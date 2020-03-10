@@ -18,9 +18,9 @@
 - luci-app-koolproxyR        
 - 去广告
 - luci-app-passwall           
-- Lienol大神passwall VERSION:=3.5.18 (2/22) 
+- Lienol大神passwall
 - luci-app-ssr-plus           
-- lean大神的ssr VERSION:=1.51（2/22）
+- lean大神的ssr
 
 #### 感谢
 
@@ -44,8 +44,3 @@
 ![argon主题](https://github.com/kenzok8/openwrt-packages/blob/master/screenshot/14.png)
 ![argon-p主题](https://github.com/kenzok8/openwrt-packages/blob/master/screenshot/15.png)
 
-#### openwrt-packages
-
- - kenzok888888
-# openwrt-packages
-# openwrt-packages
