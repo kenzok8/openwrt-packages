@@ -705,6 +705,9 @@ msgstr "（空值无效）"
 msgid "Keyword Match"
 msgstr "筛选节点"
 
+msgid "Exclude Keyword Match"
+msgstr "排除节点"
+
 msgid "(eg: hk or tw&bgp)"
 msgstr "（格式示例：香港、台湾&bgp）"
 
@@ -777,5 +780,8 @@ msgstr "序号"
 msgid "Game Rules Manage"
 msgstr "管理游戏规则"
 
+msgid "Proxy UDP Traffics"
+msgstr "*代理UDP流量"
 
-
+msgid "Select Mode For UDP Traffics, The Servers Must Support UDP while Choose Proxy"
+msgstr "启用时服务器必须支持UDP转发"

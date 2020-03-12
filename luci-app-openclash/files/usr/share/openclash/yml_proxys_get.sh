@@ -60,22 +60,22 @@ single_provider_gen="/tmp/provider_gen.yaml"
 single_provider_che="/tmp/provider_che.yaml"
 match_servers="/tmp/match_servers.list"
 match_provider="/tmp/match_provider.list"
-group_num=$(grep -c "name:" /tmp/yaml_group.yaml)
+group_num=$(grep -c "name:" /tmp/yaml_group.yaml 2>/dev/null)
 servers_update=$(uci get openclash.config.servers_update 2>/dev/null)
 servers_if_update=$(uci get openclash.config.servers_if_update 2>/dev/null)
 new_servers_group=$(uci get openclash.config.new_servers_group 2>/dev/null)
 
 #proxy
-line=$(sed -n '/^ \{0,\}-/=' $server_file)
-num=$(grep -c "^ \{0,\}-" $server_file)
+line=$(sed -n '/^ \{0,\}-/=' $server_file 2>/dev/null)
+num=$(grep -c "^ \{0,\}-" $server_file 2>/dev/null)
 count=1
 
 #provider
 sed -i '/^ *$/d' $provider_file 2>/dev/null
 sed -i '/^ \{0,\}#/d' $provider_file 2>/dev/null
 sed -i 's/\t/ /g' $provider_file 2>/dev/null
-provider_line=$(awk '{print $0"#*#"FNR}' $provider_file |grep -v '^ \{0,\}proxy-provider:\|^ \{0,\}Proxy:\|^ \{0,\}Proxy Group:\|^ \{0,\}Rule:\|^ \{0,\}type:\|^ \{0,\}path:\|^ \{0,\}url:\|^ \{0,\}interval:\|^ \{0,\}health-check:\|^ \{0,\}enable:' |awk -F '#*#' '{print $3}')
-provider_num=$(grep -c "^ \{0,\}type:" $provider_file)
+provider_line=$(awk '{print $0"#*#"FNR}' $provider_file 2>/dev/null |grep -v '^ \{0,\}proxy-provider:\|^ \{0,\}Proxy:\|^ \{0,\}Proxy Group:\|^ \{0,\}Rule:\|^ \{0,\}type:\|^ \{0,\}path:\|^ \{0,\}url:\|^ \{0,\}interval:\|^ \{0,\}health-check:\|^ \{0,\}enable:' |awk -F '#*#' '{print $3}')
+provider_num=$(grep -c "^ \{0,\}type:" $provider_file 2>/dev/null)
 provider_count=1
 
 cfg_get()
@@ -277,6 +277,7 @@ server_key_get()
    
    config_get "name" "$section" "name" ""
    config_get "keyword" "$section" "keyword" ""
+   config_get "ex_keyword" "$section" "ex_keyword" ""
    
    if [ -z "$name" ]; then
       name="config"
@@ -284,6 +285,11 @@ server_key_get()
    
    if [ ! -z "$keyword" ] && [ "$name.yaml" == "$CONFIG_NAME" ]; then
       config_keyword="$keyword"
+      key_section="$1"
+   fi
+   
+   if [ ! -z "$ex_keyword" ] && [ "$name.yaml" == "$CONFIG_NAME" ]; then
+      config_ex_keyword="$ex_keyword"
       key_section="$1"
    fi
 
@@ -319,6 +325,40 @@ server_key_match()
 	else
 	   if [ ! -z "$(echo "$2" |grep -i "$1")" ]; then
 	      match="true"
+	   fi
+	fi
+}
+
+server_key_exmatch()
+{
+
+	if [ "$match" = "false" ] || [ ! -z "$(echo "$1" |grep "^ \{0,\}$")" ] || [ ! -z "$(echo "$1" |grep "^\t\{0,\}$")" ]; then
+	   return
+	fi
+	
+	if [ ! -z "$(echo "$1" |grep "&")" ]; then
+	   key_word=$(echo "$1" |sed 's/&/ /g')
+	   match=0
+	   matchs=0
+	   for k in $key_word
+	   do
+	      if [ -z "$k" ]; then
+	         continue
+	      fi
+	      
+	      if [ ! -z "$(echo "$2" |grep -i "$k")" ]; then
+	         match=$(( $match + 1 ))
+	      fi
+	      matchs=$(( $matchs + 1 ))
+	   done
+	   if [ "$match" = "$matchs" ]; then
+	   	  match="false"
+	   else
+	      match="true"
+	   fi
+	else
+	   if [ ! -z "$(echo "$2" |grep -i "$1")" ]; then
+	      match="false"
 	   fi
 	fi
 }
@@ -371,9 +411,18 @@ do
    fi
 #匹配关键字订阅节点
    if [ "$servers_if_update" = "1" ]; then
-      if [ ! -z "$config_keyword" ]; then
-         match="false"
-         config_list_foreach "$key_section" "keyword" server_key_match "$server_name"
+      if [ ! -z "$config_keyword" ] || [ ! -z "$config_ex_keyword" ]; then
+         if [ ! -z "$config_keyword" ] && [ -z "$config_ex_keyword" ]; then
+            match="false"
+            config_list_foreach "$key_section" "keyword" server_key_match "$server_name"
+         elif [ -z "$config_keyword" ] && [ ! -z "$config_ex_keyword" ]; then
+         	  match="true"
+            config_list_foreach "$key_section" "ex_keyword" server_key_exmatch "$server_name"
+         elif [ ! -z "$config_keyword" ] && [ ! -z "$config_ex_keyword" ]; then
+            match="false"
+            config_list_foreach "$key_section" "keyword" server_key_match "$server_name"
+            config_list_foreach "$key_section" "ex_keyword" server_key_exmatch "$server_name"
+         fi
 
          if [ "$match" = "false" ]; then
             echo "跳过【$server_name】服务器节点..." >$START_LOG
