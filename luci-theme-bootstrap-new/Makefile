@@ -5,10 +5,10 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=Bootstrap new kenzo
+LUCI_TITLE:=Bootstrap new By kenzo
 LUCI_DEPENDS:=
-PKG_VERSION:=1.3
-PKG_RELEASE:=20200311
+PKG_VERSION:=1.4
+PKG_RELEASE:=20200314
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
