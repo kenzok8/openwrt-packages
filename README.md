@@ -24,7 +24,7 @@
 
 #### 注意
 
-- 适配Lean的luci主题，但是原版与Lieon的openwrt 19.07分支luci主页概况有bug~
+- 适配Lean的luci主题，但是原版与Lieon的openwrt 19.07分支luci主页概况有bug~ 等忙完这阵修复错误
 
 
 
