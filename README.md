@@ -22,7 +22,7 @@
 - luci-app-ssr-plus           
 - lean大神的ssr
 
-#### 感谢
+#### 注意
 
 - 适配Lean的luci主题，但是原版与Lieon的openwrt 19.07分支luci主页概况有bug~
 
