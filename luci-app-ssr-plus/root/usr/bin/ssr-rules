@@ -119,10 +119,13 @@ ipset_r() {
 	$IPT -I SS_SPEC_WAN_AC -m set --match-set whitelist dst -j RETURN
 	for ip in $WAN_BP_IP; do ipset -! add whitelist $ip; done
 	for ip in $WAN_FW_IP; do ipset -! add blacklist $ip; done
+	
+	$IPT -I SS_SPEC_WAN_AC -p tcp -m set --match-set netflix dst -j REDIRECT --to-ports 4321
 	return $?
 }
 
 fw_rule() {
+  ipset -N netflix hash:net 2>/dev/null
 	$IPT -N SS_SPEC_WAN_FW
 	$IPT -A SS_SPEC_WAN_FW -d 0.0.0.0/8 -j RETURN
 	$IPT -A SS_SPEC_WAN_FW -d 10.0.0.0/8 -j RETURN

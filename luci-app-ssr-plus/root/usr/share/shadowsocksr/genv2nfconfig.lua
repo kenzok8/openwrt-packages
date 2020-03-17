@@ -11,20 +11,31 @@ log = {
 	-- error = "/var/ssrplus.log",
 	loglevel = "warning"
 },
-	-- 传入连接
-	inbound = {
-		port = local_port,
-		protocol = "dokodemo-door",
-		settings = {
-			network = proto,
-			followRedirect = true
-		},
-		sniffing = {
-			enabled = true,
-			destOverride = { "http", "tls" }
-		}
-	},
-	-- 传出连接
+ -- 传入连接
+ inbound = {
+     port = local_port,
+     protocol = "dokodemo-door",
+     settings = {
+         network = proto,
+         followRedirect = true
+     },
+     sniffing = {
+         enabled = true,
+         destOverride = { "http", "tls" }
+     }
+ },
+ -- 同时开启 socks 代理 
+ inboundDetour = (proto == "tcp") and {
+   {
+     protocol = "socks",
+     port = 1088,
+     settings = {
+       auth = "noauth",
+       udp = true
+     }
+   }
+ } or nil,
+ -- 传出连接
 	outbound = {
 		protocol = "vmess",
 		settings = {
