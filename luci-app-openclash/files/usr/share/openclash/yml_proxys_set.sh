@@ -103,7 +103,7 @@ set_alpn()
       return
    fi
 cat >> "$SERVER_FILE" <<-EOF
-    - "$1"
+    - $1
 EOF
 }
 
@@ -183,7 +183,7 @@ yml_servers_set()
       fi
    fi
    
-   if [ ! -z "$udp" ] && [ "$obfs" = "none" ]; then
+   if [ ! -z "$udp" ] && [ "$obfs" = "none" ] && [ "$type" != "trojan" ]; then
       udp=", udp: $udp"
    fi
    
@@ -219,7 +219,7 @@ yml_servers_set()
       fi
    fi
    
-   if [ ! -z "$skip_cert_verify" ] && [ "$type" != "ss" ]; then
+   if [ ! -z "$skip_cert_verify" ] && [ "$type" != "ss" ] && [ "$type" != "trojan" ]; then
       skip_cert_verify=", skip-cert-verify: $skip_cert_verify"
    elif [ ! -z "$skip_cert_verify" ]; then
       skip_cert_verify="skip-cert-verify: $skip_cert_verify"
@@ -278,11 +278,11 @@ EOF
    fi
    
    if [ "$type" = "vmess" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port, uuid: $uuid, alterId: $alterId, cipher: $securitys$skip_cert_verify$obfs_vmess$path$custom$tls }" >>$SERVER_FILE
+      echo "- { name: \"$name\", type: $type, server: $server, port: $port, uuid: $uuid, alterId: $alterId, cipher: $securitys$udp$skip_cert_verify$obfs_vmess$path$custom$tls }" >>$SERVER_FILE
    fi
    
    if [ "$type" = "socks5" ] || [ "$type" = "http" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port, username: $auth_name, password: $auth_pass$skip_cert_verify$tls }" >>$SERVER_FILE
+      echo "- { name: \"$name\", type: $type, server: $server, port: $port, username: $auth_name, password: $auth_pass$udp$skip_cert_verify$tls }" >>$SERVER_FILE
    fi
    
    if [ "$type" = "trojan" ]; then
@@ -311,7 +311,7 @@ EOF
    fi
    if [ ! -z "$skip_cert_verify" ]; then
 cat >> "$SERVER_FILE" <<-EOF
-    $skip_cert_verify
+  $skip_cert_verify
 EOF
    fi
    fi
