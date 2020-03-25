@@ -13,8 +13,8 @@
 - clash图形简易版
 - luci-theme-atmaterial        
 - atmaterial 三合一主题
-- luci-theme-argon-dark
--  argon高亮主题 
+- luci-theme-argon-new
+- argon主题 Lean Lienol 19.07适配
 - luci-app-koolproxyR        
 - 去广告
 - luci-app-passwall           
