@@ -191,7 +191,7 @@
 	<div class="fill">
 		<div class="container">
 			<span class="showSide"></span>
-			<a class="brand" href="#"><img width="150" alt="Openwrt" src="<%=media%>/icons/logo.svg"></a>
+			<a class="brand" href="#"><%=boardinfo.hostname or "?"%></a>
 			<div class="pull-right">
 				<span id="xhr_poll_status" style="display:none" onclick="XHR.running() ? XHR.halt() : XHR.run()">
 					<span class="label success" id="xhr_poll_status_on"><span class="mobile-hide"><%:Auto Refresh%></span> <%:on%></span>
