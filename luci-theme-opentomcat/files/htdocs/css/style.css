@@ -824,7 +824,6 @@ fieldset > .table > .tr:nth-of-type(odd) {
 }
 
 /* fix progress bar */
-#cpu_free > div,
 #swaptotal > div,
 #swapfree > div,
 #swapcache > div,
@@ -839,7 +838,6 @@ fieldset > .table > .tr:nth-of-type(odd) {
     color:#76838f !important;
 }
 
-#cpu_free > div,> div,
 #swaptotal > div > div,
 #swapfree > div > div,
 #swapcache > div > div,
@@ -849,7 +847,7 @@ fieldset > .table > .tr:nth-of-type(odd) {
 #memcache > div > div,
 #memtotal > div > div {
     height: 1.4rem !important;
-    background-color: #3CCC3C!important;
+    background-color: #CCFFFF!important;
 }
 
 /* fix multiple table */
