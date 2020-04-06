@@ -80,6 +80,16 @@ PROVIDER_FILE="/tmp/yaml_provider.yaml"
    fi
 
 
+set_http_path()
+{
+   if [ -z "$1" ]; then
+      return
+   fi
+cat >> "$SERVER_FILE" <<-EOF
+      - '$1'
+EOF
+}
+
 
 yml_proxy_provider_set()
 {
@@ -146,7 +156,7 @@ fi
 if [ -f $PROVIDER_FILE ];then 
 sed -i "1i\   " $PROVIDER_FILE 2>/dev/null 
 
-sed -i "2i\proxy-providers:" $PROVIDER_FILE 2>/dev/null
+sed -i "2i\proxy-provider:" $PROVIDER_FILE 2>/dev/null
 
 #echo "proxy-provider:" >$PROVIDER_FILE
 rm -rf /tmp/Proxy_Provider
@@ -212,35 +222,13 @@ servers_set()
    config_get "obfs_snell" "$section" "obfs_snell" ""
    config_get "sni" "$section" "sni" ""
    config_get "alpn" "$section" "alpn" ""
+   config_get "http_path" "$section" "http_path" ""
+   config_get "keep_alive" "$section" "keep_alive" ""
    
    if [ -z "$type" ]; then
       return
    fi
-   
-	if [ ! -z "$protocolparam" ];then
-	  pro_param=", protocolparam: $protocolparam"	
-	else
-	  pro_param=", protocolparam: ''" 
-	fi
-
-	if [ ! -z "$protocol" ] && [ "$type" = "ssr" ];then
-	  protol=", protocol: $protocol"
-	else
-	  protol=", protocol: origin"	 
-	fi
-	
-	if [ ! -z "$obfs_ssr" ];then
-	 ssr_obfs=", obfs: $obfs_ssr"
-	else
-	 ssr_obfs=", obfs: plain"
-	fi
-	
-	if [ ! -z "$obfsparam" ];then
-	 obfs_param=", obfsparam: $obfsparam"
-         else
-	obfs_param=", obfsparam: ''"
-	fi 
-   
+    
    if [ -z "$server" ]; then
       return
    fi
@@ -276,57 +264,24 @@ servers_set()
       fi
    fi
    
-   if [ "$obfs_vmess" = "none" ] && [ "$type" = "vmess" ]; then
-      	obfs_vmesss=""
-   elif [ "$obfs_vmess" != "none" ] && [ "$type" = "vmess" ]; then 
-      	obfs_vmesss=", network: ws"
-   fi  
+   if [ "$obfs_vmess" = "websocket" ]; then
+      obfs_vmess="network: ws"
+   fi
    
-
+   if [ "$obfs_vmess" = "http" ]; then
+      obfs_vmess="network: http"
+   fi
    
    if [ ! -z "$custom" ] && [ "$type" = "vmess" ]; then
-      custom=", ws-headers: { Host: $custom }"
+      custom="Host: $custom"
    fi
-   
-   if [ "$tls" = "false" ] && [ "$type" = "vmess" ]; then
-          tls=", tls: $tls"
-   elif [ "$tls" = "true" ] && [ "$type" = "vmess" ]; then
-          tls=", tls: $tls"
-   elif [ "$tls" = "false" ] && [ "$type" = "http" ];then
-	  tls=", tls: $tls"
-   elif [ "$tls" = "false" ] && [ "$type" = "socks5" ]; then
-	  tls=", tls: $tls"
-   elif [ "$tls" = "true" ] && [ "$type" = "http" ]; then
-	  tls=", tls: $tls" 
-   elif [ "$tls" = "true" ] && [ "$type" = "socks5" ]; then
-	  tls=", tls: $tls"
-   elif [ -z "$tls" ] && [ "$type" != "ss" ]; then
-	  tls=""	  
-   fi
-
    
    if [ ! -z "$path" ]; then
       if [ "$type" != "vmess" ]; then
-         paths="path: '$path'"
-      else
-         path=", ws-path: $path"
+         path="path: '$path'"
+      elif [ "$obfs_vmess" = "network: ws" ]; then
+         path="ws-path: $path"
       fi
-   fi
-
-   if [ "$skip_cert_verify" = "true" ] && [ "$type" = "vmess" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "false" ] && [ "$type" = "vmess" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "true" ] && [ "$type" = "http" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "true" ] && [ "$type" = "socks5" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "false" ] && [ "$type" = "http" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ "$skip_cert_verify" = "false" ] && [ "$type" = "socks5" ]; then
-      skip_cert_verifys=", skip-cert-verify: $skip_cert_verify"
-   elif [ -z "$skip_cert_verify" ]; then
-      skip_cert_verifys=""	  
    fi
 
    if [ ! -z "$auth_name" ] && [ ! -z "$auth_pass" ]; then
@@ -378,7 +333,7 @@ EOF
   fi
    if [ "$skip_cert_verify" = "true" ] && [ "$type" = "ss" ]; then
 cat >> "$SERVER_FILE" <<-EOF
-    skip_cert_verify: true
+    skip-cert-verify: true
 EOF
   fi
 
@@ -428,27 +383,137 @@ config_list_foreach "$section" "alpn" set_alpn
 fi
 if [ "$skip_cert_verify" = "true" ] && [ "$type" = "trojan" ]; then
 cat >> "$SERVER_FILE" <<-EOF
-  skip_cert_verify: true
+  skip-cert-verify: true
 EOF
   fi
 fi
    
+#vmess
    if [ "$type" = "vmess" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port, uuid: $uuid, alterId: $alterId, cipher: $securitys$udpp$obfs_vmesss$path$custom$tls$skip_cert_verifys }" >>$SERVER_FILE
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+  uuid: $uuid
+  alterId: $alterId
+  cipher: $securitys
+EOF
+      if [ ! -z "$udp" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  udp: $udp
+EOF
+      fi
+      if [ "$tls" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  tls: $tls
+EOF
+      fi
+      if [ "$skip_cert_verify" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  skip-cert-verify: $skip_cert_verify
+EOF
+      fi
+      if [ "$obfs_vmess" != "none" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  $obfs_vmess
+EOF
+         if [ ! -z "$path" ] && [ "$obfs_vmess" = "network: ws" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  $path
+EOF
+         fi
+         if [ ! -z "$custom" ] && [ "$obfs_vmess" = "network: ws" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  ws-headers:
+    $custom
+EOF
+         fi
+         if [ ! -z "$http_path" ] && [ "$obfs_vmess" = "network: http" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  http-opts:
+    method: "GET"
+    path:
+EOF
+            config_list_foreach "$section" "http_path" set_http_path
+         fi
+         if [ "$keep_alive" = "true" ] && [ "$obfs_vmess" = "network: http" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    headers:
+      Connection:
+        - keep-alive
+EOF
+         fi
+      fi
    fi
-   
+
+#socks5
    if [ "$type" = "socks5" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port$auth_psk$udpp$skip_cert_verify$tls }" >>$SERVER_FILE
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+EOF
+      if [ ! -z "$auth_name" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  username: $auth_name
+EOF
+      fi
+      if [ ! -z "$auth_pass" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  password: $auth_pass
+EOF
+      fi
+      if [ ! -z "$udp" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  udp: $udp
+EOF
+      fi
+      if [ "$skip_cert_verify" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  skip-cert-verify: $skip_cert_verify
+EOF
+      fi
+      if [ "$tls" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  tls: $tls
+EOF
+      fi
    fi
-   
+
+#http
    if [ "$type" = "http" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port$auth_psk$udpp$skip_cert_verify$tls }" >>$SERVER_FILE
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+EOF
+      if [ ! -z "$auth_name" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  username: $auth_name
+EOF
+      fi
+      if [ ! -z "$auth_pass" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  password: $auth_pass
+EOF
+      fi
+      if [ "$skip_cert_verify" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  skip-cert-verify: $skip_cert_verify
+EOF
+      fi
+      if [ "$tls" = "true" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  tls: $tls
+EOF
+      fi
    fi
 
-    if [ "$type" = "ssr" ]; then
-      echo "- { name: \"$name\", type: $type, server: $server, port: $port, cipher: $cipher_ssr, password: "$password"$protol$pro_param$ssr_obfs$obfs_param}" >>$SERVER_FILE
-    fi
 
+#snell
    if [ "$type" = "snell" ]; then
 cat >> "$SERVER_FILE" <<-EOF
 - name: "$name"
@@ -457,14 +522,30 @@ cat >> "$SERVER_FILE" <<-EOF
   port: $port
   psk: $psk
 EOF
-  if [ "$obfs_snell" != "none" ] && [ ! -z "$host" ]; then
+   if [ "$obfs_snell" != "none" ] && [ ! -z "$host" ]; then
 cat >> "$SERVER_FILE" <<-EOF
   obfs-opts:
     mode: $obfs_snell
-    $host
+    host: $host
 EOF
-  fi
    fi
+   fi
+
+if [ "$type" = "ssr" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+  cipher: $cipher_ssr
+  password: "$password"
+  protocol: "$protocol"
+  protocolparam: "$protocolparam"
+  obfs: "$obfs_ssr"
+  obfsparam: "$obfsparam"
+EOF
+fi
+
 
 }
 
@@ -478,7 +559,7 @@ if [ ! -z "${scount}" ] || [ "${scount}" -ne 0 ];then
 
 sed -i "1i\   " $SERVER_FILE 2>/dev/null 
 
-sed -i "2i\proxies:" $SERVER_FILE 2>/dev/null 
+sed -i "2i\Proxy:" $SERVER_FILE 2>/dev/null 
 
 egrep '^ {0,}-' $SERVER_FILE |grep name: |awk -F 'name: ' '{print $2}' |sed 's/,.*//' >$Proxy_Group 2>&1
 
@@ -619,7 +700,7 @@ config_foreach yml_groups_set "groups"
 
 if [ "$(ls -l $GROUP_FILE|awk '{print $5}')" -ne 0 ]; then
 sed -i "1i\  " $GROUP_FILE 2>/dev/null 
-sed -i "2i\proxy-groups:" $GROUP_FILE 2>/dev/null 
+sed -i "2i\Proxy Group:" $GROUP_FILE 2>/dev/null 
 
 fi
 
