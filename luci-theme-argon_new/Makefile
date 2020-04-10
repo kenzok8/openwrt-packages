@@ -8,8 +8,8 @@ include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=Argon new kenzo
 LUCI_DEPENDS:=
-PKG_VERSION:=2.1
-PKG_RELEASE:=20200206
+PKG_VERSION:=1.5.2
+PKG_RELEASE:=01-2020401
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
