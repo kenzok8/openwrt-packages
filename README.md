@@ -2,6 +2,8 @@
 
 * 软件不定期同步大神库更新，适合一键下载到package目录下，用于openwrt编译
 
+* 两位L大库里都少了某软件，作为搬运工，ssr与passwall的依赖一并找齐了
+
 * lede/package$下运行 或者openwrt/package$下运行
 
 ```bash
