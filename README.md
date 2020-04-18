@@ -4,6 +4,9 @@
 
 * 两位L大库里都少了某软件，作为搬运工，ssr与passwall的依赖一并找齐了
 
+- [passwall依赖库](https://github.com/kenzok8/small.git)
+ 
+
 * lede/package$下运行 或者openwrt/package$下运行
 
 ```bash
