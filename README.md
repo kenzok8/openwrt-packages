@@ -2,6 +2,11 @@
 
 * 软件不定期同步大神库更新，适合一键下载到package目录下，用于openwrt编译
 
+* 两位L大库里都删除了某软件，作为搬运工，passwall的依赖一并找齐了
+
+- [passwall依赖库](https://github.com/kenzok8/small.git)
+ 
+
 * lede/package$下运行 或者openwrt/package$下运行
 
 ```bash
