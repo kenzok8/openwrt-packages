@@ -12,11 +12,10 @@
 ```bash
  git clone https://github.com/kenzok8/openwrt-packages.git
 ```
- * 或者添加 
+ * 或者添加 到 openwrt 或lede源码根目录feeds.conf.default文件
 ```bash
  src-git openwrt-packages https://github.com/kenzok8/openwrt-packages.git
 ```
- * 到 openwrt 或lede源码根目录feeds.conf.default文件
 
 - openwrt 固件编译自定义主题与软件
 - luci-app-openclash           
