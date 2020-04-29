@@ -12,7 +12,7 @@
 ```bash
  git clone https://github.com/kenzok8/openwrt-packages.git
 ```
- * 或者添加 到 openwrt 或lede源码根目录feeds.conf.default文件
+ * 或者添加下面代码到 openwrt 或lede源码根目录feeds.conf.default文件
 ```bash
  src-git openwrt-packages https://github.com/kenzok8/openwrt-packages.git
 ```
