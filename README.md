@@ -14,8 +14,10 @@
 ```
 或者添加 
 ```bash
- src-git lienol https://github.com/Lienol/openwrt-package 到 openwrt 或lede源码根目录feeds.conf.default文件
+ src-git lienol https://github.com/Lienol/openwrt-package
 ```
+ 到 openwrt 或lede源码根目录feeds.conf.default文件
+
 - openwrt 固件编译自定义主题与软件
 - luci-app-openclash           
 - clash图形简易版
