@@ -14,7 +14,7 @@
 ```
  * 或者添加 
 ```bash
- src-git lienol https://github.com/Lienol/openwrt-package
+ src-git openwrt-packages https://github.com/kenzok8/openwrt-packages.git
 ```
  * 到 openwrt 或lede源码根目录feeds.conf.default文件
 
