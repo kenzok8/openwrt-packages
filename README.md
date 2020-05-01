@@ -14,7 +14,7 @@
 ```
  * 或者添加下面代码到 openwrt 或lede源码根目录feeds.conf.default文件
 ```bash
- src-git openwrt-packages https://github.com/kenzok8/openwrt-packages.git
+ src-git openwrt-packages https://github.com/kenzok8/openwrt-packages
 ```
 
 - openwrt 固件编译自定义主题与软件
