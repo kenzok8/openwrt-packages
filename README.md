@@ -20,7 +20,7 @@
 ```
  *passwall依赖
  ```bash
- src-git small https://github.com/kenzok8/small.git
+ src-git small https://github.com/kenzok8/small
  ```
  
 - openwrt 固件编译自定义主题与软件
