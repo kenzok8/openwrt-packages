@@ -18,7 +18,7 @@
 ```bash
  src-git kenzo https://github.com/kenzok8/openwrt-packages
 ```
- *passwall依赖
+ * passwall依赖
  ```bash
  src-git small https://github.com/kenzok8/small
  ```
