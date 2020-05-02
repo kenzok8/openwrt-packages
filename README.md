@@ -9,16 +9,16 @@
 - [passwall依赖库下载链接，注意！在openwrt或者lean源码下编译passwall，要下载此依赖库](https://github.com/kenzok8/small.git)
  
 
-* lede/package$下运行 或者openwrt/package$下运行
+1、 lede/package$下运行 或者openwrt/package$下运行
 
 ```bash
  git clone https://github.com/kenzok8/openwrt-packages.git
 ```
- * 或者添加下面代码到 openwrt 或lede源码根目录feeds.conf.default文件
+ 2、 或者添加下面代码到 openwrt 或lede源码根目录feeds.conf.default文件
 ```bash
  src-git kenzo https://github.com/kenzok8/openwrt-packages
 ```
- * passwall依赖
+ 3、 passwall依赖
  ```bash
  src-git small https://github.com/kenzok8/small
  ```
