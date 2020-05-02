@@ -2,7 +2,9 @@
 
 * 软件不定期同步大神库更新，适合一键下载到package目录下，用于openwrt编译
 
+
 * 两位L大库里都删除了某软件，作为搬运工，passwall的依赖一并找齐了
+
 
 - [passwall依赖库下载链接，注意！在openwrt或者lean源码下编译passwall，要下载此依赖库](https://github.com/kenzok8/small.git)
  
@@ -16,7 +18,11 @@
 ```bash
  src-git kenzo https://github.com/kenzok8/openwrt-packages
 ```
-
+ *passwall依赖
+ ```bash
+ src-git small https://github.com/kenzok8/small.git
+ ```
+ 
 - openwrt 固件编译自定义主题与软件
 - luci-app-openclash       ------------------openclash图形         
 - luci-app-advancedsetting ------------------系统高级设置
