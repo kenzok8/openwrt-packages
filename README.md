@@ -4,7 +4,7 @@
 
 * 两位L大库里都删除了某软件，作为搬运工，passwall的依赖一并找齐了
 
-- [passwall依赖库下载链接，在openwrt或者lean源码下，要下载此依赖库](https://github.com/kenzok8/small.git)
+- [passwall依赖库下载链接，注意！在openwrt或者lean源码下编译passwall，要下载此依赖库](https://github.com/kenzok8/small.git)
  
 
 * lede/package$下运行 或者openwrt/package$下运行
