@@ -206,4 +206,4 @@ define Package/$(PKG_NAME)/install
 	$(CP) $(PKG_BUILD_DIR)/files/* $(1)/
 endef
 
-$(eval $(call BuildPackage,$(PKG_NAME)))
+$(eval $(call BuildPackage,$(PKG_NAME))) 
