@@ -8,6 +8,8 @@
 
 - [passwall依赖库下载链接，注意！在openwrt或者lean源码下编译passwall，要下载此依赖库](https://github.com/kenzok8/small.git)
  
+- [旧版passwall3.6-4.0版使用域名有一个选项是“使用ipv6”，可以解析域名为ipv6进行连接 最新版passwall取消了“使用ipv6”这一选项，导致无法使用纯ipv6主机](https://github.com/kenzok8/passwall.git)
+
 
 1、 lede/package$下运行 或者openwrt/package$下运行
 
