@@ -1,6 +1,6 @@
 <%+cbi/valueheader%>
 <%local fs=require"nixio.fs"%>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
 <input type="button" class="cbi-button cbi-button-apply" id="apply_update_button" value="<%:Download%>" onclick=" return apply_update() "/>
 <br /><br />
 <textarea id="core_download" class="cbi-input-textarea" style="width: 100%;display:none" data-update="change" rows="10" cols="100" readonly="readonly" > </textarea>
@@ -19,10 +19,10 @@ var lv = document.getElementById('core_download');
 	lv.style.display="inline"
 XHR.poll(2, '<%=url([[admin]], [[services]], [[clash]], [[check]])%>', null,
 	function(x, data) {
-		scroll();
 		var lv = document.getElementById('core_download');
 		if (x.responseText && lv) {
 			lv.innerHTML += x.responseText; 
+			lv.scrollTop = lv.scrollHeight;
 		}
 	}
 );
@@ -57,17 +57,12 @@ function hide(){
 }
 
 
-function scroll(){
-	var textarea = document.getElementById('core_download');
-	textarea.scrollTop = textarea.scrollHeight;
-}
-
 
 <% if fs.access("/var/run/core_update") then %>
 var	btn = document.getElementById('apply_update_button');
 	btn.disabled = true;
 	btn.value    = '<%:Downloading...%>';
-poll_check();
+	poll_check();
 <%end%>
 
 
