@@ -203,7 +203,7 @@ doupdate_core(){
 	fi
 	echo -e "start copy" 
 	/etc/init.d/AdGuardHome stop nobackup
-	chmod 755 /etc/init.d/AdGuardHome
+	chmod +x /etc/init.d/AdGuardHome
 	rm "$binpath"
 	mv -f "$downloadbin" "$binpath"
 	if [ "$?" == "1" ]; then
