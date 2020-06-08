@@ -202,8 +202,8 @@ doupdate_core(){
 		rm -rf /tmp/upx-${upx_latest_ver}-${Arch}_linux
 	fi
 	echo -e "start copy" 
-	/etc/init.d/AdGuardHome stop nobackup
 	chmod +x /etc/init.d/AdGuardHome
+	/etc/init.d/AdGuardHome stop nobackup
 	rm "$binpath"
 	mv -f "$downloadbin" "$binpath"
 	if [ "$?" == "1" ]; then
