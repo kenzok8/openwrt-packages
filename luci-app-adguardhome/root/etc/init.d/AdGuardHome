@@ -68,14 +68,29 @@ set_iptable()
 	set firewall.AdGuardHome.reload=1
 	commit firewall
 EOF
-	
-	[ "$tcp_server" == "1" ] && iptables -t nat -I PREROUTING 1 -m comment --comment "AdGuardHome" -p tcp --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT
-	iptables -t nat -I PREROUTING 1 -m comment --comment "AdGuardHome" -p udp --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT
 
-	[ "$ipv6_server" == 0 ] && return
+	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
+	for IP in $IPS
+	do
+		if [ "$tcp_server" == "1" ]; then
+			iptables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+		fi
+		iptables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+	done
 
-	[ "$tcp_server" == "1" ] && ip6tables -t nat -I PREROUTING 1 -m comment --comment "AdGuardHome" -p tcp --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT
-	ip6tables -t nat -I PREROUTING 1 -m comment --comment "AdGuardHome" -p udp --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT
+	if [ "$ipv6_server" == 0 ]; then
+		return
+	fi
+
+	IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
+	for IP in $IPS
+	do
+		if [ "$tcp_server" == "1" ]; then
+			ip6tables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+		fi
+		ip6tables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+	done
+
 }
 
 clear_iptable()
@@ -84,34 +99,26 @@ clear_iptable()
   delete firewall.AdGuardHome
 	commit firewall
 EOF
+	local OLD_PORT="$1"
+	local ipv6_server=$2
+	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
+	for IP in $IPS
+	do
+		iptables -t nat -D PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
+		iptables -t nat -D PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
+	done
 
-	nums=$(iptables -t nat -n -L PREROUTING 2>/dev/null | grep -c "AdGuardHome")
-	if [ -n "$nums" ]; then
-		until [ "$nums" = 0 ]
-		do
-			rules=$(iptables -t nat -n -L PREROUTING --line-num 2>/dev/null | grep "AdGuardHome" | awk '{print $1}')
-			for rule in $rules
-			do
-				iptables -t nat -D PREROUTING $rule 2> /dev/null
-				break
-			done
-			nums=$(expr $nums - 1)
-		done
+	if [ "$ipv6_server" == 0 ]; then
+		return
 	fi
-	
-	nums=$(ip6tables -t nat -n -L PREROUTING 2>/dev/null | grep -c "AdGuardHome")
-	if [ -n "$nums" ]; then
-		until [ "$nums" = 0 ]
-		do
-			rules=$(ip6tables -t nat -n -L PREROUTING --line-num 2>/dev/null | grep "AdGuardHome" | awk '{print $1}')
-			for rule in $rules
-			do
-				ip6tables -t nat -D PREROUTING $rule 2> /dev/null
-				break
-			done
-			nums=$(expr $nums - 1)
-		done
-	fi
+	echo "warn ip6tables nat mod is needed"
+	IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
+	for IP in $IPS
+	do
+		ip6tables -t nat -D PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
+		ip6tables -t nat -D PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
+	done
+
 }
 
 service_triggers() {
@@ -176,7 +183,7 @@ rm_port53()
 	config_editor "dns.port" "$dnsmasq_port" "$configpath"
 	uci set dhcp.@dnsmasq[0].port="53"
 	uci commit dhcp
-	/etc/init.d/dnsmasq restart
+	/etc/init.d/dnsmasq reload
 }
 
 use_port53()
@@ -196,7 +203,7 @@ use_port53()
 	config_editor "dns.port" "53" "$configpath"
 	uci set dhcp.@dnsmasq[0].port="$AdGuardHome_PORT"
 	uci commit dhcp
-	/etc/init.d/dnsmasq restart
+	/etc/init.d/dnsmasq reload
 }
 do_redirect()
 {
@@ -225,7 +232,6 @@ _do_redirect()
 	config_get "old_port" "$section" "old_port" "0"
 	config_get "old_enabled" "$section" "old_enabled" "0"
 	uci get dhcp.@dnsmasq[0].port >/dev/null 2>&1 || uci set dhcp.@dnsmasq[0].port="53" >/dev/null 2>&1
-	uci commit dhcp
 	if [ "$old_enabled" = "1" -a "$old_redirect" == "exchange" ]; then
 		AdGuardHome_PORT=$(uci get dhcp.@dnsmasq[0].port 2>/dev/null)
 	fi
@@ -233,7 +239,7 @@ _do_redirect()
 	if [ "$old_redirect" != "$redirect" ] || [ "$old_port" != "$AdGuardHome_PORT" ] || [ "$old_enabled" = "1" -a "$enabled" = "0" ]; then
 		if [ "$old_redirect" != "none" ]; then
 			if [  "$old_redirect" == "redirect" -a "$old_port" != "0" ]; then
-				clear_iptable
+				clear_iptable "$old_port" "$ipv6_server"
 			elif [ "$old_redirect" == "dnsmasq-upstream" ]; then
 				stop_forward_dnsmasq "$old_port"
 			elif [ "$old_redirect" == "exchange" ]; then
@@ -242,7 +248,7 @@ _do_redirect()
 		fi
 	elif [ "$old_enabled" = "1" -a "$enabled" = "1" ]; then
 		if [  "$old_redirect" == "redirect" -a "$old_port" != "0" ]; then
-			clear_iptable
+			clear_iptable "$old_port" "$ipv6_server"
 		fi
 	fi
 	uci delete AdGuardHome.@AdGuardHome[0].old_redirect 2>/dev/null
