@@ -1,6 +1,0 @@
-[submodule "luci-app-adguardhome"]
-	path = luci-app-adguardhome
-	url = https://github.com/rufengsuixing/luci-app-adguardhome.git
-[submodule "luci-app-serverchan"]
-	path = luci-app-serverchan
-	url = https://github.com/tty228/luci-app-serverchan.git
