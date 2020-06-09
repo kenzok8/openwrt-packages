@@ -1,7 +1,7 @@
 bind_host: 0.0.0.0
 bind_port: 3001
 users:
-- name: AdGuardHome
+- name: root
   password: $2y$05$r.WXZfS0JbDj01xXmScIiuFPirVYB2FXmH0o1CUgyECxPNMlkWorq
 language: zh-cn
 rlimit_nofile: 61500
