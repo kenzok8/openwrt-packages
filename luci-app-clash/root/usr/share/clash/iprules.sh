@@ -22,7 +22,7 @@ ipadd()
 	   config_get "ipaaddr" "$section" "ipaaddr" ""
 	   config_get "type" "$section" "type" ""
 	   config_get "res" "$section" "res" ""
-	   if [ "${res}" -eq 1 ] || [ ! -z "${res}" ];then
+	   if [ "${res}" -eq 1 ];then
 		echo "- $type,$ipaaddr,$pgroup,no-resolve">>/tmp/ipadd.conf
 	   else
 		echo "- $type,$ipaaddr,$pgroup">>/tmp/ipadd.conf

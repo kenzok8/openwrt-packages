@@ -32,11 +32,91 @@ config clash 'config'
 	option ping_enable '1'
 	option dnscache '0'
 
+
+config proxyprovider
+	option type 'http'
+	option name 'ABCD'
+	option provider_interval '3600'
+	option health_check 'true'
+	option health_check_url 'http://www.gstatic.com/generate_204'
+	option health_check_interval '300'
+	list groups 'Global'
+	option provider_url 'https://www.abcd.net/link/trFxWDLxIKtbQdsZ?list=clash'
 	
-config addtype
-	option type 'IP-CIDR'
-	option pgroup 'REJECT'
-	option ipaaddr '198.18.0.1/16'
-	option res '1'
-	
+
+config ruleprovider
+	option behavior 'domain'
+	option type 'file'
+	option name 'PROXY'
+	option path './ruleprovider/Proxy.list'
+
+config rules
+	option type 'RULE-SET'
+	option rulename 'PROXY'
+	option rulegroups 'Global'
+
+config ruleprovider
+	option behavior 'domain'
+	option type 'file'
+	option name 'DOMESTIC'
+	option path './ruleprovider/Domestic.list'
+
+config rules
+	option type 'RULE-SET'
+	option rulename 'PROXYIP'
+	option rulegroups 'Global'
+
+config rules
+	option type 'RULE-SET'
+	option rulename 'DOMESTIC'
+	option rulegroups 'Global'
+
+config ruleprovider
+	option type 'file'
+	option behavior 'ipcidr'
+	option path './ruleprovider/AdBlockIP.list'
+	option name 'ADBLOCKIP'
+
+config ruleprovider
+	option name 'DOMESTICIP'
+	option type 'file'
+	option behavior 'ipcidr'
+	option path './ruleprovider/DomesticIP.list'
+
+config ruleprovider
+	option name 'PROXYIP'
+	option type 'file'
+	option behavior 'ipcidr'
+	option path './ruleprovider/ProxyIP.list'
+
+config ruleprovider
+	option name 'ADBLOCK'
+	option type 'file'
+	option behavior 'domain'
+	option path './ruleprovider/AdBlock.list'
+
+config rules
+	option type 'RULE-SET'
+	option rulename 'DOMESTICIP'
+	option rulegroups 'Global'
+
+config rules
+	option type 'RULE-SET'
+	option rulename 'ADBLOCK'
+	option rulegroups 'REJECT'
+
+config rules
+	option type 'RULE-SET'
+	option rulename 'ADBLOCKIP'
+	option rulegroups 'REJECT'
+
+config rules
+	option type 'MATCH'
+	option rulegroups 'Global'
+
+config pgroups
+	option type 'select'
+	option old_name_cfg 'Global'
+	option old_name 'Global'
+	option name 'Global'
 

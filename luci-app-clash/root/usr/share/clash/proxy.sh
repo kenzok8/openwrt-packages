@@ -98,18 +98,17 @@ yml_proxy_provider_set()
    config_get "type" "$section" "type" ""
    config_get "name" "$section" "name" ""
    config_get "path" "$section" "path" ""
-   config_get "pathh" "$section" "pathh" ""
    config_get "provider_url" "$section" "provider_url" ""
    config_get "provider_interval" "$section" "provider_interval" ""
    config_get "health_check" "$section" "health_check" ""
    config_get "health_check_url" "$section" "health_check_url" ""
    config_get "health_check_interval" "$section" "health_check_interval" ""
    
-	if [ "$type" == "http" ];then
-		ppath="path: $path"
-	elif [ "$type" == "file" ];then
-	    ppath="path: $pathh"
-	fi
+   if [ "$path" != "./proxyprovider/$name.yaml" ] && [ "$type" = "http" ]; then
+      path="./proxyprovider/$name.yaml"
+   elif [ -z "$path" ]; then
+      return
+   fi
 	  
 
    if [ -z "$type" ]; then
@@ -131,7 +130,7 @@ yml_proxy_provider_set()
 cat >> "$PROVIDER_FILE" <<-EOF
   $name:
     type: $type
-    $ppath
+    path: $path
 EOF
    if [ ! -z "$provider_url" ]; then
 cat >> "$PROVIDER_FILE" <<-EOF
