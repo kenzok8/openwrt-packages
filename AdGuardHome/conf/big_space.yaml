@@ -1,4 +1,4 @@
-bind_host: 0.0.0.0
+﻿bind_host: 0.0.0.0
 bind_port: 3001
 users:
 - name: root
