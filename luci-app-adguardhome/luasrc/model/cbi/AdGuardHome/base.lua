@@ -43,6 +43,7 @@ else
 		uci:set("AdGuardHome","AdGuardHome","version",version)
 		uci:set("AdGuardHome","AdGuardHome","binmtime",testtime)
 		uci:save("AdGuardHome")
+		uci:commit("AdGuardHome")
 	end
 	e=version..e
 end
