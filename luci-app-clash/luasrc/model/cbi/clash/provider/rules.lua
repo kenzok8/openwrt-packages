@@ -18,6 +18,7 @@ end
 s = m:section(NamedSection, sid, "rules")
 s.anonymous = true
 s.addremove   = false
+m.pageaction = false
 
 o = s:option(ListValue, "type", translate("Rule Type"))
 o.rmempty = false
@@ -30,6 +31,7 @@ o:value("IP-CIDR", translate("IP-CIDR"))
 o:value("DOMAIN", translate("DOMAIN"))
 o:value("DOMAIN-KEYWORD", translate("DOMAIN-KEYWORD"))
 o:value("DOMAIN-SUFFIX", translate("DOMAIN-SUFFIX"))
+o:value("GEOIP", translate("GEOIP"))
 o:value("MATCH", translate("MATCH"))
 
 
@@ -40,7 +42,6 @@ uci:foreach("clash", "ruleprovider",
 			   o:value(s.name)
 			end
 		end)
-o.rmempty = false
 o.description = translate("Select rule provider name")
 o:depends("type", "RULE-SET")
 
@@ -66,6 +67,7 @@ o:depends("type", "IP-CIDR")
 o:depends("type", "DOMAIN")
 o:depends("type", "DOMAIN-KEYWORD")
 o:depends("type", "DOMAIN-SUFFIX")
+o:depends("type", "GEOIP")
 
 o = s:option(Flag, "res", translate("No Resolve"))
 o.default = 0
@@ -77,5 +79,32 @@ o:depends("type", "IP-CIDR")
 o:depends("type", "DOMAIN")
 o:depends("type", "DOMAIN-KEYWORD")
 o:depends("type", "DOMAIN-SUFFIX")
+o:depends("type", "GEOIP")
+
+
+local t = {
+    {Apply, Return}
+}
+
+b = m:section(Table, t)
+
+o = b:option(Button,"Apply")
+o.inputtitle = translate("Save & Apply")
+o.inputstyle = "apply"
+o.write = function()
+  m.uci:commit("clash")
+  sys.call("/usr/share/clash/provider/rules.sh start >/dev/null 2>&1 &")
+  luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "providers"))
+end
+
+o = b:option(Button,"Return")
+o.inputtitle = translate("Back to Overview")
+o.inputstyle = "reset"
+o.write = function()
+   m.uci:revert(clash)
+   luci.http.redirect(m.redirect)
+  --luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "providers"))
+end
+
 
 return m

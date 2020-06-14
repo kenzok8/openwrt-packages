@@ -21,6 +21,7 @@ end
 
 
 m = Map(clash, translate("Edit Proxy Provider"))
+m.pageaction = false
 m.redirect = luci.dispatcher.build_url("admin/services/clash/config/providers")
 if m.uci:get(clash, sid) ~= "proxyprovider" then
 	luci.http.redirect(m.redirect)
@@ -130,6 +131,30 @@ m.uci:foreach("clash", "pgroups",
 			   o:value(s.name)
 			end
 		end)
+
+
+local t = {
+    {Apply, Return}
+}
+
+b = m:section(Table, t)
+
+o = b:option(Button,"Apply")
+o.inputtitle = translate("Save & Apply")
+o.inputstyle = "apply"
+o.write = function()
+  m.uci:commit("clash")
+  luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "providers"))
+end
+
+o = b:option(Button,"Return")
+o.inputtitle = translate("Back to Overview")
+o.inputstyle = "reset"
+o.write = function()
+   m.uci:revert(clash)
+   luci.http.redirect(m.redirect)
+  --luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "providers"))
+end
 
 
 return m

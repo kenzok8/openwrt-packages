@@ -1108,3 +1108,24 @@ msgstr "删除规则集"
 
 msgid "Delete Rules"
 msgstr "删除规则"
+
+msgid "Use Script"
+msgstr "使用脚本"
+
+msgid "Script"
+msgstr "脚本"
+
+msgid "SCRIPT"
+msgstr "脚本模式"
+
+msgid "NB: Set Clash Mode to Script if want to use"
+msgstr "注意：如果要使用，请将Clash模式,设置为脚本"
+
+msgid "Whitelist IPs"
+msgstr "启用白名单IP"
+
+msgid "Blacklist Ips"
+msgstr "启用黑名单IP"
+
+msgid "Whitelist or Blacklist IPs to use Clash ( Only support enhanced-mode: redir-host )"
+msgstr "启用白名单或黑名单IP ( 仅支持enhanced-mode: redir-host )"

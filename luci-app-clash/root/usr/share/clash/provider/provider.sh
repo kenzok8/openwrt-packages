@@ -9,7 +9,7 @@ CONFIG_YAML_PATH=$(uci get clash.config.use_config 2>/dev/null)
 if [  -f $CONFIG_YAML_PATH ] && [ "$(ls -l $CONFIG_YAML_PATH|awk '{print int($5)}')" -ne 0 ];then
 	cp $CONFIG_YAML_PATH $CLASH_CONFIG 2>/dev/null		
 fi
-
+SCRIPT="/usr/share/clash/provider/script.yaml"
 rule_providers=$(uci get clash.config.rule_providers 2>/dev/null)
 CFG_FILE="/etc/config/clash"
 config_name=$(uci get clash.config.name_tag 2>/dev/null)
@@ -19,6 +19,8 @@ check_name=$(grep -F "${config_name}.yaml" "/usr/share/clashbackup/create_list.c
 REAL_LOG="/usr/share/clash/clash_real.txt"
 same_tag=$(uci get clash.config.same_tag 2>/dev/null)
 rcount=$( grep -c "config ruleprovider" $CFG_FILE 2>/dev/null)
+create=$(uci get clash.config.provider_config 2>/dev/null)
+if [ "${create}" -eq 1 ];then
 
 if  [ $config_name == "" ] || [ -z $config_name ];then
 
@@ -159,7 +161,7 @@ fi
 
 if [ -f $PROVIDER_FILE ];then 
 	sed -i "1i\   " $PROVIDER_FILE 2>/dev/null 
-	sed -i "2i\proxy-provider:" $PROVIDER_FILE 2>/dev/null
+	sed -i "2i\proxy-providers:" $PROVIDER_FILE 2>/dev/null
 	rm -rf /tmp/Proxy_Provider
 fi
 
@@ -223,6 +225,7 @@ yml_groups_set()
    config_get "old_name" "$section" "old_name" ""
    config_get "test_url" "$section" "test_url" ""
    config_get "test_interval" "$section" "test_interval" ""
+   config_get "other_group" "$section" "other_group" ""
 
    if [ -z "$type" ]; then
       return
@@ -236,22 +239,14 @@ yml_groups_set()
    echo "  type: $type" >>$GROUP_FILE 2>/dev/null 
    group_name="$name"
    echo "  proxies: " >>$GROUP_FILE
-
-      
- 
-   if [ "$name" != "$old_name" ]; then
-      sed -i "s/,${old_name}$/,${name}#d/g" $CLASH_CONFIG 2>/dev/null
-      sed -i "s/:${old_name}$/:${name}#d/g" $CLASH_CONFIG 2>/dev/null
-      sed -i "s/\'${old_name}\'/\'${name}\'/g" $CFG_FILE 2>/dev/null
-      config_load "clash"
-   fi
    
    set_group=0
-   set_proxy_provider=0   
+   set_proxy_provider=0 
    
-   config_list_foreach "$section" "other_group" set_other_groups #加入其他策略组
+   
+  	
+   config_list_foreach "$section" "other_group" set_other_groups
 
-   
    if [ "$( grep -c "config proxyprovider" $CFG_FILE )" -gt 0 ];then  
 
 		    echo "  use: $group_name" >>$GROUP_FILE	   
@@ -270,11 +265,9 @@ yml_groups_set()
 			  sed -i "/^ \{0,\}proxies: ${group_name}/c\  proxies:" $GROUP_FILE
 		    else
 			  sed -i "/proxies: ${group_name}/d" $GROUP_FILE 
-		    fi
-	   
-   
-   fi
-   
+		    fi	     
+   fi      
+ 
    
     [ ! -z "$test_url" ] && {
 		echo "  url: $test_url" >>$GROUP_FILE 2>/dev/null 
@@ -312,11 +305,18 @@ add_rules()
 	   config_get "rulename" "$section" "rulename" ""
 	   config_get "type" "$section" "type" ""
 	   config_get "res" "$section" "res" ""
+	   config_get "rulenamee" "$section" "rulenamee" ""
 	   
+	    if [ ! -z $rulename ];then
+	      rulename=$rulename
+		elif [ ! -z $rulenamee ];then
+		  rulename=$rulenamee
+		fi	
+		  
 	   if [ "${res}" -eq 1 ];then
 		echo "- $type,$rulename,$rulegroups,no-resolve">>$RULE_FILE
 	   elif [ "${type}" == "MATCH" ];then
-	   echo "- $type,$rulegroups">>$RULE_FILE
+	    echo "- $type,$rulegroups">>$RULE_FILE
 	   else
 		echo "- $type,$rulename,$rulegroups">>$RULE_FILE
 	   fi
@@ -333,6 +333,7 @@ if [ -f $RULE_FILE ];then
 fi 
 
 mode=$(uci get clash.config.mode 2>/dev/null)
+p_mode=$(uci get clash.config.p_mode 2>/dev/null)
 da_password=$(uci get clash.config.dash_pass 2>/dev/null)
 redir_port=$(uci get clash.config.redir_port 2>/dev/null)
 http_port=$(uci get clash.config.http_port 2>/dev/null)
@@ -355,16 +356,16 @@ EOF
 		sed -i "/redir-port: ${redir_port}/a\allow-lan: ${allow_lan}" $TEMP_FILE 2>/dev/null 
 		if [ $allow_lan == "true" ];  then
 		sed -i "/allow-lan: ${allow_lan}/a\bind-address: \"${bind_addr}\"" $TEMP_FILE 2>/dev/null 
-		sed -i "/bind-address: \"${bind_addr}\"/a\mode: Rule" $TEMP_FILE 2>/dev/null
-		sed -i "/mode: Rule/a\log-level: ${log_level}" $TEMP_FILE 2>/dev/null 
+		sed -i "/bind-address: \"${bind_addr}\"/a\mode: ${p_mode}" $TEMP_FILE 2>/dev/null
+		sed -i "/mode: ${p_mode}/a\log-level: ${log_level}" $TEMP_FILE 2>/dev/null 
 		sed -i "/log-level: ${log_level}/a\external-controller: 0.0.0.0:${dash_port}" $TEMP_FILE 2>/dev/null 
 		sed -i "/external-controller: 0.0.0.0:${dash_port}/a\secret: \"${da_password}\"" $TEMP_FILE 2>/dev/null 
 		sed -i "/secret: \"${da_password}\"/a\external-ui: \"/usr/share/clash/dashboard\"" $TEMP_FILE 2>/dev/null 
 		sed -i "external-ui: \"/usr/share/clash/dashboard\"/a\  " $TEMP_FILE 2>/dev/null 
 		sed -i "   /a\   " $TEMP_FILE 2>/dev/null
 		else
-		sed -i "/allow-lan: ${allow_lan}/a\mode: Rule" $TEMP_FILE 2>/dev/null
-		sed -i "/mode: Rule/a\log-level: ${log_level}" $TEMP_FILE 2>/dev/null 
+		sed -i "/allow-lan: ${allow_lan}/a\mode: ${p_mode}" $TEMP_FILE 2>/dev/null
+		sed -i "/mode: ${p_mode}/a\log-level: ${log_level}" $TEMP_FILE 2>/dev/null 
 		sed -i "/log-level: ${log_level}/a\external-controller: 0.0.0.0:${dash_port}" $TEMP_FILE 2>/dev/null 
 		sed -i "/external-controller: 0.0.0.0:${dash_port}/a\secret: \"${da_password}\"" $TEMP_FILE 2>/dev/null 
 		sed -i "/secret: \"${da_password}\"/a\external-ui: \"/usr/share/clash/dashboard\"" $TEMP_FILE 2>/dev/null 
@@ -375,24 +376,42 @@ EOF
 cat $DNS_FILE >> $TEMP_FILE  2>/dev/null
 
 
+script=$(uci get clash.config.script 2>/dev/null)
+ruleprovider=$(uci get clash.config.rulprp 2>/dev/null)
+ppro=$(uci get clash.config.ppro 2>/dev/null)
+rul=$(uci get clash.config.rul 2>/dev/null)
 
+if [ $ppro -eq 1 ];then
 if [ -f $PROVIDER_FILE ];then 
 cat $PROVIDER_FILE >> $TEMP_FILE 2>/dev/null
 fi
-
-if [ -f $RULE_PROVIDER ];then
-cat $RULE_PROVIDER >> $TEMP_FILE  2>/dev/null
 fi
-
 
 if [ -f $GROUP_FILE ];then
 cat $GROUP_FILE >> $TEMP_FILE 2>/dev/null
 fi
 
+
+if [ $ruleprovider -eq 1 ];then
+if [ -f $RULE_PROVIDER ];then
+cat $RULE_PROVIDER >> $TEMP_FILE  2>/dev/null
+sed -i -e '$a\' $TEMP_FILE  2>/dev/null
+fi
+fi
+
+if [ $script -eq 1 ];then
+if [ -f $SCRIPT ];then
+cat $SCRIPT >> $TEMP_FILE  2>/dev/null
+sed -i -e '$a\' $TEMP_FILE  2>/dev/null
+fi
+fi
+
+
+if [ $rul -eq 1 ];then
 if [ -f $RULE_FILE ];then
 cat $RULE_FILE >> $TEMP_FILE 2>/dev/null
 fi
-
+fi
 
 mv $TEMP_FILE  $CONFIG_YAML 2>/dev/null
 
@@ -412,6 +431,7 @@ elif [ $lang == "zh_cn" ];then
     	echo "创建自定义配置完成..." >$REAL_LOG
 		sleep 2
 		echo "Clash for OpenWRT" >$REAL_LOG
+fi
 fi
 fi
 

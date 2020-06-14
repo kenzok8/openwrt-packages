@@ -634,20 +634,14 @@ yml_groups_set()
    echo "  type: $type" >>$GROUP_FILE 2>/dev/null 
    group_name="$name"
    echo "  proxies: " >>$GROUP_FILE
-
-   #if [ "$type" == "url-test" ] || [ "$type" == "load-balance" ] || [ "$type" == "fallback" ] ; then
-   #  echo "  proxies:" >>$GROUP_FILE 2>/dev/null 
-   #   cat $Proxy_Group >> $GROUP_FILE 2>/dev/null
-   #else
-   #  echo "  proxies:" >>$GROUP_FILE 2>/dev/null 
-   #fi       
+      
  
-   if [ "$name" != "$old_name" ]; then
-      sed -i "s/,${old_name}$/,${name}#d/g" $load 2>/dev/null
-      sed -i "s/:${old_name}$/:${name}#d/g" $load 2>/dev/null
-      sed -i "s/\'${old_name}\'/\'${name}\'/g" $CFG_FILE 2>/dev/null
-      config_load "clash"
-   fi
+   #if [ "$name" != "$old_name" ]; then
+   #   sed -i "s/,${old_name}$/,${name}#d/g" $load 2>/dev/null
+   #   sed -i "s/:${old_name}$/:${name}#d/g" $load 2>/dev/null
+   #   sed -i "s/\'${old_name}\'/\'${name}\'/g" $CFG_FILE 2>/dev/null
+   #   config_load "clash"
+   #fi
    
    set_group=0
    set_proxy_provider=0   
@@ -706,6 +700,7 @@ fi
 
 
 mode=$(uci get clash.config.mode 2>/dev/null)
+p_mode=$(uci get clash.config.p_mode 2>/dev/null)
 da_password=$(uci get clash.config.dash_pass 2>/dev/null)
 redir_port=$(uci get clash.config.redir_port 2>/dev/null)
 http_port=$(uci get clash.config.http_port 2>/dev/null)
@@ -715,8 +710,9 @@ bind_addr=$(uci get clash.config.bind_addr 2>/dev/null)
 allow_lan=$(uci get clash.config.allow_lan 2>/dev/null)
 log_level=$(uci get clash.config.level 2>/dev/null)
 subtype=$(uci get clash.config.subcri 2>/dev/null)
+DNS_FILE="/usr/share/clash/dns.yaml" 
+TEMP_FILE="/tmp/dns_temp.yaml"
 
-		
 cat >> "$TEMP_FILE" <<-EOF
 #config-start-here
 EOF
@@ -727,16 +723,16 @@ EOF
 		sed -i "/redir-port: ${redir_port}/a\allow-lan: ${allow_lan}" $TEMP_FILE 2>/dev/null 
 		if [ $allow_lan == "true" ];  then
 		sed -i "/allow-lan: ${allow_lan}/a\bind-address: \"${bind_addr}\"" $TEMP_FILE 2>/dev/null 
-		sed -i "/bind-address: \"${bind_addr}\"/a\mode: Rule" $TEMP_FILE 2>/dev/null
-		sed -i "/mode: Rule/a\log-level: ${log_level}" $TEMP_FILE 2>/dev/null 
+		sed -i "/bind-address: \"${bind_addr}\"/a\mode: ${p_mode}" $TEMP_FILE 2>/dev/null
+		sed -i "/mode: ${p_mode}/a\log-level: ${log_level}" $TEMP_FILE 2>/dev/null 
 		sed -i "/log-level: ${log_level}/a\external-controller: 0.0.0.0:${dash_port}" $TEMP_FILE 2>/dev/null 
 		sed -i "/external-controller: 0.0.0.0:${dash_port}/a\secret: \"${da_password}\"" $TEMP_FILE 2>/dev/null 
 		sed -i "/secret: \"${da_password}\"/a\external-ui: \"/usr/share/clash/dashboard\"" $TEMP_FILE 2>/dev/null 
 		sed -i "external-ui: \"/usr/share/clash/dashboard\"/a\  " $TEMP_FILE 2>/dev/null 
 		sed -i "   /a\   " $TEMP_FILE 2>/dev/null
 		else
-		sed -i "/allow-lan: ${allow_lan}/a\mode: Rule" $TEMP_FILE 2>/dev/null
-		sed -i "/mode: Rule/a\log-level: ${log_level}" $TEMP_FILE 2>/dev/null 
+		sed -i "/allow-lan: ${allow_lan}/a\mode: ${p_mode}" $TEMP_FILE 2>/dev/null
+		sed -i "/mode: ${p_mode}/a\log-level: ${log_level}" $TEMP_FILE 2>/dev/null 
 		sed -i "/log-level: ${log_level}/a\external-controller: 0.0.0.0:${dash_port}" $TEMP_FILE 2>/dev/null 
 		sed -i "/external-controller: 0.0.0.0:${dash_port}/a\secret: \"${da_password}\"" $TEMP_FILE 2>/dev/null 
 		sed -i "/secret: \"${da_password}\"/a\external-ui: \"/usr/share/clash/dashboard\"" $TEMP_FILE 2>/dev/null 

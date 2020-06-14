@@ -28,6 +28,10 @@ o.description = translate("Use Rule Provider")
 o = s:option(Flag, "rul", translate("Use Rules"))
 o.description = translate("Use Rules")
 
+o = s:option(Flag, "script", translate("Use Script"))
+o.description = translate("Use Script")
+
+
 o = s:option(Value, "name_tag")
 o.title = translate("Config Name")
 o.rmempty = true
@@ -100,7 +104,7 @@ end
 x = krk:section(TypedSection, "pgroups", translate("Policy Groups"))
 x.anonymous = true
 x.addremove = true
-x.sortable = false
+x.sortable = true
 x.template = "cbi/tblsection"
 x.extedit = luci.dispatcher.build_url("admin/services/clash/pgroups/%s")
 function x.create(...)
@@ -127,7 +131,7 @@ end
 z = krk:section(TypedSection, "proxyprovider", translate("Proxy Provider"))
 z.anonymous = true
 z.addremove = true
-z.sortable = false
+z.sortable = true
 z.template = "cbi/tblsection"
 z.extedit = luci.dispatcher.build_url("admin/services/clash/proxyprovider/%s")
 function z.create(...)
@@ -157,7 +161,7 @@ end
 r = krk:section(TypedSection, "ruleprovider", translate("Rule Provider"))
 r.anonymous = true
 r.addremove = true
-r.sortable = false
+r.sortable = true
 r.template = "cbi/tblsection"
 r.extedit = luci.dispatcher.build_url("admin/services/clash/ruleprovider/%s")
 function r.create(...)
@@ -217,7 +221,31 @@ function o.cfgvalue(...)
 end
 
 
+m = Map("clash")
+y = m:section(TypedSection, "clash" , translate("Script"))
+y.anonymous = true
+y.addremove=false
+m.pageaction = false
 
+local script="/usr/share/clash/provider/script.yaml"
+sev = y:option(TextValue, "scriptt")
+sev.description = translate("NB: Set Clash Mode to Script if want to use")
+sev.rows = 10
+sev.wrap = "off"
+sev.cfgvalue = function(self, section)
+	return NXFS.readfile(script) or ""
+end
+sev.write = function(self, section, value)
+	NXFS.writefile(script, value:gsub("\r\n", "\n"))
+end
 
-return krk
+o = y:option(Button,"Apply")
+o.inputtitle = translate("Save & Apply")
+o.inputstyle = "apply"
+o.write = function()
+  m.uci:commit("clash")
+  luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "providers"))
+end
+
+return krk,m
 

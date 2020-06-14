@@ -8,12 +8,12 @@
 	A rule based custom proxy for Openwrt based on <a href="https://github.com/Dreamacro/clash" target="_blank">Clash</a>.
   </p>
   <p align="center">
-  <a target="_blank" href="https://github.com/frainzy1477/luci-app-clash/releases/tag/v1.7.2">
-    <img src="https://img.shields.io/badge/luci%20for%20clash-v1.7.2-blue.svg"> 	  
+  <a target="_blank" href="https://github.com/frainzy1477/luci-app-clash/releases/tag/v1.7.3">
+    <img src="https://img.shields.io/badge/luci%20for%20clash-v1.7.3-blue.svg"> 	  
   </a>
-  <!-- <a href="https://github.com/frainzy1477/luci-app-clash/releases" target="_blank">
+  <a href="https://github.com/frainzy1477/luci-app-clash/releases" target="_blank">
         <img src="https://img.shields.io/github/downloads/frainzy1477/luci-app-clash/total.svg?style=flat-square"/>
-    </a>-->
+   </a>
   </p>
 
   
@@ -22,23 +22,30 @@
 
 - cd /tmp
 - opkg update
-- opkg install luci-app-clash_1.7.2_all.ipk  
-- opkg install luci-app-clash_1.7.2_all.ipk --force-depends
+- opkg install luci-app-clash_1.7.3_all.ipk  
+- opkg install luci-app-clash_1.7.3_all.ipk --force-depends
+
+ ## Uninstall
+- opkg remove luci-app-clash 
+- opkg remove luci-app-clash --force-remove
 
 ## Features
-
-- Support Manually config upload
+- Suport Subscription Config
+- Support Config Upload
+- Support Create Config
 - GeoIP Database Update
-- Iptables udp redirect
-- IP Query / Website Access Check
+- TProxy UDP
+- IP Query
 - DNS Forwarding
 - Support Trojan
 - Support SSR
-- Ping Custom proxy servers
-- Create v2ray & ssr clash config from subscription url
-- Create Custom Clash Config
+- Support V2ray
+- Ping Custom Proxy Servers
 - Tun Support
-- Support Proxy Provider,Game rules & Restore Config [Thanks to @vernesong ](https://github.com/vernesong/OpenClash)
+- Access Control
+- Support Provider,
+- Game Rules 
+- Auto Restore Config
 
 ## Dependency
 
@@ -57,14 +64,6 @@
 - jsonfilter
 - ca-certificates
 
-## Clash on Other Platforms
-
-- [Clash for Windows](https://github.com/Fndroid/clash_for_windows_pkg/releases) : A Windows GUI based on Clash
-- [clashX](https://github.com/yichengchen/clashX) : A rule based custom proxy with GUI for Mac base on clash
-- [ClashA](https://github.com/ccg2018/ClashA/tree/master) : An Android GUI for Clash
-- [ClashForAndroid](https://github.com/Kr328/ClashForAndroid) : Another Android GUI for Clash
-- [KoolClash OpenWrt/LEDE](https://github.com/SukkaW/Koolshare-Clash/tree/master) : A rule based custom proxy for Koolshare OpenWrt/LEDE based on Clash
-- [OpenClash](https://github.com/vernesong/OpenClash/tree/master) : Another Clash Client For OpenWrt
 ## License
 
 Luci For Clash - OpenWrt is released under the GPL v3.0 License - see detailed [LICENSE](https://github.com/frainzy1477/luci-app-clash/blob/master/LICENSE) .

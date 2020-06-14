@@ -8,7 +8,7 @@ local sid = arg[1]
 
 
 m = Map(clash, translate("Edit Group"))
---m.pageaction = false
+m.pageaction = false
 m.redirect = luci.dispatcher.build_url("admin/services/clash/config/providers")
 if m.uci:get(clash, sid) ~= "pgroups" then
 	luci.http.redirect(m.redirect)
@@ -60,11 +60,29 @@ o:value("DIRECT")
 o:value("REJECT")
 
 
+local t = {
+    {Apply, Return}
+}
 
-local apply = luci.http.formvalue("cbi.apply")
-if apply then
-    m.uci:commit(clash, sid) 
-    sys.call("sh /usr/share/clash/provider/pgroups.sh >/dev/null 2>&1 &")
+b = m:section(Table, t)
+
+o = b:option(Button,"Apply")
+o.inputtitle = translate("Save & Apply")
+o.inputstyle = "apply"
+o.write = function()
+  m.uci:commit("clash")
+  sys.call("/usr/share/clash/provider/pgroups.sh start >/dev/null 2>&1 &")
+  luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "providers"))
 end
+
+o = b:option(Button,"Return")
+o.inputtitle = translate("Back to Overview")
+o.inputstyle = "reset"
+o.write = function()
+   m.uci:revert(clash)
+   luci.http.redirect(m.redirect)
+  --luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "providers"))
+end
+
 
 return m

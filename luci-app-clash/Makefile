@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk 
 
 PKG_NAME:=luci-app-clash
-PKG_VERSION:=1.7.2
+PKG_VERSION:=1.7.3
 PKG_MAINTAINER:=frainzy1477
 
 
@@ -12,7 +12,7 @@ define Package/luci-app-clash
 	CATEGORY:=LuCI
 	SUBMENU:=2. Clash
 	TITLE:=LuCI app for clash
-	DEPENDS:=+luci +luci-base +wget +iptables +coreutils-base64 +coreutils +coreutils-nohup +bash +ipset +libustream-openssl +curl +jsonfilter +ca-certificates +iptables-mod-tproxy
+	DEPENDS:=+luci +luci-base +wget +iptables +coreutils-base64 +coreutils +coreutils-nohup +bash +ipset +libustream-openssl +curl +jsonfilter +ca-certificates +iptables-mod-tproxy +kmod-tun
 	PKGARCH:=all
 	MAINTAINER:=frainzy1477
 endef
@@ -128,7 +128,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_CONF) ./root/etc/config/clash $(1)/etc/config/clash
 	$(INSTALL_CONF) ./root/etc/clash/Country.mmdb $(1)/etc/clash/
 	$(INSTALL_CONF) ./root/etc/clash/ruleprovider/* $(1)/etc/clash/ruleprovider/
-	$(INSTALL_BIN) ./root/usr/share/clash/provider/*.sh $(1)/usr/share/clash/provider/
+	$(INSTALL_BIN) ./root/usr/share/clash/provider/* $(1)/usr/share/clash/provider/
 	$(INSTALL_BIN) ./root/usr/share/clash/*.sh $(1)/usr/share/clash/
 	$(INSTALL_BIN) ./root/usr/share/clash/dns.yaml $(1)/usr/share/clash/
 	$(INSTALL_BIN) ./root/usr/share/rpcd/acl.d/luci-app-clash.json $(1)/usr/share/rpcd/acl.d/	
