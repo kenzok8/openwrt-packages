@@ -271,12 +271,12 @@ config rules
 config rules
 	option type 'RULE-SET'
 	option rulename 'Netflix'
-	option rulegroups 'DIRECT'
+	option rulegroups 'Global'
 
 config rules
 	option type 'RULE-SET'
 	option rulename 'NetflixIP'
-	option rulegroups 'DIRECT'
+	option rulegroups 'Global'
 
 config rules
 	option type 'RULE-SET'
@@ -360,7 +360,7 @@ config rules
 
 config rules
 	option type 'GEOIP'
-	option rulenamee 'CN
+	option rulenamee 'CN'
 	option res '0'
 	option rulegroups 'DIRECT'
 	option rulename 'CN'
