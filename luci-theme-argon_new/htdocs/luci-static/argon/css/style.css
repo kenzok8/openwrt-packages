@@ -1894,7 +1894,10 @@ div>.table>.tbody>.tr:nth-of-type(2n) {
     content: "\e90c";
     color: #f3a4b5 !important;
 }
-
+.main>.main-left>.nav>.slide>.menu[data-title=Docker]:before {
+    content: "\e46b";
+    color: #232b5d !important;
+}
 .main>.main-left>.nav>.slide>.menu[data-title=VPN]:before {
     content: "\e90b";
     color: #172b4d !important;

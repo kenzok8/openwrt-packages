@@ -617,7 +617,10 @@ header > .container > a[class="brand"]:after {
     content: "\e01b";
     color: #11cdef!important;
 }
-
+.main > .main-left > .nav > .slide > a[data-title="Docker"]:before {
+    content: "\e02c";
+ color: #00b2ee!important;
+}
 .main > .main-left > .nav > .slide > a[data-title="NAS"]:before {
     content: "\e00b";
    color: #F1C40F!important;
