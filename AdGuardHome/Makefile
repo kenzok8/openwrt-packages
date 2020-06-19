@@ -7,8 +7,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=AdGuardHome
-PKG_VERSION:=v0.102
-PKG_RELEASE:=0
+PROJECT_NAME:=AdGuardHome
+PKG_VERSION:=v0.102.0
+PKG_RELEASE:=1
+
 
 ifeq ($(ARCH),x86_64)
 	PKG_ARCH_AdGuardHome:=linux_amd64
