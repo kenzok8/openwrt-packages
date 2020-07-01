@@ -28,6 +28,7 @@ o:value("DST-PORT", translate("DST-PORT"))
 o:value("SRC-PORT", translate("SRC-PORT"))
 o:value("SRC-IP-CIDR", translate("SRC-IP-CIDR"))
 o:value("IP-CIDR", translate("IP-CIDR"))
+o:value("IP-CIDR6", translate("IP-CIDR6"))
 o:value("DOMAIN", translate("DOMAIN"))
 o:value("DOMAIN-KEYWORD", translate("DOMAIN-KEYWORD"))
 o:value("DOMAIN-SUFFIX", translate("DOMAIN-SUFFIX"))
@@ -68,19 +69,13 @@ o:depends("type", "DOMAIN")
 o:depends("type", "DOMAIN-KEYWORD")
 o:depends("type", "DOMAIN-SUFFIX")
 o:depends("type", "GEOIP")
+o:depends("type", "IP-CIDR6")
 
 o = s:option(Flag, "res", translate("No Resolve"))
 o.default = 0
---o:value("RULE-SET", translate("RULE-SET"))
-o:depends("type", "DST-PORT")
-o:depends("type", "SRC-PORT")
-o:depends("type", "SRC-IP-CIDR")
 o:depends("type", "IP-CIDR")
-o:depends("type", "DOMAIN")
-o:depends("type", "DOMAIN-KEYWORD")
-o:depends("type", "DOMAIN-SUFFIX")
+o:depends("type", "IP-CIDR6")
 o:depends("type", "GEOIP")
-
 
 local t = {
     {Apply, Return}
@@ -93,7 +88,7 @@ o.inputtitle = translate("Save & Apply")
 o.inputstyle = "apply"
 o.write = function()
   m.uci:commit("clash")
-  sys.call("/usr/share/clash/provider/rules.sh start >/dev/null 2>&1 &")
+  sys.call("/usr/share/clash/create/rules.sh start >/dev/null 2>&1 &")
   luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "create"))
 end
 

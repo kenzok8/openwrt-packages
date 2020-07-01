@@ -31,6 +31,12 @@ o.datatype = "port"
 o.rmempty = false
 o.description = translate("Redir Port")
 
+o = s:option(Value, "mixed_port")
+o.title = translate("Mixed Port")
+o.default = 7893
+o.datatype = "port"
+o.rmempty = false
+o.description = translate("Mixed Port")
 
 o = s:option(ListValue, "allow_lan")
 o.title = translate("Allow Lan")
@@ -40,6 +46,13 @@ o:value("true", "true")
 o:value("false", "false")
 o.description = translate("Allow Lan")
 
+o = s:option(ListValue, "enable_ipv6")
+o.title = translate("Enable IPv6")
+o.default = false
+o.rmempty = false
+o:value("true", "true")
+o:value("false", "false")
+o.description = translate("Enable IPv6")
 
 o = s:option(Value, "bind_addr")
 o.title = translate("Bind Address")
@@ -60,7 +73,7 @@ o:depends("allow_lan", "true")
 
 o = s:option(Value, "dash_port")
 o.title = translate("Dashboard Port")
-o.default = 9191
+o.default = 9090
 o.datatype = "port"
 o.rmempty = false
 o.description = translate("Dashboard Port")
@@ -73,10 +86,10 @@ o.description = translate("Dashboard Secret")
 
 o = s:option(ListValue, "p_mode", translate("Proxy Mode"))
 o.description = translate("Choose proxy mode")
-o:value("Rule", translate("RULE"))
-o:value("Global", translate("GLOBAL"))
+o:value("rule", translate("RULE"))
+o:value("global", translate("GLOBAL"))
 o:value("Script", translate("SCRIPT"))
-o:value("Direct", translate("DIRECT"))
+o:value("direct", translate("DIRECT"))
 o.default = "Rule"
 
 o = s:option(ListValue, "level", translate("Log level"))

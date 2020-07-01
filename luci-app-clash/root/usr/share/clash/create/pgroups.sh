@@ -37,7 +37,7 @@ cfg_groups_set()
 }
 
 start(){
-status=$(ps|grep -c /usr/share/clash/provider/pgroups.sh)
+status=$(ps|grep -c /usr/share/clash/create/pgroups.sh)
 [ "$status" -gt "3" ] && exit 0
 
    config_load "clash"

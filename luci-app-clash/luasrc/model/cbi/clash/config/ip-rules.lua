@@ -27,9 +27,11 @@ o:value("DST-PORT", translate("DST-PORT"))
 o:value("SRC-PORT", translate("SRC-PORT"))
 o:value("SRC-IP-CIDR", translate("SRC-IP-CIDR"))
 o:value("IP-CIDR", translate("IP-CIDR"))
+o:value("IP-CIDR6", translate("IP-CIDR6"))
 o:value("DOMAIN", translate("DOMAIN"))
 o:value("DOMAIN-KEYWORD", translate("DOMAIN-KEYWORD"))
 o:value("DOMAIN-SUFFIX", translate("DOMAIN-SUFFIX"))
+o:value("GEOIP", translate("GEOIP"))
 
 
 o = s:option(ListValue, "pgroup", translate("Select Proxy Group"))
@@ -50,5 +52,8 @@ o.rmempty = false
 
 o = s:option(Flag, "res", translate("No Resolve"))
 o.default = 0
+o:depends("type", "IP-CIDR")
+o:depends("type", "IP-CIDR6")
+o:depends("type", "GEOIP")
 
 return m

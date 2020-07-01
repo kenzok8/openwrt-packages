@@ -26,8 +26,6 @@ o.description =''..font_red..bold_on..translate("Manually download, unzip and re
 .."<br />"
 ..translate("Dreamacro clash tun core (dtun) - (https://github.com/Dreamacro/clash/releases/tag/premium)")
 .."<br />"
-..translate("Dreamacro clash core (dtun)- (https://tmpclashpremiumbindary.cf/)")
-.."<br />"
 ..translate("comzyh clash tun core (ctun) - (https://github.com/comzyh/clash/releases)")
 .."<br />"
 ..translate("Dreamacro clash core - (https://github.com/Dreamacro/clash/releases)")
@@ -120,7 +118,7 @@ o.default = "clashcore"
 o:value("1", translate("Clash"))
 o:value("2", translate("Clashr"))
 o:value("3", translate("Clash(ctun)"))
-o:value("3", translate("Clash(dtun)"))
+o:value("4", translate("Clash(dtun)"))
 o.description = translate("Select core, clashr support ssr while clash does not.")
 
 

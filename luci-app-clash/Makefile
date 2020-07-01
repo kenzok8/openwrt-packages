@@ -1,9 +1,8 @@
 include $(TOPDIR)/rules.mk 
 
 PKG_NAME:=luci-app-clash
-PKG_VERSION:=1.7.3.3
+PKG_VERSION:=v1.7.5.3
 PKG_MAINTAINER:=frainzy1477
-
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -68,9 +67,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 	mv /usr/share/clash/config/sub/config.yaml /usr/share/clashbackup/config.bak1 2>/dev/null
 	mv /usr/share/clash/config/upload/config.yaml /usr/share/clashbackup/config.bak2 2>/dev/null
 	mv /usr/share/clash/config/custom/config.yaml /usr/share/clashbackup/config.bak3 2>/dev/null
-	mv /usr/share/clash/dns.yaml /usr/share/clashbackup/dns.bak 2>/dev/null
-	mv /usr/share/clash/tundns.yaml /usr/share/clashbackup/tundns.bak 2>/dev/null
-	mv /usr/share/clash/custom_rule.yaml /usr/share/clashbackup/custom_rule.bak 2>/dev/null
+	mv /usr/share/clash/rule.yaml /usr/share/clashbackup/rule.bak 2>/dev/null
 fi
 
 exit 0
@@ -85,9 +82,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 	mv /usr/share/clashbackup/config.bak1 /usr/share/clash/config/sub/config.yaml 2>/dev/null
 	mv /usr/share/clashbackup/config.bak2 /usr/share/clash/config/upload/config.yaml 2>/dev/null
 	mv /usr/share/clashbackup/config.bak3 /usr/share/clash/config/custom/config.yaml 2>/dev/null
-	mv /usr/share/clashbackup/dns.bak /usr/share/clash/dns.yaml 2>/dev/null
-	mv /usr/share/clashbackup/tundns.bak /usr/share/clash/tundns.yaml 2>/dev/null
-	mv /usr/share/clashbackup/custom_rule.bak /usr/share/clash/custom_rule.yaml 2>/dev/null
+	mv /usr/share/clashbackup/rule.bak /usr/share/clash/rule.yaml 2>/dev/null
 	/etc/init.d/clash disable 2>/dev/null
 fi
 
@@ -98,6 +93,15 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash/config
+	
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash/dns
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash/client
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash/filter
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash/game
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash/geoip
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash/logs
+	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/clash/update
+	
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/clash
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -118,7 +122,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/clash/dtun
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/usr/share/clashbackup
-	$(INSTALL_DIR) $(1)/usr/share/clash/provider
+	$(INSTALL_DIR) $(1)/usr/share/clash/create
 	$(INSTALL_DIR) $(1)/etc/clash/provider
 	$(INSTALL_DIR) $(1)/etc/clash/proxyprovider
 	$(INSTALL_DIR) $(1)/etc/clash/ruleprovider
@@ -131,15 +135,13 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_BIN) 	./root/etc/init.d/clash $(1)/etc/init.d/clash
 	$(INSTALL_CONF) ./root/etc/config/clash $(1)/etc/config/clash
 	$(INSTALL_CONF) ./root/etc/clash/Country.mmdb $(1)/etc/clash
-	$(INSTALL_BIN) ./root/usr/share/clash/provider/* $(1)/usr/share/clash/provider
+	$(INSTALL_BIN) ./root/usr/share/clash/create/* $(1)/usr/share/clash/create
 	$(INSTALL_BIN) ./root/usr/share/clash/*.sh $(1)/usr/share/clash
-	$(INSTALL_BIN) ./root/usr/share/clash/dns.yaml $(1)/usr/share/clash
 	$(INSTALL_BIN) ./root/usr/share/rpcd/acl.d/luci-app-clash.json $(1)/usr/share/rpcd/acl.d
 	$(INSTALL_BIN) ./root/usr/share/clash/rules/g_rules/Steam.rules $(1)/usr/share/clash/rules/g_rules
 	$(INSTALL_BIN) ./root//usr/share/clash/rules/rules.list $(1)/usr/share/clash/rules
 
-	$(INSTALL_BIN) ./root/usr/share/clash/tundns.yaml $(1)/usr/share/clash
-	$(INSTALL_BIN) ./root/usr/share/clash/custom_rule.yaml $(1)/usr/share/clash
+	$(INSTALL_BIN) ./root/usr/share/clash/rule.yaml $(1)/usr/share/clash
 	
 	$(INSTALL_BIN) ./root/usr/share/clash/luci_version $(1)/usr/share/clash
 	$(INSTALL_BIN) ./root/usr/share/clash/server.list $(1)/usr/share/clash
@@ -148,16 +150,23 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_BIN) ./root/usr/share/clash/clash.txt $(1)/usr/share/clash
 	
 	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/index.html $(1)/etc/clash/dashboard
-	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/main.24f6f4760d8c66faaa74.css $(1)/etc/clash/dashboard
+	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/main.4563da698059d88c08dc.css $(1)/etc/clash/dashboard
 	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/img/ffac0fa1d89f15922b4594863b8b32e9.png $(1)/etc/clash/dashboard/img
-	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/js/1.bundle.24f6f4760d8c66faaa74.min.js $(1)/etc/clash/dashboard/js
-	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/js/bundle.24f6f4760d8c66faaa74.min.js $(1)/etc/clash/dashboard/js
+	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/js/1.bundle.4563da698059d88c08dc.min.js $(1)/etc/clash/dashboard/js
+	$(INSTALL_BIN) ./root/usr/share/clash/dashboard/js/bundle.4563da698059d88c08dc.min.js $(1)/etc/clash/dashboard/js
 	$(INSTALL_BIN) ./root/usr/share/clash/yacd/* $(1)/usr/share/clash/yacd
 	
 	$(INSTALL_DATA) ./luasrc/clash.lua $(1)/usr/lib/lua/luci
 	$(INSTALL_DATA) ./luasrc/controller/*.lua $(1)/usr/lib/lua/luci/controller
 	$(INSTALL_DATA) ./luasrc/model/cbi/clash/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash
 	$(INSTALL_DATA) ./luasrc/model/cbi/clash/config/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash/config
+	$(INSTALL_DATA) ./luasrc/model/cbi/clash/client/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash/client
+	$(INSTALL_DATA) ./luasrc/model/cbi/clash/dns/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash/dns
+	$(INSTALL_DATA) ./luasrc/model/cbi/clash/filter/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash/filter
+	$(INSTALL_DATA) ./luasrc/model/cbi/clash/game/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash/game
+	$(INSTALL_DATA) ./luasrc/model/cbi/clash/geoip/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash/geoip
+	$(INSTALL_DATA) ./luasrc/model/cbi/clash/logs/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash/logs
+	$(INSTALL_DATA) ./luasrc/model/cbi/clash/update/*.lua $(1)/usr/lib/lua/luci/model/cbi/clash/update
 	$(INSTALL_DATA) ./luasrc/view/clash/* $(1)/usr/lib/lua/luci/view/clash
 	$(INSTALL_DATA) ./po/zh-cn/clash.zh-cn.lmo $(1)/usr/lib/lua/luci/i18n
 endef

@@ -1,15 +1,14 @@
 <h2 align="center">
  <img src="https://cdn.jsdelivr.net/gh/Dreamacro/clash/docs/logo.png" alt="Clash" width="200">
   <br>Luci For Clash <br>
-
 </h2>
 
   <p align="center">
 	A rule based custom proxy for Openwrt based on <a href="https://github.com/Dreamacro/clash" target="_blank">Clash</a>.
   </p>
   <p align="center">
-  <a target="_blank" href="https://github.com/frainzy1477/luci-app-clash/releases/tag/v1.7.3.3">
-    <img src="https://img.shields.io/badge/luci%20for%20clash-v1.7.3.3-blue.svg"> 	  
+  <a target="_blank" href="https://github.com/frainzy1477/luci-app-clash/releases/tag/v1.7.5.3">
+    <img src="https://img.shields.io/badge/luci%20for%20clash-v1.7.5.3-blue.svg"> 	  
   </a>
   <a href="https://github.com/frainzy1477/luci-app-clash/releases" target="_blank">
         <img src="https://img.shields.io/github/downloads/frainzy1477/luci-app-clash/total.svg?style=flat-square"/>
@@ -21,8 +20,8 @@
 - Upload ipk file to tmp folder
 - cd /tmp
 - opkg update
-- opkg install luci-app-clash_1.7.3.3_all.ipk  
-- opkg install luci-app-clash_1.7.3.3_all.ipk --force-depends
+- opkg install luci-app-clash_v1.7.5.3_all.ipk  
+- opkg install luci-app-clash_v1.7.5.3_all.ipk --force-depends
 
  ## Uninstall
 - opkg remove luci-app-clash 

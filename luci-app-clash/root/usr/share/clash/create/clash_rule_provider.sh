@@ -2,10 +2,10 @@
 
    RULE_FILE_NAME="$1" 
 
-   if [ -z "$(grep ",$RULE_FILE_NAME" /usr/share/clash/provider/rule_provider.list 2>/dev/null)" ]; then
-      DOWNLOAD_PATH=$(grep -F "$RULE_FILE_NAME" /usr/share/clash/provider/rule_provider.list |awk -F ',' '{print $3$4}' 2>/dev/null)
+   if [ -z "$(grep ",$RULE_FILE_NAME" /usr/share/clash/create/rule_provider.list 2>/dev/null)" ]; then
+      DOWNLOAD_PATH=$(grep -F "$RULE_FILE_NAME" /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $3$4}' 2>/dev/null)
    else
-      DOWNLOAD_PATH=$(grep -F ",$RULE_FILE_NAME" /usr/share/clash/provider/rule_provider.list |awk -F ',' '{print $3$4}' 2>/dev/null)
+      DOWNLOAD_PATH=$(grep -F ",$RULE_FILE_NAME" /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $3$4}' 2>/dev/null)
    fi
    
    RULE_FILE_DIR="/etc/clash/ruleprovider/$RULE_FILE_NAME"
@@ -14,8 +14,8 @@
    REAL_LOG="/usr/share/clash/clash_real.txt"
    
    url="https://raw.githubusercontent.com/$DOWNLOAD_PATH"
-   behavior=$(grep -F $RULE_FILE_NAME /usr/share/clash/provider/rule_provider.list |awk -F ',' '{print $2}' 2>/dev/null)
-   namee=$(grep -F ",$RULE_FILE_NAME" /usr/share/clash/provider/rule_provider.list |awk -F ',' '{print $4}' | awk -F '.' '{print $1}' 2>/dev/null)
+   behavior=$(grep -F $RULE_FILE_NAME /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $2}' 2>/dev/null)
+   namee=$(grep -F ",$RULE_FILE_NAME" /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $4}' | awk -F '.' '{print $1}' 2>/dev/null)
    path="./ruleprovider/"$RULE_FILE_NAME""
    
    curl -sL --connect-timeout 5 --retry 2 https://raw.githubusercontent.com/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" >/dev/null 2>&1

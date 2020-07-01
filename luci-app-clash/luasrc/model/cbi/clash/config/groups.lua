@@ -77,7 +77,7 @@ o.inputtitle = translate("Save & Apply")
 o.inputstyle = "apply"
 o.write = function()
   m.uci:commit("clash")
-  sys.call("/usr/share/clash/provider/pgroups.sh start >/dev/null 2>&1 &")
+  sys.call("/usr/share/clash/create/pgroups.sh start >/dev/null 2>&1 &")
   luci.http.redirect(luci.dispatcher.build_url("admin", "services", "clash", "config", "create"))
 end
 

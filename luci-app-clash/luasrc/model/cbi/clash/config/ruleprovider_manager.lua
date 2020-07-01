@@ -31,7 +31,7 @@ o.write = function()
 end
 
 
-sys.call("awk -F ',' '{print $4}' /usr/share/clash/provider/rule_provider.list > /tmp/rule_providers 2>/dev/null")
+sys.call("awk -F ',' '{print $4}' /usr/share/clash/create/rule_provider.list > /tmp/rule_providers 2>/dev/null")
 file = io.open("/tmp/rule_providers", "r");
 local e={},a,o,t
 a=nixio.fs.access("/tmp/rule_providers")
@@ -44,11 +44,11 @@ e[t]={}
 e[t].num=string.format(t)
 
 
-e[t].name=string.sub(luci.sys.exec(string.format("grep -F ',%s' /usr/share/clash/provider/rule_provider.list |awk -F ',' '{print $1}' 2>/dev/null",o)),1,-2)
+e[t].name=string.sub(luci.sys.exec(string.format("grep -F ',%s' /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $1}' 2>/dev/null",o)),1,-2)
 
-e[t].behaviour=string.sub(luci.sys.exec(string.format("grep -F ',%s' /usr/share/clash/provider/rule_provider.list |awk -F ',' '{print $2}' 2>/dev/null",o)),1,-2)
+e[t].behaviour=string.sub(luci.sys.exec(string.format("grep -F ',%s' /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $2}' 2>/dev/null",o)),1,-2)
 
-e[t].filename=string.sub(luci.sys.exec(string.format("grep -F '%s,' /usr/share/clash/provider/rule_provider.list |awk -F ',' '{print $4}' 2>/dev/null",o)),1,-2)
+e[t].filename=string.sub(luci.sys.exec(string.format("grep -F '%s,' /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $4}' 2>/dev/null",o)),1,-2)
 
 if e[t].filename == "" then
 e[t].filename=o

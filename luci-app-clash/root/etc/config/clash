@@ -31,4 +31,93 @@ config clash 'config'
 	option enable_udp '0'
 	option ping_enable '1'
 	option dnscache '0'
+	option stack 'system'
+	option enhanced_mode 'fake-ip'
+	option fake_ip_range '198.18.0.1/16'
+	list fake_ip_filter '*.lan'
+	list fake_ip_filter 'localhost.ptlogin2.qq.com'
+	list defaul_nameserver '114.114.114.114'
+	list defaul_nameserver '8.8.8.8'
+	option listen_port '5300'
+	option interf '0'
 
+
+config dnshijack
+	option enabled '1'
+	option ip '8.8.8.8'
+	option port '53'
+	option type 'tcp://'
+
+config dnshijack
+	option enabled '1'
+	option ip '8.8.8.8'
+	option port '53'
+	option type 'udp://'
+	
+config hosts
+	option enabled '1'
+	option adress '*.clash.dev'
+	option ip '127.0.0.1'
+	
+config hosts
+	option enabled '1'
+	option adress 'alpha.clash.dev'
+	option ip '::1'
+
+config dnsservers
+	option enabled '1'
+	option ser_type 'nameserver'
+	option ser_address '114.114.114.114'
+	option protocol 'udp://'
+
+config dnsservers
+	option enabled '1'
+	option ser_port '853'
+	option protocol 'tls://'
+	option ser_type 'nameserver'
+	option ser_address '47.96.179.163'
+
+config dnsservers
+	option enabled '1'
+	option ser_type 'nameserver'
+	option ser_address '118.89.110.78'
+	option ser_port '853'
+	option protocol 'tls://'
+
+config dnsservers
+	option enabled '1'
+	option ser_type 'nameserver'
+	option ser_address '8.8.8.8'
+	option ser_port '53'
+	option protocol 'udp://'
+
+config dnsservers
+	option enabled '1'
+	option ser_type 'nameserver'
+	option ser_address '1.1.1.1'
+	option ser_port '853'
+	option protocol 'tls://'
+
+config dnsservers
+	option enabled '1'
+	option ser_type 'fallback'
+	option ser_address '114.114.114.114'
+	option protocol 'udp://'
+
+config dnsservers
+	option enabled '1'
+	option ser_type 'fallback'
+	option ser_address '118.89.110.78'
+	option ser_port '853'
+	option protocol 'tls://'
+
+config dnsservers
+	option enabled '1'
+	option ser_type 'fallback'
+	option ser_address '1.1.1.1'
+	option protocol 'tcp://'
+
+config authentication
+	option enabled '0'
+	option username 'user'
+	option password '12345'
