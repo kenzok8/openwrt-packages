@@ -11,7 +11,7 @@ PORT=$(uci get clash.config.dash_port 2>/dev/null)
 
 curl -m 5 --retry 2 -w %{http_code}"\n" -H "Authorization: Bearer ${SECRET}" -H "Content-Type:application/json" -X GET http://"$LAN_IP":"$PORT"/proxies > "$CURL_CACHE" 2>/dev/null
 if [ "$(sed -n '$p' "$CURL_CACHE" 2>/dev/null)" = "200" ]; then
-   mkdir -p /etc/openclash/history 2>/dev/null
+   mkdir -p $HISTORY_PATH 2>/dev/null
    cat "$CURL_CACHE" |jsonfilter -e '@["proxies"][@.type="Selector"]["name"]' > "$CURL_GROUP_CACHE" 2>/dev/null
    cat "$CURL_CACHE" |jsonfilter -e '@["proxies"][@.type="Selector"]["now"]' > "$CURL_NOW_CACHE" 2>/dev/null
    awk 'NR==FNR{a[i]=$0;i++}NR>FNR{print a[j]"#*#"$0;j++}' "$CURL_GROUP_CACHE" "$CURL_NOW_CACHE" > "$HISTORY_PATH" 2>/dev/null

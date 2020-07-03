@@ -311,11 +311,12 @@ o.rmempty = true
 o:depends("type", "trojan")
 
 -- [[ alpn ]]--
-o = s:option(DynamicList, "alpn", translate("alpn"))
-o.default = "http/1.1"
-o:value("h2")
-o:value("http/1.1")
+o = s:option(Flag, "alpn_h2", translate("alpn-h2"))
 o:depends("type", "trojan")
+
+o = s:option(Flag, "alpn_http", translate("alpn-http/1.1"))
+o:depends("type", "trojan")
+
 
 local apply = luci.http.formvalue("cbi.apply")
 if apply then

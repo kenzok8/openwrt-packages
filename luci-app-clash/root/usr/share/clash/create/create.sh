@@ -242,15 +242,7 @@ set_provider_groups()
 
 }
 
-set_alpn()
-{
-   if [ -z "$1" ]; then
-      return
-   fi
-cat >> "$SERVER_FILE" <<-EOF
-    - $1
-EOF
-}
+
 
 scount=$( grep -c "config servers" $CFG_FILE 2>/dev/null)
 
@@ -286,7 +278,8 @@ servers_set()
    config_get "psk" "$section" "psk" ""
    config_get "obfs_snell" "$section" "obfs_snell" ""
    config_get "sni" "$section" "sni" ""
-   config_get "alpn" "$section" "alpn" ""
+   config_get "alpn_h2" "$section" "alpn_h2" ""
+   config_get "alpn_http" "$section" "alpn_http" ""
    config_get "http_path" "$section" "http_path" ""
    config_get "keep_alive" "$section" "keep_alive" ""
    config_get "servername" "$section" "servername" ""
@@ -447,12 +440,24 @@ cat >> "$SERVER_FILE" <<-EOF
   sni: $sni
 EOF
 fi
-if [ ! -z "$alpn" ]; then
+
+if [ "$alpn_h2" == "1" ] || [ "$alpn_http" == "1" ]; then
 cat >> "$SERVER_FILE" <<-EOF
   alpn:
 EOF
-config_list_foreach "$section" "alpn" set_alpn
+if [ "$alpn_h2" == "1" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    - h2
+EOF
 fi
+if [ "$alpn_http" == "1" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    - http/1.1
+EOF
+fi
+
+fi
+
 if [ "$skip_cert_verify" = "true" ] && [ "$type" = "trojan" ]; then
 cat >> "$SERVER_FILE" <<-EOF
   skip-cert-verify: true

@@ -34,7 +34,6 @@ function index()
 	entry({"admin", "services", "clash", "settings"}, firstchild(),_("Settings"), 40)
 	entry({"admin", "services", "clash", "settings", "port"},cbi("clash/dns/port"),_("Proxy Ports"), 60).leaf = true
 	entry({"admin", "services", "clash", "settings", "geoip"},cbi("clash/geoip/geoip"),_("Update GeoIP"), 80).leaf = true
-	entry({"admin", "services", "clash", "settings", "list"},cbi("clash/filter/list"),_("Filter List"), 90).leaf = true
 	entry({"admin", "services", "clash", "settings", "grules"},cbi("clash/game/game-settings"),_("Game Rules"), 91).dependent = false
     entry({"admin", "services", "clash", "g-rules"},cbi("clash/game/game-rule"), nil).leaf = true
 	entry({"admin", "services", "clash", "settings", "other"},cbi("clash/other"),_("Other Settings"), 92).leaf = true

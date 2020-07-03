@@ -209,6 +209,7 @@ check(){
 	   sed -i 's/^proxy-provider:/proxy-providers:/g' "$CONFIG_YAML"
 	   sed -i 's/^Proxy:/proxies:/g' "$CONFIG_YAML"
 	   sed -i 's/^Rule:/rules:/g' "$CONFIG_YAML"
+	   sed -i 's/^rule-provider:/rule-providers:/g' "$CONFIG_YAML"
 
 }
 
@@ -218,7 +219,7 @@ rules(){
 		dns_port=$(grep listen: $CONFIG_YAML |awk -F ':' '{print $3}' |tr -cd "[0-9]")
 		redir_port=$(uci get clash.config.redir_port 2>/dev/null)
 		#fake_ip_range=$(uci get clash.config.fake_ip_range 2>/dev/null)		
-		ipv6=$(uci get clash.config.ipv6 2>/dev/null)
+		ipv6=$(uci get clash.config.enable_ipv6 2>/dev/null)
 		core=$(uci get clash.config.core 2>/dev/null)
 		tun_mode=$(uci get clash.config.tun_mode 2>/dev/null)
 		#lan_ip=$(uci get network.lan.ipaddr 2>/dev/null |awk -F '/' '{print $1}' 2>/dev/null)
@@ -339,7 +340,7 @@ rules(){
 		   fi
    
    
-			if [ "${ipv6}" -eq 1 ]; then	
+			if [ "${ipv6}" == "true" ]; then	
 					  ip6tables -t nat -N clash
 					  if [ -n "${ip6}" ]; then
 						 for lan_ip6s in $ip6; do
@@ -526,7 +527,7 @@ if  [  -f $CONFIG_YAML ] && [ "$(ls -l $CONFIG_YAML|awk '{print int($5)}')" -ne 
 
 	fi
 
-	if [ ! -z "$(egrep '^ {0,}rule-providers:' "/etc/clash/config.yaml")" ] && [ "${core}" -ne 4 ];then
+	if [ ! -z "$(egrep '^ {0,}rule-providers:' "/etc/clash/config.yaml")" ] && [ "$(uci get clash.config.core)" -ne 4 ];then
 		
 		if [ -f /etc/clash/dtun/clash ];then
 		uci set clash.config.core="4" && uci commit clash
@@ -544,7 +545,7 @@ if  [  -f $CONFIG_YAML ] && [ "$(ls -l $CONFIG_YAML|awk '{print int($5)}')" -ne 
 		fi
 	fi
 	
-	if [ ! -z "$(egrep '^ {0,}script:' "/etc/clash/config.yaml")" ] && [ "${core}" -ne 4 ];then
+	if [ ! -z "$(egrep '^ {0,}script:' "/etc/clash/config.yaml")" ] && [ "$(uci get clash.config.core)" -ne 4 ];then
 		if [ -f /etc/clash/dtun/clash ];then
 		uci set clash.config.core="4" && uci commit clash
 		sleep 1
@@ -614,10 +615,10 @@ if  [  -f $CONFIG_YAML ] && [ "$(ls -l $CONFIG_YAML|awk '{print int($5)}')" -ne 
 	
 	game_rules >/dev/null 2>&1
 	
-       ip_rules >/dev/null 2>&1
+    ip_rules >/dev/null 2>&1
 	
         
-        if [ "$(uci get clash.config.core)" -eq 1 ];then
+    if [ "$(uci get clash.config.core)" -eq 1 ];then
         	nohup $CLASH -d "$CLASH_CONFIG" > /usr/share/clash/clash.txt 2>&1 &	
 		
 		if [ "${lang}" == "en" ] || [ $lang == "auto" ];then
@@ -735,7 +736,7 @@ remove_mark(){
 		rm -rf /var/etc/clash.include 2>/dev/null
 		
 		core=$(uci get clash.config.core 2>/dev/null)
-		ipv6=$(uci get clash.config.ipv6 2>/dev/null)
+		ipv6=$(uci get clash.config.enable_ipv6 2>/dev/null)
 		dns_port=$(grep "^ \{0,\}listen:" $CONFIG_YAML |awk -F ':' '{print $3}' 2>/dev/null)
 		PROXY_FWMARK="0x162" 2>/dev/null
 		PROXY_ROUTE_TABLE="0x162" 2>/dev/null
@@ -779,7 +780,7 @@ remove_mark(){
 		iptables -t nat -D PREROUTING -p tcp --dport 53 -j ACCEPT >/dev/null 2>&1
 		iptables -t nat -D PREROUTING -p udp --dport 53 -j DNAT --to "127.0.0.1:$dns_port"
 
-		if [ "${ipv6}" -eq 1 ]; then
+		if [ "${ipv6}" == "true" ]; then
 		ip6tables -t mangle -D PREROUTING -j MARK --set-mark "$PROXY_FWMARK" 2>/dev/null
 		fi
 
@@ -893,7 +894,7 @@ stop(){
 		
 		lang=$(uci get luci.main.lang 2>/dev/null)
 		tun_mode=$(uci get clash.config.tun_mode 2>/dev/null)
-		ipv6=$(uci get clash.config.ipv6 2>/dev/null)
+		#ipv6=$(uci get clash.config.enable_ipv6 2>/dev/null)
 		core=$(uci get clash.config.core 2>/dev/null)
 		LIST="/usr/share/clash/server.list"
 

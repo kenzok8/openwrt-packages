@@ -2,7 +2,8 @@ config clash 'config'
 	option redir_port '7892'
 	option http_port '7890'
 	option socks_port '7891'
-	option mode '0'
+	option mixed_port '7893'
+	option enable_ipv6 'false'
 	option tun_mode '0'
 	option enable '0'
 	option dash_port '9090'
@@ -15,21 +16,16 @@ config clash 'config'
 	option bind_addr '*'
 	option dnsforwader '1'
 	option subcri 'clash'
-	option cus_list '1'
-	option custom_dns '114.114.114.114'
 	option cusrule '0'
-	option loadservers '1'
-	option loadgroups '1'
 	option dnscache '0'	
 	option config_type '1'
-	option p_mode 'Rule'
+	option p_mode 'rule'
 	option auto_clear_log '1'
 	option auto_update '1'
 	option auto_update_time '12'
 	option clear_time '12'
 	option append_rules '0'
 	option enable_udp '0'
-	option ping_enable '1'
 	option dnscache '0'
 	option stack 'system'
 	option enhanced_mode 'fake-ip'
@@ -40,6 +36,7 @@ config clash 'config'
 	list defaul_nameserver '8.8.8.8'
 	option listen_port '5300'
 	option interf '0'
+	option enable_dns '1'
 
 
 config dnshijack
@@ -55,12 +52,12 @@ config dnshijack
 	option type 'udp://'
 	
 config hosts
-	option enabled '1'
+	option enabled '0'
 	option adress '*.clash.dev'
 	option ip '127.0.0.1'
 	
 config hosts
-	option enabled '1'
+	option enabled '0'
 	option adress 'alpha.clash.dev'
 	option ip '::1'
 
@@ -117,7 +114,3 @@ config dnsservers
 	option ser_address '1.1.1.1'
 	option protocol 'tcp://'
 
-config authentication
-	option enabled '0'
-	option username 'user'
-	option password '12345'
