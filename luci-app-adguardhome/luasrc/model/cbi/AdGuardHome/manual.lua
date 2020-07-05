@@ -8,7 +8,13 @@ require("table")
 function gen_template_config()
 	local b
 	local d=""
-	for cnt in io.lines("/tmp/resolv.conf.auto") do
+	local file="/tmp/resolv.conf.d/resolv.conf.auto"
+	local f1 = io.open(file,"r")
+	if f1 then f1:close()
+	else file = "/tmp/resolv.conf.auto"
+	end
+
+	for cnt in io.lines(file) do
 		b=string.match (cnt,"^[^#]*nameserver%s+([^%s]+)$")
 		if (b~=nil) then
 			d=d.."  - "..b.."\n"
