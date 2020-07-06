@@ -40,8 +40,8 @@ ifit 是一款基于luci-theme-material构建的，使用HTML5、CSS3编写的Lu
 
 屏幕截图
 ----------------
-![](screenshots/tes-38.png)
-![](screenshots/tes-39.png)
-![](screenshots/tes-40.png)
-![](screenshots/tes-41.png)
-![](screenshots/tes-42.png)
+![](screenshots/tes-38.jpg)
+![](screenshots/tes-39.jpg)
+![](screenshots/tes-40.jpg)
+![](screenshots/tes-41.jpg)
+![](screenshots/tes-42.jpg)
