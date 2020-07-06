@@ -160,25 +160,27 @@ do
 			local node_id = node[".name"]
 			local nodes = {}
 			local new_nodes = {}
-			for k, v in pairs(node.v2ray_balancing_node) do
-				local node = v
-				local currentNode
-				if node then
-					currentNode = ucic2:get_all(application, node)
-				end
-				nodes[#nodes + 1] = {
-					log = false,
-					node = node,
-					currentNode = currentNode,
-					remarks = node,
-					set = function(server)
-						for kk, vv in pairs(CONFIG) do
-							if (vv.remarks == "V2ray负载均衡节点列表" .. node_id) then
-								table.insert(vv.new_nodes, server)
+			if node.v2ray_balancing_node then
+				for k, v in pairs(node.v2ray_balancing_node) do
+					local node = v
+					local currentNode
+					if node then
+						currentNode = ucic2:get_all(application, node)
+					end
+					nodes[#nodes + 1] = {
+						log = false,
+						node = node,
+						currentNode = currentNode,
+						remarks = node,
+						set = function(server)
+							for kk, vv in pairs(CONFIG) do
+								if (vv.remarks == "V2ray负载均衡节点列表" .. node_id) then
+									table.insert(vv.new_nodes, server)
+								end
 							end
 						end
-					end
-				}
+					}
+				end
 			end
 			CONFIG[#CONFIG + 1] = {
 				remarks = "V2ray负载均衡节点列表" .. node_id,
@@ -554,25 +556,23 @@ local function select_node(nodes, config)
 				end
 			end
 		end
-		-- 第一优先级 IP + 端口
+		-- 第一优先级 cfgid
+		if not server then
+			for id, node in pairs(nodes) do
+				if id == config.currentNode['.name'] then
+					if config.log == nil or config.log == true then
+						log('选择【' .. config.remarks .. '】第一匹配节点：' .. node.remarks)
+					end
+					server = id
+					break
+				end
+			end
+		end
+		-- 第二优先级 IP + 端口
 		if not server then
 			for id, node in pairs(nodes) do
 				if node.address and node.port then
 					if node.address .. ':' .. node.port == config.currentNode.address .. ':' .. config.currentNode.port then
-						if config.log == nil or config.log == true then
-							log('选择【' .. config.remarks .. '】第一匹配节点：' .. node.remarks)
-						end
-						server = id
-						break
-					end
-				end
-			end
-		end
-		-- 第二优先级 IP
-		if not server then
-			for id, node in pairs(nodes) do
-				if node.address then
-					if node.address == config.currentNode.address then
 						if config.log == nil or config.log == true then
 							log('选择【' .. config.remarks .. '】第二匹配节点：' .. node.remarks)
 						end
@@ -582,11 +582,11 @@ local function select_node(nodes, config)
 				end
 			end
 		end
-		-- 第三优先级备注
+		-- 第三优先级 IP
 		if not server then
 			for id, node in pairs(nodes) do
-				if node.remarks then
-					if node.remarks == config.currentNode.remarks then
+				if node.address then
+					if node.address == config.currentNode.address then
 						if config.log == nil or config.log == true then
 							log('选择【' .. config.remarks .. '】第三匹配节点：' .. node.remarks)
 						end
@@ -596,15 +596,17 @@ local function select_node(nodes, config)
 				end
 			end
 		end
-		-- 第四 cfgid
+		-- 第四优先级备注
 		if not server then
 			for id, node in pairs(nodes) do
-				if id == config.currentNode['.name'] then
-					if config.log == nil or config.log == true then
-						log('选择【' .. config.remarks .. '】第四匹配节点：' .. node.remarks)
+				if node.remarks then
+					if node.remarks == config.currentNode.remarks then
+						if config.log == nil or config.log == true then
+							log('选择【' .. config.remarks .. '】第四匹配节点：' .. node.remarks)
+						end
+						server = id
+						break
 					end
-					server = id
-					break
 				end
 			end
 		end
