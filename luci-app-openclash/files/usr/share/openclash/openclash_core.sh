@@ -23,24 +23,26 @@ case $CORE_TYPE in
 	"Tun")
    CORE_CV=$(/etc/openclash/core/clash_tun -v 2>/dev/null |awk -F ' ' '{print $2}')
    CORE_LV=$(sed -n 2p /tmp/clash_last_version 2>/dev/null)
-   if [ "$en_mode" = "fake-ip-tun" ] || [ "$en_mode" = "redir-host-tun" ] || [ -z "$(pidof clash)" ]; then
+   if [ "$en_mode" = "fake-ip-tun" ] || [ "$en_mode" = "redir-host-tun" ]; then
       if_restart=1
    fi
    ;;
 	"Game")
    CORE_CV=$(/etc/openclash/core/clash_game -v 2>/dev/null |awk -F ' ' '{print $2}')
    CORE_LV=$(sed -n 3p /tmp/clash_last_version 2>/dev/null)
-   if [ "$en_mode" = "fake-ip-vpn" ] || [ "$en_mode" = "redir-host-vpn" ] || [ -z "$(pidof clash)" ]; then
+   if [ "$en_mode" = "fake-ip-vpn" ] || [ "$en_mode" = "redir-host-vpn" ]; then
       if_restart=1
    fi
    ;;
    *)
    CORE_CV=$(/etc/openclash/core/clash -v 2>/dev/null |awk -F ' ' '{print $2}')
    CORE_LV=$(sed -n 1p /tmp/clash_last_version 2>/dev/null)
-   if [ "$en_mode" = "fake-ip" ] || [ "$en_mode" = "redir-host" ] || [ -z "$(pidof clash)" ]; then
+   if [ "$en_mode" = "fake-ip" ] || [ "$en_mode" = "redir-host" ]; then
       if_restart=1
    fi
 esac
+
+[ -z "$(pidof clash)" ] && if_restart=0
 
 if [ "$CORE_CV" != "$CORE_LV" ] || [ -z "$CORE_CV" ]; then
    if [ "$CPU_MODEL" != 0 ]; then
@@ -48,7 +50,7 @@ if [ "$CORE_CV" != "$CORE_LV" ] || [ -z "$CORE_CV" ]; then
 			case $CORE_TYPE in
       	"Tun")
       	echo "正在下载【Tun】版本内核，如下载失败请尝试手动下载并上传..." >$START_LOG
-				curl -sL -m 30 --retry 2 -x http://$PROXY_ADDR:$HTTP_PORT -U "$PROXY_AUTH" https://github.com/Dreamacro/clash/releases/download/TUN/clash-"$CPU_MODEL"-"$CORE_LV".gz -o /tmp/clash.gz >/dev/null 2>&1
+				curl -sL -m 30 --retry 2 -x http://$PROXY_ADDR:$HTTP_PORT -U "$PROXY_AUTH" https://github.com/vernesong/OpenClash/releases/download/TUN-Premium/clash-"$CPU_MODEL"-"$CORE_LV".gz -o /tmp/clash.gz >/dev/null 2>&1
 				;;
 				"Game")
 				echo "正在下载【Game】版本内核，如下载失败请尝试手动下载并上传..." >$START_LOG
@@ -62,7 +64,7 @@ if [ "$CORE_CV" != "$CORE_LV" ] || [ -z "$CORE_CV" ]; then
 			case $CORE_TYPE in
       	"Tun")
       	echo "正在下载【Tun】版本内核，如下载失败请尝试手动下载并上传..." >$START_LOG
-				curl -sL -m 30 --retry 2 https://github.com/Dreamacro/clash/releases/download/TUN/clash-"$CPU_MODEL"-"$CORE_LV".gz -o /tmp/clash.gz >/dev/null 2>&1
+				curl -sL -m 30 --retry 2 https://github.com/vernesong/OpenClash/releases/download/TUN-Premium/clash-"$CPU_MODEL"-"$CORE_LV".gz -o /tmp/clash.gz >/dev/null 2>&1
 				;;
 				"Game")
 				echo "正在下载【Game】版本内核，如下载失败请尝试手动下载并上传..." >$START_LOG
@@ -98,7 +100,10 @@ if [ "$CORE_CV" != "$CORE_LV" ] || [ -z "$CORE_CV" ]; then
       rm -rf /tmp/clash.tar.gz >/dev/null 2>&1
       rm -rf /tmp/clash.gz >/dev/null 2>&1
       mkdir -p /etc/openclash/core
-      [ "$if_restart" -eq 1 ] && /etc/init.d/openclash stop
+      if [ "$if_restart" -eq 1 ]; then
+      	 kill -9 "$(pidof clash|sed 's/$//g')" 2>/dev/null
+      	 /etc/init.d/openclash stop
+      fi
       echo "【"$CORE_TYPE"】版本内核下载成功，开始更新..." >$START_LOG
 			case $CORE_TYPE in
       	"Tun")

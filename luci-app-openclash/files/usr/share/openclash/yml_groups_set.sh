@@ -195,7 +195,7 @@ yml_groups_set()
    set_group=0
    set_proxy_provider=0
    
-   if [ "$type" = "select" ]; then
+   if [ "$type" = "select" ] || [ "$type" = "relay" ]; then
       config_list_foreach "$section" "other_group" set_other_groups #加入其他策略组
    fi
    
@@ -209,9 +209,7 @@ yml_groups_set()
 
    echo "  use: $group_name" >>$GROUP_FILE
    
-   if [ "$type" != "relay" ]; then
-      config_foreach set_proxy_provider "proxy-provider" "$group_name" #加入代理集
-   fi
+   config_foreach set_proxy_provider "proxy-provider" "$group_name" #加入代理集
 
    if [ "$set_group" -eq 1 ]; then
       sed -i "/^ \{0,\}proxies: ${group_name}/c\  proxies:" $GROUP_FILE
@@ -247,9 +245,9 @@ if [ "$create_config" = "0" ] || [ "$servers_if_update" = "1" ] || [ ! -z "$if_g
    else
       if [ -z "$if_game_group" ]; then
          echo "开始写入配置文件【$CONFIG_NAME】的策略组信息..." >$START_LOG
-         echo "Proxy Group:" >$GROUP_FILE
+         echo "proxy-groups:" >$GROUP_FILE
       else
-         echo "开始加入游戏策略组【$if_game_group】的信息..." >$START_LOG
+         echo "开始加入游戏&规则集策略组【$if_game_group】的信息..." >$START_LOG
          rm -rf $GROUP_FILE
       fi
       config_load "openclash"

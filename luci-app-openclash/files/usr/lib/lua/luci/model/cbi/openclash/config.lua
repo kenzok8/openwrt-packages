@@ -90,8 +90,10 @@ clash = "/etc/openclash/clash"
 dir = "/etc/openclash/config/"
 bakck_dir="/etc/openclash/backup"
 proxy_pro_dir="/etc/openclash/proxy_provider/"
+rule_pro_dir="/etc/openclash/rule_provider/"
 create_bakck_dir=fs.mkdir(bakck_dir)
 create_proxy_pro_dir=fs.mkdir(proxy_pro_dir)
+create_rule_pro_dir=fs.mkdir(rule_pro_dir)
 
 
 HTTP.setfilehandler(
@@ -104,6 +106,8 @@ HTTP.setfilehandler(
 			   if meta and chunk then fd = nixio.open(dir .. meta.file, "w") end
 			elseif fp == "proxy-provider" then
 			   if meta and chunk then fd = nixio.open(proxy_pro_dir .. meta.file, "w") end
+			elseif fp == "rule-provider" then
+			   if meta and chunk then fd = nixio.open(rule_pro_dir .. meta.file, "w") end
 			end
 
 			if not fd then
@@ -117,21 +121,23 @@ HTTP.setfilehandler(
 		if eof and fd then
 			fd:close()
 			fd = nil
-      if IsYamlFile(meta.file) and fp ~= "proxy-provider" then
+      if IsYamlFile(meta.file) and fp == "config" then
          local yamlbackup="/etc/openclash/backup/" .. meta.file
          local c=fs.copy(dir .. meta.file,yamlbackup)
       end
-      if IsYmlFile(meta.file) and fp ~= "proxy-provider" then
+      if IsYmlFile(meta.file) and fp == "config" then
       	 local ymlname=string.lower(string.sub(meta.file,0,-5))
          local ymlbackup="/etc/openclash/backup/".. ymlname .. ".yaml"
          local c=fs.rename(dir .. meta.file,"/etc/openclash/config/".. ymlname .. ".yaml")
          local c=fs.copy("/etc/openclash/config/".. ymlname .. ".yaml",ymlbackup)
       end
-			if fp ~= "proxy-provider" then
+			if fp == "config" then
 			   um.value = translate("File saved to") .. ' "/etc/openclash/config/"'
 			   CHIF = "1"
-			else
+			elseif fp == "proxy-provider" then
 				 um.value = translate("File saved to") .. ' "/etc/openclash/proxy_provider/"'
+			elseif fp == "rule-provider" then
+				 um.value = translate("File saved to") .. ' "/etc/openclash/rule_provider/"'
 			end
 			fs.unlink("/tmp/Proxy_Group")
 		end
@@ -251,6 +257,7 @@ end
 btnrm.write=function(a,t)
 	fs.unlink("/tmp/Proxy_Group")
 	fs.unlink("/etc/openclash/backup/"..luci.openclash.basename(e[t].name))
+	fs.unlink("/etc/openclash/history/"..luci.openclash.basename(e[t].name))
 	local a=fs.unlink("/etc/openclash/config/"..luci.openclash.basename(e[t].name))
 if a then table.remove(e,t)end
 return a
@@ -321,6 +328,71 @@ if r then table.remove(p,x)end
 return r
 end
 
+local g,h={}
+for n,m in ipairs(fs.glob("/etc/openclash/rule_provider/*"))do
+h=fs.stat(m)
+if h then
+g[n]={}
+g[n].name=fs.basename(m)
+g[n].mtime=os.date("%Y-%m-%d %H:%M:%S",h.mtime)
+g[n].size=i(h.size)
+g[n].remove=0
+g[n].enable=false
+end
+end
+
+rule_form=SimpleForm("rule_provider_file_list",translate("Rule Providers File List"))
+rule_form.reset=false
+rule_form.submit=false
+tb2=rule_form:section(Table,g)
+nm2=tb2:option(DummyValue,"name",translate("File Name"))
+mt2=tb2:option(DummyValue,"mtime",translate("Update Time"))
+sz2=tb2:option(DummyValue,"size",translate("Size"))
+
+btndl2 = tb2:option(Button,"download2",translate("Download Configurations")) 
+btndl2.template="openclash/other_button"
+btndl2.render=function(m,n,h)
+m.inputstyle="remove"
+Button.render(m,n,h)
+end
+btndl2.write = function (h,n)
+	local sPath, sFile, fd, block
+	sPath = "/etc/openclash/rule_provider/"..g[n].name
+	sFile = NXFS.basename(sPath)
+	if fs.isdirectory(sPath) then
+		fd = io.popen('tar -C "%s" -cz .' % {sPath}, "r")
+		sFile = sFile .. ".tar.gz"
+	else
+		fd = nixio.open(sPath, "r")
+	end
+	if not fd then
+		return
+	end
+	HTTP.header('Content-Disposition', 'attachment; filename="%s"' % {sFile})
+	HTTP.prepare_content("application/octet-stream")
+	while true do
+		block = fd:read(nixio.const.buffersize)
+		if (not block) or (#block ==0) then
+			break
+		else
+			HTTP.write(block)
+		end
+	end
+	fd:close()
+	HTTP.close()
+end
+
+btnrm2=tb2:option(Button,"remove2",translate("Remove"))
+btnrm2.render=function(g,n,h)
+g.inputstyle="reset"
+Button.render(g,n,h)
+end
+btnrm2.write=function(h,n)
+local h=fs.unlink("/etc/openclash/rule_provider/"..luci.openclash.basename(g[n].name))
+if h then table.remove(g,n)end
+return h
+end
+
 m = SimpleForm("openclash")
 m.reset = false
 m.submit = false
@@ -334,7 +406,7 @@ s = m:section(Table, tab)
 local conf = string.sub(luci.sys.exec("uci get openclash.config.config_path 2>/dev/null"), 1, -2)
 local dconf = "/etc/openclash/default.yaml"
 local conf_name = fs.basename(conf)
-if not conf_name then conf_name = "config.yaml" end
+if not conf_name or conf == "" then conf_name = "config.yaml" end
 
 sev = s:option(Value, "user")
 sev.template = "cbi/tvalue"
@@ -389,4 +461,4 @@ o.write = function()
   HTTP.redirect(DISP.build_url("admin", "services", "openclash"))
 end
 
-return ful , form , proxy_form , m
+return ful , form , proxy_form , rule_form , m

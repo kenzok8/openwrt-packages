@@ -1,5 +1,5 @@
 <%+cbi/valueheader%>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
 <textarea id="log" class="cbi-input-textarea" style="width: 100%;" data-update="change" rows="29" readonly="readonly" > </textarea>
 
 <script type="text/javascript">//<![CDATA[
@@ -8,19 +8,15 @@
 	lv.style.display="inline"
 	XHR.poll(1, '<%=url([[admin]], [[services]], [[clash]], [[logstatus]])%>', null,
 		function(x, data) {
-			scroll();
+			
 			var lv = document.getElementById('log');
 			if (x.responseText && lv) {
-				lv.innerHTML += x.responseText; 
+				lv.innerHTML += x.responseText;
+				lv.scrollTop = lv.scrollHeight; 
 			}
 		}
 	);
 
-function scroll(){
-	var textarea = document.getElementById('log');
-	textarea.scrollTop = textarea.scrollHeight;
-}
-scroll();
 //]]>
 </script>
 <%+cbi/valuefooter%>

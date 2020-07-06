@@ -1,4 +1,5 @@
-#!/bin/bash /etc/rc.common
+#!/bin/bash
+. /lib/functions.sh
 status=$(ps|grep -c /usr/share/openclash/yml_proxys_get.sh)
 [ "$status" -gt "3" ] && exit 0
 
@@ -32,25 +33,45 @@ elif [ ! -s "$CONFIG_FILE" ] && [ -s "$BACKUP_FILE" ]; then
    mv "$BACKUP_FILE" "$CONFIG_FILE"
 fi
 
+field_cut()
+{
+   local i lines end_len
+   proxy_len=$(sed -n '/^Proxy:/=' "$3" 2>/dev/null |sed -n 1p)
+   provider_len=$(sed -n '/^proxy-providers:/=' "$3" 2>/dev/null)
+   group_len=$(sed -n '/^proxy-groups:/=' "$3" 2>/dev/null)
+   rule_len=$(sed -n '/^rules:/=' "$3" 2>/dev/null)
+   rule_provider_len=$(sed -n '/^rule-providers:/=' "$3" 2>/dev/null)
+   script_len=$(sed -n '/^script:/=' "$3" 2>/dev/null)
+   lines="$proxy_len $provider_len $group_len $rule_len $rule_provider_len $script_len"
+   
+   for i in $lines; do
+      if [ -z "$1" ]; then
+         break
+      fi
+      
+      if [ "$1" -ge "$i" ]; then
+         continue
+      fi
+	    
+      if [ "$end_len" -gt "$i" ] || [ -z "$end_len" ]; then
+	       end_len="$i"
+      fi
+   done 2>/dev/null
+   
+   if [ -n "$1" ] && [ -z "$end_len" ]; then
+      end_len=$(sed -n '$=' "$3")
+   elif [ -n "$end_len" ]; then
+      end_len=$(expr "$end_len" - 1)
+   fi
+   sed -n "${1},${end_len}p" "$3" |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null > "$2" 2>/dev/null
+}
+
 #判断各个区位置
 proxy_len=$(sed -n '/^ \{0,\}Proxy:/=' "$CONFIG_FILE" 2>/dev/null)
-group_len=$(sed -n '/^ \{0,\}Proxy Group:/=' "$CONFIG_FILE" 2>/dev/null)
-provider_len=$(sed -n '/^ \{0,\}proxy-provider:/=' "$CONFIG_FILE" 2>/dev/null)
+field_cut "$proxy_len" "/tmp/yaml_proxy.yaml" "$CONFIG_FILE"
+provider_len=$(sed -n '/^ \{0,\}proxy-providers:/=' "$CONFIG_FILE" 2>/dev/null)
+field_cut "$provider_len" "/tmp/yaml_provider.yaml" "$CONFIG_FILE"
 
-if [ "$provider_len" -ge "$proxy_len" ] && [ "$provider_len" -le "$group_len" ]; then
-   awk '/^ {0,}Proxy:/,/^ {0,}proxy-provider:/{print}' "$CONFIG_FILE" 2>/dev/null |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null >/tmp/yaml_proxy.yaml 2>&1
-   awk '/^ {0,}proxy-provider:/,/^ {0,}Proxy Group:/{print}' "$CONFIG_FILE" 2>/dev/null |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null >/tmp/yaml_provider.yaml 2>&1
-elif [ "$provider_len" -le "$proxy_len" ]; then
-   awk '/^ {0,}Proxy:/,/^ {0,}Proxy Group:/{print}' "$CONFIG_FILE" 2>/dev/null |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null >/tmp/yaml_proxy.yaml 2>&1
-   awk '/^ {0,}proxy-provider:/,/^ {0,}Proxy:/{print}' "$CONFIG_FILE" 2>/dev/null |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null >/tmp/yaml_provider.yaml 2>&1
-elif [ "$provider_len" -ge "$group_len" ]; then
-	 awk '/^ {0,}Proxy:/,/^ {0,}Proxy Group:/{print}' "$CONFIG_FILE" 2>/dev/null |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null >/tmp/yaml_proxy.yaml 2>&1
-   awk '/^ {0,}proxy-provider:/,/^ {0,}Rule:/{print}' "$CONFIG_FILE" 2>/dev/null |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null >/tmp/yaml_provider.yaml 2>&1
-elif [ "$provider_len" -le "$group_len" ]; then
-   awk '/^ {0,}proxy-provider:/,/^ {0,}Proxy Group:/{print}' "$CONFIG_FILE" 2>/dev/null |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null >/tmp/yaml_provider.yaml 2>&1
-else
-   awk '/^ {0,}Proxy:/,/^ {0,}Proxy Group:/{print}' "$CONFIG_FILE" 2>/dev/null |sed 's/\"//g' 2>/dev/null |sed "s/\'//g" 2>/dev/null |sed 's/\t/ /g' 2>/dev/null >/tmp/yaml_proxy.yaml 2>&1
-fi
 
 CFG_FILE="/etc/config/openclash"
 server_file="/tmp/yaml_proxy.yaml"
@@ -69,6 +90,7 @@ new_servers_group=$(uci get openclash.config.new_servers_group 2>/dev/null)
 #proxy
 sed -i "s/\'//g" $server_file 2>/dev/null
 sed -i 's/\"//g' $server_file 2>/dev/null
+sed -i 's/servername:/servername#/g' $server_file 2>/dev/null
 line=$(sed -n '/name:/=' $server_file 2>/dev/null)
 num=$(grep -c "name:" $server_file 2>/dev/null)
 count=1
@@ -79,8 +101,8 @@ sed -i 's/\"//g' $provider_file 2>/dev/null
 sed -i '/^ *$/d' $provider_file 2>/dev/null
 sed -i '/^ \{0,\}#/d' $provider_file 2>/dev/null
 sed -i 's/\t/ /g' $provider_file 2>/dev/null
-provider_line=$(awk '{print $0"#*#"FNR}' $provider_file 2>/dev/null |grep -v '^ \{0,\}proxy-provider:\|^ \{0,\}Proxy:\|^ \{0,\}Proxy Group:\|^ \{0,\}Rule:\|^ \{0,\}type:\|^ \{0,\}path:\|^ \{0,\}url:\|^ \{0,\}interval:\|^ \{0,\}health-check:\|^ \{0,\}enable:' |awk -F '#*#' '{print $3}')
-provider_num=$(grep -c "^ \{0,\}type:" $provider_file 2>/dev/null)
+provider_line=$(awk '{print $0"#*#"FNR}' $provider_file 2>/dev/null |grep -v '^ \{0,\}proxy-providers:\|^ \{0,\}Proxy:\|^ \{0,\}proxy-groups:\|^ \{0,\}rules:\|^ \{0,\}rule-providers:\|^ \{0,\}script:\|^ \{0,\}type:\|^ \{0,\}path:\|^ \{0,\}url:\|^ \{0,\}interval:\|^ \{0,\}health-check:\|^ \{0,\}enable:' |awk -F '#*#' '{print $3}')
+provider_num=$(grep -c "type:" $provider_file 2>/dev/null)
 provider_count=1
 
 cfg_get()
@@ -159,7 +181,7 @@ cfg_new_provider_groups_get()
    ${uci_add}groups="${1}"
 }
 
-[ "$servers_update" -eq "1" ] && {
+[ "$servers_update" -eq 1 ] && {
 echo "" >"$match_provider"
 provider_nums=0
 config_load "openclash"
@@ -214,7 +236,7 @@ do
    
    #代理集存在时获取代理集编号
    provider_nums=$(grep -Fw "$provider_name" "$match_provider" |awk -F '.' '{print $1}')
-   if [ "$servers_update" -eq "1" ] && [ ! -z "$provider_nums" ]; then
+   if [ "$servers_update" -eq 1 ] && [ ! -z "$provider_nums" ]; then
       sed -i "/^${provider_nums}\./c\#match#" "$match_provider" 2>/dev/null
       uci_set="uci -q set openclash.@proxy-provider["$provider_nums"]."
       ${uci_set}manual="0"
@@ -237,7 +259,7 @@ do
       uci_set="uci -q set $name.$uci_name_tmp."
       uci_add="uci -q add_list $name.$uci_name_tmp."
    
-      if [ -z "$new_servers_group" ] && [ "$servers_if_update" = "1" ] && [ "$servers_update" -eq "1" ]; then
+      if [ -z "$new_servers_group" ] && [ "$servers_if_update" = "1" ] && [ "$servers_update" -eq 1 ]; then
          ${uci_set}enabled="0"
       else
          ${uci_set}enabled="1"
@@ -429,7 +451,7 @@ cfg_new_servers_groups_get()
 	   
 echo "开始更新【$CONFIG_NAME】的服务器节点配置..." >$START_LOG
 
-[ "$servers_update" -eq "1" ] && {
+[ "$servers_update" -eq 1 ] && {
 echo "" >"$match_servers"
 server_num=0
 config_load "openclash"
@@ -483,7 +505,7 @@ do
    
 #节点存在时获取节点编号
    server_num=$(grep -Fw "$server_name" "$match_servers" |awk -F '.' '{print $1}')
-   if [ "$servers_update" -eq "1" ] && [ ! -z "$server_num" ]; then
+   if [ "$servers_update" -eq 1 ] && [ ! -z "$server_num" ]; then
       sed -i "/^${server_num}\./c\#match#" "$match_servers" 2>/dev/null
    fi
    
@@ -524,6 +546,8 @@ do
       alterId="$(cfg_get "alterId:" "$single_server")"
       #cipher
       cipher="$(cfg_get "cipher:" "$single_server")"
+      #servername
+      servername="$(cfg_get "servername#" "$single_server")"
       #network:
       network="$(cfg_get "network:" "$single_server")"
       #ws-path:
@@ -568,7 +592,7 @@ do
    
    echo "正在读取【$CONFIG_NAME】-【$server_type】-【$server_name】服务器节点配置..." >$START_LOG
    
-   if [ "$servers_update" -eq "1" ] && [ ! -z "$server_num" ]; then
+   if [ "$servers_update" -eq 1 ] && [ ! -z "$server_num" ]; then
 #更新已有节点
       uci_set="uci -q set openclash.@servers["$server_num"]."
       uci_add="uci -q add_list $name.$uci_name_tmp."
@@ -604,6 +628,7 @@ do
          ${uci_set}securitys="$cipher"
          ${uci_set}alterId="$alterId"
          ${uci_set}uuid="$uuid"
+         ${uci_set}servername="$servername"
          if [ "$network" = "ws" ]; then
             ${uci_set}obfs_vmess="websocket"
             ${uci_set}path="$ws_path"
@@ -646,7 +671,7 @@ do
       uci_set="uci -q set $name.$uci_name_tmp."
       uci_add="uci -q add_list $name.$uci_name_tmp."
 
-      if [ -z "$new_servers_group" ] && [ "$servers_if_update" = "1" ] && [ "$servers_update" -eq "1" ]; then
+      if [ -z "$new_servers_group" ] && [ "$servers_if_update" = "1" ] && [ "$servers_update" -eq 1 ]; then
          ${uci_set}enabled="0"
       else
          ${uci_set}enabled="1"
@@ -687,6 +712,7 @@ do
          ${uci_set}securitys="$cipher"
          ${uci_set}alterId="$alterId"
          ${uci_set}uuid="$uuid"
+         ${uci_set}servername="$servername"
          if [ "$network" = "ws" ]; then
             ${uci_set}obfs_vmess="websocket"
             ${uci_set}path="$ws_path"
@@ -772,7 +798,7 @@ fi
 
 uci set openclash.config.servers_if_update=0
 uci commit openclash
-/usr/share/openclash/cfg_servers_address_fake_block.sh
+/usr/share/openclash/cfg_servers_address_fake_filter.sh
 echo "配置文件【$CONFIG_NAME】读取完成！" >$START_LOG
 sleep 3
 echo "" >$START_LOG

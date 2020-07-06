@@ -20,8 +20,17 @@ msgstr "运行状态"
 msgid "Global Settings"
 msgstr "全局设置"
 
+msgid "Rule Providers and Groups"
+msgstr "规则集与策略组管理"
+
 msgid "Game Rules and Groups"
 msgstr "游戏规则与策略组管理"
+
+msgid "Other Rule Providers and Groups"
+msgstr "第三方规则集与策略组管理"
+
+msgid "Custom Rule Providers and Groups"
+msgstr "自定义规则集与策略组管理"
 
 msgid "General Settings"
 msgstr "常规设置"
@@ -65,11 +74,17 @@ msgstr "文件不存在"
 msgid "Not Set"
 msgstr "未设置"
 
-msgid "Server logs"
+msgid "Server Logs"
 msgstr "运行日志"
 
-msgid "Logs"
-msgstr "运行日志"
+msgid "Debug Logs"
+msgstr "调试日志"
+
+msgid "Generate Logs"
+msgstr "生成日志"
+
+msgid "Click to Generate"
+msgstr "点击生成"
 
 msgid "Enable Clash"
 msgstr "启动 OpenClash"
@@ -124,6 +139,15 @@ msgstr "Global【全局代理（需前往控制面板手动指定节点）】"
 
 msgid "Direct Proxy Mode"
 msgstr "Direct【全局直连】"
+
+msgid "Script Proxy Mode (Tun Core Only)"
+msgstr "Script【脚本模式 - 仅Tun内核】"
+
+msgid "Select Stack Type"
+msgstr "网络栈类型"
+
+msgid "Select Stack Type For Tun Mode, According To The Running Speed on Your Machine"
+msgstr "请自行根据运行速度为Tun模式选择合适的网络栈"
 
 msgid "Log Level"
 msgstr "日志等级"
@@ -197,7 +221,7 @@ msgstr "指定下方列表中域名的DNS服务器，只支持填写一个IP地�
 msgid "Domain Names In The List Do Not Return Fake-IP, One rule per line"
 msgstr "每行请只填写一个域名，列表中的域名在（Fake-IP模式）下查询DNS时将返回真实IP地址，更改后点击上方按钮生效"
 
-msgid "Fake-IP Block List Update"
+msgid "Fake-IP-Filter List Update"
 msgstr "更新Fake-IP域名黑名单"
 
 msgid "Set OpenClash Upstream DNS Resolve Server"
@@ -228,9 +252,9 @@ msgid "(Communication protocol)"
 msgstr "(通讯协议)"
 
 msgid "Enable ipv6 Resolve"
-msgstr "IPV6类型DNS解析"
+msgstr "允许IPV6类型DNS解析"
 
-msgid "Force Enable to Resolve ipv6 DNS Requests"
+msgid "Enable Clash to Resolve ipv6 DNS Requests"
 msgstr ""
 "固件须配置好IPV6的NAT，如你不使用IPV6请关闭固件的相关服务，避免客户端连接出现异常"
 
@@ -248,6 +272,9 @@ msgstr "上传文件类型"
 
 msgid "Proxy Provider File"
 msgstr "代理集文件"
+
+msgid "Rule Provider File"
+msgstr "规则集文件"
 
 msgid "Upload"
 msgstr "上传"
@@ -267,6 +294,9 @@ msgstr "注意：只支持【yaml】后缀的文件，文件将被保存到 /etc
 
 msgid "Proxy Provider File List"
 msgstr "代理集文件列表"
+
+msgid "Rule Providers File List"
+msgstr "规则集文件列表"
 
 msgid "Please Make Sure Ports Available"
 msgstr "请确保端口可用"
@@ -366,6 +396,9 @@ msgstr "lhie1 规则"
 
 msgid "ConnersHua Rules"
 msgstr "ConnersHua 规则"
+
+msgid "ConnersHua(Provider-type) Rules"
+msgstr "ConnersHua(规则集) 规则"
 
 msgid "ConnersHua Return Rules"
 msgstr "ConnersHua 回国规则"
@@ -540,6 +573,9 @@ msgstr "清空策略组配置"
 msgid "Back Configurations"
 msgstr "返回概览"
 
+msgid "Refresh Page"
+msgstr "刷新页面"
+
 msgid "Servers manage and Config create"
 msgstr "服务器&策略组管理（支持配置文件一键生成）"
 
@@ -575,6 +611,9 @@ msgstr "服务器地址"
 
 msgid "Server Port"
 msgstr "服务器端口"
+
+msgid "UDP Support"
+msgstr "UDP支持"
 
 msgid "Ping Latency"
 msgstr "服务器延迟"
@@ -624,6 +663,45 @@ msgstr "策略组配置（使用一键生成配置文件功能时无需设置）
 msgid "Proxys"
 msgstr "服务器节点配置"
 
+msgid "Edit Rule Providers"
+msgstr "编辑规则集配置"
+
+msgid "Rule Providers Type"
+msgstr "规则集类型"
+
+msgid "Choose The Rule Providers Type"
+msgstr "选择规则集类型"
+
+msgid "Append Position"
+msgstr "规则集匹配顺序"
+
+msgid "Priority Match"
+msgstr "优先（覆盖）"
+
+msgid "Extended Match"
+msgstr "扩展（补充）"
+
+msgid "Rule Providers Name"
+msgstr "别名（请勿重名）"
+
+msgid "Rule Behavior"
+msgstr "规则类型"
+
+msgid "Choose The Rule Behavior"
+msgstr "选择规则类型"
+
+msgid "Rule Providers Path"
+msgstr "规则集路径"
+
+msgid "Update Your Rule Providers File From Config Luci Page"
+msgstr "请先在配置文件管理页面上传您的规则集文件"
+
+msgid "Rule Providers URL"
+msgstr "规则集地址"
+
+msgid "Rule Providers Interval(s)"
+msgstr "规则集更新时间（秒）"
+
 msgid "Edit Group"
 msgstr "编辑策略组配置"
 
@@ -668,6 +746,9 @@ msgstr "修改配置文件前添加的代理集必须已创建"
 
 msgid "Proxy Group"
 msgstr "添加到策略组（请勿重复添加）"
+
+msgid "Set Proxy Group"
+msgstr "指定策略组"
 
 msgid "No Need Set when Config Create, The added Proxy Groups Must Exist"
 msgstr "注意：使用一键生成配置文件功能时无需设置此项，修改配置文件前添加的策略组必须已创建"
@@ -742,7 +823,7 @@ msgid "Edit Proxy-Provider"
 msgstr "编辑代理集配置"
 
 msgid "Provider Type"
-msgstr "代理集类型
+msgstr "代理集类型"
 
 msgid "Choose The Provider Type"
 msgstr "选择代理集的类型"
@@ -774,6 +855,9 @@ msgstr "状态检查间隔（s）"
 msgid "Game Rule's Name"
 msgstr "选择游戏规则"
 
+msgid "Rule Provider's Name"
+msgstr "选择规则集（请勿重复添加）"
+
 msgid "Select Proxy Group"
 msgstr "选择策略组"
 
@@ -782,6 +866,12 @@ msgstr "游戏规则列表"
 
 msgid "Rule Name"
 msgstr "规则名称"
+
+msgid "Rule Type"
+msgstr "规则类型"
+
+msgid "Rule Author"
+msgstr "规则作者"
 
 msgid "Download Rule"
 msgstr "下载规则"
@@ -797,6 +887,12 @@ msgstr "序号"
 
 msgid "Game Rules Manage"
 msgstr "管理游戏规则"
+
+msgid "Other Rule Provider Manage"
+msgstr "管理第三方规则集"
+
+msgid "Other Rule Providers List"
+msgstr "第三方规则集列表"
 
 msgid "Proxy UDP Traffics"
 msgstr "*UDP流量转发"
