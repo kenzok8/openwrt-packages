@@ -62,7 +62,6 @@
 
 cat $CONFIG_START >> $TEMP_FILE 2>/dev/null
 if [ "$interf" -eq 1 ] && [ ! -z "$interf_name" ] ;then
-
 cat >> "/tmp/interf_name.yaml" <<-EOF
 interface-name: ${interf_name} 
 EOF
@@ -386,14 +385,13 @@ add_address(){
 }
 
 
-add_address >/dev/null 2>&1
-
-
-		fake_ip=$(egrep '^ {0,}enhanced-mode' /etc/clash/config.yaml |grep enhanced-mode: |awk -F ': ' '{print $2}')
-		#fake_ip=$(uci get clash.config.enhanced_mode 2>/dev/null)
-
+		#fake_ip=$(egrep '^ {0,}enhanced-mode' /etc/clash/config.yaml |grep enhanced-mode: |awk -F ': ' '{print $2}')
+		fake_ip=$(uci get clash.config.enhanced_mode 2>/dev/null)
 
 		if [ "${fake_ip}" == "fake-ip" ];then
+		
+		add_address >/dev/null 2>&1
+		wait
 		CUSTOM_FILE="/usr/share/clash/server.list"
 		FAKE_FILTER_FILE="/usr/share/clash/fake_filter.list"
 		num=$(grep -c '' /usr/share/clash/server.list 2>/dev/null)
@@ -414,17 +412,14 @@ add_address >/dev/null 2>&1
 		  
 		 
 			fi
-		fi
-	
-		
-		if [ "$fake_ip" == "fake-ip" ];then
+
 
 			if [ $lang == "en" ] || [ $lang == "auto" ];then
 				echo "Setting Up Fake-IP Filter" >$REAL_LOG 
 			elif [ $lang == "zh_cn" ];then
 				 echo "正在设置Fake-IP黑名单" >$REAL_LOG
 			fi	
-			sleep 1
+
 			sed -i '/fake-ip-filter:/d' "/etc/clash/config.yaml" 2>/dev/null
 			if [ ! -z "$(egrep '^ {0,}fake-ip-range:' "/etc/clash/config.yaml")" ];then	
 				sed -i '/fake-ip-range/a\  fake-ip-filter:' /etc/clash/config.yaml 2>/dev/null
