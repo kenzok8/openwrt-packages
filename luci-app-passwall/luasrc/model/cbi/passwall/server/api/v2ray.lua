@@ -138,12 +138,11 @@ function gen_config(user)
                             }
                         }
                     } or nil,
-                    servers = (node.protocol == "http" or
-                        node.protocol == "socks" or node.protocol == "shadowsocks") and {
+                    servers = (node.protocol == "http" or node.protocol == "socks" or node.protocol == "shadowsocks") and {
                         {
                             address = node.address,
                             port = tonumber(node.port),
-                            method = node.ss_encrypt_method,
+                            method = node.v_ss_encrypt_method,
                             password = node.password or "",
                             ota = (node.ss_ota == '1') and true or false,
                             users = (node.username and node.password) and
@@ -176,8 +175,8 @@ function gen_config(user)
                 settings = settings,
                 streamSettings = (user.protocol == "vmess") and {
                     network = user.transport,
-                    security = (user.tls_enable == '1') and "tls" or "none",
-                    tlsSettings = (user.tls_enable == '1') and {
+                    security = (user.stream_security == 'tls') and "tls" or "none",
+                    tlsSettings = (user.stream_security == 'tls') and {
                         disableSessionResumption = user.sessionTicket ~= "1" and true or false,
                         -- serverName = (user.tls_serverName),
                         allowInsecure = false,
