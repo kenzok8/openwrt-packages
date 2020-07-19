@@ -1,9 +1,5 @@
 <%
-local api = require "luci.model.cbi.passwall.api.api"
-local dsp = require "luci.dispatcher"
-
-local V2ray_path = api.uci_get_type("global_app", "v2ray_file")
-local V2ray_version = luci.sys.exec("[ -f '" .. V2ray_path .. "/v2ray' ] && " .. V2ray_path .. "/v2ray -version | awk '{print $2}' | sed -n 1P")
+local v2ray_version = require "luci.model.cbi.passwall.api.api".get_v2ray_version()
 -%>
 
 <script type="text/javascript">
@@ -75,7 +71,7 @@ local V2ray_version = luci.sys.exec("[ -f '" .. V2ray_path .. "/v2ray' ] && " ..
 
 		var ckeckDetailElm = document.getElementById(btn.id + '-detail');
 
-		XHR.get('<%=dsp.build_url("admin/vpn/passwall/v2ray_check")%>', {
+		XHR.get('<%=url([[admin]], [[vpn]], [[passwall]], [[v2ray_check]])%>', {
 			token: tokenStr,
 			arch: ''
 		}, function(x,json) {
@@ -115,7 +111,7 @@ local V2ray_version = luci.sys.exec("[ -f '" .. V2ray_path .. "/v2ray' ] && " ..
 
 		addPageNotice_v2ray();
 
-		var v2rayUpdateUrl = '<%=dsp.build_url("admin/vpn/passwall/v2ray_update")%>';
+		var v2rayUpdateUrl = '<%=url([[admin]], [[vpn]], [[passwall]], [[v2ray_update]])%>';
 		// Download file
 		XHR.get(v2rayUpdateUrl, {
 			token: tokenStr,
@@ -167,7 +163,7 @@ local V2ray_version = luci.sys.exec("[ -f '" .. V2ray_path .. "/v2ray' ] && " ..
 	</label>
 	<div class="cbi-value-field">
 		<div class="cbi-value-description">
-			<span>【 <%=V2ray_version%>】</span>
+			<span>【 <%=v2ray_version%> 】</span>
 			<input class="cbi-button cbi-input-apply" type="button" id="_v2ray-check_btn" onclick="onBtnClick_v2ray(this);" value="<%:Manually update%>" />
 			<span id="_v2ray-check_btn-detail"></span>
 		</div>

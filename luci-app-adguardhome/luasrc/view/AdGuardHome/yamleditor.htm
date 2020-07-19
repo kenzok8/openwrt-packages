@@ -1,83 +1,24 @@
 <%+cbi/valueheader%>
+<script src="/luci-static/resources/codemirror/lib/codemirror.js"></script>
+<link rel="stylesheet" href="/luci-static/resources/codemirror/lib/codemirror.css"/>
+<script src="/luci-static/resources/codemirror/mode/yaml/yaml.js"></script>
+<link rel="stylesheet" href="/luci-static/resources/codemirror/theme/dracula.css"/>
+<link rel="stylesheet" href="/luci-static/resources/codemirror/addon/fold/foldgutter.css"/>
+<script src="/luci-static/resources/codemirror/addon/fold/foldcode.js"></script>
+<script src="/luci-static/resources/codemirror/addon/fold/foldgutter.js"></script>
+<script src="/luci-static/resources/codemirror/addon/fold/indent-fold.js"></script>
 <script type="text/javascript">//<![CDATA[
-var loadnum=0
-function addjs(url1,url2){
-	let script = document.createElement('script');
-	script.src = url1; // 没有这样的脚本
-	document.head.append(script);
-	script.onerror = function() {
-		var scriptb = document.createElement('script');
-		scriptb.src = url2;
-		document.head.append(scriptb);
-		scriptb.onload = function() {
-			loadnum+=1
-		}
-	};
-	script.onload = function() {
-	loadnum+=1
-	}
+var editor = CodeMirror.fromTextArea(document.getElementById("cbid.AdGuardHome.AdGuardHome.escconf"), {
+mode: "text/yaml",    //实现groovy代码高亮
+styleActiveLine: true,
+lineNumbers: true,	//显示行号
+theme: "dracula",	//设置主题
+lineWrapping: true,	//代码折叠
+foldGutter: true,
+gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+matchBrackets: true //括号匹配
 }
-function addcss(url1,url2){
-var link  = document.createElement('link');
-    link.rel  = 'stylesheet';
-    link.type = 'text/css';
-    link.href = url1;
-    document.head.append(link)
-	link.onerror = function() {
-		var linkb = document.createElement('link');
-		linkb.rel  = 'stylesheet';
-		linkb.type = 'text/css';
-		linkb.href = url2;
-		document.head.append(linkb);
-		linkb.onload = function() {
-			loadnum+=1
-		}
-	};
-	link.onload = function() {
-	loadnum+=1
-	}
-}
-addjs("/luci-static/resources/codemirror/lib/codemirror.js","https://cdn.jsdelivr.net/npm/codemirror@5.50.2/lib/codemirror.js")
-
-doStuff(1,addmore);
-
-function doStuff(num,callback) {
- if(loadnum<num) {
- setTimeout("doStuff("+num+","+callback+")", 50);
- return;
- }
- callback();
-}
-function addmore() {
-	addjs("/luci-static/resources/codemirror/mode/yaml/yaml.js","https://cdn.jsdelivr.net/npm/codemirror@5.50.2/mode/yaml/yaml.js")
-	addjs("/luci-static/resources/codemirror/addon/fold/foldcode.js","https://cdn.jsdelivr.net/npm/codemirror@5.50.2/addon/fold/foldcode.js")
-	addjs("/luci-static/resources/codemirror/addon/fold/foldgutter.js","https://cdn.jsdelivr.net/npm/codemirror@5.50.2/addon/fold/foldgutter.js")
-	addjs("/luci-static/resources/codemirror/addon/fold/indent-fold.js","https://cdn.jsdelivr.net/npm/codemirror@5.50.2/addon/fold/indent-fold.js")
-	addcss("/luci-static/resources/codemirror/lib/codemirror.css","https://cdn.jsdelivr.net/npm/codemirror@5.50.2/lib/codemirror.css")
-	addcss("/luci-static/resources/codemirror/theme/dracula.css","https://cdn.jsdelivr.net/npm/codemirror@5.50.2/theme/dracula.css")
-	addcss("/luci-static/resources/codemirror/addon/fold/foldgutter.css","https://cdn.jsdelivr.net/npm/codemirror@5.50.2/addon/fold/foldgutter.css")
-	doStuff(8,cheditor);
-}
-//]]>
-</script> 
-
-<script type="text/javascript">//<![CDATA[
-function cheditor(){
-	var editor = CodeMirror.fromTextArea(document.getElementById("cbid.AdGuardHome.AdGuardHome.escconf"), {
-		mode: "text/yaml",    //实现groovy代码高亮
-		styleActiveLine: true,
-		lineNumbers: true,	//显示行号
-		theme: "dracula",	//设置主题
-		lineWrapping: true,	//代码折叠
-		foldGutter: true,
-		gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
-		matchBrackets: true //括号匹配
-	});
-	var he=window.innerHeight
-	console.debug(he)
-	if (he<300){he=300;}
-	editor.setSize("100%", he-120)
-}
+);
 function reload_config(){
 	XHR.get('<%=url([[admin]], [[services]], [[AdGuardHome]], [[reloadconfig]])%>', null,
 	function(x, data) {

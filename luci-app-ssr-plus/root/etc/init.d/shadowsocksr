@@ -76,7 +76,7 @@ get_host_ip() {
 clean_log() {
 	logsnum=$(cat /tmp/ssrplus.log 2>/dev/null | wc -l)
 	[ "$logsnum" -gt 1000 ] && {
-		echo "$(date "+%Y-%m-%d %H:%M:%S") 日志文件过长，清空处理！" >/tmp/ssrplus.log
+		echo "$(date "+%Y-%m-%d %H:%M:%S") 鏃ュ織鏂囦欢杩囬暱锛屾竻绌哄鐞嗭紒" >/tmp/ssrplus.log
 	}
 }
 
@@ -587,10 +587,12 @@ check_server() {
 
 start_rules() {
 	local server=$(get_host_ip $(uci_get_by_name $GLOBAL_SERVER server))
-	[ "$server" == "127.0.0.1" ] && hostip=$(uci_get_by_name $GLOBAL_SERVER ip)
-	kcp_server=$server
+	if [ "$server" == "ERROR" ]; then
+		server=$(uci_get_by_name $GLOBAL_SERVER ip)
+	fi
 	local kcp_enable=$(uci_get_by_name $GLOBAL_SERVER kcp_enable 0)
 	if [ $kcp_enable == "1" ]; then
+		kcp_server=$server
 		kcp_flag=1
 	fi
 	local local_port=$(uci_get_by_name $GLOBAL_SERVER local_port)
@@ -621,7 +623,7 @@ start_rules() {
 	if [ $dports == "1" ]; then
 		proxyport=" "
 	else
-		proxyport="-m multiport --dports 22,53,587,465,995,993,143,80,443"
+		proxyport="-m multiport --dports 22,53,587,465,995,993,143,80,443,853"
 	fi
 	if [ "$NETFLIX_SERVER" != "nil" ]; then
 		if [ "$NETFLIX_SERVER" != "$GLOBAL_SERVER" ]; then
@@ -638,7 +640,10 @@ start_rules() {
 		2) echo "-O" ;;
 		esac
 	}
-	netflix_ip=$(get_host_ip $(uci_get_by_name $NETFLIX_SERVER server 127.0.0.1))
+	netflix_ip=$(get_host_ip $(uci_get_by_name $NETFLIX_SERVER server))
+	if [ "$netflix_ip" == "ERROR" ]; then
+		netflix_ip=$(uci_get_by_name $NETFLIX_SERVER ip)
+	fi
 	/usr/bin/ssr-rules \
 	-s "$server" \
 	-l "$local_port" \
@@ -692,6 +697,14 @@ start() {
 	if [ "$NETFLIX_SERVER" == "same" ]; then
 		NETFLIX_SERVER=$GLOBAL_SERVER
 	fi
+	mkdir -p /tmp/dnsmasq.d /tmp/dnsmasq.ssr
+	cat <<-EOF >/tmp/dnsmasq.d/dnsmasq-ssr.conf
+		conf-dir=/tmp/dnsmasq.ssr
+	EOF
+	if [ "$(uci_get_by_type global adblock 0)" == "1" ]; then
+		cp -rf /etc/ssr/ad.conf /tmp/dnsmasq.ssr/
+		awk '!/^$/&&!/^#/{printf("address=/%s/''\n",$0)}' /etc/ssr/deny.list >/tmp/dnsmasq.ssr/denylist.conf
+	fi
 	if rules; then
 		if start_redir_tcp; then
 			start_redir_udp
@@ -699,24 +712,18 @@ start() {
 			start_switch
 			start_dns
 			add_cron
-			mkdir -p /tmp/dnsmasq.d /tmp/dnsmasq.ssr
-			cat <<-EOF >/tmp/dnsmasq.d/dnsmasq-ssr.conf
-				conf-dir=/tmp/dnsmasq.ssr
-			EOF
 			if [ "$run_mode" == "oversea" ]; then
 				cp -rf /etc/ssr/oversea_list.conf /tmp/dnsmasq.ssr/
 			else
 				cp -rf /etc/ssr/gfw_list.conf /tmp/dnsmasq.ssr/
 				cp -rf /etc/ssr/gfw_base.conf /tmp/dnsmasq.ssr/
 			fi
-			if [ "$(uci_get_by_type global adblock 0)" == "1" ]; then
-				cp -rf /etc/ssr/ad.conf /tmp/dnsmasq.ssr/
-			fi
 			/usr/share/shadowsocksr/gfw2ipset.sh
 		else
 			/usr/bin/ssr-rules -f
 		fi
 	fi
+	/etc/init.d/dnsmasq restart >/dev/null 2>&1
 	start_server
 	start_local
 	start_monitor
@@ -727,6 +734,7 @@ start() {
 }
 
 boot() {
+	ulimit -n 65535
 	(/usr/share/shadowsocksr/chinaipset.sh && sleep 3 && start >/dev/null 2>&1) &
 }
 
@@ -742,11 +750,12 @@ stop() {
 	if [ -z "$switch_server" ]; then
 		ps -w | grep -v "grep" | grep ssr-switch | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
 		rm -f /var/lock/ssr-switch.lock
+		killall -q -9 kcptun-client
 	fi
 	ps -w | grep -v "grep" | grep ssr-monitor | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
 	ps -w | grep -v "grep" | grep "sleep $(uci_get_by_type global switch_time)s" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
 	ps -w | grep -v "grep" | grep "sleep 30s" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
-	killall -q -9 ss-redir ss-local obfs-local ssr-redir ssr-local ssr-server v2ray v2ray-plugin trojan microsocks ipt2socks dns2socks redsocks2 pdnsd kcptun-client
+	killall -q -9 ss-redir ss-local obfs-local ssr-redir ssr-local ssr-server v2ray v2ray-plugin trojan microsocks ipt2socks dns2socks redsocks2 pdnsd
 	rm -f /var/lock/ssr-chinaipset.lock /var/lock/ssr-monitor.lock
 	if [ -f "/tmp/dnsmasq.d/dnsmasq-ssr.conf" ]; then
 		rm -rf /tmp/dnsmasq.d/dnsmasq-ssr.conf /tmp/dnsmasq.ssr /tmp/dnsmasq.oversea

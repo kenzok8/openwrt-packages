@@ -9,7 +9,7 @@ NETFLIX_SERVER=$(uci_get_by_type global netflix_server nil)
 [ "$NETFLIX_SERVER" == "same" ] && NETFLIX_SERVER=$GLOBAL_SERVER
 if [ "$NETFLIX_SERVER" != "nil" ]; then
 	netflix() {
-		if [ -f "tmp/dnsmasq.ssr/gfw_list.conf" ]; then
+		if [ -f "/tmp/dnsmasq.ssr/gfw_list.conf" ]; then
 			for line in $(cat /etc/ssr/netflix.list); do sed -i "/$line/d" /tmp/dnsmasq.ssr/gfw_list.conf; done
 		fi
 		awk '!/^$/&&!/^#/{printf("ipset=/.%s/'"netflix"'\n",$0)}' /etc/ssr/netflix.list >/tmp/dnsmasq.ssr/netflix_forward.conf
@@ -28,4 +28,3 @@ if [ "$1" == "" ]; then
 	awk '!/^$/&&!/^#/{printf("server=/.%s/'"127.0.0.1#5335"'\n",$0)}' /etc/ssr/black.list >>/tmp/dnsmasq.ssr/blacklist_forward.conf
 	awk '!/^$/&&!/^#/{printf("ipset=/.%s/'"whitelist"'\n",$0)}' /etc/ssr/white.list >/tmp/dnsmasq.ssr/whitelist_forward.conf
 fi
-/etc/init.d/dnsmasq restart >/dev/null 2>&1

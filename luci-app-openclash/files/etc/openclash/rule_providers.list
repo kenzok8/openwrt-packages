@@ -6,10 +6,8 @@
 国外常用网站合集,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/,Global.yaml
 国外流媒体合集,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/,Streaming.yaml
 学术网站,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/Extra/,Scholar.yaml
-常用隐私规则,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/,Unbreak.yaml
 广告规则,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/Guard/,Advertising.yaml
 隐私规则合集,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/Guard/,Privacy.yaml
-GFW地址,ConnersHua,ipcidr,DivineEngine/Profiles/master/Clash/RuleSet/Extra/,IP-Blackhole.yaml
 AbemaTV,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Video/,AbemaTV.yaml
 All-4,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Video/,All-4.yaml
 AppStore,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/Extra/Apple/,AppStore.yaml
@@ -28,6 +26,7 @@ DAZN,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/StreamingMe
 Deezer,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Music/,Deezer.yaml
 DisneyPlus,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Video/,DisneyPlus.yaml
 FOX,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Video/,FOX.yaml
+GFW地址,ConnersHua,ipcidr,DivineEngine/Profiles/master/Clash/RuleSet/Extra/,IP-Blackhole.yaml
 GoogleDrive,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/Extra/Google/,GoogleDrive.yaml
 GoogleSearch,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/Extra/Google/,GoogleSearch.yaml
 HBO,ConnersHua,classical,DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Video/,HBO.yaml

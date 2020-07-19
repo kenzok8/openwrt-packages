@@ -6,16 +6,21 @@ local util = require "luci.util"
 local i18n = require "luci.i18n"
 
 appname = "passwall"
+curl = "/usr/bin/curl"
+curl_args = {"-skL", "--connect-timeout 3", "--retry 3", "-m 60"}
 wget = "/usr/bin/wget"
 wget_args = {"--no-check-certificate", "--quiet", "--timeout=100", "--tries=3"}
 command_timeout = 300
 LEDE_BOARD = nil
 DISTRIB_TARGET = nil
 
+function gen_uuid()
+    local uuid = string.gsub(sys.exec("echo -n $(cat /proc/sys/kernel/random/uuid)"), "-", "")
+    return uuid
+end
+
 function uci_get_type(type, config, default)
-    local value = uci:get_first(appname, type, config, default) or sys.exec(
-                      "echo -n `uci -q get " .. appname .. ".@" .. type ..
-                          "[0]." .. config .. "`")
+    local value = uci:get_first(appname, type, config, default) or sys.exec("echo -n $(uci -q get " .. appname .. ".@" .. type .."[0]." .. config .. ")")
     if (value == nil or value == "") and (default and default ~= "") then
         value = default
     end
@@ -23,13 +28,75 @@ function uci_get_type(type, config, default)
 end
 
 function uci_get_type_id(id, config, default)
-    local value = uci:get(appname, id, config, default) or
-                      sys.exec("echo -n `uci -q get " .. appname .. "." .. id ..
-                                   "." .. config .. "`")
+    local value = uci:get(appname, id, config, default) or sys.exec("echo -n $(uci -q get " .. appname .. "." .. id .. "." .. config .. ")")
     if (value == nil or value == "") and (default and default ~= "") then
         value = default
     end
     return value
+end
+
+function chmod_755(file)
+    if file and file ~= "" then
+        if not fs.access(file, "rwx", "rx", "rx") then
+            fs.chmod(file, 755)
+        end
+    end
+end
+
+function get_v2ray_path()
+    local path = uci_get_type("global_app", "v2ray_file")
+    return path .. "/v2ray"
+end
+
+function get_v2ray_version(file)
+    if file == nil then file = get_v2ray_path() end
+    chmod_755(file)
+    if fs.access(file) then
+        return sys.exec("echo -n $(%s -version | awk '{print $2}' | sed -n 1P)" % file)
+    end
+    return ""
+end
+
+function get_trojan_go_path()
+    local path = uci_get_type("global_app", "trojan_go_file")
+    return path
+end
+
+function get_trojan_go_version(file)
+    if file == nil then file = get_trojan_go_path() end
+    chmod_755(file)
+    if fs.access(file) then
+        return sys.exec("echo -n $(%s -version | awk '{print $2}' | sed -n 1P)" % file)
+    end
+    return ""
+end
+
+function get_kcptun_path()
+    local path = uci_get_type("global_app", "kcptun_client_file")
+    return path
+end
+
+function get_kcptun_version(file)
+    if file == nil then file = get_kcptun_path() end
+    chmod_755(file)
+    if fs.access(file) then
+        return sys.exec("echo -n $(%s -v | awk '{print $3}')" % file)
+    end
+    return ""
+end
+
+function get_brook_path()
+    local path = uci_get_type("global_app", "brook_file")
+    return path
+end
+
+function get_brook_version(file)
+    if file == nil then file = get_brook_path() end
+    chmod_755(file)
+    if fs.access(file) then
+        return sys.exec("echo -n $(%s -v | awk '{print $3}')" % file)
+    end
+    return ""
 end
 
 function _unpack(t, i)
@@ -108,12 +175,10 @@ end
 function auto_get_arch()
     local arch = nixio.uname().machine or ""
     if fs.access("/usr/lib/os-release") then
-        LEDE_BOARD = sys.exec(
-                         "echo -n `grep 'LEDE_BOARD' /usr/lib/os-release | awk -F '[\\042\\047]' '{print $2}'`")
+        LEDE_BOARD = sys.exec("echo -n `grep 'LEDE_BOARD' /usr/lib/os-release | awk -F '[\\042\\047]' '{print $2}'`")
     end
     if fs.access("/etc/openwrt_release") then
-        DISTRIB_TARGET = sys.exec(
-                             "echo -n `grep 'DISTRIB_TARGET' /etc/openwrt_release | awk -F '[\\042\\047]' '{print $2}'`")
+        DISTRIB_TARGET = sys.exec("echo -n `grep 'DISTRIB_TARGET' /etc/openwrt_release | awk -F '[\\042\\047]' '{print $2}'`")
     end
 
     if arch == "mips" then
@@ -121,15 +186,13 @@ function auto_get_arch()
             if string.match(LEDE_BOARD, "ramips") == "ramips" then
                 arch = "ramips"
             else
-                arch = sys.exec("echo '" .. LEDE_BOARD ..
-                                    "' | grep -oE 'ramips|ar71xx'")
+                arch = sys.exec("echo '" .. LEDE_BOARD .. "' | grep -oE 'ramips|ar71xx'")
             end
         elseif DISTRIB_TARGET and DISTRIB_TARGET ~= "" then
             if string.match(DISTRIB_TARGET, "ramips") == "ramips" then
                 arch = "ramips"
             else
-                arch = sys.exec("echo '" .. DISTRIB_TARGET ..
-                                    "' | grep -oE 'ramips|ar71xx'")
+                arch = sys.exec("echo '" .. DISTRIB_TARGET .. "' | grep -oE 'ramips|ar71xx'")
             end
         end
     end
@@ -168,17 +231,7 @@ end
 
 function get_api_json(url)
     local jsonc = require "luci.jsonc"
-
-    local output = {}
-    -- exec(wget, { "-O-", url, _unpack(wget_args) },
-    --	function(chunk) output[#output + 1] = chunk end)
-    -- local json_content = util.trim(table.concat(output))
-
-    local json_content = luci.sys.exec(wget ..
-                                           " --no-check-certificate --timeout=10 -t 1 -O- " ..
-                                           url)
-
+    local json_content = luci.sys.exec(curl .. " " .. _unpack(curl_args) .. " " .. url)
     if json_content == "" then return {} end
-
     return jsonc.parse(json_content) or {}
 end
