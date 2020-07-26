@@ -1,13 +1,13 @@
+# Copyright (C) 2020 Lienol
+#
+# This is free software, licensed under the GNU General Public License v3.
+#
+
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=AdGuardHome
-PKG_VERSION:=v0.102.0
+PKG_VERSION:=release
 PKG_RELEASE:=1
-
-GET_LATEST_VERSION:=$(shell curl --silent "https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')
-ifneq ($(GET_LATEST_VERSION),)
-	PKG_VERSION:=$(GET_LATEST_VERSION)
-endif
 
 ifeq ($(ARCH),i386)
 	PKG_ARCH:=386
@@ -32,7 +32,7 @@ ifeq ($(ARCH),aarch64)
 endif
 
 PKG_FILE:=$(PKG_NAME)_$(PKG_VERSION)_linux_$(PKG_ARCH).tar.gz
-PKG_URL:=https://github.com/AdguardTeam/AdGuardHome/releases/download/$(PKG_VERSION)/$(PKG_NAME)_linux_$(PKG_ARCH).tar.gz
+PKG_URL:=https://static.adguard.com/adguardhome/$(PKG_VERSION)/$(PKG_NAME)_linux_$(PKG_ARCH).tar.gz
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)/$(PKG_VERSION)
 PKG_HASH:=skip
 
