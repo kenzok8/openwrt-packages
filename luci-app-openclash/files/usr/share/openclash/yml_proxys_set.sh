@@ -16,6 +16,9 @@ UPDATE_CONFIG_NAME=$(echo "$UPDATE_CONFIG_FILE" |awk -F '/' '{print $5}' 2>/dev/
 UCI_DEL_LIST="uci del_list openclash.config.new_servers_group"
 UCI_ADD_LIST="uci add_list openclash.config.new_servers_group"
 UCI_SET="uci set openclash.config."
+MIX_PROXY=$(uci get openclash.config.mix_proxies 2>/dev/null)
+servers_name="/tmp/servers_name.list"
+proxy_provider_name="/tmp/provider_name.list"
 
 if [ ! -z "$UPDATE_CONFIG_FILE" ]; then
    CONFIG_FILE="$UPDATE_CONFIG_FILE"
@@ -47,14 +50,6 @@ yml_proxy_provider_set()
    config_get "health_check_url" "$section" "health_check_url" ""
    config_get "health_check_interval" "$section" "health_check_interval" ""
    
-   if [ ! -z "$if_game_proxy" ] && [ "$if_game_proxy" != "$name" ] && [ "$if_game_proxy_type" = "proxy-provider" ]; then
-      return
-   fi
-   
-   if [ ! -z "$config" ] && [ "$config" != "$CONFIG_NAME" ] && [ "$config" != "all" ]; then
-      return
-   fi
-   
    if [ "$enabled" = "0" ]; then
       return
    fi
@@ -75,6 +70,23 @@ yml_proxy_provider_set()
    
    if [ -z "$health_check" ]; then
       return
+   fi
+   
+   if [ ! -z "$if_game_proxy" ] && [ "$if_game_proxy" != "$name" ] && [ "$if_game_proxy_type" = "proxy-provider" ]; then
+      return
+   fi
+   
+   if [ "$MIX_PROXY" != "1" ] && [ ! -z "$config" ] && [ "$config" != "$CONFIG_NAME" ] && [ "$config" != "all" ]; then
+      return
+   fi
+   
+   if [ "$config" = "$CONFIG_NAME" ] || [ "$config" = "all" ]; then
+      if [ -n "$(grep -w "path: $path" "$PROXY_PROVIDER_FILE" 2>/dev/null)" ]; then
+         return
+      elif [ "$(grep -Fw "$name" "$proxy_provider_name" |wc -l 2>/dev/null)" -ge 2 ] && [ -z "$(grep -w "path: $path" "$PROXY_PROVIDER_FILE" 2>/dev/null)" ]; then
+      	 sed -i "1,/${name}/{//d}" "$proxy_provider_name" 2>/dev/null
+         return
+      fi
    fi
    
    echo "正在写入【$type】-【$name】代理集到配置文件【$CONFIG_NAME】..." >$START_LOG
@@ -160,15 +172,7 @@ yml_servers_set()
    config_get "http_path" "$section" "http_path" ""
    config_get "keep_alive" "$section" "keep_alive" ""
    config_get "servername" "$section" "servername" ""
-   
-   if [ ! -z "$if_game_proxy" ] && [ "$if_game_proxy" != "$name" ] && [ "$if_game_proxy_type" = "proxy" ]; then
-      return
-   fi
-   
-   if [ ! -z "$config" ] && [ "$config" != "$CONFIG_NAME" ] && [ "$config" != "all" ]; then
-      return
-   fi
-   
+
    if [ "$enabled" = "0" ]; then
       return
    fi
@@ -193,6 +197,29 @@ yml_servers_set()
    	 if [ "$type" = "ss" ] || [ "$type" = "trojan" ] || [ "$type" = "ssr" ]; then
         return
      fi
+   fi
+   
+   if [ ! -z "$if_game_proxy" ] && [ "$if_game_proxy" != "$name" ] && [ "$if_game_proxy_type" = "proxy" ]; then
+      return
+   fi
+   
+   if [ "$MIX_PROXY" != "1" ] && [ ! -z "$config" ] && [ "$config" != "$CONFIG_NAME" ] && [ "$config" != "all" ]; then
+      return
+   fi
+   
+   if [ "$config" = "$CONFIG_NAME" ] || [ "$config" = "all" ]; then
+      if [ "$(grep -Fw "$name" "$servers_name" |wc -l 2>/dev/null)" -ge 2 ] && [ -n "$(grep -w "name: \"$name\"" "$SERVER_FILE" 2>/dev/null)" ]; then
+         return
+      fi
+   fi
+   
+   if [ "$config" = "$CONFIG_NAME" ] || [ "$config" = "all" ]; then
+      if [ -n "$(grep -w "name: \"$name\"" "$SERVER_FILE" 2>/dev/null)" ]; then
+         return
+      elif [ "$(grep -Fw "$name" "$servers_name" |wc -l 2>/dev/null)" -ge 2 ] && [ -z "$(grep -w "name: \"$name\"" "$SERVER_FILE" 2>/dev/null)" ]; then
+      	 sed -i "1,/${name}/{//d}" "$servers_name" 2>/dev/null
+         return
+      fi
    fi
    
    echo "正在写入【$type】-【$name】节点到配置文件【$CONFIG_NAME】..." >$START_LOG
@@ -512,12 +539,32 @@ new_servers_group_set()
    
 }
 
+yml_servers_name_get()
+{
+	 local section="$1"
+   config_get "name" "$section" "name" ""
+   [ ! -z "$name" ] && {
+      echo "$name" >>"$servers_name"
+   }
+}
+
+yml_proxy_provider_name_get()
+{
+	 local section="$1"
+   config_get "name" "$section" "name" ""
+   [ ! -z "$name" ] && {
+      echo "$name" >>"$proxy_provider_name"
+   }
+}
 
 #创建配置文件
 if_game_proxy="$1"
 if_game_proxy_type="$2"
-#判断是否启用保留配置
+#创建对比文件防止重复
 config_load "openclash"
+config_foreach yml_servers_name_get "servers"
+config_foreach yml_proxy_provider_name_get "proxy-provider"
+#判断是否启用保留配置
 config_foreach new_servers_group_set "config_subscribe"
 #proxy-provider
 echo "开始写入配置文件【$CONFIG_NAME】的代理集信息..." >$START_LOG
@@ -529,6 +576,7 @@ if [ "$(grep "-" /tmp/Proxy_Provider 2>/dev/null |wc -l)" -eq 0 ]; then
    rm -rf $PROXY_PROVIDER_FILE
    rm -rf /tmp/Proxy_Provider
 fi
+rm -rf $proxy_provider_name
 
 #proxy
 rule_sources=$(uci get openclash.config.rule_sources 2>/dev/null)
@@ -543,6 +591,7 @@ else
    rm -rf $SERVER_FILE
    rm -rf /tmp/Proxy_Server
 fi
+rm -rf $servers_name
 
 #一键创建配置文件
 if [ "$rule_sources" = "ConnersHua" ] && [ "$servers_if_update" != "1" ] && [ -z "$if_game_proxy" ]; then
@@ -565,7 +614,7 @@ EOF
 fi
 cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
 cat >> "$SERVER_FILE" <<-EOF
-  url: http://www.gstatic.com/generate_204
+  url: https://cp.cloudflare.com/generate_204
   interval: "600"
 - name: Proxy
   type: select
@@ -653,7 +702,7 @@ EOF
 fi
 cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
 cat >> "$SERVER_FILE" <<-EOF
-  url: http://www.gstatic.com/generate_204
+  url: https://cp.cloudflare.com/generate_204
   interval: "600"
 - name: Proxy
   type: select
@@ -887,7 +936,7 @@ EOF
 fi
 cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
 cat >> "$SERVER_FILE" <<-EOF
-  url: http://www.gstatic.com/generate_204
+  url: https://cp.cloudflare.com/generate_204
   interval: "600"
 - name: Proxy
   type: select
