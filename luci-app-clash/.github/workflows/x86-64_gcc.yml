@@ -1,7 +1,7 @@
 on:
   push:
-    tags:
-      - 'v*.*.*.*'
+    branches: 
+      - test
 
 name: luci-app-clash
 jobs:
