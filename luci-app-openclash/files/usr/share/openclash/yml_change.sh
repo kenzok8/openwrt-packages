@@ -202,8 +202,15 @@
 	           sed -i "/^ \{0,\}hosts:/c\hosts:" "$7"
 	        fi
 	     fi
-       sed -i '/^hosts:/a\##Custom HOSTS END##' "$7" 2>/dev/null
-       sed -i '/^hosts:/a\##Custom HOSTS##' "$7" 2>/dev/null
+	     if [ -z "$(grep "^ \{0,\}use-hosts:" $7)" ]; then
+	        sed -i "/^dns:/a\  use-hosts: true" "$7"
+   	   else
+	        if [ ! -z "$(grep "^ \{0,\}use-hosts:" $7)" ]; then
+	           sed -i "/^ \{0,\}use-hosts:/c\  use-hosts: true" "$7"
+	        fi
+	     fi
+	     sed -i '/^hosts:/a\##Custom HOSTS END##' "$7" 2>/dev/null
+	     sed -i '/^hosts:/a\##Custom HOSTS##' "$7" 2>/dev/null
 	     sed -i '/##Custom HOSTS##/r/etc/openclash/custom/openclash_custom_hosts.list' "$7" 2>/dev/null
 	     sed -i "/^hosts:/,/^dns:/ {s/^ \{0,\}'/  '/}" "$7" 2>/dev/null #修改参数空格
 	  fi
