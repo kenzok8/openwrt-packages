@@ -70,7 +70,7 @@ o.write = function()
 	end)
 	uci:save("shadowsocksr")
 	uci:commit("shadowsocksr")
-	luci.sys.exec("/etc/init.d/shadowsocksr restart")
+	luci.sys.exec("/etc/init.d/shadowsocksr restart &")
 	luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocksr", "servers"))
 	return
 end
@@ -92,7 +92,7 @@ end
 
 o = s:option(DummyValue, "type", translate("Type"))
 function o.cfgvalue(...)
-	return Value.cfgvalue(...) or ""
+	return (Value.cfgvalue(...) == "vless") and "VLESS" or Value.cfgvalue(...)
 end
 
 o = s:option(DummyValue, "alias", translate("Alias"))
@@ -119,7 +119,7 @@ node.write = function(self, section)
 	uci:set("shadowsocksr", '@global[0]', 'global_server', section)
 	uci:save("shadowsocksr")
 	uci:commit("shadowsocksr")
-	luci.sys.exec("/etc/init.d/shadowsocksr restart")
+	luci.sys.exec("/etc/init.d/shadowsocksr restart &")
 	luci.http.redirect(luci.dispatcher.build_url("admin", "services", "shadowsocksr", "client"))
 end
 

@@ -1,7 +1,8 @@
 #!/bin/sh
 . /lib/functions.sh
+. /usr/share/openclash/openclash_ps.sh
 
-status=$(ps|grep -c /usr/share/openclash/yml_proxys_set.sh)
+status=$(unify_ps_status "yml_proxys_set.sh")
 [ "$status" -gt "3" ] && exit 0
 
 START_LOG="/tmp/openclash_start.log"
@@ -16,6 +17,9 @@ UPDATE_CONFIG_NAME=$(echo "$UPDATE_CONFIG_FILE" |awk -F '/' '{print $5}' 2>/dev/
 UCI_DEL_LIST="uci del_list openclash.config.new_servers_group"
 UCI_ADD_LIST="uci add_list openclash.config.new_servers_group"
 UCI_SET="uci set openclash.config."
+MIX_PROXY=$(uci get openclash.config.mix_proxies 2>/dev/null)
+servers_name="/tmp/servers_name.list"
+proxy_provider_name="/tmp/provider_name.list"
 
 if [ ! -z "$UPDATE_CONFIG_FILE" ]; then
    CONFIG_FILE="$UPDATE_CONFIG_FILE"
@@ -47,14 +51,6 @@ yml_proxy_provider_set()
    config_get "health_check_url" "$section" "health_check_url" ""
    config_get "health_check_interval" "$section" "health_check_interval" ""
    
-   if [ ! -z "$if_game_proxy" ] && [ "$if_game_proxy" != "$name" ] && [ "$if_game_proxy_type" = "proxy-provider" ]; then
-      return
-   fi
-   
-   if [ ! -z "$config" ] && [ "$config" != "$CONFIG_NAME" ] && [ "$config" != "all" ]; then
-      return
-   fi
-   
    if [ "$enabled" = "0" ]; then
       return
    fi
@@ -75,6 +71,24 @@ yml_proxy_provider_set()
    
    if [ -z "$health_check" ]; then
       return
+   fi
+   
+   if [ ! -z "$if_game_proxy" ] && [ "$if_game_proxy" != "$name" ] && [ "$if_game_proxy_type" = "proxy-provider" ]; then
+      return
+   fi
+   
+   if [ "$MIX_PROXY" != "1" ] && [ ! -z "$config" ] && [ "$config" != "$CONFIG_NAME" ] && [ "$config" != "all" ]; then
+      return
+   fi
+   
+   #避免重复代理集
+   if [ "$config" = "$CONFIG_NAME" ] || [ "$config" = "all" ]; then
+      if [ -n "$(grep -w "path: $path" "$PROXY_PROVIDER_FILE" 2>/dev/null)" ]; then
+         return
+      elif [ "$(grep -w "$name$" "$proxy_provider_name" |wc -l 2>/dev/null)" -ge 2 ] && [ -z "$(grep -w "path: $path" "$PROXY_PROVIDER_FILE" 2>/dev/null)" ]; then
+      	 sed -i "1,/${name}/{//d}" "$proxy_provider_name" 2>/dev/null
+         return
+      fi
    fi
    
    echo "正在写入【$type】-【$name】代理集到配置文件【$CONFIG_NAME】..." >$START_LOG
@@ -133,11 +147,16 @@ yml_servers_set()
    config_get "server" "$section" "server" ""
    config_get "port" "$section" "port" ""
    config_get "cipher" "$section" "cipher" ""
+   config_get "cipher_ssr" "$section" "cipher_ssr" ""
    config_get "password" "$section" "password" ""
    config_get "securitys" "$section" "securitys" ""
    config_get "udp" "$section" "udp" ""
    config_get "obfs" "$section" "obfs" ""
+   config_get "obfs_ssr" "$section" "obfs_ssr" ""
+   config_get "obfs_param" "$section" "obfs_param" ""
    config_get "obfs_vmess" "$section" "obfs_vmess" ""
+   config_get "protocol" "$section" "protocol" ""
+   config_get "protocol_param" "$section" "protocol_param" ""
    config_get "host" "$section" "host" ""
    config_get "mux" "$section" "mux" ""
    config_get "custom" "$section" "custom" ""
@@ -155,15 +174,7 @@ yml_servers_set()
    config_get "http_path" "$section" "http_path" ""
    config_get "keep_alive" "$section" "keep_alive" ""
    config_get "servername" "$section" "servername" ""
-   
-   if [ ! -z "$if_game_proxy" ] && [ "$if_game_proxy" != "$name" ] && [ "$if_game_proxy_type" = "proxy" ]; then
-      return
-   fi
-   
-   if [ ! -z "$config" ] && [ "$config" != "$CONFIG_NAME" ] && [ "$config" != "all" ]; then
-      return
-   fi
-   
+
    if [ "$enabled" = "0" ]; then
       return
    fi
@@ -185,11 +196,34 @@ yml_servers_set()
    fi
    
    if [ -z "$password" ]; then
-   	 if [ "$type" = "ss" ] || [ "$type" = "trojan" ]; then
+   	 if [ "$type" = "ss" ] || [ "$type" = "trojan" ] || [ "$type" = "ssr" ]; then
         return
      fi
    fi
    
+   if [ ! -z "$if_game_proxy" ] && [ "$if_game_proxy" != "$name" ] && [ "$if_game_proxy_type" = "proxy" ]; then
+      return
+   fi
+   
+   if [ "$MIX_PROXY" != "1" ] && [ ! -z "$config" ] && [ "$config" != "$CONFIG_NAME" ] && [ "$config" != "all" ]; then
+      return
+   fi
+   
+   #避免重复节点
+   if [ "$config" = "$CONFIG_NAME" ] || [ "$config" = "all" ]; then
+      if [ "$(grep -w "$name$" "$servers_name" |wc -l 2>/dev/null)" -ge 2 ] && [ -n "$(grep -w "name: \"$name\"" "$SERVER_FILE" 2>/dev/null)" ]; then
+         return
+      fi
+   fi
+   
+   if [ "$config" = "$CONFIG_NAME" ] || [ "$config" = "all" ]; then
+      if [ -n "$(grep -w "name: \"$name\"" "$SERVER_FILE" 2>/dev/null)" ]; then
+         return
+      elif [ "$(grep -w "$name$" "$servers_name" |wc -l 2>/dev/null)" -ge 2 ] && [ -z "$(grep -w "name: \"$name\"" "$SERVER_FILE" 2>/dev/null)" ]; then
+      	 sed -i "1,/${name}/{//d}" "$servers_name" 2>/dev/null
+         return
+      fi
+   fi
    echo "正在写入【$type】-【$name】节点到配置文件【$CONFIG_NAME】..." >$START_LOG
    
    if [ "$obfs" != "none" ] && [ -n "$obfs" ]; then
@@ -278,6 +312,35 @@ EOF
         fi
      fi
    fi
+   
+#ssr
+if [ "$type" = "ssr" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+- name: "$name"
+  type: $type
+  server: $server
+  port: $port
+  cipher: $cipher_ssr
+  password: "$password"
+  obfs: "$obfs_ssr"
+  protocol: "$protocol"
+EOF
+   if [ ! -z "$obfs_param" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  obfs-param: $obfs_param
+EOF
+   fi
+   if [ ! -z "$protocol_param" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  protocol-param: $protocol_param
+EOF
+   fi
+   if [ ! -z "$udp" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  udp: $udp
+EOF
+   fi
+fi
 
 #vmess
    if [ "$type" = "vmess" ]; then
@@ -478,12 +541,32 @@ new_servers_group_set()
    
 }
 
+yml_servers_name_get()
+{
+	 local section="$1"
+   config_get "name" "$section" "name" ""
+   [ ! -z "$name" ] && {
+      echo "$name" >>"$servers_name"
+   }
+}
+
+yml_proxy_provider_name_get()
+{
+	 local section="$1"
+   config_get "name" "$section" "name" ""
+   [ ! -z "$name" ] && {
+      echo "$name" >>"$proxy_provider_name"
+   }
+}
 
 #创建配置文件
 if_game_proxy="$1"
 if_game_proxy_type="$2"
-#判断是否启用保留配置
+#创建对比文件防止重复
 config_load "openclash"
+config_foreach yml_servers_name_get "servers"
+config_foreach yml_proxy_provider_name_get "proxy-provider"
+#判断是否启用保留配置
 config_foreach new_servers_group_set "config_subscribe"
 #proxy-provider
 echo "开始写入配置文件【$CONFIG_NAME】的代理集信息..." >$START_LOG
@@ -495,6 +578,7 @@ if [ "$(grep "-" /tmp/Proxy_Provider 2>/dev/null |wc -l)" -eq 0 ]; then
    rm -rf $PROXY_PROVIDER_FILE
    rm -rf /tmp/Proxy_Provider
 fi
+rm -rf $proxy_provider_name
 
 #proxy
 rule_sources=$(uci get openclash.config.rule_sources 2>/dev/null)
@@ -509,10 +593,11 @@ else
    rm -rf $SERVER_FILE
    rm -rf /tmp/Proxy_Server
 fi
+rm -rf $servers_name
 
 #一键创建配置文件
 if [ "$rule_sources" = "ConnersHua" ] && [ "$servers_if_update" != "1" ] && [ -z "$if_game_proxy" ]; then
-echo "使用ConnersHua规则创建中..." >$START_LOG
+echo "使用ConnersHua(规则集)规则创建中..." >$START_LOG
 echo "proxy-groups:" >>$SERVER_FILE
 cat >> "$SERVER_FILE" <<-EOF
 - name: Auto - UrlTest
@@ -531,8 +616,9 @@ EOF
 fi
 cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
 cat >> "$SERVER_FILE" <<-EOF
-  url: http://www.gstatic.com/generate_204
+  url: https://cp.cloudflare.com/generate_204
   interval: "600"
+  tolerance: "150"
 - name: Proxy
   type: select
   proxies:
@@ -589,99 +675,6 @@ ${UCI_SET}rule_source="ConnersHua"
 ${UCI_SET}GlobalTV="GlobalTV"
 ${UCI_SET}AsianTV="AsianTV"
 ${UCI_SET}Proxy="Proxy"
-${UCI_SET}Domestic="Domestic"
-${UCI_SET}Others="Others"
-[ "$config_auto_update" -eq 1 ] && [ "$new_servers_group_set" -eq 1 ] && {
-	${UCI_SET}servers_update="1"
-	${UCI_DEL_LIST}="Auto - UrlTest" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Auto - UrlTest" >/dev/null 2>&1
-	${UCI_DEL_LIST}="Proxy" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Proxy" >/dev/null 2>&1
-	${UCI_DEL_LIST}="AsianTV" >/dev/null 2>&1 && ${UCI_ADD_LIST}="AsianTV" >/dev/null 2>&1
-	${UCI_DEL_LIST}="GlobalTV" >/dev/null 2>&1 && ${UCI_ADD_LIST}="GlobalTV" >/dev/null 2>&1
-}
-elif [ "$rule_sources" = "ConnersHua_provider" ] && [ "$servers_if_update" != "1" ] && [ -z "$if_game_proxy" ]; then
-echo "使用ConnersHua(规则集)规则创建中..." >$START_LOG
-echo "proxy-groups:" >>$SERVER_FILE
-cat >> "$SERVER_FILE" <<-EOF
-- name: Auto - UrlTest
-  type: url-test
-EOF
-if [ -f "/tmp/Proxy_Server" ]; then
-cat >> "$SERVER_FILE" <<-EOF
-  proxies:
-EOF
-fi
-cat /tmp/Proxy_Server >> $SERVER_FILE 2>/dev/null
-if [ -f "/tmp/Proxy_Provider" ]; then
-cat >> "$SERVER_FILE" <<-EOF
-  use:
-EOF
-fi
-cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
-cat >> "$SERVER_FILE" <<-EOF
-  url: http://www.gstatic.com/generate_204
-  interval: "600"
-- name: Proxy
-  type: select
-  proxies:
-  - Auto - UrlTest
-  - DIRECT
-EOF
-cat /tmp/Proxy_Server >> $SERVER_FILE 2>/dev/null
-if [ -f "/tmp/Proxy_Provider" ]; then
-cat >> "$SERVER_FILE" <<-EOF
-  use:
-EOF
-fi
-cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
-cat >> "$SERVER_FILE" <<-EOF
-- name: Domestic
-  type: select
-  proxies:
-  - DIRECT
-  - Proxy
-- name: Others
-  type: select
-  proxies:
-  - Proxy
-  - DIRECT
-  - Domestic
-- name: AdBlock
-  type: select
-  proxies:
-  - REJECT
-  - DIRECT
-  - Proxy
-- name: AsianTV
-  type: select
-  proxies:
-  - DIRECT
-  - Proxy
-EOF
-cat /tmp/Proxy_Server >> $SERVER_FILE 2>/dev/null
-if [ -f "/tmp/Proxy_Provider" ]; then
-cat >> "$SERVER_FILE" <<-EOF
-  use:
-EOF
-fi
-cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
-cat >> "$SERVER_FILE" <<-EOF
-- name: GlobalTV
-  type: select
-  proxies:
-  - Proxy
-  - DIRECT
-EOF
-cat /tmp/Proxy_Server >> $SERVER_FILE 2>/dev/null
-if [ -f "/tmp/Proxy_Provider" ]; then
-cat >> "$SERVER_FILE" <<-EOF
-  use:
-EOF
-fi
-cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
-${UCI_SET}rule_source="ConnersHua_provider"
-${UCI_SET}GlobalTV="GlobalTV"
-${UCI_SET}AsianTV="AsianTV"
-${UCI_SET}Proxy="Proxy"
 ${UCI_SET}AdBlock="AdBlock"
 ${UCI_SET}Domestic="Domestic"
 ${UCI_SET}Others="Others"
@@ -712,8 +705,9 @@ EOF
 fi
 cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
 cat >> "$SERVER_FILE" <<-EOF
-  url: http://www.gstatic.com/generate_204
+  url: https://cp.cloudflare.com/generate_204
   interval: "600"
+  tolerance: "150"
 - name: Proxy
   type: select
   proxies:
@@ -750,6 +744,20 @@ cat >> "$SERVER_FILE" <<-EOF
   - DIRECT
   - Proxy
 - name: Netflix
+  type: select
+  proxies:
+  - GlobalTV
+  - DIRECT
+EOF
+cat /tmp/Proxy_Server >> $SERVER_FILE 2>/dev/null
+if [ -f "/tmp/Proxy_Provider" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  use:
+EOF
+fi
+cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
+cat >> "$SERVER_FILE" <<-EOF
+- name: Youtube
   type: select
   proxies:
   - GlobalTV
@@ -866,31 +874,17 @@ cat >> "$SERVER_FILE" <<-EOF
 EOF
 fi
 cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
-cat >> "$SERVER_FILE" <<-EOF
-- name: Netease Music
-  type: select
-  proxies:
-  - DIRECT
-  - Proxy
-EOF
-cat /tmp/Proxy_Server >> $SERVER_FILE 2>/dev/null
-if [ -f "/tmp/Proxy_Provider" ]; then
-cat >> "$SERVER_FILE" <<-EOF
-  use:
-EOF
-fi
-cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
 ${UCI_SET}rule_source="lhie1"
 ${UCI_SET}GlobalTV="GlobalTV"
 ${UCI_SET}AsianTV="AsianTV"
 ${UCI_SET}Proxy="Proxy"
+${UCI_SET}Youtube="Youtube"
 ${UCI_SET}Apple="Apple"
 ${UCI_SET}Microsoft="Microsoft"
 ${UCI_SET}Netflix="Netflix"
 ${UCI_SET}Spotify="Spotify"
 ${UCI_SET}Steam="Steam"
 ${UCI_SET}AdBlock="AdBlock"
-${UCI_SET}Netease_Music="Netease Music"
 ${UCI_SET}Speedtest="Speedtest"
 ${UCI_SET}Telegram="Telegram"
 ${UCI_SET}PayPal="PayPal"
@@ -900,6 +894,7 @@ ${UCI_SET}Others="Others"
 	${UCI_SET}servers_update="1"
 	${UCI_DEL_LIST}="Auto - UrlTest" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Auto - UrlTest" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Proxy" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Proxy" >/dev/null 2>&1
+	${UCI_DEL_LIST}="Youtube" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Youtube" >/dev/null 2>&1
 	${UCI_DEL_LIST}="AsianTV" >/dev/null 2>&1 && ${UCI_ADD_LIST}="AsianTV" >/dev/null 2>&1
 	${UCI_DEL_LIST}="GlobalTV" >/dev/null 2>&1 && ${UCI_ADD_LIST}="GlobalTV" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Netflix" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Netflix" >/dev/null 2>&1
@@ -908,7 +903,6 @@ ${UCI_SET}Others="Others"
 	${UCI_DEL_LIST}="Telegram" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Telegram" >/dev/null 2>&1
 	${UCI_DEL_LIST}="PayPal" >/dev/null 2>&1 && ${UCI_ADD_LIST}="PayPal" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Speedtest" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Speedtest" >/dev/null 2>&1
-	${UCI_DEL_LIST}="Netease Music" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Netease Music" >/dev/null 2>&1
 }
 elif [ "$rule_sources" = "ConnersHua_return" ] && [ "$servers_if_update" != "1" ] && [ -z "$if_game_proxy" ]; then
 echo "使用ConnersHua回国规则创建中..." >$START_LOG
@@ -930,8 +924,9 @@ EOF
 fi
 cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
 cat >> "$SERVER_FILE" <<-EOF
-  url: http://www.gstatic.com/generate_204
+  url: https://cp.cloudflare.com/generate_204
   interval: "600"
+  tolerance: "150"
 - name: Proxy
   type: select
   proxies:

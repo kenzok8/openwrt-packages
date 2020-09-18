@@ -11,54 +11,52 @@ function index()
 		return
 	end
 
-	local page = entry({"admin", "services", "clash"},alias("admin", "services", "clash", "overview"), _("Clash"), 5)
+	local page = entry({"admin", "services", "clash"},alias("admin", "services", "clash", "overview"), _("Clash"), 1)
 	page.dependent = true
 	page.acl_depends = {"luci-app-clash"}
 	
 	entry({"admin", "services", "clash", "overview"},cbi("clash/overview"),_("Overview"), 10).leaf = true
-	entry({"admin", "services", "clash", "client"},cbi("clash/client"),_("Client"), 20).leaf = true
+	entry({"admin", "services", "clash", "client"},cbi("clash/client/client"),_("Client"), 20).leaf = true
 
 	entry({"admin", "services", "clash", "config"}, firstchild(),_("Config"), 25)
-	entry({"admin", "services", "clash", "config", "import"},cbi("clash/import"),_("Import Config"), 25).leaf = true
-	entry({"admin", "services", "clash", "config", "config"},cbi("clash/config"),_("Select Config"), 30).leaf = true
+	entry({"admin", "services", "clash", "config", "import"},cbi("clash/config/import"),_("Import Config"), 25).leaf = true
+	entry({"admin", "services", "clash", "config", "config"},cbi("clash/config/config"),_("Select Config"), 30).leaf = true
 	
-
+	entry({"admin", "services", "clash", "config", "create"},cbi("clash/config/create"),_("Create Config"), 35).leaf = true
+	entry({"admin", "services", "clash", "proxyprovider"},cbi("clash/config/proxy_provider"), nil).leaf = true
+	entry({"admin", "services", "clash", "servers"},cbi("clash/config/servers-config"), nil).leaf = true
+    entry({"admin", "services", "clash", "ruleprovider"},cbi("clash/config/rule_provider"), nil).leaf = true	
+	entry({"admin", "services", "clash", "rules"},cbi("clash/config/rules"), nil).leaf = true
+	entry({"admin", "services", "clash", "pgroups"},cbi("clash/config/groups"), nil).leaf = true
+	entry({"admin", "services", "clash", "rulemanager"},cbi("clash/config/ruleprovider_manager"), nil).leaf = true
 	
-	entry({"admin", "services", "clash", "config", "create"},cbi("clash/create"),_("Standard Config"), 35).leaf = true
-    entry({"admin", "services", "clash", "servers"},cbi("clash/servers-config"), nil).leaf = true
-	entry({"admin", "services", "clash", "provider"},cbi("clash/provider-config"), nil).leaf = true
-    entry({"admin", "services", "clash", "groups"},cbi("clash/groups"), nil).leaf = true
-
-	entry({"admin", "services", "clash", "config", "providers"},cbi("clash/provider/providers"),_("Provider Config"), 40).leaf = true
-	entry({"admin", "services", "clash", "proxyprovider"},cbi("clash/provider/proxy_provider"), nil).leaf = true
-    entry({"admin", "services", "clash", "ruleprovider"},cbi("clash/provider/rule_provider"), nil).leaf = true	
-	entry({"admin", "services", "clash", "rules"},cbi("clash/provider/rules"), nil).leaf = true
-	    entry({"admin", "services", "clash", "pgroups"},cbi("clash/provider/groups"), nil).leaf = true
-
-	entry({"admin", "services", "clash", "settings"}, firstchild(),_("Settings"), 50)
-	entry({"admin", "services", "clash", "settings", "port"},cbi("clash/port"),_("Proxy Ports"), 60).leaf = true
-	entry({"admin", "services", "clash", "settings", "dns"},cbi("clash/dns"),_("DNS Settings"), 70).leaf = true
-	entry({"admin", "services", "clash", "settings", "geoip"},cbi("clash/geoip"),_("Update GeoIP"), 80).leaf = true
-	entry({"admin", "services", "clash", "settings", "list"},cbi("clash/list"),_("Custom List"), 90).leaf = true
-
-	entry({"admin", "services", "clash", "settings", "grules"},cbi("clash/game-settings"),_("Game Rules"), 91).dependent = false
-    entry({"admin", "services", "clash", "g-rules"},cbi("clash/game-rule"), nil).leaf = true
+	
+	entry({"admin", "services", "clash", "settings"}, firstchild(),_("Settings"), 40)
+	entry({"admin", "services", "clash", "settings", "port"},cbi("clash/dns/port"),_("Proxy Ports"), 60).leaf = true
+	entry({"admin", "services", "clash", "settings", "geoip"},cbi("clash/geoip/geoip"),_("Update GeoIP"), 80).leaf = true
+	entry({"admin", "services", "clash", "settings", "grules"},cbi("clash/game/game-settings"),_("Game Rules"), 91).dependent = false
+    entry({"admin", "services", "clash", "g-rules"},cbi("clash/game/game-rule"), nil).leaf = true
 	entry({"admin", "services", "clash", "settings", "other"},cbi("clash/other"),_("Other Settings"), 92).leaf = true
-    entry({"admin", "services", "clash", "ip-rules"},cbi("clash/ip-rules"), nil).leaf = true
+    entry({"admin", "services", "clash", "ip-rules"},cbi("clash/config/ip-rules"), nil).leaf = true	
+	entry({"admin", "services", "clash", "settings", "dns"},firstchild(),_("DNS Settings"), 65)
+	entry({"admin", "services", "clash", "settings", "dns", "dns"},cbi("clash/dns/dns"),_("Clash DNS"), 70).leaf = true
+	entry({"admin", "services", "clash", "settings", "dns", "advance"},cbi("clash/dns/advance"),_("Advance DNS"), 75).leaf = true
 	
+
 	
-	entry({"admin","services","clash","status"},call("action_status")).leaf=true
-	entry({"admin", "services", "clash", "log"},cbi("clash/log"),_("Log"), 150).leaf = true
-	entry({"admin", "services", "clash", "update"},cbi("clash/update"),_("Update"), 160).leaf = true
+	entry({"admin", "services", "clash", "update"},cbi("clash/update/update"),_("Update"), 45).leaf = true
+	entry({"admin", "services", "clash", "log"},cbi("clash/logs/log"),_("Log"), 50).leaf = true
+	
 
 	entry({"admin","services","clash","check_status"},call("check_status")).leaf=true
 	entry({"admin", "services", "clash", "ping"}, call("act_ping")).leaf=true
 	entry({"admin", "services", "clash", "readlog"},call("action_read")).leaf=true
-
+	entry({"admin","services","clash", "status"},call("action_status")).leaf=true
 	entry({"admin", "services", "clash", "check"}, call("check_update_log")).leaf=true
 	entry({"admin", "services", "clash", "doupdate"}, call("do_update")).leaf=true
 	entry({"admin", "services", "clash", "start"}, call("do_start")).leaf=true
 	entry({"admin", "services", "clash", "stop"}, call("do_stop")).leaf=true
+	entry({"admin", "services", "clash", "reload"}, call("do_reload")).leaf=true
 	entry({"admin", "services", "clash", "geo"}, call("geoip_check")).leaf=true
 	entry({"admin", "services", "clash", "geoipupdate"}, call("geoip_update")).leaf=true
 	entry({"admin", "services", "clash", "check_geoip"}, call("check_geoip_log")).leaf=true	
@@ -67,11 +65,27 @@ function index()
 	entry({"admin", "services", "clash", "conf"},call("action_conf")).leaf=true
 	entry({"admin", "services", "clash", "update_config"},call("action_update")).leaf=true
 	entry({"admin", "services", "clash", "game_rule"},call("action_update_rule")).leaf=true
+	entry({"admin", "services", "clash", "ruleproviders"},call("action_update_rule_providers")).leaf=true
 	entry({"admin", "services", "clash", "ping_check"},call("action_ping_status")).leaf=true
 	
 end
 
 local fss = require "luci.clash"
+
+local function download_rule_provider()
+	local filename = luci.http.formvalue("filename")
+  	local status = luci.sys.call(string.format('/usr/share/clash/create/clash_rule_provider.sh "%s" >/dev/null 2>&1',filename))
+  	return status
+end
+
+
+function action_update_rule_providers()
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+	rulep = download_rule_provider();
+})
+end
+
 
 local function uhttp_port()
 	local uhttp_port = luci.sys.exec("uci get uhttpd.main.listen_http |awk -F ':' '{print $NF}'")
@@ -105,11 +119,6 @@ end
 
 local function in_use()
 	return luci.sys.exec("uci get clash.config.config_type")
-end
-
-
-local function ping_enable()
-	return luci.sys.exec("uci get clash.config.ping_enable")
 end
 
 
@@ -165,9 +174,6 @@ local function check_core()
 	return luci.sys.exec("sh /usr/share/clash/check_core_version.sh")
 end
 
-local function check_clashr_core()
-	return luci.sys.exec("sh /usr/share/clash/check_clashr_core_version.sh")
-end
 
 local function check_clashtun_core()
 	return luci.sys.exec("sh /usr/share/clash/check_clashtun_core_version.sh")
@@ -185,12 +191,17 @@ local function new_core_version()
 	return luci.sys.exec("sed -n 1p /usr/share/clash/new_core_version")
 end
 
-local function new_clashr_core_version()
-	return luci.sys.exec("sed -n 1p /usr/share/clash/new_clashr_core_version")
-end
 
 local function new_clashtun_core_version()
 	return luci.sys.exec("sed -n 1p /usr/share/clash/new_clashtun_core_version")
+end
+
+local function check_dtun_core()
+	return luci.sys.call(string.format("sh /usr/share/clash/check_dtun_core_version.sh"))
+end
+
+local function new_dtun_core()
+	return luci.sys.exec("sed -n 1p /usr/share/clash/new_clashdtun_core_version")
 end
 
 local function e_mode()
@@ -212,18 +223,6 @@ local function clash_core()
 end
 
 
-local function clashr_core()
-	if nixio.fs.access("/usr/bin/clash") then
-		local core=luci.sys.exec("/usr/bin/clash -v 2>/dev/null |awk -F ' ' '{print $2}'")
-		if core ~= "" then
-			return luci.sys.exec("/usr/bin/clash -v 2>/dev/null |awk -F ' ' '{print $2}'")
-		else
-			return luci.sys.exec("sed -n 1p /usr/share/clash/corer_version")
-		end
-	else
-		return "0"
-	end
-end
 
 
 local function clashtun_core()
@@ -242,7 +241,12 @@ end
 
 local function dtun_core()
 	if nixio.fs.access("/etc/clash/dtun/clash") then
-		return luci.sys.exec("/etc/clash/dtun/clash -v 2>/dev/null |awk -F ' ' '{print $2}'")
+		local tun=luci.sys.exec("/etc/clash/dtun/clash -v 2>/dev/null |awk -F ' ' '{print $2}'")
+		if tun ~= "" then
+			return luci.sys.exec("/etc/clash/dtun/clash -v 2>/dev/null |awk -F ' ' '{print $2}'")
+		else 
+			return luci.sys.exec("sed -n 1p /usr/share/clash/dtun_core_version")
+		end		
 	else
 		return "0"
 	end
@@ -307,11 +311,10 @@ function check_status()
 		check_version = check_version(),
 		check_core = check_core(),
 		current_version = current_version(),
-		check_clashr_core = check_clashr_core(),
 		new_version = new_version(),
-		new_clashr_core_version = new_clashr_core_version(),
 		clash_core = clash_core(),
-		clashr_core = clashr_core(),
+		check_dtun_core = check_dtun_core(),
+		new_dtun_core = new_dtun_core(),
 		clashtun_core = clashtun_core(),
 		dtun_core = dtun_core(),
 		new_core_version = new_core_version(),
@@ -329,8 +332,11 @@ function action_status()
 		localip = localip(),
 		dash_port = dash_port(),
 		current_version = current_version(),
+		new_dtun_core = new_dtun_core(),
+		new_core_version = new_core_version(),
+		new_clashtun_core_version =new_clashtun_core_version(),
+		new_version = new_version(),
 		clash_core = clash_core(),
-		clashr_core = clashr_core(),
 		dtun_core = dtun_core(),
 		dash_pass = dash_pass(),
 		clashtun_core = clashtun_core(),
@@ -377,6 +383,12 @@ end
 function do_stop()
 	luci.sys.exec('uci set clash.config.enable="0" && uci commit clash')
 	luci.sys.exec("/etc/init.d/clash stop 2>&1 &")
+end
+
+function do_reload()
+	if luci.sys.call("pidof clash >/dev/null") == 0 then
+		luci.sys.exec("/etc/init.d/clash reload 2>&1 &")
+	end	
 end
 
 function check_update_log()

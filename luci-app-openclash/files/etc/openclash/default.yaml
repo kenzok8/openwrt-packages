@@ -18,8 +18,8 @@ allow-lan: true # 此项将被接管为true
 # "[aaaa::a8aa:ff:fe09:57d8]": bind a single IPv6 address
 bind-address: "*" # HTTP(S)\SOCKS5 监听地址，此项将被接管为all
 
-# Rule / Global/ Direct (default is Rule)
-mode: Rule # 此项将被接管
+# rule / global / direct (default is rule)
+mode: rule # 此项将被接管
 
 # set log level to stdout (default is info)
 # info / warning / error / debug / silent
@@ -34,10 +34,6 @@ external-ui: "/usr/share/openclash/dashboard" # 此项将被接管
 
 # Secret for RESTful API (Optional)
 secret: '123456' # 此项将被接管
-
-# experimental feature
-experimental:
-  ignore-resolve-fail: true # ignore dns resolve fail, default value is true
 
 # authentication of local SOCKS5/HTTP(S) server
 authentication: # 此项将被接管
@@ -137,6 +133,32 @@ proxies: # 节点设置，此部分与proxy-provider两者不能同时删除
    # path: "/"
    # headers:
    #    custom: value
+
+# shadowsocksR
+#The supported shadowsocksR ciphers(encrypt methods):
+#aes-128-cfb aes-192-cfb    aes-256-cfb
+#aes-128-ctr aes-192-ctr    aes-256-ctr
+#rc4-md5     chacha20-ietf  xchacha20
+
+#The supported shadowsocksR obfses:
+#plain       http_simple         http_post
+#random_head tls1.2_ticket_auth  tls1.2_ticket_fastauth
+
+#The supported shadowsocksR protocols: 
+#origin           auth_sha1_v4 auth_aes128_md5
+#auth_aes128_sha1 auth_chain_a auth_chain_b
+
+- name: "ssr"
+  type: ssr
+  server: server
+  port: 443
+  cipher: chacha20-ietf
+  password: "password"
+  obfs: tls1.2_ticket_auth
+  protocol: auth_sha1_v4
+  # obfs-param: domain.tld
+  # protocol-param: "#"
+  # udp: true
 
 # vmess
 # cipher support auto/aes-128-gcm/chacha20-poly1305/none
@@ -283,7 +305,7 @@ proxy-groups: # 此参数必须保留,不能删除
 #rule-providers:
 #  name: # name of the provider
 #    type: http # type of the provider, it can be a HTTP or a File
-#    behavior: ipcidr # or domain
+#    behavior: classical # or ipcidr、domain
 #    path: # where is the file, ./ relative to clash home
 #    url: # only available when type is HTTP, where to download a file. You don't need to create a new file in local space.
 #    interval: # auto-update interval, only available when type is HTTP
@@ -316,6 +338,4 @@ rules: # 此参数必须保留,不能删除
 - SRC-PORT,7777,DIRECT
 # or use rule with provider
 - RULE-SET,name,Proxy
-# FINAL would remove after prerelease
-# you also can use `FINAL,Proxy` or `FINAL,,Proxy` now
 - MATCH,auto

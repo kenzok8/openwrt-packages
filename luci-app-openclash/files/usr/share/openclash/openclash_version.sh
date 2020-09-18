@@ -18,11 +18,11 @@ if [ "$CKTIME" != "$(grep "CheckTime" $LAST_OPVER 2>/dev/null |awk -F ':' '{prin
       curl -sL --connect-timeout 10 --retry 2 "$VERSION_URL" -o $LAST_OPVER >/dev/null 2>&1
    fi
    if [ "$?" -eq "0" ] && [ -s "$LAST_OPVER" ]; then
-   	  OP_LV=$(sed -n 1p $LAST_OPVER 2>/dev/null |awk -F '-' '{print $1}' |awk -F 'v' '{print $2}' |awk -F '.' '{print $1"."$2$3}' 2>/dev/null)
+   	  OP_LV=$(sed -n 1p $LAST_OPVER 2>/dev/null |awk -F '-' '{print $1}' |awk -F 'v' '{print $2}' |awk -F '.' '{print $2$3}' 2>/dev/null)
       if [ "$(expr "$OP_CV" \>= "$OP_LV")" -eq 1 ]; then
          sed -i "/^https:/i\CheckTime:${CKTIME}" "$LAST_OPVER" 2>/dev/null
          sed -i '/^https:/,$d' $LAST_OPVER
-      elif [ "$(expr "$OP_LV" \> "$OP_CV")" -eq 1 ]; then
+      elif [ "$(expr "$OP_LV" \> "$OP_CV")" -eq 1 ] && [ -n "$OP_LV" ]; then
          sed -i "/^https:/i\CheckTime:${CKTIME}" "$LAST_OPVER" 2>/dev/null
          return 2
       fi
@@ -32,6 +32,6 @@ if [ "$CKTIME" != "$(grep "CheckTime" $LAST_OPVER 2>/dev/null |awk -F ':' '{prin
 elif [ "$(expr "$OP_CV" \>= "$OP_LV")" -eq 1 ]; then
    sed -i '/^CheckTime:/,$d' $LAST_OPVER
    echo "CheckTime:$CKTIME" >> $LAST_OPVER
-elif [ "$(expr "$OP_LV" \> "$OP_CV")" -eq 1 ]; then
+elif [ "$(expr "$OP_LV" \> "$OP_CV")" -eq 1 ] && [ -n "$OP_LV" ]; then
    return 2
 fi 2>/dev/null

@@ -6,7 +6,7 @@ msgid "OpenClash"
 msgstr "OpenClash"
 
 msgid "A Clash Client For OpenWrt"
-msgstr "一个运行在OpenWrt上的Clash客户端，兼容Shadowsocks、Vmess、Trojan、Snell等协议，根据灵活的规则配置实现策略代理"
+msgstr "一个运行在OpenWrt上的Clash客户端，兼容Shadowsocks、ShadowsocksR、Vmess、Trojan、Snell等协议，根据灵活的规则配置实现策略代理"
 
 msgid "Global Settings(Will Modify The Config File Or Subscribe According To The Settings On This Page)"
 msgstr "全局设置（将按照本页设置自动修改配置文件和获取订阅）"
@@ -122,14 +122,20 @@ msgstr "Redir-Host（游戏）模式【依赖kmod-tun】"
 msgid "fake-ip-vpn(game mode)"
 msgstr "Fake-IP（游戏）模式【依赖kmod-tun】"
 
+msgid "redir-host-mix(tun mix mode)"
+msgstr "Redir-Host（TUN-混合）模式【依赖kmod-tun】【UDP-TUN，TCP-转发】"
+
+msgid "fake-ip-mix(tun mix mode)"
+msgstr "Fake-IP（TUN-混合）模式【依赖kmod-tun】【UDP-TUN，TCP-转发】"
+
 msgid "Select Mode For OpenClash Work, Try Flush DNS Cache If Network Error"
 msgstr "选择运行模式，Redir-Host模式下无法代理路由器自身流量，如客户端的网络异常请尝试清除DNS缓存"
 
 msgid "Proxy Mode"
 msgstr "*代理模式"
 
-msgid "Select Proxy Mode"
-msgstr "选择默认代理模式"
+msgid "Select Proxy Mode, Use Script Mode Could Prevent Proxy BT traffics If Rules Support, eg.lhie1's"
+msgstr "选择默认代理模式，如果规则支持，使用脚本模式可以阻止代理BT流量，比如lhie1规则"
 
 msgid "Rule Proxy Mode"
 msgstr "Rule【策略代理】"
@@ -148,6 +154,12 @@ msgstr "网络栈类型"
 
 msgid "Select Stack Type For Tun Mode, According To The Running Speed on Your Machine"
 msgstr "请自行根据运行速度为Tun模式选择合适的网络栈"
+
+msgid "China IP Route"
+msgstr "实验性：绕过中国大陆IP"
+
+msgid "Bypass The China Network Flows, Improve Performance"
+msgstr "启用后中国大陆流量将不再经过内核，提升系统性能"
 
 msgid "Log Level"
 msgstr "日志等级"
@@ -213,13 +225,16 @@ msgid "(Please Don't Modify it at Will)"
 msgstr "（如您不知道选项有何用，请不要随意修改）"
 
 msgid "Specify DNS Server"
-msgstr "（Fake-IP模式）黑名单DNS服务器"
+msgstr "指定（第二）DNS服务器"
 
-msgid "Specify DNS Server For List, Only One IP Server Address Support"
-msgstr "指定下方列表中域名的DNS服务器，只支持填写一个IP地址"
+msgid "Specify DNS Server For List and Server Nodes With Fake-IP Mode, Only One IP Server Address Support"
+msgstr "指定下方列表中域名和Fake-IP模式下非代理集内节点的DNS服务器，只支持填写一个IP地址"
 
 msgid "Domain Names In The List Do Not Return Fake-IP, One rule per line"
 msgstr "每行请只填写一个域名，列表中的域名在（Fake-IP模式）下查询DNS时将返回真实IP地址，更改后点击上方按钮生效"
+
+msgid "Domain Names In The List Use The Custom DNS Server, One rule per line"
+msgstr "每行请只填写一个域名，列表中的域名将使用上方指定的DNS进行查询"
 
 msgid "Fake-IP-Filter List Update"
 msgstr "更新Fake-IP域名黑名单"
@@ -379,6 +394,15 @@ msgstr "自动更新GEOIP数据库"
 msgid "Update GEOIP Database"
 msgstr "更新GEOIP数据库"
 
+msgid "Auto Update Chnroute Lists"
+msgstr "自动更新大陆白名单"
+
+msgid "Update Chnroute Lists"
+msgstr "更新大陆白名单"
+
+msgid "Chnroute Update"
+msgstr "大陆白名单订阅"
+
 msgid "Other Rules Update(Only in Use)"
 msgstr "正在使用第三方规则时才能更新"
 
@@ -444,6 +468,9 @@ msgstr "亚洲流媒体流量"
 
 msgid "Proxy"
 msgstr "必须代理的流量"
+
+msgid "Youtube"
+msgstr "Youtube流量"
 
 msgid "Apple"
 msgstr "苹果服务流量"
@@ -600,6 +627,12 @@ msgstr "使用第三方规则快速创建配置文件（创建后可在全局设
 msgid "Disable Create Config"
 msgstr "只更新配置文件服务器节点信息"
 
+msgid "Mix Proxies"
+msgstr "混合节点"
+
+msgid "Mix This Page's Proxies"
+msgstr "一键生成配置文件时合并本页下方的所有代理服务器信息（不区分配置文件）"
+
 msgid "Type"
 msgstr "节点类型"
 
@@ -632,6 +665,18 @@ msgstr "密码"
 
 msgid "Encrypt Method"
 msgstr "加密方式"
+
+msgid "Protocol"
+msgstr "协议"
+
+msgid "Protocol param(optional)"
+msgstr "传输协议参数（可选）"
+
+msgid "Obfs"
+msgstr "混淆插件"
+
+msgid "Obfs param(optional)"
+msgstr "混淆参数（可选）"
 
 msgid "UDP Enable"
 msgstr "UDP支持"
@@ -719,6 +764,9 @@ msgstr "检测地址（URL）"
 
 msgid "Test Interval(s)"
 msgstr "检测频率（秒）"
+
+msgid "Tolerance(ms)"
+msgstr "节点切换容忍值（毫秒）"
 
 msgid "Select"
 msgstr "Select【手动选择】"
@@ -886,7 +934,7 @@ msgid "Order Number"
 msgstr "序号"
 
 msgid "Game Rules Manage"
-msgstr "管理游戏规则"
+msgstr "管理第三方游戏规则"
 
 msgid "Other Rule Provider Manage"
 msgstr "管理第三方规则集"
@@ -924,8 +972,8 @@ msgstr "切换"
 msgid "Access Control"
 msgstr "访问控制"
 
-msgid "Access Control Mode"
-msgstr "访问控制模式"
+msgid "LAN Access Control Mode"
+msgstr "局域网访问控制模式"
 
 msgid "Black List Mode"
 msgstr "黑名单模式"
@@ -939,8 +987,23 @@ msgstr "不走代理的局域网LAN IP"
 msgid "LAN Proxied Host List"
 msgstr "走代理的局域网LAN IP"
 
+msgid "WAN Bypassed Host List"
+msgstr "不走代理的WAN IP"
+
+msgid "In The Fake-IP Mode, Only Pure IP Requests Are Supported"
+msgstr "在Fake-IP模式下，只支持过滤纯IP类型的请求"
+
 msgid "Rule Match Proxy Mode"
 msgstr "*仅代理命中规则流量"
 
 msgid "Only Proxy Rules Match, Prevent BT Passing"
 msgstr "仅允许代理命中规则的流量，防止BT下载流量经过代理"
+
+msgid "Provider File Manage"
+msgstr "代理（规则）集文件管理"
+
+msgid "Config File Edit"
+msgstr "配置文件编辑"
+
+msgid "Delete All File"
+msgstr "删除所有文件"

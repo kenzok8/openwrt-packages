@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-openclash
-PKG_VERSION:=0.39.2
+PKG_VERSION:=0.40.3
 PKG_RELEASE:=beta
 PKG_MAINTAINER:=vernesong <https://github.com/vernesong/OpenClash>
 
@@ -22,9 +22,6 @@ define Package/$(PKG_NAME)/description
     A LuCI support for clash
 endef
 
-define Package/$(PKG_NAME)/postinst
-endef
-
 define Build/Prepare
 	$(CP) $(CURDIR)/files $(PKG_BUILD_DIR)
 	$(foreach po,$(wildcard ${CURDIR}/i18n/zh-cn/*.po), \
@@ -41,6 +38,7 @@ define Build/Prepare
 	cp "$(PKG_BUILD_DIR)/files/etc/openclash/custom/openclash_custom_rules_2.list" "$(PKG_BUILD_DIR)/files/usr/share/openclash/backup/openclash_custom_rules_2.list" >/dev/null 2>&1
 	cp "$(PKG_BUILD_DIR)/files/etc/openclash/custom/openclash_custom_hosts.list" "$(PKG_BUILD_DIR)/files/usr/share/openclash/backup/openclash_custom_hosts.list" >/dev/null 2>&1
 	cp "$(PKG_BUILD_DIR)/files/etc/openclash/custom/openclash_custom_fake_filter.list" "$(PKG_BUILD_DIR)/files/usr/share/openclash/backup/openclash_custom_fake_filter.list" >/dev/null 2>&1
+	cp "$(PKG_BUILD_DIR)/files/etc/openclash/custom/openclash_custom_domain_dns.list" "$(PKG_BUILD_DIR)/files/usr/share/openclash/backup/openclash_custom_domain_dns.list" >/dev/null 2>&1
 endef
 
 define Build/Configure
@@ -64,6 +62,7 @@ if [ -f "/etc/openclash/custom/openclash_custom_rules.list" ]; then
 	cp "/etc/openclash/custom/openclash_custom_rules_2.list" "/tmp/openclash_custom_rules_2.list.bak" >/dev/null 2>&1
 	cp "/etc/openclash/custom/openclash_custom_hosts.list" "/tmp/openclash_custom_hosts.list.bak" >/dev/null 2>&1
 	cp "/etc/openclash/custom/openclash_custom_fake_filter.list" "/tmp/openclash_custom_fake_filter.list.bak" >/dev/null 2>&1
+	cp "/etc/openclash/custom/openclash_custom_domain_dns.list" "/tmp/openclash_custom_domain_dns.list.bak" >/dev/null 2>&1
 fi
 endef
 
@@ -91,6 +90,7 @@ cp "/etc/openclash/custom/openclash_custom_rules.list" "/usr/share/openclash/bac
 cp "/etc/openclash/custom/openclash_custom_rules_2.list" "/usr/share/openclash/backup/openclash_custom_rules_2.list" >/dev/null 2>&1
 cp "/etc/openclash/custom/openclash_custom_hosts.list" "/usr/share/openclash/backup/openclash_custom_hosts.list" >/dev/null 2>&1
 cp "/etc/openclash/custom/openclash_custom_fake_filter.list" "/usr/share/openclash/backup/openclash_custom_fake_filter.list" >/dev/null 2>&1
+cp "/etc/openclash/custom/openclash_custom_domain_dns.list" "/usr/share/openclash/backup/openclash_custom_domain_dns.list" >/dev/null 2>&1
 
 if [ -f "/tmp/openclash.bak" ]; then
 	mv "/tmp/openclash.bak" "/etc/config/openclash" >/dev/null 2>&1
@@ -98,9 +98,10 @@ if [ -f "/tmp/openclash.bak" ]; then
 	mv "/tmp/openclash_custom_rules_2.list.bak" "/etc/openclash/custom/openclash_custom_rules_2.list" >/dev/null 2>&1
 	mv "/tmp/openclash_custom_hosts.list.bak" "/etc/openclash/custom/openclash_custom_hosts.list" >/dev/null 2>&1
 	mv "/tmp/openclash_custom_fake_filter.list.bak" "/etc/openclash/custom/openclash_custom_fake_filter.list" >/dev/null 2>&1
+	mv "/tmp/openclash_custom_domain_dns.list.bak" "/etc/openclash/custom/openclash_custom_domain_dns.list" >/dev/null 2>&1
 	if [ -d "/tmp/openclash_history/" ]; then
-		rm -rf "/etc/openclash/history" >/dev/null 2>&1
-		mv "/tmp/openclash_history" "/etc/openclash/history" >/dev/null 2>&1
+		cp -a "/tmp/openclash_history/." "/etc/openclash/history" >/dev/null 2>&1
+		rm -rf "/tmp/openclash_history" >/dev/null 2>&1
 	fi
 fi
 if [ -f "/tmp/config.yaml" ]; then
@@ -168,6 +169,7 @@ define Package/$(PKG_NAME)/prerm
 	cp "/etc/openclash/custom/openclash_custom_rules_2.list" "/tmp/openclash_custom_rules_2.list.bak" >/dev/null 2>&1
 	cp "/etc/openclash/custom/openclash_custom_hosts.list" "/tmp/openclash_custom_hosts.list.bak" >/dev/null 2>&1
 	cp "/etc/openclash/custom/openclash_custom_fake_filter.list" "/tmp/openclash_custom_fake_filter.list.bak" >/dev/null 2>&1
+	cp "/etc/openclash/custom/openclash_custom_domain_dns.list" "/tmp/openclash_custom_domain_dns.list.bak" >/dev/null 2>&1
 endef
 
 define Package/$(PKG_NAME)/postrm
@@ -187,10 +189,12 @@ fi
 	rm -rf /tmp/openclash_start.log >/dev/null 2>&1
 	rm -rf /tmp/Proxy_Group >/dev/null 2>&1
 	rm -rf /tmp/rules_name >/dev/null 2>&1
+	rm -rf /tmp/rule_providers_name >/dev/null 2>&1
 	rm -rf /tmp/openclash_last_version >/dev/null 2>&1
 	rm -rf /tmp/clash_last_version >/dev/null 2>&1
 	rm -rf /etc/openclash/dnsmasq_fake_block.conf >/dev/null 2>&1
 	rm -rf /etc/openclash/clash >/dev/null 2>&1
+	rm -rf /usr/share/openclash/backup >/dev/null 2>&1
 	uci delete firewall.openclash >/dev/null 2>&1
 	uci commit firewall >/dev/null 2>&1
 	uci delete ucitrack.@openclash[-1] >/dev/null 2>&1

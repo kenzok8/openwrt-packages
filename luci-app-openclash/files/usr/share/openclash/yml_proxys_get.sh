@@ -1,6 +1,8 @@
 #!/bin/bash
 . /lib/functions.sh
-status=$(ps|grep -c /usr/share/openclash/yml_proxys_get.sh)
+. /usr/share/openclash/openclash_ps.sh
+
+status=$(unify_ps_status "yml_proxys_get.sh")
 [ "$status" -gt "3" ] && exit 0
 
 START_LOG="/tmp/openclash_start.log"
@@ -235,7 +237,7 @@ do
    echo "正在读取【$CONFIG_NAME】-【$provider_name】代理集配置..." >$START_LOG
    
    #代理集存在时获取代理集编号
-   provider_nums=$(grep -Fw "$provider_name" "$match_provider" |awk -F '.' '{print $1}')
+   provider_nums=$(grep -Fw "$provider_name" "$match_provider" 2>/dev/null|awk -F '.' '{print $1}')
    if [ "$servers_update" -eq 1 ] && [ ! -z "$provider_nums" ]; then
       sed -i "/^${provider_nums}\./c\#match#" "$match_provider" 2>/dev/null
       uci_set="uci -q set openclash.@proxy-provider["$provider_nums"]."
@@ -321,7 +323,7 @@ done
 if [ "$servers_if_update" = "1" ]; then
      echo "删除【$CONFIG_NAME】订阅中已不存在的代理集..." >$START_LOG
      sed -i '/#match#/d' "$match_provider" 2>/dev/null
-     cat $match_provider |awk -F '.' '{print $1}' |sort -rn |while read line
+     cat $match_provider 2>/dev/null|awk -F '.' '{print $1}' |sort -rn |while read line
      do
         if [ -z "$line" ]; then
            continue
@@ -504,7 +506,7 @@ do
    fi
    
 #节点存在时获取节点编号
-   server_num=$(grep -Fw "$server_name" "$match_servers" |awk -F '.' '{print $1}')
+   server_num=$(grep -Fw "$server_name" "$match_servers" 2>/dev/null|awk -F '.' '{print $1}')
    if [ "$servers_update" -eq 1 ] && [ ! -z "$server_num" ]; then
       sed -i "/^${server_num}\./c\#match#" "$match_servers" 2>/dev/null
    fi
@@ -537,6 +539,21 @@ do
       obfs="$(cfg_get "obfs:" "$single_server")"
       #obfs-host:
       obfs_host="$(cfg_get "obfs-host:" "$single_server")"
+   fi
+   
+   if [ "$server_type" = "ssr" ]; then
+      #cipher
+      cipher="$(cfg_get "cipher:" "$single_server")"
+      #password
+      password="$(cfg_get "password:" "$single_server")"
+      #obfs:
+      obfs="$(cfg_get "obfs:" "$single_server")"
+      #protocol:
+      protocol="$(cfg_get "protocol:" "$single_server")"
+      #obfs-param:
+      obfs_param="$(cfg_get "obfs-param:" "$single_server")"
+      #protocol-param:
+      protocol_param="$(cfg_get "protocol-param:" "$single_server")"
    fi
    
    if [ "$server_type" = "vmess" ]; then
@@ -608,6 +625,7 @@ do
       
       if [ "$server_type" = "ss" ]; then
       	 ${uci_set}cipher="$cipher"
+      	 ${uci_set}password="$password"
          ${uci_set}obfs="$obfs"
          ${uci_set}host="$obfs_host"
          ${uci_set}path="$path"
@@ -617,6 +635,16 @@ do
          [ -z "$obfs" ] && [ -z "$mode" ] && ${uci_set}obfs="none"
       fi
       [ -z "$obfs_host" ] && ${uci_set}host="$host"
+      
+      if [ "$server_type" = "ssr" ]; then
+      	 ${uci_set}cipher_ssr="$cipher"
+      	 ${uci_set}password="$password"
+         ${uci_set}obfs_ssr="$obfs"
+         ${uci_set}obfs_param="$obfs_param"
+         ${uci_set}protocol="$protocol"
+         ${uci_set}protocol_param="$protocol_param"
+
+      fi
       
       if [ "$server_type" = "snell" ]; then
       	 ${uci_set}obfs_snell="$mode"
@@ -692,6 +720,7 @@ do
       
       if [ "$server_type" = "ss" ]; then
       	 ${uci_set}cipher="$cipher"
+      	 ${uci_set}password="$password"
          ${uci_set}obfs="$obfs"
          ${uci_set}host="$obfs_host"
          ${uci_set}path="$path"
@@ -701,6 +730,16 @@ do
          [ -z "$obfs" ] && [ -z "$mode" ] && ${uci_set}obfs="none"
       fi
       [ -z "$obfs_host" ] && ${uci_set}host="$host"
+      
+      if [ "$server_type" = "ssr" ]; then
+      	 ${uci_set}cipher_ssr="$cipher"
+      	 ${uci_set}password="$password"
+         ${uci_set}obfs_ssr="$obfs"
+         ${uci_set}obfs_param="$obfs_param"
+         ${uci_set}protocol="$protocol"
+         ${uci_set}protocol_param="$protocol_param"
+
+      fi
       
       if [ "$server_type" = "snell" ]; then
       	 ${uci_set}obfs_snell="$mode"
