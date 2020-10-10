@@ -6,7 +6,7 @@ local i18n = require "luci.i18n"
 local ipkg = require("luci.model.ipkg")
 local api = require "luci.model.cbi.passwall.api.api"
 
-local trojan_go_api = api.uci_get_type("global_app", "trojan_go_latest", "https://api.github.com/repos/trojan-gfw/trojan-go/releases/latest")
+local trojan_go_api = api.uci_get_type("global_app", "trojan_go_latest", "https://api.github.com/repos/p4gefau1t/trojan-go/releases")
 
 function to_check(arch)
     if not arch or arch == "" then arch = api.auto_get_arch() end
@@ -30,6 +30,7 @@ function to_check(arch)
     end
 
     local json = api.get_api_json(trojan_go_api)
+    json = json and json[1]
 
     if json == nil or json.tag_name == nil then
         return {
