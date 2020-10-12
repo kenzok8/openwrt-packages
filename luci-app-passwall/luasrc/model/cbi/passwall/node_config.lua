@@ -53,6 +53,8 @@ local encrypt_methods_ss_aead = {
 	"aes-256-gcm",
 }
 
+local log_list = {"all", "info", "warning", "error", "fatal", "off"}
+
 m = Map(appname, translate("Node Config"))
 m.redirect = d.build_url("admin", "services", appname)
 
@@ -221,6 +223,14 @@ password:depends("type", "Trojan-Go")
 password:depends("protocol", "http")
 password:depends("protocol", "socks")
 password:depends("protocol", "shadowsocks")
+
+-- [[ Log ]] --
+log = s:option(ListValue, "log", translate("Log Level"))
+for i, v in ipairs(log_list) do log:value(v, i) end
+log.default = 1
+log:depends("type", "Trojan")
+log:depends("type", "Trojan-Plus")
+log:depends("type", "Trojan-Go")
 
 ss_encrypt_method = s:option(ListValue, "ss_encrypt_method", translate("Encrypt Method"))
 for a, t in ipairs(ss_encrypt_method_list) do ss_encrypt_method:value(t) end

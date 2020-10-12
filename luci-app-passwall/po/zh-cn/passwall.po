@@ -1051,6 +1051,9 @@ msgstr "用户管理"
 msgid "Logs"
 msgstr "日志"
 
+msgid "Log Level"
+msgstr "日志等级"
+
 msgid "UDP Forward"
 msgstr "UDP转发"
 
