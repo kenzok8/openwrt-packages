@@ -226,7 +226,7 @@ password:depends("protocol", "shadowsocks")
 
 -- [[ Log ]] --
 log = s:option(ListValue, "log", translate("Log Level"))
-for i, v in ipairs(log_list) do log:value(v, i) end
+for i, v in ipairs(log_list) do log:value(v, i - 1) end
 log.default = 1
 log:depends("type", "Trojan")
 log:depends("type", "Trojan-Plus")
