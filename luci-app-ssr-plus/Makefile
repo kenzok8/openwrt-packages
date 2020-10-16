@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ssr-plus
 PKG_VERSION:=180
-PKG_RELEASE:=9
+PKG_RELEASE:=10
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -22,7 +22,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
 config PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy
 	bool "Include NaiveProxy"
 	depends on !(arc||armeb||mips||mips64||powerpc)
-	default n
+	default y if i386||x86_64||arm||aarch64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2
 	bool "Include Redsocks2"
