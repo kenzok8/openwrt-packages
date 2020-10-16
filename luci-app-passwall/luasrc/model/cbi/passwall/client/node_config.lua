@@ -87,11 +87,9 @@ end
 if api.is_finded("brook") then
     type:value("Brook", translate("Brook"))
 end
---[[
-if api.is_finded("trojan-plus") or api.is_finded("trojan") then
+if api.is_finded("trojan") then
     type:value("Trojan", translate("Trojan"))
 end
-]]--
 if api.is_finded("trojan-plus") then
     type:value("Trojan-Plus", translate("Trojan-Plus"))
 end
