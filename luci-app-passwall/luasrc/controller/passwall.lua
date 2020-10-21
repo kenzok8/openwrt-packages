@@ -124,6 +124,7 @@ function link_add_node()
 	local link = luci.http.formvalue("link")
 	luci.sys.call('echo \'' .. link .. '\' >> ' .. lfile)
 	luci.sys.call("lua /usr/share/passwall/subscribe.lua add log")
+	http_write_json()
 end
 
 function get_now_use_node()
@@ -313,6 +314,7 @@ end
 function update_rules()
 	local update = luci.http.formvalue("update")
 	luci.sys.call("lua /usr/share/passwall/rule_update.lua log '" .. update .. "' > /dev/null 2>&1 &")
+	http_write_json()
 end
 
 function server_user_status()
