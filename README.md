@@ -41,7 +41,7 @@
 - luci-app-adguardhome     ------------------去广告 
 - luci-app-smartdns        ------------------smartdns防污染
 - luci-app-passwall        ------------------Lienol大神 
-- luci-theme-argon_new     ------------------二合一适配19.07与18.06的主题
+- luci-theme-argon_new     ------------------二合蓝 紫主题
 - luci-app-ssr-plus        ------------------Lean大神 
 - luci-theme-opentomcat    ------------------修复主机名错误（适配18.06）  
 - luci-theme-opentomato    ------------------修复主机名错误（适配18.06）
