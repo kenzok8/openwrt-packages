@@ -1,0 +1,9 @@
+#!/bin/sh
+if [ "$PKG_UPGRADE" != 1 ]; then
+uci batch <<-EOF
+	set luci.themes.opentopd=/luci-static/opentopd
+	set luci.main.mediaurlbase=/luci-static/opentopd
+	commit luci
+EOF
+fi
+exit 0
