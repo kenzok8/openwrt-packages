@@ -706,8 +706,15 @@ gen_include() {
 		[ "$1" == "6" ] && _ipt="ip6tables"
 	
 		echo "*$2"
-		${_ipt}-save -t $2 | grep PSW | \
-		sed -e "s/^-A \(OUTPUT\|PREROUTING\)/-I \1 1/"
+		
+		if [ "$2" == "nat" ]; then
+			index_nat_pre=`$_ipt -t nat -L PREROUTING|tail -n +3|sed -n -e '/^prerouting_rule/='`
+			${_ipt}-save -t nat | grep PSW | \
+				sed -e "s/^-A PREROUTING/-I PREROUTING $index_nat_pre/"
+		else
+			${_ipt}-save -t $2 | grep PSW | \
+				sed -e "s/^-A OUTPUT/-I OUTPUT 1/"
+		fi
 		echo 'COMMIT'
 	}
 	cat <<-EOF >>$FWI
