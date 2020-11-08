@@ -641,27 +641,28 @@ del_firewall_rule() {
 	do 
 		$ipt_n -D PREROUTING -p tcp -j PSW 2>/dev/null
 		$ipt_n -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
-		$ipt_n -F PSW 2>/dev/null && $ipt_n -X PSW 2>/dev/null
-		$ipt_n -F PSW_OUTPUT 2>/dev/null && $ipt_n -X PSW_OUTPUT 2>/dev/null
 		
 		$ipt_m -D PREROUTING -j PSW 2>/dev/null
 		$ipt_m -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
 		$ipt_m -D OUTPUT -p udp -j PSW_OUTPUT 2>/dev/null
-		$ipt_m -F PSW 2>/dev/null && $ipt_m -X PSW 2>/dev/null
-		$ipt_m -F PSW_OUTPUT 2>/dev/null && $ipt_m -X PSW_OUTPUT 2>/dev/null
 	
 		$ip6t_n -D PREROUTING -j PSW 2>/dev/null
 		$ip6t_n -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
-		$ip6t_n -F PSW 2>/dev/null && $ip6t_n -X PSW 2>/dev/null
-		$ip6t_n -F PSW_OUTPUT 2>/dev/null && $ip6t_n -X PSW_OUTPUT 2>/dev/null
 		
 		$ip6t_m -D PREROUTING -j PSW 2>/dev/null
 		$ip6t_m -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
-		$ip6t_m -F PSW 2>/dev/null && $ip6t_m -X PSW 2>/dev/null
-		$ip6t_m -F PSW_OUTPUT 2>/dev/null && $ip6t_m -X PSW_OUTPUT 2>/dev/null
+
 		ib_nat_exist=`expr $ib_nat_exist - 1`
 	done
 	fi
+	$ipt_n -F PSW 2>/dev/null && $ipt_n -X PSW 2>/dev/null
+	$ipt_n -F PSW_OUTPUT 2>/dev/null && $ipt_n -X PSW_OUTPUT 2>/dev/null
+	$ipt_m -F PSW 2>/dev/null && $ipt_m -X PSW 2>/dev/null
+	$ipt_m -F PSW_OUTPUT 2>/dev/null && $ipt_m -X PSW_OUTPUT 2>/dev/null
+	$ip6t_n -F PSW 2>/dev/null && $ip6t_n -X PSW 2>/dev/null
+	$ip6t_n -F PSW_OUTPUT 2>/dev/null && $ip6t_n -X PSW_OUTPUT 2>/dev/null
+	$ip6t_m -F PSW 2>/dev/null && $ip6t_m -X PSW 2>/dev/null
+	$ip6t_m -F PSW_OUTPUT 2>/dev/null && $ip6t_m -X PSW_OUTPUT 2>/dev/null
 	
 	ip rule del fwmark 1 lookup 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
