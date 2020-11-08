@@ -635,26 +635,33 @@ add_firewall_rule() {
 }
 
 del_firewall_rule() {
-	$ipt_n -D PREROUTING -p tcp -j PSW 2>/dev/null
-	$ipt_n -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
-	$ipt_n -F PSW 2>/dev/null && $ipt_n -X PSW 2>/dev/null
-	$ipt_n -F PSW_OUTPUT 2>/dev/null && $ipt_n -X PSW_OUTPUT 2>/dev/null
+	ib_nat_exist=`$ipt_n -L PREROUTING | grep -c PSW`
+	if [ ! -z "$ib_nat_exist" ];then
+		until [ "$ib_nat_exist" = 0 ]
+	do 
+		$ipt_n -D PREROUTING -p tcp -j PSW 2>/dev/null
+		$ipt_n -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
+		$ipt_n -F PSW 2>/dev/null && $ipt_n -X PSW 2>/dev/null
+		$ipt_n -F PSW_OUTPUT 2>/dev/null && $ipt_n -X PSW_OUTPUT 2>/dev/null
+		
+		$ipt_m -D PREROUTING -j PSW 2>/dev/null
+		$ipt_m -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
+		$ipt_m -D OUTPUT -p udp -j PSW_OUTPUT 2>/dev/null
+		$ipt_m -F PSW 2>/dev/null && $ipt_m -X PSW 2>/dev/null
+		$ipt_m -F PSW_OUTPUT 2>/dev/null && $ipt_m -X PSW_OUTPUT 2>/dev/null
 	
-	$ipt_m -D PREROUTING -j PSW 2>/dev/null
-	$ipt_m -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
-	$ipt_m -D OUTPUT -p udp -j PSW_OUTPUT 2>/dev/null
-	$ipt_m -F PSW 2>/dev/null && $ipt_m -X PSW 2>/dev/null
-	$ipt_m -F PSW_OUTPUT 2>/dev/null && $ipt_m -X PSW_OUTPUT 2>/dev/null
-
-	$ip6t_n -D PREROUTING -j PSW 2>/dev/null
-	$ip6t_n -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
-	$ip6t_n -F PSW 2>/dev/null && $ip6t_n -X PSW 2>/dev/null
-	$ip6t_n -F PSW_OUTPUT 2>/dev/null && $ip6t_n -X PSW_OUTPUT 2>/dev/null
-	
-	$ip6t_m -D PREROUTING -j PSW 2>/dev/null
-	$ip6t_m -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
-	$ip6t_m -F PSW 2>/dev/null && $ip6t_m -X PSW 2>/dev/null
-	$ip6t_m -F PSW_OUTPUT 2>/dev/null && $ip6t_m -X PSW_OUTPUT 2>/dev/null
+		$ip6t_n -D PREROUTING -j PSW 2>/dev/null
+		$ip6t_n -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
+		$ip6t_n -F PSW 2>/dev/null && $ip6t_n -X PSW 2>/dev/null
+		$ip6t_n -F PSW_OUTPUT 2>/dev/null && $ip6t_n -X PSW_OUTPUT 2>/dev/null
+		
+		$ip6t_m -D PREROUTING -j PSW 2>/dev/null
+		$ip6t_m -D OUTPUT -p tcp -j PSW_OUTPUT 2>/dev/null
+		$ip6t_m -F PSW 2>/dev/null && $ip6t_m -X PSW 2>/dev/null
+		$ip6t_m -F PSW_OUTPUT 2>/dev/null && $ip6t_m -X PSW_OUTPUT 2>/dev/null
+		ib_nat_exist=`expr $ib_nat_exist - 1`
+	done
+	fi
 	
 	ip rule del fwmark 1 lookup 100 2>/dev/null
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
