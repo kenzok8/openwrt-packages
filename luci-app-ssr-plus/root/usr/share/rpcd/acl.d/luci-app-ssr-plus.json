@@ -1,0 +1,11 @@
+{
+    "luci-app-ssr-plus": {
+        "description": "Luci interface for the ssr plus",
+        "read": {
+            "uci": [ "shadowsocksr" ]
+        },
+        "write": {
+            "uci": [ "shadowsocksr" ]
+        }
+    }
+}
