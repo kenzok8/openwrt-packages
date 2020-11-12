@@ -669,16 +669,16 @@ del_firewall_rule() {
 
 	ipset -F $IPSET_LANIPLIST >/dev/null 2>&1 && ipset -X $IPSET_LANIPLIST >/dev/null 2>&1 &
 	ipset -F $IPSET_VPSIPLIST >/dev/null 2>&1 && ipset -X $IPSET_VPSIPLIST >/dev/null 2>&1 &
-	#ipset -F $IPSET_SHUNTLIST >/dev/null 2>&1 && ipset -X $IPSET_SHUNTLIST >/dev/null 2>&1 &
-	#ipset -F $IPSET_GFW >/dev/null 2>&1 && ipset -X $IPSET_GFW >/dev/null 2>&1 &
+	ipset -F $IPSET_SHUNTLIST >/dev/null 2>&1 && ipset -X $IPSET_SHUNTLIST >/dev/null 2>&1 &
+	ipset -F $IPSET_GFW >/dev/null 2>&1 && ipset -X $IPSET_GFW >/dev/null 2>&1 &
 	#ipset -F $IPSET_GFW6 >/dev/null 2>&1 && ipset -X $IPSET_GFW6 >/dev/null 2>&1 &
-	#ipset -F $IPSET_CHN >/dev/null 2>&1 && ipset -X $IPSET_CHN >/dev/null 2>&1 &
-	#ipset -F $IPSET_CHN6 >/dev/null 2>&1 && ipset -X $IPSET_CHN6 >/dev/null 2>&1 &
-	#ipset -F $IPSET_BLACKLIST >/dev/null 2>&1 && ipset -X $IPSET_BLACKLIST >/dev/null 2>&1 &
-	#ipset -F $IPSET_BLACKLIST2 >/dev/null 2>&1 && ipset -X $IPSET_BLACKLIST2 >/dev/null 2>&1 &
-	#ipset -F $IPSET_BLACKLIST3 >/dev/null 2>&1 && ipset -X $IPSET_BLACKLIST3 >/dev/null 2>&1 &
+	ipset -F $IPSET_CHN >/dev/null 2>&1 && ipset -X $IPSET_CHN >/dev/null 2>&1 &
+	ipset -F $IPSET_CHN6 >/dev/null 2>&1 && ipset -X $IPSET_CHN6 >/dev/null 2>&1 &
+	ipset -F $IPSET_BLACKLIST >/dev/null 2>&1 && ipset -X $IPSET_BLACKLIST >/dev/null 2>&1 &
+	ipset -F $IPSET_BLACKLIST2 >/dev/null 2>&1 && ipset -X $IPSET_BLACKLIST2 >/dev/null 2>&1 &
+	ipset -F $IPSET_BLACKLIST3 >/dev/null 2>&1 && ipset -X $IPSET_BLACKLIST3 >/dev/null 2>&1 &
 	ipset -F $IPSET_WHITELIST >/dev/null 2>&1 && ipset -X $IPSET_WHITELIST >/dev/null 2>&1 &
-	#echolog "删除相关防火墙规则完成。"
+	echolog "删除相关防火墙规则完成。"
 }
 
 flush_ipset() {
@@ -707,14 +707,14 @@ gen_include() {
 	
 		echo "*$2"
 		
-		if [ "$2" == "nat" ]; then
-			PR_INDEX=$(RULE_LAST_INDEX "$_ipt -t nat" PREROUTING prerouting_rule)
-			PR_INDEX=$((PR_INDEX + 1))
+        if [ "$2" == "nat" ]; then
+            PR_INDEX=$(RULE_LAST_INDEX "$_ipt -t nat" PREROUTING prerouting_rule)
+            PR_INDEX=$((PR_INDEX + 1))
             ${_ipt}-save -t nat | grep PSW | \
-                    sed -e "s/^-A PREROUTING/-I PREROUTING $PR_INDEX/"
+                sed -e "s/^-A PREROUTING/-I PREROUTING $PR_INDEX/"
 		else
-			${_ipt}-save -t $2 | grep PSW | \
-				sed -e "s/^-A OUTPUT/-I OUTPUT 1/"
+            ${_ipt}-save -t $2 | grep PSW | \
+                sed -e "s/^-A OUTPUT/-I OUTPUT 1/"
 		fi
 		echo 'COMMIT'
 	}
