@@ -629,13 +629,6 @@ check_server() {
 }
 
 start_rules() {
-	if [ -z "$switch_server" ]; then
-		GLOBAL_SERVER=$(uci_get_by_type global global_server nil)
-	else
-		GLOBAL_SERVER=$switch_server
-		switch_enable=1
-	fi
-	[ "$GLOBAL_SERVER" == "nil" ] && return 1
 	local server=$(get_host_ip $(uci_get_by_name $GLOBAL_SERVER server))
 	[ "$server" == "ERROR" ] && server=$(uci_get_by_name $GLOBAL_SERVER ip)
 	local local_port=$(uci_get_by_name $GLOBAL_SERVER local_port 1234)
@@ -721,8 +714,15 @@ start_rules() {
 }
 
 start() {
-	[ -f "$LOCK_FILE" ] && exit 2
-	touch "$LOCK_FILE"
+    [ -f "$LOCK_FILE" ] && exit 2
+    touch "$LOCK_FILE"
+    if [ -z "$switch_server" ]; then
+		GLOBAL_SERVER=$(uci_get_by_type global global_server nil)
+	else
+		GLOBAL_SERVER=$switch_server
+		switch_enable=1
+	fi
+	[ "$GLOBAL_SERVER" == "nil" ] && rm -f $LOCK_FILE && return 1
 	echo "-----------start-----------" >>/tmp/ssrplus.log
 	mkdir -p /tmp/dnsmasq.d /tmp/dnsmasq.ssr /var/run /var/etc
 	cat <<-EOF >/tmp/dnsmasq.d/dnsmasq-ssr.conf
@@ -767,6 +767,8 @@ start() {
 }
 
 boot() {
+    GLOBAL_SERVER=$(uci_get_by_type global global_server nil)
+    [ "$GLOBAL_SERVER" == "nil" ] && return 1
 	ulimit -n 65535
 	(/usr/share/shadowsocksr/chinaipset.sh && sleep 3 && start >/dev/null 2>&1) &
 }
