@@ -62,7 +62,6 @@ unlock() {
 			sleep 1s
 			[ "$failcount" -ge 10 ] && unset_lock
 		else
-			set_lock
 			break
 		fi
 	done
@@ -1234,6 +1233,7 @@ start() {
 
 stop() {
 	unlock
+	set_lock
 	clean_log
 	source $APP_PATH/iptables.sh stop
 	kill_all v2ray-plugin obfs-local
