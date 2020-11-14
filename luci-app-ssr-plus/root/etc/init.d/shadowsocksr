@@ -722,9 +722,9 @@ start() {
 		GLOBAL_SERVER=$switch_server
 		switch_enable=1
 	fi
+	mkdir -p /tmp/dnsmasq.d /tmp/dnsmasq.ssr /var/run /var/etc
 	[ "$GLOBAL_SERVER" == "nil" ] && rm -f $LOCK_FILE && return 1
 	echo "-----------start-----------" >>/tmp/ssrplus.log
-	mkdir -p /tmp/dnsmasq.d /tmp/dnsmasq.ssr /var/run /var/etc
 	cat <<-EOF >/tmp/dnsmasq.d/dnsmasq-ssr.conf
 		conf-dir=/tmp/dnsmasq.ssr
 	EOF
