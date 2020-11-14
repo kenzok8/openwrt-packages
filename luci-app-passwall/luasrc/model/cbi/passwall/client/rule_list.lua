@@ -12,6 +12,7 @@ s = m:section(TypedSection, "global_rules")
 s.anonymous = true
 
 s:tab("direct_list", translate("Direct List"))
+s:tab("black_list", translate("Black List"))
 s:tab("proxy_list", translate("Proxy List"))
 s:tab("proxy_list2", translate("Proxy List") .. " 2")
 s:tab("proxy_list3", translate("Proxy List") .. " 3")
@@ -43,6 +44,44 @@ o.wrap = "off"
 o.cfgvalue = function(self, section) return fs.readfile(direct_ip) or "" end
 o.write = function(self, section, value) fs.writefile(direct_ip, value:gsub("\r\n", "\n")) end
 o.remove = function(self, section, value) fs.writefile(direct_ip, "") end
+o.validate = function(self, value)
+    local ipmasks= {}
+    string.gsub(value, '[^' .. "\r\n" .. ']+', function(w) table.insert(ipmasks, w) end)
+    for index, ipmask in ipairs(ipmasks) do
+        if not datatypes.ipmask4(ipmask) then
+            return nil, ipmask .. " " .. translate("Not valid IP format, please re-enter!")
+        end
+    end
+    return value
+end
+
+---- Black Hosts
+local black_host = string.format("/usr/share/%s/rules/black_host", appname)
+o = s:taboption("black_list", TextValue, "black_hosts", "", "<font color='red'>" .. translate("Join the black hosts list of domain names will always proxy.") .. "</font>")
+o.rows = 15
+o.wrap = "off"
+o.cfgvalue = function(self, section) return fs.readfile(black_host) or "" end
+o.write = function(self, section, value) fs.writefile(black_host, value:gsub("\r\n", "\n")) end
+o.remove = function(self, section, value) fs.writefile(black_host, "") end
+o.validate = function(self, value)
+    local hosts= {}
+    string.gsub(value, '[^' .. "\r\n" .. ']+', function(w) table.insert(hosts, w) end)
+    for index, host in ipairs(hosts) do
+        if not datatypes.hostname(host) then
+            return nil, host .. " " .. translate("Not valid domain name, please re-enter!")
+        end
+    end
+    return value
+end
+
+---- Black IP
+local black_ip = string.format("/usr/share/%s/rules/black_ip", appname)
+o = s:taboption("black_list", TextValue, "black_ip", "", "<font color='red'>" .. translate("These had been joined ip addresses will always proxy. Please input the ip address or ip address segment,every line can input only one ip address. For example: 192.168.0.0/24 or 223.5.5.5.") .. "</font>")
+o.rows = 15
+o.wrap = "off"
+o.cfgvalue = function(self, section) return fs.readfile(black_ip) or "" end
+o.write = function(self, section, value) fs.writefile(black_ip, value:gsub("\r\n", "\n")) end
+o.remove = function(self, section, value) fs.writefile(black_ip, "") end
 o.validate = function(self, value)
     local ipmasks= {}
     string.gsub(value, '[^' .. "\r\n" .. ']+', function(w) table.insert(ipmasks, w) end)

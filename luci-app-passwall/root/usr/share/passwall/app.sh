@@ -930,6 +930,7 @@ add_dnsmasq() {
 		[ "$CHINADNS_NG" = "1" ] && unset fwd_dns
 		#如果使用chnlist直接使用默认DNS
 		[ "${USE_CHNLIST}" = "1" ] && unset fwd_dns
+		sort -u "${RULES_PATH}/black_host" | gen_dnsmasq_items "blacklist" "${fwd_dns}" "${TMP_DNSMASQ_PATH}/9-black_host.conf"
 		sort -u "${RULES_PATH}/proxy_host" | gen_dnsmasq_items "blacklist" "${fwd_dns}" "${TMP_DNSMASQ_PATH}/12-proxy_host.conf"
 		[ "2" -le "$TCP_NODE_NUM" ] && sort -u "${RULES_PATH}/proxy_host2" | gen_dnsmasq_items "blacklist2" "${fwd_dns}" "${TMP_DNSMASQ_PATH}/11-proxy_host2.conf"
 		[ "3" -le "$TCP_NODE_NUM" ] && sort -u "${RULES_PATH}/proxy_host3" | gen_dnsmasq_items "blacklist3" "${fwd_dns}" "${TMP_DNSMASQ_PATH}/10-proxy_host3.conf"

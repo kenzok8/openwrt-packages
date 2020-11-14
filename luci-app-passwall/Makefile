@@ -133,6 +133,8 @@ define Package/$(PKG_NAME)/conffiles
 /usr/share/passwall/rules/proxy_ip2
 /usr/share/passwall/rules/proxy_host3
 /usr/share/passwall/rules/proxy_ip3
+/usr/share/passwall/rules/black_host
+/usr/share/passwall/rules/black_ip
 /usr/share/passwall/rules/direct_host
 /usr/share/passwall/rules/direct_ip
 endef
