@@ -701,34 +701,8 @@ flush_include() {
 
 gen_include() {
 	flush_include
-	extract_rules() {
-		local _ipt="iptables"
-		[ "$1" == "6" ] && _ipt="ip6tables"
-	
-		echo "*$2"
-		
-        if [ "$2" == "nat" ]; then
-            PR_INDEX=$(RULE_LAST_INDEX "$_ipt -t nat" PREROUTING prerouting_rule)
-            PR_INDEX=$((PR_INDEX + 1))
-            ${_ipt}-save -t nat | grep PSW | \
-                sed -e "s/^-A PREROUTING/-I PREROUTING $PR_INDEX/"
-		else
-            ${_ipt}-save -t $2 | grep PSW | \
-                sed -e "s/^-A OUTPUT/-I OUTPUT 1/"
-		fi
-		echo 'COMMIT'
-	}
 	cat <<-EOF >>$FWI
-		iptables-save -c | grep -v "PSW" | iptables-restore -c
-		iptables-restore -n <<-EOT
-		$(extract_rules 4 nat)
-		$(extract_rules 4 mangle)
-		EOT
-		ip6tables-save -c | grep -v "PSW" | ip6tables-restore -c
-		ip6tables-restore -n <<-EOT
-		$(extract_rules 6 nat)
-		$(extract_rules 6 mangle)
-		EOT
+		/etc/init.d/passwall reload
 	EOF
 	return 0
 }
