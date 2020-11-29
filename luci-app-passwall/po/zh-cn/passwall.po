@@ -745,6 +745,9 @@ msgstr "如果你希望从内存中运行，请更改路径，例如%s，然后�
 msgid "Make sure there is enough space to install %s"
 msgstr "确保有足够的空间安装%s"
 
+msgid "Xray Path"
+msgstr "Xray 路径"
+
 msgid "V2ray Path"
 msgstr "V2ray 路径"
 
@@ -955,8 +958,8 @@ msgstr "是否允许不安全连接。当勾选时，将跳过证书验证。"
 msgid "<br />none: default, no masquerade, data sent is packets with no characteristics.<br />srtp: disguised as an SRTP packet, it will be recognized as video call data (such as FaceTime).<br />utp: packets disguised as uTP will be recognized as bittorrent downloaded data.<br />wechat-video: packets disguised as WeChat video calls.<br />dtls: disguised as DTLS 1.2 packet.<br />wireguard: disguised as a WireGuard packet. (not really WireGuard protocol)"
 msgstr "<br />none：默认值，不进行伪装，发送的数据是没有特征的数据包。<br />srtp：伪装成 SRTP 数据包，会被识别为视频通话数据（如 FaceTime）。<br />utp：伪装成 uTP 数据包，会被识别为 BT 下载数据。<br />wechat-video：伪装成微信视频通话的数据包。<br />dtls：伪装成 DTLS 1.2 数据包。<br />wireguard：伪装成 WireGuard 数据包。(并不是真正的 WireGuard 协议)"
 
-msgid "A legal file path. This file must not exist before running V2Ray."
-msgstr "一个合法的文件路径。在运行 V2Ray 之前，这个文件必须不存在。"
+msgid "A legal file path. This file must not exist before running."
+msgstr "一个合法的文件路径。在运行之前，这个文件必须不存在。"
 
 msgid "TCP Open Socks"
 msgstr "开启Socks"
@@ -1068,6 +1071,9 @@ msgstr "日志"
 
 msgid "UDP Forward"
 msgstr "UDP转发"
+
+msgid "You did not fill in the %s path. Please save and apply then update manually."
+msgstr "您没有填写 %s 路径。请保存应用后再手动更新。"
 
 msgid "Can't determine ARCH, or ARCH not supported."
 msgstr "无法确认ARCH架构，或是不支持。"
