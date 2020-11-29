@@ -10,7 +10,7 @@
 - [passwall依赖库下载链接，注意！在openwrt或者lean源码下编译passwall，要下载此依赖库](https://github.com/kenzok8/small.git)
 
 
-***[Lienolpasswall新库地址](https://github.com/xiaorouji/openwrt-passwall.git)
+- [Lienolpasswall新库地址](https://github.com/xiaorouji/openwrt-passwall.git)
  
 
 
