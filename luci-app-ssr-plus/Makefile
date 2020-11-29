@@ -1,15 +1,10 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ssr-plus
-PKG_VERSION:=181
-PKG_RELEASE:=1
+PKG_VERSION:=180
+PKG_RELEASE:=10
 
 include $(INCLUDE_DIR)/package.mk
-
-define Package/$(PKG_NAME)/conffiles
-/etc/config/shadowsocksr
-/etc/ssr/
-endef
 
 define Package/$(PKG_NAME)/config
 config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_plugin
@@ -27,7 +22,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
 config PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy
 	bool "Include NaiveProxy"
 	depends on !(arc||armeb||mips||mips64||powerpc)
-	default y if i386||x86_64||arm||aarch64
+	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2
 	bool "Include Redsocks2"
