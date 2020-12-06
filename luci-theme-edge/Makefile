@@ -6,10 +6,10 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=Edge Theme
+LUCI_TITLE:=Edge_new kenzo
 LUCI_DEPENDS:=
-PKG_VERSION:=2.2
-PKG_RELEASE:=20201029
+PKG_VERSION:=2.4
+PKG_RELEASE:=20201128
 
 
 include $(TOPDIR)/feeds/luci/luci.mk
