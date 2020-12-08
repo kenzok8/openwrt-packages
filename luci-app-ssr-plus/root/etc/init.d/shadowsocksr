@@ -701,6 +701,7 @@ start_rules() {
 	-B "$(uci_get_by_type access_control lan_bp_ips)" \
 	-p "$(uci_get_by_type access_control lan_fp_ips)" \
 	-G "$(uci_get_by_type access_control lan_gm_ips)" \
+	-m "$(uci_get_by_type access_control Interface)" \
 	-D "$proxyport" \
 	-F "$netflix" \
 	-N "$netflix_ip" \
