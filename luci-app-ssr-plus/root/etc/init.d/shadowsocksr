@@ -11,7 +11,6 @@
 START=95
 STOP=15
 SERVICE_DAEMONIZE=1
-EXTRA_COMMANDS=rules
 MAXFD=32768
 NAME=shadowsocksr
 LOCK_FILE=/var/lock/${NAME}.lock
@@ -59,14 +58,10 @@ uci_get_by_cfgid() {
 
 get_host_ip() {
 	local host=$1
-	local isip=""
-	local ip=$host
-	isip=$(echo $host | grep -E "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
-	if [ -z "$isip" ]; then
-		if [ "$host" != "${host#*:[0-9a-fA-F]}" ]; then
-			ip=$host
-		else
-			local ip=$(resolveip -4 -t 3 $host | awk 'NR==1{print}')
+	local ip=$1
+	if [ -z "$(echo $1 | grep -E "([0-9]{1,3}[\.]){3}[0-9]{1,3}")" ]; then
+		if [ "$1" == "${1#*:[0-9a-fA-F]}" ]; then
+			ip=$(resolveip -4 -t 3 $1 | awk 'NR==1{print}')
 			[ -z "$ip" ] && ip=$(wget -q -O- http://119.29.29.29/d?dn=$1 | awk -F ';' '{print $1}')
 		fi
 	fi
@@ -114,7 +109,7 @@ find_bin() {
 	ssr) ret="/usr/bin/ssr-redir" ;;
 	ssr-local) ret="/usr/bin/ssr-local" ;;
 	ssr-server) ret="/usr/bin/ssr-server" ;;
-	v2ray | vless)
+	vmess | vless)
 	ret="/usr/bin/xray"
 	[ ! -f "$ret" ] && ret="/usr/bin/xray/xray"
 	[ ! -f "$ret" ] && ret="/usr/bin/v2ray"
@@ -134,9 +129,8 @@ gen_config_file() {
 	else
 		uci_set_by_name $1 ip $hostip
 	fi
-	[ "$2" == "0" -a "$kcp_flag" == "1" ] && hostip="127.0.0.1"
 	case "$2" in
-	0) config_file=$CONFIG_FILE ;;
+	0) config_file=$CONFIG_FILE && [ "$kcp_flag" == "1" ] && hostip="127.0.0.1" ;;
 	1) config_file=$CONFIG_UDP_FILE ;;
 	2) config_file=$CONFIG_NETFLIX_FILE ;;
 	*) config_file=$CONFIG_SOCK5_FILE ;;
@@ -191,7 +185,7 @@ gen_config_file() {
 			}
 		EOF
 		;;
-	v2ray | vless)
+	vmess | vless)
 		lua /usr/share/shadowsocksr/genv2config.lua $GLOBAL_SERVER tcp $(uci_get_by_name $1 local_port) >/var/etc/v2-ssr-retcp.json
 		sed -i 's/\\//g' /var/etc/v2-ssr-retcp.json
 		;;
@@ -266,9 +260,6 @@ start_dns() {
 	start_pdnsd() {
 		local usr_dns="$1"
 		local usr_port="$2"
-		[ -z "$usr_dns" ] && usr_dns="8.8.8.8"
-		[ -z "$usr_port" ] && usr_port="53"
-		[ -d /var/etc ] || mkdir -p /var/etc
 		if [ ! -f "/var/pdnsd/pdnsd.cache" ]; then
 			mkdir -p /var/pdnsd
 			touch /var/pdnsd/pdnsd.cache
@@ -364,7 +355,7 @@ start_redir_tcp() {
 		done
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Main node:$name $threads Threads Started!" >>/tmp/ssrplus.log
 		;;
-	v2ray | vless)
+	vmess | vless)
 		$bin -config /var/etc/v2-ssr-retcp.json >/dev/null 2>&1 &
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Main node:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
 		;;
@@ -417,7 +408,7 @@ start_redir_udp() {
 			$bin -c $last_config_file $ARG_OTA -U -f /var/run/ssr-reudp.pid >/dev/null 2>&1
 			echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay:$name Started!" >>/tmp/ssrplus.log
 			;;
-		v2ray | vless)
+		vmess | vless)
 			lua /usr/share/shadowsocksr/genv2config.lua $UDP_RELAY_SERVER udp $(uci_get_by_name $UDP_RELAY_SERVER local_port) >/var/etc/v2-ssr-reudp.json
 			sed -i 's/\\//g' /var/etc/v2-ssr-reudp.json
 			$bin -config /var/etc/v2-ssr-reudp.json >/dev/null 2>&1 &
@@ -468,7 +459,7 @@ start_shunt() {
 			dns2socks 127.0.0.1:1088 8.8.8.8:53 127.0.0.1:5555 -q >/dev/null 2>&1 &
 			echo "$(date "+%Y-%m-%d %H:%M:%S") Netflix shunt:$name Started!" >>/tmp/ssrplus.log
 			;;
-		v2ray | vless)
+		vmess | vless)
 			lua /usr/share/shadowsocksr/genv2config.lua $NETFLIX_SERVER tcp 4321 1088 >/var/etc/v2-ssr-netflix.json
 			sed -i 's/\\//g' /var/etc/v2-ssr-netflix.json
 			$bin -config /var/etc/v2-ssr-netflix.json >/dev/null 2>&1 &
@@ -531,7 +522,7 @@ start_local() {
 		$bin -c $CONFIG_SOCK5_FILE -u -f /var/run/ssr-local.pid >/dev/null 2>&1
 		echo "$(date "+%Y-%m-%d %H:%M:%S") Global_Socks5:$name Started!" >>/tmp/ssrplus.log
 		;;
-	v2ray | vless)
+	vmess | vless)
 		lua /usr/share/shadowsocksr/genv2config.lua $local_server tcp 0 $(uci_get_by_type socks5_proxy local_port 1080) >/var/etc/v2-ssr-local.json
 		sed -i 's/\\//g' /var/etc/v2-ssr-local.json
 		$bin -config /var/etc/v2-ssr-local.json >/dev/null 2>&1 &
@@ -585,7 +576,6 @@ start_server() {
 		iptables -t filter -A SSR-SERVER-RULE -p udp --dport $(uci_get_by_name $1 server_port) -j ACCEPT
 		return 0
 	}
-	mkdir -p /var/run /var/etc
 	config_load $NAME
 	config_foreach server_service server_config
 	gen_serv_include
@@ -631,6 +621,24 @@ check_server() {
 }
 
 start_rules() {
+	if [ -z "$switch_server" ]; then
+		GLOBAL_SERVER=$(uci_get_by_type global global_server nil)
+	else
+		GLOBAL_SERVER=$switch_server
+		switch_enable=1
+	fi
+	if [ "$GLOBAL_SERVER" == "nil" ]; then
+		return 1
+	fi
+	NETFLIX_SERVER=$(uci_get_by_type global netflix_server nil)
+	if [ "$NETFLIX_SERVER" == "same" ]; then
+		NETFLIX_SERVER=$GLOBAL_SERVER
+	fi
+	run_mode=$(uci_get_by_type global run_mode)
+	UDP_RELAY_SERVER=$(uci_get_by_type global udp_relay_server)
+	if [ "$UDP_RELAY_SERVER" == "same" ] ; then
+		UDP_RELAY_SERVER=$GLOBAL_SERVER
+	fi
 	local server=$(get_host_ip $(uci_get_by_name $GLOBAL_SERVER server))
 	if [ "$server" == "ERROR" ]; then
 		server=$(uci_get_by_name $GLOBAL_SERVER ip)
@@ -711,58 +719,27 @@ start_rules() {
 	return $?
 }
 
-rules() {
-	if [ "$GLOBAL_SERVER" == "nil" ]; then
-		return 1
-	fi
-	mkdir -p /var/run /var/etc
-	run_mode=$(uci_get_by_type global run_mode)
-	UDP_RELAY_SERVER=$(uci_get_by_type global udp_relay_server)
-	[ "$UDP_RELAY_SERVER" == "same" ] && UDP_RELAY_SERVER=$GLOBAL_SERVER
-	if start_rules; then
-		return 0
-	else
-		return 1
-	fi
-}
-
 start() {
 	[ -f "$LOCK_FILE" ] && exit 2
 	touch "$LOCK_FILE"
-	echo "-----------start-----------" >>/tmp/ssrplus.log
-	if [ -z "$switch_server" ]; then
-		GLOBAL_SERVER=$(uci_get_by_type global global_server nil)
-	else
-		GLOBAL_SERVER=$switch_server
-		switch_enable=1
-	fi
-	NETFLIX_SERVER=$(uci_get_by_type global netflix_server nil)
-	if [ "$NETFLIX_SERVER" == "same" ]; then
-		NETFLIX_SERVER=$GLOBAL_SERVER
-	fi
-	mkdir -p /tmp/dnsmasq.d /tmp/dnsmasq.ssr
+	echo "----------start------------" >>/tmp/ssrplus.log
+	mkdir -p /tmp/dnsmasq.d /tmp/dnsmasq.ssr /var/run /var/etc
 	cat <<-EOF >/tmp/dnsmasq.d/dnsmasq-ssr.conf
 		conf-dir=/tmp/dnsmasq.ssr
 	EOF
-	if rules; then
+	if start_rules; then
 		if start_redir_tcp; then
 			start_redir_udp
 			start_shunt
 			start_switch
 			start_dns
 			add_cron
-			if [ "$run_mode" == "oversea" ]; then
-				cp -rf /etc/ssr/oversea_list.conf /tmp/dnsmasq.ssr/
-			else
-				cp -rf /etc/ssr/gfw_list.conf /tmp/dnsmasq.ssr/
-				cp -rf /etc/ssr/gfw_base.conf /tmp/dnsmasq.ssr/
-			fi
 			/usr/share/shadowsocksr/gfw2ipset.sh $switch_server
 		else
 			/usr/bin/ssr-rules -f
 		fi
 	else
-		awk '!/^$/&&!/^#/{printf("address=/%s/''\n",$0)}' /etc/ssr/deny.list >/tmp/dnsmasq.ssr/denylist.conf
+		sed '/.*/s/.*/address=\/&\//' /etc/ssr/deny.list >/tmp/dnsmasq.ssr/denylist.conf
 		if [ "$(uci_get_by_type global adblock 0)" == "1" ]; then
 			[ "$1" == "" ] && cp -f /etc/ssr/ad.conf /tmp/dnsmasq.ssr/
 			if [ -f "/tmp/dnsmasq.ssr/ad.conf" ]; then
@@ -778,13 +755,14 @@ start() {
 	start_monitor
 	check_server
 	clean_log
-	echo "------------end------------" >>/tmp/ssrplus.log
+	echo "-----------end------------" >>/tmp/ssrplus.log
 	rm -f $LOCK_FILE
 }
 
 boot() {
+	echo "$(date "+%Y-%m-%d %H:%M:%S") boot！" >/tmp/ssrplus.log
 	ulimit -n 65535
-	(/usr/share/shadowsocksr/chinaipset.sh && sleep 3 && start >/dev/null 2>&1) &
+	start
 }
 
 stop() {

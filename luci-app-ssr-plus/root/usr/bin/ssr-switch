@@ -35,23 +35,6 @@ uci_get_by_type() {
 DEFAULT_SERVER=$(uci_get_by_type global global_server)
 CURRENT_SERVER=$DEFAULT_SERVER
 
-#解析ip
-get_host_ip() {
-	local host=$1
-	local isip=""
-	local ip=$host
-	isip=$(echo $host | grep -E "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
-	if [ -z "$isip" ]; then
-		if [ "$host" != "${host#*:[0-9a-fA-F]}" ]; then
-			ip=$host
-		else
-			local ip=$(resolveip -4 -t 3 $host | awk 'NR==1{print}')
-			[ -z "$ip" ] && ip=$(wget -q -O- http://119.29.29.29/d?dn=$1 | awk -F ';' '{print $1}')
-		fi
-	fi
-	echo ${ip:="ERROR"}
-}
-
 #判断代理是否正常
 check_proxy() {
 	local result=0
@@ -77,19 +60,18 @@ check_proxy() {
 }
 
 test_proxy() {
-	local servername=$(get_host_ip $(uci_get_by_name $1 server))
+	local servername=$(uci_get_by_name $1 server)
 	local serverport=$(uci_get_by_name $1 server_port)
-	ipset add ss_spec_wan_ac $servername 2>/dev/null
-	ret1=$?
+	ipset add whitelist $servername 2>/dev/null
 	tcping -q -c 3 -i 1 -t 2 -p $serverport $servername
 	if [ "$?" -gt "0" ]; then
-		[ "$ret1" == "0" ] && ipset del ss_spec_wan_ac $servername 2>/dev/null
+		ipset del whitelist $servername 2>/dev/null
 		return 1
 	fi
 	/usr/bin/ssr-check $servername $serverport $switch_time
-	local ret2=$?
-	[ "$ret1" == "0" ] && ipset del ss_spec_wan_ac $servername 2>/dev/null
-	if [ "$ret2" == "0" ]; then
+	local ret=$?
+	ipset del whitelist $servername 2>/dev/null
+	if [ "$ret" == "0" ]; then
 		return 0
 	else
 		return 1
@@ -102,14 +84,13 @@ search_proxy() {
 	[ "$(uci_get_by_name $1 switch_enable 0)" != "1" ] && return 1
 	[ $ENABLE_SERVER != nil ] && return 0
 	[ "$1" == "$CURRENT_SERVER" ] && return 0
-	local servername=$(get_host_ip $(uci_get_by_name $1 server))
+	local servername=$(uci_get_by_name $1 server)
 	local serverport=$(uci_get_by_name $1 server_port)
-	ipset add ss_spec_wan_ac $servername 2>/dev/null
-	ret=$?
+	ipset add whitelist $servername 2>/dev/null
 	/usr/bin/ssr-check $servername $serverport $switch_time
-	local ret2=$?
-	[ "$ret" == "0" ] && ipset del ss_spec_wan_ac $servername 2>/dev/null
-	if [ "$ret2" == "0" ]; then
+	local ret=$?
+	ipset del whitelist $servername 2>/dev/null
+	if [ "$ret" == "0" ]; then
 		server_locate=$server_count
 		ENABLE_SERVER=$1
 		return 0

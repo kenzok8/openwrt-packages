@@ -36,7 +36,7 @@ inboundDetour = (proto == "tcp" and socks_port ~= "0") and {
 } or nil,
 -- 传出连接
 outbound = {
-	protocol = (server.type == "v2ray") and "vmess" or "vless",
+	protocol = server.type,
 	settings = {
 		vnext = {
 			{
@@ -45,10 +45,10 @@ outbound = {
 				users = {
 					{
 						id = server.vmess_id,
-						alterId = (server.type == "v2ray") and tonumber(server.alter_id) or nil,
-						security = (server.type == "v2ray") and server.security or nil,
+						alterId = (server.type == "vmess") and tonumber(server.alter_id) or nil,
+						security = (server.type == "vmess") and server.security or nil,
 						encryption = (server.type == "vless") and server.vless_encryption or nil,
-						flow = (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-origin") or nil,
+						flow = (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-splice") or nil,
 					}
 				}
 			}
@@ -58,8 +58,14 @@ outbound = {
 	streamSettings = {
 		network = server.transport,
 		security = (server.tls == '1') and ((server.xtls == '1') and "xtls" or "tls") or "none",
-		tlsSettings = (server.tls == '1' and server.xtls ~= '1') and {allowInsecure = (server.insecure ~= "0") and true or nil,serverName=server.tls_host,} or nil,
-		xtlsSettings = (server.xtls == '1') and {allowInsecure = (server.insecure ~= "0") and true or nil,serverName=server.tls_host,} or nil,
+		tlsSettings = (server.tls == '1' and server.xtls ~= '1' and (server.insecure == "1" or server.tls_host)) and {
+			allowInsecure = (server.insecure == "1") and true or nil,
+			serverName=server.tls_host
+		} or nil,
+		xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host)) and {
+			allowInsecure = (server.insecure == "1") and true or nil,
+			serverName=server.tls_host
+		} or nil,
 		tcpSettings = (server.transport == "tcp" and server.tcp_guise == "http") and {
 			header = {
 				type = server.tcp_guise,

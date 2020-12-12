@@ -65,5 +65,6 @@ set shadowsocksr.@server_global[0].enable_server='0'
 commit shadowsocksr
 EOF
 fi
+sed -i "s/type 'v2ray'"/"type 'vmess'/g" /etc/config/shadowsocksr
 rm -rf /tmp/luci-modulecache /tmp/luci-indexcache
 exit 0
