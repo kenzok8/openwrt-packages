@@ -191,8 +191,8 @@ msgstr "选择内核日志的默认输出模式"
 msgid "Only intranet allowed"
 msgstr "仅允许内网"
 
-msgid "When Enabled, The Control Panel And The Connection Broker Port Will Not Be Accessible From The Public Network, TUN Not Support Yet"
-msgstr "启用后将禁止从公网访问控制面板和连接代理端口,TUN模式下启用此项不会生效"
+msgid "When Enabled, The Control Panel And The Connection Broker Port Will Not Be Accessible From The Public Network"
+msgstr "启用后将禁止从公网访问控制面板和连接代理端口"
 
 msgid "Redirect Local DNS Setting"
 msgstr "*本地DNS劫持"
@@ -1020,8 +1020,14 @@ msgstr "在Fake-IP模式下，只支持过滤纯IP类型的请求"
 msgid "Rule Match Proxy Mode"
 msgstr "*仅代理命中规则流量"
 
-msgid "Only Proxy Rules Match, Prevent BT Passing"
-msgstr "仅允许代理命中规则的流量，防止BT下载流量经过代理"
+msgid "Only Proxy Rules Match, Prevent BT/P2P Passing"
+msgstr "仅允许代理命中规则的流量，防止BT、P2P下载流量经过代理"
+
+msgid "Common Ports Proxy Mode"
+msgstr "*仅允许常用端口流量"
+
+msgid "Only Common Ports, Prevent BT/P2P Passing"
+msgstr "仅允许常用端口的流量经过Clash，防止BT、P2P下载流量经过代理"
 
 msgid "Provider File Manage"
 msgstr "代理（规则）集文件管理"
@@ -1385,3 +1391,25 @@ msgstr "当前系统默认接口:"
 
 msgid ",Try Enable If Network Loopback"
 msgstr ", 如发生回环死机请尝试启用"
+
+msgid "Custom GEOIP URL"
+msgstr "GEOIP数据库更新URL"
+
+msgid "Custom Chnroute Lists URL"
+msgstr "大陆IP段更新URL"
+
+msgid "Custom GEOIP Data URL, Click Button Below To Refresh After Edit"
+msgstr "自定义GEOIP数据库的更新来源，编辑后点击下方按钮生效"
+
+msgid "Custom Chnroute Lists URL, Click Button Below To Refresh After Edit"
+msgstr "自定义大陆IP段的更新来源，编辑后点击下方按钮生效"
+
+msgid "(Default)"
+msgstr "(默认)"
+
+msgid "(Only CN)"
+msgstr "(仅中国数据)"
+
+msgid "(Large Size)"
+msgstr "(18MB大文件，请确保足够的剩余空间)"
+

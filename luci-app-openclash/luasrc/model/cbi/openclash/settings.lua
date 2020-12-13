@@ -67,7 +67,7 @@ o:depends("en_mode", "redir-host-tun")
 o:depends("en_mode", "fake-ip-tun")
 o:depends("en_mode", "redir-host-mix")
 o:depends("en_mode", "fake-ip-mix")
-o:value("system", translate("System"))
+o:value("system", translate("System　"))
 o:value("gvisor", translate("Gvisor"))
 o.default = "system"
 
@@ -78,6 +78,22 @@ o:value("global", translate("Global Proxy Mode"))
 o:value("direct", translate("Direct Proxy Mode"))
 o:value("script", translate("Script Proxy Mode (Tun Core Only)"))
 o.default = "rule"
+
+o = s:taboption("op_mode", ListValue, "enable_rule_proxy", font_red..bold_on..translate("Rule Match Proxy Mode")..bold_off..font_off)
+o.description = translate("Only Proxy Rules Match, Prevent BT/P2P Passing")
+o:value("0", translate("Disable"))
+o:value("1", translate("Enable"))
+o.default=0
+
+o = s:taboption("op_mode", ListValue, "common_ports", font_red..bold_on..translate("Common Ports Proxy Mode")..bold_off..font_off)
+o.description = translate("Only Common Ports, Prevent BT/P2P Passing")
+o:value("0", translate("Disable"))
+o:value("1", translate("Enable"))
+o.default = "0"
+o:depends("en_mode", "redir-host")
+o:depends("en_mode", "redir-host-tun")
+o:depends("en_mode", "redir-host-vpn")
+o:depends("en_mode", "redir-host-mix")
 
 o = s:taboption("op_mode", ListValue, "china_ip_route", font_red..bold_on..translate("China IP Route")..bold_off..font_off)
 o.description = translate("Bypass The China Network Flows, Improve Performance")
@@ -118,12 +134,6 @@ o:value("linux-mipsle-hardfloat")
 o:value("0", translate("Not Set"))
 o.default=0
 
-o = s:taboption("settings", ListValue, "enable_rule_proxy", font_red..bold_on..translate("Rule Match Proxy Mode")..bold_off..font_off)
-o.description = translate("Only Proxy Rules Match, Prevent BT Passing")
-o:value("0", translate("Disable"))
-o:value("1", translate("Enable"))
-o.default=0
-
 o = s:taboption("settings", ListValue, "interface_name", font_red..bold_on..translate("Bind Network Interface")..bold_off..font_off)
 local de_int = SYS.exec("ip route |grep 'default' |awk '{print $5}' 2>/dev/null")
 o.description = translate("Default Interface Name:").." "..font_green..bold_on..de_int..bold_off..font_off..translate(",Try Enable If Network Loopback")
@@ -144,13 +154,9 @@ o:value("silent", translate("Silent Mode"))
 o.default = "silent"
 
 o = s:taboption("settings", ListValue, "intranet_allowed", translate("Only intranet allowed"))
-o.description = translate("When Enabled, The Control Panel And The Connection Broker Port Will Not Be Accessible From The Public Network, TUN Not Support Yet")
+o.description = translate("When Enabled, The Control Panel And The Connection Broker Port Will Not Be Accessible From The Public Network")
 o:value("0", translate("Disable"))
 o:value("1", translate("Enable"))
-o:depends("en_mode", "redir-host")
-o:depends("en_mode", "fake-ip")
-o:depends("en_mode", "redir-host-vpn")
-o:depends("en_mode", "fake-ip-vpn")
 o.default = 0
 
 o = s:taboption("settings", Value, "proxy_port")
@@ -494,6 +500,16 @@ o:value(t, t..":00")
 end
 o.default=0
 
+o = s:taboption("geo_update", Value, "geo_custom_url")
+o.title = translate("Custom GEOIP URL")
+o.rmempty = false
+o.description = translate("Custom GEOIP Data URL, Click Button Below To Refresh After Edit")
+o:value("http://www.ideame.top/mmdb/Country.mmdb", translate("Alecthw-Version")..translate("(Default)"))
+o:value("https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/Country.mmdb", translate("Hackl0us-Version")..translate("(Only CN)"))
+o:value("https://static.clash.to/GeoIP2/GeoIP2-Country.mmdb", translate("Static.clash.to"))
+o:value("https://geolite.clash.dev/Country.mmdb", translate("Geolite.clash.dev"))
+o.default = "http://www.ideame.top/mmdb/Country.mmdb"
+
 o = s:taboption("geo_update", Button, translate("GEOIP Update")) 
 o.title = translate("Update GEOIP Database")
 o.inputtitle = translate("Check And Update")
@@ -528,6 +544,15 @@ for t = 0,23 do
 o:value(t, t..":00")
 end
 o.default=0
+
+o = s:taboption("chnr_update", Value, "chnr_custom_url")
+o.title = translate("Custom Chnroute Lists URL")
+o.rmempty = false
+o.description = translate("Custom Chnroute Lists URL, Click Button Below To Refresh After Edit")
+o:value("https://ispip.clang.cn/all_cn.txt", translate("Clang-CN")..translate("(Default)"))
+o:value("https://ispip.clang.cn/all_cn_cidr.txt", translate("Clang-CN-CIDR"))
+o:value("https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/CN-ip-cidr.txt", translate("Hackl0us-CN-CIDR")..translate("(Large Size)"))
+o.default = "https://ispip.clang.cn/all_cn.txt"
 
 o = s:taboption("chnr_update", Button, translate("Chnroute Lists Update")) 
 o.title = translate("Update Chnroute Lists")
