@@ -502,17 +502,14 @@ header > .container > a[class="brand"]:after {
     -webkit-font-smoothing: antialiased;
 }
 
-
 .main > .main-left > .nav > .slide > a[data-title="Status"]:before {
     content: "\e026";
-   color: #5e72e4!important;
-  
+   color: #5e72e4!important; 
 }
 
 .main > .main-left > .nav > .slide > a[data-title="Status"]:before {
     content: "\e026";
-   color: #5e72e4!important;
-  
+   color: #5e72e4!important;  
 }
 
 .main > .main-left > .nav > .slide > a[data-title="System"]:before {
@@ -524,6 +521,7 @@ color: #FF00FF!important;
     content: "\e00e";
 color: #8965e0!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="VPN"]:before {
     content: "\e029";
  color: #5F9EA0!important;
@@ -533,10 +531,12 @@ color: #8965e0!important;
     content: "\e01b";
  color: #11cdef!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="Docker"]:before {
     content: "\e02c";
  color: #00b2ee!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="NAS"]:before {
     content: "\e00b";
    color: #F1C40F!important;
@@ -546,10 +546,12 @@ color: #8965e0!important;
     content: "\e024";
   color: 	#3CB371!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="Statistics"]:before {
     content: "\e023";
   color: #1E90FF!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="QOS"]:before {
     content: "\e00a";
     color: #f3a4b5!important;
@@ -565,6 +567,7 @@ color: #2dce89!important;
     line-height:40px;
  color: #9400D3!important;
 }
+
 .main > .main-left > .nav > li > a[data-title="Logout"]:before {
     content: "\e005";
     display: inline-block;

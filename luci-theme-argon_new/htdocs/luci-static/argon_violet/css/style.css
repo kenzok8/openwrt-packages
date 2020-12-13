@@ -1836,6 +1836,11 @@ div>.table>.tbody>.tr:nth-of-type(2n) {
     color: #8965e0 !important;
 }
 
+.main>.main-left>.nav>.slide>.menu[data-title=Docker]:before {
+    content: "\e911";
+    color: #6699ff !important;
+}
+
 .main>.main-left>.nav>.slide>.menu[data-title=Bandwidth_Monitor]:before {
     content: "\e90d";
     color: #5e72e4 !important;

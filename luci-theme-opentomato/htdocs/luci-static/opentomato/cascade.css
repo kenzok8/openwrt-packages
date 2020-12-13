@@ -608,6 +608,7 @@ header > .container > a[class="brand"]:after {
     content: "\e00e";
    color: #8965e0!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="VPN"]:before {
     content: "\e029";
    color: #5F9EA0!important;
@@ -617,10 +618,12 @@ header > .container > a[class="brand"]:after {
     content: "\e01b";
     color: #11cdef!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="Docker"]:before {
     content: "\e02c";
  color: #00b2ee!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="NAS"]:before {
     content: "\e00b";
    color: #F1C40F!important;
@@ -635,6 +638,7 @@ header > .container > a[class="brand"]:after {
     content: "\e022";
    color: #00FF7F!important;
 }
+
 .main > .main-left > .nav > .slide > a[data-title="QOS"]:before {
     content: "\e00a";
     color: #f3a4b5!important;
