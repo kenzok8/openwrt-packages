@@ -59,7 +59,7 @@ kcp_param=$(uci_get_by_name $GLOBAL_SERVER kcp_param)
 [ "$password" != "" ] && password="--key "${password}
 
 while [ "1" == "1" ]; do #死循环
-	sleep 30s
+	sleep 000030s
 	#redir tcp
 	if [ "$redir_tcp_process" -gt 0 ]; then
 		icount=$(busybox ps -w | grep ssr-retcp | grep -v grep | wc -l)

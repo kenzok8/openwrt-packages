@@ -246,7 +246,7 @@
 		} else if (ssu[0] == "vmess") {
 			var sstr = b64DecodeUnicode(ssu[1]);
 			var ploc = sstr.indexOf("/?");
-			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].value = "v2ray";
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].value = "vmess";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].dispatchEvent(event);
 			var url0, param = "";
 			if (ploc > 0) {

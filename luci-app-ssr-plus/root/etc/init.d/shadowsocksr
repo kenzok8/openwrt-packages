@@ -186,11 +186,11 @@ gen_config_file() {
 		EOF
 		;;
 	vmess | vless)
-		lua /usr/share/shadowsocksr/genv2config.lua $GLOBAL_SERVER tcp $(uci_get_by_name $1 local_port) >/var/etc/v2-ssr-retcp.json
+		lua /usr/share/shadowsocksr/genv2config.lua $GLOBAL_SERVER tcp $3 >/var/etc/v2-ssr-retcp.json
 		sed -i 's/\\//g' /var/etc/v2-ssr-retcp.json
 		;;
 	trojan)
-		lua /usr/share/shadowsocksr/gentrojanconfig.lua $GLOBAL_SERVER nat $(uci_get_by_name $1 local_port) >/var/etc/trojan-ssr-retcp.json
+		lua /usr/share/shadowsocksr/gentrojanconfig.lua $GLOBAL_SERVER nat $3 >/var/etc/trojan-ssr-retcp.json
 		sed -i 's/\\//g' /var/etc/trojan-ssr-retcp.json
 		;;
 	naiveproxy)
@@ -394,6 +394,7 @@ start_redir_udp() {
 		redir_udp=1
 		local type=$(uci_get_by_name $UDP_RELAY_SERVER type)
 		local bin=$(find_bin $type)
+		local udp_port=1357
 		[ ! -f "$bin" ] && echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay:Can't find $bin program, can't start!" >>/tmp/ssrplus.log && redir_udp=0 && return 1
 		case "$type" in
 		ss | ssr)
@@ -403,7 +404,7 @@ start_redir_udp() {
 			esac
 			local name="Shadowsocks"
 			[ "$type" == "ssr" ] && name="ShadowsocksR"
-			gen_config_file $UDP_RELAY_SERVER 1 $(uci_get_by_name $UDP_RELAY_SERVER local_port 1234)
+			gen_config_file $UDP_RELAY_SERVER 1 $udp_port
 			last_config_file=$CONFIG_UDP_FILE
 			$bin -c $last_config_file $ARG_OTA -U -f /var/run/ssr-reudp.pid >/dev/null 2>&1
 			echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay:$name Started!" >>/tmp/ssrplus.log
@@ -418,7 +419,7 @@ start_redir_udp() {
 			lua /usr/share/shadowsocksr/gentrojanconfig.lua $GLOBAL_SERVER client 10801 >/var/etc/trojan-ssr-reudp.json
 			sed -i 's/\\//g' /var/etc/trojan-ssr-reudp.json
 			$bin --config /var/etc/trojan-ssr-reudp.json >/dev/null 2>&1 &
-			ipt2socks -U -b 0.0.0.0 -4 -s 127.0.0.1 -p 10801 -l $(uci_get_by_name $UDP_RELAY_SERVER local_port) >/dev/null 2>&1 &
+			ipt2socks -U -b 0.0.0.0 -4 -s 127.0.0.1 -p 10801 -l $udp_port >/dev/null 2>&1 &
 			echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay:$($bin --version 2>&1 | head -1) Started!" >>/tmp/ssrplus.log
 			;;
 		naiveproxy)
@@ -426,7 +427,7 @@ start_redir_udp() {
 			echo "$(date "+%Y-%m-%d %H:%M:%S") $($bin --version | head -1) UDP TPROXY Relay not supported!" >>/tmp/ssrplus.log
 			;;
 		socks5)
-			/usr/share/shadowsocksr/genred2config.sh "/var/etc/redsocks-ssr-reudp.conf" socks5 udp $(uci_get_by_name $UDP_RELAY_SERVER local_port) \
+			/usr/share/shadowsocksr/genred2config.sh "/var/etc/redsocks-ssr-reudp.conf" socks5 udp $udp_port \
 			$(get_host_ip $(uci_get_by_name $UDP_RELAY_SERVER server)) $(uci_get_by_name $UDP_RELAY_SERVER server_port) \
 			$(uci_get_by_name $UDP_RELAY_SERVER auth_enable 0) $(uci_get_by_name $UDP_RELAY_SERVER username) $(uci_get_by_name $UDP_RELAY_SERVER password)
 			$bin -c /var/etc/redsocks-ssr-reudp.conf >/dev/null 2>&1
@@ -648,16 +649,23 @@ start_rules() {
 		kcp_server=$server
 		kcp_flag=1
 	fi
-	local local_port=$(uci_get_by_name $GLOBAL_SERVER local_port)
+	local local_port=$(uci_get_by_name $GLOBAL_SERVER local_port 1234)
 	local lan_ac_ips=$(uci_get_by_type access_control lan_ac_ips)
 	local lan_ac_mode=$(uci_get_by_type access_control lan_ac_mode)
 	local router_proxy=$(uci_get_by_type access_control router_proxy)
-	if [ "$GLOBAL_SERVER" == "$UDP_RELAY_SERVER" -a "$kcp_flag" == "0" ]; then
-		ARG_UDP="-u"
-	elif [ -n "$UDP_RELAY_SERVER" ]; then
-		ARG_UDP="-U"
-		local udp_server=$(uci_get_by_name $UDP_RELAY_SERVER server)
-		local udp_local_port=$(uci_get_by_name $UDP_RELAY_SERVER local_port)
+	if [ -n "$UDP_RELAY_SERVER" ]; then
+		if [ "$kcp_flag" == "0" ]; then
+			local type=$(uci_get_by_name $UDP_RELAY_SERVER type)
+			case "$type" in
+			tun | naiveproxy) ;;
+			*) ARG_UDP="-U";;
+			esac
+			local udp_server=$(uci_get_by_name $UDP_RELAY_SERVER server)
+			if [ "$udp_server" == "ERROR" ]; then
+				udp_server=$(uci_get_by_name $UDP_RELAY_SERVER ip)
+			fi
+			local udp_local_port=1357
+		fi
 	fi
 	if [ -n "$lan_ac_ips" ]; then
 		case "$lan_ac_mode" in
@@ -739,14 +747,18 @@ start() {
 			/usr/bin/ssr-rules -f
 		fi
 	else
-		sed '/.*/s/.*/address=\/&\//' /etc/ssr/deny.list >/tmp/dnsmasq.ssr/denylist.conf
+		echo "$(date "+%Y-%m-%d %H:%M:%S") 未启动主节点，禁止连接的域名正在加载。" >>/tmp/ssrplus.log
+		sed "/.*/s/.*/address=\/&\//" /etc/ssr/deny.list >/tmp/dnsmasq.ssr/denylist.conf
+		echo "$(date "+%Y-%m-%d %H:%M:%S") 禁止连接的域名加载完毕。" >>/tmp/ssrplus.log
 		if [ "$(uci_get_by_type global adblock 0)" == "1" ]; then
+			echo "$(date "+%Y-%m-%d %H:%M:%S") 未启动主节点，广告过滤正在加载。" >>/tmp/ssrplus.log
 			[ "$1" == "" ] && cp -f /etc/ssr/ad.conf /tmp/dnsmasq.ssr/
 			if [ -f "/tmp/dnsmasq.ssr/ad.conf" ]; then
 				for line in $(cat /etc/ssr/black.list); do sed -i "/$line/d" /tmp/dnsmasq.ssr/ad.conf; done
 				for line in $(cat /etc/ssr/white.list); do sed -i "/$line/d" /tmp/dnsmasq.ssr/ad.conf; done
 				for line in $(cat /etc/ssr/deny.list); do sed -i "/$line/d" /tmp/dnsmasq.ssr/ad.conf; done
 			fi
+			echo "$(date "+%Y-%m-%d %H:%M:%S") 广告过滤加载完毕。" >>/tmp/ssrplus.log
 		fi
 	fi
 	/etc/init.d/dnsmasq restart >/dev/null 2>&1
@@ -761,6 +773,7 @@ start() {
 
 boot() {
 	echo "$(date "+%Y-%m-%d %H:%M:%S") boot！" >/tmp/ssrplus.log
+	mkdir -p /var/lock /tmp/dnsmasq.d /tmp/dnsmasq.ssr /var/run /var/etc
 	ulimit -n 65535
 	start
 }
@@ -780,8 +793,7 @@ stop() {
 		killall -q -9 kcptun-client
 	fi
 	ps -w | grep -v "grep" | grep ssr-monitor | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
-	ps -w | grep -v "grep" | grep "sleep $(uci_get_by_type global switch_time)s" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
-	ps -w | grep -v "grep" | grep "sleep 30s" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
+	ps -w | grep -v "grep" | grep "sleep 0000" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
 	killall -q -9 ss-redir ss-local obfs-local ssr-redir ssr-local ssr-server v2ray v2ray-plugin xray trojan naive microsocks ipt2socks dns2socks redsocks2 pdnsd
 	rm -f /var/lock/ssr-monitor.lock
 	if [ -f "/tmp/dnsmasq.d/dnsmasq-ssr.conf" ]; then

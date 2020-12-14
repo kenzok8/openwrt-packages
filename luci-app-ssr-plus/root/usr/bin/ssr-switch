@@ -118,7 +118,7 @@ start() {
 	#不支持kcptun启用时的切换
 	[ $(uci_get_by_name $DEFAULT_SERVER kcp_enable) = "1" ] && return 1
 	while [ "1" == "1" ]; do #死循环
-		sleep $cycle_time
+		sleep 0000$cycle_time
 		LOGTIME=$(date "+%Y-%m-%d %H:%M:%S")
 		#判断当前代理是否为缺省服务器
 		if [ "$CURRENT_SERVER" != "$DEFAULT_SERVER" ]; then

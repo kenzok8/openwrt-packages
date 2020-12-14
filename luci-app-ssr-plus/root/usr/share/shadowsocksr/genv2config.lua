@@ -11,8 +11,8 @@ log = {
 loglevel = "warning"
 },
 -- 传入连接
-inbound = (local_port ~= "0") and {
-	port = local_port,
+inbound = (local_port ~= "0" or server.local_port) and {
+	port = tonumber(local_port) or tonumber(server.local_port),
 	protocol = "dokodemo-door",
 	settings = {
 		network = proto,
@@ -57,8 +57,8 @@ outbound = {
 -- 底层传输配置
 	streamSettings = {
 		network = server.transport,
-		security = (server.tls == '1') and ((server.xtls == '1') and "xtls" or "tls") or "none",
-		tlsSettings = (server.tls == '1' and server.xtls ~= '1' and (server.insecure == "1" or server.tls_host)) and {
+		security = (server.xtls == '1') and "xtls" or (server.tls == '1') and "tls" or "none",
+		tlsSettings = (server.tls == '1' and (server.insecure == "1" or server.tls_host)) and {
 			allowInsecure = (server.insecure == "1") and true or nil,
 			serverName=server.tls_host
 		} or nil,
@@ -90,9 +90,9 @@ outbound = {
 			},
 			seed = server.seed or nil
 		} or nil,
-		wsSettings = (server.transport == "ws") and (server.ws_path ~= nil or server.ws_host ~= nil) and {
+		wsSettings = (server.transport == "ws") and (server.ws_path or server.ws_host) and {
 			path = server.ws_path,
-			headers = (server.ws_host ~= nil) and {
+			headers = (server.ws_host) and {
 				Host = server.ws_host
 			} or nil,
 		} or nil,
@@ -108,8 +108,8 @@ outbound = {
 			}
 		} or nil
 	},
-	mux = (server.xtls ~= "1") and {
-		enabled = (server.mux == "1") and true or false,
+	mux = (server.mux == "1" and server.xtls ~= "1") and {
+		enabled = true,
 		concurrency = tonumber(server.concurrency)
 	} or nil
 } or nil
