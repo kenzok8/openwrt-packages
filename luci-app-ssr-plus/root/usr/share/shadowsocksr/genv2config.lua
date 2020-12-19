@@ -11,8 +11,8 @@ log = {
 loglevel = "warning"
 },
 -- 传入连接
-inbound = (local_port ~= "0" or server.local_port) and {
-	port = tonumber(local_port) or tonumber(server.local_port),
+inbound = (local_port ~= "0") and {
+	port = tonumber(local_port),
 	protocol = "dokodemo-door",
 	settings = {
 		network = proto,
