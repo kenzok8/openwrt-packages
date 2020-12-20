@@ -410,7 +410,7 @@ start_redir_udp() {
 			echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay:$name Started!" >>/tmp/ssrplus.log
 			;;
 		vmess | vless)
-			lua /usr/share/shadowsocksr/genv2config.lua $UDP_RELAY_SERVER udp $(uci_get_by_name $UDP_RELAY_SERVER local_port) >/var/etc/v2-ssr-reudp.json
+			lua /usr/share/shadowsocksr/genv2config.lua $UDP_RELAY_SERVER udp $udp_port >/var/etc/v2-ssr-reudp.json
 			sed -i 's/\\//g' /var/etc/v2-ssr-reudp.json
 			$bin -config /var/etc/v2-ssr-reudp.json >/dev/null 2>&1 &
 			echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
