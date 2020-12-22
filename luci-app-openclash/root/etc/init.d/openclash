@@ -96,9 +96,18 @@ revert_dns() {
    }
    
    [ "$1" -eq 1 ] && {
-      if [ -s "/tmp/resolv.conf.d/resolv.conf.auto" ]; then
+      if [ -s "/tmp/resolv.conf.d/resolv.conf.auto" ] && [ -n "$(grep "nameserver" /tmp/resolv.conf.d/resolv.conf.auto)" ]; then
          uci set dhcp.@dnsmasq[0].resolvfile=/tmp/resolv.conf.d/resolv.conf.auto >/dev/null 2>&1
-      elif [ -s "/tmp/resolv.conf.auto" ]; then
+      elif [ -s "/tmp/resolv.conf.auto" ] && [ -n "$(grep "nameserver" /tmp/resolv.conf.auto)" ]; then
+         uci set dhcp.@dnsmasq[0].resolvfile=/tmp/resolv.conf.auto >/dev/null 2>&1
+      else
+         rm -rf /tmp/resolv.conf.auto 2>/dev/null
+         touch /tmp/resolv.conf.auto 2>/dev/null
+         cat >> "/tmp/resolv.conf.auto" <<-EOF
+# Interface lan
+nameserver 114.114.114.114
+nameserver 119.29.29.29
+EOF
          uci set dhcp.@dnsmasq[0].resolvfile=/tmp/resolv.conf.auto >/dev/null 2>&1
       fi
       uci set dhcp.@dnsmasq[0].noresolv=0 >/dev/null 2>&1
@@ -171,7 +180,7 @@ EOF
    if [ -n "$(ruby_read "$CONFIG_FILE" "['dns']['fallback']")" ] && [ -z "$(ruby_read "$CONFIG_FILE" "['dns']['fallback-filter']")" ]; then
 cat >> "$2" <<-EOF
   fallback-filter:
-    geoip: true
+    geoip: false
     ipcidr:
       - 0.0.0.0/8
       - 10.0.0.0/8
@@ -189,9 +198,14 @@ cat >> "$2" <<-EOF
       - 224.0.0.0/4
       - 240.0.0.0/4
       - 255.255.255.255/32
+    domain:
+      - '+.google.com'
+      - '+.facebook.com'
+      - '+.youtube.com'
+      - '+.githubusercontent.com'
 EOF
-   fi
    ruby_merge "$CONFIG_FILE" "['dns']" "$2"
+   fi
 }
 
 #修改集路径
@@ -215,12 +229,18 @@ yml_provider_path()
    begin
    Value = YAML.load_file('$1');
    if Value.key?('$2') then
-      Value['$2'].values.each{|x,v|
-         unless x['path'].include? '$3' then
-         v=File.basename(x['path']);
-         x['path']='./$3/'+v; end};
+      Value_1 = Marshal.load(Marshal.dump(Value['$2']));
+      Value['$2'].values.each{
+      |x,v|
+      unless x['path'].include? '$3' then
+         v=File.basename(x['path'])
+         x['path']='./$3/'+v
+      end
+      };
+      if not Value_1.eql?(Value['$2']) then
          File.open('$1','w') {|f| YAML.dump(Value, f)}
-   end
+      end
+   end;
    rescue Exception => e
    puts '${LOGTIME} Edit Provider Path Error: ' + e.message
    end
@@ -409,7 +429,6 @@ get_rule_file()
    GAME_RULE_PATH="/etc/openclash/game_rules/$GAME_RULE_FILE_NAME"
    
    sed '/^#/d' "$GAME_RULE_PATH" 2>/dev/null |sed '/^ *$/d' |awk '{print "- IP-CIDR,"$0}' |awk -v tag="$2" '{print $0","'tag'""}' >> $GAME_RULE_FILE 2>/dev/null
-   set_rule_file=1
 }
 
 yml_game_rule_get()
@@ -463,7 +482,7 @@ yml_game_custom()
 #处理游戏规则
 config_load "openclash"
 config_foreach yml_game_rule_get "game_config"
-[ "$set_rule_file" = 1 ] && {
+[ -f "$GAME_RULE_FILE" ] && {
 ruby -ryaml -E UTF-8 -e "
 begin
 Value = YAML.load_file('$CONFIG_FILE');
@@ -488,6 +507,7 @@ end
 config_load "openclash"
 config_foreach yml_rule_group_get "rule_provider_config"
 config_foreach yml_rule_group_get "game_config"
+if [ -f "/tmp/yaml_groups.yaml" ] || [ -f "/tmp/yaml_servers.yaml" ] || [ -f "/tmp/yaml_provider.yaml" ]; then
 ruby -ryaml -E UTF-8 -e "
 begin
 Value = YAML.load_file('$CONFIG_FILE');
@@ -522,6 +542,7 @@ File.open('$CONFIG_FILE','w') {|f| YAML.dump(Value, f)}
 rescue Exception => e
 puts '${LOGTIME} Game Proxy Merge Error: ' + e.message
 end" 2>/dev/null >> $LOG_FILE
+fi
 }
 
 yml_rule_set_add()
@@ -719,7 +740,6 @@ if [ ! -f "$RAW_CONFIG_FILE" ]; then
    if [ -n "$subscribe_info" ]; then
       echo "配置文件不存在，您已设置订阅信息，准备开始下载..." >$START_LOG
       sleep 3
-      kill_clash
       nohup /usr/share/openclash/openclash.sh &
       del_lock
       exit 0
@@ -753,6 +773,24 @@ elif [ ! -f "$CONFIG_FILE" ] || [ ! -s "$CONFIG_FILE" ]; then
    sleep 3
    start_fail
 fi
+}
+
+yml_other_rules_get()
+{
+   local section="$1"
+   local enabled config
+   config_get_bool "enabled" "$section" "enabled" "1"
+   config_get "config" "$section" "config" ""
+   
+   if [ "$enabled" = "0" ] || [ "$config" != "$2" ]; then
+      return
+   fi
+   
+   if [ -n "$rule_name" ]; then
+      return
+   fi
+   
+   config_get "rule_name" "$section" "rule_name" ""
 }
 
 #运行模式处理
@@ -825,12 +863,19 @@ do_run_file()
       core_type="Game"
       core_start_log="检测到配置了【Game】内核专属功能，调用【Game】内核启动..."
    fi
+   
+   if [ "$rule_source" != "0" ]; then
+      config_load "openclash"
+      config_foreach yml_other_rules_get "other_rules" "$CONFIG_NAME"
+   fi
 
-   if [ "$proxy_mode" = "script" ] || [ "$rule_source" = "ConnersHua" ] || [ "$rule_source" = "lhie1" ] || [ -n "$(ruby_read "$CONFIG_FILE" "['rules'].grep(/^RULE-SET,/)")" ]; then
-      rm -rf "/etc/openclash/clash" 2>/dev/null
-      ln -s "$tun_core_path" /etc/openclash/clash 2>/dev/null
-      core_type="Tun"
-      core_start_log="检测到配置了【Tun】内核专属功能，调用【Tun】内核启动..."
+   if [ "$proxy_mode" = "script" ] || [ "$rule_name" = "ConnersHua" ] || [ "$rule_name" = "lhie1" ] || [ -n "$(ruby_read "$CONFIG_FILE" "['rules'].grep(/^RULE-SET,/)")" ]; then
+      if [ "$en_mode_tun" != "2" ]; then
+         rm -rf "/etc/openclash/clash" 2>/dev/null
+         ln -s "$tun_core_path" /etc/openclash/clash 2>/dev/null
+         core_type="Tun"
+         core_start_log="检测到配置了【Tun】内核专属功能，调用【Tun】内核启动..."
+      fi
    fi
     
    if [ ! -f "/etc/openclash/clash" ] && [ -f "$dev_core_path" ] && [ -z "$core_type" ]; then
@@ -1584,7 +1629,7 @@ start()
    yml_auth_custom "$CONFIG_FILE"
    yml_dns_custom "$enable_custom_dns" "$CONFIG_FILE"
    /usr/share/openclash/yml_change.sh 2>/dev/null "$LOGTIME" "$en_mode" "$enable_custom_dns" "$da_password" "$cn_port" "$proxy_port" "$CONFIG_FILE" "$ipv6_enable" "$http_port" "$socks_port" "$lan_ip" "$log_level" "$proxy_mode" "$intranet_allowed" "$en_mode_tun" "$stack_type" "$dns_port" "$core_type" "$mixed_port"
-   /usr/share/openclash/yml_rules_change.sh 2>/dev/null "$LOGTIME" "$rule_source" "$enable_custom_clash_rules" "$CONFIG_FILE" "$set_rule_file" "$en_mode" "$enable_rule_proxy" "$RAW_CONFIG_FILE" "$RULE_PROVIDER_FILE"
+   /usr/share/openclash/yml_rules_change.sh 2>/dev/null "$LOGTIME" "$rule_source" "$enable_custom_clash_rules" "$CONFIG_FILE" "$enable_rule_proxy" "$CONFIG_NAME"
    yml_custom_rule_provider
    yml_game_custom
    yml_provider_path "$CONFIG_FILE" "proxy-providers" "proxy_provider"

@@ -213,13 +213,13 @@ msgid "Custom DNS Setting"
 msgstr "自定义上游DNS服务器"
 
 msgid "Use Custom Rules"
-msgstr "启用后将把自定义规则增加到配置文件并优先匹配，规则请到下方文本框编辑"
+msgstr "启用后将把自定义规则增加到配置文件，规则请到下方文本框编辑"
 
 msgid "Add Custom DNS Servers"
 msgstr "设置自定义上游DNS服务器"
 
 msgid "(Take Effect After Choose Above)"
-msgstr "（在上方DNS设置中启用本功能后生效）"
+msgstr "（在上方设置中启用本功能后生效）"
 
 msgid "Advanced Setting"
 msgstr "高级设置"
@@ -422,10 +422,7 @@ msgid "Enable Other Rules"
 msgstr "第三方规则"
 
 msgid "Use Other Rules"
-msgstr "选择并启用第三方规则后将覆盖配置文件内的所有规则 (不包括自定义规则)"
-
-msgid "Disable Other Rules"
-msgstr "不使用第三方规则"
+msgstr "将覆盖配置文件内的所有规则 (不包括自定义规则)，启用前请先在此页面下方创建配置"
 
 msgid "lhie1 Rules"
 msgstr "lhie1 规则"
@@ -520,8 +517,8 @@ msgstr "国内流量"
 msgid "Others"
 msgstr "未匹配到规则的流量"
 
-msgid "Choose Proxy Group, Base On Your Servers Group in config.yaml"
-msgstr "指定流量(策略)的代理方式，只支持选择（服务器组），信息来源于您的配置文件"
+msgid "Choose Proxy Groups, Base On Your Config File"
+msgstr "指定流量(策略)的代理方式，只支持选择（策略组），信息来源于您的配置文件"
 
 msgid "Custom Clash Rules"
 msgstr "自定义规则"
@@ -594,7 +591,7 @@ msgid "Only For IPK Install Type Or Not Release Memory"
 msgstr ""
 "只支持通过IPK安装的版本进行更新，因为随系统编译的版本更新后不会释放旧版本的闪存空间"
 
-msgid "Severs and Groups"
+msgid "Servers and Groups"
 msgstr "服务器与策略组管理"
 
 msgid "Load Config"
@@ -603,7 +600,7 @@ msgstr "读取配置"
 msgid "Delete Unused Servers"
 msgstr "删除未启用节点"
 
-msgid "Delete Severs"
+msgid "Delete Servers"
 msgstr "清空服务器配置"
 
 msgid "Delete Proxy Provider"
@@ -1413,3 +1410,14 @@ msgstr "(仅中国数据)"
 msgid "(Large Size)"
 msgstr "(18MB大文件，请确保足够的剩余空间)"
 
+msgid "Other Rules Edit"
+msgstr "设置第三方规则"
+
+msgid "Get Group Names"
+msgstr "获取策略组"
+
+msgid "Get Group Names After Select Config File"
+msgstr "选择配置文件后请点击以获取对应的策略组"
+
+msgid "Other Rules Name"
+msgstr "第三方规则"
