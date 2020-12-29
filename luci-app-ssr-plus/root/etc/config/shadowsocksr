@@ -13,7 +13,7 @@ config global
 	option switch_time '667'
 	option switch_timeout '5'
 	option switch_try_count '3'
-	option gfwlist_url 'https://cdn.jsdelivr.net/gh/v2fly/domain-list-community@release/gfwlist.txt'
+	option gfwlist_url 'https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt'
 	option chnroute_url 'https://ispip.clang.cn/all_cn.txt'
 	option nfip_url 'https://cdn.jsdelivr.net/gh/QiuSimons/Netflix_IP/getflix.txt'
 	option adblock_url 'https://anti-ad.net/anti-ad-for-dnsmasq.conf'
