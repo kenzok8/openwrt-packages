@@ -415,7 +415,7 @@ start_redir_udp() {
 			echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay:$($bin -version | head -1) Started!" >>/tmp/ssrplus.log
 			;;
 		trojan)
-			lua /usr/share/shadowsocksr/gentrojanconfig.lua $GLOBAL_SERVER client 10801 >/var/etc/trojan-ssr-reudp.json
+			lua /usr/share/shadowsocksr/gentrojanconfig.lua $UDP_RELAY_SERVER client 10801 >/var/etc/trojan-ssr-reudp.json
 			sed -i 's/\\//g' /var/etc/trojan-ssr-reudp.json
 			$bin --config /var/etc/trojan-ssr-reudp.json >/dev/null 2>&1 &
 			ipt2socks -U -b 0.0.0.0 -4 -s 127.0.0.1 -p 10801 -l $(uci_get_by_name $UDP_RELAY_SERVER local_port) >/dev/null 2>&1 &
@@ -676,7 +676,7 @@ start_rules() {
 	if [ $dports == "1" ]; then
 		proxyport=" "
 	else
-		proxyport="-m multiport --dports 22,53,587,465,995,993,143,80,443,853"
+		proxyport="-m multiport --dports 22,53,587,465,995,993,143,80,443,853,9418"
 	fi
 	if [ "$NETFLIX_SERVER" != "nil" ]; then
 		if [ "$NETFLIX_SERVER" != "$GLOBAL_SERVER" ]; then
