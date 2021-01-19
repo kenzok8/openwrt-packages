@@ -157,9 +157,6 @@ msgstr "服务端配置"
 msgid "KcpTun Enable"
 msgstr "KcpTun 启用"
 
-msgid "bin:/usr/bin/kcptun-client"
-msgstr "二进制文件：/usr/bin/kcptun-client"
-
 msgid "KcpTun Port"
 msgstr "KcpTun 端口"
 
@@ -168,12 +165,6 @@ msgstr "KcpTun 参数"
 
 msgid "KcpTun Password"
 msgstr "KcpTun 密码"
-
-msgid "Haven't a Kcptun executable file"
-msgstr "不存在Kcptun可执行文件，请下载Kcptun可执行文件并改名放入/usr/bin/kcptun-client"
-
-msgid "Not a Kcptun executable file"
-msgstr "Kcptun可执行文件格式不正确，请确认是否正确下载了路由器对应的可执行文件"
 
 msgid "Enable Process Monitor"
 msgstr "启用进程监控"
@@ -382,23 +373,23 @@ msgstr "DNS 防污染服务"
 msgid "Use Other DNS Tunnel(Need to install)"
 msgstr "使用其他DNS转发(需要自己安装)"
 
-msgid "Import SSR"
-msgstr "导入ssr配置信息"
+msgid "Import"
+msgstr "导入配置信息"
 
 msgid "Export SSR"
 msgstr "导出ssr配置信息"
 
-msgid "Import SSR successfully."
-msgstr "成功导入SSR。"
+msgid "Import configuration information successfully."
+msgstr "导入配置信息成功。"
 
-msgid "Invalid SSR format."
-msgstr "无效的SSR格式。"
+msgid "Invalid format."
+msgstr "无效的格式。"
 
 msgid "User cancelled."
 msgstr "用户已取消。"
 
-msgid "Paste ssr url here"
-msgstr "在此处粘贴ssr://网址"
+msgid "Paste sharing link here"
+msgstr "在此处粘贴分享链接"
 
 msgid "Unable to copy SSR to clipboard."
 msgstr "无法复制SSR网址到剪贴板。"
@@ -688,5 +679,59 @@ msgstr "禁止连接的域名"
 msgid "Obfuscate password (optional)"
 msgstr "混淆密码（可选）"
 
-msgid "Select the interface that needs to transmit data. If unchecked, all interfaces will pass data by default!"
-msgstr "选择需要传递数据的接口。如果未选择，则默认情况下所有接口都将传递数据！"
+msgid "Camouflage Type"
+msgstr "伪装类型"
+
+msgid "VideoCall (SRTP)"
+msgstr "视频通话 (SRTP)"
+
+msgid "BitTorrent (uTP)"
+msgstr "BT下载 (uTP)"
+
+msgid "WechatVideo"
+msgstr "微信视频通话"
+
+msgid "DTLS 1.2"
+msgstr "DTLS 1.2 数据包"
+
+msgid "WireGuard"
+msgstr "WireGuard 数据包"
+
+msgid "MTU"
+msgstr "最大传输单元"
+
+msgid "TTI"
+msgstr "传输时间间隔"
+
+msgid "Uplink Capacity"
+msgstr "上行链路容量"
+
+msgid "Downlink Capacity"
+msgstr "下行链路容量"
+
+msgid "Read Buffer Size"
+msgstr "读取缓冲区大小"
+
+msgid "Write Buffer Size"
+msgstr "写入缓冲区大小"
+
+msgid "Congestion"
+msgstr "拥塞控制"
+
+msgid "Network interface to use"
+msgstr "使用的网络接口"
+
+msgid "Please fill in reset"
+msgstr "请填写 reset"
+
+msgid "The content entered is incorrect!"
+msgstr "输入的内容不正确！"
+
+msgid "Reset complete"
+msgstr "重置完成"
+
+msgid "Shadowsocks2"
+msgstr "二次加密"
+
+msgid "Finger Print"
+msgstr "指纹伪造"

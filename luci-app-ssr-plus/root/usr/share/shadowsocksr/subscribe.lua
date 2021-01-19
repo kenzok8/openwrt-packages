@@ -1,4 +1,5 @@
 #!/usr/bin/lua
+
 ------------------------------------------------
 -- This file is part of the luci-app-ssr-plus subscribe.lua
 -- @author William Chan <root@williamchan.me>
@@ -15,7 +16,7 @@ local ssub, slen, schar, sbyte, sformat, sgsub = string.sub, string.len, string.
 local jsonParse, jsonStringify = luci.jsonc.parse, luci.jsonc.stringify
 local b64decode = nixio.bin.b64decode
 local cache = {}
-local nodeResult = setmetatable({}, { __index = cache }) -- update result
+local nodeResult = setmetatable({}, {__index = cache}) -- update result
 local name = 'shadowsocksr'
 local uciType = 'servers'
 local ucic = luci.model.uci.cursor()
@@ -24,7 +25,7 @@ local switch = ucic:get_first(name, 'server_subscribe', 'switch', '1')
 local subscribe_url = ucic:get_first(name, 'server_subscribe', 'subscribe_url', {})
 local filter_words = ucic:get_first(name, 'server_subscribe', 'filter_words', '过期时间/剩余流量')
 local log = function(...)
-	print(os.date("%Y-%m-%d %H:%M:%S ") .. table.concat({ ... }, " "))
+	print(os.date("%Y-%m-%d %H:%M:%S ") .. table.concat({...}, " "))
 end
 -- 分割字符串
 local function split(full, sep)
@@ -79,7 +80,9 @@ end
 -- base64
 local function base64Decode(text)
 	local raw = text
-	if not text then return '' end
+	if not text then
+		return ''
+	end
 	text = text:gsub("%z", "")
 	text = text:gsub("_", "/")
 	text = text:gsub("-", "+")
@@ -94,11 +97,7 @@ local function base64Decode(text)
 end
 -- 处理数据
 local function processData(szType, content)
-	local result = {
-	type = szType,
-	local_port = 1234,
-	kcp_param = '--nocomp'
-	}
+	local result = {type = szType, local_port = 1234, kcp_param = '--nocomp'}
 	if szType == 'ssr' then
 		local dat = split(content, "/%?")
 		local hostInfo = split(dat[1], ':')
@@ -258,6 +257,72 @@ local function processData(szType, content)
 			result.server_port = host[2]
 		end
 		result.password = password
+	elseif szType == "vless" then
+		local idx_sp = 0
+		local alias = ""
+		if content:find("#") then
+			idx_sp = content:find("#")
+			alias = content:sub(idx_sp + 1, -1)
+		end
+		local info = content:sub(1, idx_sp - 1)
+		local hostInfo = split(info, "@")
+		local host = split(hostInfo[2], ":")
+		local uuid = hostInfo[1]
+		if host[2]:find("?") then
+			local query = split(host[2], "?")
+			local params = {}
+			for _, v in pairs(split(UrlDecode(query[2]), '&')) do
+				local t = split(v, '=')
+				params[t[1]] = t[2]
+			end
+			result.alias = UrlDecode(alias)
+			result.type = "vless"
+			result.server = host[1]
+			result.server_port = query[1]
+			result.vmess_id = uuid
+			result.vless_encryption = params.encryption or "none"
+			result.transport = params.type or "tcp"
+			if not params.type or params.type == "tcp" then
+				if params.security == "xtls" then
+					result.xtls = "1"
+					result.tls_host = params.sni or host[1]
+					result.vless_flow = params.flow
+				else
+					result.xtls = "0"
+				end
+			end
+			if params.type == 'ws' then
+				result.ws_host = params.host
+				result.ws_path = params.path or "/"
+			end
+			if params.type == 'http' then
+				result.h2_host = params.host or host[1]
+				result.h2_path = params.path or "/"
+			end
+			if params.type == 'kcp' then
+				result.kcp_guise = params.headerType or "none"
+				result.mtu = 1350
+				result.tti = 50
+				result.uplink_capacity = 5
+				result.downlink_capacity = 20
+				result.read_buffer_size = 2
+				result.write_buffer_size = 2
+				result.seed = params.seed
+			end
+			if params.type == 'quic' then
+				result.quic_guise = params.headerType or "none"
+				result.quic_key = params.key
+				result.quic_security = params.quicSecurity or "none"
+			end
+			if params.security == "tls" then
+				result.tls = "1"
+				result.tls_host = params.sni or host[1]
+			else
+				result.tls = "0"
+			end
+		else
+			result.server_port = host[2]
+		end
 	end
 	if not result.alias then
 		if result.server and result.server_port then
@@ -278,7 +343,7 @@ local function processData(szType, content)
 end
 -- wget
 local function wget(url)
-	local stdout = luci.sys.exec('wget-ssl -q --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36" --no-check-certificate -t 3 -T 10 -O- "' .. url .. '"')
+	local stdout = luci.sys.exec('wget -q --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36" --no-check-certificate -O- "' .. url .. '"')
 	return trim(stdout)
 end
 
@@ -315,16 +380,11 @@ local execute = function()
 					local nEnd = select(2, raw:find('ssd://'))
 					nodes = base64Decode(raw:sub(nEnd + 1, #raw))
 					nodes = jsonParse(nodes)
-					local extra = {
-					airport = nodes.airport,
-					port = nodes.port,
-					encryption = nodes.encryption,
-					password = nodes.password
-					}
+					local extra = {airport = nodes.airport, port = nodes.port, encryption = nodes.encryption, password = nodes.password}
 					local servers = {}
 					-- SS里面包着 干脆直接这样
 					for _, server in ipairs(nodes.servers) do
-						tinsert(servers, setmetatable(server, { __index = extra }))
+						tinsert(servers, setmetatable(server, {__index = extra}))
 					end
 					nodes = servers
 				else
@@ -355,14 +415,9 @@ local execute = function()
 						end
 						-- log(result)
 						if result then
-							if
-								not result.server or
-								not result.server_port or
-								result.alias == "NULL" or
-								check_filer(result) or
-								result.server:match("[^0-9a-zA-Z%-%.%s]") -- 中文做地址的 也没有人拿中文域名搞，就算中文域也有Puny Code SB 机场
-								then
-								log('丢弃无效节点: ' .. result.type ..' 节点, ' .. result.alias)
+							-- 中文做地址的 也没有人拿中文域名搞，就算中文域也有Puny Code SB 机场
+							if not result.server or not result.server_port or result.alias == "NULL" or check_filer(result) or result.server:match("[^0-9a-zA-Z%-%.%s]") then
+								log('丢弃无效节点: ' .. result.type .. ' 节点, ' .. result.alias)
 							else
 								-- log('成功解析: ' .. result.type ..' 节点, ' .. result.alias)
 								result.grouphashkey = groupHash
@@ -372,7 +427,7 @@ local execute = function()
 						end
 					end
 				end
-				log('成功解析节点数量: ' ..#nodes)
+				log('成功解析节点数量: ' .. #nodes)
 			else
 				log(url .. ': 获取内容为空')
 			end
@@ -398,13 +453,19 @@ local execute = function()
 					local dat = nodeResult[old.grouphashkey][old.hashkey]
 					ucic:tset(name, old['.name'], dat)
 					-- 标记一下
-					setmetatable(nodeResult[old.grouphashkey][old.hashkey], { __index = { _ignore = true } })
+					setmetatable(nodeResult[old.grouphashkey][old.hashkey], {__index = {_ignore = true}})
 				end
 			else
 				if not old.alias then
-					old.alias = old.server .. ':' .. old.server_port
+					if not old.server or old.server_port then
+						ucic:delete(name, old['.name'])
+					else
+						old.alias = old.server .. ':' .. old.server_port
+						log('忽略手动添加的节点: ' .. old.alias)
+					end
+				else
+					log('忽略手动添加的节点: ' .. old.alias)
 				end
-				log('忽略手动添加的节点: ' .. old.alias)
 			end
 		end)
 		for k, v in ipairs(nodeResult) do
@@ -432,14 +493,14 @@ local execute = function()
 					luci.sys.call("/etc/init.d/" .. name .. " start > /dev/null 2>&1 &")
 				else
 					log('维持当前主服务器节点。')
-					luci.sys.call("/etc/init.d/" .. name .." restart > /dev/null 2>&1 &")
+					luci.sys.call("/etc/init.d/" .. name .. " restart > /dev/null 2>&1 &")
 				end
 			else
 				log('没有服务器节点了，停止服务')
 				luci.sys.call("/etc/init.d/" .. name .. " stop > /dev/null 2>&1 &")
 			end
 		end
-		log('新增节点数量: ' ..add, '删除节点数量: ' .. del)
+		log('新增节点数量: ' .. add, '删除节点数量: ' .. del)
 		log('订阅更新成功')
 	end
 end
@@ -451,10 +512,10 @@ if subscribe_url and #subscribe_url > 0 then
 		log('发生错误, 正在恢复服务')
 		local firstServer = ucic:get_first(name, uciType)
 		if firstServer then
-			luci.sys.call("/etc/init.d/" .. name .." restart > /dev/null 2>&1 &") -- 不加&的话日志会出现的更早
+			luci.sys.call("/etc/init.d/" .. name .. " restart > /dev/null 2>&1 &") -- 不加&的话日志会出现的更早
 			log('重启服务成功')
 		else
-			luci.sys.call("/etc/init.d/" .. name .." stop > /dev/null 2>&1 &") -- 不加&的话日志会出现的更早
+			luci.sys.call("/etc/init.d/" .. name .. " stop > /dev/null 2>&1 &") -- 不加&的话日志会出现的更早
 			log('停止服务成功')
 		end
 	end)
