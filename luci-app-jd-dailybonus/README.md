@@ -2,14 +2,13 @@
 Luci for JD dailybonus Script for Openwrt  
 一个运行在openwrt下的京东签到插件。
 
-### Update Log 2020-12-30  
+### Update Log 2021-01-24  v1.0.2
 
-#### Updates
+#### Updates 
 
-- UPD: 取消已经无法使用的crx工具，请使用压缩包手动安装扩展。
-- UPD: 修改了获取京东cookie的插件，只获取必要的cookie信息，信息更加简短。
-- UPD: 后台更新取消了版本大小检测，每次更新将会直接拉取源脚本。
-- UPD: 前端手动更新脚本，点击后如果确认有新版本将自动更新到新版本。
+- UPD: 大量代码重构，去除lua-request 使用wget实现网络请求节省大量空间和依赖（感谢@Promix953的更新）
+- FIX: 修复当使用master版本时 提交信息出错的问题
+- FIX: 修复部分文件翻译
 
 
 详情见[具体日志](./relnotes.txt)。 
@@ -44,7 +43,17 @@ make -j1 V=s #编译固件
 1.自行安装Node [命令: opkg update && opkg install node]
   (如果已经安装node版本的网易云插件则可以跳过)   
   
-2.安装luci-app-jd-dailybonus
+2.需要安装以下依赖：
+```
+opkg update  
+opkg install node wget lua
+```
+如果更新ipk后无法获取二维码  
+```
+#登录ssh后执行
+rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/*
+```
+3.安装luci-app-jd-dailybonus
 
 ### 感谢
 
@@ -52,6 +61,10 @@ make -j1 V=s #编译固件
 
 ### 我的其它项目
 Argon theme ：https://github.com/jerrykuku/luci-theme-argon  
-Argon theme config  ：https://github.com/jerrykuku/luci-app-argon-config
+Argon theme config  ：https://github.com/jerrykuku/luci-app-argon-config  
 Hello World ：https://github.com/jerrykuku/luci-app-vssr  
 openwrt-nanopi-r1s-h5 ： https://github.com/jerrykuku/openwrt-nanopi-r1s-h5  
+
+### 支持我
+如果你觉得我做的不错，可以赞赏一下。
+<img src="https://raw.githubusercontent.com/jerrykuku/staff/master/photo_2019-12-22_11-40-20.jpg" width="300" height="300">
