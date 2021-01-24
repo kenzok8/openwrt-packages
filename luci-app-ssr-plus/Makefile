@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ssr-plus
 PKG_VERSION:=182
-PKG_RELEASE:=6
+PKG_RELEASE:=9
 
 define Package/$(PKG_NAME)/conffiles
 /etc/config/shadowsocksr
@@ -10,6 +10,14 @@ define Package/$(PKG_NAME)/conffiles
 endef
 
 define Package/$(PKG_NAME)/config
+config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks
+	bool "Include Shadowsocks"
+	default y if i386||x86_64||arm||aarch64
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_plugin
+	bool "Include Shadowsocks V2ray Plugin"
+	default n
+	
 config PACKAGE_$(PKG_NAME)_INCLUDE_Xray
 	bool "Include Xray"
 	default y if i386||x86_64||arm||aarch64
@@ -20,7 +28,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2
 	bool "Include Redsocks2"
-	default y if i386||x86_64||arm||aarch64
+	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy
 	bool "Include NaiveProxy"
@@ -39,10 +47,6 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun
 	bool "Include Kcptun"
 	default n
 
-config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_plugin
-	bool "Include Shadowsocks V2ray Plugin"
-	default n
-
 config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Server
 	bool "Include ShadowsocksR Server"
 	default y if i386||x86_64||arm||aarch64
@@ -51,7 +55,10 @@ endef
 LUCI_TITLE:=SS/SSR/V2Ray/Trojan/NaiveProxy/Socks5/Tun LuCI interface
 LUCI_PKGARCH:=all
 LUCI_DEPENDS:=+shadowsocksr-libev-alt +ipset +ip-full +iptables-mod-tproxy +dnsmasq-full +coreutils +coreutils-base64 +pdnsd-alt +wget-ssl +lua +libuci-lua \
-	+microsocks +dns2socks +shadowsocks-libev-ss-local +shadowsocksr-libev-ssr-local +shadowsocks-libev-ss-redir +simple-obfs +tcping +resolveip\
+	+microsocks +dns2socks +shadowsocksr-libev-ssr-local +tcping +resolveip\
+	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks:shadowsocks-libev-ss-local \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks:shadowsocks-libev-ss-redir \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks:simple-obfs \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_plugin:v2ray-plugin \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_V2ray:v2ray \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Xray:xray \
