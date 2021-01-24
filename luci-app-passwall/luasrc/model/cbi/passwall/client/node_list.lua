@@ -1,6 +1,5 @@
-local d = require "luci.dispatcher"
-local _api = require "luci.model.cbi.passwall.api.api"
-local appname = "passwall"
+local api = require "luci.model.cbi.passwall.api.api"
+local appname = api.appname
 
 m = Map(appname)
 
@@ -28,9 +27,9 @@ s = m:section(TypedSection, "nodes")
 s.anonymous = true
 s.addremove = true
 s.template = "cbi/tblsection"
-s.extedit = d.build_url("admin", "services", appname, "node_config", "%s")
+s.extedit = api.url("node_config", "%s")
 function s.create(e, t)
-    local uuid = _api.gen_uuid()
+    local uuid = api.gen_uuid()
     t = uuid
     TypedSection.create(e, t)
     luci.http.redirect(e.extedit:format(t))
@@ -39,7 +38,7 @@ end
 function s.remove(e, t)
     s.map.proceed = true
     s.map:del(t)
-    luci.http.redirect(d.build_url("admin", "services", appname, "node_list"))
+    luci.http.redirect(api.url("node_list"))
 end
 
 if nodes_display:find("show_group") then
@@ -63,7 +62,7 @@ if nodes_display:find("compact_display_nodes") then
         local remarks = m:get(n, "remarks") or ""
         local type = m:get(n, "type") or ""
         str = str .. string.format("<input type='hidden' id='cbid.%s.%s.type' value='%s'/>", appname, n, type)
-        if type == "Xray" or type == "V2ray" then
+        if type == "Xray" then
             local protocol = m:get(n, "protocol")
             if protocol == "_balancing" then
                 type = type .. " 负载均衡"
@@ -106,7 +105,7 @@ else
         local v = Value.cfgvalue(t, n)
         if v then
             result = translate(v)
-            if v == "Xray" or v == "V2ray" then
+            if v == "Xray" then
                 local protocol = m:get(n, "protocol")
                 if protocol == "_balancing" then
                     result = result .. " 负载均衡"

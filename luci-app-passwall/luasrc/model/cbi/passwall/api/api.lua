@@ -9,11 +9,24 @@ local i18n = require "luci.i18n"
 appname = "passwall"
 curl = "/usr/bin/curl"
 curl_args = {"-skL", "--connect-timeout 3", "--retry 3", "-m 60"}
-wget = "/usr/bin/wget"
-wget_args = {"--no-check-certificate", "--quiet", "--timeout=100", "--tries=3"}
 command_timeout = 300
 LEDE_BOARD = nil
 DISTRIB_TARGET = nil
+
+function url(...)
+    local url = string.format("admin/services/%s", appname)
+    local args = { ... }
+    for i, v in pairs(args) do
+        if v ~= "" then
+            url = url .. "/" .. v
+        end
+    end
+    return require "luci.dispatcher".build_url(url)
+end
+
+function trim(s)
+    return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
 
 function is_exist(table, value)
     for index, k in ipairs(table) do
@@ -134,31 +147,6 @@ function get_xray_version(file)
     chmod_755(file)
     if fs.access(file) then
         if file == get_xray_path() then
-            local md5 = sys.exec("echo -n $(md5sum " .. file .. " | awk '{print $1}')")
-            if fs.access("/tmp/psw_" .. md5) then
-                return sys.exec("cat /tmp/psw_" .. md5)
-            else
-                local version = sys.exec("echo -n $(%s -version | awk '{print $2}' | sed -n 1P)" % file)
-                sys.call("echo '" .. version .. "' > " .. "/tmp/psw_" .. md5)
-                return version
-            end
-        else
-            return sys.exec("echo -n $(%s -version | awk '{print $2}' | sed -n 1P)" % file)
-        end
-    end
-    return ""
-end
-
-function get_v2ray_path()
-    local path = uci_get_type("global_app", "v2ray_file")
-    return path
-end
-
-function get_v2ray_version(file)
-    if file == nil then file = get_v2ray_path() end
-    chmod_755(file)
-    if fs.access(file) then
-        if file == get_v2ray_path() then
             local md5 = sys.exec("echo -n $(md5sum " .. file .. " | awk '{print $1}')")
             if fs.access("/tmp/psw_" .. md5) then
                 return sys.exec("cat /tmp/psw_" .. md5)

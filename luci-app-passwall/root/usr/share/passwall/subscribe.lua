@@ -82,16 +82,6 @@ do
 		}
 	end)
 
-	local tcp_main = ucic2:get(application, "@auto_switch[0]", "tcp_main") or "nil"
-	CONFIG[#CONFIG + 1] = {
-		log = false,
-		remarks = "自动切换TCP主节点",
-		currentNode = ucic2:get_all(application, tcp_main),
-		set = function(server)
-			ucic2:set(application, "@auto_switch[0]", "tcp_main1", server)
-		end
-	}
-
 	local tcp_node_table = ucic2:get(application, "@auto_switch[0]", "tcp_node")
 	if tcp_node_table then
 		local nodes = {}
@@ -161,6 +151,20 @@ do
 				remarks = "分流默认节点",
 				set = function(server)
 					ucic2:set(application, node_id, "default_node", server)
+				end
+			}
+
+			local main_node_id = node.main_node
+			local main_node
+			if main_node_id then
+				main_node = ucic2:get_all(application, main_node_id)
+			end
+			CONFIG[#CONFIG + 1] = {
+				log = false,
+				currentNode = main_node,
+				remarks = "分流默认前置代理节点",
+				set = function(server)
+					ucic2:set(application, node_id, "main_node", server)
 				end
 			}
 		elseif node.protocol and node.protocol == '_balancing' then
@@ -340,10 +344,7 @@ local function processData(szType, content, add_mode)
 		result.remarks = base64Decode(params.remarks)
 	elseif szType == 'vmess' then
 		local info = jsonParse(content)
-		result.type = 'V2ray'
-		if api.is_finded("xray") then
-			result.type = 'Xray'
-		end
+		result.type = 'Xray'
 		result.address = info.add
 		result.port = info.port
 		result.protocol = 'vmess'

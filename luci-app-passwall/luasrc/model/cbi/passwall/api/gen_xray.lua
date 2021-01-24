@@ -57,13 +57,13 @@ function gen_outbound(node, tag, relay_port)
                 node.port = new_port
                 sys.call(string.format('/usr/share/%s/app.sh run_socks "%s" "%s" "%s" "%s" "%s" "%s" "%s" "%s"> /dev/null', 
                     appname,
+                    new_port,
                     node_id,
                     "127.0.0.1",
                     new_port,
                     string.format("/var/etc/%s/v2_%s_%s.json", appname, node_type, node_id),
                     "0",
                     "nil",
-                    "4",
                     relay_port and tostring(relay_port) or ""
                     )
                 )
@@ -286,6 +286,38 @@ if node_section then
         local default_node_id = node.default_node or nil
         if default_node_id and default_node_id ~= "nil" then
             local default_node = ucursor:get_all(appname, default_node_id)
+            if "1" == node.default_proxy then
+                local node_id = node.main_node or nil
+                if node_id and node_id ~= "nil" then
+                    if node_id == default_node_id then
+                    else
+                        new_port = get_new_port()
+                        table.insert(inbounds, {
+                            tag = "proxy_default",
+                            listen = "127.0.0.1",
+                            port = new_port,
+                            protocol = "dokodemo-door",
+                            settings = {network = "tcp,udp", address = default_node.address, port = tonumber(default_node.port)}
+                        })
+                        if default_node.tls_serverName == nil then
+                            default_node.tls_serverName = default_node.address
+                        end
+                        default_node.address = "127.0.0.1"
+                        default_node.port = new_port
+                        local node = ucursor:get_all(appname, node_id)
+                        local outbound = gen_outbound(node, "main")
+                        if outbound then
+                            table.insert(outbounds, outbound)
+                            local rule = {
+                                type = "field",
+                                inboundTag = {"proxy_default"},
+                                outboundTag = "main"
+                            }
+                            table.insert(rules, rule)
+                        end
+                    end
+                end
+            end
             local default_outbound = gen_outbound(default_node, "default")
             if default_outbound then
                 table.insert(outbounds, default_outbound)
@@ -327,37 +359,23 @@ if node_section then
 end
 
 if dns_server then
+    local rules = {}
+
     dns = {
+        tag = "dns-in1",
         servers = {
             dns_server
         }
     }
     if doh_url and doh_host then
-        local dohl = doh_url:gsub("https:", "https+local:")
         dns.hosts = {
             [doh_host] = dns_server
         }
         dns.servers = {
-            dohl
+            doh_url
         }
     end
-    if doh_socks_address and doh_socks_port then
-        table.insert(outbounds, {
-            protocol = "socks",
-            streamSettings = {
-                network = "tcp",
-                security = "none"
-            },
-            settings = {
-                servers = {
-                    {
-                        address = doh_socks_address,
-                        port = tonumber(doh_socks_port)
-                    }
-                }
-            }
-        })
-    end
+
     if dns_listen_port then
         table.insert(inbounds, {
             listen = "127.0.0.1",
@@ -375,13 +393,60 @@ if dns_server then
             tag = "dns-out"
         })
     end
+
+    table.insert(rules, {
+        type = "field",
+        inboundTag = {
+            "dns-in"
+        },
+        outboundTag = "dns-out"
+    })
+
+    if doh_socks_address and doh_socks_port then
+        table.insert(outbounds, {
+            tag = "out",
+            protocol = "socks",
+            streamSettings = {
+                network = "tcp",
+                security = "none"
+            },
+            settings = {
+                servers = {
+                    {
+                        address = doh_socks_address,
+                        port = tonumber(doh_socks_port)
+                    }
+                }
+            }
+        })
+        table.insert(rules, {
+            type = "field",
+            inboundTag = {
+                "dns-in1"
+            },
+            outboundTag = "out"
+        })
+    else
+        table.insert(rules, {
+            type = "field",
+            inboundTag = {
+                "dns-in1"
+            },
+            outboundTag = "direct"
+        })
+    end
+    
+    routing = {
+        domainStrategy = "IPOnDemand",
+        rules = rules
+    }
 end
 
 if inbounds or outbounds then
     table.insert(outbounds, {
         protocol = "freedom",
         tag = "direct",
-        settings = {keep = ""}
+        settings = {domainStrategy = "UseIPv4"}
     })
 
     local xray = {
