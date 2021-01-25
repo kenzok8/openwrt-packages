@@ -279,8 +279,10 @@ function import_ssr_url(btn, urlname, sid) {
 		case "vmess":
 			var sstr = b64DecodeUnicode(ssu[1]);
 			var ploc = sstr.indexOf("/?");
-			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].value = ssu[0];
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].value = "v2ray";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].dispatchEvent(event);
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.v2ray_protocol')[0].value = "vmess";
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.v2ray_protocol')[0].dispatchEvent(event);
 			var url0, param = "";
 			if (ploc > 0) {
 				url0 = sstr.substr(0, ploc);
@@ -337,8 +339,10 @@ function import_ssr_url(btn, urlname, sid) {
 				url0 = ssu[1]
 			}
 			var sstr = url0;
-			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].value = ssu[0];
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].value = "v2ray";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.type')[0].dispatchEvent(event);
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.v2ray_protocol')[0].value = "vless";
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.v2ray_protocol')[0].dispatchEvent(event);
 			var team = sstr.split('@');
 			var uuid = team[0]
 			var serverPart = team[1].split(':');
