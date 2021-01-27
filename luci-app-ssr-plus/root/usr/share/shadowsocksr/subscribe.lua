@@ -232,7 +232,8 @@ local function processData(szType, content)
 		local userinfo = hostInfo[1]
 		local password = userinfo
 		result.alias = UrlDecode(alias)
-		result.type = "trojan"
+		result.type = "v2ray"
+		result.v2ray_protocol = "trojan"
 		result.server = host[1]
 		-- 按照官方的建议 默认验证ssl证书
 		result.insecure = "0"
@@ -459,11 +460,11 @@ local execute = function()
 				end
 			else
 				if not old.alias then
-					if not old.server or old.server_port then
-						ucic:delete(name, old['.name'])
-					else
+					if old.server or old.server_port then
 						old.alias = old.server .. ':' .. old.server_port
 						log('忽略手动添加的节点: ' .. old.alias)
+					else
+						ucic:delete(name, old['.name'])
 					end
 				else
 					log('忽略手动添加的节点: ' .. old.alias)
