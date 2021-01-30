@@ -13,12 +13,12 @@
    LOG_FILE="/usr/share/clash/clash.txt"
    REAL_LOG="/usr/share/clash/clash_real.txt"
    
-   url="https://raw.githubusercontent.com/$DOWNLOAD_PATH"
+   url="https://cdn.jsdelivr.net/gh/$DOWNLOAD_PATH"
    behavior=$(grep -F $RULE_FILE_NAME /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $2}' 2>/dev/null)
    namee=$(grep -F ",$RULE_FILE_NAME" /usr/share/clash/create/rule_provider.list |awk -F ',' '{print $4}' | awk -F '.' '{print $1}' 2>/dev/null)
    path="./ruleprovider/"$RULE_FILE_NAME""
    
-   curl -sL --connect-timeout 5 --retry 2 https://raw.githubusercontent.com/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" >/dev/null 2>&1
+   curl -sL --connect-timeout 5 --retry 2 https://cdn.jsdelivr.net/gh/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" >/dev/null 2>&1
    	
    if [ "$?" -eq "0" ] && [ -s "$TMP_RULE_DIR" ] && [ -z "$(grep "404: Not Found" "$TMP_RULE_DIR")" ]; then
       cmp -s $TMP_RULE_DIR $RULE_FILE_DIR

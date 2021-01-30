@@ -421,7 +421,7 @@ cat >> "$SERVER_FILE" <<-EOF
 EOF
   fi
    fi
-
+#trojan
 if [ "$type" = "trojan" ]; then
 cat >> "$SERVER_FILE" <<-EOF
 - name: "$name"
@@ -592,6 +592,11 @@ cat >> "$SERVER_FILE" <<-EOF
   tls: $tls
 EOF
       fi
+      if [ ! -z "$sni" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  sni: $sni
+EOF
+      fi	  
    fi
 
 

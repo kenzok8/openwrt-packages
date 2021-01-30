@@ -291,8 +291,9 @@ o:depends("obfs_vmess", "http")
 o:depends("type", "socks5")
 o:depends("type", "http")
 
-o = s:option(Value, "servername", translate("Custom TLS Host"))
+o = s:option(Value, "servername", translate("SNI"))
 o.rmempty = true
+o.datatype = "host"
 o.placeholder = translate("example.com")
 o:depends("obfs_vmess", "websocket")
 
