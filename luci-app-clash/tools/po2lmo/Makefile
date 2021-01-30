@@ -9,4 +9,4 @@ install:
 	$(INSTALL) -m 755 src/po2lmo $(PREFIX)
 
 clean:
-	$(RM) src/po2lmo src/*.o
+	$(RM) src/po2lmo src/*.o 
