@@ -118,13 +118,13 @@ local Xray = {
 		streamSettings = {
 			network = server.transport or "tcp",
 			security = (server.xtls == '1') and "xtls" or (server.tls == '1') and "tls" or nil,
-			tlsSettings = (server.tls == '1') and {
+			tlsSettings = (server.tls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
 				-- tls
 				fingerprint = server.fingerprint,
 				allowInsecure = (server.insecure == "1") and true or nil,
 				serverName = server.tls_host
 			} or nil,
-			xtlsSettings = (server.xtls == '1') and {
+			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
 				-- xtls
 				allowInsecure = (server.insecure == "1") and true or nil,
 				serverName = server.tls_host
