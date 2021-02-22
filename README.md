@@ -52,7 +52,7 @@
 - luci-theme-opentomato    ------------------修复主机名错误（适配18.06）
 #### 注意
 
-*lean等源码编译本插件前请先执行
+*lean等源码编译bypass前请先执行
 
 ```
 find package/*/ feeds/*/ -maxdepth 2 -path "*luci-app-bypass/Makefile" | xargs -i sed -i 's/shadowsocksr-libev-ssr-redir/shadowsocksr-libev-alt/g' {}
