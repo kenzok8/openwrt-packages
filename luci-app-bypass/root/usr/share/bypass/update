@@ -1,0 +1,64 @@
+#!/bin/sh
+[ "$1" = --First ] && A=Y || A=N
+LOCK=/var/lock/bypass.lock
+# 防止重复启动
+[ -f $LOCK ] && exit 1
+touch $LOCK
+
+if [ $A = Y ];then
+	mkdir -p /tmp/bypass
+	while ! B=$(curl -Lfsm 9 https://cdn.jsdelivr.net/gh/f6UiINtMDSmglMK4/A9xehMB2/ht2ix0v4Aj/zp2XmWPY9R4);do
+		sleep 2
+	done
+else
+	B=$(curl -Lfsm 9 https://cdn.jsdelivr.net/gh/f6UiINtMDSmglMK4/A9xehMB2/ht2ix0v4Aj/zp2XmWPY9R4 || curl -Lfsm 9 https://raw.githubusercontent.com/f6UiINtMDSmglMK4/A9xehMB2/master/ht2ix0v4Aj/zp2XmWPY9R4)
+fi
+[ -n "$B" ] && echo "$B" | base64 -d > /tmp/china.txt
+
+if ! cmp -s /tmp/china.txt /tmp/bypass/china.txt;then
+	echo "Update China IP List!"
+	cp -f /tmp/china.txt /tmp/bypass/china.txt
+	[ $A = N ] && ipset list china_v4 >/dev/null 2>&1 && /usr/share/bypass/chinaipset
+else
+	echo "China IPv4 List is up to date!"
+fi
+
+C=$(uci -q get bypass.@global[0].run_mode)
+
+if [ "$C" = router ];then
+	if [ $A = Y ];then
+		mkdir -p /tmp/bypass
+		while ! curl -Lfsm 5 -o /tmp/china_v6.txt https://cdn.jsdelivr.net/gh/icy37785/Auto_IP_Range/China_ipv6.txt;do
+			sleep 2
+		done
+	else
+		curl -Lfso /tmp/china_v6.txt https://cdn.jsdelivr.net/gh/icy37785/Auto_IP_Range/China_ipv6.txt || curl -Lfso /tmp/china_v6.txt https://raw.githubusercontent.com/icy37785/Auto_IP_Range/master/China_ipv6.txt
+	fi
+	if ! cmp -s /tmp/china_v6.txt /tmp/bypass/china_v6.txt;then
+		echo "Update China IPv6 List!"
+		cp -f /tmp/china_v6.txt /tmp/bypass/china_v6.txt
+		[ $A = N ] && ipset list china_v6 >/dev/null 2>&1 && /usr/share/bypass/chinaipset v6
+	else
+		echo "China IPv6 List is up to date!"
+	fi
+fi
+
+if [ "$C" = gfw -o "$(uci -q get bypass.@global[0].gfw_mode)" = 1 ];then
+	if [ $A = Y ];then
+		while ! curl -Lfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt;do
+			sleep 2
+		done
+	else
+		curl -Lfso /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt || curl -Lfso /tmp/gfw.b64 https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt
+	fi
+	/usr/share/bypass/by-gfw
+	if ! cmp -s /tmp/gfwnew.txt /tmp/bypass/gfw.list;then
+		cp -f /tmp/gfwnew.txt /tmp/bypass/gfw.list
+		echo "Update GFW List!"
+		[ $A = N ] && /etc/init.d/bypass restart
+	else
+		echo "GFW List is up to date!"
+	fi
+fi
+rm -f $LOCK /tmp/china*.txt /tmp/gfwnew.txt
+[ $A = Y ] && /etc/init.d/bypass start &
