@@ -271,6 +271,9 @@ end
 if is_finded("v2ray-plugin") then
 	o:value("v2ray-plugin", translate("v2ray-plugin"))
 end
+if is_finded("xray-plugin") then
+	o:value("xray-plugin", translate("xray-plugin"))
+end
 o.rmempty = true
 o:depends("type", "ss")
 
@@ -278,6 +281,7 @@ o = s:option(Value, "plugin_opts", translate("Plugin Opts"))
 o.rmempty = true
 o:depends({type = "ss", plugin = "obfs-local"})
 o:depends({type = "ss", plugin = "v2ray-plugin"})
+o:depends({type = "ss", plugin = "xray-plugin"})
 
 o = s:option(ListValue, "protocol", translate("Protocol"))
 for _, v in ipairs(protocol) do

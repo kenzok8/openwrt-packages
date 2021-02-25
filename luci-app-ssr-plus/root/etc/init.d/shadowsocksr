@@ -27,6 +27,7 @@ shunt_dns_config_file=
 tmp_local_port=
 ARG_UDP=
 ARG_OTA=
+dns_port="5335"            #dns port
 tmp_dns_port="300"         #dns2socks temporary port
 tmp_udp_port="301"         #udp temporary port
 tmp_udp_local_port="302"   #udp socks temporary port
@@ -182,7 +183,7 @@ start_dns() {
 			pid_file="/var/run/pdnsd.pid";
 			run_as="nobody";
 			server_ip=127.0.0.1;
-			server_port=5335;
+			server_port=$dns_port;
 			status_ctl=on;
 			query_method=tcp_only;
 			min_ttl=1h;
@@ -219,7 +220,7 @@ start_dns() {
 			;;
 		2)
 			ln_start_bin $(first_type microsocks) microsocks -i 127.0.0.1 -p $tmp_dns_port ssrplus-dns
-			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver:$dnsport 127.0.0.1:5335 -q
+			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver:$dnsport 127.0.0.1:$dns_port -q
 			pdnsd_enable_flag=2
 			;;
 		esac
