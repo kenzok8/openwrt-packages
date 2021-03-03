@@ -18,7 +18,7 @@ define Package/$(PKG_NAME)
 	SUBMENU:=3. Applications
 	TITLE:=LuCI support for clash
 	PKGARCH:=all
-	DEPENDS:=+iptables +dnsmasq-full +coreutils +coreutils-nohup +bash +curl +jsonfilter +ca-certificates +ipset +ip-full +iptables-mod-tproxy +iptables-mod-extra +libcap +ruby +ruby-yaml
+	DEPENDS:=+iptables +dnsmasq-full +coreutils +coreutils-nohup +bash +curl +jsonfilter +ca-bundle +ipset +ip-full +iptables-mod-tproxy +iptables-mod-extra +libcap +libcap-bin +ruby +ruby-yaml
 	MAINTAINER:=vernesong
 endef
 
@@ -29,7 +29,7 @@ endef
 define Build/Prepare
 	$(CP) $(CURDIR)/root $(PKG_BUILD_DIR)
 	$(CP) $(CURDIR)/luasrc $(PKG_BUILD_DIR)
-	$(foreach po,$(wildcard ${CURDIR}/po/zh-cn/*.po), \
+	$(foreach po,$(wildcard ${CURDIR}/po/zh_Hans/*.po), \
 		po2lmo $(po) $(PKG_BUILD_DIR)/$(patsubst %.po,%.lmo,$(notdir $(po)));)
 	chmod 0755 $(PKG_BUILD_DIR)/root/etc/init.d/openclash
 	chmod -R 0755 $(PKG_BUILD_DIR)/root/usr/share/openclash/
