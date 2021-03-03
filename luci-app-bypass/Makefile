@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-bypass
 PKG_VERSION:=1.2
-PKG_RELEASE:=50
+PKG_RELEASE:=51
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
@@ -116,7 +116,7 @@ define Package/$(PKG_NAME)
 endef
 
 define Build/Prepare
-	$(foreach po,$(wildcard ${CURDIR}/po/zh-cn/*.po), \
+	$(foreach po,$(wildcard ${CURDIR}/po/zh_Hans/*.po), \
 		po2lmo $(po) $(PKG_BUILD_DIR)/$(patsubst %.po,%.lmo,$(notdir $(po)));)
 endef
 

@@ -28,12 +28,14 @@ C=$(uci -q get bypass.@global[0].run_mode)
 if [ "$C" = router ];then
 	if [ $A = Y ];then
 		mkdir -p /tmp/bypass
-		while ! curl -Lfsm 5 -o /tmp/china_v6.txt https://cdn.jsdelivr.net/gh/icy37785/Auto_IP_Range/China_ipv6.txt;do
+		while ! D=$(curl -Lfsm 9 https://cdn.jsdelivr.net/gh/f6UiINtMDSmglMK4/A9xehMB2/ht2ix0v4Aj/OEOuOq9MXw6);do
 			sleep 2
 		done
 	else
-		curl -Lfso /tmp/china_v6.txt https://cdn.jsdelivr.net/gh/icy37785/Auto_IP_Range/China_ipv6.txt || curl -Lfso /tmp/china_v6.txt https://raw.githubusercontent.com/icy37785/Auto_IP_Range/master/China_ipv6.txt
+		D=$(curl -Lfsm 9 https://cdn.jsdelivr.net/gh/f6UiINtMDSmglMK4/A9xehMB2/ht2ix0v4Aj/OEOuOq9MXw6 || curl -Lfsm 9 https://raw.githubusercontent.com/f6UiINtMDSmglMK4/A9xehMB2/master/ht2ix0v4Aj/OEOuOq9MXw6)
 	fi
+	[ -n "$D" ] && echo "$D" | base64 -d > /tmp/china_v6.txt
+
 	if ! cmp -s /tmp/china_v6.txt /tmp/bypass/china_v6.txt;then
 		echo "Update China IPv6 List!"
 		cp -f /tmp/china_v6.txt /tmp/bypass/china_v6.txt
