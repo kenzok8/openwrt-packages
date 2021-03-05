@@ -23,7 +23,6 @@ flush_r(){
 	ip route del local 0.0.0.0/0 dev lo table 100 2>/dev/null
 	ipset -X ss_spec_wan_ac 2>/dev/null
 	ipset -X ss_spec_lan_ac 2>/dev/null
-	ipset -X ssr_gen_router 2>/dev/null
 	ipset -X fplan 2>/dev/null
 	ipset -X gmlan 2>/dev/null
 	ipset -X blacklist 2>/dev/null
@@ -129,7 +128,7 @@ tp_rule(){
 	esac
 
 	ipset -N bypass_all hash:net 2>/dev/null
-	for i in $(ip -4 add show | grep -v $(uci -P /tmp/state get network.wan.ifname) | grep inet | grep -v 127.0.0.1 | awk '{print$2}');do
+	for i in $(ip -4 add show | grep -v $(uci -qP /tmp/state get network.wan.ifname || echo 127.0.0.1) | grep inet | grep -v 127.0.0.1 | awk '{print$2}');do
 		ipset -! add bypass_all $i
 	done
 	$ipt -I PREROUTING 1 -p udp $MATCH_SET -m set --match-set bypass_all src -m comment --comment "$TAG" -j SS_SPEC_TPROXY
