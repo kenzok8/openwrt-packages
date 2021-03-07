@@ -6,10 +6,10 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=Argon_new kenzo 
+LUCI_TITLE:=Argon_new kenzo
 LUCI_DEPENDS:=
 PKG_VERSION:=1.7.1
-PKG_RELEASE:=20201022
+PKG_RELEASE:=20210215
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
