@@ -871,9 +871,9 @@ reset() {
 		set shadowsocksr.@global[0].switch_time='667'
 		set shadowsocksr.@global[0].switch_timeout='5'
 		set shadowsocksr.@global[0].switch_try_count='3'
-		set shadowsocksr.@global[0].gfwlist_url='https://cdn.jsdelivr.net/gh/YW5vbnltb3Vz/domain-list-community@release/gfwlist.txt'
+		set shadowsocksr.@global[0].gfwlist_url='https://raw.sevencdn.com/YW5vbnltb3Vz/domain-list-community/release/gfwlist.txt'
 		set shadowsocksr.@global[0].chnroute_url='https://ispip.clang.cn/all_cn.txt'
-		set shadowsocksr.@global[0].nfip_url='https://cdn.jsdelivr.net/gh/QiuSimons/Netflix_IP/NF_only.txt'
+		set shadowsocksr.@global[0].nfip_url='https://raw.sevencdn.com/QiuSimons/Netflix_IP/master/NF_only.txt'
 		set shadowsocksr.@global[0].adblock_url='https://anti-ad.net/anti-ad-for-dnsmasq.conf'
 		add shadowsocksr server_subscribe
 		set shadowsocksr.@server_subscribe[0].proxy='0'
