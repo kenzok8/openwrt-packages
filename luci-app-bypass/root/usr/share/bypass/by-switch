@@ -233,9 +233,7 @@ while :;do
 	fi
 	check_proxy
 	a=$?
-	if [ $a = 0 ];then
-		echo "`eval $D` By-Switch : Bypass No Problem." >> $L
-	elif [ $a = 1 ];then
+	if [ $a = 1 ];then
 		echo "`eval $D` By-Switch : Current server : $($UCI$SERVER_B.alias || uci_get_by_name $SERVER_B server) error.Try to switch another server." >> $L
 		select_proxy
 		if [ $SERVER_C != 0 ];then
@@ -243,11 +241,11 @@ while :;do
 			SERVER_B=$SERVER_C
 			switch_proxy
 		else
-			echo "`eval $D` By-Switch : No server available.Try restart current server." >> $L
+			echo "`eval $D` By-Switch : No server available. Try restart current server." >> $L
 			switch_proxy
 		fi
 	else
-		echo "`eval $D` By-Switch : Network Problem.Do nothing." >> $L
+		echo "`eval $D` By-Switch : Network Problem. Do nothing." >> $L
 	fi
 	sleep $time_a
 done
