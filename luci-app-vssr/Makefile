@@ -41,14 +41,14 @@ define Package/luci-app-vssr
 	SUBMENU:=3. Applications
 	TITLE:=A New SS/SSR/Xray/Trojan LuCI interface
 	PKGARCH:=all
-	DEPENDS:=+shadowsocksr-libev-ssr-redir +ipset +ip-full +iptables-mod-tproxy +dnsmasq-full +coreutils +coreutils-base64 +bash +pdnsd-alt +wget-ssl +lua +luasocket +lua-maxminddb \
+	DEPENDS:=+shadowsocksr-libev-alt +ipset +ip-full +iptables-mod-tproxy +dnsmasq-full +coreutils +coreutils-base64 +bash +pdnsd-alt +wget-ssl +lua +luasocket +lua-maxminddb \
 			+shadowsocks-libev-ss-local +shadowsocksr-libev-ssr-local +shadowsocks-libev-ss-redir +simple-obfs \
 			+PACKAGE_$(PKG_NAME)_INCLUDE_Xray:xray-core \
 			+PACKAGE_$(PKG_NAME)_INCLUDE_Trojan:trojan \
 			+PACKAGE_$(PKG_NAME)_INCLUDE_Trojan:ipt2socks \
 			+PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun:kcptun-client \
 			+PACKAGE_$(PKG_NAME)_INCLUDE_Xray_plugin:xray-plugin \
-			+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Server:shadowsocksr-libev-ssr-server
+			+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Server:shadowsocksr-libev-server
 endef
 
 define Build/Prepare
@@ -68,7 +68,7 @@ define Package/luci-app-vssr/install
 	$(INSTALL_DIR) $(1)/
 	cp -pR ./root/* $(1)/
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
-	po2lmo ./po/zh_Hans/vssr.po $(1)/usr/lib/lua/luci/i18n/vssr.zh-cn.lmo
+	po2lmo ./po/zh-cn/vssr.po $(1)/usr/lib/lua/luci/i18n/vssr.zh-cn.lmo
 endef
 
 define Package/luci-app-vssr/postinst
