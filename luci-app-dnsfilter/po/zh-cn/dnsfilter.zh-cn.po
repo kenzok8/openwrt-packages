@@ -5,7 +5,7 @@ msgid "Support AdGuardHome/Host/DNSMASQ/Domain Rules"
 msgstr "支持 AdGuardHome/Host/DNSMASQ/Domain 规则"
 
 msgid "RUNNING"
-msgstr "正在运行中"
+msgstr "运行中"
 
 msgid "NOT RUNNING"
 msgstr "未运行"

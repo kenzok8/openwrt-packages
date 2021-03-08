@@ -36,7 +36,8 @@ down(){
 		done
 		X=`md5sum $G/rules.conf 2>/dev/null | awk '{print$1}'`
 		Y=`md5sum $G/host 2>/dev/null | awk '{print$1}'`
-		sed -i -e '/127.0.0.1 #/d' -e '/127.0.0.1 !/d' -e 's:#.*::' -e 's:!.*::' -e 's/[ \t]*$//g' -e 's/^[ \t]*//g' -e '/\*/d' -e '/^$/d' $F
+		sed -i -e '/127.0.0.1 #/d' -e '/127.0.0.1 !/d' -e 's:#.*::' -e 's:!.*::' -e 's/\$important//g' -e 's/[ \t]*$//g' -e 's/^[ \t]*//g' -e '/\*/d' -e '/^$/d' $F
+		sed -i "s/\r//g" $F
 		if grep -q "^address=" $F;then
 			cat $F >> $G/rules.conf
 		elif grep -q -e "^0.0.0.0 " -e "^127.0.0.1 " $F;then
