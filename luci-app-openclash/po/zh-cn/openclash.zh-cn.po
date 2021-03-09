@@ -1,6 +1,6 @@
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: zh_Hans\n"
+"Language: zh_CN\n"
 
 msgid "OpenClash"
 msgstr "OpenClash"
