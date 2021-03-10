@@ -36,8 +36,8 @@
  ```
  
 - openwrt 固件编译自定义主题与软件
-- luci-app-bypass             ------------------bypass软件
-- luci-app-dnsfilter             ------------------基于DNS的广告过滤
+- luci-app-bypass          ------------------bypass软件(已去除)
+- luci-app-dnsfilter       ------------------基于DNS的广告过滤
 - luci-app-openclash       ------------------openclash图形         
 - luci-app-advancedsetting ------------------系统高级设置
 - luci-theme-ifit          ------------------透明主题（适配18.06修复主机名错误）
