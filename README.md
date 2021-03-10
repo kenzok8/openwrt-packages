@@ -36,7 +36,7 @@
  ```
  
 - openwrt 固件编译自定义主题与软件
-- luci-app-bypass          ------------------bypass软件(已去除)
+- luci-app-vssr            ------------------vssr老竭力
 - luci-app-dnsfilter       ------------------基于DNS的广告过滤
 - luci-app-openclash       ------------------openclash图形         
 - luci-app-advancedsetting ------------------系统高级设置
