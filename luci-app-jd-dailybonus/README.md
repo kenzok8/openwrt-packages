@@ -2,15 +2,13 @@
 Luci for JD dailybonus Script for Openwrt  
 一个运行在openwrt下的京东签到插件。
 
-### gitee源目前已经被和谐，如显示【根据相关法律政策,该内容无法显示】请切换至github源或GitHub CDN源进行更新，近期将会取消gitee更新。
 
-### Update Log 2021-01-25  v1.0.3
+
+### Update Log 2021-03-15  v1.0.4
 
 #### Updates 
 
-- UPD: 大量代码重构，去除lua-request 使用wget实现网络请求节省大量空间和依赖（感谢@Promix953的更新）
-- FIX: 修复当使用master版本时 提交信息出错的问题
-- FIX: 修复部分文件翻译
+- UPD: 增加更多账号功能，双击cookie输入框即可调出二维码，扫码自动填入。【感谢[maple's sky](https://github.com/maplesky)】
 
 
 详情见[具体日志](./relnotes.txt)。 
@@ -60,6 +58,9 @@ rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/*
 ### 感谢
 
 感谢[NobyDa](https://github.com/NobyDa) 的脚本。  
+感谢[Promix953](https://github.com/Promix953) 的二次开发。  
+感谢[maple's sky](https://github.com/maplesky) 的二次开发。  
+感谢[Mattraks](https://github.com/Mattraks) 的bug修复。 
 
 ### 我的其它项目
 Argon theme ：https://github.com/jerrykuku/luci-theme-argon  
