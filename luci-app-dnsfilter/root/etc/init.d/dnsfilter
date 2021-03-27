@@ -322,8 +322,17 @@ EOF
 	fi
 }
 
-gen() {
-	extract_rules() {
+gen(){
+	echo '#!/bin/sh' > $FWI
+}
+
+add_rule(){
+	ipset -N blockip hash:net 2>/dev/null
+	for i in $(cat $L/ip.list);do ipset -! add blockip $i;done
+	iptables -I FORWARD -m set --match-set blockip dst -m comment --comment "$TAG" -j DROP
+	iptables -I OUTPUT -m set --match-set blockip dst -m comment --comment "$TAG" -j DROP
+	gen
+	extract_rules(){
 		echo "*$1"
 		iptables-save -t $1 | grep DNSFILTER |\
 			sed -e "s/^-A \(OUTPUT\|FORWARD\)/-I \1 1/"
@@ -333,17 +342,8 @@ gen() {
 	iptables-save -c | grep -v DNSFILTER | iptables-restore -c
 	iptables-restore -n <<-EOT
 	$(extract_rules filter)
-	$(extract_rules nat)
 	EOT
 EOF
-}
-
-add_rule(){
-	ipset -N blockip hash:net 2>/dev/null
-	for i in $(cat $L/ip.list);do ipset -! add blockip $i;done
-	iptables -I FORWARD -m set --match-set blockip dst -m comment --comment "$TAG" -j DROP
-	iptables -I OUTPUT -m set --match-set blockip dst -m comment --comment "$TAG" -j DROP
-	gen
 }
 
 add_cron(){
@@ -369,7 +369,7 @@ del_rule(){
 	iptables -D FORWARD -m set --match-set blockip dst -m comment --comment "$TAG" -j DROP 2>/dev/null
 	iptables -D OUTPUT -m set --match-set blockip dst -m comment --comment "$TAG" -j DROP 2>/dev/null
 	ipset -X blockip 2>/dev/null
-	echo '#!/bin/sh' > $FWI
+	gen
 }
 
 start(){
@@ -440,5 +440,5 @@ restart(){
 }
 
 boot(){
-	echo '#!/bin/sh' > $FWI;start
+	gen;start
 }
