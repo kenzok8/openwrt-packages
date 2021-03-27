@@ -1,10 +1,16 @@
 #!/bin/sh
 . /lib/functions.sh
-. /usr/share/openclash/openclash_ps.sh
 . /usr/share/openclash/ruby.sh
 
-status=$(unify_ps_status "yml_proxys_set.sh")
-[ "$status" -gt "3" ] && exit 0
+set_lock() {
+   exec 886>"/tmp/lock/openclash_proxies_set.lock" 2>/dev/null
+   flock -x 886 2>/dev/null
+}
+
+del_lock() {
+   flock -u 886 2>/dev/null
+   rm -rf "/tmp/lock/openclash_proxies_set.lock"
+}
 
 START_LOG="/tmp/openclash_start.log"
 SERVER_FILE="/tmp/yaml_servers.yaml"
@@ -21,6 +27,7 @@ UCI_SET="uci set openclash.config."
 MIX_PROXY=$(uci get openclash.config.mix_proxies 2>/dev/null)
 servers_name="/tmp/servers_name.list"
 proxy_provider_name="/tmp/provider_name.list"
+set_lock
 
 if [ ! -z "$UPDATE_CONFIG_FILE" ]; then
    CONFIG_FILE="$UPDATE_CONFIG_FILE"
@@ -200,6 +207,7 @@ yml_servers_set()
    config_get "servername" "$section" "servername" ""
    config_get "h2_path" "$section" "h2_path" ""
    config_get "h2_host" "$section" "h2_host" ""
+   config_get "grpc_service_name" "$section" "grpc_service_name" ""
 
    if [ "$enabled" = "0" ]; then
       return
@@ -272,6 +280,10 @@ yml_servers_set()
    
    if [ "$obfs_vmess" = "h2" ]; then
       obfs_vmess="network: h2"
+   fi
+   
+   if [ "$obfs_vmess" = "grpc" ]; then
+      obfs_vmess="network: grpc"
    fi
    
    if [ ! -z "$custom" ] && [ "$type" = "vmess" ]; then
@@ -447,6 +459,12 @@ cat >> "$SERVER_FILE" <<-EOF
       path: $h2_path
 EOF
          fi
+         if [ ! -z "$grpc_service_name" ] && [ "$obfs_vmess" = "network: grpc" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    grpc-opts:
+      grpc-service-name: "$grpc_service_name"
+EOF
+         fi
       fi
    fi
 
@@ -548,6 +566,12 @@ EOF
    if [ ! -z "$skip_cert_verify" ]; then
 cat >> "$SERVER_FILE" <<-EOF
     skip-cert-verify: $skip_cert_verify
+EOF
+   fi
+   if [ ! -z "$grpc_service_name" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    grpc-opts:
+      grpc-service-name: "$grpc_service_name"
 EOF
    fi
    fi
@@ -1106,4 +1130,5 @@ ${UCI_SET}enable=1 2>/dev/null
 [ "$(uci get openclash.config.servers_if_update)" == "0" ] && [ -z "$if_game_proxy" ] && /etc/init.d/openclash restart >/dev/null 2>&1
 ${UCI_SET}servers_if_update=0
 uci commit openclash
+del_lock
 
