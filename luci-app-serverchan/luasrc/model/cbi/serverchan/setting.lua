@@ -27,7 +27,10 @@ s.anonymous = true
 a=s:taboption("basic", Flag,"serverchan_enable",translate("启用"))
 a.rmempty = true
 
-a=s:taboption("basic", Value,"sckey",translate('微信推送/新旧共用'), translate("").."旧版调用代码<a href='http://sc.ftqq.com' target='_blank'>点击这里</a><br>调用代码获取<a href='https://sct.ftqq.com/' target='_blank'>点击这里</a><br>")
+a=s:taboption("basic", Value,"sckey",translate('微信推送/新旧共用'), translate("").."旧版调用代码<a href='http://sc.ftqq.com' target='_blank'>点击这里</a><br>新版代码获取<a href='https://sct.ftqq.com/' target='_blank'>点击这里</a><br>")
+a.rmempty = true
+
+a=s:taboption("basic",Value,"pushplus_token",translate('pushplus_token'),translate("").."获取pushplus_token <a href='http://www.pushplus.plus/' target='_blank'>点击这里</a><br>")
 a.rmempty = true
 
 a=s:taboption("basic", Value, "tg_token", translate("TG_token"),translate("").."获取机器人<a href='https://t.me/BotFather' target='_blank'>点击这里</a><br>与创建的机器人发一条消息，开启对话<br>")
