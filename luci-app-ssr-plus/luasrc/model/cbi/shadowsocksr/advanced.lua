@@ -48,19 +48,19 @@ o = s:option(Flag, "adblock", translate("Enable adblock"))
 o.rmempty = false
 
 o = s:option(Value, "adblock_url", translate("adblock_url"))
-o:value("https://raw.sevencdn.com/neodevpro/neodevhost/master/lite_host_dnsmasq.conf", translate("NEO DEV HOST Lite"))
-o:value("https://raw.sevencdn.com/neodevpro/neodevhost/master/host_dnsmasq.conf", translate("NEO DEV HOST Full"))
-o:value("https://raw.sevencdn.com/privacy-protection-tools/anti-AD/master/adblock-for-dnsmasq.conf", translate("anti-AD"))
-o.default = "https://raw.sevencdn.com/neodevpro/neodevhost/master/lite_host_dnsmasq.conf"
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/neodevpro/neodevhost/master/lite_host_dnsmasq.conf", translate("NEO DEV HOST Lite"))
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/neodevpro/neodevhost/master/host_dnsmasq.conf", translate("NEO DEV HOST Full"))
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/adblock-for-dnsmasq.conf", translate("anti-AD"))
+o.default = "https://ghproxy.com/https://raw.githubusercontent.com/neodevpro/neodevhost/master/lite_host_dnsmasq.conf"
 o:depends("adblock", "1")
 o.description = translate("Support AdGuardHome and DNSMASQ format list")
 
 o = s:option(Value, "gfwlist_url", translate("gfwlist Update url"))
-o:value("https://raw.sevencdn.com/YW5vbnltb3Vz/domain-list-community/release/gfwlist.txt", translate("v2fly/domain-list-community"))
-o:value("https://raw.sevencdn.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt", translate("Loyalsoldier/v2ray-rules-dat"))
-o:value("https://raw.sevencdn.com/Loukky/gfwlist-by-loukky/master/gfwlist.txt", translate("Loukky/gfwlist-by-loukky"))
-o:value("https://raw.sevencdn.com/gfwlist/gfwlist/master/gfwlist.txt", translate("gfwlist/gfwlist"))
-o.default = "https://raw.sevencdn.com/YW5vbnltb3Vz/domain-list-community/release/gfwlist.txt"
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/YW5vbnltb3Vz/domain-list-community/release/gfwlist.txt", translate("v2fly/domain-list-community"))
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/Loyalsoldier/v2ray-rules-dat/release/gfw.txt", translate("Loyalsoldier/v2ray-rules-dat"))
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/Loukky/gfwlist-by-loukky/master/gfwlist.txt", translate("Loukky/gfwlist-by-loukky"))
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt", translate("gfwlist/gfwlist"))
+o.default = "https://ghproxy.com/https://raw.githubusercontent.com/YW5vbnltb3Vz/domain-list-community/release/gfwlist.txt"
 
 o = s:option(Value, "chnroute_url", translate("Chnroute Update url"))
 o:value("https://ispip.clang.cn/all_cn.txt", translate("Clang.CN"))
@@ -68,9 +68,9 @@ o:value("https://ispip.clang.cn/all_cn_cidr.txt", translate("Clang.CN.CIDR"))
 o.default = "https://ispip.clang.cn/all_cn.txt"
 
 o = s:option(Value, "nfip_url", translate("nfip_url"))
-o:value("https://raw.sevencdn.com/QiuSimons/Netflix_IP/master/NF_only.txt", translate("Netflix IP Only"))
-o:value("https://raw.sevencdn.com/QiuSimons/Netflix_IP/master/getflix.txt", translate("Netflix and AWS"))
-o.default = "https://raw.sevencdn.com/QiuSimons/Netflix_IP/master/NF_only.txt"
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/QiuSimons/Netflix_IP/master/NF_only.txt", translate("Netflix IP Only"))
+o:value("https://ghproxy.com/https://raw.githubusercontent.com/QiuSimons/Netflix_IP/master/getflix.txt", translate("Netflix and AWS"))
+o.default = "https://ghproxy.com/https://raw.githubusercontent.com/QiuSimons/Netflix_IP/master/NF_only.txt"
 o.description = translate("Customize Netflix IP Url")
 
 o = s:option(Button, "reset", translate("Reset to defaults"))
