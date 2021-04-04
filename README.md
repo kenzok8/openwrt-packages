@@ -7,11 +7,9 @@
 <img src="https://img.shields.io/github/license/BlueskyClouds/My-Actions?color=ff69b4">
 <img src="https://img.shields.io/github/languages/code-size/BlueskyClouds/My-Actions?color=blueviolet">
 </div>
-=
 ==================================================
 
--
-[kenzo のpackage 常用插件](https://github.com/kenzok8/openwrt-packages)
+[kenzo的package常用插件](https://github.com/kenzok8/openwrt-packages)
 ==================================================
 
 
