@@ -31,7 +31,7 @@ local encrypt_methods = {
 
 local protocol = {'origin'}
 
-obfs = {'plain', 'http_simple', 'http_post'}
+obfs = {'plain', 'http_simple', 'http_post', 'random_head', 'tls1.2_ticket_auth'}
 
 m = Map(vssr, translate('Edit vssr Server'))
 
