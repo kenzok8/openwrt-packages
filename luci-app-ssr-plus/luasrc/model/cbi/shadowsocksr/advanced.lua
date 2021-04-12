@@ -51,7 +51,7 @@ o = s:option(Value, "adblock_url", translate("adblock_url"))
 o:value("https://ghproxy.com/https://raw.githubusercontent.com/neodevpro/neodevhost/master/lite_host_dnsmasq.conf", translate("NEO DEV HOST Lite"))
 o:value("https://ghproxy.com/https://raw.githubusercontent.com/neodevpro/neodevhost/master/host_dnsmasq.conf", translate("NEO DEV HOST Full"))
 o:value("https://ghproxy.com/https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/adblock-for-dnsmasq.conf", translate("anti-AD"))
-o.default = "https://ghproxy.com/https://raw.githubusercontent.com/neodevpro/neodevhost/master/lite_host_dnsmasq.conf"
+o.default = "https://ghproxy.com/https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/adblock-for-dnsmasq.conf"
 o:depends("adblock", "1")
 o.description = translate("Support AdGuardHome and DNSMASQ format list")
 
