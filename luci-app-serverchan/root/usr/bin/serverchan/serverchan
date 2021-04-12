@@ -194,7 +194,7 @@ function getcpu(){
 # 获取SOC温度 （取所有传感器温度最大值）
 function soc_temp(){
 	[ -z "$soc_code" ] && soc_code="cat /sys/class/thermal/thermal_zone*/temp|sort -nr|head -n1|cut -c-2"
-	[ "$soc_code" == "sensors" ] && soc_code="sensors|grep °C|sed -nr 's#^Core.*:.*\+(.*)°C .*#\1#gp'|sort -nr|head -n1"
+	[ "$soc_code" == "sensors" ] && soc_code="sensors|grep °C|sed -nr 's#^.*:.*\+(.*)°C .*#\1#gp'|sort -nr|head -n1"
 	echo "$soc_code"|awk '{run=$0;system(run)}' 2>/dev/null
 }
 
