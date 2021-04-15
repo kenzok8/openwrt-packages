@@ -45,7 +45,7 @@ down(){
 		elif ! grep -q -e "|" -e "@" $F;then
 			cat $F | sed -e 's:^:address=/:' -e 's:$:/:' >> $G/rules.conf
 		else
-			cat $F | grep ^\|\|[^\*]*\^$ | grep -Ev "^\|\|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}*" | sed -e 's:||:address=/:' -e 's:\^:/:' >> $G/rules.conf
+			cat $F | grep ^\|\|[^\*]*\^$ | grep -Ev "^\|\|[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}*" | sed -e 's:||:address=/:' -e 's:\^.*:/:' >> $G/rules.conf
 		fi
 		[ "$X" = "`md5sum $G/rules.conf 2>/dev/null | awk '{print$1}'`" -a "$Y" = "`md5sum $G/host 2>/dev/null | awk '{print$1}'`" ] && echo "`eval $E` [Conversion $i Failed]"
 		echo $i >> $G/url

@@ -407,10 +407,6 @@ stop(){
 	kill -9 $(ps -w | grep grep $P/dnsfilter | grep -v grep | awk '{print$1}') 2>/dev/null
 	kill -9 $(ps -w | grep grep $P/addown | grep -v grep | awk '{print$1}') 2>/dev/null
 	kill -9 $(ps -w | grep ad_new.conf | grep -v grep | awk '{print$1}') 2>/dev/null
-	if [ ! -s $D/rules.conf ];then
-		echo "`eval $E` [DNSFilter is not running]"
-		return 1
-	fi
 	echo "`eval $E` [Stop DNSFilter]"
 	rm -rf /tmp/dnsmasq.d/dnsfilter.conf $D /var/lock/dnsfilter.lock
 	if [ "$(echo $url | sed 's/ /\n/g' | sort -u)" != "$(cat $T/url 2>/dev/null)" ];then
