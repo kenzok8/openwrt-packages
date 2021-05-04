@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ssr-plus
-PKG_VERSION:=183
-PKG_RELEASE:=11
+PKG_VERSION:=184
+PKG_RELEASE:=1
 
 define Package/$(PKG_NAME)/conffiles
 /etc/config/shadowsocksr
