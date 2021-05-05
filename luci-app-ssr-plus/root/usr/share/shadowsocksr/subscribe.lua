@@ -123,7 +123,7 @@ local function base64Decode(text)
 end
 -- 检查数组(table)中是否存在某个字符值
 -- https://www.04007.cn/article/135.html
-function checkTabValue(tab)
+local function checkTabValue(tab)
 	local revtab = {}
 	for k,v in pairs(tab) do
 		revtab[v] = true
