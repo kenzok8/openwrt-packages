@@ -1,0 +1,8 @@
+
+config easymesh 'config'
+	option enabled '0'
+	option ap_mode '0'
+	option ipaddr '192.168.1.10'
+	option netmask '255.255.255.0'
+	option gateway '192.168.1.1'
+	option dns '192.168.1.1'

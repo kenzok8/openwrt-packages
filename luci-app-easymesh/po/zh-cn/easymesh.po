@@ -1,0 +1,47 @@
+msgid "easymesh"
+msgstr "easymesh"
+
+msgid "EASY MESH"
+msgstr "简单MESH"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "General Settings"
+msgstr "基本设置"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "interface"
+msgstr "接口"
+
+msgid "AUTO"
+msgstr "自动"
+
+msgid "Enable or disable EASY MESH"
+msgstr "启用或禁用简单MESH"
+
+msgid "Encryption"
+msgstr "加密"
+
+msgid "Key"
+msgstr "密码"
+
+msgid "AP MODE Enable"
+msgstr "启用AP模式"
+
+msgid "Enable or disable AP MODE"
+msgstr "启用或禁用AP模式"
+
+msgid "IPv4-Address"
+msgstr "IPv4 地址"
+
+msgid "IPv4 netmask"
+msgstr "IPv4 子网掩码"
+
+msgid "IPv4 gateway"
+msgstr "IPv4 网关"
+
+msgid "Use custom DNS servers"
+msgstr "使用自定义的 DNS 服务器"
