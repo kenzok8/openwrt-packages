@@ -7,8 +7,8 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-passwall
 PKG_VERSION:=4
-PKG_RELEASE:=21
-PKG_DATE:=20210425
+PKG_RELEASE:=22
+PKG_DATE:=20210505
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
@@ -37,13 +37,13 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust
 config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR
 	bool "Include ShadowsocksR"
 	default y
-	select PACKAGE_shadowsocksr-libev-alt
 	select PACKAGE_shadowsocksr-libev-ssr-local
+	select PACKAGE_shadowsocksr-libev-ssr-redir
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Server
 	bool "Include ShadowsocksR Server"
 	default y
-	select PACKAGE_shadowsocksr-libev-server
+	select PACKAGE_shadowsocksr-libev-ssr-server
 	
 config PACKAGE_$(PKG_NAME)_INCLUDE_Xray
 	bool "Include Xray"
