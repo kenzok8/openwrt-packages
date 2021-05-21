@@ -1,5 +1,4 @@
 #!/bin/sh
-
 PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 count=0
 while :
