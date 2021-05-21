@@ -15,7 +15,7 @@ local sys = require 'luci.sys'
 m = Map(vssr)
 
 -- [[ SOCKS5 Proxy ]]--
-if nixio.fs.access('/usr/bin/xray') or nixio.fs.access('/usr/bin/xray/xray') then
+if nixio.fs.access('/usr/bin/xray') then
     s = m:section(TypedSection, 'socks5_proxy', translate('Xray SOCKS5 Proxy'))
     s.anonymous = true
 
@@ -43,7 +43,7 @@ if nixio.fs.access('/usr/bin/xray') or nixio.fs.access('/usr/bin/xray/xray') the
 end
 
 -- [[ Http Proxy ]]--
-if nixio.fs.access('/usr/bin/xray') or nixio.fs.access('/usr/bin/xray/xray') then
+if nixio.fs.access('/usr/bin/xray') then
     s = m:section(TypedSection, 'http_proxy', translate('Xray HTTP Proxy'))
     s.anonymous = true
 

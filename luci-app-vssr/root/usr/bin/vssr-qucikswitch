@@ -82,7 +82,7 @@ start_local() {
     lua /usr/share/vssr/genconfig_v2ray_s.lua "socks" ${local_port} ${Socks_user} ${Socks_pass} >$CONFIG_SOCK5_FILE
     sed -i 's/\\//g' $config_file
 
-    /usr/bin/v2ray/v2ray -config $CONFIG_SOCK5_FILE >/dev/null 2>&1 &
+    /usr/bin/xray -config $CONFIG_SOCK5_FILE >/dev/null 2>&1 &
 }
 
 killall -q -9 ssr-redir
@@ -105,8 +105,8 @@ gen_config_file $GLOBAL_SERVER 0
 stype=$(uci_get_by_name $GLOBAL_SERVER type)
 local stype=$(uci_get_by_name $GLOBAL_SERVER type)
 if [ "$stype" == "ss" -o "$stype" == "v2ray" ]; then
-    sscmd="/usr/bin/v2ray/v2ray"
-    [ ! -f "$sscmd" ] && sscmd="/usr/bin/v2ray"
+    sscmd="/usr/bin/xray"
+    [ ! -f "$sscmd" ] && sscmd="/usr/bin/xray"
 elif [ "$stype" == "ssr" ]; then
     sscmd="/usr/bin/ssr-redir"
 elif [ "$stype" == "trojan" ]; then
@@ -115,8 +115,8 @@ fi
 
 local utype=$(uci_get_by_name $UDP_RELAY_SERVER type)
 if [ "$utype" == "ss" -o "$utype" == "v2ray" ]; then
-    ucmd="/usr/bin/v2ray/v2ray"
-    [ ! -f "$ucmd" ] && ucmd="/usr/bin/v2ray"
+    ucmd="/usr/bin/xray"
+    [ ! -f "$ucmd" ] && ucmd="/usr/bin/xray"
 elif [ "$utype" == "ssr" ]; then
     ucmd="/usr/bin/ssr-redir"
 elif [ "$utype" == "trojan" ]; then
