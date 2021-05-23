@@ -15,17 +15,15 @@ function index()
         entry({'admin', 'services', 'vssr', 'subscribe_config'}, cbi('vssr/subscribe-config', {hideapplybtn = true, hidesavebtn = true, hideresetbtn = true}), _('Subscribe'), 12).leaf = true -- 订阅设置
         entry({'admin', 'services', 'vssr', 'control'}, cbi('vssr/control'), _('Access Control'), 13).leaf = true -- 访问控制
         entry({'admin', 'services', 'vssr', 'router'}, cbi('vssr/router'), _('Router Config'), 14).leaf = true -- 访问控制
-    if nixio.fs.access('/usr/bin/xray') then
-        entry({'admin', 'services', 'vssr', 'socks5'}, cbi('vssr/socks5'), _('Local Proxy'), 15).leaf = true -- Socks5代理
-    end
+        if nixio.fs.access('/usr/bin/xray') then
+            entry({'admin', 'services', 'vssr', 'socks5'}, cbi('vssr/socks5'), _('Local Proxy'), 15).leaf = true -- Socks5代理
+        end
         entry({'admin', 'services', 'vssr', 'advanced'}, cbi('vssr/advanced'), _('Advanced Settings'), 16).leaf = true -- 高级设置
-    else
-	if nixio.fs.access('/usr/bin/ssr-server') then
+    elseif nixio.fs.access('/usr/bin/ssr-server') then
         entry({'admin', 'services', 'vssr'}, alias('admin', 'services', 'vssr', 'server'), _('vssr'), 10).dependent = true
     else
         return
     end
-
     if nixio.fs.access('/usr/bin/ssr-server') then
         entry({'admin', 'services', 'vssr', 'server'}, arcombine(cbi('vssr/server'), cbi('vssr/server-config')), _('SSR Server'), 20).leaf = true -- 服务端
     end
