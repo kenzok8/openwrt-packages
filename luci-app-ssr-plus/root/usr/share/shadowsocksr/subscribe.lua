@@ -248,7 +248,7 @@ local function processData(szType, content)
 			result.password = password
 		else
 			-- 1202 年了还不支持 SS AEAD 的屑机场
-			result = nil
+			result.server = nil
 		end
 	elseif szType == "ssd" then
 		result.type = "ss"
@@ -259,6 +259,10 @@ local function processData(szType, content)
 		result.plugin = content.plugin
 		result.plugin_opts = content.plugin_options
 		result.alias = "[" .. content.airport .. "] " .. content.remarks
+		if checkTabValue(encrypt_methods_ss)[result.encrypt_method_ss] then
+			-- 1202 年了还不支持 SS AEAD 的屑机场
+			result.server = nil
+		end
 	elseif szType == "trojan" then
 		local idx_sp = 0
 		local alias = ""
