@@ -741,3 +741,6 @@ msgstr "重置pdnsd缓存"
 
 msgid "Finger Print"
 msgstr "指纹伪造"
+
+msgid "Reapply"
+msgstr "重新应用"
