@@ -737,7 +737,7 @@ msgid "Reset Error"
 msgstr "重置错误"
 
 msgid "Reset pdnsd cache"
-msgstr "重置pdnsd缓存"
+msgstr "重置PDNSD缓存"
 
 msgid "Finger Print"
 msgstr "指纹伪造"
