@@ -137,7 +137,7 @@ end
 
 function act_cache()
 	local e = {}
-	e.ret = luci.sys.call("/usr/bin/pdnsd-ctl -c /var/etc/ssrplus/pdnsd empty-cache >/dev/null")
+	e.ret = luci.sys.call("pdnsd-ctl -c /var/etc/ssrplus/pdnsd empty-cache >/dev/null")
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(e)
 end
