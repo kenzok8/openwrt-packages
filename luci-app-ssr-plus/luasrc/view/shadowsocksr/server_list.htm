@@ -5,17 +5,26 @@
 <script type="text/javascript">
 	//<![CDATA[
 	const doms = document.getElementsByClassName('pingtime');
-	const ports = document.getElementsByClassName("socket-connected")
+	const ports = document.getElementsByClassName("socket-connected");
+	const transports = document.getElementsByClassName("transport");
+	const wsPaths = document.getElementsByClassName("wsPath");
+	const tlss = document.getElementsByClassName("tls");
 	const xhr = (index) => {
 		return new Promise((res) => {
 			const dom = doms[index];
 			const port = ports[index];
+			const transport = transports[index];
+			const wsPath = wsPaths[index];
+			const tls = tlss[index];
 			if (!dom) res()
 			port.innerHTML = '<font color="#0072c3">connect</font>';
 			XHR.get('<%=luci.dispatcher.build_url("admin/services/shadowsocksr/ping")%>', {
 				index,
 				domain: dom.getAttribute("hint"),
-				port: port.getAttribute("hint")
+				port: port.getAttribute("hint"),
+				transport: transport.getAttribute("hint"),
+				wsPath: wsPath.getAttribute("hint"),
+				tls: tls.getAttribute("hint")
 			},
 			(x, result) => {
 				let col = '#ff0000';

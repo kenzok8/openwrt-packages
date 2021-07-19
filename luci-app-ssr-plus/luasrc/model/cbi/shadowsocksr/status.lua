@@ -168,16 +168,23 @@ s.rawhtml = true
 s.template = "shadowsocksr/refresh"
 s.value = ip_count .. " " .. translate("Records")
 
+if uci:get_first("shadowsocksr", 'global', 'netflix_enable', '0') ~= '0' then
 s = m:field(DummyValue, "nfip_data", translate("Netflix IP Data"))
 s.rawhtml = true
 s.template = "shadowsocksr/refresh"
 s.value = nfip_count .. " " .. translate("Records")
+end
 
 if uci:get_first("shadowsocksr", 'global', 'adblock', '0') == '1' then
 	s = m:field(DummyValue, "ad_data", translate("Advertising Data"))
 	s.rawhtml = true
 	s.template = "shadowsocksr/refresh"
 	s.value = ad_count .. " " .. translate("Records")
+end
+
+if uci:get_first("shadowsocksr", 'global', 'pdnsd_enable', '0') == '1' then
+	s = m:field(DummyValue, "cache", translate("Reset pdnsd cache"))
+	s.template = "shadowsocksr/cache"
 end
 
 s = m:field(DummyValue, "check_port", translate("Check Server Port"))

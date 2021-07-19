@@ -3,15 +3,15 @@ function index()
 	if not nixio.fs.access("/etc/config/dnsfilter") then
 		return
 	end
-	local e=entry({"admin","services","dnsfilter"},firstchild(),_("DNSFilter"),1)
-	e.dependent=false
-	e.acl_depends={ "luci-app-dnsfilter" }
-	entry({"admin","services","dnsfilter","base"},cbi("dnsfilter/base"),_("Base Setting"),1).leaf=true
-	entry({"admin","services","dnsfilter","white"},form("dnsfilter/white"),_("White Domain List"),2).leaf=true
-	entry({"admin","services","dnsfilter","black"},form("dnsfilter/black"),_("Block Domain List"),3).leaf=true
-	entry({"admin","services","dnsfilter","ip"},form("dnsfilter/ip"),_("Block IP List"),4).leaf=true
-	entry({"admin","services","dnsfilter","log"},form("dnsfilter/log"),_("Update Log"),5).leaf=true
-	entry({"admin","services","dnsfilter","run"},call("act_status"))
+	local page = entry({"admin","services","dnsfilter"},alias("admin","services","dnsfilter","base"),_("DNSFilter"),9)
+	page.dependent = true
+	page.acl_depends = { "luci-app-dnsfilter" }
+	entry({"admin","services","dnsfilter","base"},cbi("dnsfilter/base"),_("Base Setting"),10).leaf=true
+	entry({"admin","services","dnsfilter","white"},form("dnsfilter/white"),_("White Domain List"),20).leaf=true
+	entry({"admin","services","dnsfilter","black"},form("dnsfilter/black"),_("Block Domain List"),30).leaf=true
+	entry({"admin","services","dnsfilter","ip"},form("dnsfilter/ip"),_("Block IP List"),40).leaf=true
+	entry({"admin","services","dnsfilter","log"},form("dnsfilter/log"),_("Update Log"),50).leaf=true
+	entry({"admin","services","dnsfilter","run"},call("act_status")).leaf = true
 	entry({"admin","services","dnsfilter","refresh"},call("refresh_data"))
 end
 

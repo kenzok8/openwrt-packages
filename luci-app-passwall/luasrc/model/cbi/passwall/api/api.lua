@@ -1,10 +1,10 @@
 module("luci.model.cbi.passwall.api.api", package.seeall)
-local fs = require "nixio.fs"
-local sys = require "luci.sys"
-local uci = require"luci.model.uci".cursor()
-local util = require "luci.util"
-local datatypes = require "luci.cbi.datatypes"
-local i18n = require "luci.i18n"
+fs = require "nixio.fs"
+sys = require "luci.sys"
+uci = require"luci.model.uci".cursor()
+util = require "luci.util"
+datatypes = require "luci.cbi.datatypes"
+i18n = require "luci.i18n"
 
 appname = "passwall"
 curl = "/usr/bin/curl"
@@ -37,21 +37,83 @@ function is_exist(table, value)
     return false
 end
 
-function get_args(arg, myarg)
+function repeat_exist(table, value)
+    local count = 0
+    for index, k in ipairs(table) do
+        if k == value then
+            count = count + 1
+        end
+    end
+    if count > 1 then
+        return true
+    end
+    return false
+end
+
+function get_args(arg)
     local var = {}
     for i, arg_k in pairs(arg) do
         if i > 0 then
-            if is_exist(myarg, arg_k) == true then
-                local v = arg[i + 1]
-                if v then
-                    if is_exist(myarg, v) == false then
-                        var[arg_k] = v
-                    end
+            local v = arg[i + 1]
+            if v then
+                if repeat_exist(arg, v) == false then
+                    var[arg_k] = v
                 end
             end
         end
     end
     return var
+end
+
+function strToTable(str)
+    if str == nil or type(str) ~= "string" then
+        return {}
+    end
+    
+    return loadstring("return " .. str)()
+end
+
+function is_normal_node(e)
+    if e and e.type and e.protocol and (e.protocol == "_balancing" or e.protocol == "_shunt") then
+        return false
+    end
+    return true
+end
+
+function is_special_node(e)
+    return is_normal_node(e) == false
+end
+
+function is_ip(ip)
+    return datatypes.ipaddr(ip)
+end
+
+function get_ip_type(ip)
+    if is_ip(ip) then
+        if datatypes.ip6addr(ip) then
+            return "6"
+        end
+        if datatypes.ip4addr(ip) then
+            return "4"
+        end
+    end
+    return ""
+end
+
+function is_mac(mac)
+    return datatypes.macaddr(mac)
+end
+
+function ip_or_mac(e)
+    if e then
+        if get_ip_type(e) == "4" then
+            return "ip"
+        end
+        if is_mac(e) then
+            return "mac"
+        end
+    end
+    return ""
 end
 
 function get_valid_nodes()
@@ -199,7 +261,7 @@ function get_xray_version(file)
         if file == get_xray_path() then
             local md5 = sys.exec("echo -n $(md5sum " .. file .. " | awk '{print $1}')")
             if fs.access("/tmp/psw_" .. md5) then
-                return sys.exec("cat /tmp/psw_" .. md5)
+                return sys.exec("echo -n $(cat /tmp/psw_%s)" % md5)
             else
                 local version = sys.exec("echo -n $(%s -version | awk '{print $2}' | sed -n 1P)" % file)
                 sys.call("echo '" .. version .. "' > " .. "/tmp/psw_" .. md5)
@@ -224,7 +286,7 @@ function get_trojan_go_version(file)
         if file == get_trojan_go_path() then
             local md5 = sys.exec("echo -n $(md5sum " .. file .. " | awk '{print $1}')")
             if fs.access("/tmp/psw_" .. md5) then
-                return sys.exec("cat /tmp/psw_" .. md5)
+                return sys.exec("echo -n $(cat /tmp/psw_%s)" % md5)
             else
                 local version = sys.exec("echo -n $(%s -version | awk '{print $2}' | sed -n 1P)" % file)
                 sys.call("echo '" .. version .. "' > " .. "/tmp/psw_" .. md5)
@@ -249,7 +311,7 @@ function get_kcptun_version(file)
         if file == get_kcptun_path() then
             local md5 = sys.exec("echo -n $(md5sum " .. file .. " | awk '{print $1}')")
             if fs.access("/tmp/psw_" .. md5) then
-                return sys.exec("cat /tmp/psw_" .. md5)
+                return sys.exec("echo -n $(cat /tmp/psw_%s)" % md5)
             else
                 local version = sys.exec("echo -n $(%s -v | awk '{print $3}')" % file)
                 sys.call("echo '" .. version .. "' > " .. "/tmp/psw_" .. md5)
@@ -274,7 +336,7 @@ function get_brook_version(file)
         if file == get_brook_path() then
             local md5 = sys.exec("echo -n $(md5sum " .. file .. " | awk '{print $1}')")
             if fs.access("/tmp/psw_" .. md5) then
-                return sys.exec("cat /tmp/psw_" .. md5)
+                return sys.exec("echo -n $(cat /tmp/psw_%s)" % md5)
             else
                 local version = sys.exec("echo -n $(%s -v | awk '{print $3}')" % file)
                 sys.call("echo '" .. version .. "' > " .. "/tmp/psw_" .. md5)
@@ -356,6 +418,9 @@ end
 function compare_versions(ver1, comp, ver2)
     local table = table
 
+    if not ver1 then ver1 = "" end
+    if not ver2 then ver2 = "" end
+
     local av1 = util.split(ver1, "[%.%-]", nil, true)
     local av2 = util.split(ver2, "[%.%-]", nil, true)
 
@@ -364,8 +429,8 @@ function compare_versions(ver1, comp, ver2)
     if (max < n2) then max = n2 end
 
     for i = 1, max, 1 do
-        local s1 = av1[i] or ""
-        local s2 = av2[i] or ""
+        local s1 = tonumber(av1[i] or 0) or 0
+        local s2 = tonumber(av2[i] or 0) or 0
 
         if comp == "~=" and (s1 ~= s2) then return true end
         if (comp == "<" or comp == "<=") and (s1 < s2) then return true end
@@ -379,10 +444,10 @@ end
 function auto_get_arch()
     local arch = nixio.uname().machine or ""
     if fs.access("/usr/lib/os-release") then
-        LEDE_BOARD = sys.exec("echo -n `grep 'LEDE_BOARD' /usr/lib/os-release | awk -F '[\\042\\047]' '{print $2}'`")
+        LEDE_BOARD = sys.exec("echo -n $(grep 'LEDE_BOARD' /usr/lib/os-release | awk -F '[\\042\\047]' '{print $2}')")
     end
     if fs.access("/etc/openwrt_release") then
-        DISTRIB_TARGET = sys.exec("echo -n `grep 'DISTRIB_TARGET' /etc/openwrt_release | awk -F '[\\042\\047]' '{print $2}'`")
+        DISTRIB_TARGET = sys.exec("echo -n $(grep 'DISTRIB_TARGET' /etc/openwrt_release | awk -F '[\\042\\047]' '{print $2}')")
     end
 
     if arch == "mips" then

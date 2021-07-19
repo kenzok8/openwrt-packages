@@ -412,8 +412,8 @@ msgstr "GFW列表"
 msgid "ShadowSocksR Plus+ Settings"
 msgstr "ShadowSocksR Plus+ 设置"
 
-msgid "<h3>Support SS/SSR/V2RAY/TROJAN/NAIVEPROXY/SOCKS5/TUN etc.</h3>"
-msgstr "<h3>支持 SS/SSR/V2RAY/TROJAN/NAIVEPROXY/SOCKS5/TUN 等协议</h3>"
+msgid "<h3>Support SS/SSR/V2RAY/XRAY/TROJAN/NAIVEPROXY/SOCKS5/TUN etc.</h3>"
+msgstr "<h3>支持 SS/SSR/V2RAY/XRAY/TROJAN/NAIVEPROXY/SOCKS5/TUN 等协议</h3>"
 
 msgid "Main Server"
 msgstr "主服务器"
@@ -733,5 +733,17 @@ msgstr "输入的内容不正确！"
 msgid "Reset complete"
 msgstr "重置完成"
 
+msgid "Reset Error"
+msgstr "重置错误"
+
+msgid "Reset pdnsd cache"
+msgstr "重置PDNSD缓存"
+
 msgid "Finger Print"
 msgstr "指纹伪造"
+
+msgid "Reapply"
+msgstr "重新应用"
+
+msgid "Enable Netflix Mode"
+msgstr "启用 Netflix 分流模式"

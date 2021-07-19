@@ -2,8 +2,8 @@
 . /usr/share/openclash/ruby.sh
 
 LOG_FILE="/tmp/openclash.log"
-START_LOG="/tmp/openclash_start.log"
 LOGTIME=$(date "+%Y-%m-%d %H:%M:%S")
+dns_advanced_setting=$(uci -q get openclash.config.dns_advanced_setting)
 
 if [ "${14}" != "1" ]; then
    controller_address="0.0.0.0"
@@ -112,7 +112,7 @@ elsif $en_mode_tun == 2
    Value['tun']['dns-listen']='0.0.0.0:53'
 elsif $en_mode_tun == 0
    if Value.key?('tun') then
-      Value['tun'].clear
+      Value.delete('tun')
    end
 end;
 if not Value.key?('profile') then
@@ -161,6 +161,24 @@ if '$2' == 'fake-ip' then
 end;
 rescue Exception => e
 puts '${LOGTIME} Set Fake IP Filter Error: ' + e.message
+end
+begin
+#nameserver-policy
+if '$dns_advanced_setting' == '1' then
+   if File::exist?('/etc/openclash/custom/openclash_custom_domain_dns_policy.list') then
+     Value_6 = YAML.load_file('/etc/openclash/custom/openclash_custom_domain_dns_policy.list')
+     if Value_6 != false then
+        if Value['dns'].has_key?('nameserver-policy') and not Value['dns']['nameserver-policy'].to_a.empty? then
+           Value['dns']['nameserver-policy'].merge!(Value_6)
+           Value['dns']['nameserver-policy'].uniq
+        else
+           Value['dns']['nameserver-policy']=Value_6
+        end
+     end
+  end
+end;
+rescue Exception => e
+puts '${LOGTIME} Set Nameserver-policy Error: ' + e.message
 ensure
 File.open('$7','w') {|f| YAML.dump(Value, f)}
 end" 2>/dev/null >> $LOG_FILE

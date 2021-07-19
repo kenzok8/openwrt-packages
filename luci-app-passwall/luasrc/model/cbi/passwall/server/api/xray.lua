@@ -72,6 +72,12 @@ function gen_config(user)
                 }
             }
         }
+    elseif user.protocol == "dokodemo-door" then
+        settings = {
+            network = user.d_protocol,
+            address = user.d_address,
+            port = tonumber(user.d_port)
+        }
     end
 
     if user.fallback and user.fallback == "1" then
@@ -146,10 +152,6 @@ function gen_config(user)
                     network = user.transport,
                     security = "none",
                     xtlsSettings = ("1" == user.tls and "1" == user.xtls) and {
-                        alpn = {
-                            "h2",
-                            "http/1.1"
-                        },
                         disableSystemRoot = false,
                         certificates = {
                             {
@@ -159,10 +161,6 @@ function gen_config(user)
                         }
                     } or nil,
                     tlsSettings = ("1" == user.tls) and {
-                        alpn = {
-                            "h2",
-                            "http/1.1"
-                        },
                         disableSystemRoot = false,
                         certificates = {
                             {
@@ -209,6 +207,9 @@ function gen_config(user)
                         security = user.quic_security,
                         key = user.quic_key,
                         header = {type = user.quic_guise}
+                    } or nil,
+                    grpcSettings = (user.transport == "grpc") and {
+                        serviceName = user.grpc_serviceName
                     } or nil
                 }
             }
@@ -217,6 +218,21 @@ function gen_config(user)
         outbounds = outbounds,
         routing = routing
     }
+
+    local alpn = {}
+    if user.alpn then
+        string.gsub(user.alpn, '[^' .. "," .. ']+', function(w)
+            table.insert(alpn, w)
+        end)
+    end
+    if alpn and #alpn > 0 then
+        if config.streamSettings.tlsSettings then
+            config.inbounds[1].streamSettings.tlsSettings.alpn = alpn
+        end
+        if config.streamSettings.xtlsSettings then
+            config.inbounds[1].streamSettings.xtlsSettings.alpn = alpn
+        end
+    end
 
     if "1" == user.tls then
         config.inbounds[1].streamSettings.security = "tls"

@@ -1,18 +1,13 @@
+# SPDX-License-Identifier: GPL-3.0-only
 #
 # Copyright (C) 2020 jerryk <jerrykuku@qq.com>
-#
-# Copyright (C) 2021 ImmortalWrt
-# <https://immortalwrt.org>
-#
-# This is free software, licensed under the GNU General Public License v3.
-# See /LICENSE for more information.
-#
+# Copyright (C) 2021 ImmortalWrt.org
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lua-maxminddb
 PKG_VERSION:=0.2
-PKG_RELEASE:=2
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/fabled/lua-maxminddb.git
@@ -25,7 +20,6 @@ PKG_LICENSE_FILE:=LICENSE
 PKG_MAINTAINER:=fabled
 
 PKG_BUILD_PARALLEL:=1
-PKG_INSTALL:=1
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -40,9 +34,11 @@ endef
 
 TARGET_CFLAGS += $(FPIC)
 
+MAKE_VARS += LUA_PKG=lua
+
 define Package/lua-maxminddb/install
 	$(INSTALL_DIR) $(1)/usr/lib/lua
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/maxminddb.so $(1)/usr/lib/lua/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/maxminddb.so $(1)/usr/lib/lua/
 endef
 
 $(eval $(call BuildPackage,lua-maxminddb))

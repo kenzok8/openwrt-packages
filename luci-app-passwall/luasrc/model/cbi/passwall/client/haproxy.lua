@@ -1,7 +1,8 @@
-local e = require "luci.sys"
-local net = require "luci.model.network".init()
 local api = require "luci.model.cbi.passwall.api.api"
 local appname = api.appname
+local sys = api.sys
+local net = require "luci.model.network".init()
+local datatypes = api.datatypes
 
 local nodes_table = {}
 for k, e in ipairs(api.get_valid_nodes()) do
@@ -30,19 +31,19 @@ o.default = false
 ---- Console Username
 o = s:option(Value, "console_user", translate("Console Username"))
 o.default = ""
-o:depends("balancing_enable", 1)
+o:depends("balancing_enable", true)
 
 ---- Console Password
 o = s:option(Value, "console_password", translate("Console Password"))
 o.password = true
 o.default = ""
-o:depends("balancing_enable", 1)
+o:depends("balancing_enable", true)
 
 ---- Console Port
 o = s:option(Value, "console_port", translate("Console Port"), translate(
                  "In the browser input routing IP plus port access, such as:192.168.1.1:1188"))
 o.default = "1188"
-o:depends("balancing_enable", 1)
+o:depends("balancing_enable", true)
 
 -- [[ Balancing Settings ]]--
 s = m:section(TypedSection, "haproxy_config", "",
@@ -62,29 +63,36 @@ o.rmempty = false
 
 ---- Node Address
 o = s:option(Value, "lbss", translate("Node Address"))
-for k, v in pairs(nodes_table) do o:value(v.obj.address .. ":" .. v.obj.port, v.remarks) end
+for k, v in pairs(nodes_table) do o:value(v.id, v.remarks) end
 o.rmempty = false
-
----- Node Port
-o = s:option(Value, "lbort", translate("Node Port"))
-o:value("default", translate("Default"))
-o.default = "default"
-o.rmempty = false
+o.validate = function(self, value)
+    if not value then return nil end
+    local t = m:get(value) or nil
+    if t and t[".type"] == "nodes" then
+        return value
+    end
+    if datatypes.hostport(value) then
+        return value
+    end
+    return nil, value
+end
 
 ---- Haproxy Port
 o = s:option(Value, "haproxy_port", translate("Haproxy Port"))
-o.default = "1181"
+o.datatype = "port"
+o.default = 1181
 o.rmempty = false
 
 ---- Node Weight
 o = s:option(Value, "lbweight", translate("Node Weight"))
-o.default = "5"
+o.datatype = "uinteger"
+o.default = 5
 o.rmempty = false
 
 ---- Export
 o = s:option(ListValue, "export", translate("Export Of Multi WAN"))
 o:value(0, translate("Auto"))
-local ifaces = e.net:devices()
+local ifaces = sys.net:devices()
 for _, iface in ipairs(ifaces) do
     if (iface:match("^br") or iface:match("^eth*") or iface:match("^pppoe*")) then
         local nets = net:get_interface(iface)

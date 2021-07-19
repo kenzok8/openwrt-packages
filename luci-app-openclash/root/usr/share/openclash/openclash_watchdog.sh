@@ -1,4 +1,5 @@
 #!/bin/sh
+. /usr/share/openclash/log.sh
 
 CLASH="/etc/openclash/clash"
 CLASH_CONFIG="/etc/openclash"
@@ -11,6 +12,7 @@ disable_masq_cache=$(uci get openclash.config.disable_masq_cache 2>/dev/null)
 en_mode=$(uci get openclash.config.en_mode 2>/dev/null)
 cfg_update_interval=$(uci get openclash.config.config_update_interval 2>/dev/null)
 log_size=$(uci get openclash.config.log_size 2>/dev/null || 1024)
+_koolshare=$(cat /usr/lib/os-release 2>/dev/null |grep OPENWRT_RELEASE 2>/dev/null |grep -i koolshare 2>/dev/null)
 CRASH_NUM=0
 CFG_UPDATE_INT=0
 
@@ -24,7 +26,6 @@ fi
 
 while :;
 do
-   LOGTIME=$(date "+%Y-%m-%d %H:%M:%S")
    cfg_update=$(uci get openclash.config.auto_update 2>/dev/null)
    cfg_update_mode=$(uci get openclash.config.config_auto_update_mode 2>/dev/null)
    cfg_update_interval_now=$(uci get openclash.config.config_update_interval 2>/dev/null)
@@ -33,7 +34,7 @@ do
 if [ "$enable" -eq 1 ]; then
 	clash_pids=$(pidof clash |sed 's/$//g' |wc -l)
 	if [ "$clash_pids" -gt 1 ]; then
-		 echo "${LOGTIME} Watchdog: Multiple Clash Processes, Kill All..." >> $LOG_FILE
+		 LOG_OUT "Watchdog: Multiple Clash Processes, Kill All..."
 		 for clash_pid in $clash_pids; do
 	      kill -9 "$clash_pid" 2>/dev/null
 		 done >/dev/null 2>&1
@@ -44,14 +45,18 @@ if [ "$enable" -eq 1 ]; then
 	   if [ "$CRASH_NUM" -le 3 ]; then
 	      RAW_CONFIG_FILE=$(uci get openclash.config.config_path 2>/dev/null)
 	      CONFIG_FILE="/etc/openclash/$(uci get openclash.config.config_path 2>/dev/null |awk -F '/' '{print $5}' 2>/dev/null)"
-	      echo "${LOGTIME} Watchdog: Clash Core Problem, Restart." >> $LOG_FILE
-	      touch /tmp/openclash.log 2>/dev/null
-        chmod o+w /etc/openclash/proxy_provider/* 2>/dev/null
-        chmod o+w /etc/openclash/rule_provider/* 2>/dev/null
-        chmod o+w /tmp/openclash.log 2>/dev/null
-        chown nobody:nogroup /etc/openclash/core/* 2>/dev/null
-        capabilties="cap_sys_resource,cap_dac_override,cap_net_raw,cap_net_bind_service,cap_net_admin"
-        capsh --caps="${capabilties}+eip" -- -c "capsh --user=nobody --addamb='${capabilties}' -- -c 'nohup $CLASH -d $CLASH_CONFIG -f \"$CONFIG_FILE\" >> $LOG_FILE 2>&1 &'" >> $LOG_FILE 2>&1
+	      LOG_OUT "Watchdog: Clash Core Problem, Restart..."
+	      if [ -z "$_koolshare" ]; then
+	         touch /tmp/openclash.log 2>/dev/null
+           chmod o+w /etc/openclash/proxy_provider/* 2>/dev/null
+           chmod o+w /etc/openclash/rule_provider/* 2>/dev/null
+           chmod o+w /tmp/openclash.log 2>/dev/null
+           chown nobody:nogroup /etc/openclash/core/* 2>/dev/null
+           capabilties="cap_sys_resource,cap_dac_override,cap_net_raw,cap_net_bind_service,cap_net_admin"
+           capsh --caps="${capabilties}+eip" -- -c "capsh --user=nobody --addamb='${capabilties}' -- -c 'nohup $CLASH -d $CLASH_CONFIG -f \"$CONFIG_FILE\" >> $LOG_FILE 2>&1 &'" >> $LOG_FILE 2>&1
+        else
+           nohup $CLASH -d $CLASH_CONFIG -f "$CONFIG_FILE" >> $LOG_FILE 2>&1 &
+        fi
 	      sleep 3
 	      if [ "$core_type" = "Tun" ]; then
 	         ip route replace default dev utun table "$PROXY_ROUTE_TABLE" 2>/dev/null
@@ -62,9 +67,8 @@ if [ "$enable" -eq 1 ]; then
            ip route replace default dev clash0 table "$PROXY_ROUTE_TABLE" 2>/dev/null
            ip rule add fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE" 2>/dev/null
 	      fi
-	      /usr/share/openclash/openclash_history_set.sh
 	   else
-	      echo "${LOGTIME} Watchdog: Already Restart 3 Times With Clash Core Problem, Auto-Exit." >> $LOG_FILE
+	      LOG_OUT "Watchdog: Already Restart 3 Times With Clash Core Problem, Auto-Exit..."
 	      /etc/init.d/openclash stop
 	      exit 0
 	   fi
@@ -79,7 +83,7 @@ fi
 ## Log File Size Manage:
     LOGSIZE=`ls -l /tmp/openclash.log |awk '{print int($5/1024)}'`
     if [ "$LOGSIZE" -gt "$log_size" ]; then
-       echo "$LOGTIME Watchdog: Log Size Limit, Clean Up All Log Records." > $LOG_FILE
+       LOG_OUT "Watchdog: Log Size Limit, Clean Up All Log Records..."
     fi
 
 ## 端口转发重启
@@ -91,13 +95,13 @@ fi
          iptables -t nat -D PREROUTING "$pre_line" >/dev/null 2>&1
       done >/dev/null 2>&1
       iptables -t nat -A PREROUTING -p tcp -j openclash
-      echo "$LOGTIME Watchdog: Reset Firewall For Enabling Redirect." >>$LOG_FILE
+      LOG_OUT "Watchdog: Reset Firewall For Enabling Redirect..."
    fi
    
 ## DNS转发劫持
    if [ "$enable_redirect_dns" -ne 0 ]; then
       if [ -z "$(uci get dhcp.@dnsmasq[0].server 2>/dev/null |grep "$dns_port")" ] || [ ! -z "$(uci get dhcp.@dnsmasq[0].server 2>/dev/null |awk -F ' ' '{print $2}')" ]; then
-         echo "$LOGTIME Watchdog: Force Reset DNS Hijack." >> $LOG_FILE
+         LOG_OUT "Watchdog: Force Reset DNS Hijack..."
          uci del dhcp.@dnsmasq[-1].server >/dev/null 2>&1
          uci add_list dhcp.@dnsmasq[0].server=127.0.0.1#"$dns_port"
          uci delete dhcp.@dnsmasq[0].resolvfile

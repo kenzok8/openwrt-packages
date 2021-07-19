@@ -24,13 +24,13 @@ o:value(7, translate("Every day"))
 for e = 1, 6 do o:value(e, translate("Week") .. e) end
 o:value(0, translate("Week") .. translate("day"))
 o.default = 0
-o:depends("auto_update_subscribe", 1)
+o:depends("auto_update_subscribe", true)
 
 ---- Day update rules
 o = s:option(ListValue, "time_update_subscribe", translate("Day update rules"))
 for e = 0, 23 do o:value(e, e .. translate("oclock")) end
 o.default = 0
-o:depends("auto_update_subscribe", 1)
+o:depends("auto_update_subscribe", true)
 
 o = s:option(ListValue, "filter_keyword_mode", translate("Filter keyword Mode"))
 o:value("0", translate("Close"))
@@ -76,6 +76,19 @@ o.rmempty = false
 o = s:option(Value, "remark", translate("Subscribe Remark"))
 o.width = "auto"
 o.rmempty = false
+
+o = s:option(DummyValue, "_node_count")
+o.rawhtml = true
+o.cfgvalue = function(t, n)
+    local remark = m:get(n, "remark") or ""
+    local num = 0
+    m.uci:foreach(appname, "nodes", function(s)
+        if s["add_from"] ~= "" and s["add_from"] == remark then
+            num = num + 1
+        end
+    end)
+    return string.format("<span title='%s' style='color:red'>%s</span>", remark .. " " .. translate("Node num") .. ": " .. num, num)
+end
 
 o = s:option(Value, "url", translate("Subscribe URL"))
 o.width = "auto"

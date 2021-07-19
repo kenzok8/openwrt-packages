@@ -58,7 +58,7 @@ for t,f in ipairs(fs.glob("/etc/openclash/config/*"))do
   end
 end
 
-o = s:option(Button, translate("Get Group Names")) 
+o = s:option(Button, translate("Get Group Names"))
 o.title = translate("Get Group Names")
 o.inputtitle = translate("Get Group Names")
 o.description = translate("Get Group Names After Select Config File")
@@ -113,6 +113,50 @@ o:value("DIRECT")
 o:value("REJECT")
 
 o = s:option(ListValue, "Youtube", translate("Youtube"))
+o:depends("rule_name", "lhie1")
+o.rmempty = true
+for groupname in string.gmatch(groupnames, "([^'##\n']+)##") do
+  if groupname ~= nil and groupname ~= "" then
+    o:value(groupname)
+  end
+end
+o:value("DIRECT")
+o:value("REJECT")
+
+o = s:option(ListValue, "Bilibili", translate("Bilibili"))
+o:depends("rule_name", "lhie1")
+o.rmempty = true
+for groupname in string.gmatch(groupnames, "([^'##\n']+)##") do
+  if groupname ~= nil and groupname ~= "" then
+    o:value(groupname)
+  end
+end
+o:value("DIRECT")
+o:value("REJECT")
+
+o = s:option(ListValue, "Bahamut", translate("Bahamut"))
+o:depends("rule_name", "lhie1")
+o.rmempty = true
+for groupname in string.gmatch(groupnames, "([^'##\n']+)##") do
+  if groupname ~= nil and groupname ~= "" then
+    o:value(groupname)
+  end
+end
+o:value("DIRECT")
+o:value("REJECT")
+
+o = s:option(ListValue, "HBO", translate("HBO"))
+o:depends("rule_name", "lhie1")
+o.rmempty = true
+for groupname in string.gmatch(groupnames, "([^'##\n']+)##") do
+  if groupname ~= nil and groupname ~= "" then
+    o:value(groupname)
+  end
+end
+o:value("DIRECT")
+o:value("REJECT")
+
+o = s:option(ListValue, "Pornhub", translate("Pornhub"))
 o:depends("rule_name", "lhie1")
 o.rmempty = true
 for groupname in string.gmatch(groupnames, "([^'##\n']+)##") do
@@ -277,7 +321,7 @@ local t = {
 }
 a = m:section(Table, t)
 
-o = a:option(Button,"Commit")
+o = a:option(Button,"Commit", " ")
 o.inputtitle = translate("Commit Configurations")
 o.inputstyle = "apply"
 o.write = function()
@@ -285,11 +329,11 @@ o.write = function()
    --luci.http.redirect(m.redirect)
 end
 
-o = a:option(Button,"Back")
+o = a:option(Button,"Back", " ")
 o.inputtitle = translate("Back Configurations")
 o.inputstyle = "reset"
 o.write = function()
-   m.uci:revert(openclash)
+   m.uci:revert(openclash, sid)
    luci.http.redirect(m.redirect)
 end
 

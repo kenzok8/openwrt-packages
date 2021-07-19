@@ -2,12 +2,7 @@ local api = require "luci.model.cbi.passwall.api.api"
 local ucursor = require"luci.model.uci".cursor()
 local json = require "luci.jsonc"
 
-local myarg = {
-    "-node", "-run_type", "-local_addr", "-local_port", "-server_host", "-server_port", "-loglevel"
-}
-
-local var = api.get_args(arg, myarg)
-
+local var = api.get_args(arg)
 local node_section = var["-node"]
 if not node_section then
     print("-node 不能为空")
@@ -34,7 +29,7 @@ local trojan = {
     ssl = {
         verify = (node.tls_allowInsecure ~= "1") and true or false,
         verify_hostname = true,
-        cert = node.trojan_cert_path,
+        cert = nil,
         cipher = cipher,
         cipher_tls13 = cipher13,
         sni = node.tls_serverName or node.address,
@@ -44,12 +39,8 @@ local trojan = {
         curves = ""
     },
     udp_timeout = 60,
-    mux = (node.mux == "1") and {
-        enabled = true,
-        concurrency = tonumber(node.mux_concurrency),
-        idle_timeout = 60,
-        } or nil,
     tcp = {
+        use_tproxy = (node.type == "Trojan-Plus" and var["-use_tproxy"]) and true or nil,
         no_delay = true,
         keep_alive = true,
         reuse_port = true,
@@ -58,12 +49,12 @@ local trojan = {
     }
 }
 if node.type == "Trojan-Go" then
-    trojan.ssl.cipher = node.fingerprint == nil and cipher or (node.fingerprint == "disable" and cipher13 .. ":" .. cipher or "")
-    trojan.ssl.cipher_tls13 = node.fingerprint == nil and cipher13 or nil
-    trojan.ssl.fingerprint = (node.fingerprint ~= nil and node.fingerprint ~= "disable" ) and node.fingerprint or ""
-    trojan.ssl.alpn = node.trojan_transport == 'ws' and {} or {"h2", "http/1.1"}
-    if node.stream_security ~= "tls" and node.trojan_transport == "original" then trojan.ssl = nil end
-    trojan.transport_plugin = node.stream_security == "none" and node.trojan_transport == "original" and {
+    trojan.ssl.cipher = (node.fingerprint == nil) and cipher or (node.fingerprint == "disable" and cipher13 .. ":" .. cipher or "")
+    trojan.ssl.cipher_tls13 = (node.fingerprint == nil) and cipher13 or nil
+    trojan.ssl.fingerprint = (node.fingerprint ~= nil and node.fingerprint ~= "disable") and node.fingerprint or ""
+    trojan.ssl.alpn = (node.trojan_transport == 'ws') and {} or {"h2", "http/1.1"}
+    if node.tls ~= "1" and node.trojan_transport == "original" then trojan.ssl = nil end
+    trojan.transport_plugin = ((not node.tls or node.tls ~= "1") and node.trojan_transport == "original") and {
         enabled = node.plugin_type ~= nil,
         type = node.plugin_type or "plaintext",
         command = node.plugin_type ~= "plaintext" and node.plugin_cmd or nil,
@@ -71,7 +62,7 @@ if node.type == "Trojan-Go" then
         arg = node.plugin_type ~= "plaintext" and { node.plugin_arg } or nil,
         env = {}
     } or nil
-    trojan.websocket = node.trojan_transport and node.trojan_transport:find('ws') and {
+    trojan.websocket = (node.trojan_transport and node.trojan_transport:find('ws')) and {
         enabled = true,
         path = node.ws_path or "/",
         host = node.ws_host or (node.tls_serverName or node.address)
@@ -80,6 +71,11 @@ if node.type == "Trojan-Go" then
         enabled = true,
         method = node.ss_aead_method or "aead_aes_128_gcm",
         password = node.ss_aead_pwd or ""
+    } or nil
+    trojan.mux = (node.smux == "1") and {
+        enabled = true,
+        concurrency = tonumber(node.mux_concurrency),
+        idle_timeout = tonumber(node.smux_idle_timeout)
     } or nil
 end
 print(json.stringify(trojan, 1))

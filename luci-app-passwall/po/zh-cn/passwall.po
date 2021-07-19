@@ -262,6 +262,18 @@ msgstr "可以使用负载均衡实现故障切换功能。"
 msgid "Restore the default configuration method. Input example in the address bar:"
 msgstr "恢复默认配置方法，地址栏输入例："
 
+msgid "Hide menu method, input example in the address bar:"
+msgstr "隐藏菜单方法，地址栏输入例："
+
+msgid "After the hidden to the display, input example in the address bar:"
+msgstr "当你隐藏后想再次显示，地址栏输入例："
+
+msgid "Are you sure to reset?"
+msgstr "你确定要恢复吗？"
+
+msgid "Are you sure to hide?"
+msgstr "你确定要隐藏吗？"
+
 msgid "DNS Export Of Multi WAN"
 msgstr "国内DNS指定解析出口"
 
@@ -291,6 +303,9 @@ msgstr "单进程"
 
 msgid "Proxy Mode"
 msgstr "代理模式"
+
+msgid "%s Proxy Mode"
+msgstr "%s 代理模式"
 
 msgid "If not available, try clearing the cache."
 msgstr "如果无法使用，请尝试清除缓存。"
@@ -331,11 +346,11 @@ msgstr "添加节点"
 msgid "Add the node via the link"
 msgstr "通过链接添加节点"
 
-msgid "SS/SSR/Vmess/Trojan Link"
-msgstr "SS/SSR/Vmess/Trojan链接"
+msgid "SS/SSR/Vmess/VLESS/Trojan Link"
+msgstr "SS/SSR/Vmess/VLESS/Trojan链接"
 
-msgid "Please enter the correct link, ss:// ssr:// vmess:// trojan://"
-msgstr "请输入正确的链接，ss:// ssr:// vmess:// trojan://"
+msgid "Please enter the correct link, ss:// ssr:// vmess:// vless:// trojan://"
+msgstr "请输入正确的链接，ss:// ssr:// vmess:// vless:// trojan://"
 
 msgid "Clear all nodes"
 msgstr "清空所有节点"
@@ -445,14 +460,11 @@ msgstr "负载均衡节点列表"
 msgid "Load balancing node list, <a target='_blank' href='https://toutyrater.github.io/routing/balance2.html'>document</a>"
 msgstr "负载均衡节点列表，<a target='_blank' href='https://toutyrater.github.io/routing/balance2.html'>文档原理</a>"
 
-msgid "Share Current"
-msgstr "所见即所得"
-
 msgid "From Share URL"
-msgstr "导入配置信息"
+msgstr "导入分享URL"
 
 msgid "Build Share URL"
-msgstr "导出配置信息"
+msgstr "导出分享URL"
 
 msgid "Import Finished"
 msgstr "导入完成："
@@ -461,19 +473,16 @@ msgid "Not a supported scheme:"
 msgstr "不支持这种样式的："
 
 msgid "Invalid Share URL Format"
-msgstr "无效的分享信息"
-
-msgid "User cancelled"
-msgstr "用户已取消"
+msgstr "无效的分享URL信息"
 
 msgid "Paste Share URL Here"
 msgstr "在此处粘贴分享信息"
 
-msgid "Unable share to clipboard, copy to batch mode still:"
-msgstr "无法分享网址到剪贴板，复制到批量导入临时输入："
+msgid "Share URL to clipboard unable."
+msgstr "无法分享URL到剪贴板。"
 
-msgid "Share to clipboard successfully, copy to batch mode still:"
-msgstr "成功复制分享网址到剪贴板和批量导入临时输入："
+msgid "Share URL to clipboard successfully."
+msgstr "成功复制分享URL到剪贴板。"
 
 msgid "Faltal on get option, please help in debug:"
 msgstr "代码错误，请协助捉虫："
@@ -496,8 +505,8 @@ msgstr "证书路径"
 msgid "Finger Print"
 msgstr "指纹伪造"
 
-msgid "Shadowsocks2"
-msgstr "二次加密"
+msgid "Shadowsocks secondary encryption"
+msgstr "Shadowsocks 二次加密"
 
 msgid "Encrypt Method"
 msgstr "加密"
@@ -534,6 +543,12 @@ msgstr "简洁显示节点"
 
 msgid "Show server address and port"
 msgstr "显示服务器地址和端口"
+
+msgid "Node num"
+msgstr "节点数量"
+
+msgid "Self add"
+msgstr "自添"
 
 msgid "Apply"
 msgstr "应用"
@@ -613,6 +628,12 @@ msgstr "默认"
 msgid "Close"
 msgstr "关闭"
 
+msgid "Hijacking ICMP (PING)"
+msgstr "劫持ICMP (PING)"
+
+msgid "TCP Proxy Way"
+msgstr "TCP代理方式"
+
 msgid "Proxy Settings"
 msgstr "代理配置"
 
@@ -640,8 +661,14 @@ msgstr "自动切换"
 msgid "When there is no server, an automatic reconnect scheme is used"
 msgstr "当没有服务器时，则使用自动重连方案"
 
-msgid "How often is a diagnosis made"
-msgstr "检测时间"
+msgid "How often to test"
+msgstr "多久检测一次"
+
+msgid "Timeout seconds"
+msgstr "超时秒数"
+
+msgid "Timeout retry num"
+msgstr "超时重试次数"
 
 msgid "Automatic switching cannot be used when this option is checked"
 msgstr "当勾选此选项时，不能使用自动切换"
@@ -657,6 +684,15 @@ msgstr "恢复切换"
 
 msgid "When detects main node is available, switch back to the main node."
 msgstr "当检测到主节点可用时，切换回主节点。"
+
+msgid "Add nodes to the standby node list by keywords"
+msgstr "通过关键字添加节点到备用节点列表"
+
+msgid "Delete nodes in the standby node list by keywords"
+msgstr "通过关键字删除备用节点列表的节点"
+
+msgid "Please enter the node keyword, pay attention to distinguish between spaces, uppercase and lowercase."
+msgstr "请输入节点关键字，注意区分空格、大写和小写。"
 
 msgid "Configure this node with 127.0.0.1: this port"
 msgstr "使用127.0.0.1和此端口配置节点"
@@ -759,6 +795,9 @@ msgstr "Xray 资源文件目录"
 
 msgid "This variable specifies a directory where geoip.dat and geosite.dat files are."
 msgstr "此变量指定geoip.dat和geosite.dat文件所在的目录。"
+
+msgid "Shunt Rule"
+msgstr "分流规则"
 
 msgid "Please note attention to the priority, the higher the order, the higher the priority."
 msgstr "请注意优先级问题，排序越上面优先级越高。"
@@ -1051,15 +1090,6 @@ msgstr "<br />none：默认值，不进行伪装，发送的数据是没有特�
 msgid "A legal file path. This file must not exist before running."
 msgstr "一个合法的文件路径。在运行之前，这个文件必须不存在。"
 
-msgid "TCP Open Socks"
-msgstr "开启Socks"
-
-msgid "When using this TCP node, whether to open the socks proxy at the same time"
-msgstr "使用此TCP节点时，是否同时打开socks代理"
-
-msgid "Do not conflict with other ports"
-msgstr "端口不能冲突"
-
 msgid "Auth"
 msgstr "身份认证"
 
@@ -1102,14 +1132,17 @@ msgstr "显示节点检测"
 msgid "Show Show IP111"
 msgstr "显示IP111"
 
-msgid "Hide menu method, input example in the address bar:"
-msgstr "隐藏菜单方法，地址栏输入例："
-
-msgid "After the hidden to the display, input example in the address bar:"
-msgstr "当你隐藏后想再次显示，地址栏输入例："
-
 msgid "The MTProto protocol must be 32 characters and can only contain characters from 0 to 9 and a to f."
 msgstr "MTProto 协议必须为 32 个字符，仅可包含 0 到 9 和 a 到 f 之间的字符。"
+
+msgid "Destination protocol"
+msgstr "目标协议"
+
+msgid "Destination address"
+msgstr "目标地址"
+
+msgid "Destination port"
+msgstr "目标端口"
 
 msgid "Whether to receive PROXY protocol, when this node want to be fallback or forwarded by proxy, it must be enable, otherwise it cannot be used."
 msgstr "是否接收 PROXY protocol，当该节点要被回落或被代理转发时，必须启用，否则不能使用。"
@@ -1176,6 +1209,9 @@ msgstr "日志"
 
 msgid "Log"
 msgstr "日志"
+
+msgid "%s Node Log Close"
+msgstr "%s 节点日志关闭"
 
 msgid "Log Level"
 msgstr "日志等级"

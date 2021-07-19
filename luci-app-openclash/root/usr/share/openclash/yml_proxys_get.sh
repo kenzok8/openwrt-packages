@@ -1,18 +1,25 @@
 #!/bin/bash
 . /lib/functions.sh
-. /usr/share/openclash/openclash_ps.sh
 . /usr/share/openclash/ruby.sh
+. /usr/share/openclash/log.sh
 
-status=$(unify_ps_status "yml_proxys_get.sh")
-[ "$status" -gt "3" ] && exit 0
+set_lock() {
+   exec 875>"/tmp/lock/openclash_proxies_get.lock" 2>/dev/null
+   flock -x 875 2>/dev/null
+}
 
-START_LOG="/tmp/openclash_start.log"
+del_lock() {
+   flock -u 875 2>/dev/null
+   rm -rf "/tmp/lock/openclash_proxies_get.lock"
+}
+
 CONFIG_FILE=$(uci get openclash.config.config_path 2>/dev/null)
 CONFIG_NAME=$(echo "$CONFIG_FILE" |awk -F '/' '{print $5}' 2>/dev/null)
 UPDATE_CONFIG_FILE=$(uci get openclash.config.config_update_path 2>/dev/null)
 UPDATE_CONFIG_NAME=$(echo "$UPDATE_CONFIG_FILE" |awk -F '/' '{print $5}' 2>/dev/null)
 LOGTIME=$(date "+%Y-%m-%d %H:%M:%S")
 LOG_FILE="/tmp/openclash.log"
+set_lock
 
 if [ ! -z "$UPDATE_CONFIG_FILE" ]; then
    CONFIG_FILE="$UPDATE_CONFIG_FILE"
@@ -32,6 +39,7 @@ fi
 BACKUP_FILE="/etc/openclash/backup/$(echo "$CONFIG_FILE" |awk -F '/' '{print $5}' 2>/dev/null)"
 
 if [ ! -s "$CONFIG_FILE" ] && [ ! -s "$BACKUP_FILE" ]; then
+   del_lock
    exit 0
 elif [ ! -s "$CONFIG_FILE" ] && [ -s "$BACKUP_FILE" ]; then
    mv "$BACKUP_FILE" "$CONFIG_FILE"
@@ -58,9 +66,9 @@ provider_count=0
 group_hash=$(ruby_read "$CONFIG_FILE" ".select {|x| 'proxy-groups' == x}")
 
 if [ -z "$num" ] && [ -z "$provider_num" ]; then
-   echo "配置文件校验失败，请检查配置文件后重试！" >$START_LOG
-   echo "${LOGTIME} Error: Unable To Parse Config File, Please Check And Try Again!" >> $LOG_FILE
+   LOG_OUT "Error: Unable To Parse Config File, Please Check And Try Again!"
    sleep 3
+   del_lock
    exit 0
 fi
 
@@ -110,7 +118,7 @@ else
    config_group_exist=0
 fi
 
-echo "开始更新【$CONFIG_NAME】的代理集配置..." >$START_LOG
+LOG_OUT "Start Getting【$CONFIG_NAME】Proxy-providers Setting..."
 
 yml_provider_name_get()
 {
@@ -151,7 +159,7 @@ do
       continue
    fi
    
-   echo "正在读取【$CONFIG_NAME】-【$provider_name】代理集配置..." >$START_LOG
+   LOG_OUT "Start Getting【$CONFIG_NAME - $provider_name】Proxy-provider Setting..."
 
    #代理集存在时获取代理集编号
    provider_nums=$(grep -Fw "$provider_name" "$match_provider" 2>/dev/null|awk -F '.' '{print $1}')
@@ -280,7 +288,7 @@ done 2>/dev/null
 
 #删除订阅中已不存在的代理集
 if [ "$servers_if_update" = "1" ]; then
-     echo "删除【$CONFIG_NAME】订阅中已不存在的代理集..." >$START_LOG
+     LOG_OUT "Deleting【$CONFIG_NAME】Proxy-providers That no Longer Exists in Subscription"
      sed -i '/#match#/d' "$match_provider" 2>/dev/null
      cat $match_provider 2>/dev/null|awk -F '.' '{print $1}' |sort -rn |while read line
      do
@@ -302,35 +310,6 @@ yml_servers_name_get()
       echo "$server_num.$name" >>"$match_servers"
    }
    server_num=$(( $server_num + 1 ))
-}
-
-server_key_get()
-{
-   local section="$1"
-   config_get_bool "enabled" "$section" "enabled" "1"
-
-   if [ "$enabled" = "0" ]; then
-      return
-   fi
-   
-   config_get "name" "$section" "name" ""
-   config_get "keyword" "$section" "keyword" ""
-   config_get "ex_keyword" "$section" "ex_keyword" ""
-   
-   if [ -z "$name" ]; then
-      name="config"
-   fi
-   
-   if [ ! -z "$keyword" ] && [ "$name.yaml" == "$CONFIG_NAME" ]; then
-      config_keyword="$keyword"
-      key_section="$1"
-   fi
-   
-   if [ ! -z "$ex_keyword" ] && [ "$name.yaml" == "$CONFIG_NAME" ]; then
-      config_ex_keyword="$ex_keyword"
-      key_section="$1"
-   fi
-
 }
 
 server_key_match()
@@ -410,7 +389,7 @@ cfg_new_servers_groups_get()
    ${uci_add}groups="${1}"
 }
 	   
-echo "开始更新【$CONFIG_NAME】的服务器节点配置..." >$START_LOG
+LOG_OUT "Start Getting【$CONFIG_NAME】Proxies Setting..."
 
 [ "$servers_update" -eq 1 ] && {
 echo "" >"$match_servers"
@@ -429,32 +408,6 @@ do
       continue
    fi
    
-   config_load "openclash"
-   config_foreach server_key_get "config_subscribe"
-   
-   #匹配关键字订阅节点
-   if [ "$servers_if_update" = "1" ]; then
-      if [ -n "$config_keyword" ] || [ -n "$config_ex_keyword" ]; then
-         if [ -n "$config_keyword" ] && [ -z "$config_ex_keyword" ]; then
-            match="false"
-            config_list_foreach "$key_section" "keyword" server_key_match "$server_name"
-         elif [ -z "$config_keyword" ] && [ ! -z "$config_ex_keyword" ]; then
-         	  match="true"
-            config_list_foreach "$key_section" "ex_keyword" server_key_exmatch "$server_name"
-         elif [ ! -z "$config_keyword" ] && [ ! -z "$config_ex_keyword" ]; then
-            match="false"
-            config_list_foreach "$key_section" "keyword" server_key_match "$server_name"
-            config_list_foreach "$key_section" "ex_keyword" server_key_exmatch "$server_name"
-         fi
-
-         if [ "$match" = "false" ]; then
-            echo "跳过【$server_name】服务器节点..." >$START_LOG
-            let count++
-            continue
-         fi
-      fi
-   fi
-   
 #节点存在时获取节点编号
    server_num=$(grep -Fw "$server_name" "$match_servers" 2>/dev/null|awk -F '.' '{print $1}')
    if [ "$servers_update" -eq 1 ] && [ -n "$server_num" ]; then
@@ -464,7 +417,7 @@ do
    #type
    server_type=$(ruby_read_hash "$proxy_hash" "['proxies'][$count]['type']")
 
-   echo "正在读取【$CONFIG_NAME】-【$server_type】-【$server_name】服务器节点配置..." > "$START_LOG"
+   LOG_OUT "Start Getting【$CONFIG_NAME - $server_type - $server_name】Proxy Setting..."
 
    if [ "$servers_update" -eq 1 ] && [ ! -z "$server_num" ]; then
 #更新已有节点
@@ -727,6 +680,15 @@ do
                   system(h2_path)
                end
             end
+         elsif Value['proxies'][$count]['network'].to_s == 'grpc'
+            #grpc-service-name
+            system '${uci_set}obfs_vmess=grpc'
+            if Value['proxies'][$count].key?('grpc-opts') then
+               if Value['proxies'][$count]['grpc-opts'].key?('grpc-service-name') then
+                  grpc_service_name = '${uci_set}grpc_service_name=\"' + Value['proxies'][$count]['grpc-opts']['grpc-service-name'].to_s + '\"'
+                  system(grpc_service_name)
+               end
+            end
          else
             system '${uci_set}obfs_vmess=none'
          end
@@ -816,6 +778,16 @@ do
       }.join
       
       Thread.new{
+      #grpc-service-name
+      if Value['proxies'][$count].key?('grpc-opts') then
+         if Value['proxies'][$count]['grpc-opts'].key?('grpc-service-name') then
+            grpc_service_name = '${uci_set}grpc_service_name=\"' + Value['proxies'][$count]['grpc-opts']['grpc-service-name'].to_s + '\"'
+            system(grpc_service_name)
+         end
+      end
+      }.join
+      
+      Thread.new{
       #skip-cert-verify
       if Value['proxies'][$count].key?('skip-cert-verify') then
          skip_cert_verify = '${uci_set}skip_cert_verify=' + Value['proxies'][$count]['skip-cert-verify'].to_s
@@ -872,7 +844,7 @@ done 2>/dev/null
 
 #删除订阅中已不存在的节点
 if [ "$servers_if_update" = "1" ]; then
-     echo "删除【$CONFIG_NAME】订阅中已不存在的节点..." >$START_LOG
+     LOG_OUT "Deleting【$CONFIG_NAME】Proxies That no Longer Exists in Subscription"
      sed -i '/#match#/d' "$match_servers" 2>/dev/null
      cat $match_servers |awk -F '.' '{print $1}' |sort -rn |while read -r line
      do
@@ -889,9 +861,10 @@ uci set openclash.config.servers_if_update=0
 wait
 uci commit openclash
 /usr/share/openclash/cfg_servers_address_fake_filter.sh
-echo "配置文件【$CONFIG_NAME】读取完成！" >$START_LOG
+LOG_OUT "Config File【$CONFIG_NAME】Read Successful!"
 sleep 3
-echo "" >$START_LOG
+SLOG_CLEAN
 rm -rf /tmp/match_servers.list 2>/dev/null
 rm -rf /tmp/match_provider.list 2>/dev/null
 rm -rf /tmp/yaml_other_group.yaml 2>/dev/null
+del_lock

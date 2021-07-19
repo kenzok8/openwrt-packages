@@ -94,6 +94,11 @@ s = m:section(NamedSection, sid, "servers")
 s.anonymous = true
 s.addremove   = false
 
+o = s:option(DummyValue, "server_url", "SS/SSR/VMESS/TROJAN URL")
+o.rawhtml = true
+o.template = "openclash/server_url"
+o.value = sid
+
 o = s:option(ListValue, "config", translate("Config File"))
 o:value("all", translate("Use For All Config File"))
 local e,a={}
@@ -123,7 +128,7 @@ o.rmempty = false
 
 o = s:option(Value, "server", translate("Server Address"))
 o.datatype = "host"
-o.rmempty = false
+o.rmempty = true
 
 o = s:option(Value, "port", translate("Server Port"))
 o.datatype = "port"
@@ -220,10 +225,12 @@ o:value("none")
 o:value("websocket", translate("websocket (ws)"))
 o:value("http", translate("http"))
 o:value("h2", translate("h2"))
+o:value("grpc", translate("grpc"))
 o:depends("type", "vmess")
 
 o = s:option(Value, "host", translate("obfs-hosts"))
 o.datatype = "host"
+o.placeholder = translate("example.com")
 o.rmempty = true
 o:depends("obfs", "tls")
 o:depends("obfs", "http")
@@ -239,6 +246,7 @@ o:depends("obfs_vmess", "websocket")
 
 o = s:option(DynamicList, "h2_host", translate("host"))
 o.rmempty = true
+o.placeholder = translate("http.example.com")
 o.datatype = "host"
 o:depends("obfs_vmess", "h2")
 
@@ -267,6 +275,7 @@ o:value("false")
 o:depends("obfs", "websocket")
 o:depends("obfs_vmess", "none")
 o:depends("obfs_vmess", "websocket")
+o:depends("obfs_vmess", "grpc")
 o:depends("type", "socks5")
 o:depends("type", "http")
 o:depends("type", "trojan")
@@ -281,14 +290,16 @@ o:depends("obfs", "websocket")
 o:depends("obfs_vmess", "none")
 o:depends("obfs_vmess", "websocket")
 o:depends("obfs_vmess", "http")
+o:depends("obfs_vmess", "grpc")
 o:depends("type", "socks5")
 o:depends("type", "http")
 
-o = s:option(Value, "servername", translate("sni"))
+o = s:option(Value, "servername", translate("servername"))
 o.rmempty = true
 o.datatype = "host"
 o.placeholder = translate("example.com")
 o:depends("obfs_vmess", "websocket")
+o:depends("obfs_vmess", "grpc")
 
 o = s:option(Value, "keep_alive", translate("keep-alive"))
 o.rmempty = true
@@ -332,6 +343,14 @@ o:value("h2")
 o:value("http/1.1")
 o:depends("type", "trojan")
 
+-- [[ grpc ]]--
+o = s:option(Value, "grpc_service_name", translate("grpc-service-name"))
+o.rmempty = true
+o.datatype = "host"
+o.placeholder = translate("example")
+o:depends("type", "trojan")
+o:depends("obfs_vmess", "grpc")
+
 o = s:option(DynamicList, "groups", translate("Proxy Group"))
 o.description = font_red..bold_on..translate("No Need Set when Config Create, The added Proxy Groups Must Exist")..bold_off..font_off
 o.rmempty = true
@@ -347,7 +366,7 @@ local t = {
 }
 a = m:section(Table, t)
 
-o = a:option(Button,"Commit")
+o = a:option(Button,"Commit", " ")
 o.inputtitle = translate("Commit Configurations")
 o.inputstyle = "apply"
 o.write = function()
@@ -356,11 +375,11 @@ o.write = function()
    luci.http.redirect(m.redirect)
 end
 
-o = a:option(Button,"Back")
+o = a:option(Button,"Back", " ")
 o.inputtitle = translate("Back Configurations")
 o.inputstyle = "reset"
 o.write = function()
-   m.uci:revert(openclash)
+   m.uci:revert(openclash, sid)
    luci.http.redirect(m.redirect)
 end
 

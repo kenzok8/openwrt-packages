@@ -35,13 +35,13 @@ s.addremove   = false
 
 ---- name
 o = s:option(Value, "name", translate("Config Alias"))
-o.description = font_red..bold_on..translate("(Name For Distinguishing)")..bold_off..font_off
+o.description = font_red..bold_on..translate("Name For Distinguishing")..bold_off..font_off
 o.placeholder = translate("config")
 o.rmempty = true
 
 ---- address
 o = s:option(Value, "address", translate("Subscribe Address"))
-o.description = font_red..bold_on..translate("(Not Null)")..bold_off..font_off
+o.description = font_red..bold_on..translate("Not Null")..bold_off..font_off
 o.placeholder = translate("Not Null")
 o.datatype = "or(host, string)"
 o.rmempty = false
@@ -50,6 +50,19 @@ o.rmempty = false
 o = s:option(Flag, "sub_convert", translate("Subscribe Convert Online"))
 o.description = translate("Convert Subscribe Online With Template, Mix Proxies and Keep Settings options Will Not Effect")
 o.default=0
+
+---- Convert Address
+o = s:option(Value, "convert_address", translate("Convert Address"))
+o.rmempty     = true
+o.description = font_red..bold_on..translate("Note: There is A Risk of Privacy Leakage in Online Convert")..bold_off..font_off
+o:depends("sub_convert", "1")
+o:value("https://api.dler.io/sub", translate("api.dler.io")..translate("(Default)"))
+o:value("https://subcon.dlj.tf/sub", translate("subcon.dlj.tf")..translate("(Default)"))
+o:value("https://subconverter-web.now.sh/sub", translate("subconverter-web.now.sh"))
+o:value("https://subconverter.herokuapp.com/sub", translate("subconverter.herokuapp.com"))
+o:value("https://sub.id9.cc/sub", translate("sub.id9.cc"))
+o:value("https://api.wcc.best/sub", translate("api.wcc.best"))
+o.default = "https://api.dler.io/sub"
 
 ---- Template
 o = s:option(ListValue, "template", translate("Template Name"))
@@ -113,20 +126,28 @@ o:depends("sub_convert", "1")
 
 ---- key
 o = s:option(DynamicList, "keyword", font_red..bold_on..translate("Keyword Match")..bold_off..font_off)
-o.description = font_red..bold_on..translate("(eg: hk or tw&bgp)")..bold_off..font_off
+o.description = font_red..bold_on..translate("eg: hk or tw&bgp")..bold_off..font_off
 o.rmempty = true
 
 ---- exkey
 o = s:option(DynamicList, "ex_keyword", font_red..bold_on..translate("Exclude Keyword Match")..bold_off..font_off)
-o.description = font_red..bold_on..translate("(eg: hk or tw&bgp)")..bold_off..font_off
+o.description = font_red..bold_on..translate("eg: hk or tw&bgp")..bold_off..font_off
 o.rmempty = true
+
+---- de_exkey
+o = s:option(MultiValue, "de_ex_keyword", font_red..bold_on..translate("Exclude Keyword Match Default")..bold_off..font_off)
+o.rmempty = true
+o:value("过期时间")
+o:value("剩余流量")
+o:value("TG群")
+o:value("官网")
 
 local t = {
     {Commit, Back}
 }
 a = m:section(Table, t)
 
-o = a:option(Button,"Commit")
+o = a:option(Button,"Commit", " ")
 o.inputtitle = translate("Commit Configurations")
 o.inputstyle = "apply"
 o.write = function()
@@ -134,11 +155,11 @@ o.write = function()
    luci.http.redirect(m.redirect)
 end
 
-o = a:option(Button,"Back")
+o = a:option(Button,"Back", " ")
 o.inputtitle = translate("Back Configurations")
 o.inputstyle = "reset"
 o.write = function()
-   m.uci:revert(openclash)
+   m.uci:revert(openclash, sid)
    luci.http.redirect(m.redirect)
 end
 

@@ -1,6 +1,7 @@
 #!/bin/sh
 . /lib/functions.sh
 . /usr/share/openclash/ruby.sh
+. /usr/share/openclash/log.sh
 
 /usr/share/openclash/yml_groups_name_get.sh
 LOGTIME=$(date "+%Y-%m-%d %H:%M:%S")
@@ -63,17 +64,34 @@ yml_other_set()
    puts '${LOGTIME} Set Custom Rules Error: ' + e.message
    end
    begin
-   if $5 == 1 then
+   if $5 == 1 and Value.has_key?('rules') and not Value['rules'].to_a.empty? then
       Value['rules']=Value['rules'].to_a.insert(0,
-      'DOMAIN-KEYWORD,tracker,DIRECT',
-      'DOMAIN-KEYWORD,announce.php?passkey=,DIRECT',
-      'DOMAIN-KEYWORD,torrent,DIRECT',
-      'DOMAIN-KEYWORD,peer_id=,DIRECT',
-      'DOMAIN-KEYWORD,info_hash,DIRECT',
-      'DOMAIN-KEYWORD,get_peers,DIRECT',
-      'DOMAIN-KEYWORD,find_node,DIRECT',
-      'DOMAIN-KEYWORD,BitTorrent,DIRECT',
-      'DOMAIN-KEYWORD,announce_peer,DIRECT'
+      'DOMAIN-SUFFIX,awesome-hd.me,DIRECT',
+      'DOMAIN-SUFFIX,broadcasthe.net,DIRECT',
+      'DOMAIN-SUFFIX,chdbits.co,DIRECT',
+      'DOMAIN-SUFFIX,classix-unlimited.co.uk,DIRECT',
+      'DOMAIN-SUFFIX,empornium.me,DIRECT',
+      'DOMAIN-SUFFIX,gazellegames.net,DIRECT',
+      'DOMAIN-SUFFIX,hdchina.org,DIRECT',
+      'DOMAIN-SUFFIX,hdsky.me,DIRECT',
+      'DOMAIN-SUFFIX,icetorrent.org,DIRECT',
+      'DOMAIN-SUFFIX,jpopsuki.eu,DIRECT',
+      'DOMAIN-SUFFIX,icetorrent.org,DIRECT',
+      'DOMAIN-SUFFIX,keepfrds.com,DIRECT',
+      'DOMAIN-SUFFIX,madsrevolution.net,DIRECT',
+      'DOMAIN-SUFFIX,m-team.cc,DIRECT',
+      'DOMAIN-SUFFIX,nanyangpt.com,DIRECT',
+      'DOMAIN-SUFFIX,ncore.cc,DIRECT',
+      'DOMAIN-SUFFIX,open.cd,DIRECT',
+      'DOMAIN-SUFFIX,ourbits.club,DIRECT',
+      'DOMAIN-SUFFIX,passthepopcorn.me,DIRECT',
+      'DOMAIN-SUFFIX,privatehd.to,DIRECT',
+      'DOMAIN-SUFFIX,redacted.ch,DIRECT',
+      'DOMAIN-SUFFIX,springsunday.net,DIRECT',
+      'DOMAIN-SUFFIX,tjupt.org,DIRECT',
+      'DOMAIN-SUFFIX,totheglory.im,DIRECT',
+      'DOMAIN-KEYWORD,announce,DIRECT',
+      'DOMAIN-KEYWORD,torrent,DIRECT'
       )
       begin
       match_group=Value['rules'].grep(/(MATCH|FINAL)/)[0]
@@ -93,6 +111,8 @@ yml_other_set()
       puts '${LOGTIME} Set BT/P2P Common Port Rules Error: ' + e.message
       end
       Value['rules'].to_a.collect!{|x|x.to_s.gsub(/(^MATCH.*|^FINAL.*)/, 'MATCH,DIRECT')}
+   else
+      puts '${LOGTIME} Because of No Rules Field, Stop Setting BT/P2P DIRECT Rules!'
    end;
    rescue Exception => e
    puts '${LOGTIME} Set BT/P2P DIRECT Rules Error: ' + e.message
@@ -126,7 +146,7 @@ yml_other_rules_get()
    fi
    
    if [ -n "$rule_name" ]; then
-      echo "${LOGTIME} Warrning: Multiple Other-Rules-Configurations Enabled, Ignore..." >> $LOG_FILE
+      LOG_OUT "Warrning: Multiple Other-Rules-Configurations Enabled, Ignore..."
       return
    fi
    
@@ -135,6 +155,10 @@ yml_other_rules_get()
    config_get "AsianTV" "$section" "AsianTV" ""
    config_get "Proxy" "$section" "Proxy" ""
    config_get "Youtube" "$section" "Youtube" ""
+   config_get "Bilibili" "$section" "Bilibili" ""
+   config_get "Bahamut" "$section" "Bahamut" ""
+   config_get "HBO" "$section" "HBO" ""
+   config_get "Pornhub" "$section" "Pornhub" ""
    config_get "Apple" "$section" "Apple" ""
    config_get "Scholar" "$section" "Scholar" ""
    config_get "Netflix" "$section" "Netflix" ""
@@ -161,7 +185,7 @@ if [ "$2" != "0" ]; then
    elif [ "$rule_name" = "ConnersHua_return" ]; then
 	    if [ -z "$(grep -F "$Proxy" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Others" /tmp/Proxy_Group)" ];then
-         echo "${1} Warning: Because of The Different Porxy-Group's Name, Stop Setting The Other Rules!" >> $LOG_FILE
+         LOG_OUT "Warning: Because of The Different Porxy-Group's Name, Stop Setting The Other Rules!"
          yml_other_set "$1" "$2" "$3" "$4" "$5"
          exit 0
 	    fi
@@ -171,7 +195,7 @@ if [ "$2" != "0" ]; then
 	 || [ -z "$(grep -F "$Proxy" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Others" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Domestic" /tmp/Proxy_Group)" ]; then
-         echo "${1} Warning: Because of The Different Porxy-Group's Name, Stop Setting The Other Rules!" >> $LOG_FILE
+         LOG_OUT "Warning: Because of The Different Porxy-Group's Name, Stop Setting The Other Rules!"
          yml_other_set "$1" "$2" "$3" "$4" "$5"
          exit 0
        fi
@@ -180,6 +204,10 @@ if [ "$2" != "0" ]; then
 	 || [ -z "$(grep -F "$AsianTV" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Proxy" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Youtube" /tmp/Proxy_Group)" ]\
+	 || [ -z "$(grep -F "$Bilibili" /tmp/Proxy_Group)" ]\
+	 || [ -z "$(grep -F "$Bahamut" /tmp/Proxy_Group)" ]\
+	 || [ -z "$(grep -F "$HBO" /tmp/Proxy_Group)" ]\
+	 || [ -z "$(grep -F "$Pornhub" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Apple" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Scholar" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Netflix" /tmp/Proxy_Group)" ]\
@@ -193,22 +221,22 @@ if [ "$2" != "0" ]; then
    || [ -z "$(grep -F "$PayPal" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Others" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Domestic" /tmp/Proxy_Group)" ]; then
-         echo "${1} Warning: Because of The Different Porxy-Group's Name, Stop Setting The Other Rules!" >> $LOG_FILE
+         LOG_OUT "Warning: Because of The Different Porxy-Group's Name, Stop Setting The Other Rules!"
          yml_other_set "$1" "$2" "$3" "$4" "$5"
          exit 0
        fi
    fi
    if [ -z "$Proxy" ]; then
-      echo "${1} Error: Missing Porxy-Group's Name, Stop Setting The Other Rules!" >> $LOG_FILE
+      LOG_OUT "Error: Missing Porxy-Group's Name, Stop Setting The Other Rules!"
       yml_other_set "$1" "$2" "$3" "$4" "$5"
       exit 0
    else
        #删除原有的部分，防止冲突
        if [ -n "$(ruby_read "$4" "['script']")" ]; then
-          ruby_edit "$4" "['script'].clear"
+          ruby_edit "$4" ".delete('script')"
        fi
        if [ -n "$(ruby_read "$4" "['rules']")" ]; then
-          ruby_edit "$4" "['rules'].clear"
+          ruby_edit "$4" ".delete('rules')"
        fi
        if [ "$rule_name" = "lhie1" ]; then
        	    ruby -ryaml -E UTF-8 -e "
@@ -225,7 +253,11 @@ if [ "$2" != "0" ]; then
        	    Value['script']=Value_1['script'];
        	    Value['rules']=Value_1['rules'];
        	    Value['rules'].to_a.collect!{|x|
-       	    x.to_s.gsub(/,GlobalTV$/, ',$GlobalTV#d')
+       	    x.to_s.gsub(/,Bilibili,AsianTV$/, ',Bilibili,$Bilibili#d')
+       	    .gsub(/,Bahamut,GlobalTV$/, ',Bahamut,$Bahamut#d')
+       	    .gsub(/,HBO,GlobalTV$/, ',HBO,$HBO#d')
+       	    .gsub(/,Pornhub,GlobalTV$/, ',Pornhub,$Pornhub#d')
+       	    .gsub(/,GlobalTV$/, ',$GlobalTV#d')
        	    .gsub(/,AsianTV$/, ',$AsianTV#d')
        	    .gsub(/,Proxy$/, ',$Proxy#d')
        	    .gsub(/,YouTube$/, ',$Youtube#d')
@@ -244,7 +276,11 @@ if [ "$2" != "0" ]; then
        	    .gsub(/,Others$/, ',$Others#d')
        	    .gsub(/#d/, '')
        	    };
-       	    Value['script']['code'].to_s.gsub!(/: \"GlobalTV\"/,': \"$GlobalTV#d\"')
+       	    Value['script']['code'].to_s.gsub!(/\"Bilibili\": \"AsianTV\"/,'\"Bilibili\": \"$Bilibili#d\"')
+       	    .gsub!(/\"Bahamut\": \"GlobalTV\"/,'\"Bahamut\": \"$Bahamut#d\"')
+       	    .gsub!(/\"HBO\": \"GlobalTV\"/,'\"HBO\": \"$HBO#d\"')
+       	    .gsub!(/\"Pornhub\": \"GlobalTV\"/,'\"Pornhub\": \"$Pornhub#d\"')
+       	    .gsub!(/: \"GlobalTV\"/,': \"$GlobalTV#d\"')
        	    .gsub!(/: \"AsianTV\"/,': \"$AsianTV#d\"')
        	    .gsub!(/: \"Proxy\"/,': \"$Proxy#d\"')
        	    .gsub!(/: \"YouTube\"/,': \"$Youtube#d\"')

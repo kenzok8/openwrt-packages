@@ -54,11 +54,6 @@ s = m:section(NamedSection, arg[1], "user", "")
 s.addremove = false
 s.dynamic = false
 
-share = s:option(DummyValue, "passwall_server", translate("Share Current"))
-share.rawhtml  = true
-share.template = "passwall/node_list/link_share_man"
-share.value = arg[1]
-
 enable = s:option(Flag, "enable", translate("Enable"))
 enable.default = "1"
 enable.rmempty = false
@@ -103,6 +98,7 @@ protocol:value("socks", "Socks")
 protocol:value("shadowsocks", "Shadowsocks")
 protocol:value("trojan", "Trojan")
 protocol:value("mtproto", "MTProto")
+protocol:value("dokodemo-door", "dokodemo-door")
 protocol:depends("type", "Xray")
 
 -- Brook协议
@@ -120,7 +116,7 @@ end
 brook_tls = s:option(Flag, "brook_tls", translate("Use TLS"))
 brook_tls:depends("brook_protocol", "wsserver")
 
-port = s:option(Value, "port", translate("Port"))
+port = s:option(Value, "port", translate("Listen Port"))
 port.datatype = "port"
 port.rmempty = false
 
@@ -140,11 +136,11 @@ auth:depends({ type = "Xray", protocol = "socks" })
 auth:depends({ type = "Xray", protocol = "http" })
 
 username = s:option(Value, "username", translate("Username"))
-username:depends("auth", "1")
+username:depends("auth", true)
 
 password = s:option(Value, "password", translate("Password"))
 password.password = true
-password:depends("auth", "1")
+password:depends("auth", true)
 password:depends("type", "SS")
 password:depends("type", "SSR")
 password:depends("type", "Brook")
@@ -159,6 +155,19 @@ end
 function mtproto_password.write(self, section, value)
 	m:set(section, "password", value)
 end
+
+d_protocol = s:option(ListValue, "d_protocol", translate("Destination protocol"))
+d_protocol:value("tcp", "TCP")
+d_protocol:value("udp", "UDP")
+d_protocol:value("tcp,udp", "TCP,UDP")
+d_protocol:depends({ type = "Xray", protocol = "dokodemo-door" })
+
+d_address = s:option(Value, "d_address", translate("Destination address"))
+d_address:depends({ type = "Xray", protocol = "dokodemo-door" })
+
+d_port = s:option(Value, "d_port", translate("Destination port"))
+d_port.datatype = "port"
+d_port:depends({ type = "Xray", protocol = "dokodemo-door" })
 
 decryption = s:option(Value, "decryption", translate("Encrypt Method"))
 decryption.default = "none"
@@ -275,8 +284,8 @@ tls:depends("type", "Trojan-Go")
 
 xtls = s:option(Flag, "xtls", translate("XTLS"))
 xtls.default = 0
-xtls:depends({ type = "Xray", protocol = "vless", tls = "1" })
-xtls:depends({ type = "Xray", protocol = "trojan", tls = "1" })
+xtls:depends({ type = "Xray", protocol = "vless", tls = true })
+xtls:depends({ type = "Xray", protocol = "trojan", tls = true })
 
 flow = s:option(Value, "flow", translate("flow"))
 flow.default = "xtls-rprx-direct"
@@ -284,18 +293,16 @@ flow:value("xtls-rprx-origin")
 flow:value("xtls-rprx-origin-udp443")
 flow:value("xtls-rprx-direct")
 flow:value("xtls-rprx-direct-udp443")
-flow:depends("xtls", "1")
+flow:depends("xtls", true)
+
+alpn = s:option(ListValue, "alpn", translate("alpn"))
+alpn.default = "h2,http/1.1"
+alpn:value("h2,http/1.1")
+alpn:value("h2")
+alpn:value("http/1.1")
+alpn:depends({ type = "Xray", tls = true })
 
 -- [[ TLS部分 ]] --
-
-tls_allowInsecure = s:option(Flag, "tls_allowInsecure", translate("allowInsecure"), translate("Whether unsafe connections are allowed. When checked, Certificate validation will be skipped."))
-tls_allowInsecure.default = "0"
-tls_allowInsecure:depends({ type = "Trojan", tls = "1" })
-tls_allowInsecure:depends({ type = "Trojan-Plus", tls = "1" })
-tls_allowInsecure:depends({ type = "Trojan-Go", tls = "1" })
-
-tls_serverName = s:option(Value, "tls_serverName", translate("Domain"))
-tls_serverName:depends("tls", "1")
 
 tls_certificateFile = s:option(FileUpload, "tls_certificateFile", translate("Public key absolute path"), translate("as:") .. "/etc/ssl/fullchain.pem")
 tls_certificateFile.validate = function(self, value, t)
@@ -309,7 +316,7 @@ tls_certificateFile.validate = function(self, value, t)
     return nil
 end
 tls_certificateFile.default = "/etc/config/ssl/" .. arg[1] .. ".pem"
-tls_certificateFile:depends("tls", "1")
+tls_certificateFile:depends("tls", true)
 
 tls_keyFile = s:option(FileUpload, "tls_keyFile", translate("Private key absolute path"), translate("as:") .. "/etc/ssl/private.key")
 tls_keyFile.validate = function(self, value, t)
@@ -323,13 +330,13 @@ tls_keyFile.validate = function(self, value, t)
     return nil
 end
 tls_keyFile.default = "/etc/config/ssl/" .. arg[1] .. ".key"
-tls_keyFile:depends("tls", "1")
+tls_keyFile:depends("tls", true)
 
 tls_sessionTicket = s:option(Flag, "tls_sessionTicket", translate("Session Ticket"))
 tls_sessionTicket.default = "0"
-tls_sessionTicket:depends({ type = "Trojan", tls = "1" })
-tls_sessionTicket:depends({ type = "Trojan-Plus", tls = "1" })
-tls_sessionTicket:depends({ type = "Trojan-Go", tls = "1" })
+tls_sessionTicket:depends({ type = "Trojan", tls = true })
+tls_sessionTicket:depends({ type = "Trojan-Plus", tls = true })
+tls_sessionTicket:depends({ type = "Trojan-Go", tls = true })
 
 transport = s:option(ListValue, "transport", translate("Transport"))
 transport:value("tcp", "TCP")
@@ -338,6 +345,7 @@ transport:value("ws", "WebSocket")
 transport:value("h2", "HTTP/2")
 transport:value("ds", "DomainSocket")
 transport:value("quic", "QUIC")
+transport:value("grpc", "gRPC")
 transport:depends({ type = "Xray", protocol = "vmess" })
 transport:depends({ type = "Xray", protocol = "vless" })
 transport:depends({ type = "Xray", protocol = "socks" })
@@ -349,7 +357,7 @@ trojan_transport:value("original", "Original")
 trojan_transport:value("ws", "WebSocket")
 trojan_transport:value("h2", "HTTP/2")
 trojan_transport:value("h2+ws", "HTTP/2 & WebSocket")
-trojan_transport.default = "ws"
+trojan_transport.default = "original"
 trojan_transport:depends("type", "Trojan-Go")
 
 trojan_plugin = s:option(ListValue, "plugin_type", translate("Plugin Type"))
@@ -357,7 +365,7 @@ trojan_plugin:value("plaintext", "Plain Text")
 trojan_plugin:value("shadowsocks", "ShadowSocks")
 trojan_plugin:value("other", "Other")
 trojan_plugin.default = "plaintext"
-trojan_plugin:depends({ tls = "0", trojan_transport = "original" })
+trojan_plugin:depends({ tls = false, trojan_transport = "original" })
 
 trojan_plugin_cmd = s:option(Value, "plugin_cmd", translate("Plugin Binary"))
 trojan_plugin_cmd.placeholder = "eg: /usr/bin/v2ray-plugin"
@@ -473,6 +481,10 @@ quic_guise = s:option(ListValue, "quic_guise", translate("Camouflage Type"))
 for a, t in ipairs(header_type_list) do quic_guise:value(t) end
 quic_guise:depends("transport", "quic")
 
+-- [[ gRPC部分 ]]--
+grpc_serviceName = s:option(Value, "grpc_serviceName", "ServiceName")
+grpc_serviceName:depends("transport", "grpc")
+
 acceptProxyProtocol = s:option(Flag, "acceptProxyProtocol", translate("acceptProxyProtocol"), translate("Whether to receive PROXY protocol, when this node want to be fallback or forwarded by proxy, it must be enable, otherwise it cannot be used."))
 acceptProxyProtocol:depends({ type = "Xray", transport = "tcp" })
 acceptProxyProtocol:depends({ type = "Xray", transport = "ws" })
@@ -484,34 +496,34 @@ fallback:depends({ type = "Xray", protocol = "trojan", transport = "tcp" })
 
 --[[
 fallback_alpn = s:option(Value, "fallback_alpn", "Fallback alpn")
-fallback_alpn:depends("fallback", "1")
+fallback_alpn:depends("fallback", true)
 
 fallback_path = s:option(Value, "fallback_path", "Fallback path")
-fallback_path:depends("fallback", "1")
+fallback_path:depends("fallback", true)
 
 fallback_dest = s:option(Value, "fallback_dest", "Fallback dest")
-fallback_dest:depends("fallback", "1")
+fallback_dest:depends("fallback", true)
 
 fallback_xver = s:option(Value, "fallback_xver", "Fallback xver")
 fallback_xver.default = 0
-fallback_xver:depends("fallback", "1")
+fallback_xver:depends("fallback", true)
 ]]--
 
 fallback_list = s:option(DynamicList, "fallback_list", "Fallback", translate("dest,path"))
-fallback_list:depends("fallback", "1")
+fallback_list:depends("fallback", true)
 
-ss_aead = s:option(Flag, "ss_aead", translate("Shadowsocks2"))
+ss_aead = s:option(Flag, "ss_aead", translate("Shadowsocks secondary encryption"))
 ss_aead:depends("type", "Trojan-Go")
 ss_aead.default = "0"
 
 ss_aead_method = s:option(ListValue, "ss_aead_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods_ss_aead) do ss_aead_method:value(v, v) end
 ss_aead_method.default = "aead_aes_128_gcm"
-ss_aead_method:depends("ss_aead", "1")
+ss_aead_method:depends("ss_aead", true)
 
 ss_aead_pwd = s:option(Value, "ss_aead_pwd", translate("Password"))
 ss_aead_pwd.password = true
-ss_aead_pwd:depends("ss_aead", "1")
+ss_aead_pwd:depends("ss_aead", true)
 
 tcp_fast_open = s:option(Flag, "tcp_fast_open", translate("TCP Fast Open"))
 tcp_fast_open.default = "0"
@@ -543,8 +555,12 @@ bind_local:depends("type", "Xray")
 
 accept_lan = s:option(Flag, "accept_lan", translate("Accept LAN Access"), translate("When selected, it can accessed lan , this will not be safe!"))
 accept_lan.default = "0"
-accept_lan.rmempty = false
-accept_lan:depends("type", "Xray")
+accept_lan:depends({ type = "Xray", protocol = "vmess" })
+accept_lan:depends({ type = "Xray", protocol = "vless" })
+accept_lan:depends({ type = "Xray", protocol = "http" })
+accept_lan:depends({ type = "Xray", protocol = "socks" })
+accept_lan:depends({ type = "Xray", protocol = "shadowsocks" })
+accept_lan:depends({ type = "Xray", protocol = "trojan" })
 
 local nodes_table = {}
 for k, e in ipairs(api.get_valid_nodes()) do
@@ -582,7 +598,7 @@ transit_node_password.password = true
 transit_node_password:depends("transit_node", "_socks")
 transit_node_password:depends("transit_node", "_http")
 
-log = s:option(Flag, "log", translate("Enable") .. translate("Log"))
+log = s:option(Flag, "log", translate("Log"))
 log.default = "1"
 log.rmempty = false
 

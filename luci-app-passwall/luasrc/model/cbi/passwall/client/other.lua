@@ -28,21 +28,21 @@ o.rmempty = false
 ---- Automatically turn off time
 o = s:option(ListValue, "time_off", translate("Automatically turn off time"))
 o.default = nil
-o:depends("auto_on", "1")
+o:depends("auto_on", true)
 o:value(nil, translate("Disable"))
 for e = 0, 23 do o:value(e, e .. translate("oclock")) end
 
 ---- Automatically turn on time
 o = s:option(ListValue, "time_on", translate("Automatically turn on time"))
 o.default = nil
-o:depends("auto_on", "1")
+o:depends("auto_on", true)
 o:value(nil, translate("Disable"))
 for e = 0, 23 do o:value(e, e .. translate("oclock")) end
 
 ---- Automatically restart time
 o = s:option(ListValue, "time_restart", translate("Automatically restart time"))
 o.default = nil
-o:depends("auto_on", "1")
+o:depends("auto_on", true)
 o:value(nil, translate("Disable"))
 for e = 0, 23 do o:value(e, e .. translate("oclock")) end
 --]]
@@ -82,6 +82,17 @@ o = s:option(Value, "udp_redir_ports", translate("UDP Redir Ports"))
 o.default = "1:65535"
 o:value("1:65535", translate("All"))
 o:value("53", "DNS")
+
+o = s:option(Flag, "accept_icmp", translate("Hijacking ICMP (PING)"))
+o.default = 0
+
+if os.execute("lsmod | grep -i REDIRECT >/dev/null") == 0 and os.execute("lsmod | grep -i TPROXY >/dev/null") == 0 then
+    o = s:option(ListValue, "tcp_proxy_way", translate("TCP Proxy Way"))
+    o.default = "default"
+    o:value("default", translate("Default"))
+    o:value("redirect", "REDIRECT")
+    o:value("tproxy", "TPROXY")
+end
 
 --[[
 ---- Proxy IPv6

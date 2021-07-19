@@ -94,7 +94,7 @@ for t,f in ipairs(fs.glob("/etc/openclash/game_rules/*"))do
     end
   end
 end
-   
+
 o.rmempty = true
 
 ---- Proxy Group
@@ -110,7 +110,7 @@ o:value("REJECT")
 o.rmempty = true
 
 -- [[ Edit Other Rule Provider ]] --
-s = m:section(TypedSection, "rule_provider_config", translate("Other Rule Providers and Groups"))
+s = m:section(TypedSection, "rule_provider_config", translate("Other Rule Providers and Groups (Only TUN Core Support)"))
 s.anonymous = true
 s.addremove = true
 s.sortable = true
@@ -182,7 +182,7 @@ o:value("0", translate("Priority Match"))
 o:value("1", translate("Extended Match"))
 
 -- [[ Edit Custom Rule Provider ]] --
-s = m:section(TypedSection, "rule_providers", translate("Custom Rule Providers and Groups"))
+s = m:section(TypedSection, "rule_providers", translate("Custom Rule Providers and Groups (Only TUN Core Support)"))
 s.anonymous = true
 s.addremove = true
 s.sortable = true
@@ -225,14 +225,14 @@ local rm = {
 
 rmg = m:section(Table, rm)
 
-o = rmg:option(Button, "rule_mg")
+o = rmg:option(Button, "rule_mg", " ")
 o.inputtitle = translate("Game Rules Manage")
 o.inputstyle = "reload"
 o.write = function()
   HTTP.redirect(DISP.build_url("admin", "services", "openclash", "game-rules-manage"))
 end
 
-o = rmg:option(Button, "pro_mg")
+o = rmg:option(Button, "pro_mg", " ")
 o.inputtitle = translate("Other Rule Provider Manage")
 o.inputstyle = "reload"
 o.write = function()
@@ -245,14 +245,14 @@ local t = {
 
 ss = m:section(Table, t)
 
-o = ss:option(Button, "Commit") 
+o = ss:option(Button, "Commit", " ")
 o.inputtitle = translate("Commit Configurations")
 o.inputstyle = "apply"
 o.write = function()
   m.uci:commit("openclash")
 end
 
-o = ss:option(Button, "Apply")
+o = ss:option(Button, "Apply", " ")
 o.inputtitle = translate("Apply Configurations")
 o.inputstyle = "apply"
 o.write = function()

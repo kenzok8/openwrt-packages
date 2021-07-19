@@ -432,7 +432,7 @@ start_redir() {
             ;;
         v2ray | vless)
             $ucmd -config $last_config_file >/dev/null 2>&1 &
-            echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay: V2ray 已启动!" >>/tmp/vssr.log
+            echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay: $($sscmd -version | head -1) 已启动!" >>/tmp/vssr.log
             ;;
         trojan)
             $ucmd --config $last_config_file >/dev/null 2>&1 &

@@ -70,7 +70,7 @@ function get_s_token()
     local referer = 
         'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wq.jd.com/passport/LoginRedirect?state=' ..
         timestamp .. '&returnurl=https://home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport'
-    local s_token = luci.sys.exec("echo -n $(wget-ssl --header='"..Accept.."' --header='"..Accept_Language.."' --header='"..Host.."' --referer='"..referer.."' --user-agent='"..User_Agent.."' --save-cookies="..cookie.." --keep-session-cookies -q -O - '"..url.."' | sed s/[[:space:]]//g | grep -oE '\"s_token\":\"(.+?)\"' | awk -F \\\" '{print $4}')")
+    local s_token = luci.sys.exec("echo -n $(wget --header='"..Accept.."' --header='"..Accept_Language.."' --header='"..Host.."' --referer='"..referer.."' --user-agent='"..User_Agent.."' --save-cookies="..cookie.." --keep-session-cookies -q -O - '"..url.."' | sed s/[[:space:]]//g | grep -oE '\"s_token\":\"(.+?)\"' | awk -F \\\" '{print $4}')")
     return s_token
 end
 
@@ -80,7 +80,7 @@ function qrcode()
     local s_token = get_s_token()
     local url = 'https://plogin.m.jd.com/cgi-bin/m/tmauthreflogurl?s_token='..s_token..'&v='..timestamp..'&remember=true'
     local referer = 'https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wq.jd.com/passport/LoginRedirect?state=' .. timestamp .. '&returnurl=https://home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action&source=wq_passport'
-    local response = luci.sys.exec("echo -n $(wget-ssl --header='"..Accept.."' --header='"..Accept_Language.."' --header='"..Host.."' --referer='"..referer.."' --user-agent='"..User_Agent.."' --load-cookies="..cookie.." --save-cookies="..cookie.." --keep-session-cookies -q -O - '"..url.."')")
+    local response = luci.sys.exec("echo -n $(wget --header='"..Accept.."' --header='"..Accept_Language.."' --header='"..Host.."' --referer='"..referer.."' --user-agent='"..User_Agent.."' --load-cookies="..cookie.." --save-cookies="..cookie.." --keep-session-cookies -q -O - '"..url.."')")
     local token = luci.sys.exec("echo -n $(echo \'"..response.."\' | grep -oE '\"token\":\"(.+?)\"' | awk -F \\\" '{print $4}')")
     local ou_state = luci.sys.exec("echo -n $(echo \'"..response.."\' | grep -oE '\"ou_state\":(\\d+)' | awk -F : '{print $2}')")
     local okl_token = luci.sys.exec("echo -n $(cat "..cookie.." | grep okl_token | awk '{print $7}')")
@@ -96,10 +96,9 @@ end
 function check_login()
     local uci = luci.model.uci.cursor()
     local data = luci.http.formvalue()
-    local id = data.id
     local post_data = 'lang=chs&appid=300&source=wq_passport&returnurl=https://wqlogin2.jd.com/passport/LoginRedirect?state=1100399130787&returnurl=//home.m.jd.com/myJd/newhome.action?sceneval=2&ufc=&/myJd/home.action'
     local referer='https://plogin.m.jd.com/login/login?appid=300&returnurl=https://wqlogin2.jd.com/passport/LoginRedirect?state='
-    local response = luci.sys.exec("echo -n $(wget-ssl --post-data='"..post_data.."' --header='"..Accept.."' --header='"..Accept_Language.."' --header='"..Host.."' --referer='"..referer.."' --user-agent='"..User_Agent.."' --load-cookies="..cookie.." --save-cookies="..cookie.." --keep-session-cookies -q -O - '"..data.check_url.."')")
+    local response = luci.sys.exec("echo -n $(wget --post-data='"..post_data.."' --header='"..Accept.."' --header='"..Accept_Language.."' --header='"..Host.."' --referer='"..referer.."' --user-agent='"..User_Agent.."' --load-cookies="..cookie.." --save-cookies="..cookie.." --keep-session-cookies -q -O - '"..data.check_url.."')")
     local return_json = {
         error = tonumber(luci.sys.exec("echo -n $(echo \'"..response.."\' | grep -oE '\"errcode\":(\\d+)' | awk -F : '{print $2}')")),
         msg = luci.sys.exec("echo -n $(echo \'"..response.."\' | grep -oE '\"message\":\"(.+?)\"' | awk -F \\\" '{print $4}')"),
@@ -107,11 +106,7 @@ function check_login()
     if return_json.error == 0 then
         local pt_key = luci.sys.exec("echo -n $(cat "..cookie.." | grep pt_key | awk '{print $7}')")
         local pt_pin = luci.sys.exec("echo -n $(cat "..cookie.." | grep pt_pin | awk '{print $7}')")
-        local cookieStr = 'pt_key=' .. pt_key .. ';pt_pin=' .. pt_pin .. ';'
-        uci:set('jd-dailybonus', '@global[0]', id, cookieStr)
-        uci:commit('jd-dailybonus')
-        luci.sys.call('lua /usr/share/jd-dailybonus/gen_cookieset.lua')
-        return_json.cookie = cookieStr
+        return_json.cookie = 'pt_key=' .. pt_key .. ';pt_pin=' .. pt_pin .. ';'
     end
 
     luci.http.prepare_content('application/json')

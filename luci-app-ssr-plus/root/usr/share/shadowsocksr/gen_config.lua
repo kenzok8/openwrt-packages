@@ -117,14 +117,14 @@ local Xray = {
 		-- 底层传输配置
 		streamSettings = {
 			network = server.transport or "tcp",
-			security = (server.xtls == '1') and "xtls" or (server.tls == '1') and "tls" or nil,
+			security = (server.xtls == '1') and "xtls" or (server.tls == '1'or server.transport == "grpc") and "tls" or nil,
 			tlsSettings = (server.tls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
 				-- tls
 				fingerprint = server.fingerprint,
 				allowInsecure = (server.insecure == "1") and true or nil,
 				serverName = server.tls_host
 			} or nil,
-			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
+			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host)) and {
 				-- xtls
 				allowInsecure = (server.insecure == "1") and true or nil,
 				serverName = server.tls_host
@@ -169,9 +169,14 @@ local Xray = {
 				security = server.quic_security,
 				key = server.quic_key,
 				header = {type = server.quic_guise}
+			} or nil,
+			grpcSettings = (server.transport == "grpc") and {
+				-- grpc
+				serviceName = server.serviceName or "",
+				multiMode = (server.mux == "1") and true or false
 			} or nil
 		},
-		mux = (server.mux == "1" and server.xtls ~= "1") and {
+		mux = (server.mux == "1" and server.xtls ~= "1" and server.transport ~= "grpc") and {
 			-- mux
 			enabled = true,
 			concurrency = tonumber(server.concurrency)
@@ -223,6 +228,7 @@ local ss = {
 	server_port = tonumber(server.server_port),
 	local_address = "0.0.0.0",
 	local_port = tonumber(local_port),
+	mode = (proto == "tcp,udp") and "tcp_and_udp" or proto .. "_only",
 	password = server.password,
 	method = server.encrypt_method_ss,
 	timeout = tonumber(server.timeout),
@@ -239,6 +245,7 @@ end
 function config:handleIndex(index)
 	local switch = {
 		ss = function()
+			ss.protocol = socks_port
 			if server.plugin and server.plugin ~= "none" then
 				ss.plugin = server.plugin
 				ss.plugin_opts = server.plugin_opts or nil

@@ -76,6 +76,6 @@ o=s:option(DynamicList,"url",translate("Anti-AD Rules Subscribe"))
 o:value("https://cdn.jsdelivr.net/gh/privacy-protection-tools/anti-AD@master/adblock-for-dnsmasq.conf","anti-AD")
 o:value("https://small_5.coding.net/p/adbyby/d/adbyby/git/raw/master/adguard","AdGuard")
 o:value("https://small_5.coding.net/p/adbyby/d/adbyby/git/raw/master/dnsmasq.adblock","Easylistchina+Easylist")
-o:value("https://block.energized.pro/extensions/porn-lite/formats/domains.txt","Porn")
+o:value("https://block.energized.pro/extensions/porn-lite/formats/domains.txt","Anti-Porn")
 
 return m
