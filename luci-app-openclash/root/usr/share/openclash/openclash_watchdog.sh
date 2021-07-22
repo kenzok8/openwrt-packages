@@ -129,5 +129,9 @@ fi
       CFG_UPDATE_INT=$(expr "$CFG_UPDATE_INT" + 1)
    fi
 
+##dler checkin
+   /usr/share/openclash/openclash_dler_checkin.lua
+
+   SLOG_CLEAN
    sleep 60
 done 2>/dev/null

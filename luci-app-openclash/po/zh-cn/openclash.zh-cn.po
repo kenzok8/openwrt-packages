@@ -11,7 +11,7 @@ msgstr "一个运行在OpenWrt上的Clash客户端，兼容Shadowsocks、Shadows
 msgid "Global Settings(Will Modify The Config File Or Subscribe According To The Settings On This Page)"
 msgstr "全局设置（将按照本页设置自动修改配置文件和获取订阅）"
 
-msgid "Technical Support"
+msgid "Credits"
 msgstr "技术支持"
 
 msgid "Overviews"
@@ -551,9 +551,6 @@ msgstr "设置自定义Hosts，仅在Redir-Host模式下生效（不会覆盖配
 msgid "Version Update"
 msgstr "版本更新"
 
-msgid "CPU Model"
-msgstr "处理器架构"
-
 msgid "Model Not Found"
 msgstr "处理器架构识别失败"
 
@@ -571,12 +568,6 @@ msgstr "查询更新失败"
 
 msgid "<New>"
 msgstr "<可更新>"
-
-msgid "Chose to Download"
-msgstr "*选择内核编译版本"
-
-msgid "Select Based On Your CPU Model For Core Update, Wrong Version Will Not Work"
-msgstr "请根据处理器架构选择以便下载、更新对应内核，错误的版本将不能正常运行"
 
 msgid "Update Core File"
 msgstr "更新内核"
@@ -1213,8 +1204,8 @@ msgstr "确定要一键检查并更新所有内核及插件吗？"
 msgid "Check failed, Please try again later!"
 msgstr "一键检查更新失败,请稍后再试！"
 
-msgid "No compiled version is selected. Please configure it in the General Settings tab!"
-msgstr "未选择编译版本，请到常规设置标签中配置！"
+msgid "No Compiled Version is Selected, Please Select on The Top and Try Again!"
+msgstr "未选择编译版本，请到上方标签选择后重试！"
 
 msgid "Checking..."
 msgstr "正在检查更新..."
@@ -1971,3 +1962,201 @@ msgstr "下载失败！"
 
 msgid "Download Successful!"
 msgstr "下载成功！"
+
+msgid "Switch To The New Proxy When The Delay Difference Between Old and The Fastest Currently is Greater Than This Value"
+msgstr "仅当旧代理和当前最快代理之间的延迟差大于此值时，才会切换到新代理"
+
+msgid "Url-Test Group Tolerance (ms)"
+msgstr "Url-Test 策略组切换灵敏度（ms）"
+
+msgid "Attention:"
+msgstr "注意事项："
+
+msgid "The game proxy is a test function and does not guarantee the availability of rules"
+msgstr "游戏代理为测试功能，不保证规则可用性"
+
+msgid "Preparation steps:"
+msgstr "准备步骤："
+
+msgid "1. In the <server and policy group management> page, create the policy group and node you are going to use, and apply the configuration (when adding nodes, you must select the policy group you want to join). Policy group type suggestion: fallback, game nodes must support UDP"
+msgstr "1、在《服务器与策略组管理》页面创建您准备使用的策略组和节点，并应用配置（节点添加时必须选择要加入的策略组），策略组类型建议:FallBack，游戏节点必须支持UDP"
+
+msgid "2. Click the <manage third party game rules> or <manage third party rule set> button to enter the rule list and download the rules you want to use"
+msgstr "2、点击《管理第三方游戏规则》或者《管理第三方规则集》按钮进入规则列表下载您要使用的规则"
+
+msgid "3. On this page, set the corresponding configuration file and policy group of the rule you have downloaded, and save the settings"
+msgstr "3、在此页面设置您已下载的规则的对应配置文件、策略组并保存设置"
+
+msgid "Use in normal mode (rules of the game only):"
+msgstr "在普通模式下使用（仅游戏规则）："
+
+msgid "1. Select normal mode in <global settings> - <mode settings> - <running mode> and enable UDP traffic, then restart"
+msgstr "1、在《全局设置》-《模式设置》-《运行模式》中选择普通模式并启用UDP流量代理，然后重新启动"
+
+msgid "Use in tun mode:"
+msgstr "在TUN模式下使用："
+
+msgid "1. In the <global settings> - <version update tab>, download and install the corresponding mode core first"
+msgstr "1、在全局设置-版本更新标签先下载、安装对应模式内核"
+
+msgid "2. Select mixed mode, Tun mode or game mode in <global settings> - <mode settings> - <running mode> and restart"
+msgstr "2、在《全局设置》-《模式设置》-《运行模式》中选择混合模式、TUN模式或者游戏模式并重新启动"
+
+msgid "When setting this page, if the groups is empty, please go to the <server and group management> page to add"
+msgstr "本页设置时如策略组为空，请先到《服务器与策略组管理》页面进行添加"
+
+msgid "Introduction to rule set usage: https://lancellc.gitbook.io/clash/clash-config-file/rule-provider"
+msgstr "规则集使用介绍：https://lancellc.gitbook.io/clash/clash-config-file/rule-provider"
+
+msgid "Subconverter external configuration (subscription conversion template) Description: https://github.com/tindy2013/subconverter#external-configuration-file"
+msgstr "subconverter 外部配置(订阅转换模板)说明：https://github.com/tindy2013/subconverter#external-configuration-file"
+
+msgid "If you need to customize the external configuration file (subscription conversion template), please write it according to the instructions, upload it to the accessible location of the external network, and fill in the address correctly when using it"
+msgstr "如需自定义外部配置文件(订阅转换模板)，请按照说明编写后上传至外部网络可访问的位置，并在使用时正确填写地址"
+
+msgid "If you have a recommended external configuration file (subscription conversion template), you can modify by following The file format of /usr/share/opencrash/res/sub_ini.list and pr"
+msgstr "如您有值得推荐的外部配置文件(订阅转换模板)，可以按照 /usr/share/openclash/res/sub_ini.list 的文件格式修改后提交PR"
+
+msgid "To restore the default configuration, try accessing:"
+msgstr "如遇到配置丢失或者需要还原默认配置，请尝试访问地址:"
+
+msgid "Take Effect If Fallback DNS Setted, Prevent DNS Pollution"
+msgstr "只有在配置文件设置了 Fallback 组的DNS时才会生效，正确设置可以有效防止DNS污染"
+
+msgid "Custom Fallback-Filter"
+msgstr "自定义Fallback-Filter"
+
+msgid "Error: Fallback-Filter Need fallback of DNS Been Setted, Ignore..."
+msgstr "错误：只有在配置文件设置了Fallback组的DNS时Fallback-Filter才会生效，跳过此项修改..."
+
+msgid "Error: Unable To Parse Custom Fallback-Filter File, Ignore..."
+msgstr "错误：读取自定义的Fallback-Filter设置失败，跳过此项修改..."
+
+msgid "Simple & trustworthy"
+msgstr "简单 & 值得信赖"
+
+msgid "Cross-platform Support"
+msgstr "丰富的第三方应用兼容性"
+
+msgid "Global Acceleration Network"
+msgstr "全球网络基础设施"
+
+msgid "Easy to Use"
+msgstr "操作简易"
+
+msgid "Intelligent Shunting"
+msgstr "智能分流"
+
+msgid "Perfect Technical Support"
+msgstr "完善技术支持"
+
+msgid "Plan Expiration Time"
+msgstr "到期时间"
+
+msgid "Account Balances"
+msgstr "账户余额"
+
+msgid "Aff Balances"
+msgstr "返利余额"
+
+msgid "Account Integral"
+msgstr "账户积分"
+
+msgid "Today Used"
+msgstr "今日已用"
+
+msgid "Plan Used"
+msgstr "本月已用"
+
+msgid "Plan Unused"
+msgstr "剩余流量"
+
+msgid "Plan Traffic"
+msgstr "套餐流量"
+
+msgid "Checkin"
+msgstr "试试手气"
+
+msgid "Dler Cloud Account Login Failed! Please Check And Try Again..."
+msgstr "Dler Cloud 账户登录失败！请检查账户信息并重试..."
+
+msgid "Dler Cloud Checkin Failed! Please Check And Try Again..."
+msgstr "Dler Cloud 签到失败，请稍后再试！"
+
+msgid "Account Email Address"
+msgstr "账号地址"
+
+msgid "Account Password"
+msgstr "账号密码"
+
+msgid "Checkin Interval (hour)"
+msgstr "签到间隔（小时）"
+
+msgid "Checkin Multiple"
+msgstr "签到倍数"
+
+msgid "Multiple Must Be a Positive Integer and No More Than 50"
+msgstr "倍数必须是正整数且不大于50"
+
+msgid "Dler Cloud Checkin Successful, Result:"
+msgstr "Dler Cloud 签到成功，结果："
+
+msgid "Dler Cloud Checkin Failed, Result:"
+msgstr "Dler Cloud 签到失败，结果："
+
+msgid "Downloading Rule..."
+msgstr "正在下载规则..."
+
+msgid "Downloading Fail"
+msgstr "下载失败"
+
+msgid "Downloading Successful"
+msgstr "下载成功"
+
+msgid "Rule No Change"
+msgstr "规则没有更新"
+
+msgid "Downloading Timeout"
+msgstr "下载超时"
+
+msgid "Rule Project:"
+msgstr "规则项目:"
+
+msgid "Rule Project:"
+msgstr "规则项目:"
+
+msgid "Login..."
+msgstr "登录中..."
+
+msgid "Dler Cloud Login Successful"
+msgstr "Dler Cloud 登录成功"
+
+msgid "Dler Cloud Login Faild"
+msgstr "Dler Cloud 登录失败"
+
+msgid "Login Account"
+msgstr "登录账号"
+
+msgid "Dler Cloud Logout Successful"
+msgstr "Dler Cloud 已成功退出"
+
+msgid "Dler Cloud Logout Faild"
+msgstr "Dler Cloud 退出失败"
+
+msgid "Logout Account"
+msgstr "退出账号"
+
+msgid "Account Login"
+msgstr "账号登录"
+
+msgid "Account logged in"
+msgstr "账号已登录"
+
+msgid "Account not logged in"
+msgstr "账号未登录"
+
+msgid "Logout..."
+msgstr "退出中..."
+
+msgid "Error Login Info"
+msgstr "登录信息错误"

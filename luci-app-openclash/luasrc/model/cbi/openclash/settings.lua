@@ -6,6 +6,7 @@ local DISP = require "luci.dispatcher"
 local UTIL = require "luci.util"
 local fs = require "luci.openclash"
 local uci = require "luci.model.uci".cursor()
+local json = require "luci.jsonc"
 
 font_green = [[<font color="green">]]
 font_red = [[<font color="red">]]
@@ -15,9 +16,12 @@ bold_off = [[</strong>]]
 
 local op_mode = string.sub(luci.sys.exec('uci get openclash.config.operation_mode 2>/dev/null'),0,-2)
 if not op_mode then op_mode = "redir-host" end
+local lan_ip=SYS.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
 
 m = Map("openclash", translate("Global Settings(Will Modify The Config File Or Subscribe According To The Settings On This Page)"))
 m.pageaction = false
+m.description=translate("To restore the default configuration, try accessing:").." <a href='/cgi-bin/luci/admin/services/openclash/restore'>http://"..lan_ip.."/cgi-bin/luci/admin/services/openclash/restore</a>"
+
 s = m:section(TypedSection, "openclash")
 s.anonymous = true
 
@@ -37,6 +41,7 @@ s:tab("chnr_update", translate("Chnroute Update"))
 s:tab("auto_restart", translate("Auto Restart"))
 s:tab("version_update", translate("Version Update"))
 s:tab("debug", translate("Debug Logs"))
+s:tab("dlercloud", translate("Dler Cloud"))
 
 o = s:taboption("op_mode", ListValue, "en_mode", font_red..bold_on..translate("Select Mode")..bold_off..font_off)
 o.description = translate("Select Mode For OpenClash Work, Try Flush DNS Cache If Network Error")
@@ -111,24 +116,6 @@ switch_mode = s:taboption("op_mode", DummyValue, "", nil)
 switch_mode.template = "openclash/switch_mode"
 
 ---- General Settings
-local cpu_model=SYS.exec("opkg status libc 2>/dev/null |grep 'Architecture' |awk -F ': ' '{print $2}' 2>/dev/null")
-o = s:taboption("settings", ListValue, "core_version", font_red..bold_on..translate("Chose to Download")..bold_off..font_off)
-o.description = translate("CPU Model")..': '..font_green..bold_on..cpu_model..bold_off..font_off..', '..translate("Select Based On Your CPU Model For Core Update, Wrong Version Will Not Work")
-o:value("linux-386")
-o:value("linux-amd64", translate("linux-amd64(x86-64)"))
-o:value("linux-armv5")
-o:value("linux-armv6")
-o:value("linux-armv7")
-o:value("linux-armv8")
-o:value("linux-mips-hardfloat")
-o:value("linux-mips-softfloat")
-o:value("linux-mips64")
-o:value("linux-mips64le")
-o:value("linux-mipsle-softfloat")
-o:value("linux-mipsle-hardfloat")
-o:value("0", translate("Not Set"))
-o.default=0
-
 o = s:taboption("settings", ListValue, "interface_name", font_red..bold_on..translate("Bind Network Interface")..bold_off..font_off)
 local de_int = SYS.exec("ip route |grep 'default' |awk '{print $5}' 2>/dev/null")
 o.description = translate("Default Interface Name:").." "..font_green..bold_on..de_int..bold_off..font_off..translate(",Try Enable If Network Loopback")
@@ -138,6 +125,14 @@ for interface in string.gmatch(interfaces, "%S+") do
 end
 o:value("0", translate("Disable"))
 o.default=0
+
+o = s:taboption("settings", Value, "tolerance", font_red..bold_on..translate("Url-Test Group Tolerance (ms)")..bold_off..font_off)
+o.description = translate("Switch To The New Proxy When The Delay Difference Between Old and The Fastest Currently is Greater Than This Value")
+o:value("0", translate("Disable"))
+o:value("100")
+o:value("150")
+o.datatype = "uinteger"
+o.default = "0"
 
 o = s:taboption("settings", ListValue, "log_level", translate("Log Level"))
 o.description = translate("Select Core's Log Level")
@@ -207,6 +202,29 @@ o.default=0
 o = s:taboption("dns", Flag, "disable_masq_cache", translate("Disable Dnsmasq's DNS Cache"))
 o.description = translate("Recommended Enabled For Avoiding Some Connection Errors")..font_red..bold_on..translate("(Maybe Incompatible For Your Firmware)")..bold_off..font_off
 o.default=0
+
+o = s:taboption("dns", Flag, "custom_fallback_filter", translate("Custom Fallback-Filter"))
+o.description = translate("Take Effect If Fallback DNS Setted, Prevent DNS Pollution")
+o.default=0
+
+custom_fallback_filter = s:taboption("dns", Value, "custom_fallback_fil")
+custom_fallback_filter.template = "cbi/tvalue"
+custom_fallback_filter.rows = 20
+custom_fallback_filter.wrap = "off"
+custom_fallback_filter:depends("custom_fallback_filter", "1")
+
+function custom_fallback_filter.cfgvalue(self, section)
+	return NXFS.readfile("/etc/openclash/custom/openclash_custom_fallback_filter.yaml") or ""
+end
+function custom_fallback_filter.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		local old_value = NXFS.readfile("/etc/openclash/custom/openclash_custom_fallback_filter.yaml")
+	  if value ~= old_value then
+			NXFS.writefile("/etc/openclash/custom/openclash_custom_fallback_filter.yaml", value)
+		end
+	end
+end
 
 o = s:taboption("dns", Flag, "dns_advanced_setting", translate("Advanced Setting"))
 o.description = translate("DNS Advanced Settings")..font_red..bold_on..translate("(Please Don't Modify it at Will)")..bold_off..font_off
@@ -525,7 +543,6 @@ end
 o.default=0
 
 ---- Dashboard Settings
-local lan_ip=SYS.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
 local cn_port=SYS.exec("uci get openclash.config.cn_port 2>/dev/null |tr -d '\n'")
 o = s:taboption("dashboard", Value, "cn_port")
 o.title = translate("Dashboard Port")
@@ -559,6 +576,54 @@ o.inputtitle = translate("Click to Generate")
 o.inputstyle = "reload"
 o.write = function()
   SYS.call("/usr/share/openclash/openclash_debug.sh")
+end
+
+---- dlercloud
+o = s:taboption("dlercloud", Value, "dler_email")
+o.title = translate("Account Email Address")
+o.rmempty = true
+
+o = s:taboption("dlercloud", Value, "dler_passwd")
+o.title = translate("Account Password")
+o.password = true
+o.rmempty = true
+
+if m.uci:get("openclash", "config", "dler_token") then
+	o = s:taboption("dlercloud", Flag, "dler_checkin")
+	o.title = translate("Checkin")
+	o.default=0
+	o.rmempty = true
+end
+
+o = s:taboption("dlercloud", Value, "dler_checkin_interval")
+o.title = translate("Checkin Interval (hour)")
+o:depends("dler_checkin", "1")
+o.default=1
+o.rmempty = true
+
+o = s:taboption("dlercloud", Value, "dler_checkin_multiple")
+o.title = translate("Checkin Multiple")
+o.datatype = "uinteger"
+o.default=1
+o:depends("dler_checkin", "1")
+o.rmempty = true
+o.description = font_green..bold_on..translate("Multiple Must Be a Positive Integer and No More Than 50")..bold_off..font_off
+function o.validate(self, value)
+	if tonumber(value) < 1 then
+		return "1"
+	end
+	if tonumber(value) > 50 then
+		return "50"
+	end
+	return value
+end
+
+o = s:taboption("dlercloud", DummyValue, "dler_login", translate("Account Login"))
+o.template = "openclash/dler_login"
+if m.uci:get("openclash", "config", "dler_token") then
+	o.value = font_green..bold_on..translate("Account logged in")..bold_off..font_off
+else
+	o.value = font_red..bold_on..translate("Account not logged in")..bold_off..font_off
 end
 
 -- [[ Edit Server ]] --

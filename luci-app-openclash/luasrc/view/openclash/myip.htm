@@ -30,6 +30,8 @@
             font-size:15px;
             display: inline-block;
             width: 25%;
+            overflow: hidden;
+            text-overflow: ellipsis;
             vertical-align:bottom;
         }
         
@@ -40,6 +42,8 @@
             display: inline-block;
             width: 52%;
             vertical-align:bottom;
+            overflow: hidden;
+            text-overflow: ellipsis;
             transform:translateY(5%);
         }
         
@@ -125,10 +129,10 @@
 
     </style>
 </head>
+<body>
 <fieldset class="cbi-section">
 	<table width="100%">
-     <tr><td width="100%">
-<body>
+     <tr><td>
     <div style="display: flex;">
         <div style="width: 51%">
             <h3><%:IP Address%></h3>
@@ -167,6 +171,7 @@
     </td></tr>
 	</table>
 </fieldset>
+</body>
     <script>
         function ip_skk()
        {
@@ -332,6 +337,4 @@
     </script>
     <script defer="defer" src="https://whois.pconline.com.cn/ipJson.jsp?callback=getPcolIP"></script>
     <script defer="defer" src="https://api-ipv4.ip.sb/jsonip?callback=getIpsbIP"></script>
-</body>
-
 </html>
