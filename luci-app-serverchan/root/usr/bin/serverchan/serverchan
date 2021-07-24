@@ -10,7 +10,7 @@ function get_config(){
 
 # 初始化设置信息
 function read_config(){
-	get_config "serverchan_enable" "sckey" "sctkey" "tg_token" "chat_id" "pushplus_token" "serverchan_ipv4" "ipv4_interface" "ipv4_URL" "serverchan_ipv6" "ipv6_interface" "ipv6_URL" "serverchan_up" "serverchan_down" "serverchan_sheep" "serverchan_whitelist" "serverchan_blacklist" "serverchan_interface" "starttime" "endtime" "cpuload_enable" "cpuload" "temperature_enable" "temperature" "device_name" "err_enable" "network_err_event" "err_sheep_enable" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" "soc_code" "sleeptime" "up_timeout" "down_timeout" "device_aliases" "debuglevel" "cpuload" "temperature" "send_mode" "regular_time" "regular_time_2" "regular_time_3" "interval_time" "thread_num" "timeout_retry_count" "err_device_aliases" "oui_dir" "oui_data" "client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" "reset_regularly"
+	get_config "serverchan_enable" "sckey" "sctkey" "qywx_token" "tg_token" "chat_id" "pushplus_token" "serverchan_ipv4" "ipv4_interface" "serverchan_ipv6" "ipv6_interface" "serverchan_up" "serverchan_down" "serverchan_sheep" "serverchan_whitelist" "serverchan_blacklist" "serverchan_interface" "starttime" "endtime" "cpuload_enable" "cpuload" "temperature_enable" "temperature" "device_name" "err_enable" "network_err_event" "err_sheep_enable" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" "soc_code" "sleeptime" "up_timeout" "down_timeout" "device_aliases" "debuglevel" "cpuload" "temperature" "send_mode" "regular_time" "regular_time_2" "regular_time_3" "interval_time" "thread_num" "timeout_retry_count" "err_device_aliases" "oui_dir" "oui_data" "client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" "reset_regularly" "ipv4_urllist" "ipv6_urllist" "lite_enable" "content_current_device" "content_nowtime" "content_content"
 	for str_version in "wrtbwmon" "iputils-arping" "curl" "iw"; do
 		eval `echo ${str_version:0:2}"_version"`=`opkg list-installed|grep -w ^${str_version}|awk '{print $3}'` 2>/dev/null
 	done
@@ -31,6 +31,8 @@ function read_config(){
 	[ ! -z "$pushplus_token" ] && [ -z "$sckey" ] && str_tab=""
 	[ ! -z "$tg_token" ] && [ -z "$sckey" ] && str_title_start="<b>" && str_title_end="</b>";
 	[ ! -z "$tg_token" ] && [ -z "$pushplus_token" ] && str_splitline="%0D%0A%0D%0A"
+	[ ! -z "$qywx_token" ] && [ -z "$pushplus_token" ] && str_title_start="<h3>" && str_title_end="</h3>" && str_splitline='<hr>' && str_linefeed='<br>' && str_tab='<li>'
+	[ ! -z "$content_content" ] && [ "$content_content" -eq "1" ] && str_title_start="" && str_title_end="" && str_splitline="" && str_linefeed="" && str_tab=""
 }
 
 # 初始化
@@ -43,14 +45,38 @@ function serverchan_init(){
 	fi
 	down_oui &
 	deltemp
-	
+
 	rm -f ${dir}fd1 ${dir}sheep_usage ${dir}old_sheep_usage ${dir}client_usage_aliases ${dir}old_client_usage_aliases /usr/bin/serverchan/errlog >/dev/null 2>&1
 	[ ! -f "/usr/sbin/wrtbwmon" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】未安装 wrtbwmon ，流量统计不可用" >> ${logfile}
 	[ -z "$ip_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 iputils-arping 版本号，请确认插件是否正常运行" >> ${logfile}
 	[ -z "$cu_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 curl 版本号，请确认插件是否正常运行" >> ${logfile}
-	[ -z "${sckey}${tg_token}${pushplus_token}" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的 key " >> ${logfile} && return 1
+	[ -z "${sckey}${tg_token}${pushplus_token}${qywx_token}" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的 key " >> ${logfile} && return 1
 	local interfacelist=`getinterfacelist` && [ -z "$interfacelist" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法正确获取接口信息，请确认插件是否正常运行" >> ${logfile}
 	return 0
+}
+
+# 企业微信推送
+qywx_push(){
+	qywx_am="$1"
+	title=`echo "$2"|sed 's/%20/\ /g'`
+	digest="$3"
+	content=`echo "$4"|sed 's/%25/%/g'|sed 's/%e2%84%83/℃/g'`
+	[ -z "$content_nowtime" ] || [ "$content_nowtime" -eq "0" ] && nowtime=`date "+%Y-%m-%d %H:%M:%S"`
+	[ -z "$digest" ] && digest="`echo "$content"|sed 's/<br>/\\\n/g'| sed 's/<hr>//g'|sed 's/<li>//g'|sed 's/<h3>/\\\n\\\n#/g'|sed 's$</h3>$$g'|sed 's/^\(\\\n\)*//g'`"
+	corpid=`echo "$qywx_am" | awk -F\; '{print $1}'`
+	touser=`echo "$qywx_am" | awk -F\; '{print $2}'`
+	agentid=` echo "$qywx_am" | awk -F\; '{print $3}'`
+	corpsecret=` echo "$qywx_am" | awk -F\; '{print $4}'`
+    mediaid=` echo "$qywx_am" | awk -F\; '{print $5}'`
+	msg_tpl='{"touser":"%s","msgtype":"mpnews","agentid":"%s","mpnews":{"articles":[{"title":"%s","thumb_media_id":"%s","author":"ServerChan","digest":"%s","content":"%s"}]}}\n'
+	qywx_ret=$(curl -ks "https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpid}&corpsecret=${corpsecret}")
+	if [ `echo "${qywx_ret//\"/}" | sed "s/.*errcode:\([^,}]*\).*/\1/"` -ne 0 ]; then
+	echo "`date "+%Y-%m-%d %H:%M:%S"` 【微信推送】获取企业微信推送 token 失败" >> ${logfile}
+	else
+	token=`echo "${qywx_ret//\"/}" | sed "s/.*access_token:\([^,}]*\).*/\1/"`
+	fi
+	printf "$msg_tpl" "$touser" "$agentid" "$title" "$mediaid" "$digest" "${nowtime}${content}"|curl -X POST -d@- -H "Content-Type: application/json" "https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=${token}"
+	digest=''
 }
 
 # 下载设备MAC厂商信息
@@ -98,17 +124,35 @@ function getip(){
 		[ -z "$ipv4_interface" ] && local wanIP=$(getinterfacelist|grep '\"address\"'|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 		echo "$wanIP"
 	elif [ $1 == "hostipv4" ] ;then
-		[ -z "$ipv4_URL" ] && local ipv4_URL="members.3322.org/dyndns/getip"
-		[ ! -z "$ipv4_interface" ] && local hostIP=$(curl -k -s -4 --interface ${ipv4_interface} ${ipv4_URL}) || local hostIP=$(curl -k -s -4 ${ipv4_URL})
-		echo "$hostIP"
+		function get_hostipv4()
+		{
+			[ -z "$ipv4_urllist" ] && local ipv4_urllist="www.cip.cc myip.ipip.net ipv4.ddnspod.com ifcfg.cn speed.neu.edu.cn/getIP.php ddns.oray.com/checkip www.net.cn/static/customercare/yourip.asp"
+			local url_number=`expr $(echo "$ipv4_urllist"|grep -o ' '|wc -l) + 1`
+			local ipv4_URL=`echo "$ipv4_urllist"|awk -v i=$(rand 1 $url_number) '{print $i}'`
+			[ ! -z "$ipv4_interface" ] && local hostIP=$(curl -k -s -4 --interface ${ipv4_interface} -m 5 ${ipv4_URL}) || local hostIP=$(curl -k -s -4 -m 5 ${ipv4_URL})
+			echo $hostIP|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1
+		}
+		local hostIP=`get_hostipv4`
+		[ -z "$hostIP" ] && local hostIP=`get_hostipv4`
+		[ -z "$hostIP" ] && local hostIP=`get_hostipv4`
+		echo $hostIP # 重试，偷懒，有空再优化
 	elif [ $1 == "wanipv6" ] ;then
 		[ ! -z "$ipv6_interface" ] && local wanIPv6=$(ip addr show ${ipv6_interface}|grep -v deprecated|grep -A1 'inet6 [^f:]'|sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\2 \1#p;ta'|sort -nr|head -n1|awk '{print $2}')
 		[ -z "$ipv6_interface" ] && local wanIPv6=$(ip addr show|grep -v deprecated|grep -A1 'inet6 [^f:]'|sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\2 \1#p;ta'|sort -nr|head -n1|awk '{print $2}')
 		echo "$wanIPv6"
 	elif [ $1 == "hostipv6" ] ;then
-		[ -z "$ipv6_URL" ] && local ipv6_URL="v6.ip.zxinc.org/getip"
-		[ ! -z "$ipv6_interface" ] && local hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} ${ipv6_URL}) || local hostIPv6=$(curl -k -s -6 ${ipv6_URL})
-		echo "$hostIPv6"
+		function get_hostipv6()
+		{
+			[ -z "$ipv6_urllist" ] && local ipv6_urllist="ip.sb ipv6.ddnspod.com api-ipv6.ip.sb/ip speed.neu6.edu.cn/getIP.php v6.myip.la/json"
+			local urlv6_number=`expr $(echo "$ipv6_urllist"|grep -o ' '|wc -l) + 1`
+			local ipv6_URL=`echo "$ipv6_urllist"|awk -v i=$(rand 1 $urlv6_number) '{print $i}'`
+			[ ! -z "$ipv6_interface" ] && local hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} -m 5 ${ipv6_URL}) || local hostIPv6=$(curl -k -s -6 -m 5 ${ipv6_URL})
+			echo $hostIPv6|grep -oE '([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}'|head -n1
+		}
+		local hostIPv6=`get_hostipv6`
+		[ -z "$hostIPv6" ] && local hostIPv6=`get_hostipv6`
+		[ -z "$hostIPv6" ] && local hostIPv6=`get_hostipv6`
+		echo $hostIPv6 # 重试，偷懒，有空再优化
 	fi
 }
 
@@ -241,7 +285,7 @@ function get_client_usage(){
 	[ "$client_usage_disturb" -eq "0" ] && [ -f "${dir}ipAddress" ] && local MACLIST=`cat ${dir}ipAddress|awk '{print $2}'|grep -v "^$"|sort -u`
 	[ "$client_usage_disturb" -eq "1" ] && [ ! -z "$client_usage_whitelist" ] && local MACLIST=`echo "$client_usage_whitelist"`
 	[ -z "$MACLIST" ] && return
-		
+
 	if [ "$((`date +%s`-$get_client_usage_time))" -ge "60" ]; then
 		> ${dir}client_usage_aliases
 		for mac in $MACLIST; do
@@ -323,6 +367,14 @@ function cut_str {
 	echo $(echo "$1"|cut -c -$temp_length)"*"
 }
 
+# 随机数
+function rand(){
+    min=$1
+    max=$(($2- $min + 1))
+    num=$(date +%s%N)
+    echo $(($num % $max + $min))
+}
+
 # 在线设备列表
 function serverchan_first(){
 	[ -f "${dir}ipAddress" ] && local IPLIST=`cat ${dir}ipAddress|awk '{print $1}'|grep -v "^$"|sort -u`
@@ -349,7 +401,7 @@ function serverchan_first(){
 # 创建计划任务
 function serverchan_cron(){
 	function del_cron(){
-		( echo `crontab -l`|grep -q "serverchan" ) && crontab -l > conf && sed -i "/serverchan/d" conf && crontab conf && rm -f conf >/dev/null 2>&1
+		( echo `crontab -l 2>/dev/null`|grep -q "serverchan" ) && crontab -l > conf && sed -i "/serverchan/d" conf && crontab conf && rm -f conf >/dev/null 2>&1
 	}
 	function re_cron(){
 		/etc/init.d/cron stop
@@ -360,20 +412,20 @@ function serverchan_cron(){
 		re_cron
 		return
 	fi
-	
+
 	# 重置流量
 	if [ ! -z "$reset_regularly" ] && [ "$reset_regularly" -eq "1" ]; then
-		crontab -l > conf && echo -e "0 0 * * * rm /tmp/serverchan/usage.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
-		crontab -l > conf && echo -e "0 0 * * * rm /tmp/serverchan/usage6.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l 2>/dev/null > conf && echo -e "0 0 * * * rm /tmp/serverchan/usage.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l 2>/dev/null > conf && echo -e "0 0 * * * rm /tmp/serverchan/usage6.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	fi
 	[ ! -z "$regular_time_2" ] && local regular_time_2=",${regular_time_2}"
 	[ ! -z "$regular_time_3" ] && local regular_time_3=",${regular_time_3}"
 	# 定时发送
 	if [ ! -z "$regular_time" ] || [ ! -z "$regular_time_2" ] || [ ! -z "$regular_time_3" ]; then
-		crontab -l > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/bin/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l 2>/dev/null > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/bin/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	# 间隔发送
 	elif [ ! -z "$interval_time" ]; then
-		crontab -l > conf && echo -e "0 */$interval_time * * * /usr/bin/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l 2>/dev/null > conf && echo -e "0 */$interval_time * * * /usr/bin/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	fi
 	re_cron
 }
@@ -442,7 +494,7 @@ function get_client(){
 	done < ${dir}ipAddress
 	fi
 cat>/usr/lib/lua/luci/view/serverchan/client.htm<<EOF
-<h2><%:在线设备列表%></h2><div class="table" id="traffic"><div class="tr table-titles"><div class="th" id="thClient" style="width:17%"><%:客户端名%></div><div class="th" id="thMAC" style="width:10%"><%:MAC%></div><div class="th" id="thIP" style="width:17%"><%:IP%></div><div class="th" id="thTotal" style="width:9%"><%:总计流量%></div><div class="th" id="thFirstSeen" style="width:15%"><%:在线时间%></div></div>
+<h2><%:在线设备列表%></h2><div class="table" id="traffic"><div class="tr table-titles"><div class="th" id="thClient" style="width:17%"><%:客户端名%></div><div class="th" id="thMAC" style="width:10%"><%:MAC%></div><div class="th" id="thIP" style="width:17%"><%:IP%></div><div class="th" id="thTotal" style="width:9%"><%:总计流量%></div><div class="th" id="thFirstSeen" style="width:15%"><%: 在线时间%></div></div>
 $js_str
 </div>
 EOF
@@ -490,7 +542,7 @@ function unattended(){
 	[ -z "$err_enable" ] || [ "$err_enable" -ne "1" ] && return
 	[ ! -z "$err_sheep_enable" ] && [ "$err_sheep_enable" -eq "1" ] && [ -z "$sheep_starttime" ] && return
 	geterrdevicealiases;[ $? -eq "1" ] && return
-	
+
 	if [ ! -z "$system_time_event" ]; then
 		local interfaceuptime=`getinterfaceuptime`
 		if [ ! -z "$autoreboot_time" ] && [ `cat /proc/uptime|awk -F. '{run_hour=$1/3600;printf("%d",run_hour)}'` -ge "$autoreboot_time" ] && [ "$system_time_event" -eq "1" ]; then
@@ -527,10 +579,11 @@ function unattended(){
 
 # 检测网络状态
 function rand_geturl(){
-	local urllist="https://www.163.com https://www.qq.com https://www.baidu.com https://www.qidian.com https://www.douban.com"
-	local url_str=$( echo "$urllist"|awk -v i="`awk 'BEGIN{srand();sum=rand()*5+ 1;printf("%d",sum)}'`" '{print $i}' )
 	function getcheck(){
-		echo `curl -k -s -w "%{http_code}" ${url_str}  -A "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.47 Safari/536.11" -o /dev/null`
+		local urllist="https://www.163.com https://www.qq.com https://www.baidu.com https://www.qidian.com https://www.douban.com"
+		local url_number=`expr $(echo "$urllist"|grep -o ' '|wc -l) + 1`
+		local url_str=`echo "$urllist"|awk -v i=$(rand 1 $url_number) '{print $i}'`
+		echo `curl -k -s -w "%{http_code}" -m 5 ${url_str} -A "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36" -o /dev/null`
 	}
 	local check=`getcheck`
 	while [ -z "$check" ] || [ "$check" -ne "200" ]; do
@@ -559,7 +612,7 @@ function rand_geturl(){
 					elif [ "$network_err_event" -eq "2" ] ;then
 						[ "$retry_count" -lt "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试重启网络，当前第 $retry_count 次 " >> ${logfile} && ifup wan >/dev/null 2>&1
 						[ "$retry_count" -eq "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】已经重启网络2次，修复失败，请主人自行修复哦 " >> ${logfile}
-					elif [ "$network_err_event" -eq "3" ] ;then				
+					elif [ "$network_err_event" -eq "3" ] ;then
 						if [ "$retry_count" -eq "1" ] ;then
 							echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试修复网络，当前第 1 次，重启网络服务中 " >> ${logfile} && network_restart
 						elif [ "$retry_count" -eq "2" ] ;then
@@ -613,7 +666,7 @@ function rand_geturl(){
 				network_err_time=`expr $network_err_time - 600` && sleep 60
 			fi
 			enable_detection
-			sleep 60
+			sleep $sleeptime
 		fi
 	continue
 	done
@@ -638,7 +691,7 @@ function ip_changes(){
 		elif [ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && [ -z "$IPv4" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】获取 IPv4 地址失败" >> ${logfile}
 		fi
-		
+
 		if [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && [ ! -z "$IPv6" ] && ( ! echo "$IPv6"|grep -w -q ${last_IPv6} ); then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前IPv6：${IPv6}" >> ${logfile}
 			echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $IPv6 >> ${dir}ip
@@ -648,7 +701,7 @@ function ip_changes(){
 		elif [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && [ -z "$IPv6" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】获取 IPv6 地址失败" >> ${logfile}
 		fi
-		
+
 	else
 		echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}路由器已经重启!" >> ${logfile}
 		[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  当前IP: ${IPv4}" >> ${logfile}
@@ -659,7 +712,7 @@ function ip_changes(){
 		[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IP：${IPv4}"
 		[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && content="${content}${str_linefeed}${str_tab}当前IPv6：${IPv6}"
 	fi
-	
+
 	if [ ! -z "$content" ] ;then
 		[ -z "$ddns_enabled" ] && ddns_enabled=$(uci show ddns|grep "enabled"|grep "1")
 		[ -z "$ddns_enabled" ] && ddns_logrow=0 || ddns_logrow=$(echo "$ddns_enabled"|wc -l)
@@ -692,7 +745,7 @@ function up(){
 			[ ! -z "$serverchan_up" ] && [ "$serverchan_up" -ne "1" ] && LockFile unlock && return
 			[ ! -z "$ip_blackwhite" ] && [ "$ip_blackwhite" -ne "0" ] && LockFile unlock && return
 			[ -f "${dir}title" ] && local title=`cat ${dir}title`
-			[ -f "${dir}content" ] && local content=`cat ${dir}content`	
+			[ -f "${dir}content" ] && local content=`cat ${dir}content`
 			if [ -z "$title" ]; then
 				local title="$ip_name 连接了你的路由器"
 				local content="${str_splitline}${str_title_start} 新设备连接${str_title_end}${str_linefeed}${str_tab}客户端名：${str_space}${str_space}${str_space}${str_space}${str_space}${ip_name}${str_linefeed}${str_tab}客户端IP： ${str_space}${str_space}${str_space}${str_space}${1}${str_linefeed}${str_tab}客户端MAC：${str_space}${str_space}${str_space}${str_space}${ip_mac}${str_linefeed}${str_tab}网络接口：${str_space}${str_space}${str_space}${str_space}${str_space}${ip_interface}"
@@ -702,7 +755,7 @@ function up(){
 			else
 				local title="设备状态变化"
 				local content="${str_splitline}${str_title_start} 新设备连接${str_title_end}${str_linefeed}${str_tab}客户端名：${str_space}${str_space}${str_space}${str_space}${str_space}${ip_name}${str_linefeed}${str_tab}客户端IP： ${str_space}${str_space}${str_space}${str_space}${1}${str_linefeed}${str_tab}客户端MAC：${str_space}${str_space}${str_space}${str_space}${ip_mac}${str_linefeed}${str_tab}网络接口：${str_space}${str_space}${str_space}${str_space}${str_space}${ip_interface}"
-			fi				
+			fi
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}新设备 ${ip_name} ${1} 连接了">> ${logfile}
 			#[ ! -z "$serverchan_blacklist" ] && local title="你偷偷关注的设备上线了"
 			[ ! -z "$title" ] && echo "$title" >${dir}title
@@ -776,14 +829,14 @@ function current_device(){
 		local ip_total=`usage get ${ip_mac}`
 		local ip_name=`getname ${ip} ${ip_mac}`
 		local ip_name=`cut_str $ip_name 15`
-		if [ "${#ip}" -lt "15" ]; then 
+		if [ "${#ip}" -lt "15" ]; then
 			local n=`expr 15 - ${#ip}`
 			for i in `seq 1 $n`; do
 				local ip="${ip}${str_space}"
 			done
 			unset i n
 		fi
-		if [ ! -z "$ip_total" ]; then	
+		if [ ! -z "$ip_total" ]; then
 			local n=`expr 11 - ${#ip_total}`
 			for i in `seq 1 $n`; do
 				local ip_total="${ip_total}${str_space}"
@@ -800,18 +853,18 @@ function cpu_load(){
 		[ -z "$temperature_time" ] && temperature_time=`date +%s`
 		local cpu_wendu=`soc_temp`;
 		[ -z "$cpu_wendu" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【！！！】无法读取设备温度，请检查命令" >> ${logfile}
-		
+
 		if [ "$cpu_wendu" -gt "$temperature" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！警报！！】 CPU 温度过高: ${cpu_wendu}" >> ${logfile}
 		else
 			temperature_time=`date +%s`
 		fi
-		
+
 		if [ "$((`date +%s`-$temperature_time))" -ge "300" ] && [ -z "$temperaturecd_time" ]; then
 			title="CPU 温度过高！"
 			temperaturecd_time=`date +%s`
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text} CPU 温 度过高: ${cpu_wendu}" >> ${logfile}
-			content="${content}${str_splitline}${str_title_start} CPU 温度过高${str_title_end}${str_linefeed}${str_tab}CPU 温度已连续五分钟超过预设${str_linefeed}${str_tab}接下来一小时不再提示${str_linefeed}${str_tab}当前温度：${cpu_wendu}"
+			content="${content}${str_splitline}${str_title_start} CPU 温度过高${str_title_end}${str_linefeed}${str_tab}CPU 温度已连续五分钟超过预设${str_linefeed}${str_tab}接下来一小 时不再提示${str_linefeed}${str_tab}当前温度：${cpu_wendu}"
 		elif [ ! -z "$temperaturecd_time" ] && [ "$((`date +%s`-$temperaturecd_time))" -ge "3300" ] ;then
 			unset temperaturecd_time
 		fi
@@ -821,14 +874,14 @@ function cpu_load(){
 		[ -z "$cpuload_time" ] && cpuload_time=`date +%s`
 		local cpu_fuzai=`cat /proc/loadavg|awk '{print $1}'` 2>/dev/null
 		[ -z "$cpu_fuzai" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【！！！】无法读取设备负载，请检查命令" >> ${logfile}
-		
+
 		if [ `expr $cpu_fuzai \> $cpuload` -eq "1" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！警报！！】 CPU 负载过高: ${cpu_fuzai}" >> ${logfile}
 			cputop log
 		else
 			cpuload_time=`date +%s`
 		fi
-		
+
 		if [ "$((`date +%s`-$cpuload_time))" -ge "300" ] && [ -z "$cpucd_time" ]; then
 			unset getlogtop
 			if [ ! -z "$title" ] && ( echo "$title"|grep -q "过高" ); then
@@ -838,7 +891,7 @@ function cpu_load(){
 			fi
 			cpucd_time=`date +%s`
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text} CPU 负 载过高: ${cpu_fuzai}" >> ${logfile}
-			content="${content}${str_splitline}${str_title_start} CPU 负载过高${str_title_end}${str_linefeed}${str_tab}CPU 负载已连续五分钟超过预设${str_linefeed}${str_tab}接下来一小时不再提示${str_linefeed}${str_tab}当前负载：${cpu_fuzai}"
+			content="${content}${str_splitline}${str_title_start} CPU 负载过高${str_title_end}${str_linefeed}${str_tab}CPU 负载已连续五分钟超过预设${str_linefeed}${str_tab}接下来一小 时不再提示${str_linefeed}${str_tab}当前负载：${cpu_fuzai}"
 			cputop
 		elif [ ! -z "$cpucd_time" ] && [ "$((`date +%s`-$cpucd_time))" -ge "3300" ] ;then
 			unset cpucd_time
@@ -885,7 +938,7 @@ function send(){
 		local send_content="${send_content}${str_linefeed}${str_tab}${systemstatustime}"
 	fi
 
-	[ ! -z "$router_temp" ] && [ "$router_temp" -eq "1" ] && local cputemp=`soc_temp` && local send_content="${send_content}${str_splitline}${str_title_start} 设备温度${str_title_end}${str_linefeed}${str_tab}CPU：${cputemp}%e2%84%83"	#%e2%84%83="℃"
+	[ ! -z "$router_temp" ] && [ "$router_temp" -eq "1" ] && local cputemp=`soc_temp` && local send_content="${send_content}${str_splitline}${str_title_start} 设备温度${str_title_end}${str_linefeed}${str_tab}CPU：${cputemp}%e2%84%83"	  #%e2%84%83="℃"
 
 	if [ ! -z "$router_wan" ] && [ "$router_wan" -eq "1" ]; then
 		local send_wanIP=`getip wanipv4`;local send_hostIP=`getip hostipv4`
@@ -920,11 +973,12 @@ function send(){
 	fi
 	[ ! -z "$device_name" ] && local send_title="【$device_name】${send_title}"
 	local send_title=`echo "$send_title"|sed $'s/\ /%20/g'|sed $'s/\"/%22/g'|sed $'s/\#/%23/g'|sed $'s/\&/%26/g'|sed $'s/\,/%2C/g'|sed $'s/\//%2F/g'|sed $'s/\:/%3A/g'|sed $'s/\;/%3B/g'|sed $'s/\=/%3D/g'|sed $'s/\@/%40/g'`
-	[ -z "$send_content" ] && local send_content="${str_splitline}${str_title_start} 我遇到了一个难题${str_title_end}${str_linefeed}${str_tab}定时发送选项错误，你没有选择需要发送的项目，该怎么办呢${str_splitline}"
+	[ -z "$send_content" ] && local send_content="${str_splitline}${str_title_start} 我遇到了一个难题${str_title_end}${str_linefeed}${str_tab}定时发送选项错误，你没有选择需要发送的项目，该怎 么办呢${str_splitline}"
 	local nowtime=`date "+%Y-%m-%d %H:%M:%S"`
 	[ "$send_disturb" -eq "0" ] && [ ! -z "$sckey" ] && curl -s "${sckey_url}?text=${send_title}" -d "&desp=${nowtime}${str_linefeed}${send_content}" >/dev/null 2>&1
 	[ "$send_disturb" -eq "0" ] && [ ! -z "$tg_token" ] && curl -s "https://api.telegram.org/bot${tg_token}/sendMessage" -d "chat_id=${chat_id}&text=${str_title_start}${send_title}${str_title_end}${str_linefeed}${nowtime}${send_content}&parse_mode=HTML" >/dev/null 2>&1
 	[ "$send_disturb" -eq "0" ] && [ ! -z "$pushplus_token" ] && curl -s "http://pushplus.plus/send?token=${pushplus_token}" -d "&title=${send_title}&content=${send_content}&template=markdown" >/dev/null 2>&1
+	[ "$send_disturb" -eq "0" ] && [ ! -z "$qywx_token" ] && qywx_push "$qywx_token" "$send_title" "$digest" "$send_content" >/dev/null 2>&1
 	deltemp
 	echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}定时推送任务完成" >> ${logfile}
 }
@@ -969,7 +1023,7 @@ while [ "$serverchan_enable" -eq "1" ]; do
 		rand_geturl
 		ip_changes
 	fi
-	
+
 	# 设备列表
 	if [ ! -f "${dir}send_enable.lock" ]; then
 		[ ! -z "$title" ] && echo "$title" > ${dir}title
@@ -978,29 +1032,31 @@ while [ "$serverchan_enable" -eq "1" ]; do
 		[ -f "${dir}title" ] && title=`cat ${dir}title` && rm -f ${dir}title >/dev/null 2>&1
 		[ -f "${dir}content" ] && content=`cat ${dir}content` && rm -f ${dir}content >/dev/null 2>&1
 	fi
-	
+
 	# 离线缓存区推送
 	[ ! -f "${dir}send_enable.lock" ] && down_send
-	
+
 	# 当前设备列表
-	[ ! -z "$content" ] && [ ! -f "${dir}send_enable.lock" ] && current_device
-	
+	[ ! -z "$content" ] && [ ! -f "${dir}send_enable.lock" ] && [ -z "$content_current_device" ] || [ "$content_current_device" -eq "0" ] && current_device
+
 	# 无人值守任务
 	[ ! -f "${dir}send_enable.lock" ] && unattended
 
 	# CPU 检测
 	[ ! -f "${dir}send_enable.lock" ] && cpu_load
-	
+
 	# 异常流量检测
 	[ ! -f "${dir}send_enable.lock" ] && get_client_usage
 
 	if [ ! -f "${dir}send_enable.lock" ] && [ ! -z "$title" ] && [ ! -z "$content" ]; then
-		nowtime=`date "+%Y-%m-%d %H:%M:%S"`
+		[ -z "$content_nowtime" ] || [ "$content_nowtime" -eq "0" ] && nowtime=`date "+%Y-%m-%d %H:%M:%S"`
 		[ ! -z "$device_name" ] && title="【$device_name】$title"
 		title=`echo "$title"|sed $'s/\ /%20/g'|sed $'s/\"/%22/g'|sed $'s/\#/%23/g'|sed $'s/\&/%26/g'|sed $'s/\,/%2C/g'|sed $'s/\//%2F/g'|sed $'s/\:/%3A/g'|sed $'s/\;/%3B/g'|sed $'s/\=/%3D/g'|sed $'s/\@/%40/g'`
+		[ ! -z "$content_content" ] && [ "$content_content" -eq "1" ] && content=""
 		[ "$disturb" -eq "0" ] && [ ! -z "$sckey" ] && curl -s "${sckey_url}?text=${title}" -d "desp=${nowtime}${str_linefeed}${content}" >/dev/null 2>&1
 		[ "$disturb" -eq "0" ] && [ ! -z "$tg_token" ] && curl -s "https://api.telegram.org/bot${tg_token}/sendMessage" -d "chat_id=${chat_id}&text=${str_title_start}${title}${str_title_end}${str_linefeed}${nowtime}${content}&parse_mode=HTML" >/dev/null 2>&1
 		[ "$disturb" -eq "0" ] && [ ! -z "$pushplus_token" ] && curl -s "http://pushplus.plus/send?token=${pushplus_token}" -d "&title=${title}&content=${content}&template=markdown" >/dev/null 2>&1
+		[ "$disturb" -eq "0" ] && [ ! -z "$qywx_token" ] &&  qywx_push "$qywx_token" "$title" "$digest" "$content" >/dev/null 2>&1
 	fi
 	
 	while [ -f "${dir}send_enable.lock" ]; do
@@ -1008,4 +1064,3 @@ while [ "$serverchan_enable" -eq "1" ]; do
 	done
 	sleep $sleeptime
 done
-

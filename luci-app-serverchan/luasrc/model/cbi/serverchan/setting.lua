@@ -27,7 +27,29 @@ s.anonymous = true
 a=s:taboption("basic", Flag,"serverchan_enable",translate("启用"))
 a.rmempty = true
 
+a=s:taboption("basic", Flag,"lite_enable",translate("精简模式"))
+a.default=0
+a.rmempty = true
+
+a= s:taboption("basic", Flag, "content_current_device", "精简当前设备列表")
+a.default = 0
+a.rmempty = true
+a:depends({lite_enable="1"})
+
+a= s:taboption("basic", Flag, "content_nowtime", "精简当前时间")
+a.default = 0
+a.rmempty = true
+a:depends({lite_enable="1"})
+
+a= s:taboption("basic", Flag, "content_content", "只推送标题")
+a.default = 0
+a.rmempty = true
+a:depends({lite_enable="1"})
+
 a=s:taboption("basic", Value,"sckey",translate('微信推送/新旧共用'), translate("").."旧版调用代码<a href='http://sc.ftqq.com' target='_blank'>点击这里</a><br>新版代码获取<a href='https://sct.ftqq.com/' target='_blank'>点击这里</a><br>")
+a.rmempty = true
+
+a=s:taboption("basic", Value,"qywx_token",translate('企业微信凭证'), translate("").."格式必须为：corpid;userid;agentid;corpsecret;mediaid，获取说明<a href='https://work.weixin.qq.com/api/doc/10013' target='_blank'>点击这里</a><br>图片对应 mediaid 是必须的，且因无法夸企业共享需要自行上传到素材库并获取 mediaid<br>注意：使用企业微信推送会导致其他推送的内容排版错乱")
 a.rmempty = true
 
 a=s:taboption("basic",Value,"pushplus_token",translate('pushplus_token'),translate("").."获取pushplus_token <a href='http://www.pushplus.plus/' target='_blank'>点击这里</a><br>")
@@ -98,11 +120,11 @@ for _, iface in ipairs(ifaces) do
 end
 a.description = translate("<br/>一般选择 wan 接口，多拨环境请自行选择")
 
-a= s:taboption("content", Value, "ipv4_URL", "URL 地址")
+a= s:taboption("content", DynamicList, "ipv4_URL", "URL 地址")
 a.rmempty = true
-a.default = "members.3322.org/dyndns/getip"
 a:depends({serverchan_ipv4="2"})
-a.description = translate("<br/>会因服务器稳定性、连接频繁等原因导致获取失败<br/>如接口可以正常获取 IP，不推荐使用")
+a.description = translate("<br/>会因服务器稳定性、连接频繁等原因导致获取失败<br/>从以上列表中随机一个地址，留空使用默认地址")
+
 
 a=s:taboption("content", ListValue,"serverchan_ipv6",translate("ipv6 变动通知"))
 a.rmempty = true
@@ -127,11 +149,10 @@ for _, iface in ipairs(ifaces) do
 end
 a.description = translate("<br/>一般选择 wan 接口，多拨环境请自行选择")
 
-a= s:taboption("content", Value, "ipv6_URL", "URL 地址")
+a= s:taboption("content", DynamicList, "ipv6_URL", "URL 地址")
 a.rmempty = true
-a.default = "v6.ip.zxinc.org/getip"
 a:depends({serverchan_ipv6="2"})
-a.description = translate("<br/>会因服务器稳定性、连接频繁等原因导致获取失败<br/>如接口可以正常获取 IP，不推荐使用")
+a.description = translate("<br/>会因服务器稳定性、连接频繁等原因导致获取失败<br/>从以上列表中随机一个地址，留空使用默认地址")
 
 a=s:taboption("content", Flag,"serverchan_up",translate("设备上线通知"))
 a.default=1
