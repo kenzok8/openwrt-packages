@@ -75,7 +75,7 @@ notify() {
         if [ "$serverurlflag" = "sct" ]; then
             serverurl=https://sctapi.ftqq.com/
         fi
-        uclient-fetch -q --output-document=/dev/null --post-data="text=$title~&desp=$desc" $serverurl$sckey.send
+        uclient-fetch -q --post-data="text=$title~&desp=$desc" $serverurl$sckey.send
     fi
     
     #Dingding
@@ -83,7 +83,7 @@ notify() {
     if [ ! -z $dtoken ]; then
     	DTJ_FILE=/tmp/jd-djson.json
 	echo "{\"msgtype\": \"markdown\",\"markdown\": {\"title\":\"${title}\",\"text\":\"${title} <br/> ${desc}\"}}" > ${DTJ_FILE}
-    	uclient-fetch -q --output-document=/dev/null --header="Content-Type: application/json" --post-file=/tmp/jd-djson.json "https://oapi.dingtalk.com/robot/send?access_token=${dtoken}"
+    	uclient-fetch -q --post-file=/tmp/jd-djson.json "https://oapi.dingtalk.com/robot/send?access_token=${dtoken}"
     fi
 
     #telegram
@@ -98,7 +98,7 @@ notify() {
 ===============================
 本消息来自京东签到插件 jd-dailybonus
 \`\`\`"
-        uclient-fetch -q --output-document=/dev/null --post-data="chat_id=$TG_USER_ID&text=$text&parse_mode=markdownv2" $API_URL
+        uclient-fetch -q --post-data="chat_id=$TG_USER_ID&text=$text&parse_mode=markdownv2" $API_URL
     fi
 }
 
