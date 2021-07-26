@@ -311,15 +311,15 @@ local function dler_login()
 	local email = uci:get("openclash", "config", "dler_email")
 	local passwd = uci:get("openclash", "config", "dler_passwd")
 	if email and passwd then
-		info = luci.sys.exec(string.format("curl -sL -d 'email=%s' -d 'passwd=%s' -X POST https://dler.cloud/api/v1/login", email, passwd))
+		info = luci.sys.exec(string.format("curl -sL -H 'Content-Type: application/json' -d '{\"email\":\"%s\", \"passwd\":\"%s\"}' -X POST https://dler.cloud/api/v1/login", email, passwd))
 		if info then
 			info = json.parse(info)
 		end
-		if info.ret == 200 then
+		if info and info.ret == 200 then
 			token = info.data.token
 			uci:set("openclash", "config", "dler_token", token)
 			uci:commit("openclash")
-			get_sub = string.format("curl -sL -d 'access_token=%s' -X POST https://dler.cloud/api/v1/managed/clash -o %s", token, sub_path)
+			get_sub = string.format("curl -sL -H 'Content-Type: application/json' -d '{\"access_token\":\"%s\"}' -X POST https://dler.cloud/api/v1/managed/clash -o %s", token, sub_path)
 			luci.sys.exec(get_sub)
 			return info.ret
 		else
@@ -344,11 +344,11 @@ local function dler_logout()
 	local info, token
 	local token = uci:get("openclash", "config", "dler_token")
 	if token then
-		info = luci.sys.exec(string.format("curl -sL -d 'access_token=%s' -X POST https://dler.cloud/api/v1/logout", token))
+		info = luci.sys.exec(string.format("curl -sL -H 'Content-Type: application/json' -d '{\"access_token\":\"%s\"}' -X POST https://dler.cloud/api/v1/logout", token))
 		if info then
 			info = json.parse(info)
 		end
-		if info.ret == 200 then
+		if info and info.ret == 200 then
 			uci:delete("openclash", "config", "dler_token")
 			uci:delete("openclash", "config", "dler_checkin")
 			uci:delete("openclash", "config", "dler_checkin_interval")
@@ -373,7 +373,7 @@ local function dler_info()
 	local passwd = uci:get("openclash", "config", "dler_passwd")
 	path = "/tmp/dler_info"
 	if token and email and passwd then
-		get_info = string.format("curl -sL -d 'email=%s' -d 'passwd=%s' -X POST https://dler.cloud/api/v1/information -o %s", email, passwd, path)
+		get_info = string.format("curl -sL -H 'Content-Type: application/json' -d '{\"email\":\"%s\", \"passwd\":\"%s\"}' -X POST https://dler.cloud/api/v1/information -o %s", email, passwd, path)
 		if not nixio.fs.access(path) then
 			luci.sys.exec(get_info)
 		else
@@ -389,7 +389,7 @@ local function dler_info()
 		if info then
 			info = json.parse(info)
 		end
-		if info.ret == 200 then
+		if info and info.ret == 200 then
 			return info.data
 		else
 			fs.unlink(path)
@@ -409,17 +409,17 @@ local function dler_checkin()
 	local passwd = uci:get("openclash", "config", "dler_passwd")
 	local multiple = uci:get("openclash", "config", "dler_checkin_multiple") or 1
 	if token and email and passwd then
-		info = luci.sys.exec(string.format("curl -sL -d 'email=%s' -d 'passwd=%s' -d 'multiple=%s' -X POST https://dler.cloud/api/v1/checkin", email, passwd, multiple))
+		info = luci.sys.exec(string.format("curl -sL -H 'Content-Type: application/json' -d '{\"email\":\"%s\", \"passwd\":\"%s\", \"multiple\":\"%s\"}' -X POST https://dler.cloud/api/v1/checkin", email, passwd, multiple))
 		if info then
 			info = json.parse(info)
 		end
-		if info.ret == 200 then
+		if info and info.ret == 200 then
 			fs.unlink("/tmp/dler_info")
 			fs.writefile(path, info)
 			luci.sys.exec(string.format("echo -e %s Dler Cloud Checkin Successful, Result:【%s】 >> /tmp/openclash.log", os.date("%Y-%m-%d %H:%M:%S"), info.data.checkin))
 			return info
 		else
-			if info.msg then
+			if info and info.msg then
 				luci.sys.exec(string.format("echo -e %s Dler Cloud Checkin Failed, Result:【%s】 >> /tmp/openclash.log", os.date("%Y-%m-%d %H:%M:%S"), info.msg))
 			else
 				luci.sys.exec(string.format("echo -e %s Dler Cloud Checkin Failed! Please Check And Try Again... >> /tmp/openclash.log",os.date("%Y-%m-%d %H:%M:%S")))
