@@ -1,0 +1,5 @@
+#!/bin/sh
+
+[ "$ACTION" = "ifup" ] || exit 0
+[ "$INTERFACE" = "br-lan" ] || exit 0
+/etc/init.d/speedlimit start

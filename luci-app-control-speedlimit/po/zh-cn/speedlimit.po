@@ -1,0 +1,44 @@
+msgid "Speed Limit"
+msgstr "用户限速"
+
+msgid "CowB Speed Limit can limit user's speed via MAC or IP or IP range."
+msgstr "可以通过MAC或IP或IP段限制用户网速。"
+
+msgid "Running state"
+msgstr "运行状态"
+
+msgid "Not running"
+msgstr "未运行"
+
+msgid "Running"
+msgstr "已运行"
+
+msgid "The denomination is MB/S. You can type in 0 and move the rule to top to unlimit someone to exclude for overlapping IP range, click --custom-- (at the bottom of the MAC list) to type in IP or IP range or IP with mask."
+msgstr "速度单位为<font color=\"red\"><b> MB/秒 </b></font>。<br>如某速率填 0 并将该规则移动到顶端则该项不限速，上下都填 0 则该用户不限速（排除与IP范围重叠用）。<br>按 --自定义--（在MAC列表底部）可输入IP或IP段或IP范围或IP加掩码。"
+
+msgid "MAC/IP/IPrange<font color=\"green\">(MAC support the separation is : or - .)</font>"
+msgstr "MAC/IP/IP范围<font color=\"green\">（MAC支持 : 或 - 分割）</font>"
+
+msgid "downloads"
+msgstr "下载速度"
+
+msgid "uploads"
+msgstr "上传速度"
+
+msgid "Comment"
+msgstr "备注"
+
+msgid ""
+msgstr ""
+
+msgid ""
+msgstr ""
+
+msgid ""
+msgstr ""
+
+msgid ""
+msgstr ""
+
+msgid ""
+msgstr ""

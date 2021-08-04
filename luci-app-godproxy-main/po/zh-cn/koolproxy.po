@@ -1,0 +1,46 @@
+msgid "Filter Mode"
+msgstr "过滤模式"
+
+msgid "Basic Settings"
+msgstr "基础设置"
+
+msgid "View the logs"
+msgstr "更新日志"
+
+msgid "Certificate Management"
+msgstr "证书管理"
+
+msgid "Set Backlist Of custom"
+msgstr "自定义规则"
+
+msgid "IP Address"
+msgstr "内部IP地址"
+
+msgid "Client Remarks"
+msgstr "客户端备注"
+
+msgid "Upload Restore"
+msgstr "上传恢复证书"
+
+msgid "Backup Download"
+msgstr "下载证书备份"
+
+msgid "Set Backlist Of Websites"
+msgstr "网站黑名单设置"
+
+msgid "KoolproxyR Plus+"
+msgstr "GodProxy滤广告"
+
+msgid "Koolproxy Logs"
+msgstr "查看最近的更新日志"
+
+msgid "Enter your custom rules, each row."
+msgstr "输入你的自定义规则，每条规则一行。"
+
+msgid "Upload backup file,The file name must be koolproxyCA.tar.gz"
+msgstr "上传恢复已备份的证书，文件名必须为koolproxyCA.tar.gz"
+
+msgid "ACLs is a tools which used to designate specific IP filter mode,The MAC addresses added to the list will be filtered using https"
+msgstr "访问控制列表是用于指定特殊IP过滤模式的工具，如为已安装证书的客户端开启https广告过滤等，MAC或者IP必须填写其中一项。"
+
+

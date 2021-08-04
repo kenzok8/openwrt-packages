@@ -1,0 +1,13 @@
+#!/bin/sh
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@speedlimit[-1]
+	add ucitrack speedlimit
+	set ucitrack.@speedlimit[-1].init=speedlimit
+	commit ucitrack
+EOF
+
+
+rm -f /tmp/luci-indexcache
+exit 0
+

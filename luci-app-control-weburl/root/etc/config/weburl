@@ -1,0 +1,27 @@
+
+config basic
+	option algos 'kmp'
+	option enabled '0'
+
+config macbind
+	option timeoff '00:00'
+	option timeon '00:00'
+	option daysofweek 'Monday Tuesday Wednesday Thursday Friday Saturday Sunday'
+	option keyword 'qq.com'
+	option enable '0'
+
+config macbind
+	option timeoff '00:00'
+	option timeon '00:00'
+	option daysofweek 'Monday Tuesday Wednesday Thursday Friday Saturday Sunday'
+	option enable '0'
+	option keyword 'www'
+
+config macbind
+	option timeoff '00:00'
+	option timeon '00:00'
+	option daysofweek 'Monday Tuesday Wednesday Thursday Friday Saturday Sunday'
+	option enable '0'
+	option keyword 'cmd.exe'
+
+

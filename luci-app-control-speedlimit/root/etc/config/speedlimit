@@ -1,0 +1,13 @@
+
+config usrlimit
+	option usr '00:11:22:33:44:55'
+	option enable '0'
+	option download '0.2'
+	option upload '0.2'
+
+config usrlimit
+	option usr '192.168.1.100-200'
+	option enable '0'
+	option download '0.1'
+	option upload '0.1'
+

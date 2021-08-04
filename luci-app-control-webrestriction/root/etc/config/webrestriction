@@ -1,0 +1,15 @@
+
+config basic
+	option enable '0'
+	option limit_type 'blacklist'
+	option enable '0'
+	option start_time '00:00'
+	option stop_time '00:00'
+	option daysofweek 'Monday Tuesday Wednesday Thursday Friday Saturday Sunday'
+
+config macbind
+	option macaddr '00:11:22:33:44:55'
+	option comment 'Example'
+	option enable '0'
+
+

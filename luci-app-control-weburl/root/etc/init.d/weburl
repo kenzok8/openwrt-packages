@@ -1,0 +1,65 @@
+#!/bin/sh /etc/rc.common
+#
+# Copyright (C) 2015 OpenWrt-dist
+# Copyright (C) 2016 fw867 <ffkykzs@gmail.com>
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+# wulishui mod. at 20200923 , <wulishui@gmail.com>
+
+START=98
+
+add_rules() {
+rulessum=$(grep -c 'macbind' /etc/config/weburl)
+for i in $(seq 0 $((rulessum-1)))
+do
+enable=$(uci get weburl.@macbind[$i].enable 2>/dev/null)
+if [ "$enable" == 1 ]; then
+ macaddr=$(uci get weburl.@macbind[$i].macaddr 2>/dev/null) && MAC="-m mac --mac-source $macaddr" || MAC=""
+ keyword=$(uci get weburl.@macbind[$i].keyword 2>/dev/null) && STG="-m string --string ${keyword} --algo ${algos}" || STG=""
+ proto=$(uci get weburl.@macbind[$i].proto 2>/dev/null) || proto="tcp"
+ sport=$(uci get weburl.@macbind[$i].sport 2>/dev/null) && SPT="--sport ${sport}" || SPT=""
+ dport=$(uci get weburl.@macbind[$i].dport 2>/dev/null) && DPT="--dport ${dport}" || DPT=""
+ havesMPT=`echo "$sport"|grep ","` && sMPT="-m multiport" || sMPT=""
+ havedMPT=`echo "$dport"|grep ","` && dMPT="-m multiport" || dMPT=""
+ [ -z "$sport" -a -z "$dport" ] && PTS="" || PTS="-p ${proto} ${sMPT} ${SPT} ${dMPT} ${DPT}"
+ timestart=$(uci get weburl.@macbind[$i].timeon 2>/dev/null) || timestart="00:00"
+ timestop=$(uci get weburl.@macbind[$i].timeoff 2>/dev/null) ||  timestop="00:00"
+ week_days=$(uci get weburl.@macbind[$i].daysofweek |sed 's/ /,/g' 2>/dev/null)
+ [ "$timestart" = "$timestop" ] && TIME="" || TIME="--timestart ${timestart} --timestop ${timestop}"
+ [ -z "$week_days" -o "$week_days" = "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday" ] && WEEK="" || WEEK="--weekdays ${week_days}"
+ [ -n "$TIME" -o -n "$WEEK" ] && TME="-m time --kerneltz ${TIME} ${WEEK}" || TME=""
+ if [ -n "$keyword" -o -n "$MAC" -o -n "$sport" -o -n "$dport" ]; then
+  iptables  -A WEBURL ${MAC} ${PTS} ${TME} ${STG} -j REJECT 2>/dev/null
+  ip6tables -A WEBURL ${MAC} ${PTS} ${TME} ${STG} -j REJECT 2>/dev/null
+ fi
+fi
+done
+}
+
+start(){
+enabled=`uci get weburl.@basic[0].enabled 2>/dev/null`
+if [ "$enabled" == 1 ]; then
+	ENsum=`grep -c 'enable .1.' /etc/config/weburl`
+	if [ "$ENsum" -gt 0 ]; then
+	 algos=`uci get weburl.@basic[0].algos 2>/dev/null`
+	 iptables  -N WEBURL 2>/dev/null || iptables  -F WEBURL 2>/dev/null
+	 ip6tables -N WEBURL 2>/dev/null || ip6tables -F WEBURL 2>/dev/null
+	 iptables  -C FORWARD -j WEBURL 2>/dev/null || iptables  -I FORWARD -j WEBURL
+	 ip6tables -C FORWARD -j WEBURL 2>/dev/null || ip6tables -I FORWARD -j WEBURL
+	 add_rules
+	 grep 'weburl' /etc/firewall.user || echo "/etc/init.d/weburl restart" >> /etc/firewall.user
+	fi
+fi
+}
+
+stop(){
+	sed -i '/weburl/d' /etc/firewall.user 2>/dev/null
+	iptables  -D FORWARD -j WEBURL 2>/dev/null
+	ip6tables -D FORWARD -j WEBURL 2>/dev/null
+	iptables  -F WEBURL 2>/dev/null
+	ip6tables -F WEBURL 2>/dev/null
+	iptables - X WEBURL 2>/dev/null
+	ip6tables -X WEBURL 2>/dev/null
+}
+

@@ -1,0 +1,125 @@
+#!/bin/bash /etc/rc.common
+# wulishui 20200218--- - -  -   -    -20210426
+# Author: wulishui <wulishui@gmail.com> , all rights reserved.
+
+START=86
+
+del_tc() {
+	tc qdisc del dev br-lan root 2>/dev/null
+	tc qdisc del dev br-lan_ifb root 2>/dev/null
+	tc qdisc del dev br-lan ingress 2>/dev/null
+	ip link del dev br-lan_ifb 2>/dev/null
+}
+
+get_rate() {
+	RATE=$(awk '{print $1*8*10^3}' <<< "$RATE_")
+}
+
+add_rule_sip() {
+	grep -q ^"$usr"$ <<< "$useradded" && return
+	if [ "$DL" -gt 0 ]; then
+		tc class add dev br-lan parent 1:1 classid 1:$cnt htb rate "$DL"kbit ceil "$DL"kbit prio $cnt quantum 1500
+		tc qdisc add dev br-lan parent 1:"$cnt" handle "$cnt": sfq perturb 1
+		tc filter add dev br-lan parent 1:0 prio $cnt protocol ip u32 match ip dst "$usr"/"$M" classid 1:$cnt
+	elif [ "$DL" == 0 ]; then
+		tc filter add dev br-lan parent 1:0 prio 6 protocol ip u32 match ip dst "$usr"/"$M" classid 1:1
+	fi
+	if [ "$UL" -gt 0 ]; then
+		tc class add dev br-lan_ifb parent 1:1 classid 1:$cnt htb rate "$UL"kbit ceil "$UL"kbit prio $cnt quantum 1500
+		tc qdisc add dev br-lan_ifb parent 1:"$cnt" handle "$cnt": sfq perturb 1
+		tc filter add dev br-lan_ifb parent 1:0 prio $cnt protocol ip u32 match ip src "$usr"/"$M" classid 1:$cnt
+	elif [ "$UL" == 0 ]; then
+		tc filter add dev br-lan_ifb parent 1:0 prio 6 protocol ip u32 match ip src "$usr"/"$M" classid 1:1
+	fi
+	useradded=$(sed '$a\'"$usr"'' <<< "$useradded")
+	cnt="$((cnt + 1))"
+}
+
+add_rule_ip() {
+	if [ -n "$(grep '-' <<< "$usr")" ]; then
+		usr=$(awk -F '[.-]' '{if ($5=="") print $1"."$2"."$3"."$4 ; else if ($8=="" && $4<$5) print $1"."$2"."$3"."$4"-"$5 ; else if ($8=="" && $4>$5) print $1"."$2"."$3"."$5"-"$4 ; else if ($8>$4) print $1"."$2"."$3"."$4"-"$8 ; else if ($8<$4) print $1"."$2"."$3"."$8"-"$4}' <<< "$usr")
+		iphead=$(awk -F '[.-]' '{print $1"."$2"."$3"."}' <<< "$usr")
+		ipstart=$(awk -F '[.-]' '{print $4}' <<< "$usr")
+		ipend=$(awk -F '[.-]' '{print $5}' <<< "$usr")
+		M=32
+		while [ $ipstart -le $ipend ]; do
+			usr="$iphead""$ipstart"
+			add_rule_sip
+			ipstart=$(($ipstart + 1))
+		done
+	else
+		M=$(awk -F '[/]' '{print $2}' <<< "$usr")
+		[ -n "$M" ] && usr=$(awk -F '[/]' '{print $1}' <<< "$usr") || M=32
+		add_rule_sip
+	fi
+}
+
+add_rule_mac() {
+	grep -q ^"$usr"$ <<< "$useradded" && return
+	A=$(awk -F '[-:]' '{print $1$2}' <<< "$usr")
+	B=$(awk -F '[-:]' '{print $3$4$5$6}' <<< "$usr")
+	C=$(awk -F '[-:]' '{print $1$2$3$4}' <<< "$usr")
+	D=$(awk -F '[-:]' '{print $5$6}' <<< "$usr")
+	if [ "$DL" -gt 0 ]; then
+		tc class add dev br-lan parent 1:1 classid 1:$cnt htb rate "$DL"kbit ceil "$DL"kbit prio $cnt quantum 1500
+		tc qdisc add dev br-lan parent 1:"$cnt" handle "$cnt": sfq perturb 1
+		tc filter add dev br-lan parent 1: protocol ip prio $cnt u32 match u16 0x0800 0xffff at -2 match u32 0x"$B" 0xffffffff at -12 match u16 0x"$A" 0xffff at -14 flowid 1:$cnt
+	elif [ "$DL" == 0 ]; then
+		tc filter add dev br-lan parent 1: protocol ip prio 5 u32 match u16 0x0800 0xffff at -2 match u32 0x"$B" 0xffffffff at -12 match u16 0x"$A" 0xffff at -14 flowid 1:1
+	fi
+	if [ "$UL" -gt 0 ]; then
+		tc class add dev br-lan_ifb parent 1:1 classid 1:$cnt htb rate "$UL"kbit ceil "$UL"kbit prio $cnt quantum 1500
+		tc qdisc add dev br-lan_ifb parent 1:"$cnt" handle "$cnt": sfq perturb 1
+		tc filter add dev br-lan_ifb parent 1: protocol ip prio $cnt u32 match u16 0x0800 0xffff at -2 match u16 0x"$D" 0xffff at -4 match u32 0x"$C" 0xffffffff at -8 flowid 1:$cnt
+	elif [ "$UL" == 0 ]; then
+		tc filter add dev br-lan_ifb parent 1: protocol ip prio 5 u32 match u16 0x0800 0xffff at -2 match u16 0x"$D" 0xffff at -4 match u32 0x"$C" 0xffffffff at -8 flowid 1:1
+	fi
+	useradded=$(sed '$a\'"$usr"'' <<< "$useradded")
+	cnt="$((cnt + 1))"
+}
+
+add_htb_root() {
+	tc qdisc add dev "$1" root handle 1:0 htb default 1
+	tc class add dev "$1" parent 1:0 classid 1:1 htb rate 80gbit prio 0 quantum 1500
+	tc filter add dev "$1" parent 1:0 protocol ipv4 prio 1 u32 match ip dst 224.0.0.0/4 flowid 1:1
+	tc filter add dev "$1" parent 1:0 protocol ipv4 prio 1 u32 match ip dst 240.0.0.0/4 flowid 1:1
+	tc filter add dev "$1" parent 1:0 protocol ipv4 prio 1 u32 match ip src "$localip" match ip dst "$localip" flowid 1:1
+}
+
+start() {
+	[ -f /var/lock/speedlimit ] && exit
+	if [ "$(grep -c 'option enable .1.' /etc/config/speedlimit 2>/dev/null)" -gt "0" ]; then
+		touch /var/lock/speedlimit
+		localip=$(uci get network.lan.ipaddr 2>/dev/null | awk -F '.' '{print $1"."$2"."$3".0/24"}')
+		del_tc
+		ip link add dev br-lan_ifb name br-lan_ifb type ifb
+		ip link set dev br-lan_ifb up
+		add_htb_root br-lan
+		add_htb_root br-lan_ifb
+		tc qdisc add dev br-lan ingress
+		tc filter add dev br-lan parent ffff: protocol all prio 2 u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev br-lan_ifb
+		enablesum=$(grep -c 'usrlimit' /etc/config/speedlimit | awk '{print $1-1}')
+		cnt=3
+		useradded="-"
+		for i in $(seq 0 $enablesum); do
+			enable=$(uci get speedlimit.@usrlimit[$i].enable)
+			if [ "$enable" == 1 ]; then
+				usr=$(uci get speedlimit.@usrlimit[$i].usr 2>/dev/null)
+				RATE_=$(uci get speedlimit.@usrlimit[$i].download 2>/dev/null); get_rate; DL="$RATE"; unset RATE_
+				RATE_=$(uci get speedlimit.@usrlimit[$i].upload   2>/dev/null); get_rate; UL="$RATE"; unset RATE_
+				egrep -q "([A-Fa-f0-9]{2}[-:]){5}[A-Fa-f0-9]{2}" <<< "$usr" && (add_rule_mac; :;) || (egrep -q "(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])" <<< "$usr" && add_rule_ip)
+			fi
+		done
+		rm -f /var/lock/speedlimit
+	fi
+}
+
+stop() {
+	rm -f /var/lock/speedlimit 2>/dev/null
+	del_tc
+}
+
+restart() {
+	stop
+	start
+}

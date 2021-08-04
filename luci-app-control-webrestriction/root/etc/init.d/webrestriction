@@ -1,0 +1,82 @@
+#!/bin/sh /etc/rc.common
+# wulishui 20200202 20:11-20200218 13:29-20200220 v2.1 20200321 v2.2.1 20200424 v2.2.2
+
+START=92
+
+start(){
+enable=`uci get webrestriction.@basic[-1].enable 2>/dev/null`
+if [ "$enable" == 1 ]; then
+
+iptables -t filter -F SWOBL 2>/dev/null
+ip6tables -t filter -F SWOBL 2>/dev/null
+ipset flush webrestriction 2>/dev/null
+
+running=`ps|grep 'webrestriction.sh'|grep -v grep|awk '{print $1}'|head -1`
+[ -n "$running" ] && kill -9 "$running" 2>/dev/null
+
+awk 'BEGIN {RS = "\n\n+";ORS = "\n\n"} /enable .1./ {print $0}' /etc/config/webrestriction |grep -o -E "([A-Fa-f0-9]{2}[:-]){5}[A-Fa-f0-9]{2}"|sed '/^ *$/d'|sort -n|uniq -i|sed 's/^/add webrestriction &/g' > /tmp/webrestriction 2>/dev/nul
+
+[ -s /tmp/webrestriction ] || exit
+
+ipset create webrestriction hash:mac hashsize 1024 maxelem 2048 2>/dev/null
+ipset restore -f /tmp/webrestriction 2>/dev/null 
+
+running=`ps|grep 'woblwatchdog.sh'|grep -v grep|awk '{print $1}'|head -1`
+kill -9 "$running" 2>/dev/null
+
+swobl_enabled=`uci get swobl.swobl.enabled 2>/dev/null`
+if [ "$swobl_enabled" == 1 ]; then
+uci set swobl.swobl.enabled=0
+uci commit swobl
+/etc/init.d/swobl stop
+fi
+
+setup=`uci get firewall.@defaults[0].SWOBL_FORWARD 2>/dev/null`
+if [ "$setup" != 1 ]; then
+uci set firewall.@defaults[0].SWOBL_FORWARD=1
+uci commit firewall
+/etc/init.d/firewall reload >/dev/null 2>&1
+fi
+
+limit_type=`uci get webrestriction.@basic[-1].limit_type 2>/dev/null`
+timestart=$(uci get webrestriction.@basic[0].start_time 2>/dev/null)
+timestop=$(uci get webrestriction.@basic[0].stop_time 2>/dev/null)
+week_days=$(uci get webrestriction.@basic[0].daysofweek|sed 's/ /,/g' 2>/dev/null)
+
+if [ "$limit_type" = "blacklist" ]; then
+iptables -t filter -A SWOBL -m set --match-set webrestriction src,dst -m time --kerneltz --timestart "$timestart" --timestop "$timestop" --weekdays "$week_days" -j DROP 2>/dev/null
+ip6tables -t filter -A SWOBL -m set --match-set webrestriction src,dst -m time --kerneltz --timestart "$timestart" --timestop "$timestop" --weekdays "$week_days" -j DROP 2>/dev/null
+fi
+
+if [ "$limit_type" = "whitelist" ]; then
+iptables -t filter -A SWOBL -m set ! --match-set webrestriction src,dst -m time --kerneltz --timestart "$timestart" --timestop "$timestop" --weekdays "$week_days" -j DROP 2>/dev/null
+ip6tables -t filter -A SWOBL -m set ! --match-set webrestriction src,dst -m time --kerneltz --timestart "$timestart" --timestop "$timestop" --weekdays "$week_days" -j DROP 2>/dev/null
+fi
+
+running=`ps|grep 'webrestriction.sh'|grep -v grep|awk '{print $1}'|head -1`
+[ -z "$running" ] && /etc/webrestriction.sh &
+
+rm -f /tmp/webrestriction 2>/dev/null
+
+/etc/init.d/firewall reload >/dev/null 2>&1
+
+fi
+}
+
+stop(){
+running=`ps|grep 'webrestriction.sh'|grep -v grep|awk '{print $1}'|head -1`
+kill -9 "$running" 2>/dev/null
+
+ iptables -t filter -F SWOBL 2>/dev/null
+ ip6tables -t filter -F SWOBL 2>/dev/null
+
+ uci set firewall.@defaults[0].SWOBL_FORWARD=0
+ uci commit firewall
+ /etc/init.d/firewall reload >/dev/null 2>&1
+ipset flush webrestriction 2>/dev/null
+ipset destroy webrestriction 2>/dev/null
+}
+
+
+
+
