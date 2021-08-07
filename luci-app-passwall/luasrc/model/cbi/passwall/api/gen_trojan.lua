@@ -1,6 +1,6 @@
 local api = require "luci.model.cbi.passwall.api.api"
-local ucursor = require"luci.model.uci".cursor()
-local json = require "luci.jsonc"
+local uci = api.uci
+local json = api.jsonc
 
 local var = api.get_args(arg)
 local node_section = var["-node"]
@@ -14,7 +14,7 @@ local local_port = var["-local_port"]
 local server_host = var["-server_host"]
 local server_port = var["-server_port"]
 local loglevel = var["-loglevel"] or 2
-local node = ucursor:get_all("passwall", node_section)
+local node = uci:get_all("passwall", node_section)
 
 local cipher = "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA:AES128-SHA:AES256-SHA:DES-CBC3-SHA"
 local cipher13 = "TLS_AES_128_GCM_SHA256:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_256_GCM_SHA384"
@@ -49,9 +49,9 @@ local trojan = {
     }
 }
 if node.type == "Trojan-Go" then
-    trojan.ssl.cipher = (node.fingerprint == nil) and cipher or (node.fingerprint == "disable" and cipher13 .. ":" .. cipher or "")
-    trojan.ssl.cipher_tls13 = (node.fingerprint == nil) and cipher13 or nil
-    trojan.ssl.fingerprint = (node.fingerprint ~= nil and node.fingerprint ~= "disable") and node.fingerprint or ""
+    trojan.ssl.cipher = nil
+    trojan.ssl.cipher_tls13 = nil
+    trojan.ssl.fingerprint = (node.fingerprint ~= "disable") and node.fingerprint or ""
     trojan.ssl.alpn = (node.trojan_transport == 'ws') and {} or {"h2", "http/1.1"}
     if node.tls ~= "1" and node.trojan_transport == "original" then trojan.ssl = nil end
     trojan.transport_plugin = ((not node.tls or node.tls ~= "1") and node.trojan_transport == "original") and {
@@ -62,14 +62,14 @@ if node.type == "Trojan-Go" then
         arg = node.plugin_type ~= "plaintext" and { node.plugin_arg } or nil,
         env = {}
     } or nil
-    trojan.websocket = (node.trojan_transport and node.trojan_transport:find('ws')) and {
+    trojan.websocket = (node.trojan_transport == 'ws') and {
         enabled = true,
         path = node.ws_path or "/",
         host = node.ws_host or (node.tls_serverName or node.address)
     } or nil
     trojan.shadowsocks = (node.ss_aead == "1") and {
         enabled = true,
-        method = node.ss_aead_method or "aead_aes_128_gcm",
+        method = node.ss_aead_method or "aes_128_gcm",
         password = node.ss_aead_pwd or ""
     } or nil
     trojan.mux = (node.smux == "1") and {

@@ -43,10 +43,6 @@ local header_type_list = {
     "none", "srtp", "utp", "wechat-video", "dtls", "wireguard"
 }
 local encrypt_methods_ss_aead = {
-	"dummy",
-	"aead_chacha20_poly1305",
-	"aead_aes_128_gcm",
-	"aead_aes_256_gcm",
 	"chacha20-ietf-poly1305",
 	"aes-128-gcm",
 	"aes-256-gcm",
@@ -77,6 +73,9 @@ if api.is_finded("sslocal") or api.is_finded("ss-redir") then
 end
 if api.is_finded("ssr-redir") then
     type:value("SSR", translate("ShadowsocksR"))
+end
+if api.is_finded("v2ray") then
+    type:value("V2ray", translate("V2ray"))
 end
 if api.is_finded("xray") then
     type:value("Xray", translate("Xray"))
@@ -120,6 +119,7 @@ protocol:value("shadowsocks", translate("Shadowsocks"))
 protocol:value("trojan", translate("Trojan"))
 protocol:value("_balancing", translate("Balancing"))
 protocol:value("_shunt", translate("Shunt"))
+protocol:depends("type", "V2ray")
 protocol:depends("type", "Xray")
 
 local nodes_table = {}
@@ -227,6 +227,12 @@ address:depends("type", "Trojan")
 address:depends("type", "Trojan-Plus")
 address:depends("type", "Trojan-Go")
 address:depends("type", "Naiveproxy")
+address:depends({ type = "V2ray", protocol = "vmess" })
+address:depends({ type = "V2ray", protocol = "vless" })
+address:depends({ type = "V2ray", protocol = "http" })
+address:depends({ type = "V2ray", protocol = "socks" })
+address:depends({ type = "V2ray", protocol = "shadowsocks" })
+address:depends({ type = "V2ray", protocol = "trojan" })
 address:depends({ type = "Xray", protocol = "vmess" })
 address:depends({ type = "Xray", protocol = "vless" })
 address:depends({ type = "Xray", protocol = "http" })
@@ -244,6 +250,12 @@ use_ipv6:depends("type", "Brook")
 use_ipv6:depends("type", "Trojan")
 use_ipv6:depends("type", "Trojan-Plus")
 use_ipv6:depends("type", "Trojan-Go")
+use_ipv6:depends({ type = "V2ray", protocol = "vmess" })
+use_ipv6:depends({ type = "V2ray", protocol = "vless" })
+use_ipv6:depends({ type = "V2ray", protocol = "http" })
+use_ipv6:depends({ type = "V2ray", protocol = "socks" })
+use_ipv6:depends({ type = "V2ray", protocol = "shadowsocks" })
+use_ipv6:depends({ type = "V2ray", protocol = "trojan" })
 use_ipv6:depends({ type = "Xray", protocol = "vmess" })
 use_ipv6:depends({ type = "Xray", protocol = "vless" })
 use_ipv6:depends({ type = "Xray", protocol = "http" })
@@ -263,6 +275,12 @@ port:depends("type", "Trojan")
 port:depends("type", "Trojan-Plus")
 port:depends("type", "Trojan-Go")
 port:depends("type", "Naiveproxy")
+port:depends({ type = "V2ray", protocol = "vmess" })
+port:depends({ type = "V2ray", protocol = "vless" })
+port:depends({ type = "V2ray", protocol = "http" })
+port:depends({ type = "V2ray", protocol = "socks" })
+port:depends({ type = "V2ray", protocol = "shadowsocks" })
+port:depends({ type = "V2ray", protocol = "trojan" })
 port:depends({ type = "Xray", protocol = "vmess" })
 port:depends({ type = "Xray", protocol = "vless" })
 port:depends({ type = "Xray", protocol = "http" })
@@ -273,6 +291,8 @@ port:depends({ type = "Xray", protocol = "trojan" })
 username = s:option(Value, "username", translate("Username"))
 username:depends("type", "Socks")
 username:depends("type", "Naiveproxy")
+username:depends({ type = "V2ray", protocol = "http" })
+username:depends({ type = "V2ray", protocol = "socks" })
 username:depends({ type = "Xray", protocol = "http" })
 username:depends({ type = "Xray", protocol = "socks" })
 
@@ -286,6 +306,10 @@ password:depends("type", "Trojan")
 password:depends("type", "Trojan-Plus")
 password:depends("type", "Trojan-Go")
 password:depends("type", "Naiveproxy")
+password:depends({ type = "V2ray", protocol = "http" })
+password:depends({ type = "V2ray", protocol = "socks" })
+password:depends({ type = "V2ray", protocol = "shadowsocks" })
+password:depends({ type = "V2ray", protocol = "trojan" })
 password:depends({ type = "Xray", protocol = "http" })
 password:depends({ type = "Xray", protocol = "socks" })
 password:depends({ type = "Xray", protocol = "shadowsocks" })
@@ -323,10 +347,12 @@ end
 
 security = s:option(ListValue, "security", translate("Encrypt Method"))
 for a, t in ipairs(security_list) do security:value(t) end
+security:depends({ type = "V2ray", protocol = "vmess" })
 security:depends({ type = "Xray", protocol = "vmess" })
 
 encryption = s:option(Value, "encryption", translate("Encrypt Method"))
 encryption.default = "none"
+encryption:depends({ type = "V2ray", protocol = "vless" })
 encryption:depends({ type = "Xray", protocol = "vless" })
 
 v_ss_encrypt_method = s:option(Value, "v_ss_encrypt_method", translate("Encrypt Method"))
@@ -418,6 +444,8 @@ kcp_opts:depends("use_kcp", "1")
 
 uuid = s:option(Value, "uuid", translate("ID"))
 uuid.password = true
+uuid:depends({ type = "V2ray", protocol = "vmess" })
+uuid:depends({ type = "V2ray", protocol = "vless" })
 uuid:depends({ type = "Xray", protocol = "vmess" })
 uuid:depends({ type = "Xray", protocol = "vless" })
 
@@ -435,6 +463,11 @@ tls.validate = function(self, value, t)
         return value
     end
 end
+tls:depends({ type = "V2ray", protocol = "vmess" })
+tls:depends({ type = "V2ray", protocol = "vless" })
+tls:depends({ type = "V2ray", protocol = "socks" })
+tls:depends({ type = "V2ray", protocol = "trojan" })
+tls:depends({ type = "V2ray", protocol = "shadowsocks" })
 tls:depends({ type = "Xray", protocol = "vmess" })
 tls:depends({ type = "Xray", protocol = "vless" })
 tls:depends({ type = "Xray", protocol = "socks" })
@@ -464,6 +497,7 @@ alpn.default = "h2,http/1.1"
 alpn:value("h2,http/1.1")
 alpn:value("h2")
 alpn:value("http/1.1")
+alpn:depends({ type = "V2ray", tls = true })
 alpn:depends({ type = "Xray", tls = true })
 
 -- [[ TLS部分 ]] --
@@ -510,14 +544,12 @@ function xray_fingerprint.write(self, section, value)
 end
 
 trojan_transport = s:option(ListValue, "trojan_transport", translate("Transport"))
-trojan_transport:value("original", "Original")
+trojan_transport:value("original", translate("Original"))
 trojan_transport:value("ws", "WebSocket")
-trojan_transport:value("h2", "HTTP/2")
-trojan_transport:value("h2+ws", "HTTP/2 & WebSocket")
 trojan_transport.default = "original"
 trojan_transport:depends("type", "Trojan-Go")
 
-trojan_plugin = s:option(ListValue, "plugin_type", translate("Plugin Type"))
+trojan_plugin = s:option(ListValue, "plugin_type", translate("Transport Plugin"))
 trojan_plugin:value("plaintext", "Plain Text")
 trojan_plugin:value("shadowsocks", "ShadowSocks")
 trojan_plugin:value("other", "Other")
@@ -547,6 +579,11 @@ transport:value("h2", "HTTP/2")
 transport:value("ds", "DomainSocket")
 transport:value("quic", "QUIC")
 transport:value("grpc", "gRPC")
+transport:depends({ type = "V2ray", protocol = "vmess" })
+transport:depends({ type = "V2ray", protocol = "vless" })
+transport:depends({ type = "V2ray", protocol = "socks" })
+transport:depends({ type = "V2ray", protocol = "shadowsocks" })
+transport:depends({ type = "V2ray", protocol = "trojan" })
 transport:depends({ type = "Xray", protocol = "vmess" })
 transport:depends({ type = "Xray", protocol = "vless" })
 transport:depends({ type = "Xray", protocol = "socks" })
@@ -558,6 +595,7 @@ ss_transport = s:option(ListValue, "ss_transport", translate("Transport"))
 ss_transport:value("ws", "WebSocket")
 ss_transport:value("h2", "HTTP/2")
 ss_transport:value("h2+ws", "HTTP/2 & WebSocket")
+ss_transport:depends({ type = "V2ray", protocol = "shadowsocks" })
 ss_transport:depends({ type = "Xray", protocol = "shadowsocks" })
 ]]--
 
@@ -617,13 +655,11 @@ mkcp_seed:depends("transport", "mkcp")
 ws_host = s:option(Value, "ws_host", translate("WebSocket Host"))
 ws_host:depends("transport", "ws")
 ws_host:depends("ss_transport", "ws")
-ws_host:depends("trojan_transport", "h2+ws")
 ws_host:depends("trojan_transport", "ws")
 
 ws_path = s:option(Value, "ws_path", translate("WebSocket Path"))
 ws_path:depends("transport", "ws")
 ws_path:depends("ss_transport", "ws")
-ws_path:depends("trojan_transport", "h2+ws")
 ws_path:depends("trojan_transport", "ws")
 ws_path:depends({ type = "Brook", brook_protocol = "wsclient" })
 
@@ -631,14 +667,10 @@ ws_path:depends({ type = "Brook", brook_protocol = "wsclient" })
 h2_host = s:option(Value, "h2_host", translate("HTTP/2 Host"))
 h2_host:depends("transport", "h2")
 h2_host:depends("ss_transport", "h2")
-h2_host:depends("trojan_transport", "h2+ws")
-h2_host:depends("trojan_transport", "h2")
 
 h2_path = s:option(Value, "h2_path", translate("HTTP/2 Path"))
 h2_path:depends("transport", "h2")
 h2_path:depends("ss_transport", "h2")
-h2_path:depends("trojan_transport", "h2+ws")
-h2_path:depends("trojan_transport", "h2")
 
 -- [[ DomainSocket部分 ]]--
 ds_path = s:option(Value, "ds_path", "Path", translate("A legal file path. This file must not exist before running."))
@@ -669,7 +701,7 @@ ss_aead.default = "0"
 
 ss_aead_method = s:option(ListValue, "ss_aead_method", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods_ss_aead) do ss_aead_method:value(v, v) end
-ss_aead_method.default = "aead_aes_128_gcm"
+ss_aead_method.default = "aes-128-gcm"
 ss_aead_method:depends("ss_aead", "1")
 
 ss_aead_pwd = s:option(Value, "ss_aead_pwd", translate("Password"))
@@ -680,8 +712,14 @@ ss_aead_pwd:depends("ss_aead", "1")
 mux = s:option(Flag, "smux", translate("smux"))
 mux:depends("type", "Trojan-Go")
 
--- [[ Xray Mux ]]--
+-- [[ Mux ]]--
 mux = s:option(Flag, "mux", translate("mux"))
+mux:depends({ type = "V2ray", protocol = "vmess" })
+mux:depends({ type = "V2ray", protocol = "vless", xtls = false })
+mux:depends({ type = "V2ray", protocol = "http" })
+mux:depends({ type = "V2ray", protocol = "socks" })
+mux:depends({ type = "V2ray", protocol = "shadowsocks" })
+mux:depends({ type = "V2ray", protocol = "trojan" })
 mux:depends({ type = "Xray", protocol = "vmess" })
 mux:depends({ type = "Xray", protocol = "vless", xtls = false })
 mux:depends({ type = "Xray", protocol = "http" })
