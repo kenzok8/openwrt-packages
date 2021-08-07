@@ -202,6 +202,8 @@ start_dns() {
 			interval=10m;
 			purge_cache=off;
 			reject=::/0;
+			reject_policy=negate;
+			reject_recursively=on;
 			}
 		EOF
 		ln_start_bin $(first_type pdnsd) pdnsd -c $TMP_PATH/pdnsd.conf

@@ -256,6 +256,19 @@ local function processData(szType, content)
 			-- 1202 年了还不支持 SS AEAD 的屑机场
 			result.server = nil
 		end
+	elseif szType == "sip008" then
+		result.type = v2_ss
+		result.v2ray_protocol = "shadowsocks"
+		result.server = content.server
+		result.server_port = content.server_port
+		result.password = content.password
+		result.encrypt_method_ss = content.method
+		result.plugin = content.plugin
+		result.plugin_opts = content.plugin_opts
+		result.alias = content.remarks
+		if not checkTabValue(encrypt_methods_ss)[content.method] then
+			result.server = nil
+		end
 	elseif szType == "ssd" then
 		result.type = v2_ss
 		result.v2ray_protocol = "shadowsocks"
@@ -440,6 +453,12 @@ local execute = function()
 						tinsert(servers, setmetatable(server, {__index = extra}))
 					end
 					nodes = servers
+				-- SS SIP008 直接使用 Json 格式
+				elseif jsonParse(raw) then
+					nodes = jsonParse(raw)
+					if nodes[1].server and nodes[1].method then
+						szType = 'sip008'
+					end
 				else
 					-- ssd 外的格式
 					nodes = split(base64Decode(raw):gsub(" ", "_"), "\n")
@@ -447,7 +466,7 @@ local execute = function()
 				for _, v in ipairs(nodes) do
 					if v then
 						local result
-						if szType == 'ssd' then
+						if szType then
 							result = processData(szType, v)
 						elseif not szType then
 							local node = trim(v)
