@@ -247,7 +247,7 @@ local function processData(szType, content)
 				end
 			end
 		else
-			result.server_port = host[2]
+			result.server_port = host[2]:gsub("/","")
 		end
 		if checkTabValue(encrypt_methods_ss)[method] then
 			result.encrypt_method_ss = method

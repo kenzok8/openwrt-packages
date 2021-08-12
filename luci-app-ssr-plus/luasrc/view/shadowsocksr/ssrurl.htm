@@ -109,7 +109,7 @@ function import_ssr_url(btn, urlname, sid) {
 				var temp = url0.substr(sipIndex + 1).split("/?");
 				var serverInfo = temp[0].split(":");
 				var server = serverInfo[0];
-				var port = serverInfo[1];
+				var port = serverInfo[1].replace("/","");
 				var method, password, plugin, pluginOpts;
 				if (temp[1]) {
 					var pluginInfo = decodeURIComponent(temp[1]);
