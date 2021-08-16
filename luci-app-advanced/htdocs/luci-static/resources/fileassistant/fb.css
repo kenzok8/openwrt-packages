@@ -2,7 +2,7 @@
     margin-top: 1rem;
 }
 .fb-container .cbi-button {
-    height: 2rem;
+    height: 2.6rem;
 }
 .fb-container .cbi-input-text {
     margin-bottom: 1rem;
@@ -18,7 +18,7 @@
     align-items: center;
     justify-content: space-between;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #aaa;
 }
 .fb-container .upload-container {
     display: none;
