@@ -17,9 +17,13 @@ function read_config(){
 	dir="/tmp/serverchan/" && mkdir -p ${dir}
 	[ ! -z "$oui_dir" ] && [ "$oui_dir" -eq "1" ] && oui_base="${dir}oui_base.txt" || oui_base="/usr/bin/serverchan/oui_base.txt"
 	debuglevel=`echo "$debuglevel"` && [ -z "$debuglevel" ] && logfile="/dev/null" || logfile="${dir}serverchan.log"
+	serverchan_blacklist=`echo "$serverchan_blacklist"|sed 's/ /\n/g'` 2>/dev/null
+	serverchan_whitelist=`echo "$serverchan_whitelist"|sed 's/ /\n/g'` 2>/dev/null
 	device_aliases=`echo "$device_aliases"|sed 's/ /\n/g'|sed 's/-/ /'` 2>/dev/null
 	err_device_aliases=`echo "$err_device_aliases"|sed 's/ /\n/g'` 2>/dev/null
 	client_usage_whitelist=`echo "$client_usage_whitelist"|sed 's/ /\n/g'` 2>/dev/null
+	[ -z "$serverchan_ipv4" ] && serverchan_ipv4=0
+	[ -z "$serverchan_ipv6" ] && serverchan_ipv6=0
 	[ "$iw_version" ] && wlan_interface=`iw dev|grep Interface|awk '{print $2}'` >/dev/null 2>&1
 	[ -z "$up_timeout" ] || [ "$up_timeout" -eq "0" ] && up_timeout="2"
 	[ -z "$down_timeout" ] || [ "$down_timeout" -eq "0" ] && down_timeout="20";down_timeout=`expr ${down_timeout} / 2 + 1`
@@ -126,7 +130,7 @@ function getip(){
 	elif [ $1 == "hostipv4" ] ;then
 		function get_hostipv4()
 		{
-			[ -z "$ipv4_urllist" ] && local ipv4_urllist="www.cip.cc myip.ipip.net ipv4.ddnspod.com ifcfg.cn speed.neu.edu.cn/getIP.php ddns.oray.com/checkip www.net.cn/static/customercare/yourip.asp"
+			[ -z "$ipv4_urllist" ] && local ipv4_urllist="www.cip.cc ipv4.ddnspod.com ifcfg.cn speed.neu.edu.cn/getIP.php ddns.oray.com/checkip www.net.cn/static/customercare/yourip.asp"
 			local url_number=`expr $(echo "$ipv4_urllist"|grep -o ' '|wc -l) + 1`
 			local ipv4_URL=`echo "$ipv4_urllist"|awk -v i=$(rand 1 $url_number) '{print $i}'`
 			[ ! -z "$ipv4_interface" ] && local hostIP=$(curl -k -s -4 --interface ${ipv4_interface} -m 5 ${ipv4_URL}) || local hostIP=$(curl -k -s -4 -m 5 ${ipv4_URL})
@@ -464,16 +468,16 @@ function LockFile(){
 		LockFile lock
 	fi
 	[ $1 = "unlock" ] && rm -f ${dir}serverchan.lock >/dev/null 2>&1
-	return
+	return 0
 }
 
 # 检测黑白名单
 function blackwhitelist(){
 	[ ! "$1" ] && return 1
-	[ -z "$serverchan_whitelist" ] && [ -z "$serverchan_blacklist" ] && [ -z "$serverchan_interface" ] && return
-	[ ! -z "$serverchan_whitelist" ] && ( ! echo "$serverchan_whitelist"|grep -q -i -w $1) && return
-	[ ! -z "$serverchan_blacklist" ] && ( echo "$serverchan_blacklist"|grep -q -i -w $1) && return
-	[ ! -z "$serverchan_interface" ] && ( echo `getinterface ${1}`|grep -q -i -w $serverchan_interface ) && return
+	[ -z "$serverchan_whitelist" ] && [ -z "$serverchan_blacklist" ] && [ -z "$serverchan_interface" ] && return 0
+	[ ! -z "$serverchan_whitelist" ] && ( ! echo "$serverchan_whitelist"|grep -q -i -w $1 ) && return 0
+	[ ! -z "$serverchan_blacklist" ] && ( echo "$serverchan_blacklist"|grep -q -i -w $1 ) && return 0
+	[ ! -z "$serverchan_interface" ] && ( echo `getinterface ${1}`|grep -q -i -w $serverchan_interface ) && return 0
 	return 1
 }
 
@@ -728,22 +732,27 @@ function ip_changes(){
 function up(){
 	[ -f ${dir}ipAddress ] && ( cat ${dir}ipAddress|grep -q -w $1 ) && return
 	local ip_mac=`getmac $1`
+	local ip_name=`getname ${1} ${ip_mac}`
 	local ip_interface=`getinterface ${ip_mac}`
 	getping ${1} ${up_timeout} "1";local ping_online=$?
 	if [ "$ping_online" -eq "0" ]; then
 		LockFile lock
-		[ -f "${dir}tmp_downlist" ] && local tmp_downip=`cat ${dir}tmp_downlist|grep -w ${1}|grep -v "^$"|sort -u|head -n1`
+		[ ! -z "$serverchan_blacklist" ] && local tmp_mac=`echo "${serverchan_blacklist}"|grep -w ${ip_mac}`
+		[ ! -z "$serverchan_whitelist" ] && local tmp_mac=`echo "${serverchan_whitelist}"|grep -w ${ip_mac}`
+		[ -z "$tmp_mac" ] && local tmp_mac=${ip_mac}
+		[ -f "${dir}tmp_downlist" ] && local tmp_downip=`cat ${dir}tmp_downlist|grep -w ${tmp_mac}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
+		[ -z "$tmp_downip" ] && local tmp_downip=`cat ${dir}tmp_downlist|grep -w ${1}|grep -v "^$"|sort -u|head -n1`
 		if [ ! -z "$tmp_downip" ]; then
-			cat ${dir}tmp_downlist|grep -w ${1}|grep -v "^$"|sort -u|head -n1 >> ${dir}ipAddress
-			sed -i "/^${1} /d" ${dir}tmp_downlist
+			local olddate=`cat ${dir}tmp_downlist|grep -w ${tmp_downip}|awk '{print $4}'|grep -v "^$"|sort -u|head -n1`
+			echo "$1 ${ip_mac} ${ip_name} ${olddate} ${ip_interface}" >> ${dir}ipAddress
+			sed -i "/^${tmp_downip} /d" ${dir}tmp_downlist
 		else
 			usage down $1
-			local ip_name=`getname ${1} ${ip_mac}`
 			blackwhitelist ${ip_mac};local ip_blackwhite=$?
 			echo "$1 ${ip_mac} ${ip_name} `date +%s` ${ip_interface}" >> ${dir}ipAddress
 			[ -f "${dir}send_enable.lock" ] || [ -z "$serverchan_up" ] || [ -z "$ip_blackwhite" ] && LockFile unlock && return
 			[ ! -z "$serverchan_up" ] && [ "$serverchan_up" -ne "1" ] && LockFile unlock && return
-			[ ! -z "$ip_blackwhite" ] && [ "$ip_blackwhite" -ne "0" ] && LockFile unlock && return
+			[ -z "$ip_blackwhite" ] || [ "$ip_blackwhite" -ne "0" ] && LockFile unlock && return
 			[ -f "${dir}title" ] && local title=`cat ${dir}title`
 			[ -f "${dir}content" ] && local content=`cat ${dir}content`
 			if [ -z "$title" ]; then
@@ -797,7 +806,7 @@ function down_send(){
 		blackwhitelist ${ip_mac};local ip_blackwhite=$?
 		[ -z "$serverchan_down" ] || [ -z "$ip_blackwhite" ] && continue
 		[ ! -z "$serverchan_down" ] && [ "$serverchan_down" -ne "1" ] && continue
-		[ ! -z "$ip_blackwhite" ] && [ "$ip_blackwhite" -ne "0" ] && continue
+		[ -z "$ip_blackwhite" ] || [ "$ip_blackwhite" -ne "0" ] && continue
 		local ip_name=`getname ${ip} ${ip_mac}`
 		local time_up=`cat ${dir}tmp_downlist|grep -w ${ip}|awk '{print $4}'|grep -v "^$"|sort -u|head -n1`
 		local ip_total=`usage get $ip_mac` && [ ! -z "$ip_total" ] && local ip_total="${str_linefeed}${str_tab}总计流量： ${str_space}${str_space}${str_space}${str_space}${ip_total}"
@@ -820,6 +829,7 @@ function down_send(){
 
 # 当前设备列表
 function current_device(){
+	[ ! -z "$content_current_device" ] && [ "$content_current_device" -eq "1" ] && return
 	[ -f ${dir}ipAddress ] && local logrow=$(grep -c "" ${dir}ipAddress) || local logrow="0";[ $logrow -eq "0" ] && return
 	[ -f ${dir}usage.db ] && local ip_total_db="总计流量${str_space}${str_space}${str_space}${str_space}"
 	content="${content}${str_splitline}${str_title_start} 现有在线设备 ${logrow} 台，具体如下${str_title_end}${str_linefeed}${str_tab}IP 地址${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${str_space}${ip_total_db}客户端名"
@@ -1018,8 +1028,7 @@ while [ "$serverchan_enable" -eq "1" ]; do
 	usage update
 	serverchan_disturb;disturb=$?
 
-	# 外网IP变化检测
-	if [ ! -z "$serverchan_ipv4" ] && [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv4" -ne "0" ] || [ "$serverchan_ipv6" -ne "0" ]; then
+	if [ "$serverchan_ipv4" -ne "0" ] || [ "$serverchan_ipv6" -ne "0" ]; then
 		rand_geturl
 		ip_changes
 	fi
@@ -1037,7 +1046,7 @@ while [ "$serverchan_enable" -eq "1" ]; do
 	[ ! -f "${dir}send_enable.lock" ] && down_send
 
 	# 当前设备列表
-	[ ! -z "$content" ] && [ ! -f "${dir}send_enable.lock" ] && [ -z "$content_current_device" ] || [ "$content_current_device" -eq "0" ] && current_device
+	[ ! -z "$content" ] && [ ! -f "${dir}send_enable.lock" ] && current_device
 
 	# 无人值守任务
 	[ ! -f "${dir}send_enable.lock" ] && unattended

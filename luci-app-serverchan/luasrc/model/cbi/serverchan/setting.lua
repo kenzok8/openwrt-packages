@@ -334,6 +334,7 @@ a = s:taboption("disturb", DynamicList, "serverchan_blacklist", translate("关�
 nt.mac_hints(function(mac, name) a:value(mac, "%s (%s)" %{ mac, name }) end)
 a.rmempty = true
 a:depends({macmechanism="block"})
+a.description = translate("AA:AA:AA:AA:AA:AA\\|BB:BB:BB:BB:BB:B 可以将多个 MAC 视为同一用户")
 
 a = s:taboption("disturb", ListValue, "serverchan_interface", translate("接口名称"))
 a:depends({macmechanism="interface"})
