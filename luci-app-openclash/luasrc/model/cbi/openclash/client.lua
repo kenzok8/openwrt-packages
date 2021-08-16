@@ -133,10 +133,10 @@ dler = Map("openclash")
 dler.pageaction = false
 dler:section(SimpleSection).template  = "openclash/dlercloud"
 
+m:append(Template("openclash/toolbar_show"))
+
 if m.uci:get("openclash", "config", "dler_token") then
   return m, dler, form, s, ap, d
 else
-	dler.title = translate("Sponsor")
-	fs.unlink("/tmp/dler_info")
-  return m, form, s, ap, d, dler
+	return m, form, s, ap, d
 end

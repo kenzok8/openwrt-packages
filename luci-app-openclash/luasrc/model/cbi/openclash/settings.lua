@@ -365,7 +365,7 @@ o.default=0
 custom_rules = s:taboption("rules", Value, "custom_rules")
 custom_rules:depends("enable_custom_clash_rules", 1)
 custom_rules.template = "cbi/tvalue"
-custom_rules.description = translate("Custom Rules Here, For More Go Github:https://github.com/Dreamacro/clash/blob/master/README.md, IP To CIDR: http://ip2cidr.com")
+custom_rules.description = translate("Custom Priority Rules Here, For More Go:").." "..'<a href="https://lancellc.gitbook.io/clash/clash-config-file/rules">https://lancellc.gitbook.io/clash/clash-config-file/rules</a>'.." ,"..translate("IP To CIDR:").." "..'<a href="http://ip2cidr.com">http://ip2cidr.com</a>'
 custom_rules.rows = 20
 custom_rules.wrap = "off"
 
@@ -385,7 +385,7 @@ end
 custom_rules_2 = s:taboption("rules", Value, "custom_rules_2")
 custom_rules_2:depends("enable_custom_clash_rules", 1)
 custom_rules_2.template = "cbi/tvalue"
-custom_rules_2.description = translate("Custom Rules 2 Here, For More Go Github:https://github.com/Dreamacro/clash/blob/master/README.md, IP To CIDR: http://ip2cidr.com")
+custom_rules_2.description = translate("Custom Extended Rules Here, For More Go:").." "..'<a href="https://lancellc.gitbook.io/clash/clash-config-file/rules">https://lancellc.gitbook.io/clash/clash-config-file/rules</a>'.." ,"..translate("IP To CIDR:").." "..'<a href="http://ip2cidr.com">http://ip2cidr.com</a>'
 custom_rules_2.rows = 20
 custom_rules_2.wrap = "off"
 
@@ -561,22 +561,8 @@ core_update = s:taboption("version_update", DummyValue, "", nil)
 core_update.template = "openclash/update"
 
 ---- debug
-debug_log = s:taboption("debug", Value, "debug_log")
-debug_log.template = "cbi/tvalue"
-debug_log.readonly=true
-debug_log.rows = 30
-debug_log.wrap = "off"
-function debug_log.cfgvalue(self, section)
-  return NXFS.readfile("/tmp/openclash_debug.log") or ""
-end
-  
-o = s:taboption("debug", Button, translate("Generate Logs")) 
-o.title = translate("Generate Logs")
-o.inputtitle = translate("Click to Generate")
-o.inputstyle = "reload"
-o.write = function()
-  SYS.call("/usr/share/openclash/openclash_debug.sh")
-end
+o = s:taboption("debug", DummyValue, "", nil)
+o.template = "openclash/debug"
 
 ---- dlercloud
 o = s:taboption("dlercloud", Value, "dler_email")
@@ -745,12 +731,12 @@ o.placeholder = translate("Not Null")
 o.rmempty = true
 
 if op_mode == "redir-host" then
-s = m:section(TypedSection, "openclash", translate("Set Custom Hosts, Only Work with Redir-Host Mode"))
+s = m:section(NamedSection, "config", translate("Set Custom Hosts, Only Work with Redir-Host Mode"))
 s.anonymous = true
 
 custom_hosts = s:option(Value, "custom_hosts")
 custom_hosts.template = "cbi/tvalue"
-custom_hosts.description = translate("Custom Hosts Here, For More Go Github:https://github.com/Dreamacro/clash/blob/master/README.md")
+custom_hosts.description = translate("Custom Hosts Here, For More Go:").." "..'<a href="https://lancellc.gitbook.io/clash/clash-config-file/dns/host">https://lancellc.gitbook.io/clash/clash-config-file/dns/host</a>'
 custom_hosts.rows = 20
 custom_hosts.wrap = "off"
 
@@ -790,6 +776,9 @@ o.write = function()
   SYS.call("/etc/init.d/openclash restart >/dev/null 2>&1 &")
   HTTP.redirect(DISP.build_url("admin", "services", "openclash"))
 end
+
+m:append(Template("openclash/toolbar_show"))
+
 return m
 
 

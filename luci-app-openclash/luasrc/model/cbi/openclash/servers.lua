@@ -257,4 +257,6 @@ o.write = function()
 end
 
 m:append(Template("openclash/server_list"))
+m:append(Template("openclash/toolbar_show"))
+
 return m

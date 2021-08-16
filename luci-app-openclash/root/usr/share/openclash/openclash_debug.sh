@@ -13,7 +13,7 @@ del_lock() {
 }
 
 DEBUG_LOG="/tmp/openclash_debug.log"
-LOGTIME=$(date "+%Y-%m-%d %H:%M:%S")
+LOGTIME=$(echo $(date "+%Y-%m-%d %H:%M:%S"))
 uci commit openclash
 set_lock
 
@@ -383,6 +383,14 @@ tail -n 50 "/tmp/openclash.log" >> "$DEBUG_LOG" 2>/dev/null
 
 cat >> "$DEBUG_LOG" <<-EOF
 
+#===================== 活动连接信息 =====================#
+
+EOF
+/usr/share/openclash/openclash_debug_getcon.lua
+
+cat >> "$DEBUG_LOG" <<-EOF
+
 \`\`\`
 EOF
+
 del_lock
