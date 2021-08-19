@@ -10,7 +10,7 @@ function get_config(){
 
 # 初始化设置信息
 function read_config(){
-	get_config "serverchan_enable" "sckey" "sctkey" "qywx_token" "tg_token" "chat_id" "pushplus_token" "serverchan_ipv4" "ipv4_interface" "serverchan_ipv6" "ipv6_interface" "serverchan_up" "serverchan_down" "serverchan_sheep" "serverchan_whitelist" "serverchan_blacklist" "serverchan_interface" "starttime" "endtime" "cpuload_enable" "cpuload" "temperature_enable" "temperature" "device_name" "err_enable" "network_err_event" "err_sheep_enable" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" "soc_code" "sleeptime" "up_timeout" "down_timeout" "device_aliases" "debuglevel" "cpuload" "temperature" "send_mode" "regular_time" "regular_time_2" "regular_time_3" "interval_time" "thread_num" "timeout_retry_count" "err_device_aliases" "oui_dir" "oui_data" "client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" "reset_regularly" "ipv4_urllist" "ipv6_urllist" "lite_enable" "content_current_device" "content_nowtime" "content_content"
+	get_config "serverchan_enable" "sckey" "sctkey" "qywx_token" "tg_token" "chat_id" "pushplus_token" "serverchan_ipv4" "ipv4_interface" "serverchan_ipv6" "ipv6_interface" "serverchan_up" "serverchan_down" "serverchan_sheep" "serverchan_whitelist" "serverchan_blacklist" "serverchan_interface" "starttime" "endtime" "cpuload_enable" "cpuload" "temperature_enable" "temperature" "device_name" "err_enable" "network_err_event" "err_sheep_enable" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" "soc_code" "sleeptime" "up_timeout" "down_timeout" "device_aliases" "debuglevel" "cpuload" "temperature" "send_mode" "regular_time" "regular_time_2" "regular_time_3" "interval_time" "thread_num" "timeout_retry_count" "err_device_aliases" "oui_dir" "oui_data" "client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" "reset_regularly" "ipv4_urllist" "ipv6_urllist" "lite_enable" "content_current_device" "content_nowtime" "content_content" "MAC_online_list" "MAC_offline_list"
 	for str_version in "wrtbwmon" "iputils-arping" "curl" "iw"; do
 		eval `echo ${str_version:0:2}"_version"`=`opkg list-installed|grep -w ^${str_version}|awk '{print $3}'` 2>/dev/null
 	done
@@ -22,6 +22,8 @@ function read_config(){
 	device_aliases=`echo "$device_aliases"|sed 's/ /\n/g'|sed 's/-/ /'` 2>/dev/null
 	err_device_aliases=`echo "$err_device_aliases"|sed 's/ /\n/g'` 2>/dev/null
 	client_usage_whitelist=`echo "$client_usage_whitelist"|sed 's/ /\n/g'` 2>/dev/null
+	mark_mac_list="${MAC_online_list} ${MAC_offline_list}"
+	mark_mac_list=`echo "$mark_mac_list"|sed 's/ /\n/g'|sed 's/-/ /'` 2>/dev/null
 	[ -z "$serverchan_ipv4" ] && serverchan_ipv4=0
 	[ -z "$serverchan_ipv6" ] && serverchan_ipv6=0
 	[ "$iw_version" ] && wlan_interface=`iw dev|grep Interface|awk '{print $2}'` >/dev/null 2>&1
@@ -105,7 +107,7 @@ utstarcom\|volans\|xerox\|xiaomi\|zdc\|zhongxing\|smartisan" > ${oui_base} && ec
 
 # 清理临时文件
 function deltemp(){
-	unset title	content
+	unset title	content ipAddress_logrow online_list online_mac mac_online_status
 	rm -f ${dir}title ${dir}content ${dir}top ${dir}tmp_downlist ${dir}send_enable.lock >/dev/null 2>&1
 	LockFile unlock
 	[ -f ${logfile} ] && local logrow=$(grep -c "" ${logfile}) || local logrow="0"
@@ -474,11 +476,14 @@ function LockFile(){
 # 检测黑白名单
 function blackwhitelist(){
 	[ ! "$1" ] && return 1
-	[ -z "$serverchan_whitelist" ] && [ -z "$serverchan_blacklist" ] && [ -z "$serverchan_interface" ] && return 0
-	[ ! -z "$serverchan_whitelist" ] && ( ! echo "$serverchan_whitelist"|grep -q -i -w $1 ) && return 0
-	[ ! -z "$serverchan_blacklist" ] && ( echo "$serverchan_blacklist"|grep -q -i -w $1 ) && return 0
-	[ ! -z "$serverchan_interface" ] && ( echo `getinterface ${1}`|grep -q -i -w $serverchan_interface ) && return 0
-	return 1
+	[ -z "$serverchan_whitelist" ] && [ -z "$serverchan_blacklist" ] && [ -z "$serverchan_interface" ] && [ -z "$MAC_online_list" ] && [ -z "$MAC_offline_list" ] && return 0
+	[ ! -z "$serverchan_whitelist" ] && ( echo "$serverchan_whitelist"|grep -q -i -w $1 ) && return 1
+	[ ! -z "$serverchan_blacklist" ] && ( ! echo "$serverchan_blacklist"|grep -q -i -w $1 ) && return 1
+	[ ! -z "$serverchan_interface" ] && ( ! echo `getinterface ${1}`|grep -q -i -w $serverchan_interface ) && return 1
+	[ ! -z "$MAC_online_list" ] && [ ! -z "$mac_online_status" ] && return 1
+	[ ! -z "$MAC_online_list" ] && ( echo "$MAC_online_list"|grep -q -i -w $1 ) && return 1
+	[ ! -z "$MAC_offline_list" ] && [ -z "$mac_online_status" ] && return 1
+	return 0
 }
 
 function get_client(){
@@ -737,20 +742,20 @@ function up(){
 	getping ${1} ${up_timeout} "1";local ping_online=$?
 	if [ "$ping_online" -eq "0" ]; then
 		LockFile lock
-		[ ! -z "$serverchan_blacklist" ] && local tmp_mac=`echo "${serverchan_blacklist}"|grep -w ${ip_mac}`
-		[ ! -z "$serverchan_whitelist" ] && local tmp_mac=`echo "${serverchan_whitelist}"|grep -w ${ip_mac}`
-		( cat ${dir}ipAddress|grep -q -w ${tmp_mac} ) && return
-		[ -z "$tmp_mac" ] && local tmp_mac=${ip_mac}
-		[ -f "${dir}tmp_downlist" ] && local tmp_downip=`cat ${dir}tmp_downlist|grep -w ${tmp_mac}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
-		[ -z "$tmp_downip" ] && local tmp_downip=`cat ${dir}tmp_downlist|grep -w ${1}|grep -v "^$"|sort -u|head -n1`
+		[ ! -z "$serverchan_blacklist" ] && local tmp_mac=`echo "${serverchan_blacklist}"|grep -w -i ${ip_mac}`
+		[ ! -z "$serverchan_whitelist" ] && local tmp_mac=`echo "${serverchan_whitelist}"|grep -w -i ${ip_mac}`
+		[ ! -z "$tmp_mac" ] && ( cat ${dir}ipAddress|grep -q -w ${tmp_mac} ) && LockFile unlock && return
+		local tmp_mac=${ip_mac}
+		[ -f "${dir}tmp_downlist" ] && local tmp_downip=`cat ${dir}tmp_downlist|grep -w -i ${tmp_mac}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
+		[ -f "${dir}tmp_downlist" ] && [ -z "$tmp_downip" ] && local tmp_downip=`cat ${dir}tmp_downlist|grep -w ${1}|grep -v "^$"|sort -u|head -n1`
 		if [ ! -z "$tmp_downip" ]; then
 			local olddate=`cat ${dir}tmp_downlist|grep -w ${tmp_downip}|awk '{print $4}'|grep -v "^$"|sort -u|head -n1`
 			echo "$1 ${ip_mac} ${ip_name} ${olddate} ${ip_interface}" >> ${dir}ipAddress
 			sed -i "/^${tmp_downip} /d" ${dir}tmp_downlist
 		else
 			usage down $1
-			blackwhitelist ${ip_mac};local ip_blackwhite=$?
 			echo "$1 ${ip_mac} ${ip_name} `date +%s` ${ip_interface}" >> ${dir}ipAddress
+			blackwhitelist ${ip_mac};local ip_blackwhite=$?
 			[ -f "${dir}send_enable.lock" ] || [ -z "$serverchan_up" ] || [ -z "$ip_blackwhite" ] && LockFile unlock && return
 			[ ! -z "$serverchan_up" ] && [ "$serverchan_up" -ne "1" ] && LockFile unlock && return
 			[ -z "$ip_blackwhite" ] || [ "$ip_blackwhite" -ne "0" ] && LockFile unlock && return
@@ -1028,6 +1033,14 @@ while [ "$serverchan_enable" -eq "1" ]; do
 	deltemp
 	usage update
 	serverchan_disturb;disturb=$?
+	
+	[ -f ${dir}ipAddress ] && ipAddress_logrow=$(grep -c "" ${dir}ipAddress) || ipAddress_logrow="0";
+	if [ $ipAddress_logrow -ne "0" ]; then
+		online_list=`cat ${dir}ipAddress|awk '{print $2}'|grep -v "^$"|sort -u`
+		for online_mac in $online_list; do
+			[ ! -z "$online_mac" ] && mac_online_status="`echo "$mark_mac_list"|grep -i $online_mac|grep -v "^$"|sort -u|head -n1`${mac_online_status}"
+		done
+	fi
 
 	if [ "$serverchan_ipv4" -ne "0" ] || [ "$serverchan_ipv6" -ne "0" ]; then
 		rand_geturl
