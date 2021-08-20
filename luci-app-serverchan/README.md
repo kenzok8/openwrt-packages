@@ -1,7 +1,14 @@
 # 简介
-- 用于 OpenWRT/LEDE 路由器上进行 Server酱 微信/Telegram 推送的插件
-- 基于 serverchan 提供的接口发送信息，Server酱说明：http://sc.ftqq.com/1.version
-- **基于斐讯 k3 制作，不同系统不同设备，请自行修改部分代码，无测试条件无法重现的 bug 不考虑修复**
+- 用于 OpenWRT/LEDE 路由器上进行 微信/Telegram 推送的插件
+- 支持列表：
+- 微信推送/Server酱    https://sct.ftqq.com/
+- 企业微信/Server酱    https://sct.ftqq.com/
+- 微信推送/WxPusher    https://wxpusher.zjiecode.com/docs
+- 微信推送/推送加      http://www.pushplus.plus/
+- Telegram/BotFather  https://t.me/BotFather
+- 精力有限，如需要钉钉推送、飞书推送、Bark推送等请尝试 https://github.com/zzsj0928/luci-app-pushbot
+- 
+- **基于X86 OpenWrt 19.07.8 制作，不同系统不同设备，请自行修改部分代码，无测试条件无法重现的 bug 不考虑修复**
 - 依赖 iputils-arping + curl 命令，安装前请 `opkg update`，小内存路由谨慎安装
 - 使用主动探测设备连接的方式检测设备在线状态，以避免WiFi休眠机制，主动探测较为耗时，**如遇设备休眠频繁，请自行调整超时设置**
 - 流量统计功能依赖 wrtbwmon ，自行选装或编译，该插件与 Routing/NAT 、Flow Offloading 冲突，开启无法获取流量，自行选择
@@ -20,9 +27,7 @@
 #### 已知问题
 - 直接关闭接口时，该接口的离线设备会忽略检测
 - 部分设备无法读取到设备名，脚本使用 `cat /var/dhcp.leases` 命令读取设备名，如果 dhcp 中不存在设备名，则无法读取设备名（如二级路由设备、静态ip设备），请使用设备名备注.
-- tg 推送机器人已停运，请自建服务器
-- serverchan 一对多好像也挂了，哪个大佬无聊可以弄一下 pushplus
-- 基于斐讯 k3 制作，不同系统不同设备，可能会遇到各种问题
+- 基于X86 OpenWrt 19.07.8 制作，不同系统不同设备，可能会遇到各种问题
 - 潘多拉系统、或不支持 sh 的系统，请将脚本开头 `#!/bin/sh` 改为 `#!/bin/bash`，或手动安装 `sh`
 
 # Download
