@@ -5,7 +5,7 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=Atmaterial new by kenzo
+LUCI_TITLE:=Atmaterial_new kenzo
 LUCI_DEPENDS:=
 PKG_VERSION:=1.2
 PKG_RELEASE:=02-20200209
