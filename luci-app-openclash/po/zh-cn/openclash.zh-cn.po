@@ -358,6 +358,9 @@ msgstr "运行后，请等待服务器上线"
 msgid "Redir Port"
 msgstr "流量转发端口"
 
+msgid "TProxy Port"
+msgstr "TProxy 端口"
+
 msgid "SOCKS5 Port"
 msgstr "SOCKS5 代理端口"
 
@@ -1413,6 +1416,12 @@ msgstr "自定义大陆IP段的更新来源，编辑后点击下方按钮生效"
 msgid "(Default)"
 msgstr "(默认)"
 
+msgid "(Default mmdb)"
+msgstr "(默认，全部国家且仅写入iso_code和geoname_id)"
+
+msgid "(All Info mmdb)"
+msgstr "(全部国家且且包含官方全部信息数据)"
+
 msgid "(Only CN)"
 msgstr "(仅中国数据)"
 
@@ -2274,6 +2283,12 @@ msgstr "上传:"
 msgid "Down:"
 msgstr "下载:"
 
+msgid "Up Total:"
+msgstr "上传总量:"
+
+msgid "Down Total:"
+msgstr "下载总量:"
+
 msgid "Connections:"
 msgstr "活动连接:"
 
@@ -2292,8 +2307,8 @@ msgstr "发生了一些错误！"
 msgid "Click to Test"
 msgstr "点击测试"
 
-msgid "Connection Test"
-msgstr "连接测试"
+msgid "Connection Test (Current Browser)"
+msgstr "连接测试（当前浏览器）"
 
 msgid "Backup File"
 msgstr "备份文件"
@@ -2306,3 +2321,15 @@ msgstr "备份 OpenClash"
 
 msgid "Not Select"
 msgstr "未选择"
+
+msgid "1. It may be that the plugin is not running"
+msgstr "1. 可能是插件未在运行"
+
+msgid "2. It may be that the cache causes the browser to directly use the IP for access"
+msgstr "2. 可能是缓存导致浏览直接使用IP地址进行访问"
+
+msgid "3. It may be that DNS hijacking did not take effect, so clash unable to reverse the domain name"
+msgstr "3. 可能是DNS未劫持成功，导致Clash无法正确反推出域名连接"
+
+msgid "4. It may be that the filled address cannot be resolved and connected"
+msgstr "4. 可能是所填地址无法进行解析和连接"
