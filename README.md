@@ -50,7 +50,7 @@
 - luci-app-advancedsetting ------------------系统高级设置
 - luci-app-serverchan      ------------------Server酱 微信/Telegram 推送的插件
 - luci-theme-ifit          ------------------透明主题（适配18.06修复主机名错误）
-- luci-theme-atmaterial    ------------------atmaterial 三合一主题（适配18.06）     
+- luci-theme-atmaterial_new  ------------------atmaterial 三合一主题（适配18.06）     
 - luci-app-aliddns         ------------------阿里云ddns
 - luci-app-eqos            ------------------依IP地址限速
 - luci-app-gost            ------------------隐蔽的https代理
