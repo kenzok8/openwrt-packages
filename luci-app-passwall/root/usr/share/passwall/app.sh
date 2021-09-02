@@ -359,6 +359,45 @@ run_v2ray() {
 	ln_start_bin "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $log_file -config="$config_file"
 }
 
+run_dns2socks() {
+	local flag socks socks_address socks_port socks_username socks_password listen_address listen_port dns cache log_file
+	local _extra_param=""
+	eval_set_val $@
+	[ -n "$flag" ] && flag="_${flag}"
+	[ -n "$log_file" ] || log_file="/dev/null"
+	dns=$(get_first_dns dns 53 | sed 's/#/:/g')
+	[ -n "$socks" ] && {
+		socks=$(echo $socks | sed "s/#/:/g")
+		socks_address=$(echo $socks | awk -F ':' '{print $1}')
+		socks_port=$(echo $socks | awk -F ':' '{print $2}')
+	}
+	[ -n "$socks_username" ] && [ -n "$socks_password" ] && _extra_param="${_extra_param} /u $socks_username /p $socks_password"
+	[ -z "$cache" ] && cache=1
+	[ "$cache" = "0" ] && _extra_param="${_extra_param} /d"
+	ln_start_bin "$(first_type dns2socks)" "dns2socks${flag}" $log_file ${_extra_param} "${socks_address}:${socks_port}" "${dns}" "${listen_address}:${listen_port}"
+}
+
+run_v2ray_doh_socks() {
+	local bin=$(first_type $(config_t_get global_app v2ray_file) v2ray)
+	if [ -n "$bin" ]; then
+		type="v2ray"
+	else
+		bin=$(first_type $(config_t_get global_app xray_file) xray)
+		[ -n "$bin" ] && type="xray"
+	fi
+	[ -z "$type" ] && return 1
+	local flag socks_address socks_port socks_username socks_password listen_address listen_port doh_bootstrap doh_url doh_host log_file config_file
+	eval_set_val $@
+	[ -n "$log_file" ] || log_file="/dev/null"
+	_doh_url=$(echo $doh | awk -F ',' '{print $1}')
+	_doh_host_port=$(echo $_doh_url | sed "s/https:\/\///g" | awk -F '/' '{print $1}')
+	_doh_host=$(echo $_doh_host_port | awk -F ':' '{print $1}')
+	_doh_port=$(echo $_doh_host_port | awk -F ':' '{print $2}')
+	_doh_bootstrap=$(echo $doh | cut -d ',' -sf 2-)
+	lua $API_GEN_V2RAY -dns_listen_port "${listen_port}" -dns_server "${doh_bootstrap}" -doh_url "${doh_url}" -doh_host "${doh_host}" -dns_socks_address "${socks_address}" -dns_socks_port "${socks_port}" > $config_file
+	ln_start_bin "$bin" $type $log_file -config="$config_file"
+}
+
 run_socks() {
 	local flag node bind socks_port config_file http_port http_config_file relay_port log_file
 	eval_set_val $@
@@ -994,9 +1033,8 @@ start_dns() {
 	dns2socks)
 		local dns2socks_socks_server=$(echo $(config_t_get global socks_server 127.0.0.1:1080) | sed "s/#/:/g")
 		local dns2socks_forward=$(get_first_dns DNS_FORWARD 53 | sed 's/#/:/g')
-		[ "$DNS_CACHE" == "0" ] && local dns2sock_cache="/d"
-		ln_start_bin "$(first_type dns2socks)" dns2socks "/dev/null" "$dns2socks_socks_server" "$dns2socks_forward" "127.0.0.1:$dns_listen_port" $dns2sock_cache
-		echolog "  - 域名解析：dns2socks(127.0.0.1:${dns_listen_port})，${dns2socks_socks_server} -> ${dns2socks_forward}"
+		run_dns2socks socks=$dns2socks_socks_server listen_address=127.0.0.1 listen_port=${dns_listen_port} dns=$dns2socks_forward cache=$DNS_CACHE
+		echolog "  - 域名解析：dns2socks(127.0.0.1:${dns_listen_port})，${dns2socks_socks_server:-127.0.0.1:1080} -> ${dns2socks_forward-D8.8.8.8:53}"
 	;;
 	v2ray_tcp)
 		local dns_forward=$(get_first_dns DNS_FORWARD 53 | sed 's/#/:/g')
