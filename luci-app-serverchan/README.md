@@ -2,14 +2,14 @@
 - 用于 OpenWRT/LEDE 路由器上进行 微信/Telegram 推送的插件
 - 支持列表：
 - 微信推送/Server酱    https://sct.ftqq.com/
-- 企业微信/Server酱    https://sct.ftqq.com/
+- 企业微信/应用推送    https://work.weixin.qq.com/api/doc/90000/90135/90248
 - 微信推送/WxPusher    https://wxpusher.zjiecode.com/docs
 - 微信推送/推送加      http://www.pushplus.plus/
 - Telegram/BotFather  https://t.me/BotFather
 - 精力有限，如需要钉钉推送、飞书推送、Bark推送等请尝试 https://github.com/zzsj0928/luci-app-pushbot
 - 
 - **基于X86 OpenWrt 19.07.8 制作，不同系统不同设备，请自行修改部分代码，无测试条件无法重现的 bug 不考虑修复**
-- 依赖 iputils-arping + curl 命令，安装前请 `opkg update`，小内存路由谨慎安装
+- 依赖 iputils-arping + curl + jq 命令，安装前请 `opkg update`，小内存路由谨慎安装
 - 使用主动探测设备连接的方式检测设备在线状态，以避免WiFi休眠机制，主动探测较为耗时，**如遇设备休眠频繁，请自行调整超时设置**
 - 流量统计功能依赖 wrtbwmon ，自行选装或编译，该插件与 Routing/NAT 、Flow Offloading 冲突，开启无法获取流量，自行选择
 
