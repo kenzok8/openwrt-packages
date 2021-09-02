@@ -28,5 +28,10 @@ if [ ! -s "/etc/config/shadowsocksr" ]; then
 fi
 sed -i "s/option type 'vmess'"/"option type 'v2ray'\n\toption v2ray_protocol 'vmess'/g" /etc/config/shadowsocksr
 sed -i "s/option type 'vless'"/"option type 'v2ray'\n\toption v2ray_protocol 'vless'/g" /etc/config/shadowsocksr
+if [ -s "/etc/uwsgi/vassals/luci-webui.ini" ];then
+	limit=$(cat /etc/uwsgi/vassals/luci-webui.ini  | grep -Eo "limit-as.*"|grep -Eo "[0-9]+")
+	[ $limit -lt 5000 ] && sed -i '/limit-as/c\limit-as = 5000' /etc/uwsgi/vassals/luci-webui.ini && \
+	/etc/init.d/uwsgi restart
+fi
 rm -rf /tmp/luci-modulecache /tmp/luci-indexcache
 exit 0
