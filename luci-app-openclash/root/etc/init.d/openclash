@@ -170,6 +170,32 @@ EOF
       fi
    fi
    
+   #default-nameserver
+   ruby -ryaml -E UTF-8 -e "
+   begin
+      Value = YAML.load_file('$1');
+      reg = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
+      if Value['dns'].has_key?('fallback') then
+         Value_1=Value['dns']['nameserver'] | Value['dns']['fallback']
+      else
+         Value_1=Value['dns']['nameserver']
+      end;
+      Value_1.each{|x|
+         if x =~ reg then
+            if Value['dns'].has_key?('default-nameserver') then
+               Value['dns']['default-nameserver']=Value['dns']['default-nameserver'].to_a.insert(-1,x).uniq
+            else
+               Value_2={'default-nameserver'=>[x]}
+               Value['dns'].merge!(Value_2)
+            end
+         end
+       };
+       File.open('${1}','w') {|f| YAML.dump(Value, f)};
+    rescue Exception => e
+    puts '${LOGTIME} Error: Set default-nameserver Error,【' + e.message + '】'
+    end
+    " 2>/dev/null >> $LOG_FILE
+   
    #fallback-filter
    if [ "$custom_fallback_filter" = "1" ]; then
       if [ -z "$(ruby_read "$CONFIG_FILE" "['dns']['fallback']")" ]; then
@@ -276,6 +302,31 @@ fi
 
 }
 
+#获取DHCP或接口的DNS并追加
+sys_dns_append()
+{
+   if [ "$1" = 1 ]; then
+   	  wan_dns=$(/usr/share/openclash/openclash_get_network.lua "dns")
+      wan6_dns=$(/usr/share/openclash/openclash_get_network.lua "dns6")
+      if [ -n "$wan_dns" ]; then
+         if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
+            echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
+         fi
+         for i in $wan_dns; do
+            echo "    - \"$i\"" >>/tmp/yaml_config.namedns.yaml
+         done
+      fi
+      if [ -n "$wan6_dns" ] && [ "$2" = 1 ]; then
+         if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
+            echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
+         fi
+         for i in $wan6_dns; do
+            echo "    - \"[${i}]:53\"" >>/tmp/yaml_config.namedns.yaml
+         done
+      fi
+   fi
+}
+
 #获取自定义DNS设置
 yml_dns_get()
 {
@@ -338,18 +389,21 @@ yml_dns_get()
 #添加自定义DNS设置
 yml_dns_custom()
 {
-   if [ "$1" = 1 ]; then
+   if [ "$1" = 1 ] || [ "$3" = 1 ]; then
+   	  sys_dns_append "$3" "$4"
       config_load "openclash"
       config_foreach yml_dns_get "dns_servers"
+      ruby_uniq "/tmp/yaml_config.namedns.yaml" "['nameserver']"
+      ruby_uniq "/tmp/yaml_config.falldns.yaml" "['fallback']"
       if [ -f "/tmp/yaml_config.namedns.yaml" ]; then
-         if [ -z "$(ruby_read "$CONFIG_FILE" "['dns']")" ]; then
-            ruby_cover "$CONFIG_FILE" "['dns']" "/tmp/yaml_config.namedns.yaml"
-            ruby_merge "$CONFIG_FILE" "['dns']" "/tmp/yaml_config.falldns.yaml"
+         if [ -z "$(ruby_read "$2" "['dns']")" ]; then
+            ruby_cover "$2" "['dns']" "/tmp/yaml_config.namedns.yaml"
+            ruby_merge "$2" "['dns']" "/tmp/yaml_config.falldns.yaml"
          else
-            ruby_edit "$CONFIG_FILE" "['dns'].delete('nameserver')"
-      	    ruby_edit "$CONFIG_FILE" "['dns'].delete('fallback')"
-            ruby_merge "$CONFIG_FILE" "['dns']" "/tmp/yaml_config.namedns.yaml"
-            ruby_merge "$CONFIG_FILE" "['dns']" "/tmp/yaml_config.falldns.yaml"
+            ruby_edit "$2" "['dns'].delete('nameserver')"
+      	    ruby_edit "$2" "['dns'].delete('fallback')"
+            ruby_merge "$2" "['dns']" "/tmp/yaml_config.namedns.yaml"
+            ruby_merge "$2" "['dns']" "/tmp/yaml_config.falldns.yaml"
          fi
       else
          LOG_OUT "Error: Nameserver Option Must Be Setted, Stop Customing DNS Servers"
@@ -989,7 +1043,7 @@ do_run_file()
      nohup /usr/share/openclash/openclash_core.sh "$core_type" &
    }
    
-   if [ "$china_ip_route" = "1" ] || [ "$china_ip6_route" = "1" ]; then
+   if [ "$china_ip_route" = "1" ] || [ "$china_ip6_route" = "1" ] || [ "$disable_udp_quic" = "1" ]; then
    	  if [ ! -f "$chnr_path" ] || [ ! -f "$chnr6_path" ]; then
          LOG_OUT "Detect that the Chnroute Cidr List is not Installed, Ready to Download..."
          nofile=1
@@ -1348,7 +1402,7 @@ cat > "/var/etc/openclash.include" <<-EOF
 /etc/init.d/openclash reload >/dev/null 2>&1
 EOF
 
-if [ "$china_ip_route" = "1" ] && [ -f "/etc/openclash/china_ip_route.ipset" ]; then
+if [ "$china_ip_route" = "1" ] || [ "$disable_udp_quic" = "1" ]; then
    ipset -! flush china_ip_route 2>/dev/null
    ipset -! restore </etc/openclash/china_ip_route.ipset 2>/dev/null
 fi
@@ -1359,8 +1413,8 @@ if [ "$enable_redirect_dns" -eq 1 ] && [ -z "$(iptables -t nat -nL PREROUTING --
    else
       DNSPORT="$(uci -q get dhcp.@dnsmasq[0].port || echo 53)"
    fi
-   iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment dns_hijack
-   iptables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment dns_hijack
+   iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
+   iptables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
 fi
 
 #lan_ac
@@ -1470,13 +1524,13 @@ if [ -z "$en_mode_tun" ] || [ "$en_mode_tun" -eq 3 ]; then
             iptables -t mangle -A openclash -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
             iptables -t mangle -A openclash -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
          fi
-      #quic
-         if [ "$disable_udp_quic" -eq 1 ]; then
-            iptables -I INPUT -p udp --dport 443 -j REJECT
-         fi
          iptables -t mangle -A openclash -p udp --dport 53 -j RETURN >/dev/null 2>&1
          iptables -t mangle -A openclash -p udp -j TPROXY --on-port "$proxy_port" --tproxy-mark "$PROXY_FWMARK"
          iptables -t mangle -A PREROUTING -p udp -j openclash
+      fi
+      #quic
+      if [ "$disable_udp_quic" -eq 1 ]; then
+	       iptables -I INPUT -p udp --dport 443 -m comment --comment "OpenClash QUIC REJECT" -m set ! --match-set china_ip_route dst -j REJECT >/dev/null 2>&1
       fi
    fi
    
@@ -1606,21 +1660,21 @@ if [ -n "$en_mode_tun" ]; then
    fi
    #TUN FORWORD
    iptables -I FORWARD -o utun -j ACCEPT
-   #quic
-   if [ "$disable_udp_quic" -eq 1 ]; then
-   	  iptables -I INPUT -p udp --dport 443 -j REJECT
-      iptables -I FORWARD -p udp --dport 443 -j REJECT
-   fi
+fi
+
+#quic
+if [ "$disable_udp_quic" -eq 1 ]; then
+   iptables -I FORWARD -p udp --dport 443 -o utun -m comment --comment "OpenClash QUIC REJECT" -m set ! --match-set china_ip_route dst -j REJECT >/dev/null 2>&1
 fi
 
 #ipv6
 if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Chain')" ]; then
    if [ "$enable_redirect_dns" -eq 1 ] && [ -z "$(ip6tables -t nat -nL PREROUTING --line-number |grep 'dns_hijack')"]; then
-      ip6tables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment dns_hijack
-      ip6tables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment dns_hijack
+      ip6tables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
+      ip6tables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
    fi
 
-   if [ "$china_ip6_route" = "1" ] && [ -f "/etc/openclash/china_ip6_route.ipset" ]; then
+   if [ "$china_ip6_route" = "1" ] || [ "$disable_udp_quic" = "1" ]; then
       ipset -! flush china_ip6_route 2>/dev/null
       ipset -! restore </etc/openclash/china_ip6_route.ipset 2>/dev/null
    fi
@@ -1666,7 +1720,7 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
       ip6tables -t mangle -A openclash -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
    fi
    ip6tables -t mangle -A openclash -m set --match-set china_ip6_route dst -j RETURN >/dev/null 2>&1
-   ip6tables -t mangle -A openclash -p tcp -m comment --comment "\'openclash\'" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
+   ip6tables -t mangle -A openclash -p tcp -m comment --comment "OpenClash" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
    ip6tables -t mangle -A PREROUTING -j openclash
 
    if [ -z "$_koolshare" ]; then
@@ -1683,13 +1737,12 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
    #udp
    if [ "$enable_udp_proxy" -eq 1 ] || [ -n "$en_mode_tun" ]; then
       ip6tables -t mangle -A openclash_output -p udp -m owner ! --uid-owner 65534 -j MARK --set-xmark "$PROXY_FWMARK"
-      ip6tables -t mangle -A openclash -p udp -m comment --comment "\'openclash\'" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
+      ip6tables -t mangle -A openclash -p udp -m comment --comment "OpenClash" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
    fi
    
    #quic
    if [ "$disable_udp_quic" -eq 1 ]; then
-      ip6tables -I FORWARD -p udp --dport 443 -j REJECT
-      ip6tables -I INPUT -p udp --dport 443 -j REJECT
+	    ip6tables -I INPUT -p udp --dport 443 -m comment --comment "OpenClash QUIC REJECT" -m set ! --match-set china_ip6_route dst -j REJECT >/dev/null 2>&1
    fi
    
 fi 2>/dev/null
@@ -1713,9 +1766,10 @@ revert_firewall()
    ip -6 route del local ::/0 dev lo table "$PROXY_ROUTE_TABLE"
 
    iptables -t nat -D PREROUTING -p tcp --dport 53 -j ACCEPT >/dev/null 2>&1
-   
-   iptables -D FORWARD -p udp --dport 443 -j REJECT >/dev/null 2>&1
-   iptables -D INPUT -p udp --dport 443 -j REJECT >/dev/null 2>&1
+   #quic
+	 iptables -D INPUT -p udp --dport 443 -m comment --comment "OpenClash QUIC REJECT" -m set ! --match-set china_ip_route dst -j REJECT >/dev/null 2>&1
+   iptables -D FORWARD -p udp --dport 443 -o utun -m comment --comment "OpenClash QUIC REJECT" -m set ! --match-set china_ip_route dst -j REJECT >/dev/null 2>&1
+
 
    out_lines=$(iptables -nvL OUTPUT -t nat |sed 1,2d |sed -n '/openclash/=' 2>/dev/null |sort -rn)
    for out_line in $out_lines; do
@@ -1745,7 +1799,7 @@ revert_firewall()
    done >/dev/null 2>&1
    iptables -t nat -D PREROUTING -p tcp -j openclash >/dev/null 2>&1
 
-   pre_lines=$(iptables -nvL PREROUTING -t nat |sed 1,2d |sed -n '/dns_hijack/=' 2>/dev/null |sort -rn)
+   pre_lines=$(iptables -nvL PREROUTING -t nat |sed 1,2d |sed -n '/DNS Hijack/=' 2>/dev/null |sort -rn)
    for pre_line in $pre_lines; do
       iptables -t nat -D PREROUTING "$pre_line" >/dev/null 2>&1
    done >/dev/null 2>&1
@@ -1790,7 +1844,7 @@ revert_firewall()
       ip6tables -t mangle -D OUTPUT "$out_line" >/dev/null 2>&1
    done >/dev/null 2>&1
    
-   pre_lines=$(ip6tables -nvL PREROUTING -t nat |sed 1,2d |sed -n '/dns_hijack/=' 2>/dev/null |sort -rn)
+   pre_lines=$(ip6tables -nvL PREROUTING -t nat |sed 1,2d |sed -n '/DNS Hijack/=' 2>/dev/null |sort -rn)
    for pre_line in $pre_lines; do
       ip6tables -t nat -D PREROUTING "$pre_line" >/dev/null 2>&1
    done >/dev/null 2>&1
@@ -1802,9 +1856,9 @@ revert_firewall()
    ip6tables -t mangle -X openclash >/dev/null 2>&1
    ip6tables -t mangle -F openclash_output >/dev/null 2>&1
    ip6tables -t mangle -X openclash_output >/dev/null 2>&1
-   ip6tables -D FORWARD -p udp --dport 443 -j REJECT >/dev/null 2>&1
-   ip6tables -D INPUT -p udp --dport 443 -j REJECT >/dev/null 2>&1
-
+   #quic
+	 ip6tables -D INPUT -p udp --dport 443 -m comment --comment "OpenClash QUIC REJECT" -m set ! --match-set china_ip6_route dst -j REJECT >/dev/null 2>&1
+   
    ipset destroy localnetwork6 >/dev/null 2>&1
    ipset destroy china_ip6_route >/dev/null 2>&1
    ipset destroy lan_ac_white_ipv6s >/dev/null 2>&1
@@ -1858,6 +1912,7 @@ get_config()
    dns_port=$(uci -q get openclash.config.dns_port)
    tolerance=$(uci -q get openclash.config.tolerance)
    custom_fallback_filter=$(uci -q get openclash.config.custom_fallback_filter)
+   append_wan_dns=$(uci -q get openclash.config.append_wan_dns || 1)
    _koolshare=$(cat /usr/lib/os-release 2>/dev/null |grep OPENWRT_RELEASE 2>/dev/null |grep -i koolshare 2>/dev/null)
    [ -z "$dns_port" ] && dns_port=7874 && uci -q set openclash.config.dns_port=7874
    uci -q set openclash.config.restricted_mode=0 && uci -q commit openclash
@@ -1885,7 +1940,7 @@ start()
    config_load "openclash"
    config_foreach yml_auth_get "authentication"
    yml_auth_custom "$CONFIG_FILE"
-   yml_dns_custom "$enable_custom_dns" "$CONFIG_FILE"
+   yml_dns_custom "$enable_custom_dns" "$CONFIG_FILE" "$append_wan_dns" "$ipv6_dns"
    /usr/share/openclash/yml_change.sh 2>/dev/null "$LOGTIME" "$en_mode" "$enable_custom_dns" "$da_password" "$cn_port" "$proxy_port" "$CONFIG_FILE" "$ipv6_enable" "$http_port" "$socks_port" "$lan_ip" "$log_level" "$proxy_mode" "$intranet_allowed" "$en_mode_tun" "$stack_type" "$dns_port" "$core_type" "$mixed_port" "$tproxy_port" "$ipv6_dns"
    /usr/share/openclash/yml_rules_change.sh 2>/dev/null "$LOGTIME" "$rule_source" "$enable_custom_clash_rules" "$CONFIG_FILE" "$enable_rule_proxy" "$CONFIG_NAME"
    yml_custom_rule_provider
