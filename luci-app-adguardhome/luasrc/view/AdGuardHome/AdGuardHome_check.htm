@@ -1,9 +1,9 @@
 <%+cbi/valueheader%>
 <%local fs=require"nixio.fs"%>
-<input type="button" class="cbi-button cbi-button-apply" id="apply_update_button" value="<%:Update core version%>" onclick=" return apply_update() "/>
-<input type="button" class="cbi-button cbi-button-apply" id="apply_forceupdate_button" value="<%:Force update%>" onclick=" return apply_forceupdate()" style="display:none"/>
+<input type="button" class="btn cbi-button cbi-button-apply" id="apply_update_button" value="<%:Update core version%>" onclick=" return apply_update() "/>
+<input type="button" class="btn cbi-button cbi-button-apply" id="apply_forceupdate_button" value="<%:Force update%>" onclick=" return apply_forceupdate()" style="display:none"/>
 <% if self.showfastconfig then %>
-<input type="button" class="cbi-button cbi-button-apply" id="to_configpage" value="<%:Fast config%>" onclick="location.href='<%=url([[admin]], [[services]], [[AdGuardHome]], [[manual]])%>'"/>
+<input type="button" class="btn cbi-button cbi-button-apply" id="to_configpage" value="<%:Fast config%>" onclick="location.href='<%=url([[admin]], [[services]], [[AdGuardHome]], [[manual]])%>'"/>
 <%end%>
 <div id="logview" style="display:none">
 <input type="checkbox" id="reversetag" value="reverse" onclick=" return reverselog()" style="vertical-align:middle;height: auto;"><%:reverse%></input>
