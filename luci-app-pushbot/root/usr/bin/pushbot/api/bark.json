@@ -1,0 +1,27 @@
+{
+    "_api": "这是Bark推送 post 模板信息 api 文件",
+    "_api": "【Bark推送】",
+    
+    "url": "",
+    "data": "@${tempjsonpath}",
+    "content_type": "",
+    "str_title_start": "【",
+    "str_title_end": "】",
+    "str_linefeed": "%0D%0A%0D%0A",
+    "str_splitline": "%0D%0A%0D%0A",
+    "str_space": "%20",
+    "str_tab": "%20",
+    "table_tab": "",
+    "font_green": "",
+    "font_red": "",
+    "font_blue": "",
+    "font_purple": "",
+    "font_end": "",
+    "font_end2": "",
+    "percentsym": "25",
+    "boldstar": "",
+    "type":
+	{
+		"bark_text": "\"${bark_srv}/${bark_token}/${1}/${nowtime}${str_linefeed}${2}?group=${device_name}\""
+}
+}
