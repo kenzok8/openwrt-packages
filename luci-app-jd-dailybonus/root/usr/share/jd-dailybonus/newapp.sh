@@ -20,7 +20,7 @@ usage() {
 		Valid options are:
 
 		    -a                      Add Cron
-		    -n                      Check 
+		    -n                      Check
 		    -r                      Run Script
 		    -u                      Update Script From Server
 		    -s                      Save Cookie And Add Cron
@@ -77,13 +77,13 @@ notify() {
         fi
         uclient-fetch -q --post-data="text=$title~&desp=$desc" $serverurl$sckey.send
     fi
-    
+
     #Dingding
     dtoken=$(uci_get_by_type global dd_token)
     if [ ! -z $dtoken ]; then
-    	DTJ_FILE=/tmp/jd-djson.json
-	echo "{\"msgtype\": \"markdown\",\"markdown\": {\"title\":\"${title}\",\"text\":\"${title} <br/> ${desc}\"}}" > ${DTJ_FILE}
-    	uclient-fetch -q --post-file=/tmp/jd-djson.json "https://oapi.dingtalk.com/robot/send?access_token=${dtoken}"
+        DTJ_FILE=/tmp/jd-djson.json
+        echo "{\"msgtype\": \"markdown\",\"markdown\": {\"title\":\"${title}\",\"text\":\"${title} <br/> ${desc}\"}}" > ${DTJ_FILE}
+        wget -q --output-document=/dev/null --header="Content-Type: application/json" --post-file=${DTJ_FILE} "https://oapi.dingtalk.com/robot/send?access_token=${dtoken}"
     fi
 
     #telegram
@@ -92,7 +92,7 @@ notify() {
     API_URL="https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage"
     if [ ! -z $TG_BOT_TOKEN ] && [ ! -z $TG_USER_ID ]; then
         text="*$title*
-        
+
 \`\`\`
 "$desc"
 ===============================
