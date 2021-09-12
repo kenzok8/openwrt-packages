@@ -1,0 +1,219 @@
+<%
+local system_version = require "luci.model.cbi.gpsysupgrade.sysupgrade".get_system_version()
+-%>
+<%+header%>
+<h2 name="content"><%:System upgrade%></h2>
+<%- local c = require("luci.model.uci").cursor():changes(); if c and next(c) then -%>
+	<p class="alert-message warning"><%:Warning: There are unsaved changes that will get lost on reboot!%></p>
+<%- end -%>
+
+<script type="text/javascript">
+	//<![CDATA[
+	var sysUpgradeInfo;
+	var tokenStr = '<%=token%>';
+	var clickToForceUpdateText = '<%:It is the latest version,Reflash?%>';
+	var updateSuccessText = '<%:Upgrade successful%>';
+	var clickToUpdateText = '<%:Click to Upgrade%>';
+	var inProgressText = '<%:Upgrading...%>';
+	var unexpectedErrorText = '<%:Unexpected error%>';
+	var updateInProgressNotice = '<%:Upgrading, are you sure to close?%>';
+	var downloadingText = '<%:Downloading...%>';
+	var flashing = '<%:Flashing...%>';
+	var checking = '<%:Checking...%>';
+
+	window.onload = function() {
+		var sysupCheckBtn = document.getElementById('_sysup-check_btn');
+		checkUpdate_sysup(sysupCheckBtn)
+	};
+
+	function addPageNotice_sysup() {
+		window.onbeforeunload = function(e) {
+			e.returnValue = updateInProgressNotice;
+			return updateInProgressNotice;
+		};
+	}
+
+	function removePageNotice_sysup() {
+		window.onbeforeunload = null;
+	}
+
+	function onUpdateSuccess_sysup(btn) {
+		alert(updateSuccessText);
+
+		if(btn) {
+			btn.value = updateSuccessText;
+			btn.placeholder = updateSuccessText;
+			btn.disabled = true;
+		}
+
+		window.setTimeout(function() {
+			window.location.reload();
+		}, 1000);
+	}
+
+	function onRequestError_sysup(btn, errorMessage) {
+		btn.disabled = false;
+		btn.value = btn.placeholder;
+
+		if(errorMessage) {
+			alert(errorMessage);
+		}
+	}
+
+	function onBtnClick_sysup(btn) {
+		if(sysUpgradeInfo === undefined) {
+			checkUpdate_sysup(btn);
+		} else {
+			doUpdate_sysup(btn);
+		}
+	}
+
+	function checkUpdate_sysup(btn) {
+		btn.disabled = true;
+		btn.value = checking;
+
+		addPageNotice_sysup();
+
+		var ckeckDetailElm = document.getElementById(btn.id + '-detail');
+		var updateLogs = document.getElementById('updatelogs');
+
+		XHR.get('<%=url([[admin]], [[services]], [[gpsysupgrade]], [[sysversion_check]])%>', {
+			token: tokenStr,
+			model: ''
+		}, function(x,json) {
+			removePageNotice_sysup();
+
+			if(json.code) {
+				sysUpgradeInfo = undefined;
+				onRequestError_sysup(btn, json.error);
+			} else {
+			document.querySelector('#retain').style.display = '';
+				if(json.update) {
+					sysUpgradeInfo = json;
+					btn.disabled = false;
+					btn.value = clickToUpdateText;
+					btn.placeholder = clickToUpdateText;
+					
+					if(ckeckDetailElm) {
+						var urlNode = '';
+						if(json.version) {
+							urlNode = '<em style="color:red;">最新版本号：' + json.version + '</em>';
+						}
+						if(json.logs) {
+							logs = '<div class="alert alert-message">' + json.logs + '</div>';
+						}
+					ckeckDetailElm.innerHTML = urlNode;
+					updateLogs.innerHTML = logs;
+					
+					}
+				} else {
+					sysUpgradeInfo = json;
+					btn.disabled = false;
+					btn.value = clickToForceUpdateText;
+					btn.placeholder = clickToForceUpdateText;
+				}
+			}
+		},300);
+	}
+
+	function doUpdate_sysup(btn) {
+		btn.disabled = true;
+		btn.value = downloadingText;
+
+		addPageNotice_sysup();
+
+		var sysUpgradeUrl = '<%=url([[admin]], [[services]], [[gpsysupgrade]], [[sysversion_update]])%>';
+		// Download file
+		XHR.get(sysUpgradeUrl, {
+			token: tokenStr,
+			url: sysUpgradeInfo ? sysUpgradeInfo.url : ''
+		}, function(x,json) {
+			if(json.code) {
+				removePageNotice_sysup();
+				onRequestError_sysup(btn, json.error);
+			} else {
+						btn.value = flashing;
+						message.style.display = '';
+							label.innerHTML = '<%:Upgrade successful, Waiting for device...%>';
+							
+			var opts = "";
+		if (!kconfig.checked){
+			opts = "-n";
+			}
+
+		if (kopkg.checked){
+			opts = "-k";
+			}
+		if (!kconfig.checked && kopkg.checked){
+			opts = "-n -k";
+			}
+				removePageNotice_sysup();
+				check();
+						XHR.get(sysUpgradeUrl, {
+							token: tokenStr,
+							task: 'flash',
+							file: json.file,
+							retain: opts
+						}, function(x,json) {
+							
+						},300)
+			}
+		},300)
+	}
+	//]]>
+
+</script>
+
+<div class="cbi-value">
+	<label class="value-title" style="float:left;">
+		<%:Current system version%>
+	</label>
+	
+		<div class="cbi-value-description">
+			<span>【 <%=system_version%> 】</span>
+		&nbsp;&nbsp;&nbsp;<span id="_sysup-check_btn-detail"></span>
+		</div>
+	<div id="updatelogs"></div>
+<div id="retain" style="display:none;margin:0.5rem;">
+	<p style="margin-top:0.4rem;"><button class="btn"><input type="checkbox" checked id="kconfig"> <%:Keep settings and retain the current configuration%></button></p>
+<p style="margin-top:0.5rem;"><button class="btn"><input type="checkbox" checked id="kopkg"> <%:Retain the current packages%></button></p>
+</div>
+						<input class="cbi-button cbi-input-apply cbi-button-reset" type="button" id="_sysup-check_btn" onclick="onBtnClick_sysup(this);" value="<%:Check update%>" style="margin-top:0.5rem;"/>
+			
+</div>
+<p class="alert-message notice reboot-message" style="display:none">
+	<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" />
+	<span><%:Device is rebooting...%></span>
+</p>
+<script type="text/javascript">
+	//<![CDATA[
+	var tries = 0,
+	    kconfig = document.querySelector('#kconfig'),
+	    kopkg = document.querySelector('#kopkg');
+	var message = document.querySelector('p.reboot-message');
+	var label = message.querySelector('span');
+
+	function ok() {
+		window.location = '<%=url("admin")%>';
+	}
+
+	function check() {
+		window.setTimeout(ping, 5000);
+	}
+
+	function ping() {
+		var img = document.createElement('img');
+
+		img.onload = ok;
+		img.onerror = check;
+		img.src = '<%=resource%>/icons/loading.gif?' + Math.random();
+
+		if (tries++ >= 30) {
+			message.classList.remove('notice');
+			message.classList.add('warning');
+			label.innerHTML = '<%:Device unreachable! Still waiting for device...%>';
+		}
+	}
+	//]]>
+</script>
+<%+footer%>

@@ -1,0 +1,40 @@
+<%
+local fs = require "nixio.fs"
+local uci = require 'luci.model.uci'.cursor()
+
+if fs.access('/etc/config/system') then
+	autoupgrade_fm = uci:get_first('system', 'system', 'autoupgrade_fm', '1')
+end
+if autoupgrade_fm ~= '0' then
+-%>
+<script>
+var tokenStr = '<%=token%>';
+
+		XHR.get('<%=url([[admin]], [[services]], [[gpsysupgrade]], [[sysversion_check]])%>', {
+			token: tokenStr,
+			model: ''
+		}, function(x,json) {
+			if(json.code) {
+			
+			} else {
+				if(json.notice) {
+					sysUpgradeInfo = json;
+					setTimeout(function(){
+					var ckeckDetailElm = document.querySelector("#maincontent");
+					if(ckeckDetailElm) {
+						var urlNode = '';
+						if(json.version) {
+							urlNode = '<div class="alert-message fade-in success" style="display:flex;margin-top: -1.5rem;padding: 0.31rem 0rem;"><div style="flex:10"><a href="<%=url([[admin]], [[services]], [[gpsysupgrade]])%>"><p><%:New version available%>：' + json.version + '</p></a></div></div>';
+							 ckeckDetailElm.innerHTML=urlNode+ckeckDetailElm.innerHTML;
+						}
+					
+					}
+				}, 0);
+				} else {
+
+				}
+			}
+		},300);
+
+</script>
+<% end -%>

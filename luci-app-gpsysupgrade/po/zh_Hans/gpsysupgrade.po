@@ -1,0 +1,65 @@
+msgid "System upgrade"
+msgstr "系统在线更新"
+
+msgid "Upgrade..."
+msgstr "更新中"
+
+msgid "Current system version"
+msgstr "当前固件版本"
+
+msgid "It is the latest version,Reflash?"
+msgstr "已是最新版,重刷此版本?"
+
+msgid "Upgrade successful"
+msgstr "更新成功"
+
+msgid "Click to Upgrade"
+msgstr "点击更新"
+
+msgid "Upgrading..."
+msgstr "更新中"
+
+msgid "Checking..."
+msgstr "正在检查更新"
+
+msgid "Flashing..."
+msgstr "正在刷入..."
+
+msgid "Check update"
+msgstr "检查更新"
+
+msgid "Unexpected error"
+msgstr "意外错误"
+
+msgid "Upgrading, are you sure to close?"
+msgstr "正在更新，你确认要关闭吗？"
+
+msgid "Downloading..."
+msgstr "下载中"
+
+msgid "Unpacking..."
+msgstr "解压中"
+
+msgid "Can't determine MODEL, or MODEL not supported."
+msgstr "无法确认型号，或是不支持。"
+
+msgid "Get remote version info failed."
+msgstr "获取远程版本信息失败。"
+
+msgid "New version found, but failed to get new version download url."
+msgstr "发现新版本，但未能获得新版本的下载地址。"
+
+msgid "File download failed or timed out: %s"
+msgstr "固件下载失败或超时：%s"
+
+msgid "Firmware file required."
+msgstr "固件文件未找到。"
+
+msgid "New version available"
+msgstr "新版本可用"
+
+msgid "Upgrade successful, Waiting for device..."
+msgstr "更新成功, 等待设备重启后响应..."
+
+msgid "Device unreachable! Still waiting for device..."
+msgstr "无法连接设备! 继续等待..."
