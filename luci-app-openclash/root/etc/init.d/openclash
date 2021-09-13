@@ -308,20 +308,42 @@ sys_dns_append()
    if [ "$1" = 1 ]; then
    	  wan_dns=$(/usr/share/openclash/openclash_get_network.lua "dns")
       wan6_dns=$(/usr/share/openclash/openclash_get_network.lua "dns6")
-      if [ -n "$wan_dns" ]; then
+      wan_gate=$(/usr/share/openclash/openclash_get_network.lua "gateway")
+      wan6_gate=$(/usr/share/openclash/openclash_get_network.lua "gateway6")
+      dhcp_iface=$(/usr/share/openclash/openclash_get_network.lua "dhcp")
+      if [ -z "$dhcp_iface" ]; then
+         if [ -n "$wan_dns" ]; then
+            if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
+               echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
+            fi
+            for i in $wan_dns; do
+               echo "    - \"$i\"" >>/tmp/yaml_config.namedns.yaml
+            done
+         fi
+         if [ -n "$wan6_dns" ] && [ "$2" = 1 ]; then
+            if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
+               echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
+            fi
+            for i in $wan6_dns; do
+               echo "    - \"[${i}]:53\"" >>/tmp/yaml_config.namedns.yaml
+            done
+         fi
+      else
          if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
             echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
          fi
-         for i in $wan_dns; do
-            echo "    - \"$i\"" >>/tmp/yaml_config.namedns.yaml
-         done
-      fi
-      if [ -n "$wan6_dns" ] && [ "$2" = 1 ]; then
-         if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
-            echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
+         if [ -n "$wan_gate" ]; then
+            for i in $wan_gate; do
+                echo "    - \"$i\"" >>/tmp/yaml_config.namedns.yaml
+            done
          fi
-         for i in $wan6_dns; do
-            echo "    - \"[${i}]:53\"" >>/tmp/yaml_config.namedns.yaml
+         if [ -n "$wan6_gate" ] && [ "$2" = 1 ]; then
+            for i in $wan6_gate; do
+               echo "    - \"[${i}]:53\"" >>/tmp/yaml_config.namedns.yaml
+            done
+         fi
+         for i in $dhcp_iface; do
+            echo "    - dhcp://\"$i\"" >>/tmp/yaml_config.namedns.yaml
          done
       fi
    fi
@@ -331,7 +353,7 @@ sys_dns_append()
 yml_dns_get()
 {
 
-   local section="$1"
+   local section="$1" regex='^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$'
    local enabled port type ip group dns_type dns_address
    config_get_bool "enabled" "$section" "enabled" "1"
    config_get "port" "$section" "port" ""
@@ -347,7 +369,7 @@ yml_dns_get()
       return
    fi
    
-   if [ -n "$(echo $ip |grep ":" 2>/dev/null)" ]; then
+   if [[ $ip =~ $regex ]]; then
       ip="[${ip}]"
    fi
 
@@ -399,11 +421,13 @@ yml_dns_custom()
          if [ -z "$(ruby_read "$2" "['dns']")" ]; then
             ruby_cover "$2" "['dns']" "/tmp/yaml_config.namedns.yaml"
             ruby_merge "$2" "['dns']" "/tmp/yaml_config.falldns.yaml"
-         else
+         elif [ "$1" = 1 ]; then
             ruby_edit "$2" "['dns'].delete('nameserver')"
       	    ruby_edit "$2" "['dns'].delete('fallback')"
             ruby_merge "$2" "['dns']" "/tmp/yaml_config.namedns.yaml"
             ruby_merge "$2" "['dns']" "/tmp/yaml_config.falldns.yaml"
+         else
+            ruby_merge "$2" "['dns']" "/tmp/yaml_config.namedns.yaml"
          fi
       else
          LOG_OUT "Error: Nameserver Option Must Be Setted, Stop Customing DNS Servers"
@@ -986,7 +1010,7 @@ do_run_file()
       config_foreach yml_other_rules_get "other_rules" "$CONFIG_NAME"
    fi
 
-   if [ "$proxy_mode" = "script" ] || [ "$rule_name" = "ConnersHua" ] || [ "$rule_name" = "lhie1" ] || [ -n "$(ruby_read "$CONFIG_FILE" "['rules'].grep(/^RULE-SET,/)")" ]; then
+   if [ "$proxy_mode" = "script" ] || [ "$rule_name" = "ConnersHua" ] || [ "$rule_name" = "lhie1" ] || [ -n "$(ruby_read "$CONFIG_FILE" "['rules'].grep(/(^RULE-SET,|^SCRIPT,)/)")" ] || [ -n "$(ruby_read "/etc/openclash/custom/openclash_custom_rules.list" "['rules'].grep(/(^RULE-SET,|^SCRIPT,)/)")" ] || [ -n "$(ruby_read "/etc/openclash/custom/openclash_custom_rules_2.list" "['rules'].grep(/(^RULE-SET,|^SCRIPT,)/)")" ]; then
       if [ "$en_mode_tun" != "2" ]; then
          rm -rf "/etc/openclash/clash"
          ln -s "$tun_core_path" /etc/openclash/clash 2>/dev/null
@@ -1499,7 +1523,9 @@ if [ -z "$en_mode_tun" ] || [ "$en_mode_tun" -eq 3 ]; then
    iptables -t nat -A openclash -m set ! --match-set lan_ac_white_ips src -j RETURN >/dev/null 2>&1
    if [ "$en_mode" = "redir-host" ]; then
       iptables -t nat -A openclash -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
-      iptables -t nat -A openclash -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+      if [ "$china_ip_route" = "1" ]; then
+         iptables -t nat -A openclash -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+      fi
    fi
    iptables -t nat -A openclash -p tcp -j REDIRECT --to-ports "$proxy_port"
    iptables -t nat -A PREROUTING -p tcp -j openclash
@@ -1522,7 +1548,9 @@ if [ -z "$en_mode_tun" ] || [ "$en_mode_tun" -eq 3 ]; then
          iptables -t mangle -A openclash -m set ! --match-set lan_ac_white_macs src -j RETURN >/dev/null 2>&1
          if [ "$en_mode" = "redir-host" ]; then
             iptables -t mangle -A openclash -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
-            iptables -t mangle -A openclash -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+            if [ "$china_ip_route" = "1" ]; then
+               iptables -t mangle -A openclash -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+            fi
          fi
          iptables -t mangle -A openclash -p udp --dport 53 -j RETURN >/dev/null 2>&1
          iptables -t mangle -A openclash -p udp -j TPROXY --on-port "$proxy_port" --tproxy-mark "$PROXY_FWMARK"
@@ -1548,7 +1576,9 @@ if [ -z "$en_mode_tun" ] || [ "$en_mode_tun" -eq 3 ]; then
       iptables -t nat -A openclash_output -m owner ! --uid-owner 65534 -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
       if [ "$en_mode" = "redir-host" ]; then
       	 iptables -t nat -A openclash_output -m set --match-set wan_ac_black_ips dst -j RETURN >/dev/null 2>&1
-         iptables -t nat -A openclash_output -m owner ! --uid-owner 65534 -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+      	 if [ "$china_ip_route" = "1" ]; then
+            iptables -t nat -A openclash_output -m owner ! --uid-owner 65534 -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+         fi
       fi
       if [ "$intranet_allowed" -eq 1 ]; then
          iptables -t nat -A openclash_output -m owner ! --uid-owner 65534 -p tcp -j DNAT --to-destination "$lan_ip:$proxy_port"
@@ -1610,7 +1640,9 @@ if [ -n "$en_mode_tun" ]; then
       iptables -t mangle -A openclash_output -m set --match-set localnetwork dst -j RETURN
       iptables -t mangle -A openclash_output -m set --match-set wan_ac_black_ips dst -j RETURN >/dev/null 2>&1
       iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
-      iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+      if [ "$china_ip_route" = "1" ]; then
+         iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+      fi
       iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -p tcp -j MARK --set-mark "$PROXY_FWMARK"
       iptables -t mangle -I OUTPUT -j openclash_output
    fi
@@ -1628,7 +1660,9 @@ if [ -n "$en_mode_tun" ]; then
    iptables -t mangle -A openclash -m set ! --match-set lan_ac_white_macs src -j RETURN >/dev/null 2>&1
    if [ "$en_mode" = "redir-host" ]; then
       iptables -t mangle -A openclash -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
-      iptables -t mangle -A openclash -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+      if [ "$china_ip_route" = "1" ]; then
+         iptables -t mangle -A openclash -m set --match-set china_ip_route dst -j RETURN >/dev/null 2>&1
+      fi
    fi
    iptables -t mangle -A openclash -j MARK --set-mark "$PROXY_FWMARK"
    
@@ -1719,7 +1753,9 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
       ip6tables -t mangle -A openclash -m set ! --match-set lan_ac_white_macs src -j RETURN >/dev/null 2>&1
       ip6tables -t mangle -A openclash -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
    fi
-   ip6tables -t mangle -A openclash -m set --match-set china_ip6_route dst -j RETURN >/dev/null 2>&1
+   if [ "$china_ip6_route" = "1" ]; then
+      ip6tables -t mangle -A openclash -m set --match-set china_ip6_route dst -j RETURN >/dev/null 2>&1
+   fi
    ip6tables -t mangle -A openclash -p tcp -m comment --comment "OpenClash" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
    ip6tables -t mangle -A PREROUTING -j openclash
 
@@ -1729,7 +1765,9 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
       ip6tables -t mangle -A openclash_output -m set --match-set localnetwork6 dst -j RETURN
       ip6tables -t mangle -A openclash_output -m set --match-set wan_ac_black_ips dst -j RETURN >/dev/null 2>&1
       ip6tables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
-      ip6tables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -m set --match-set china_ip6_route dst -j RETURN >/dev/null 2>&1
+      if [ "$china_ip6_route" = "1" ]; then
+         ip6tables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -m set --match-set china_ip6_route dst -j RETURN >/dev/null 2>&1
+      fi
       ip6tables -t mangle -A openclash_output -p tcp -m owner ! --uid-owner 65534 -j MARK --set-xmark "$PROXY_FWMARK"
       ip6tables -t mangle -A OUTPUT -j openclash_output
    fi
@@ -1761,9 +1799,6 @@ revert_firewall()
 
    ip rule del fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
    ip route del local 0.0.0.0/0 dev lo table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
-
-   ip -6 rule del fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE"
-   ip -6 route del local ::/0 dev lo table "$PROXY_ROUTE_TABLE"
 
    iptables -t nat -D PREROUTING -p tcp --dport 53 -j ACCEPT >/dev/null 2>&1
    #quic
@@ -1833,6 +1868,9 @@ revert_firewall()
    iptables -t mangle -X openclash_output >/dev/null 2>&1
 
    #Revert IPv6 rules
+   
+   ip -6 rule del fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
+   ip -6 route del local ::/0 dev lo table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
 
    pre_lines=$(ip6tables -nvL PREROUTING -t mangle |sed 1,2d |sed -n '/openclash/=' 2>/dev/null |sort -rn)
    for pre_line in $pre_lines; do
@@ -1915,6 +1953,7 @@ get_config()
    append_wan_dns=$(uci -q get openclash.config.append_wan_dns || echo 1)
    _koolshare=$(cat /usr/lib/os-release 2>/dev/null |grep OPENWRT_RELEASE 2>/dev/null |grep -i koolshare 2>/dev/null)
    [ -z "$dns_port" ] && dns_port=7874 && uci -q set openclash.config.dns_port=7874
+   [ "$ipv6_enable" -eq 1 ] && [ "$intranet_allowed" -eq 1 ] && intranet_allowed=0 && uci -q set openclash.config.intranet_allowed=0
    uci -q set openclash.config.restricted_mode=0 && uci -q commit openclash
 }
 
@@ -2062,6 +2101,7 @@ restart()
 reload()
 {
    if pidof clash >/dev/null; then
+      set_lock
       revert_firewall 2>/dev/null
       do_run_mode 2>/dev/null
       get_config 2>/dev/null
@@ -2069,5 +2109,6 @@ reload()
       /etc/init.d/dnsmasq restart >/dev/null 2>&1
       LOG_OUT "Reload OpenClash Firewall Rules..."
       SLOG_CLEAN
+      del_lock
    fi
 }

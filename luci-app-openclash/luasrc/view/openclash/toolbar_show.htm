@@ -18,50 +18,79 @@
 </div>
 
 <script type="text/javascript">//<![CDATA[
-	var config_name = document.getElementById('cfg_name');
-	var tool_label = document.getElementById('tool_label');
-	var header1 = document.getElementsByClassName("tabmenu-item-log ")[0];
-	var header2 = document.getElementsByClassName("tabmenu-item-client ")[0];
-	var header3 = document.getElementsByClassName("tabmenu-item-config ")[0];
+
+		var config_name = document.getElementById('cfg_name');
+		var tool_label = document.getElementById('tool_label');
+		var Commit = document.getElementById('cbi-table-1-Commit');
+		var Apply = document.getElementById('cbi-table-1-Apply');
+		var Load_Config = document.getElementById('cbi-table-1-Load_Config');
+		var Delete_Unused_Servers = document.getElementById('cbi-table-1-Delete_Unused_Servers');
+		var Delete_Servers = document.getElementById('cbi-table-1-Delete_Servers');
+		var Delete_Proxy_Provider = document.getElementById('cbi-table-1-Delete_Proxy_Provider');
+		var Delete_Groups = document.getElementById('cbi-table-1-Delete_Groups');
+		var rule_mg = document.getElementById('cbi-table-1-rule_mg');
+		var pro_mg = document.getElementById('cbi-table-1-pro_mg');
+    
+		setTimeout("get_header()",100);
+		
+		if (Commit) {
+			Commit.style.textAlign="center";
+    	Apply.style.textAlign="center";
+		}
+		if (Load_Config) {
+    	Load_Config.style.textAlign="center";
+    	Delete_Unused_Servers.style.textAlign="center";
+    	Delete_Servers.style.textAlign="center";
+    	Delete_Proxy_Provider.style.textAlign="center";
+    	Delete_Groups.style.textAlign="center";
+		}
+		if (rule_mg) {
+    	rule_mg.style.textAlign="center";
+    	pro_mg.style.textAlign="center";
+		}
+
+		if (tool_label.style.display != "none") {
+			XHR.get('<%=luci.dispatcher.build_url("admin", "services", "openclash", "config_name")%>', null, function(x, status) {
+				if (x && x.status == 200 && status.config_name != "") {
+					for(var i in status.config_name){
+     	 	  config_name.options.add(new Option(status.config_name[i].name,status.config_name[i].name));
+    			}
+    			if (status.config_path != "") {
+    				config_name.value = status.config_path;
+    			}
+    			else
+    			{
+    				config_name.options.add(new Option("<%:Not Select%>",""));
+    				config_name.value = "";
+    			}
+				}
+				else if (x && x.status == 200 && status.config_path != "") {
+					config_name.options.add(new Option(status.config_path,status.config_path));
+					config_name.value = status.config_path;
+				}
+				else {
+					tool_label.style.display = "none";
+				}
+			});
+		};
 	
-	if (header1 && header2.className != "tabmenu-item-client active" && header3.className != "tabmenu-item-config active") {
-		insertAfter(tool_label,header1);
+	function get_header() {
+		var header = document.getElementsByClassName("tabmenu-item-log ")[0];
+		if (header) {
+			insertAfter(tool_label,header);
+		}
+		else {
+			setTimeout("get_header()",100);
+		}
 	}
-	else {
-		tool_label.style.display = "none";
-	}
-	
-	if (tool_label.style.display != "none") {
-		XHR.get('<%=luci.dispatcher.build_url("admin", "services", "openclash", "config_name")%>', null, function(x, status) {
-			if (x && x.status == 200 && status.config_name != "") {
-				for(var i in status.config_name){
-      	  config_name.options.add(new Option(status.config_name[i].name,status.config_name[i].name));
-    		}
-    		if (status.config_path != "") {
-    			config_name.value = status.config_path;
-    		}
-    		else
-    		{
-    			config_name.options.add(new Option("<%:Not Select%>",""));
-    			config_name.value = "";
-    		}
-			}
-			else if (x && x.status == 200 && status.config_path != "") {
-				config_name.options.add(new Option(status.config_path,status.config_path));
-				config_name.value = status.config_path;
-			}
-			else {
-				tool_label.style.display = "none";
-			}
-		});
-	}
-	
-	function insertAfter( newElement, targetElement ){
+		
+	function insertAfter(newElement, targetElement) {
     var parent = targetElement.parentNode;
-    if( parent.lastChild == targetElement ){
-        parent.appendChild( newElement, targetElement ); 
-    }else{ 
-        parent.insertBefore( newElement, targetElement.nextSibling );
+    if(parent.lastChild == targetElement) {
+        parent.appendChild(newElement, targetElement); 
+    }
+    else {
+        parent.insertBefore(newElement, targetElement.nextSibling);
     };
 	};
 	
@@ -79,6 +108,14 @@
 				}
 			});
 			return false;
+		}
+	}
+	
+	function winOpen(url)
+	{
+		var winOpen = window.open(url);
+		if(winOpen == null || typeof(winOpen) == 'undefined'){
+			window.location.href=url;
 		}
 	}
 //]]></script>
