@@ -1,8 +1,11 @@
 /**	
-*	ifit is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
+*	InfinityFreedom is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
 *
-*	luci-theme-ifit
-*	Copyright 2020 Richard Yu <xiaoqingfengatgm@gmail.com>
+*	luci-theme-infinityfreedom
+*	Copyright 2020-2021 Richard Yu <xiaoqingfengatgm@gmail.com>
+*
+*	Have a bug? Please create an issue here on GitHub!
+*	https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom/issues
 *	
 *	luci-theme-material:
 *	Copyright 2015 Lutty Yang
@@ -263,7 +266,7 @@ header {
 }
 
 body > header > div > a.brandWithBackground {
-	background: url("/luci-static/ifit/images/brand.png") 50% 50% / 171px 50px no-repeat rgba(7, 34, 62, 0.8);
+	background: url("/luci-static/infinityfreedom/images/brand.png") 50% 50% / 171px 50px no-repeat rgba(7, 34, 62, 0.8);
 }
 
 footer {
@@ -334,7 +337,15 @@ footer > a {
         transform: rotate(360deg)
     }
 }
-[id^="cbi-apply-"] {
+
+[id^="cbi-apply-"][id$="-status"]{
+	background: 0 0;
+	font-size: 1rem;
+	height: auto;
+	top: 140px;
+}
+
+[id^="cbi-apply-"]{
 	position: absolute;
 	z-index: 200;
 	left: 50%;
@@ -356,13 +367,6 @@ footer > a {
 
 [id^="cbi-apply-"]>img {
 	margin-top: 1rem;
-}
-
-[id^="cbi-apply-"]>[id^="cbi-apply-"] {
-	height: auto;
-	font-size: 1rem;
-	display: block;
-	background: 0 0;
 }
 
 .main-left {
@@ -1865,7 +1869,7 @@ header > .container > .pull-right > * {
 }
 
 .node-main-login > .main .cbi-value-title {
-    width: 7rem;
+    width: 8rem;
 }
 
 .node-main-login > .main #maincontent {
@@ -2103,17 +2107,19 @@ pre#strongswanInDocker_download_log_viewer {
 
 
 /* For luci-app-dockerman */
-div#cbi-dockerman.cbi-map div.pure-g.status
+div#cbi-docker.cbi-map div.pure-g.status,
+div#cbi-dockerd.cbi-map div.pure-g.status
 {
 	margin: 1rem 0rem 1rem 0rem;
 	padding: 0 1rem;
 	background-color: rgba(7,34,62,.4);
 }
-div#cbi-dockerman.cbi-map div.pure-g.status div.pure-u-1-4
+div#cbi-docker.cbi-map div.pure-g.status div.pure-u-1-4,
+div#cbi-dockerd.cbi-map div.pure-g.status div.pure-u-1-4
 {
 	background-color: rgba(7,34,62,.5);
 }
-div#cbi-dockerman.cbi-map div.pure-g.status div.pure-u-1-4 div.block.pure-g div.pure-u-2-5 div.img-con svg
+div#cbi-dockerd.cbi-map div.pure-g.status div.pure-u-1-4 div.block.pure-g div.pure-u-2-5 div.img-con svg
 {
 	fill: white;
 }
@@ -2142,6 +2148,96 @@ textarea.ddns_logview
 #_passwall_status_fieldset > div > div:nth-child(10) > div > div.pure-u-1-5 > div > img
 {
 	filter:invert(100%);
+}
+div#cbi-passwall.cbi-map fieldset > fieldset > div > div > div  label
+{
+	padding: 7px 10px;
+}
+
+div#cbi-passwall.cbi-map fieldset > fieldset > div > div > div  label input.cbi-input-checkbox
+{
+	vertical-align: top;
+	margin-top: 3px;
+}
+
+div#cbi-passwall.cbi-map div#set_node_div
+{
+	background : rgba(7,34,62,.9);
+}
+
+div#cbi-passwall.cbi-map fieldset > fieldset > div#add_link_div
+{
+	position: fixed;
+	width: 55rem;
+	height: 20rem;
+}
+
+#add_link_div > div:nth-child(1) > label
+{
+	width: 30rem;
+}
+
+#add_link_div > div > div> textarea#nodes_link
+{
+	width: 52rem;
+	height: 10rem;
+}
+
+fieldset#cbi-passwall-nodes > div.cbi-section-node input.cbi-input-checkbox.nodes_select
+{
+	vertical-align: top;
+    margin-top: 5px;
+	width : 1.3rem;
+	height: 1.3rem;
+}
+
+/* For luci-app-beamInDocker */
+div#cbi-beamInDocker.cbi-map .cbi-value div.cbi-value-field font.ipsec-server_status ,
+div#cbi-beamInDocker.cbi-map .cbi-value div.cbi-value-field font#beamInDocker-download_status.beamInDocker-download_status
+{
+	display: block;
+	padding-top:6px;
+}
+
+pre#beamInDocker_download_log_viewer {
+	border: 1px solid #e4eaec;
+	width: 100%;
+    min-height: 15rem;
+	height:15rem;
+	overflow:scroll;
+    padding: 1rem;
+    font-size: 1.2rem;
+	line-height:120%;
+    color: #A9B7C6;
+    margin-bottom: 20px;
+    border-radius: 0;
+    background-color: rgba(7,34,62,.75);
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
+	font-family : 'Consolas','Courier New', 'Hiragino Sans GB W6','Microsoft Yahei';
+	/* For FireFox */
+	scrollbar-color: rgba(238,238,238,.5) rgba(50,50,50,.3);
+	scrollbar-width: thin;
+}
+
+#cbi-beamInDocker-beam-beamInDocker_status > div ,
+#cbi-beamInDocker-beam-version > div
+{
+	display: block;
+	padding-top:6px;
+}
+
+/* For luci-app-softethervpn */
+div#cbi-softethervpn.cbi-map .cbi-value div.cbi-value-field font.softethervpn_status
+{
+	display: block;
+	padding-top:6px;
+}
+
+/* For luci-app-homeconnect */
+div#cbi-homeconnect.cbi-map .cbi-value div.cbi-value-field > font.softethervpn_status
+{
+	display: block;
+	padding-top:6px;
 }
 
 @media screen and (max-width: 1600px) {
@@ -2239,7 +2335,7 @@ textarea.ddns_logview
 @media screen and (max-width: 992px) {
 	
 	body > header > div > a.brandWithBackground {
-		background: url("/luci-static/ifit/images/brand.png") 50% 50% / 126px 37px no-repeat rgba(7, 34, 62, 0.8);
+		background: url("/luci-static/infinityfreedom/images/brand.png") 50% 50% / 126px 37px no-repeat rgba(7, 34, 62, 0.8);
 	}
 	
 	html{
