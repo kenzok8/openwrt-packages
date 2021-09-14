@@ -1,6 +1,9 @@
 msgid "Base Setting"
 msgstr "基本设置"
 
+msgid "DNS Filter"
+msgstr "DNS 过滤器"
+
 msgid "Support AdGuardHome/Host/DNSMASQ/Domain Rules"
 msgstr "支持 AdGuardHome/Host/DNSMASQ/Domain 规则"
 
@@ -22,8 +25,8 @@ msgstr "拦截 短视频 APP 和网站"
 msgid "Enable automatic update rules"
 msgstr "启用规则自动更新"
 
-msgid "Update time"
-msgstr "更新时间"
+msgid "Update time (every day)"
+msgstr "更新时间 (每天)"
 
 msgid "DNSFilter Data"
 msgstr "DNSFilter 规则数据库"
@@ -56,7 +59,7 @@ msgid "Subscribe Rules Data"
 msgstr "去广告规则"
 
 msgid "AdGuardHome / Host / DNSMASQ / Domain rules auto-convert"
-msgstr "AdGuardHome / Host / DNSMASQ /Domain 规则自动识别, 自动去重"
+msgstr "AdGuardHome / Host / DNSMASQ / Domain 规则自动识别, 自动去重"
 
 msgid "Save rules to flash"
 msgstr "保存规则到闪存"

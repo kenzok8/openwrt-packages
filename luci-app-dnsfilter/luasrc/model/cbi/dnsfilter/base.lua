@@ -1,7 +1,7 @@
 local SYS=require "luci.sys"
 
 m=Map("dnsfilter")
-m.title=translate("DNSFilter")
+m.title=translate("DNS Filter")
 m.description=translate("Support AdGuardHome/Host/DNSMASQ/Domain Rules")
 m:section(SimpleSection).template="dnsfilter/dnsfilter_status"
 
@@ -26,9 +26,9 @@ o=s:option(Flag,"cron_mode")
 o.title=translate("Enable automatic update rules")
 
 o=s:option(ListValue,"time_update")
-o.title=translate("Update time")
+o.title=translate("Update time (every day)")
 for s=0,23 do
-o:value(s)
+o:value(s, s .. ':00')
 end
 o.default=6
 o:depends("cron_mode",1)
@@ -40,7 +40,7 @@ UD=SYS.exec("cat /tmp/dnsfilter/dnsfilter.updated 2>/dev/null")
 rule_count=tonumber(SYS.exec("find /tmp/dnsfilter -exec cat {} \\; 2>/dev/null | wc -l"))
 o=s:option(DummyValue,"1",translate("Subscribe Rules Data"))
 o.rawhtml=true
-o.template="dnsfilter/refresh"
+o.template="dnsfilter/dnsfilter_refresh"
 o.value=rule_count.." "..translate("Records")
 o.description=string.format(translate("AdGuardHome / Host / DNSMASQ / Domain rules auto-convert").."<br/><strong>"..translate("Last Update Checked")..":</strong> %s<br/>",UD)
 end

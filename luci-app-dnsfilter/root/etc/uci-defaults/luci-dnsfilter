@@ -11,6 +11,7 @@ uci -q batch <<-EOF >/dev/null
 	set firewall.dnsfilter.reload=1
 	commit firewall
 EOF
+
 chmod 755 /etc/init.d/dnsfilter /usr/share/dnsfilter/* >/dev/null 2>&1
-rm -rf /tmp/luci-modulecache /tmp/luci-indexcache*
+rm -rf /tmp/luci-*
 exit 0
