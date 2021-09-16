@@ -1,11 +1,9 @@
 /**	
-*	InfinityFreedom is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
+*	ifit is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
 *
-*	luci-theme-infinityfreedom
+*	luci-theme-ifit
 *	Copyright 2020-2021 Richard Yu <xiaoqingfengatgm@gmail.com>
 *
-*	Have a bug? Please create an issue here on GitHub!
-*	https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom/issues
 *	
 *	luci-theme-material:
 *	Copyright 2015 Lutty Yang
@@ -266,7 +264,7 @@ header {
 }
 
 body > header > div > a.brandWithBackground {
-	background: url("/luci-static/infinityfreedom/images/brand.png") 50% 50% / 171px 50px no-repeat rgba(7, 34, 62, 0.8);
+	background: url("/luci-static/ifit/images/brand.png") 50% 50% / 171px 50px no-repeat rgba(7, 34, 62, 0.8);
 }
 
 footer {
@@ -2335,7 +2333,7 @@ div#cbi-homeconnect.cbi-map .cbi-value div.cbi-value-field > font.softethervpn_s
 @media screen and (max-width: 992px) {
 	
 	body > header > div > a.brandWithBackground {
-		background: url("/luci-static/infinityfreedom/images/brand.png") 50% 50% / 126px 37px no-repeat rgba(7, 34, 62, 0.8);
+		background: url("/luci-static/ifit/images/brand.png") 50% 50% / 126px 37px no-repeat rgba(7, 34, 62, 0.8);
 	}
 	
 	html{

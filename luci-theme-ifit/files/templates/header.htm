@@ -1,12 +1,9 @@
 <%#
 	
-	InfinityFreedom is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
+	ifit is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
 
-	luci-theme-infinityfreedom
+	luci-theme-ifit
 	Copyright 2020 Richard Yu <xiaoqingfengatgm@gmail.com>
-
-	Have a bug? Please create an issue here on GitHub!
-	https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom/issues
 	
 	luci-theme-material:
 	Copyright 2015 Lutty Yang
@@ -224,7 +221,7 @@
 <header>
 	<div class="container">
 		<span class="showSide"></span>
-		<a class="brand" href="#"><%="OpenWrt"%></a>
+		<a class="brand" href="#"><%=boardinfo.hostname or "?"%></a>
 		<div class="pull-right">
 			<% render_changes() %>
 			<span id="xhr_poll_status" style="display:none" onclick="XHR.running() ? XHR.halt() : XHR.run()">
@@ -235,7 +232,7 @@
 	</div>
 </header>
 	<script>
-	var brandurl = '/luci-static/infinityfreedom/images/brand.png';
+	var brandurl = '/luci-static/ifit/images/brand.png';
 	$.ajax({
         url : brandurl,
         type : 'HEAD',
