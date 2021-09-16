@@ -13,6 +13,7 @@
     "str_tab": " ",
     "table_tab": "<font color=#76CCFF>┋</font>",
     "font_green": "<font color=#92D050>",
+    "font_green2": "<font color=#92D050>",
     "font_red": "<font color=#FF6666>",
     "font_blue": "<font color=#76CCFF>",
     "font_purple": "<font color=#6A65FF>",
@@ -25,7 +26,7 @@
 	      "msgtype": "\"markdown\"",
 	      "markdown": {
 		      	"title": "\"${1}\"",
-			"text": "\"${font_purple}${1}${font_end}${str_linefeed}${nowtime}${str_linefeed}${2}\""
+			"text": "\"${str_title_start}${font_purple}${1}${font_end}${str_title_end}${str_linefeed}${nowtime}${str_linefeed}${2}${str_linefeed}${font_purple}${1}${font_end}\""
 	      }
       }
 }
