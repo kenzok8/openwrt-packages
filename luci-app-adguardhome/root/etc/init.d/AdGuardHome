@@ -7,13 +7,12 @@ STOP=01
 
 CONFIGURATION=AdGuardHome
 CRON_FILE=/etc/crontabs/root
-
-extra_command "do_redirect" "0 or 1"
-extra_command "testbackup" "backup or restore"
-extra_command "test_crontab"
-extra_command "force_reload"
-extra_command "isrunning"
-
+EXTRA_COMMANDS="do_redirect testbackup test_crontab force_reload isrunning"
+EXTRA_HELP="        do_redirect 0 or 1\
+        testbackup backup or restore\
+		test_crontab
+		force_reload
+		isrunning"
 set_forward_dnsmasq()
 {
 	local PORT="$1"
@@ -29,7 +28,7 @@ set_forward_dnsmasq()
 		if [ "$server" = "$addr" ]; then
 			continue
 		fi
-		# uci add_list dhcp.@dnsmasq[0].server=$server
+		uci add_list dhcp.@dnsmasq[0].server=$server
 	done
 	uci delete dhcp.@dnsmasq[0].resolvfile 2>/dev/null
 	uci set dhcp.@dnsmasq[0].noresolv=1
@@ -50,7 +49,9 @@ stop_forward_dnsmasq()
 	uci del_list dhcp.@dnsmasq[0].server=$addr 2>/dev/null
 	addrlist="`uci get dhcp.@dnsmasq[0].server 2>/dev/null`"
 	if [ -z "$addrlist" ] ; then
-		uci set dhcp.@dnsmasq[0].resolvfile=/tmp/resolv.conf.d/resolv.conf.auto 2>/dev/null
+		resolvfile="/tmp/resolv.conf.d/resolv.conf.auto"
+		[ ! -f "$resolvfile" ] && resolvfile="/tmp/resolv.conf.auto"
+		uci set dhcp.@dnsmasq[0].resolvfile="$resolvfile" 2>/dev/null
 		uci delete dhcp.@dnsmasq[0].noresolv 2>/dev/null
 	fi
 	uci commit dhcp
@@ -62,89 +63,80 @@ set_iptable()
 	local ipv6_server=$1
 	local tcp_server=$2
 	uci -q batch <<-EOF >/dev/null 2>&1
-	delete firewall.AdGuardHome
+  delete firewall.AdGuardHome
 	set firewall.AdGuardHome=include
 	set firewall.AdGuardHome.type=script
 	set firewall.AdGuardHome.path=/usr/share/AdGuardHome/firewall.start
 	set firewall.AdGuardHome.reload=1
 	commit firewall
 EOF
+	
+	[ "$tcp_server" == "1" ] && iptables -t nat -I PREROUTING 1 -m comment --comment "AdGuardHome" -p tcp --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT
+	iptables -t nat -I PREROUTING 1 -m comment --comment "AdGuardHome" -p udp --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT
 
-	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
-	for IP in $IPS
-	do
-		if [ "$tcp_server" == "1" ]; then
-			iptables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
-		fi
-		iptables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
-	done
+	[ "$ipv6_server" == 0 ] && return
 
-	if [ "$ipv6_server" == 0 ]; then
-		return
-	fi
-
-	IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
-	for IP in $IPS
-	do
-		if [ "$tcp_server" == "1" ]; then
-			ip6tables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
-		fi
-		ip6tables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
-	done
+	[ "$tcp_server" == "1" ] && ip6tables -t nat -I PREROUTING 1 -m comment --comment "AdGuardHome" -p tcp --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT
+	ip6tables -t nat -I PREROUTING 1 -m comment --comment "AdGuardHome" -p udp --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT
 }
 
 clear_iptable()
 {
 	uci -q batch <<-EOF >/dev/null 2>&1
-	delete firewall.AdGuardHome
+  delete firewall.AdGuardHome
 	commit firewall
 EOF
-	local OLD_PORT="$1"
-	local ipv6_server=$2
-	IPS="`ifconfig | grep "inet addr" | grep -v ":127" | grep "Bcast" | awk '{print $2}' | awk -F : '{print $2}'`"
-	for IP in $IPS
-	do
-		iptables -t nat -D PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
-		iptables -t nat -D PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
-	done
 
-	if [ "$ipv6_server" == 0 ]; then
-		return
+	nums=$(iptables -t nat -n -L PREROUTING 2>/dev/null | grep -c "AdGuardHome")
+	if [ -n "$nums" ]; then
+		until [ "$nums" = 0 ]
+		do
+			rules=$(iptables -t nat -n -L PREROUTING --line-num 2>/dev/null | grep "AdGuardHome" | awk '{print $1}')
+			for rule in $rules
+			do
+				iptables -t nat -D PREROUTING $rule 2> /dev/null
+				break
+			done
+			nums=$(expr $nums - 1)
+		done
 	fi
-	echo "warn ip6tables nat mod is needed"
-	IPS="`ifconfig | grep "inet6 addr" | grep -v " fe80::" | grep -v " ::1" | grep "Global" | awk '{print $3}'`"
-	for IP in $IPS
-	do
-		ip6tables -t nat -D PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
-		ip6tables -t nat -D PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $OLD_PORT >/dev/null 2>&1
-	done
+	
+	nums=$(ip6tables -t nat -n -L PREROUTING 2>/dev/null | grep -c "AdGuardHome")
+	if [ -n "$nums" ]; then
+		until [ "$nums" = 0 ]
+		do
+			rules=$(ip6tables -t nat -n -L PREROUTING --line-num 2>/dev/null | grep "AdGuardHome" | awk '{print $1}')
+			for rule in $rules
+			do
+				ip6tables -t nat -D PREROUTING $rule 2> /dev/null
+				break
+			done
+			nums=$(expr $nums - 1)
+		done
+	fi
 }
 
 service_triggers() {
 	procd_add_reload_trigger "$CONFIGURATION"
 	[ "$(uci get AdGuardHome.AdGuardHome.redirect)" == "redirect" ] && procd_add_reload_trigger firewall
 }
-
 isrunning(){
-	config_load "${CONFIGURATION}"
-	_isrunning
-	local r=$?
-	([ "$r" == "0" ] && echo "running") || ([ "$r" == "1" ] && echo "not run" ) || echo "no bin"
-	return $r
+config_load "${CONFIGURATION}"
+_isrunning
+local r=$?
+([ "$r" == "0" ] && echo "running") || ([ "$r" == "1" ] && echo "not run" ) || echo "no bin"
+return $r
 }
-
 _isrunning(){
-	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
+	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome/AdGuardHome"
 	[ ! -f "$binpath" ] && return 2
 	pgrep $binpath 2>&1 >/dev/null && return 0
 	return 1
 }
-
 force_reload(){
 	config_load "${CONFIGURATION}"
 	_isrunning && procd_send_signal "$CONFIGURATION" || start
 }
-
 get_tz()
 {
 	SET_TZ=""
@@ -186,7 +178,7 @@ rm_port53()
 	config_editor "dns.port" "$dnsmasq_port" "$configpath"
 	uci set dhcp.@dnsmasq[0].port="53"
 	uci commit dhcp
-	/etc/init.d/dnsmasq reload
+	/etc/init.d/dnsmasq restart
 }
 
 use_port53()
@@ -206,15 +198,13 @@ use_port53()
 	config_editor "dns.port" "53" "$configpath"
 	uci set dhcp.@dnsmasq[0].port="$AdGuardHome_PORT"
 	uci commit dhcp
-	/etc/init.d/dnsmasq reload
+	/etc/init.d/dnsmasq restart
 }
-
 do_redirect()
 {
 	config_load "${CONFIGURATION}"
 	_do_redirect $1
 }
-
 _do_redirect()
 {
 	local section="$CONFIGURATION"
@@ -237,6 +227,7 @@ _do_redirect()
 	config_get "old_port" "$section" "old_port" "0"
 	config_get "old_enabled" "$section" "old_enabled" "0"
 	uci get dhcp.@dnsmasq[0].port >/dev/null 2>&1 || uci set dhcp.@dnsmasq[0].port="53" >/dev/null 2>&1
+	uci commit dhcp
 	if [ "$old_enabled" = "1" -a "$old_redirect" == "exchange" ]; then
 		AdGuardHome_PORT=$(uci get dhcp.@dnsmasq[0].port 2>/dev/null)
 	fi
@@ -244,7 +235,7 @@ _do_redirect()
 	if [ "$old_redirect" != "$redirect" ] || [ "$old_port" != "$AdGuardHome_PORT" ] || [ "$old_enabled" = "1" -a "$enabled" = "0" ]; then
 		if [ "$old_redirect" != "none" ]; then
 			if [  "$old_redirect" == "redirect" -a "$old_port" != "0" ]; then
-				clear_iptable "$old_port" "$ipv6_server"
+				clear_iptable
 			elif [ "$old_redirect" == "dnsmasq-upstream" ]; then
 				stop_forward_dnsmasq "$old_port"
 			elif [ "$old_redirect" == "exchange" ]; then
@@ -253,7 +244,7 @@ _do_redirect()
 		fi
 	elif [ "$old_enabled" = "1" -a "$enabled" = "1" ]; then
 		if [  "$old_redirect" == "redirect" -a "$old_port" != "0" ]; then
-			clear_iptable "$old_port" "$ipv6_server"
+			clear_iptable
 		fi
 	fi
 	uci delete AdGuardHome.@AdGuardHome[0].old_redirect 2>/dev/null
@@ -275,7 +266,6 @@ _do_redirect()
 		use_port53
 	fi
 }
-
 get_filesystem()
 {
 # print out path filesystem
@@ -345,7 +335,7 @@ boot_service() {
 	config_load "${CONFIGURATION}"
 	config_get waitonboot $CONFIGURATION waitonboot "0"
 	config_get_bool enabled $CONFIGURATION enabled 0
-	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
+	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome/AdGuardHome"
 	[ -f "$binpath" ] && start_service
 	if [ "$enabled" == "1" ] && [ "$waitonboot" == "1" ]; then
 		procd_open_instance "waitnet"
@@ -363,18 +353,16 @@ testbackup(){
 		restore
 	fi
 }
-
 restore()
 {
-	config_get workdir $CONFIGURATION workdir "/etc/AdGuardHome"
-	config_get backupwdpath $CONFIGURATION backupwdpath "/etc/AdGuardHome"
+	config_get workdir $CONFIGURATION workdir "/usr/bin/AdGuardHome"
+	config_get backupwdpath $CONFIGURATION backupwdpath "/usr/bin/AdGuardHome"
 	cp -u -r -f $backupwdpath/data $workdir
 }
-
 backup() {
-	config_get backupwdpath $CONFIGURATION backupwdpath "/etc/AdGuardHome"
+	config_get backupwdpath $CONFIGURATION backupwdpath "/usr/bin/AdGuardHome"
 	mkdir -p $backupwdpath/data
-	config_get workdir $CONFIGURATION workdir "/etc/AdGuardHome"
+	config_get workdir $CONFIGURATION workdir "/usr/bin/AdGuardHome"
 	config_get backupfile $CONFIGURATION backupfile ""
 	for one in $backupfile;
 	do
@@ -398,7 +386,6 @@ backup() {
 		done
 	done
 }
-
 start_service() {
 	# Reading config
 	rm /var/run/AdGserverdis >/dev/null 2>&1
@@ -419,7 +406,7 @@ start_service() {
 		return
 	fi
 	#what need to do before reload
-	config_get workdir $CONFIGURATION workdir "/etc/AdGuardHome"
+	config_get workdir $CONFIGURATION workdir "/usr/bin/AdGuardHome"
 
 	config_get backupfile $CONFIGURATION backupfile ""
 	mkdir -p $workdir/data
@@ -444,7 +431,7 @@ start_service() {
 		fi
 	fi
 	local ADDITIONAL_ARGS=""
-	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
+	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome/AdGuardHome"
 
 	mkdir -p ${binpath%/*}
 	ADDITIONAL_ARGS="$ADDITIONAL_ARGS -c $configpath"
@@ -456,7 +443,7 @@ start_service() {
 	config_get upprotect $CONFIGURATION upprotect ""
 	eval upprotect=${upprotect// /\\\\n}
 	echo -e "$upprotect">/lib/upgrade/keep.d/luci-app-adguardhome
-
+	
 	config_get logfile $CONFIGURATION logfile ""
 	if [ -n "$logfile" ]; then
 		ADDITIONAL_ARGS="$ADDITIONAL_ARGS -l $logfile"
@@ -499,16 +486,7 @@ start_service() {
 	echo "AdGuardHome service enabled"
 	echo "luci enable switch=$enabled"
 	(sleep 10 && [ -z "$(pgrep $binpath)" ] && logger "AdGuardHome" "no process in 10s cancel redirect" && _do_redirect 0 )&
-	if [[ "`uci get bypass.@global[0].global_server 2>/dev/null`" && "`uci get bypass.@global[0].adguardhome 2>/dev/null`" == 1 && "$(uci get dhcp.@dnsmasq[0].port)" == "53" ]]; then
-		c1=0
-		while ! netstat -tunlp | grep 53 | grep -i AdGuardHome 2>&1; do
-			/etc/init.d/bypass restart 2>/dev/null
-			sleep 1
-			[ $c1 == 5 ] && break || let c1++
-		done
-	fi
 }
-
 reload_service()
 {
 	rm /var/run/AdGlucitest >/dev/null 2>&1
@@ -517,23 +495,22 @@ reload_service()
 }
 
 del_querylog(){
-	local btarget=$(ls $backupwdpath/data | grep -F "querylog.json" | sort -r | head -n 1)
-	local wtarget=$(ls $workdir/data | grep -F "querylog.json" | sort -r | head -n 1)
-	if [ "$btarget"x == "$wtarget"x ]; then
-		[ -z "$btarget" ] && return 1
-		rm -f $workdir/data/$wtarget
-		rm -f $backupwdpath/data/$btarget
-		return 0
-	fi
-	if [ "$btarget" \> "$wtarget" ]; then
-		rm -f $backupwdpath/data/$btarget
-		return 0
-	else
-		rm -f $workdir/data/$wtarget
-		return 0
-	fi
+local btarget=$(ls $backupwdpath/data | grep -F "querylog.json" | sort -r | head -n 1)
+local wtarget=$(ls $workdir/data | grep -F "querylog.json" | sort -r | head -n 1)
+if [ "$btarget"x == "$wtarget"x ]; then
+	[ -z "$btarget" ] && return 1
+	rm -f $workdir/data/$wtarget
+	rm -f $backupwdpath/data/$btarget
+	return 0
+fi
+if [ "$btarget" \> "$wtarget" ]; then
+	rm -f $backupwdpath/data/$btarget
+	return 0
+else
+	rm -f $workdir/data/$wtarget
+	return 0
+fi
 }
-
 stop_service()
 {
 	config_load "${CONFIGURATION}"
@@ -547,22 +524,17 @@ stop_service()
 	fi
 	echo "AdGuardHome service disabled"
 	touch /var/run/AdGserverdis
-	killall -9 AdGuardHome 2>/dev/null
-	/etc/init.d/dnsmasq restart
 }
-
 boot() {
 	rc_procd boot_service "$@"
-	if eval "type service_started" 2>/dev/null; then
+	if eval "type service_started" 2>/dev/null >/dev/null; then
 		service_started
 	fi
 }
-
 test_crontab(){
-	config_load "${CONFIGURATION}"
-	do_crontab
+config_load "${CONFIGURATION}"
+do_crontab
 }
-
 do_crontab(){
 	config_get_bool enabled $CONFIGURATION enabled 0
 	config_get crontab $CONFIGURATION crontab ""
@@ -573,16 +545,16 @@ do_crontab(){
 	default="30 3 * * * /usr/share/AdGuardHome/update_core.sh 2>&1"
 	[ "$enabled" == "0" ] || [ "${crontab//autoupdate/}" == "$crontab" ] && cronenable=0 || cronenable=1
 	crontab_editor
-
-	config_get workdir $CONFIGURATION workdir "/etc/AdGuardHome"
-	config_get lastworkdir $CONFIGURATION lastworkdir "/etc/AdGuardHome"
+	
+	config_get workdir $CONFIGURATION workdir "/usr/bin/AdGuardHome"
+	config_get lastworkdir $CONFIGURATION lastworkdir "/usr/bin/AdGuardHome"
 	findstr="/usr/share/AdGuardHome/tailto.sh [0-9]* \$(uci get AdGuardHome.AdGuardHome.workdir)/data/querylog.json"
 	#[ -n "$lastworkdir" ] && findstr="/usr/share/AdGuardHome/tailto.sh [0-9]* $lastworkdir/data/querylog.json" && [ "$lastworkdir" != "$workdir" ] && replace="${lastworkdir//\//\\/}/${workdir//\//\\/}"
 	default="0 * * * * /usr/share/AdGuardHome/tailto.sh 2000 \$(uci get AdGuardHome.AdGuardHome.workdir)/data/querylog.json"
 	[ "$enabled" == "0" ] || [ "${crontab//cutquerylog/}" == "$crontab" ] && cronenable=0 || cronenable=1
 	crontab_editor
 	#[ "$lastworkdir" != "$workdir" ] && uci set AdGuardHome.AdGuardHome.lastworkdir="$workdir" && commit=1
-
+	
 	config_get logfile $CONFIGURATION logfile ""
 	config_get lastlogfile $CONFIGURATION lastlogfile ""
 	findstr="/usr/share/AdGuardHome/tailto.sh [0-9]* \$(uci get AdGuardHome.AdGuardHome.logfile)"
@@ -591,7 +563,7 @@ do_crontab(){
 	[ "$logfile" == "syslog" ] || [ "$logfile" == "" ] || [ "$enabled" == "0" ] || [ "${crontab//cutruntimelog/}" == "$crontab" ] && cronenable=0 || cronenable=1
 	crontab_editor
 	#[ -n "$logfile" ] && [ "$lastlogfile" != "$logfile" ] && uci set AdGuardHome.AdGuardHome.lastlogfile="$logfile" && commit=1
-
+	
 	findstr="/usr/share/AdGuardHome/addhost.sh"
 	default="0 * * * * /usr/share/AdGuardHome/addhost.sh"
 	[ "$enabled" == "0" ] || [ "${crontab//autohost/}" == "$crontab" ] && cronenable=0 || cronenable=1
@@ -605,7 +577,6 @@ do_crontab(){
 	[ "$cronreload" -gt 0 ] && /etc/init.d/cron restart
 	#[ "$commit" -gt 0 ] && uci commit AdGuardHome
 }
-
 crontab_editor(){
 	#usage input:
 	#findstr=
@@ -615,7 +586,7 @@ crontab_editor(){
 	#output:cronreload:if >1 please /etc/init.d/cron restart manual
 	local testline reload
 	local line="$(grep "$findstr" $CRON_FILE)"
-	[ -n "$replace" ] && [ -n "$line" ] && eval testline="\${line//$replace}" && [ "$testline" != "$line" ] && line="$testline" && reload="1" && replace=""
+	[ -n "$replace" ] && [ -n "$line" ] && eval testline="\${line//$replace}" && [ "$testline" != "$line" ] && line="$testline" && reload="1" && replace="" 
 	if [ "${line:0:1}" != "#" ]; then
 		if [ $cronenable -eq 1 ]; then
 			[ -z "$line" ] && line="$default" && reload="1"
@@ -639,4 +610,5 @@ crontab_editor(){
 			echo "$line" >> $CRON_FILE
 		fi
 	fi
+	
 }

@@ -4,8 +4,8 @@
 <input type="checkbox" name="NAME" value="localtime" onclick=" return chlogtime()" style="vertical-align:middle;height: auto;" checked><%:localtime%></input><br>
 <%end%>
 <textarea id="cbid.logview.1.conf" class="cbi-input-textarea" style="width: 100%;display:inline" data-update="change" rows="32" cols="60" readonly="readonly" > </textarea>
-<input type="button" class="btn cbi-button cbi-button-apply" id="apply_update_button" value="<%:dellog%>" onclick=" return apply_del_log() "/>
-<input type="button" class="btn cbi-button cbi-button-apply" value="<%:download log%>" style=" display:inline;" onclick=" return download_log()" />
+<input type="button" class="cbi-button cbi-button-apply" id="apply_update_button" value="<%:dellog%>" onclick=" return apply_del_log() "/>
+<input type="button" class="cbi-button cbi-button-apply" value="<%:download log%>" style=" display:inline;" onclick=" return download_log()" />
 <script type="text/javascript">//<![CDATA[
 var islogreverse = true;
 var isutc2local = <%=tostring(self.timereplace)%>;
