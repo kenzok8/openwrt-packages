@@ -745,5 +745,8 @@ msgstr "指纹伪造"
 msgid "Reapply"
 msgstr "重新应用"
 
+msgid "Apply"
+msgstr "应用"
+
 msgid "Enable Netflix Mode"
 msgstr "启用 Netflix 分流模式"
