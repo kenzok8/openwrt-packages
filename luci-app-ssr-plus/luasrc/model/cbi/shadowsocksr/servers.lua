@@ -33,6 +33,10 @@ o = s:option(Value, "filter_words", translate("Subscribe Filter Words"))
 o.rmempty = true
 o.description = translate("Filter Words splited by /")
 
+o = s:option(Value, "save_words", translate("Subscribe Save Words"))
+o.rmempty = true
+o.description = translate("Save Words splited by /")
+
 o = s:option(Button, "update_Sub", translate("Update Subscribe List"))
 o.inputstyle = "reload"
 o.description = translate("Update subscribe url list first")

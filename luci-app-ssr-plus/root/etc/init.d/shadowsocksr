@@ -906,6 +906,7 @@ reset() {
 		set shadowsocksr.@server_subscribe[0].auto_update_time='2'
 		set shadowsocksr.@server_subscribe[0].auto_update='1'
 		set shadowsocksr.@server_subscribe[0].filter_words='过期时间/剩余流量/QQ群/官网/防失联地址/回国'
+		set shadowsocksr.@server_subscribe[0].save_words=''
 		add shadowsocksr access_control
 		set shadowsocksr.@access_control[0].lan_ac_mode='0'
 		set shadowsocksr.@access_control[0].router_proxy='1'
