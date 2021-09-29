@@ -15,9 +15,8 @@
 
 * 作为搬运工，passwall的依赖一并找齐了
 
-##### 插件下载:
-
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/kenzok78/compile-packages?style=for-the-badge&label=插件下载)](https://github.com/kenzok78/compile-packages/releases/latest)
+##### 插件每日更新下载:
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/kenzok8/compile-package?style=for-the-badge&label=插件更新下载)](https://github.com/kenzok8/compile-package/releases/latest)
 
 - [passwall依赖库下载链接，注意！在openwrt或者lean源码下编译passwall，要下载此依赖库](https://github.com/kenzok8/small.git)
 
