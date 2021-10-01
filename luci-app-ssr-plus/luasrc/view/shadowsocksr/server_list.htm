@@ -4,55 +4,58 @@
 -%>
 <script type="text/javascript">
 	//<![CDATA[
-	const doms = document.getElementsByClassName('pingtime');
-	const ports = document.getElementsByClassName("socket-connected");
-	const transports = document.getElementsByClassName("transport");
-	const wsPaths = document.getElementsByClassName("wsPath");
-	const tlss = document.getElementsByClassName("tls");
-	const xhr = (index) => {
-		return new Promise((res) => {
-			const dom = doms[index];
-			const port = ports[index];
-			const transport = transports[index];
-			const wsPath = wsPaths[index];
-			const tls = tlss[index];
-			if (!dom) res()
-			port.innerHTML = '<font color="#0072c3">connect</font>';
-			XHR.get('<%=luci.dispatcher.build_url("admin/services/shadowsocksr/ping")%>', {
-				index,
-				domain: dom.getAttribute("hint"),
-				port: port.getAttribute("hint"),
-				transport: transport.getAttribute("hint"),
-				wsPath: wsPath.getAttribute("hint"),
-				tls: tls.getAttribute("hint")
-			},
-			(x, result) => {
-				let col = '#ff0000';
-				if (result.ping) {
-					if (result.ping < 300) col = '#ff3300';
-					if (result.ping < 200) col = '#ff7700';
-					if (result.ping < 100) col = '#249400';
-				}
-				dom.innerHTML = `<font color="${col}">${(result.ping ? result.ping : "--") + " ms"}</font>`
-				if (result.socket) {
-					port.innerHTML = '<font color="#249400">ok</font>';
-				} else {
-					port.innerHTML = '<font color="#ff0000">fail</font>';
-				}
-				res();
-			});
-		})
-	}
-	let task = -1;
-	const thread = () => {
-		task = task + 1
-		if (doms[task]) {
-			xhr(task).then(thread);
+	window.addEventListener('load',function(){
+		const doms = document.getElementsByClassName('pingtime');
+		const ports = document.getElementsByClassName("socket-connected");
+		const transports = document.getElementsByClassName("transport");
+		const wsPaths = document.getElementsByClassName("wsPath");
+		const tlss = document.getElementsByClassName("tls");
+		const xhr = (index) => {
+			return new Promise((res) => {
+				const dom = doms[index];
+				const port = ports[index];
+				const transport = transports[index];
+				const wsPath = wsPaths[index];
+				const tls = tlss[index];
+				if (!dom) res()
+				port.innerHTML = '<font color="#0072c3">connect</font>';
+				XHR.get('<%=luci.dispatcher.build_url("admin/services/shadowsocksr/ping")%>', {
+					index,
+					domain: dom.getAttribute("hint"),
+					port: port.getAttribute("hint"),
+					transport: transport.getAttribute("hint"),
+					wsPath: wsPath.getAttribute("hint"),
+					tls: tls.getAttribute("hint")
+				},
+				(x, result) => {
+					let col = '#ff0000';
+					if (result.ping) {
+						if (result.ping < 300) col = '#ff3300';
+						if (result.ping < 200) col = '#ff7700';
+						if (result.ping < 100) col = '#249400';
+					}
+					dom.innerHTML = `<font color="${col}">${(result.ping ? result.ping : "--") + " ms"}</font>`
+					if (result.socket) {
+						port.innerHTML = '<font color="#249400">ok</font>';
+					} else {
+						port.innerHTML = '<font color="#ff0000">fail</font>';
+					}
+					res();
+				});
+			})
 		}
-	}
-	for (let i = 0; i < 20; i++) {
-		thread()
-	}
+		let task = -1;
+		const thread = () => {
+			task = task + 1
+			if (doms[task]) {
+				xhr(task).then(thread);
+			}
+		}
+		for (let i = 0; i < 20; i++) {
+			thread()
+		}
+	})
+	
 	function cbi_row_drop(fromId, toId, store, isToBottom) {
 		var fromNode = document.getElementById(fromId);
 		var toNode = document.getElementById(toId);
