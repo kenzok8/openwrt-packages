@@ -1,0 +1,55 @@
+--- a/src/third_party/abseil-cpp/absl/base/internal/direct_mmap.h
++++ b/src/third_party/abseil-cpp/absl/base/internal/direct_mmap.h
+@@ -41,13 +41,7 @@
+ 
+ #ifdef __mips__
+ // Include definitions of the ABI currently in use.
+-#ifdef __BIONIC__
+-// Android doesn't have sgidefs.h, but does have asm/sgidefs.h, which has the
+-// definitions we need.
+ #include <asm/sgidefs.h>
+-#else
+-#include <sgidefs.h>
+-#endif  // __BIONIC__
+ #endif  // __mips__
+ 
+ // SYS_mmap and SYS_munmap are not defined in Android.
+--- a/src/third_party/lss/linux_syscall_support.h
++++ b/src/third_party/lss/linux_syscall_support.h
+@@ -119,14 +119,7 @@ extern "C" {
+ 
+ #ifdef __mips__
+ /* Include definitions of the ABI currently in use.                          */
+-#ifdef __ANDROID__
+-/* Android doesn't have sgidefs.h, but does have asm/sgidefs.h,
+- * which has the definitions we need.
+- */
+ #include <asm/sgidefs.h>
+-#else
+-#include <sgidefs.h>
+-#endif
+ #endif
+ #endif
+ 
+--- a/src/third_party/tcmalloc/chromium/src/base/linux_syscall_support.h
++++ b/src/third_party/tcmalloc/chromium/src/base/linux_syscall_support.h
+@@ -166,7 +166,7 @@ extern "C" {
+ 
+ #ifdef __mips__
+ /* Include definitions of the ABI currently in use.                          */
+-#include <sgidefs.h>
++#include <asm/sgidefs.h>
+ #endif
+ 
+ #endif
+--- a/src/third_party/tcmalloc/vendor/src/base/linux_syscall_support.h
++++ b/src/third_party/tcmalloc/vendor/src/base/linux_syscall_support.h
+@@ -166,7 +166,7 @@ extern "C" {
+ 
+ #ifdef __mips__
+ /* Include definitions of the ABI currently in use.                          */
+-#include <sgidefs.h>
++#include <asm/sgidefs.h>
+ #endif
+ 
+ #endif
