@@ -43,12 +43,14 @@
  ```bash
  src-git small https://github.com/kenzok8/small
  ```
- 
+ |  class | age  |
+| :------------: | :------------: |
+| - luci-app-vssr | vssr老竭力 |
 - openwrt 固件编译自定义主题与软件
 - luci-app-vssr            ------------------vssr老竭力
 - luci-app-dnsfilter       ------------------基于DNS的广告过滤
 - luci-app-openclash       ------------------openclash图形         
-- luci-app-advanced&       ------------------系统高级设置
+- luci-app-advanced       ------------------系统高级设置
 - luci-app-pushbot         ------------------微信/钉钉 推送的插件
 - luci-theme-ifit          ------------------透明主题（适配18.06修复主机名错误）
 - luci-theme-atmaterial_new  ------------------atmaterial 三合一主题（适配18.06）     
