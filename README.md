@@ -43,9 +43,7 @@
  ```bash
  src-git small https://github.com/kenzok8/small
  ```
- |  class | age  |
-| :------------: | :------------: |
-| - luci-app-vssr | vssr老竭力 |
+
 - openwrt 固件编译自定义主题与软件
 - luci-app-vssr            ------------------vssr老竭力
 - luci-app-dnsfilter       ------------------基于DNS的广告过滤
