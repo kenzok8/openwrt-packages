@@ -4,11 +4,12 @@ Luci for JD dailybonus Script for Openwrt
 
 
 
-### Update Log 2021-03-16  v1.0.5
+### Update Log 2021-10-16  v1.0.6
 
 #### Updates 
 
-- FIX: 修正新的PR依赖jQuery的问题。
+- FIX: 修正扫码问题。
+- UPDATE: JS脚本更新至2.1.3。
 
 详情见[具体日志](./relnotes.txt)。 
 

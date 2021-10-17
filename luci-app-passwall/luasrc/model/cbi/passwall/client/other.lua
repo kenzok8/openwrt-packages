@@ -70,9 +70,9 @@ o:value("1:65535", translate("All"))
 
 ---- TCP Redir Ports
 o = s:option(Value, "tcp_redir_ports", translate("TCP Redir Ports"))
-o.default = "22,25,53,143,465,587,993,995,80,443"
+o.default = "22,25,53,143,465,587,853,993,995,80,443"
 o:value("1:65535", translate("All"))
-o:value("22,25,53,143,465,587,993,995,80,443", translate("Common Use"))
+o:value("22,25,53,143,465,587,853,993,995,80,443", translate("Common Use"))
 o:value("80,443", translate("Only Web"))
 o:value("80:65535", "80 " .. translate("or more"))
 o:value("1:443", "443 " .. translate("or less"))
@@ -91,6 +91,22 @@ if os.execute("lsmod | grep -i REDIRECT >/dev/null") == 0 and os.execute("lsmod 
     o.default = "redirect"
     o:value("redirect", "REDIRECT")
     o:value("tproxy", "TPROXY")
+    o:depends("ipv6_tproxy", false)
+    function o.formvalue(self, section)
+        local ipv6_tproxy = ListValue.formvalue(o_ipv6_tproxy, section)
+        if ipv6_tproxy == "1" then
+            return "tproxy"
+        end
+        return ListValue.formvalue(self, section)
+    end
+
+    ---- IPv6 TProxy
+    o_ipv6_tproxy = s:option(Flag, "ipv6_tproxy", translate("IPv6 TProxy"),
+                 "<font color='red'>" .. translate(
+                     "Experimental feature. Make sure that your node supports IPv6.") ..
+                     "</font>")
+    o_ipv6_tproxy.default = 0
+    o_ipv6_tproxy.rmempty = false
 end
 
 --[[
@@ -117,14 +133,6 @@ o.rmempty = true
 s = m:section(TypedSection, "global_other", translate("Other Settings"))
 s.anonymous = true
 s.addremove = false
-
----- IPv6 TProxy
-o = s:option(Flag, "ipv6_tproxy", translate("IPv6 TProxy"),
-             "<font color='red'>" .. translate(
-                 "Experimental feature.Make sure that your node supports IPv6.") ..
-                 "</font>")
-o.default = 0
-o.rmempty = false
 
 o = s:option(MultiValue, "status", translate("Status info"))
 o:value("big_icon", translate("Big icon")) -- 大图标

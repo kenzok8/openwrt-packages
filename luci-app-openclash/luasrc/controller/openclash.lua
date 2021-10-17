@@ -30,6 +30,9 @@ function index()
 	entry({"admin", "services", "openclash", "coreupdate"},call("action_coreupdate"))
 	entry({"admin", "services", "openclash", "ping"}, call("act_ping"))
 	entry({"admin", "services", "openclash", "download_rule"}, call("action_download_rule"))
+	entry({"admin", "services", "openclash", "download_netflix_domains"}, call("action_download_netflix_domains"))
+	entry({"admin", "services", "openclash", "catch_netflix_domains"}, call("action_catch_netflix_domains"))
+	entry({"admin", "services", "openclash", "write_netflix_domains"}, call("action_write_netflix_domains"))
 	entry({"admin", "services", "openclash", "restore"}, call("action_restore_config"))
 	entry({"admin", "services", "openclash", "backup"}, call("action_backup"))
 	entry({"admin", "services", "openclash", "remove_all_core"}, call("action_remove_all_core"))
@@ -283,17 +286,23 @@ end
 local function historychecktime()
 	local CONFIG_FILE = uci:get("openclash", "config", "config_path")
 	if not CONFIG_FILE then return "0" end
-  local HISTORY_PATH = "/etc/openclash/history/" .. fs.filename(fs.basename(CONFIG_FILE))
-	if not nixio.fs.access(HISTORY_PATH) then
+  local HISTORY_PATH_OLD = "/etc/openclash/history/" .. fs.filename(fs.basename(CONFIG_FILE))
+  local HISTORY_PATH = "/etc/openclash/history/" .. fs.filename(fs.basename(CONFIG_FILE)) .. ".db"
+	if not nixio.fs.access(HISTORY_PATH) and not nixio.fs.access(HISTORY_PATH_OLD) then
   	return "0"
 	else
-		return os.date("%Y-%m-%d %H:%M:%S",fs.mtime(HISTORY_PATH))
+		return os.date("%Y-%m-%d %H:%M:%S",fs.mtime(HISTORY_PATH)) or os.date("%Y-%m-%d %H:%M:%S",fs.mtime(HISTORY_PATH_OLD))
 	end
 end
 
 function download_rule()
 	local filename = luci.http.formvalue("filename")
   local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_rule_list.sh "%s" >/dev/null 2>&1',filename))
+  return state
+end
+
+function download_netflix_domains()
+  local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_rule_list.sh "%s" >/dev/null 2>&1',"netflix_domains"))
   return state
 end
 
@@ -628,11 +637,11 @@ end
 end
 
 function action_toolbar_show_sys()
-	local pid = luci.sys.exec("pidof clash |tr -d '\n' 2>/dev/null")
+	local pid = luci.sys.exec("pidof clash |head -1 |tr -d '\n' 2>/dev/null")
 	local mem, cpu
 	if pid and pid ~= "" then
 		mem = tonumber(luci.sys.exec(string.format("cat /proc/%s/status 2>/dev/null |grep -w VmRSS |awk '{print $2}'", pid)))
-		cpu = luci.sys.exec(string.format("top -b -n1 |grep %s 2>/dev/null |head -1 |awk '{print $7}' 2>/dev/null", pid))
+		cpu = luci.sys.exec(string.format("top -b -n1 |grep -E '(%s|PID)' 2>/dev/null |grep -v grep |awk '{for (i=1;i<=NF;i++) {if ($i ~ /CPU/) num=i}};{print $num}' 2>/dev/null | sed -n '2p' 2>/dev/null", pid))
 		if mem and cpu then
 			mem = fs.filesize(mem*1024)
 			cpu = string.gsub(cpu, "%%\n", "")
@@ -651,7 +660,7 @@ function action_toolbar_show_sys()
 end
 
 function action_toolbar_show()
-	local pid = luci.sys.exec("pidof clash |tr -d '\n' 2>/dev/null")
+	local pid = luci.sys.exec("pidof clash |head -1 |tr -d '\n' 2>/dev/null")
 	local traffic, connections, connection, up, down, up_total, down_total, mem, cpu
 	if pid and pid ~= "" then
 		local daip = daip()
@@ -674,7 +683,7 @@ function action_toolbar_show()
 			connection = "0"
 		end
 		mem = tonumber(luci.sys.exec(string.format("cat /proc/%s/status 2>/dev/null |grep -w VmRSS |awk '{print $2}'", pid)))
-		cpu = luci.sys.exec(string.format("top -b -n1 |grep %s 2>/dev/null |head -1 |awk '{print $7}' 2>/dev/null", pid))
+		cpu = luci.sys.exec(string.format("top -b -n1 |grep -E '(%s|PID)' 2>/dev/null |grep -v grep |awk '{for (i=1;i<=NF;i++) {if ($i ~ /CPU/) num=i}};{print $num}' 2>/dev/null | sed -n '2p' 2>/dev/null", pid))
 		if mem and cpu then
 			mem = fs.filesize(mem*1024)
 			cpu = string.gsub(cpu, "%%\n", "")
@@ -902,6 +911,13 @@ function action_download_rule()
 	})
 end
 
+function action_download_netflix_domains()
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+		rule_download_status = download_netflix_domains();
+	})
+end
+
 function action_refresh_log()
 	luci.http.prepare_content("application/json")
 	local logfile="/tmp/openclash.log"
@@ -960,6 +976,64 @@ end
 function action_del_log()
 	luci.sys.exec(": > /tmp/openclash.log")
 	return
+end
+
+function split(str,delimiter)
+	local dLen = string.len(delimiter)
+	local newDeli = ''
+	for i=1,dLen,1 do
+		newDeli = newDeli .. "["..string.sub(delimiter,i,i).."]"
+	end
+
+	local locaStart,locaEnd = string.find(str,newDeli)
+	local arr = {}
+	local n = 1
+	while locaStart ~= nil
+	do
+		if locaStart>0 then
+			arr[n] = string.sub(str,1,locaStart-1)
+			n = n + 1
+		end
+
+		str = string.sub(str,locaEnd+1,string.len(str))
+		locaStart,locaEnd = string.find(str,newDeli)
+	end
+	if str ~= nil then
+		arr[n] = str
+	end
+	return arr
+end
+
+function action_write_netflix_domains()
+	local domains = luci.http.formvalue("domains")
+	local dustom_file = "/etc/openclash/custom/openclash_custom_netflix_domains.list"
+	local file = io.open(dustom_file, "a+")
+	file:seek("set")
+	local domain = file:read("*a")
+	for v, k in pairs(split(domains,"\n")) do
+		if not string.find(domain,k,1,true) then
+			file:write(k.."\n")
+		end
+	end
+	file:close()
+	return
+end
+
+function action_catch_netflix_domains()
+	local cmd = "/usr/share/openclash/openclash_debug_getcon.lua 'netflix-nflxvideo'"
+	luci.http.prepare_content("text/plain")
+	local util = io.popen(cmd)
+	if util and util ~= "" then
+		while true do
+			local ln = util:read("*l")
+			if not ln then break end
+			luci.http.write(ln)
+			luci.http.write(",")
+		end
+		util:close()
+		return
+	end
+	luci.http.status(500, "Bad address")
 end
 
 function action_diag_connection()

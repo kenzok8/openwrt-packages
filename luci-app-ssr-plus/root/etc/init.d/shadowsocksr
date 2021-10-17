@@ -17,7 +17,7 @@ LOCK_FILE=/var/lock/ssrplus.lock
 LOG_FILE=/var/log/ssrplus.log
 TMP_PATH=/var/etc/ssrplus
 TMP_BIN_PATH=$TMP_PATH/bin
-TMP_DNSMASQ_PATH=/var/etc/dnsmasq-ssrplus.d
+TMP_DNSMASQ_PATH=/tmp/dnsmasq.d/dnsmasq-ssrplus.d
 tcp_config_file=
 udp_config_file=
 shunt_config_file=
@@ -810,8 +810,8 @@ start_rules() {
 start() {
 	set_lock
 	echolog "----------start------------"
-	mkdir -p /var/run /var/lock /var/log /var/dnsmasq.d $TMP_BIN_PATH $TMP_DNSMASQ_PATH
-	echo "conf-dir=${TMP_DNSMASQ_PATH}" >"/var/dnsmasq.d/dnsmasq-ssrplus.conf"
+	mkdir -p /var/run /var/lock /var/log /tmp/dnsmasq.d $TMP_BIN_PATH $TMP_DNSMASQ_PATH
+	echo "conf-dir=${TMP_DNSMASQ_PATH}" >"/tmp/dnsmasq.d/dnsmasq-ssrplus.conf"
 	if load_config; then
 		Start_Run
 		start_rules
@@ -844,7 +844,7 @@ start() {
 
 boot() {
 	echolog "boot！"
-	mkdir -p /var/run /var/lock /var/log /var/dnsmasq.d $TMP_BIN_PATH $TMP_DNSMASQ_PATH
+	mkdir -p /var/run /var/lock /var/log /tmp/dnsmasq.d $TMP_BIN_PATH $TMP_DNSMASQ_PATH
 	ulimit -n 65535
 	start
 }
@@ -869,8 +869,8 @@ stop() {
 	$PS -w | grep -v "grep" | grep "$TMP_PATH" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
 	killall -q -9 v2ray-plugin obfs-local xray-plugin
 	rm -f /var/lock/ssr-monitor.lock
-	if [ -f "/var/dnsmasq.d/dnsmasq-ssrplus.conf" ]; then
-		rm -rf /var/dnsmasq.d/dnsmasq-ssrplus.conf $TMP_DNSMASQ_PATH $TMP_PATH/*-ssr-*.json $TMP_PATH/ssr-server*.json
+	if [ -f "/tmp/dnsmasq.d/dnsmasq-ssrplus.conf" ]; then
+		rm -rf /tmp/dnsmasq.d/dnsmasq-ssrplus.conf $TMP_DNSMASQ_PATH $TMP_PATH/*-ssr-*.json $TMP_PATH/ssr-server*.json
 		/etc/init.d/dnsmasq restart >/dev/null 2>&1
 	fi
 	del_cron

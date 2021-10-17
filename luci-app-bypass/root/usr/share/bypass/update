@@ -20,11 +20,11 @@ fi
 if [ "$C" = router ];then
 	if [ $A = Y ];then
 		mkdir -p $TMP
-		while ! B=$(curl -Lfsm 9 https://ispip.clang.cn/all_cn.txt);do
+		while ! B=$(curl -kLfsm 9 https://ispip.clang.cn/all_cn.txt);do
 			sleep 2
 		done
 	else
-		B=$(curl -Lfsm 9 https://ispip.clang.cn/all_cn.txt)
+		B=$(curl -kLfsm 9 https://ispip.clang.cn/all_cn.txt)
 	fi
 	[ -n "$B" ] && echo "$B" > /tmp/china.txt
 
@@ -38,11 +38,11 @@ if [ "$C" = router ];then
 
 	if [ $A = Y ];then
 		mkdir -p $TMP
-		while ! D=$(curl -Lfsm 9 https://ispip.clang.cn/all_cn_ipv6.txt);do
+		while ! D=$(curl -kLfsm 9 https://ispip.clang.cn/all_cn_ipv6.txt);do
 			sleep 2
 		done
 	else
-		D=$(curl -Lfsm 9 https://ispip.clang.cn/all_cn_ipv6.txt)
+		D=$(curl -kLfsm 9 https://ispip.clang.cn/all_cn_ipv6.txt)
 	fi
 	[ -n "$D" ] && echo "$D" > /tmp/china_v6.txt
 
@@ -57,7 +57,7 @@ fi
 
 if [ "$C" = gfw -o "$(uci -q get bypass.@global[0].gfw_mode)" = 1 ];then
 	if [ $A = Y ];then
-		while ! curl -Lfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt;do
+		while ! curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt;do
 			sleep 2
 		done
 	else

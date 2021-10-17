@@ -1,0 +1,87 @@
+#!/bin/sh
+
+IS_ROOT=/tmp/is-root
+DL_DIR=${IS_ROOT}/tmp/dl
+LISTS_DIR_O=/tmp/opkg-lists
+LISTS_DIR=${IS_ROOT}${LISTS_DIR_O}
+OPKG_CONF_DIR=${IS_ROOT}/etc/opkg
+FEEDS_SERVER=https://istore.linkease.com/repo
+ARCH=`opkg -f /dev/null print-architecture | grep -v 'arch all' | grep -v 'arch noarch' | cut -d ' ' -f2`
+
+action=${1}
+shift
+
+is_init() {
+    mkdir -p ${DL_DIR} ${LISTS_DIR} ${IS_ROOT}/etc ${IS_ROOT}/var
+
+    cat /etc/opkg.conf | grep -v lists_dir | grep -v check_signature > ${IS_ROOT}/etc/opkg.conf
+
+    cp ${IS_ROOT}/etc/opkg.conf ${IS_ROOT}/etc/opkg_o.conf
+
+    echo >> ${IS_ROOT}/etc/opkg.conf
+    echo "lists_dir ext ${LISTS_DIR}" >> ${IS_ROOT}/etc/opkg.conf
+    echo >> ${IS_ROOT}/etc/opkg_o.conf
+    echo "lists_dir ext ${LISTS_DIR_O}" >> ${IS_ROOT}/etc/opkg_o.conf
+
+    [ -e ${IS_ROOT}/var/lock ] || {
+        cp -a /etc/opkg ${IS_ROOT}/etc/
+
+        ln -s /var/lock ${IS_ROOT}/var/lock
+    }
+}
+
+opkg_wrap() {
+    OPKG_CONF_DIR=${OPKG_CONF_DIR} opkg -f ${IS_ROOT}/etc/opkg.conf "$@"
+}
+
+update() {
+    curl -o ${OPKG_CONF_DIR}/meta.conf "${FEEDS_SERVER}/all/meta.conf" && \
+      curl -o ${OPKG_CONF_DIR}/all.conf "${FEEDS_SERVER}/all/isfeeds.conf" && \
+      curl -o ${OPKG_CONF_DIR}/arch.conf "${FEEDS_SERVER}/${ARCH}/isfeeds.conf" && \
+      opkg -f ${IS_ROOT}/etc/opkg_o.conf --offline-root ${IS_ROOT} update
+
+    return 0
+}
+
+check_mtime() {
+    find ${OPKG_CONF_DIR}/arch.conf -mtime -1 2>/dev/null | grep -q .  || update
+}
+
+wrapped_in_update() {
+    check_mtime || return 1
+    opkg_wrap "$@" && return 0
+    local idle_t=$((`date '+%s'` - `date -r ${IS_ROOT}/.last_force_ts '+%s' 2>/dev/null || echo '0'`))
+    [ $idle_t -gt 120 ] || return 1
+    update || return 1
+    touch ${IS_ROOT}/.last_force_ts
+    opkg_wrap "$@"
+}
+
+usage() {
+    echo "usage: is-opkg sub-command [arguments...]"
+    echo "where sub-command is one of:"
+    echo "      update                  Update list of available packages"
+    echo "      upgrade <pkgs>          Upgrade packages"
+    echo "      install <pkgs>          Install package(s)"
+    echo "      remove <pkgs>           Remove package(s)"
+}
+
+is_init >/dev/null 2>&1
+
+case $action in
+    "update")
+        update
+    ;;
+    "install")
+        wrapped_in_update install "$@"
+    ;;
+    "upgrade")
+        wrapped_in_update upgrade "$@"
+    ;;
+    "remove")
+        opkg_wrap --autoremove --force-removal-of-dependent-packages remove "$@"
+    ;;
+    *)
+        usage
+    ;;
+esac
