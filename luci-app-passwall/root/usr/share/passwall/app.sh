@@ -320,6 +320,7 @@ run_ipt2socks() {
 	local _extra_param=""
 	eval_set_val $@
 	[ -n "$log_file" ] || log_file="/dev/null"
+	socks_address=$(get_host_ip "ipv4" ${socks_address})
 	[ -n "$socks_username" ] && [ -n "$socks_password" ] && _extra_param="${_extra_param} -a $socks_username -k $socks_password"
 	[ -n "$tcp_tproxy" ] || _extra_param="${_extra_param} -R"
 	case "$redir_type" in
@@ -556,11 +557,12 @@ run_redir() {
 		case "$type" in
 		socks)
 			local _socks_address=$(config_n_get $node address)
+			_socks_address=$(get_host_ip "ipv4" ${_socks_address})
 			local _socks_port=$(config_n_get $node port)
 			local _socks_username=$(config_n_get $node username)
 			local _socks_password=$(config_n_get $node password)
 			[ -n "${_socks_username}" ] && [ -n "${_socks_password}" ] && local _extra_param="-a ${_socks_username} -k ${_socks_password}"
-			ln_start_bin "$(first_type ipt2socks)" "ipt2socks_UDP" $log_file -l $local_port -b 127.0.0.1 -s ${_socks_address} -p ${_socks_port} ${_extra_param} -U -v
+			ln_start_bin "$(first_type ipt2socks)" "ipt2socks_UDP" $log_file -l $local_port -b 0.0.0.0 -s ${_socks_address} -p ${_socks_port} ${_extra_param} -U -v
 		;;
 		v2ray|\
 		xray)
@@ -641,6 +643,7 @@ run_redir() {
 		socks)
 			_socks_flag=1
 			_socks_address=$(config_n_get $node address)
+			_socks_address=$(get_host_ip "ipv4" ${_socks_address})
 			_socks_port=$(config_n_get $node port)
 			_socks_username=$(config_n_get $node username)
 			_socks_password=$(config_n_get $node password)
@@ -793,7 +796,7 @@ run_redir() {
 			[ "$tcp_proxy_way" = "tproxy" ] && _socks_tproxy=""
 			_extra_param="${_extra_param} ${_socks_tproxy}"
 			[ -n "${_socks_username}" ] && [ -n "${_socks_password}" ] && _extra_param="-a ${_socks_username} -k ${_socks_password} ${_extra_param}"
-			ln_start_bin "$(first_type ipt2socks)" "ipt2socks_${_flag}" $log_file -l $local_port -b 127.0.0.1 -s ${_socks_address} -p ${_socks_port} ${_extra_param} -v
+			ln_start_bin "$(first_type ipt2socks)" "ipt2socks_${_flag}" $log_file -l $local_port -b 0.0.0.0 -s ${_socks_address} -p ${_socks_port} ${_extra_param} -v
 		fi
 
 		([ "$type" != "v2ray" ] && [ "$type" != "xray" ]) && {
@@ -1210,29 +1213,25 @@ gen_pdnsd_config() {
 add_ip2route() {
 	local ip=$(get_host_ip "ipv4" $1)
 	[ -z "$ip" ] && {
-		echolog "  - 无法解析${1}，路由表添加失败！"
+		echolog "  - 无法解析[${1}]，路由表添加失败！"
 		return 1
 	}
 	local remarks="${1}"
 	[ "$remarks" != "$ip" ] && remarks="${1}(${ip})"
-	local interface=$2
-	local retries=5
-	local failcount=0
-	while [ "$failcount" -lt $retries ]; do
-		unset msg
-		ip route show dev ${interface} >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
-			let "failcount++"
-			echolog "  - 找不到出口接口：$interface，1分钟后再重试(${failcount}/${retries})，${ip}"
-			[ "$failcount" -ge $retries ] && return 1
-			sleep 1m
-		else
-			route add -host ${ip} dev ${interface} >/dev/null 2>&1
-			echolog "  - ${remarks}添加路由表${interface}接口成功！"
-			echo "$ip" >> $TMP_ROUTE_PATH/${interface}
-			break
-		fi
-	done
+	
+	. /lib/functions/network.sh
+	local gateway device
+	network_get_gateway gateway "$2"
+	network_get_device device "$2"
+	[ -z "${device}" ] && device="$2"
+	
+	if [ -n "${gateway}" ]; then
+		route add -host ${ip} gw ${gateway} dev ${device} >/dev/null 2>&1
+		echo "$ip" >> $TMP_ROUTE_PATH/${device}
+		echolog "  - [${remarks}]添加到接口[${device}]路由表成功！"
+	else
+		echolog "  - [${remarks}]添加到接口[${device}]路由表失功！原因是找不到[${device}]网关。"
+	fi
 }
 
 delete_ip2route() {
