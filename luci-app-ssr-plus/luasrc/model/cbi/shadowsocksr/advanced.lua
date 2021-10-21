@@ -70,10 +70,10 @@ o = s:option(Flag, "adblock", translate("Enable adblock"))
 o.rmempty = false
 
 o = s:option(Value, "adblock_url", translate("adblock_url"))
-o:value("https://neodev.team/lite_host_dnsmasq.conf", translate("NEO DEV HOST Lite"))
-o:value("https://neodev.team/host_dnsmasq.conf", translate("NEO DEV HOST Full"))
+o:value("https://raw.githubusercontent.com/neodevpro/neodevhost/master/lite_host_dnsmasq.conf", translate("NEO DEV HOST Lite"))
+o:value("https://raw.githubusercontent.com/neodevpro/neodevhost/master/host_dnsmasq.conf", translate("NEO DEV HOST Full"))
 o:value("https://anti-ad.net/anti-ad-for-dnsmasq.conf", translate("anti-AD"))
-o.default = "https://neodev.team/lite_host_dnsmasq.conf"
+o.default = "https://raw.githubusercontent.com/neodevpro/neodevhost/master/lite_host_dnsmasq.conf"
 o:depends("adblock", "1")
 o.description = translate("Support AdGuardHome and DNSMASQ format list")
 
