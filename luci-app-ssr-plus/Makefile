@@ -21,7 +21,9 @@ PKG_CONFIG_DEPENDS:= \
 
 LUCI_TITLE:=SS/SSR/V2Ray/Trojan/NaiveProxy/Socks5/Tun LuCI interface
 LUCI_PKGARCH:=all
-LUCI_DEPENDS:=+coreutils +coreutils-base64 +dns2socks +dnsmasq-full +ipset \
+LUCI_DEPENDS:= \
+	@(PACKAGE_libustream-mbedtls||PACKAGE_libustream-openssl||PACKAGE_libustream-wolfssl) \
+	+coreutils +coreutils-base64 +dns2socks +dnsmasq-full +ipset \
 	+ip-full +iptables-mod-tproxy +lua +libuci-lua +microsocks +pdnsd-alt \
 	+tcping +resolveip +shadowsocksr-libev-ssr-check +uclient-fetch \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun:kcptun-client \
@@ -43,26 +45,6 @@ LUCI_DEPENDS:=+coreutils +coreutils-base64 +dns2socks +dnsmasq-full +ipset \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Xray:xray-core
 
 define Package/$(PKG_NAME)/config
-menu "Include libustream-ssl"
-	depends on PACKAGE_$(PKG_NAME)
-	config PACKAGE_$(PKG_NAME)_INCLUDE_libustream-wolfssl
-		bool "Include libustream-wolfssl"
-		default y if DEFAULT_libustream-wolfssl
-		select PACKAGE_libustream-wolfssl
-	
-	config PACKAGE_$(PKG_NAME)_INCLUDE_libustream-openssl
-		depends on !PACKAGE_$(PKG_NAME)_INCLUDE_libustream-wolfssl
-		bool "Include libustream-openssl"
-		default y if DEFAULT_libustream-openssl
-		select PACKAGE_libustream-openssl
-
-	config PACKAGE_$(PKG_NAME)_INCLUDE_libustream-mbedtls
-		depends on !(PACKAGE_$(PKG_NAME)_INCLUDE_libustream-wolfssl || PACKAGE_$(PKG_NAME)_INCLUDE_libustream-openssl)
-		bool "Include libustream-mbedtls"
-		default y if DEFAULT_libustream-mbedtls
-		select PACKAGE_libustream-mbedtls
-
-endmenu
 config PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun
 	bool "Include Kcptun"
 	default n
