@@ -129,8 +129,10 @@ function store_action(param)
                     local meta = json_parse(fs.readfile(metadir .. "/" .. pkg))
                     local metapkg = metapkgpre .. meta.name
                     local status = ipkg.status(metapkg)
-                    meta.time = tonumber(status[metapkg]["Installed-Time"])
-                    data[#data+1] = meta
+                    if next(status) ~= nil then
+                        meta.time = tonumber(status[metapkg]["Installed-Time"])
+                        data[#data+1] = meta
+                    end
                 end
             end
         end
