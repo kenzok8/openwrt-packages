@@ -9,4 +9,5 @@ function index()
 
 	page = entry({"admin", "network", "eqos"}, cbi("eqos"), "EQoS")
 	page.dependent = true
+	page.acl_depends = { "luci-app-eqos" }
 end
