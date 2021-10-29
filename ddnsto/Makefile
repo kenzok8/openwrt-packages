@@ -11,10 +11,10 @@ PKG_ARCH_DDNSTO:=$(ARCH)
 
 PKG_NAME:=ddnsto
 PKG_VERSION:=0.3.0
-PKG_RELEASE:=1
+PKG_RELEASE:=
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://firmware.koolshare.cn/binary/ddnsto/
-PKG_HASH:=cefd2494cb1c21e2c1616290f715dd6415cd460aafc107c38bb9910c13f42448
+PKG_HASH:=skip
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
 
