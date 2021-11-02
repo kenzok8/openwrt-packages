@@ -326,7 +326,7 @@ gen_config_file() { #server1 type2 code3 local_port4 socks_port5 threads5
 			lua /usr/share/shadowsocksr/gen_config.lua $1 redir $4 $5 >$config_file
 			;;
 		3)
-			lua /usr/share/shadowsocksr/gen_config.lua $1 redir $4 $5 >$config_file
+			lua /usr/share/shadowsocksr/gen_config.lua $1 redir $4 >$config_file
 			lua /usr/share/shadowsocksr/gen_config.lua $1 socks $tmp_port >$shunt_dns_config_file
 			;;
 		4)
@@ -564,7 +564,8 @@ Start_Run() {
 		echolog "Main node:$($(first_type $type) --version 2>&1 | head -1) , $threads Threads Started!"
 		;;
 	naiveproxy)
-		gen_config_file $GLOBAL_SERVER $type 1 $tcp_port
+		[ "$(uci_get_by_type global threads 0)" == "0" ] && threads=1
+		gen_config_file $GLOBAL_SERVER $type 1 $tcp_port $threads
 		ln_start_bin $(first_type naive) naive $tcp_config_file
 		echolog "Main node:$($(first_type naive) --version 2>&1 | head -1) , $threads Threads Started!"
 		;;

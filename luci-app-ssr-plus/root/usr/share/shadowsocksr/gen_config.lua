@@ -221,7 +221,7 @@ local trojan = {
 local naiveproxy = {
 	proxy = (server.username and server.password and server.server and server.server_port) and "https://" .. server.username .. ":" .. server.password .. "@" .. server.server .. ":" .. server.server_port,
 	listen = (proto == "redir") and "redir" .. "://0.0.0.0:" .. tonumber(local_port) or "socks" .. "://0.0.0.0:" .. tonumber(local_port),
-	concurrency = (socks_port ~= "0") and tonumber(socks_port) or "1"
+	["insecure-concurrency"] = (socks_port ~= "0") and tonumber(socks_port) or "1"
 }
 local ss = {
 	server = (server.kcp_enable == "1") and "127.0.0.1" or server.server,
