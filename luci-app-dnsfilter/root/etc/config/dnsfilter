@@ -4,5 +4,3 @@ config dnsfilter
 	option time_update '6'
 	option flash '0'
 	option enable '0'
-	list url 'https://cdn.jsdelivr.net/gh/privacy-protection-tools/anti-AD@master/adblock-for-dnsmasq.conf'
-

@@ -17,7 +17,7 @@ msgid "Enable"
 msgstr "启用"
 
 msgid "Block Apple iOS OTA update"
-msgstr "拦截 Apple iOS 的OTA更新"
+msgstr "拦截 Apple iOS 的OTA 更新"
 
 msgid "Block CNshort APP and Website"
 msgstr "拦截 短视频 APP 和网站"
@@ -77,7 +77,7 @@ msgid "Delete Subscribe Rules On The Flash"
 msgstr "清空闪存上的订阅规则库"
 
 msgid "Anti-AD Rules Subscribe"
-msgstr "广告过滤规则订阅URL"
+msgstr "广告过滤规则订阅 URL"
 
 msgid "White Domain List"
 msgstr "域名白名单"
@@ -92,16 +92,16 @@ msgid "Will Always block these Domain"
 msgstr "拦截黑名单内的域名"
 
 msgid "Block IP List"
-msgstr "IP黑名单"
+msgstr "IP 黑名单"
 
 msgid "Will Always block these IP"
-msgstr "拦截黑名单内的IP地址"
+msgstr "拦截黑名单内的 IP 地址"
 
 msgid "Safe Search"
 msgstr "安全搜索"
 
-msgid "Enforcing SafeSearch for google, bing, duckduckgo, yandex and youtube."
-msgstr "强制为google,bing,duckduckgo,yandex,youtube开启安全搜索,过滤不健康内容"
+msgid "Enforcing SafeSearch for Google Bing Duckduckgo Yandex and Youtube."
+msgstr "强制为 Google Bing Duckduckgo Yandex Youtube 开启安全搜索,过滤不健康内容"
 
 msgid "Update Log"
 msgstr "更新日志"

@@ -1,11 +1,12 @@
-local fs=require "nixio.fs"
-local conffile="/etc/dnsfilter/white.list"
+local fs = require "nixio.fs"
+local conffile = "/etc/dnsfilter/white.list"
 
-f=SimpleForm("custom")
-t=f:field(TextValue,"conf")
-t.rmempty=true
-t.rows=13
-t.description=translate("Will Never filter these Domain")
+f = SimpleForm("custom")
+t = f:field(TextValue, "conf")
+t.rmempty = true
+t.rows = 13
+t.description = translate("Will Never filter these Domain")
+
 function t.cfgvalue()
 	return fs.readfile(conffile) or ""
 end
