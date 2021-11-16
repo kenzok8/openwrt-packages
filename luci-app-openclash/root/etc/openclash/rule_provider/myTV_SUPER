@@ -1,5 +1,0 @@
-payload:  
-  # > myTV_SUPER
-  # - User-Agent,mytv*
-  - DOMAIN-SUFFIX,mytvsuper.com
-  - DOMAIN-SUFFIX,tvb.com
