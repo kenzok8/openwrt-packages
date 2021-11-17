@@ -7,9 +7,9 @@ if [ "$ACTION" = ifup -a "$INTERFACE" != wan_6 ];then
 				ipset -! add bypass_all $i
 			done
 		fi
-		if pidof smartdns-le >/dev/null;then
-			killall -q -9 smartdns-le
-			$(which smartdns-le) -c /var/etc/smartdns/smartdns.conf
+		if pidof smartdns >/dev/null;then
+			killall -q -9 smartdns
+			$(which smartdns) -c /var/etc/smartdns/smartdns.conf
 		fi
 	fi
 fi

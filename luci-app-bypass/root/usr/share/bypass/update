@@ -67,7 +67,7 @@ if [ "$C" = gfw -o "$(uci -q get bypass.@global[0].gfw_mode)" = 1 ];then
 	if ! cmp -s /tmp/gfwnew.txt $TMP/gfw.list;then
 		cp -f /tmp/gfwnew.txt $TMP/gfw.list
 		log "Update GFW List!"
-		[ $A = N ] && /etc/init.d/bypass restart
+		[ $A = N ] && /etc/init.d/bypass restart >/dev/null 2>&1
 	else
 		log "GFW List is up to date!"
 	fi

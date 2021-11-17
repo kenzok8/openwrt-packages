@@ -35,7 +35,7 @@ if [ "$1" = gfw ];then
 	B=1
 	while (curl --retry 3 -m 5 216.239.38.120 >/dev/null 2>&1 && ! curl --retry 3 -m 5 https://google.com && true) >/dev/null 2>&1;do
 		echo "$(date +'%Y-%m-%d %H:%M:%S') : ipset lost,restart bypass..." >>/tmp/log/bypass.log
-		/etc/rc.d/bypass restart
+		/etc/init.d/bypass restart >/dev/null 2>&1
 		[ $B -ge 10 ] && break || let B++
 		sleep 2
 	done

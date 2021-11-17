@@ -169,7 +169,7 @@ gen_config_file(){
 }
 
 start_dns(){
-	$(which smartdns-le) -c $DNS_T
+	$(which smartdns) -c $DNS_T
 	case $dns_mode_o in
 	doh)
 		doh_o_a=$(echo $doh_o_a | sed 's/ -http-host dns.google//g')
@@ -783,7 +783,7 @@ gen_dns(){
 				uci -q set AdGuardHome.AdGuardHome.enabled='1'
 				uci -q set AdGuardHome.AdGuardHome.redirect='exchange'
 				uci commit AdGuardHome
-				/etc/init.d/AdGuardHome restart
+				/etc/init.d/AdGuardHome restart >/dev/null 2>&1
 			fi
 		elif [ "$(uci -q get AdGuardHome.AdGuardHome.redirect)" == "exchange" ]; then
 			uci -q set AdGuardHome.AdGuardHome.enabled='0'
@@ -856,7 +856,7 @@ gen_dns(){
 	rm -f $O
 	[ $(find $DNS_DIR -name \* -exec cat {} \; 2>/dev/null | wc -l) = 0 ] && rm -rf $DNS_DIR || echo conf-dir=$DNS_DIR >>$DNS_FILE
 	[ $run_mode = router ] && chinadns_flag=1
-	killall -q -9 smartdns-le
+	killall -q -9 smartdns
 	start_dns
 	/etc/init.d/dnsmasq restart >/dev/null 2>&1
 	preload
@@ -1031,7 +1031,7 @@ stop(){
 	kill -9 $(ps -w | grep by-monitor | grep -v grep | awk '{print$1}') 2>/dev/null
 	kill -9 $(ps -w | grep by-preload | grep -v grep | awk '{print$1}') 2>/dev/null
 	kill -9 $(ps -w | grep $VAR | grep -v grep | awk '{print$1}') 2>/dev/null
-	killall -q -9 smartdns-le chinadns-ng kcptun-client microsocks
+	killall -q -9 smartdns chinadns-ng kcptun-client microsocks
 	if [[ $adguardhome == 1 && ! "$GLOBAL_SERVER" ]]; then
 		if [[ -f /etc/init.d/AdGuardHome && "$(uci -q get AdGuardHome.AdGuardHome.redirect)" == "exchange" ]]; then
 			redirect="$(uci -q get AdGuardHome.AdGuardHome.old_redirect)"
@@ -1083,9 +1083,9 @@ stop(){
 			dns_d_l=$(echo $dns_d_l | sed -e 's/，/,/g' -e 's/。/./g' -e 's/：/:/g' -e 's/,/\n/g')
 			for i in $dns_d_l;do echo "server $i" >> $DNS_T;done
 		fi
-		$(which smartdns-le) -c $DNS_T
+		$(which smartdns) -c $DNS_T
 		r=1
-		while ! ps -w | grep smartdns-le | grep -v grep >/dev/null;do
+		while ! ps -w | grep smartdns | grep -v grep >/dev/null;do
 			[ $r -ge 10 ] && return 1 || let r++
 			sleep 1
 		done

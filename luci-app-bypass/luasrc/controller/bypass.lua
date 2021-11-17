@@ -228,7 +228,7 @@ end
 
 function status()
 	local e = {}
-	e.dns_mode_status = luci.sys.call("pidof smartdns-le >/dev/null") == 0
+	e.dns_mode_status = luci.sys.call("pidof smartdns >/dev/null") == 0
 	e.socks5_status = luci.sys.call("ps -w | grep by- | grep socks5 | grep -v grep >/dev/null") == 0
 	e.tcp_node_status = luci.sys.call("ps -w | grep by-retcp | grep -v grep >/dev/null") == 0
 	e.udp_node_status = luci.sys.call("ps -w | grep by-reudp | grep -v grep >/dev/null") == 0

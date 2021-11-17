@@ -50,11 +50,6 @@ define Package/adguardhome/conffiles
 /etc/adguardhome.yaml
 endef
 
-define Package/adguardhome/postinst
-#!/bin/sh
-	/etc/init.d/AdGuardHome restart
-endef
-
 define Package/adguardhome/description
 Free and open source, powerful network-wide ads and trackers blocking DNS server.
 endef

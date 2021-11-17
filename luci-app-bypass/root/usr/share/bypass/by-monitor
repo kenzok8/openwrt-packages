@@ -41,7 +41,7 @@ while :;do
 		t=`ps -w | grep by-retcp | grep -v grep | wc -l`
 		if [ $t -lt $redir_tcp ];then
 			echolog "Redir TCP Error. Restart!"
-			/etc/init.d/bypass restart
+			/etc/init.d/bypass restart >/dev/null 2>&1
 			exit 0
 		fi
 	fi
@@ -51,7 +51,7 @@ while :;do
 		if [ $t = 0 ];then
 			echolog "SSR KCPTUN Error. Restart!"
 			killall -q -9 kcptun-client
-			$(which kcptun-client) -r $server:$kcp_port -l :$server_port $password $kcp_param &
+			$(which kcptun-client) -r $server:$kcp_port -l :$server_port $password $kcp_param >/dev/null 2>&1 &
 		fi
 	fi
 #redir udp
@@ -59,7 +59,7 @@ while :;do
 		t=`ps -w | grep by-reudp | grep -v grep | wc -l`
 		if [ $t = 0 ];then
 			echolog "Redir UDP Error. Restart!"
-			/etc/init.d/bypass restart
+			/etc/init.d/bypass restart >/dev/null 2>&1
 			exit 0
 		fi
 	fi
@@ -68,17 +68,17 @@ while :;do
 		t=`ps -w | grep by-nf | grep -v grep | wc -l`
 		if [ $t = 0 ];then
 			echolog "Redir Netflix Error. Restart!"
-			/etc/init.d/bypass restart
+			/etc/init.d/bypass restart >/dev/null 2>&1
 			exit 0
 		fi
 	fi
 #smartdns
 	if [ $smartdns = 1 ];then
-		t=`ps -w | grep smartdns-le | grep -v grep | wc -l`
+		t=`ps -w | grep smartdns | grep -v grep | wc -l`
 		if [ $t = 0 ];then
 			echolog "SmartDNS Error. Restart!"
-			killall -q -9 smartdns-le
-			$(which smartdns-le) -c /var/etc/smartdns/smartdns.conf
+			killall -q -9 smartdns >/dev/null 2>&1
+			$(which smartdns) -c /var/etc/smartdns/smartdns.conf
 		fi
 	fi
 #chinadns-ng
@@ -94,7 +94,7 @@ while :;do
 		t=`ps -w | grep by-socks | grep -v grep | wc -l`
 		if [ $t = 0 ];then
 			echolog "Global Socks Server Error. Restart!"
-			/etc/init.d/bypass restart
+			/etc/init.d/bypass restart >/dev/null 2>&1
 			exit 0
 		fi
 	fi
@@ -103,7 +103,7 @@ while :;do
 		t=`ps -w | grep by-server | grep -v grep | wc -l`
 		if [ $t -lt $server_count ];then
 			echolog "SSR Server Error. Restart!"
-			/etc/init.d/bypass restart
+			/etc/init.d/bypass restart >/dev/null 2>&1
 			exit 0
 		fi
 	fi
