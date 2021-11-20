@@ -12,7 +12,6 @@
 
 * 软件不定期同步大神库更新，适合一键下载到package目录下，用于openwrt编译
 
-
 * 作为搬运工，passwall的依赖一并找齐了
 
 ##### 插件每日更新下载:
@@ -23,19 +22,20 @@
 
 + [或者xiaorouji新库地址](https://github.com/xiaorouji/openwrt-passwall.git)
  
++ 谢谢 **kiddin9珠玉在前**[openwrt固件与插件下载](https://op.dllkids.xyz/)
 
 
-1、 lede/package$下运行 或者openwrt/package$下运行
+1、 lede/package$下运行,或者openwrt/package$下运行
 
 
 ```bash
- git clone https://github.com/kenzok8/openwrt-packages.git
+ git clone https://github.com/kenzok8/openwrt-packages
 ```
 
- 2、 或者添加下面代码到 openwrt 或lede源码根目录feeds.conf.default文件
+ 2、 或者添加下面代码到openwrt或lede源码根目录feeds.conf.default文件
  
 ```bash
- src-git kenzo https://github.com/kenzok8/openwrt-packages
+src-git kenzo https://github.com/kenzok8/openwrt-packages
 ```
 
  3、 passwall依赖
@@ -62,11 +62,8 @@
 - luci-app-ssr-plus        ------------------Lean大神 
 - luci-theme-opentomcat    ------------------修复主机名错误（适配18.06）  
 - luci-theme-opentomato    ------------------修复主机名错误（适配18.06）
-#### 注意
 
 * Lean大近期修改源码后，主题适配！
-
-
 
 ![暗黄主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-9.jpg)
 ![暗黄主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-10.jpg)

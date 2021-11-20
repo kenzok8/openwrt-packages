@@ -1,6 +1,0 @@
-payload:  
-  # > encoreTVB
-  # - User-Agent,encoreTVB*
-  - DOMAIN-SUFFIX,encoretvb.com
-  - DOMAIN,content.jwplatform.com
-  - DOMAIN,videos-f.jwpsrv.com
