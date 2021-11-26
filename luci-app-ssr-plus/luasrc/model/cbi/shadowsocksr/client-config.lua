@@ -109,6 +109,7 @@ local securitys = {
 	-- vmess
 	"auto",
 	"none",
+	"zero",
 	"aes-128-gcm",
 	"chacha20-poly1305"
 }
