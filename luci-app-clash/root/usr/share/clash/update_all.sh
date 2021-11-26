@@ -3,19 +3,19 @@
 
 c_type=$(uci get clash.config.config_type 2>/dev/null)
 
-countt=$(grep -c '' /usr/share/clashbackup/confit_list.conf) 
+countt=$(grep -c '' /etc/clash/clashbackup/confit_list.conf) 
 count_nums=1
 while [[ $count_nums -le $countt ]]
 do
 
-config_name=$(sed -n "$count_nums"p /usr/share/clashbackup/confit_list.conf| awk -F '#' '{print $1}')
+config_name=$(sed -n "$count_nums"p /etc/clash/clashbackup/confit_list.conf| awk -F '#' '{print $1}')
 
-CONFIG_YAML="/usr/share/clash/config/sub/${config_name}" 
-url=$(grep -F "${config_name}" "/usr/share/clashbackup/confit_list.conf" | awk -F '#' '{print $2}')
+CONFIG_YAML="/etc/clash/config/sub/${config_name}" 
+url=$(grep -F "${config_name}" "/etc/clash/clashbackup/confit_list.conf" | awk -F '#' '{print $2}')
 lang=$(uci get luci.main.lang 2>/dev/null)
 REAL_LOG="/usr/share/clash/update_clash_real.txt"
  
-type=$(grep -F "${config_name}" "/usr/share/clashbackup/confit_list.conf" | awk -F '#' '{print $3}') 
+type=$(grep -F "${config_name}" "/etc/clash/clashbackup/confit_list.conf" | awk -F '#' '{print $3}') 
 
 if [ $type == "clash" ] && [ ! -z $url ];then
 

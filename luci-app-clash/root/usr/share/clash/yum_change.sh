@@ -370,19 +370,19 @@ add_address(){
 	line=$(sed -n "$count_num"p /tmp/server.conf)
 	check_addr=$(grep -F "$line" "/usr/share/clash/server.list")
 	if [ -z $check_addr ];then
-	echo $line >>/usr/share/clashbackup/address.list
+	echo $line >>/etc/clash/clashbackup/address.list
 	fi	
 	count_num=$(( $count_num + 1))	
 	done
 
-	sed -i "1i\#START" /usr/share/clashbackup/address.list 2>/dev/null
-	sed -i -e "\$a#END" /usr/share/clashbackup/address.list 2>/dev/null
+	sed -i "1i\#START" /etc/clash/clashbackup/address.list 2>/dev/null
+	sed -i -e "\$a#END" /etc/clash/clashbackup/address.list 2>/dev/null
 			
-	cat /usr/share/clashbackup/address.list /usr/share/clash/server.list > /usr/share/clash/me.list
+	cat /etc/clash/clashbackup/address.list /usr/share/clash/server.list > /usr/share/clash/me.list
 	rm -rf /usr/share/clash/server.list 
 	mv /usr/share/clash/me.list /usr/share/clash/server.list
 	chmod 755 /usr/share/clash/server.list
-	rm -rf /tmp/server.conf /usr/share/clashbackup/address.list >/dev/null 2>&1
+	rm -rf /tmp/server.conf /etc/clash/clashbackup/address.list >/dev/null 2>&1
 }
 
 

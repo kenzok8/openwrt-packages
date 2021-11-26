@@ -16,7 +16,8 @@ tar zxvf /tmp/ipdb.tar.gz -C /tmp\
 && rm -rf /tmp/GeoLite2-Country_* >/dev/null 2>&1
 fi
 else
-wget -c4 --no-check-certificate --timeout=300 --user-agent="Mozilla" https://raw.githubusercontent.com/alecthw/mmdb_china_ip_list/release/Country.mmdb -O /etc/clash/Country.mmdb
+rm -rf /etc/clash/Country.mmdb
+wget -c4 --no-check-certificate --timeout=300 --user-agent="Mozilla" https://cdn.jsdelivr.net/gh/alecthw/mmdb_china_ip_list@release/Country.mmdb -O /etc/clash/Country.mmdb
 fi
 
 sleep 2

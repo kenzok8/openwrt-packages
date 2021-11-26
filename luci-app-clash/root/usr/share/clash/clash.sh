@@ -8,7 +8,7 @@ config_name=$(uci get clash.config.config_name 2>/dev/null)
 subtype=$(uci get clash.config.subcri 2>/dev/null) 
 REAL_LOG="/usr/share/clash/clash_real.txt" 
 lang=$(uci get luci.main.lang 2>/dev/null)
-CONFIG_YAML="/usr/share/clash/config/sub/${config_name}.yaml" 
+CONFIG_YAML="/etc/clash/config/sub/${config_name}.yaml" 
  
 if  [ $config_name == "" ] || [ -z $config_name ];then
 
@@ -24,12 +24,12 @@ if  [ $config_name == "" ] || [ -z $config_name ];then
 fi
 
 
-if [ ! -f "/usr/share/clashbackup/confit_list.conf" ];then 
-   touch /usr/share/clashbackup/confit_list.conf
+if [ ! -f "/etc/clash/clashbackup/confit_list.conf" ];then 
+   touch /etc/clash/clashbackup/confit_list.conf
 fi
 
 
-check_name=$(grep -F "${config_name}.yaml" "/usr/share/clashbackup/confit_list.conf")
+check_name=$(grep -F "${config_name}.yaml" "/etc/clash/clashbackup/confit_list.conf")
 
 
 if [ ! -z $check_name ];then
@@ -56,14 +56,14 @@ else
 	if [ "$subtype" = "clash" ];then
 	wget -c4 --no-check-certificate --user-agent="Clash/OpenWRT" "$clash_url" -O 2>&1 >1 $CONFIG_YAML
 	if [ "$?" -eq "0" ]; then
-	echo "${config_name}.yaml#$clash_url#$subtype" >>/usr/share/clashbackup/confit_list.conf
+	echo "${config_name}.yaml#$clash_url#$subtype" >>/etc/clash/clashbackup/confit_list.conf
 	fi
     fi
 	
 	if [ "$subtype" = "ssr2clash" ];then
 	wget -c4 --no-check-certificate --user-agent="Clash/OpenWRT" "https://gfwsb.114514.best/sub?target=clashr&url=$ssr_url" -O 2>&1 >1 $CONFIG_YAML
 	if [ "$?" -eq "0" ]; then
-	echo "${config_name}.yaml#$ssr_url#$subtype" >>/usr/share/clashbackup/confit_list.conf
+	echo "${config_name}.yaml#$ssr_url#$subtype" >>/etc/clash/clashbackup/confit_list.conf
 		CONFIG_YAMLL="/tmp/conf"
 		da_password=$(uci get clash.config.dash_pass 2>/dev/null)
 		redir_port=$(uci get clash.config.redir_port 2>/dev/null)
@@ -108,7 +108,7 @@ else
 	if [ "$subtype" = "v2clash" ];then
 	wget -c4 --no-check-certificate --user-agent="Clash/OpenWRT" "https://tgbot.lbyczf.com/v2rayn2clash?url=$v2_url" -O 2>&1 >1 $CONFIG_YAML
 	if [ "$?" -eq "0" ]; then
-	echo "${config_name}.yaml#$v2_url#$subtype" >>/usr/share/clashbackup/confit_list.conf
+	echo "${config_name}.yaml#$v2_url#$subtype" >>/etc/clash/clashbackup/confit_list.conf
 	fi
     fi	
 	

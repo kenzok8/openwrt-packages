@@ -5,10 +5,9 @@
 <meta http-equiv="x-dns-prefetch-control" content="on">
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">	
 <meta name="referrer" content="no-referrer">
-<link rel="preconnect" href="https://geoip.gbxcloud.com">
 <link rel="preconnect" href="https://myip.ipip.net">
 <link rel="preconnect" href="https://api.ip.sb/geoip/">
-<link rel="preconnect" href="https://ip4.seeip.org/json">
+<link rel="preconnect" href="https://ipinfo.io/json">
 </head>
 </html>	
 <style>
@@ -310,9 +309,9 @@
 							throw error;
 						}),
 				  parseIPIpip: (ip, elID) => {
-						IP.get(`https://geoip.gbxcloud.com/?geoip=${ip}`, 'text')
+							IP.get(`https://api.ip.sb/geoip/${ip}`, 'json')
 							.then(resp => {
-								 document.getElementById(elID).innerHTML = resp.data;
+								 document.getElementById(elID).innerHTML = `国家:${resp.data.country}<br>运营商:${resp.data.isp}`
 							})
 					},
 
@@ -321,7 +320,7 @@
 							.then((resp) => {
 								let data = resp.data.replace('当前 IP：', '').split(' 来自于：');
 								//var u= data[0].indexOf("来自于：")
-								document.getElementById('d-ip').innerHTML = `${data[0]} - `
+								document.getElementById('d-ip').innerHTML = `IP地址:${data[0]}<br>`
 								return `${data[0]}`
 							})
 							.then(ip => {
@@ -331,9 +330,9 @@
 					
 					
 					getIpifyIP: () => {
-						IP.get(`https://ip4.seeip.org/json?z=${random}`, 'json')
+						IP.get(`https://ipinfo.io/json?z=${random}`, 'json')
 						.then(resp => {
-						document.getElementById('ip-ipify').innerHTML = `${resp.data.ip} - `;
+						document.getElementById('ip-ipify').innerHTML = `IP地址:${resp.data.ip}<br>`;
 							return resp.data.ip
 						})
 						.then(ip => {
@@ -376,7 +375,7 @@
 					Ipip: (ip, elID) => {
 						IP.get(`https://api.ip.sb/geoip/${ip}`, 'json')
 							.then(resp => {
-								 document.getElementById(elID).innerHTML = `${resp.data.country} ${resp.data.region} ${resp.data.city} ${resp.data.isp} ${resp.data.asn_organization}`
+								 document.getElementById(elID).innerHTML = `Country:${resp.data.country}<br>ISP:${resp.data.isp}`
 							})
 					},
 					
@@ -387,7 +386,7 @@
 							.then((resp) => {
 								let data = resp.data.replace('当前 IP：', '').split(' 来自于：');
 								//var u= data[0].indexOf("来自于：")
-								document.getElementById('d-ip').innerHTML = `${data[0]} - `
+								document.getElementById('d-ip').innerHTML = `IP:${data[0]}<br>`
 								return `${data[0]}`
 							})
 							.then(ip => {
@@ -397,9 +396,9 @@
 					
 					
 					getIpifyIP: () => {
-						IP.get(`https://ip4.seeip.org/json?z=${random}`, 'json')
+						IP.get(`https://ipinfo.io/json?z=${random}`, 'json')
 						.then(resp => {
-						document.getElementById('d-ip-g').innerHTML = `${resp.data.ip} - `;
+						document.getElementById('d-ip-g').innerHTML = `IP:${resp.data.ip}<br>`;
 							return resp.data.ip
 						})
 						.then(ip => {
@@ -453,7 +452,7 @@
 	var conf_path = document.getElementById('_conf_path');
 
 	
-	XHR.poll(1, '<%=luci.dispatcher.build_url("admin", "services", "clash", "status")%>', null, function(x, status) {
+	XHR.poll(5, '<%=luci.dispatcher.build_url("admin", "services", "clash", "status")%>', null, function(x, status) {
 		if ( x && x.status == 200 ) {
 			web.innerHTML = status.clash ? '<a type="button" class="btn" style="background-color:black;padding: 5px;"  href="http://'+window.location.hostname+':'+status.dash_port+'/ui" target="_blank"><b><font color="green"><%:DASHBOARD%></font></b></a>' : '<b><font color="red"><%:NOT RUNNING%></font></b>';
 			webb.innerHTML = status.clash ? '<a type="button" class="btn" style="background-color:black;padding: 5px;"  href="http://'+window.location.hostname+status.uhttp_port+'/luci-static/yacd?hostname='+ status.localip + '&port=' + status.dash_port + '&secret=' + status.dash_pass +'" target="_blank"><b><font color="green"><%:DASHBOARD%></font></b></a>' : '<b><font color="red"><%:NOT RUNNING%></font></b>';
@@ -489,7 +488,7 @@
 	});
 
 
-	XHR.poll(3, '<%=luci.dispatcher.build_url("admin", "services", "clash", "status")%>', null, function(x, status) {
+	XHR.poll(5, '<%=luci.dispatcher.build_url("admin", "services", "clash", "status")%>', null, function(x, status) {
 		if ( x && x.status == 200 ) {			
 				HTTP.checker('www.baidu.com', 'status_baidu');
 				HTTP.checker('www.google.com', 'status_google');

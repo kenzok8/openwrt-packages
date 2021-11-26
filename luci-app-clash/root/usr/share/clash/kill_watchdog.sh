@@ -1,7 +1,7 @@
 #!/bin/sh 
 
 enable=$(uci get clash.config.enable 2>/dev/null)
-if [ "${enable}" -eq 0 ];then
+if [ "${enable}" -eq "0" ];then
 
 if [ -f  /tmp/watchlist ];then
 rm -rf /tmp/watchlist

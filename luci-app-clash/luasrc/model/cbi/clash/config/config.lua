@@ -42,7 +42,7 @@ end
 
 
 local e,a={}
-for t,o in ipairs(fs.glob("/usr/share/clash/config/sub/*.yaml"))do
+for t,o in ipairs(fs.glob("/etc/clash/config/sub/*.yaml"))do
 a=fs.stat(o)
 if a then
 e[t]={}
@@ -82,7 +82,7 @@ o.inputstyle="apply"
 Button.render(o,t,a)
 end
 btnis.write=function(a,t)
-luci.sys.exec(string.format('uci set clash.config.use_config="/usr/share/clash/config/sub/%s"',e[t].name ))
+luci.sys.exec(string.format('uci set clash.config.use_config="/etc/clash/config/sub/%s"',e[t].name ))
 luci.sys.exec('uci set clash.config.config_type="1"')
 luci.sys.exec('uci commit clash')
 if luci.sys.call("pidof clash >/dev/null") == 0 then
@@ -117,7 +117,7 @@ Button.render(e,t,a)
 end
 btndl.write = function (a,t)
 	local sPath, sFile, fd, block
-	sPath = "/usr/share/clash/config/sub/"..e[t].name
+	sPath = "/etc/clash/config/sub/"..e[t].name
 	sFile = NXFS.basename(sPath)
 	if fs.isdirectory(sPath) then
 		fd = io.popen('yaml -C "%s" -cz .' % {sPath}, "r")
@@ -149,7 +149,7 @@ e.inputstyle="remove"
 Button.render(e,t,a)
 end
 btnrm.write=function(a,t)
-local a=fs.unlink("/usr/share/clash/config/sub/"..fs.basename(e[t].name))
+local a=fs.unlink("/etc/clash/config/sub/"..fs.basename(e[t].name))
 luci.sys.exec(string.format('uci set clash.config.config_name_remove="%s"',e[t].name))
 luci.sys.exec('uci commit clash')
 luci.sys.exec('bash /usr/share/clash/rmlist.sh 2>&1 &')
@@ -160,7 +160,7 @@ end
 
 
 local p,x={}
-for q,v in ipairs(fs.glob("/usr/share/clash/config/upload/*.yaml"))do
+for q,v in ipairs(fs.glob("/etc/clash/config/upload/*.yaml"))do
 x=fs.stat(v)
 if x then
 p[q]={}
@@ -199,7 +199,7 @@ v.inputstyle="apply"
 Button.render(v,q,x)
 end
 btniss.write=function(x,q)
-luci.sys.exec(string.format('uci set clash.config.use_config="/usr/share/clash/config/upload/%s"',p[q].name ))
+luci.sys.exec(string.format('uci set clash.config.use_config="/etc/clash/config/upload/%s"',p[q].name ))
 luci.sys.exec('uci set clash.config.config_type="2"')
 luci.sys.exec('uci commit clash')
 if luci.sys.call("pidof clash >/dev/null") == 0 then
@@ -218,7 +218,7 @@ Button.render(p,q,x)
 end
 btndll.write = function (x,q)
 	local sPath, sFile, fd, block
-	sPath = "/usr/share/clash/config/upload/"..p[q].name
+	sPath = "/etc/clash/config/upload/"..p[q].name
 	sFile = NXFS.basename(sPath)
 	if fs.isdirectory(sPath) then
 		fd = io.popen('yaml -C "%s" -cz .' % {sPath}, "r")
@@ -250,7 +250,7 @@ p.inputstyle="remove"
 Button.render(p,q,x)
 end
 btnrml.write=function(x,q)
-local x=fs.unlink("/usr/share/clash/config/upload/"..fs.basename(p[q].name))
+local x=fs.unlink("/etc/clash/config/upload/"..fs.basename(p[q].name))
 luci.sys.exec(string.format('uci set clash.config.config_up_remove="%s"',p[q].name))
 luci.sys.exec('uci commit clash')
 luci.sys.exec('bash /usr/share/clash/uplist.sh 2>&1 &')
@@ -260,7 +260,7 @@ end
 
 
 local k,v={}
-for c,z in ipairs(fs.glob("/usr/share/clash/config/custom/*.yaml"))do
+for c,z in ipairs(fs.glob("/etc/clash/config/custom/*.yaml"))do
 v=fs.stat(z)
 if v then
 k[c]={}
@@ -299,7 +299,7 @@ z.inputstyle="apply"
 Button.render(z,c,v)
 end
 btnisz.write=function(v,c)
-luci.sys.exec(string.format('uci set clash.config.use_config="/usr/share/clash/config/custom/%s"',k[c].name ))
+luci.sys.exec(string.format('uci set clash.config.use_config="/etc/clash/config/custom/%s"',k[c].name ))
 luci.sys.exec('uci set clash.config.config_type="3"')
 luci.sys.exec('uci commit clash')
 if luci.sys.call("pidof clash >/dev/null") == 0 then
@@ -321,7 +321,7 @@ Button.render(k,c,v)
 end
 btndlz.write = function (v,c)
 	local sPath, sFile, fd, block
-	sPath = "/usr/share/clash/config/custom/"..k[c].name
+	sPath = "/etc/clash/config/custom/"..k[c].name
 	sFile = NXFS.basename(sPath)
 	if fs.isdirectory(sPath) then
 		fd = io.popen('yaml -C "%s" -cz .' % {sPath}, "r")
@@ -353,7 +353,7 @@ k.inputstyle="remove"
 Button.render(k,c,v)
 end
 btnrmz.write=function(v,c)
-local v=fs.unlink("/usr/share/clash/config/custom/"..fs.basename(k[c].name))
+local v=fs.unlink("/etc/clash/config/custom/"..fs.basename(k[c].name))
 luci.sys.exec(string.format('uci set clash.config.config_cus_remove="%s"',k[c].name))
 luci.sys.exec('uci commit clash')
 luci.sys.exec('/usr/share/clash/cuslist.sh 2>&1 &')

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-new_clashdtun_core_version=`curl -sL "https://github.com/frainzy1477/clashdtun/tags"| grep "/frainzy1477/clashdtun/releases/"| head -n 1| awk -F "/tag/" '{print $2}'| sed 's/\">//'`
+new_clashdtun_core_version=`wget -qO- "https://hub.fastgit.org/Dreamacro/clash/releases/tag/premium"| grep "/download/premium/"| head -n1| awk -F " " '{print $2}'| awk -F "-" '{print $4}'| sed "s/.gz\"//g"`
 sleep 2
 if [ "$?" -eq "0" ]; then
 rm -rf /usr/share/clash/new_clashdtun_core_version

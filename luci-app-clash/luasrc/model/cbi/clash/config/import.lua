@@ -111,7 +111,7 @@ um = sul:option(DummyValue, "", nil)
 um.template = "clash/clash_dvalue"
 
 local dir, fd
-dir = "/usr/share/clash/config/upload/"
+dir = "/etc/clash/config/upload/"
 http.setfilehandler(
 
 	function(meta, chunk, eof)
@@ -135,10 +135,10 @@ http.setfilehandler(
 			local yml2=string.lower(string.sub(meta.file,0,-5))
 			if e == '.yml'  then
 			local yml=string.lower(string.sub(meta.file,0,-5))
-			local c=fs.rename(dir .. meta.file,"/usr/share/clash/config/upload/".. yml .. ".yaml")
-			um.value = translate("File saved to") .. ' "/usr/share/clash/config/upload/'..yml..'.yaml"'
+			local c=fs.rename(dir .. meta.file,"/etc/clash/config/upload/".. yml .. ".yaml")
+			um.value = translate("File saved to") .. ' "/etc/clash/config/upload/'..yml..'.yaml"'
 			else
-			um.value = translate("File saved to") .. ' "/usr/share/clash/config/upload/'..yml2..'yaml"'
+			um.value = translate("File saved to") .. ' "/etc/clash/config/upload/'..yml2..'yaml"'
 			end
 			
 		end

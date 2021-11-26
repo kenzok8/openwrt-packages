@@ -1,0 +1,32 @@
+<%+cbi/valueheader%>
+
+<script type="text/javascript">//<![CDATA[
+	function act_remove_core(btn, dataname)
+	{
+		btn.disabled = true;
+		btn.value = '<%:正在删除核心...%>';
+		XHR.get('<%=luci.dispatcher.build_url("admin", "services", "unblockneteasemusic", "remove_core")%>',
+			status.ret,
+			function(x, status)
+			{
+				var s = document.getElementById(dataname + '-status');
+				if (s)
+				{
+					if(status.ret)
+						s.innerHTML = "<font color='green'>" + "<%:删除核心成功%>" + "</font>";
+					else
+						s.innerHTML = "<font color='red'>" + "<%:删除核心失败%>"+"</font>";
+				}
+				btn.disabled = false;
+				btn.value = '<%:点此删除核心%>';
+			}
+		);
+		return false;
+	}
+//]]></script>
+
+
+<input type="button" class="btn cbi-button cbi-input-reload" value="<%:点此删除核心%>" onclick="return act_remove_core(this, '<%=self.option%>')" />
+<span id="<%=self.option%>-status"><em><%=self.value%></em></span>
+
+<%+cbi/valuefooter%>

@@ -10,8 +10,8 @@ rule_providers=$(uci get clash.config.rule_providers 2>/dev/null)
 CFG_FILE="/etc/config/clash"
 config_name=$(uci get clash.config.name_tag 2>/dev/null)
 lang=$(uci get luci.main.lang 2>/dev/null)
-CONFIG_YAML="/usr/share/clash/config/custom/${config_name}.yaml"  
-check_name=$(grep -F "${config_name}.yaml" "/usr/share/clashbackup/create_list.conf")
+CONFIG_YAML="/etc/clash/config/custom/${config_name}.yaml"  
+check_name=$(grep -F "${config_name}.yaml" "/etc/clash/clashbackup/create_list.conf")
 REAL_LOG="/usr/share/clash/clash_real.txt"
 same_tag=$(uci get clash.config.same_tag 2>/dev/null)
 rcount=$( grep -c "config ruleprovider" $CFG_FILE 2>/dev/null)
@@ -1162,9 +1162,9 @@ mv $TEMP_FILE  $CONFIG_YAML 2>/dev/null
 fi
 
 if [ -z $check_name ] && [ "${same_tag}" -eq 1 ];then
-echo "${config_name}.yaml" >>/usr/share/clashbackup/create_list.conf
+echo "${config_name}.yaml" >>/etc/clash/clashbackup/create_list.conf
 elif [ -z $check_name ] && [ "${same_tag}" -eq 0 ];then
-echo "${config_name}.yaml" >>/usr/share/clashbackup/create_list.conf
+echo "${config_name}.yaml" >>/etc/clash/clashbackup/create_list.conf
 fi
 
 rm -rf $RULE_PROVIDER $PROVIDER_FILE $GROUP_FILE  $RULE_FILE $SERVER_FILE $Proxy_Group

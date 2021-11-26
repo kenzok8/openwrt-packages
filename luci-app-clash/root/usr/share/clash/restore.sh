@@ -1,8 +1,8 @@
 #!/bin/sh /etc/rc.common
 
-if [ -f /usr/share/clashbackup/history ];then
+if [ -f /etc/clash/clashbackup/history ];then
 
-HISTORY_PATH="/usr/share/clashbackup/history"
+HISTORY_PATH="/etc/clash/clashbackup/history"
 SECRET=$(uci get clash.config.dash_pass 2>/dev/null)
 LAN_IP=$(uci get network.lan.ipaddr 2>/dev/null |awk -F '/' '{print $1}' 2>/dev/null)
 PORT=$(uci get clash.config.dash_port 2>/dev/null)
