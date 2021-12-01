@@ -8,6 +8,10 @@ OPKG_CONF_DIR=${IS_ROOT}/etc/opkg
 FEEDS_SERVER=https://istore.linkease.com/repo
 ARCH=`opkg -f /dev/null print-architecture | grep -v 'arch all' | grep -v 'arch noarch' | cut -d ' ' -f2`
 
+# for istore self upgrade
+ISTORE_PKG=luci-app-store
+ISTORE_INDEX=https://istore.linkease.com/repo/all/store/Packages.gz
+
 action=${1}
 shift
 
@@ -23,11 +27,8 @@ is_init() {
     echo >> ${IS_ROOT}/etc/opkg_o.conf
     echo "lists_dir ext ${LISTS_DIR_O}" >> ${IS_ROOT}/etc/opkg_o.conf
 
-    [ -e ${IS_ROOT}/var/lock ] || {
-        cp -a /etc/opkg ${IS_ROOT}/etc/
-
-        ln -s /var/lock ${IS_ROOT}/var/lock
-    }
+    cp -au /etc/opkg ${IS_ROOT}/etc/
+    [ -e ${IS_ROOT}/var/lock ] || ln -s /var/lock ${IS_ROOT}/var/lock
 }
 
 opkg_wrap() {
@@ -43,6 +44,37 @@ update() {
     return 0
 }
 
+update_if_outdate() {
+    local idle_t=$((`date '+%s'` - `date -r ${IS_ROOT}/.last_force_ts '+%s' 2>/dev/null || echo '0'`))
+    [ $idle_t -gt ${1:-120} ] || return 1
+    update || return 1
+    touch ${IS_ROOT}/.last_force_ts
+    return 0
+}
+
+check_self_upgrade() {
+    local newest=`curl --connect-timeout 2 --max-time 5 -s ${ISTORE_INDEX} | gunzip | grep -FA10 "Package: ${ISTORE_PKG}" | grep -Fm1 'Version: ' | sed 's/^Version: //'`
+    local current=`grep -Fm1 'Version: ' /usr/lib/opkg/info/${ISTORE_PKG}.control | sed 's/^Version: //'`
+    if [ "v$newest" = "v" -o "v$current" = "v" ]; then
+        echo "Check version failed!" >&2
+        exit 255
+    fi
+    if [ "$newest" != "$current" ]; then
+        echo "$newest"
+    fi
+    return 0
+}
+
+do_self_upgrade() {
+    check_mtime || return 1
+    if opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed ; then
+        true
+    else
+        update_if_outdate || return 1
+    fi
+    opkg_wrap upgrade ${ISTORE_PKG}
+}
+
 check_mtime() {
     find ${OPKG_CONF_DIR}/arch.conf -mtime -1 2>/dev/null | grep -q .  || update
 }
@@ -50,20 +82,32 @@ check_mtime() {
 wrapped_in_update() {
     check_mtime || return 1
     opkg_wrap "$@" && return 0
-    local idle_t=$((`date '+%s'` - `date -r ${IS_ROOT}/.last_force_ts '+%s' 2>/dev/null || echo '0'`))
-    [ $idle_t -gt 120 ] || return 1
-    update || return 1
-    touch ${IS_ROOT}/.last_force_ts
+    update_if_outdate || return 1
     opkg_wrap "$@"
+}
+
+new_upgrade() {
+    check_mtime || return 1
+    local metapkg=`echo "$@" | sed 's/ /\n/g' | grep -F app-meta-`
+    if [ -z "$metapkg" ] || opkg_wrap info $metapkg | grep -qF not-installed ; then
+        true
+    else
+        update_if_outdate
+    fi
+    wrapped_in_update upgrade "$@"
 }
 
 usage() {
     echo "usage: is-opkg sub-command [arguments...]"
     echo "where sub-command is one of:"
     echo "      update                  Update list of available packages"
-    echo "      upgrade <pkgs>          Upgrade packages"
+    echo "      upgrade <pkgs>          Upgrade package(s)"
     echo "      install <pkgs>          Install package(s)"
-    echo "      remove <pkgs>           Remove package(s)"
+    echo "      remove <pkgs|regexp>    Remove package(s)"
+    echo "      info [pkg|regexp]       Display all info for <pkg>"
+    echo "      list-upgradable         List installed and upgradable packages"
+    echo "      check_self_upgrade      Check iStore upgrade"
+    echo "      do_self_upgrade         Upgrade iStore"
 }
 
 is_init >/dev/null 2>&1
@@ -76,10 +120,22 @@ case $action in
         wrapped_in_update install "$@"
     ;;
     "upgrade")
-        wrapped_in_update upgrade "$@"
+        new_upgrade "$@"
     ;;
     "remove")
         opkg_wrap --autoremove --force-removal-of-dependent-packages remove "$@"
+    ;;
+    "info")
+        opkg_wrap info "$@"
+    ;;
+    "list-upgradable")
+        opkg_wrap list-upgradable
+    ;;
+    "check_self_upgrade")
+        check_self_upgrade
+    ;;
+    "do_self_upgrade")
+        do_self_upgrade
     ;;
     *)
         usage

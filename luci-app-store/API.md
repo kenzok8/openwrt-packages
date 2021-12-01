@@ -74,15 +74,15 @@
     {
         "description": "DDNS.TO内网穿透",
         "tags": [
-        "net",
-        "tool"
+          "net",
+          "tool"
         ],
         "entry": "/cgi-bin/luci/admin/services/ddnsto",
         "author": "xiaobao",
         "depends": [
-        "ddnsto",
-        "luci-app-ddnsto",
-        "luci-i18n-ddnsto-zh-cn"
+          "ddnsto",
+          "luci-app-ddnsto",
+          "luci-i18n-ddnsto-zh-cn"
         ],
         "installed": true,
         "title": "DDNS.TO",
@@ -115,6 +115,26 @@
 
 
    (文件上传表单，支持文件扩展名".ipk,.run")
+
+
+   {"code":0, "stdout":"", "stderr":""}
+   ```
+
+9. 检查iStore自身更新
+   ```
+   GET /cgi-bin/luci/admin/store/check_self_upgrade
+
+
+   {"code":500, "msg":"Internal Error"}
+   {"code":200, "msg":"1.1.2"}
+   {"code":304, "msg":""}
+   ```
+
+1. 更新iStore自身
+   > 检查iStore自身更新接口返回code为200时才调用这个接口
+   ```
+   POST /cgi-bin/luci/admin/store/do_self_upgrade
+   token=xxx
 
 
    {"code":0, "stdout":"", "stderr":""}

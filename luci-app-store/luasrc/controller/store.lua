@@ -14,10 +14,15 @@ function index()
 
     entry({"admin", "store"}, call("redirect_index"), _("iStore"), 31)
     entry({"admin", "store", "pages"}, call("store_index")).leaf = true
+    if nixio.fs.access("/usr/lib/lua/luci/view/store/main_dev.htm") then
+        entry({"admin", "store", "dev"}, call("store_dev")).leaf = true
+    end
     entry({"admin", "store", "token"}, call("store_token"))
     entry({"admin", "store", "log"}, call("store_log"))
     entry({"admin", "store", "uid"}, call("action_user_id"))
     entry({"admin", "store", "upload"}, post("store_upload"))
+    entry({"admin", "store", "check_self_upgrade"}, call("check_self_upgrade"))
+    entry({"admin", "store", "do_self_upgrade"}, post("do_self_upgrade"))
     for _, action in ipairs({"update", "install", "upgrade", "remove"}) do
         store_api(action, true)
     end
@@ -46,12 +51,46 @@ local function user_id()
     return id
 end
 
+local function is_exec(cmd)
+    local nixio = require "nixio"
+    local os   = require "os"
+    local fs   = require "nixio.fs"
+
+    local oflags = nixio.open_flags("wronly", "creat")
+	local lock, code, msg = nixio.open("/var/lock/istore.lock", oflags)
+	if not lock then
+		return 255, "", "Open lock failed: " .. msg
+	end
+
+    -- Acquire lock
+	local stat, code, msg = lock:lock("tlock")
+	if not stat then
+        lock:close()
+		return 255, "", "Lock failed: " .. msg
+	end
+
+    local r = os.execute(cmd .. " >/tmp/log/istore.stdout 2>/tmp/log/istore.stderr")
+	local e = fs.readfile("/tmp/log/istore.stderr")
+	local o = fs.readfile("/tmp/log/istore.stdout")
+
+	fs.unlink("/tmp/log/istore.stderr")
+	fs.unlink("/tmp/log/istore.stdout")
+    lock:lock("ulock")
+    lock:close()
+
+	return r, o or "", e or ""
+end
+
 function redirect_index()
     luci.http.redirect(luci.dispatcher.build_url(unpack(page_index)))
 end
 
 function store_index()
     luci.template.render("store/main", {prefix=luci.dispatcher.build_url(unpack(page_index)),id=user_id()})
+end
+
+function store_dev()
+    luci.template.render("store/main_dev", {prefix=luci.dispatcher.build_url(unpack({"admin", "store", "dev"})),id=user_id()})
 end
 
 function store_log()
@@ -71,25 +110,47 @@ function action_user_id()
     luci.http.write_json(user_id())
 end
 
+function check_self_upgrade()
+    local ret = {
+        code = 500,
+        msg = "Unknown"
+    }
+    local r,o,e = is_exec(myopkg .. " check_self_upgrade")
+    if r ~= 0 then
+        ret.msg = e
+    else
+        ret.code = o == "" and 304 or 200
+        ret.msg = o:gsub("[\r\n]", "")
+    end
+    luci.http.prepare_content("application/json")
+    luci.http.write_json(ret)
+end
+
+function do_self_upgrade()
+    local code, out, err, ret
+    code,out,err = is_exec(myopkg .. " do_self_upgrade")
+    ret = {
+        code = code,
+        stdout = out,
+        stderr = err
+    }
+    luci.http.prepare_content("application/json")
+    luci.http.write_json(ret)
+end
+
 -- Internal action function
 local function _action(exe, cmd, ...)
     local os   = require "os"
     local fs   = require "nixio.fs"
-    
+
 	local pkg = ""
 	for k, v in pairs({...}) do
 		pkg = pkg .. " '" .. v:gsub("'", "") .. "'"
 	end
 
-	local c = "%s %s %s >/tmp/log/istore.stdout 2>/tmp/log/istore.stderr" %{ exe, cmd, pkg }
-	local r = os.execute(c)
-	local e = fs.readfile("/tmp/log/istore.stderr")
-	local o = fs.readfile("/tmp/log/istore.stdout")
+	local c = "%s %s %s" %{ exe, cmd, pkg }
 
-	fs.unlink("/tmp/log/istore.stderr")
-	fs.unlink("/tmp/log/istore.stdout")
-
-	return r, o or "", e or ""
+    return is_exec(c)
 end
 
 function store_action(param)

@@ -12,14 +12,15 @@ disable_masq_cache=$(uci -q get openclash.config.disable_masq_cache)
 cfg_update_interval=$(uci -q get openclash.config.config_update_interval || echo 60)
 log_size=$(uci -q get openclash.config.log_size || echo 1024)
 core_type=$(uci -q get openclash.config.core_type)
-netflix_domains_prefetch_interval=$(uci -q get openclash.config.netflix_domains_prefetch_interval || echo 1440)
+stream_domains_prefetch_interval=$(uci -q get openclash.config.stream_domains_prefetch_interval || echo 1440)
 stream_auto_select_interval=$(uci -q get openclash.config.stream_auto_select_interval || echo 30)
 NETFLIX_DOMAINS_LIST="/usr/share/openclash/res/Netflix_Domains.list"
 NETFLIX_DOMAINS_CUSTOM_LIST="/etc/openclash/custom/openclash_custom_netflix_domains.list"
+DISNEY_DOMAINS_LIST="/usr/share/openclash/res/Disney_Plus_Domains.list"
 _koolshare=$(cat /usr/lib/os-release 2>/dev/null |grep OPENWRT_RELEASE 2>/dev/null |grep -i koolshare 2>/dev/null)
 CRASH_NUM=0
 CFG_UPDATE_INT=1
-NETFLIX_DOMAINS_PREFETCH=1
+STREAM_DOMAINS_PREFETCH=1
 STREAM_AUTO_SELECT=1
 sleep 60
 
@@ -28,12 +29,14 @@ do
    cfg_update=$(uci -q get openclash.config.auto_update)
    cfg_update_mode=$(uci -q get openclash.config.config_auto_update_mode)
    cfg_update_interval_now=$(uci -q get openclash.config.config_update_interval || echo 60)
-   netflix_domains_prefetch=$(uci -q get openclash.config.netflix_domains_prefetch || echo 0)
-   netflix_domains_prefetch_interval_now=$(uci -q get openclash.config.netflix_domains_prefetch_interval || echo 1440)
+   stream_domains_prefetch=$(uci -q get openclash.config.stream_domains_prefetch || echo 0)
+   stream_domains_prefetch_interval_now=$(uci -q get openclash.config.stream_domains_prefetch_interval || echo 1440)
    stream_auto_select=$(uci -q get openclash.config.stream_auto_select || echo 0)
    stream_auto_select_interval_now=$(uci -q get openclash.config.stream_auto_select_interval || echo 30)
    stream_auto_select_netflix=$(uci -q get openclash.config.stream_auto_select_netflix || echo 0)
    stream_auto_select_disney=$(uci -q get openclash.config.stream_auto_select_disney || echo 0)
+   stream_auto_select_hbo=$(uci -q get openclash.config.stream_auto_select_hbo || echo 0)
+   stream_auto_select_ytb=$(uci -q get openclash.config.stream_auto_select_ytb || echo 0)
    enable=$(uci -q get openclash.config.enable)
 
 if [ "$enable" -eq 1 ]; then
@@ -129,7 +132,7 @@ fi
 ##Dler Cloud Checkin
    /usr/share/openclash/openclash_dler_checkin.lua >/dev/null 2>&1
 
-##NETFLIX_UNLOCK_CHECK
+##STREAMING_UNLOCK_CHECK
    if [ "$stream_auto_select" -eq 1 ]; then
       [ "$stream_auto_select_interval" -ne "$stream_auto_select_interval_now" ] && STREAM_AUTO_SELECT=1 && stream_auto_select_interval="$stream_auto_select_interval_now"
       if [ "$STREAM_AUTO_SELECT" -ne 0 ]; then
@@ -142,16 +145,24 @@ fi
                LOG_OUT "Tip: Start Auto Select Proxy For Disney Plus Unlock..."
                /usr/share/openclash/openclash_streaming_unlock.lua "Disney" >> $LOG_FILE
             fi
+            if [ "$stream_auto_select_hbo" -eq 1 ]; then
+               LOG_OUT "Tip: Start Auto Select Proxy For HBO Unlock..."
+               /usr/share/openclash/openclash_streaming_unlock.lua "HBO" >> $LOG_FILE
+            fi
+            if [ "$stream_auto_select_ytb" -eq 1 ]; then
+               LOG_OUT "Tip: Start Auto Select Proxy For YouTube Premium Unlock..."
+               /usr/share/openclash/openclash_streaming_unlock.lua "YouTube Premium" >> $LOG_FILE
+            fi
          fi
       fi
       STREAM_AUTO_SELECT=$(expr "$STREAM_AUTO_SELECT" + 1)
    fi
 
-##NETFLIX_DNS_PREFETCH
-   if [ "$netflix_domains_prefetch" -eq 1 ]; then
-      [ "$netflix_domains_prefetch_interval" -ne "$netflix_domains_prefetch_interval_now" ] && NETFLIX_DOMAINS_PREFETCH=1 && netflix_domains_prefetch_interval="$netflix_domains_prefetch_interval_now"
-      if [ "$NETFLIX_DOMAINS_PREFETCH" -ne 0 ]; then
-         if [ "$(expr "$NETFLIX_DOMAINS_PREFETCH" % "$netflix_domains_prefetch_interval_now")" -eq 0 ] || [ "$NETFLIX_DOMAINS_PREFETCH" -eq 1 ]; then
+##STREAM_DNS_PREFETCH
+   if [ "$stream_domains_prefetch" -eq 1 ]; then
+      [ "$stream_domains_prefetch_interval" -ne "$stream_domains_prefetch_interval_now" ] && STREAM_DOMAINS_PREFETCH=1 && stream_domains_prefetch_interval="$stream_domains_prefetch_interval_now"
+      if [ "$STREAM_DOMAINS_PREFETCH" -ne 0 ]; then
+         if [ "$(expr "$STREAM_DOMAINS_PREFETCH" % "$stream_domains_prefetch_interval_now")" -eq 0 ] || [ "$STREAM_DOMAINS_PREFETCH" -eq 1 ]; then
             LOG_OUT "Tip: Start Prefetch Netflix Domains..."
             cat "$NETFLIX_DOMAINS_LIST" |while read -r line
             do
@@ -162,9 +173,15 @@ fi
                [ -n "$line" ] && nslookup $line
             done >/dev/null 2>&1
             LOG_OUT "Tip: Netflix Domains Prefetch Finished!"
+            LOG_OUT "Tip: Start Prefetch Disney Plus Domains..."
+            cat "$DISNEY_DOMAINS_LIST" |while read -r line
+            do
+               [ -n "$line" ] && nslookup $line
+            done >/dev/null 2>&1
+            LOG_OUT "Tip: Disney Plus Domains Prefetch Finished!"
          fi
       fi
-      NETFLIX_DOMAINS_PREFETCH=$(expr "$NETFLIX_DOMAINS_PREFETCH" + 1)
+      STREAM_DOMAINS_PREFETCH=$(expr "$STREAM_DOMAINS_PREFETCH" + 1)
    fi
 
    SLOG_CLEAN
