@@ -206,12 +206,14 @@ function store_action(param)
                 code, out, err = _action(myopkg, action, metapkg)
             else
                 local meta = json_parse(fs.readfile(metadir .. "/" .. pkg .. ".json"))
+                local pkgs = meta.depends
+                table.insert(pkgs, metapkg)
                 if action == "upgrade" then
-                    code, out, err = _action(myopkg, action, unpack(meta.depends), metapkg)
+                    code, out, err = _action(myopkg, action, unpack(pkgs))
                 else -- remove
-                    code, out, err = _action(myopkg, action, unpack(meta.depends), metapkg)
+                    code, out, err = _action(myopkg, action, unpack(pkgs))
                     if code ~= 0 then
-                        code, out0, err0 = _action(myopkg, action, unpack(meta.depends), metapkg)
+                        code, out0, err0 = _action(myopkg, action, unpack(pkgs))
                         out = out .. out0
                         err = err .. err0
                     end

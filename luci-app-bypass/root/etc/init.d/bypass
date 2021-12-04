@@ -976,6 +976,11 @@ gen_serv_include(){
 
 start_server(){
 	[ $(uci_get_by_type server_global enable_server 0) = 0 ] && return
+	if [[ "$(uci -q get smartdns.@smartdns[0].enabled)" == "1" ]]; then
+		uci -q del smartdns.@smartdns[0].enabled
+		uci commit smartdns
+		/etc/init.d/smartdns stop 2>/dev/null
+	fi
 	mkdir -p $VAR
 	config_load $NAME
 	config_foreach run_server server_config
@@ -990,11 +995,6 @@ start_monitor(){
 }
 
 start(){
-	if [[ "$(uci -q get smartdns.@smartdns[0].enabled)" == "1" ]]; then
-		uci -q del smartdns.@smartdns[0].enabled
-		uci commit smartdns
-		/etc/init.d/smartdns stop 2>/dev/null
-	fi
 	touch $LOC
 	if [ -n "$switch_server" ];then
 		GLOBAL_SERVER=$switch_server

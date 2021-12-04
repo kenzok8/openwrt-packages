@@ -5,7 +5,7 @@ msgid "Running state"
 msgstr "运行状态"
 
 msgid "Click to open DDNS.to"
-msgstr "点击打开DDNS.to"
+msgstr "点击打开DDNSTO控制台"
 
 msgid "DDNS.to is a reverse proxy."
 msgstr "DDNS.to是一个内网穿透工具。"
