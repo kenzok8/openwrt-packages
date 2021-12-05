@@ -58,12 +58,13 @@ src-git kenzo https://github.com/kenzok8/openwrt-packages
 - luci-app-adguardhome     ------------------去广告 
 - luci-app-smartdns        ------------------smartdns防污染
 - luci-app-passwall        ------------------Lienol大神 
-- luci-theme-argon_new     ------------------二合蓝 紫主题
+- luci-theme-argonne       ------------------修改老竭力主题名
+- luci-app-argonne-config  ------------------argonne主题设置
 - luci-app-ssr-plus        ------------------Lean大神 
-- luci-theme-opentomcat    ------------------修复主机名错误（适配18.06）  
-- luci-theme-opentomato    ------------------修复主机名错误（适配18.06）
+- luci-theme-mcat          ------------------修改主题名  
+- luci-theme-tomato        ------------------修改主题名
 
-* Lean大近期修改源码后，主题适配！
+* 修改argon为argonne，包括argonne-config，为防止同名argon，而影响编译
 
 ![暗黄主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-9.jpg)
 ![暗黄主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-10.jpg)
