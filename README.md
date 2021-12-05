@@ -81,8 +81,6 @@ src-git kenzo https://github.com/kenzok8/openwrt-packages
 ![抹茶绿主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-14.jpg)
 ![argon主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-1.png)
 ![argon主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-2.png)
-![argon主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-3.png)
-![argon主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-4.png)
 * 修复opentomato 与opentomcat修改主机名无效的bug
 ![修复tomto不能修改主机名的bug](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/%E5%B0%8F%E7%8C%AA%E5%AE%B6-719.png)
 ![修复tomto不能修改主机名的bug](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/%E5%B0%8F%E7%8C%AA%E5%AE%B6-722.png)
