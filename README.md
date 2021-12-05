@@ -21,8 +21,11 @@
 
 
 + [或者xiaorouji新库地址](https://github.com/xiaorouji/openwrt-passwall.git)
+
+
  
 + 谢谢 **kiddin9珠玉在前**[openwrt固件与插件下载](https://op.dllkids.xyz/op/firmware/)
+
 
 
 1、 lede/package$下运行,或者openwrt/package$下运行
