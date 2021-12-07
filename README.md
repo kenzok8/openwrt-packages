@@ -10,9 +10,10 @@
 
 #### 说明
 
-* 软件不定期同步大神库更新，适合一键下载到package目录下，用于openwrt编译
+* 要不要设置工作流同步，然后small合并一起？
 
-* 作为搬运工，passwall的依赖一并找齐了
+* 软件不定期同步大神库更新，适合一键下载用于openwrt编译
+
 
 ##### 插件每日更新下载:
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/kenzok8/compile-package?style=for-the-badge&label=插件更新下载)](https://github.com/kenzok8/compile-package/releases/latest)
