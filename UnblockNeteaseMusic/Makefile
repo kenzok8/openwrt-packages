@@ -6,12 +6,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=UnblockNeteaseMusic
 PKG_BASE_VERSION:=0.27.0-rc.2
-PKG_RELEASE:=36
+PKG_RELEASE:=38
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/UnblockNeteaseMusic/server.git
 PKG_SOURCE_DATE:=2021-11-27
-PKG_SOURCE_VERSION:=3ddc80bfe79bfedacfd3e31fd75b1944306785bf
+PKG_SOURCE_VERSION:=8e2e987fdf0f29861f801db8a22eca04dcd7faef
 PKG_MIRROR_HASH:=skip
 
 PKG_VERSION:=$(PKG_BASE_VERSION)-$(PKG_SOURCE_DATE)-$(call version_abbrev,$(PKG_SOURCE_VERSION))
