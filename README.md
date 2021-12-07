@@ -10,7 +10,9 @@
 
 #### 说明
 
-* 要不要设置工作流同步，然后small合并一起？
+* 喜欢追新的可以去下载small-package，该仓库每天自动同步更新
+
+* [small-package](https://github.com/kenzok8/small-package) 
 
 * 软件不定期同步大神库更新，适合一键下载用于openwrt编译
 
