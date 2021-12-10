@@ -4,7 +4,7 @@
     (function(){
         var vue_prefix="<%=prefix%>";
         var myurl = window.location.pathname;
-        window.addEventListener('popstate', () => {
+        window.addEventListener('popstate', function(){
             if (myurl != window.location.pathname 
               && window.location.pathname != vue_prefix 
               && ! window.location.pathname.startsWith(vue_prefix+'/')) {

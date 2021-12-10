@@ -6,7 +6,7 @@ LISTS_DIR_O=/tmp/opkg-lists
 LISTS_DIR=${IS_ROOT}${LISTS_DIR_O}
 OPKG_CONF_DIR=${IS_ROOT}/etc/opkg
 FEEDS_SERVER=https://istore.linkease.com/repo
-ARCH=`opkg -f /dev/null print-architecture | grep -v 'arch all' | grep -v 'arch noarch' | cut -d ' ' -f2`
+ARCH=`jsonfilter -i /etc/.app_store.id -e '$.arch'`
 
 # for istore self upgrade
 ISTORE_PKG=luci-app-store
@@ -36,6 +36,13 @@ opkg_wrap() {
 }
 
 update() {
+    if [ -z "${ARCH}" ]; then
+        echo "Get architecture failed" >&2
+        echo "/etc/.app_store.id:" >&2
+        cat /etc/.app_store.id >&2
+        return 1
+    fi
+
     curl -o ${OPKG_CONF_DIR}/meta.conf "${FEEDS_SERVER}/all/meta.conf" && \
       curl -o ${OPKG_CONF_DIR}/all.conf "${FEEDS_SERVER}/all/isfeeds.conf" && \
       curl -o ${OPKG_CONF_DIR}/arch.conf "${FEEDS_SERVER}/${ARCH}/isfeeds.conf" && \

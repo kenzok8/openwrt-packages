@@ -57,28 +57,33 @@ local function is_exec(cmd)
     local fs   = require "nixio.fs"
 
     local oflags = nixio.open_flags("wronly", "creat")
-	local lock, code, msg = nixio.open("/var/lock/istore.lock", oflags)
-	if not lock then
-		return 255, "", "Open lock failed: " .. msg
-	end
+    local lock, code, msg = nixio.open("/var/lock/istore.lock", oflags)
+    if not lock then
+        return 255, "", "Open lock failed: " .. msg
+    end
 
     -- Acquire lock
-	local stat, code, msg = lock:lock("tlock")
-	if not stat then
+    local stat, code, msg = lock:lock("tlock")
+    if not stat then
         lock:close()
-		return 255, "", "Lock failed: " .. msg
-	end
+        return 255, "", "Lock failed: " .. msg
+    end
 
-    local r = os.execute(cmd .. " >/tmp/log/istore.stdout 2>/tmp/log/istore.stderr")
-	local e = fs.readfile("/tmp/log/istore.stderr")
-	local o = fs.readfile("/tmp/log/istore.stdout")
+    local r = os.execute(cmd .. " >/var/log/istore.stdout 2>/var/log/istore.stderr")
+    local e = fs.readfile("/var/log/istore.stderr")
+    local o = fs.readfile("/var/log/istore.stdout")
 
-	fs.unlink("/tmp/log/istore.stderr")
-	fs.unlink("/tmp/log/istore.stdout")
+    fs.unlink("/var/log/istore.stderr")
+    fs.unlink("/var/log/istore.stdout")
+
     lock:lock("ulock")
     lock:close()
 
-	return r, o or "", e or ""
+    e = e or ""
+    if r == 256 and e == "" then
+        e = "os.execute failed, is /var/log full or not existed?"
+    end
+    return r, o or "", e or ""
 end
 
 function redirect_index()
@@ -96,8 +101,8 @@ end
 function store_log()
     local fs   = require "nixio.fs"
     local code = 0
-	local e = fs.readfile("/tmp/log/istore.stderr")
-	local o = fs.readfile("/tmp/log/istore.stdout")
+    local e = fs.readfile("/var/log/istore.stderr")
+    local o = fs.readfile("/var/log/istore.stdout")
     if o ~= nil then
         code = 206
     end
@@ -143,12 +148,12 @@ local function _action(exe, cmd, ...)
     local os   = require "os"
     local fs   = require "nixio.fs"
 
-	local pkg = ""
-	for k, v in pairs({...}) do
-		pkg = pkg .. " '" .. v:gsub("'", "") .. "'"
-	end
+    local pkg = ""
+    for k, v in pairs({...}) do
+        pkg = pkg .. " '" .. v:gsub("'", "") .. "'"
+    end
 
-	local c = "%s %s %s" %{ exe, cmd, pkg }
+    local c = "%s %s %s" %{ exe, cmd, pkg }
 
     return is_exec(c)
 end
