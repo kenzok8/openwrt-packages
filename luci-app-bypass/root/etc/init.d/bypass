@@ -44,7 +44,7 @@ uci_get_by_type(){
 
 GLOBAL_SERVER=$(uci_get_by_type global global_server)
 adguardhome=$(uci_get_by_type global adguardhome 0)
-gfw_mode=$(uci_get_by_type global gfw_mode 0)
+gfw_mode=$(uci_get_by_type global gfw_mode 1)
 run_mode=$(uci_get_by_type global run_mode router)
 SO_SERVER=$(uci_get_by_type socks5_proxy server 0)
 [ $SO_SERVER = same ] && SO_SERVER=$GLOBAL_SERVER
