@@ -8,7 +8,7 @@
 <img src="https://img.shields.io/github/languages/code-size/kenzok8/openwrt-packages?color=blueviolet">
 </div>
 
-<img src="https://v1.jinrishici.com/all.svg?font-size=18&spacing=4">
+<img src="https://v1.jinrishici.com/all.svg?font-size=22&spacing=5">
 #### 说明
 
 * 喜欢追新的可以去下载small-package，该仓库每天自动同步更新
