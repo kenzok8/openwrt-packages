@@ -9,7 +9,7 @@ LUCI_TITLE:=LuCI based ipk store
 LUCI_DESCRIPTION:=luci-app-store is a ipk store developed by LinkEase team
 LUCI_DEPENDS:=+curl
 LUCI_PKGARCH:=all
-PKG_VERSION:=0.1.4
+PKG_VERSION:=0.1.5
 PKG_RELEASE:=1
 PKG_MAINTAINER:=jjm2473 <jjm2473@gmail.com>
 
