@@ -76,9 +76,11 @@ local encrypt_methods_v2ray_ss = {
 	"aes-256-gcm",
 	"chacha20-poly1305",
 	"chacha20-ietf-poly1305",
+	"xchacha20-ietf-poly1305",
 	"aead_aes_128_gcm",
 	"aead_aes_256_gcm",
-	"aead_chacha20_poly1305"
+	"aead_chacha20_poly1305",
+	"aead_xchacha20_poly1305"
 }
 
 local protocol = {

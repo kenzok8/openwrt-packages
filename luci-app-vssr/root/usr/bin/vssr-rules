@@ -74,30 +74,30 @@ flush_r() {
 }
 
 ipset_r() {
-    ipset -N gmlan hash:net 2>/dev/null
+    ipset -N gmlan hash:net hashsize 4096 maxelem 1000000 2>/dev/null
     $IPT -N SS_SPEC_WAN_AC
     $IPT -I SS_SPEC_WAN_AC -p tcp ! --dport 53 -d $server -j RETURN
     for ip in $LAN_GM_IP; do ipset -! add gmlan $ip; done
     case "$RUNMODE" in
     router)
         ipset -! -R <<-EOF || return 1
-			create ss_spec_wan_ac hash:net
+			create ss_spec_wan_ac hash:net hashsize 4096 maxelem 1000000
 			$(gen_iplist | sed -e "s/^/add ss_spec_wan_ac /")
 		EOF
-        ipset -N gfwlist hash:net 2>/dev/null
+        ipset -N gfwlist hash:net hashsize 4096 maxelem 1000000 2>/dev/null
         $IPT -A SS_SPEC_WAN_AC -m set --match-set ss_spec_wan_ac dst -j RETURN
 		$IPT -A SS_SPEC_WAN_AC -m set --match-set gmlan src -m set ! --match-set china dst -j SS_SPEC_WAN_FW
 		$IPT -A SS_SPEC_WAN_AC -m set --match-set china dst -j RETURN
 		$IPT -A SS_SPEC_WAN_AC -j SS_SPEC_WAN_FW
         ;;
     gfw)
-        ipset -N gfwlist hash:net 2>/dev/null
+        ipset -N gfwlist hash:net hashsize 4096 maxelem 1000000 2>/dev/null
         $IPT -A SS_SPEC_WAN_AC -m set --match-set gfwlist dst -j SS_SPEC_WAN_FW
         $IPT -A SS_SPEC_WAN_AC -m set --match-set gmlan src -m set ! --match-set china dst -j SS_SPEC_WAN_FW
         $IPT -A SS_SPEC_WAN_AC -m set --match-set china dst -j RETURN
         ;;
     oversea)
-        ipset -N oversea hash:net 2>/dev/null
+        ipset -N oversea hash:net hashsize 4096 maxelem 1000000 2>/dev/null
         $IPT -I SS_SPEC_WAN_AC -m set --match-set oversea dst -j SS_SPEC_WAN_FW
         $IPT -A SS_SPEC_WAN_AC -m set --match-set gmlan src -j SS_SPEC_WAN_FW
         $IPT -A SS_SPEC_WAN_AC -m set --match-set china dst -j SS_SPEC_WAN_FW
@@ -107,12 +107,12 @@ ipset_r() {
         ;;
     esac
 
-    ipset -N fplan hash:net 2>/dev/null
+    ipset -N fplan hash:net hashsize 4096 maxelem 1000000 2>/dev/null
     for ip in $LAN_FP_IP; do ipset -! add fplan $ip; done
     $IPT -I SS_SPEC_WAN_AC -m set --match-set fplan src -j SS_SPEC_WAN_FW
 
-    ipset -N whitelist hash:net 2>/dev/null
-    ipset -N blacklist hash:net 2>/dev/null
+    ipset -N whitelist hash:net hashsize 4096 maxelem 1000000 2>/dev/null
+    ipset -N blacklist hash:net hashsize 4096 maxelem 1000000 2>/dev/null
     $IPT -I SS_SPEC_WAN_AC -m set --match-set blacklist dst -j SS_SPEC_WAN_FW
     $IPT -I SS_SPEC_WAN_AC -m set --match-set whitelist dst -j RETURN
 
@@ -157,7 +157,7 @@ ac_rule() {
     fi
     IFNAME=$(uci get -P/var/state network.lan.ifname 2>/dev/null)
     ipset -! -R <<-EOF || return 1
-		create ss_spec_lan_ac hash:net
+		create ss_spec_lan_ac hash:net hashsize 4096 maxelem 1000000
 		$(for ip in ${LAN_AC_IP:1}; do echo "add ss_spec_lan_ac $ip"; done)
 	EOF
     $IPT -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p tcp $EXT_ARGS $MATCH_SET \
@@ -167,7 +167,7 @@ ac_rule() {
             -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
     elif [ "$OUTPUT" = 2 ]; then
         ipset -! -R <<-EOF || return 1
-			create ssr_gen_router hash:net
+			create ssr_gen_router hash:net hashsize 4096 maxelem 1000000
 			$(gen_spec_iplist | sed -e "s/^/add ssr_gen_router /")
 		EOF
         $IPT -N SS_SPEC_ROUTER &&
