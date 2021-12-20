@@ -1,6 +1,6 @@
 {
     "luci-argonne-config": {
-        "description": "Luci argonne theme config ",
+        "description": "Luci Argonne theme config ",
         "read": {
             "uci": [ "argonne" ]
         },

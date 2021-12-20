@@ -9,5 +9,5 @@ function index()
 		return
 	end
 
-	entry({"admin", "system", "argonne-config"}, form("argonne-config"), _("argonne Config"), 90)
+	entry({"admin", "system", "argonne-config"}, form("argonne-config"), _("Argonne Config"), 90)
 end

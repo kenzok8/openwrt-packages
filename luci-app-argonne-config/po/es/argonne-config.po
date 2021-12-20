@@ -26,17 +26,17 @@ msgstr ""
 "preestablecido: 0.5)"
 
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:92
-msgid "A HEX Color ; ( Default: #483d8b )"
-msgstr "Un color HEX; (Predeterminado: #483d8b)"
+msgid "A HEX Color ; ( Default: #787399 )"
+msgstr "Un color HEX; (Predeterminado: #787399)"
 
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:72
-msgid "A HEX Color ; ( Default: #5e72e4 )"
-msgstr "Un color HEX; (Predeterminado: #5e72e4)"
+msgid "A HEX Color ; ( Default: #787399 )"
+msgstr "Un color HEX; (Predeterminado: #787399)"
 
 #: applications/luci-app-argonne-config/luasrc/controller/argonne-config.lua:11
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:53
-msgid "argonne Config"
-msgstr "Configuración de argonne"
+msgid "Argonne Config"
+msgstr "Configuración de Argonne"
 
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:195
 msgid "Background file list"
@@ -96,8 +96,8 @@ msgstr ""
 "predeterminado: 10)"
 
 #: applications/luci-app-argonne-config/root/usr/share/rpcd/acl.d/luci-app-argonne-config.json:3
-msgid "Luci argonne theme config"
-msgstr "Configuración del tema Luci argonne"
+msgid "Luci Argonne theme config"
+msgstr "Configuración del tema Luci Argonne"
 
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:201
 msgid "Modify time"

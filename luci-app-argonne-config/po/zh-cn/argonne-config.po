@@ -11,8 +11,8 @@ msgstr ""
 "Language: zh_CN\n"
 "X-Generator: Poedit 2.3.1\n"
 
-msgid "argonne Config"
-msgstr "argonne 主题设置"
+msgid "Argonne Config"
+msgstr "Argonne 主题设置"
 
 msgid "Here you can set the blur and transparency of the login page of argonne theme, and manage the background pictures and videos.[Chrome is recommended]"
 msgstr "在这里你可以设置argonne 主题的登录页面的模糊和透明度，并管理背景图片与视频。[建议使用 Chrome]"
@@ -47,11 +47,11 @@ msgstr "[亮色模式] 主色调"
 msgid "[Dark mode] Primary Color"
 msgstr "[暗色模式] 主色调"
 
-msgid "A HEX Color ; ( Default: #5e72e4 )"
-msgstr "十六进制颜色值 ( 预设为：#5e72e4 )"
+msgid "A HEX Color ; ( Default: #787399 )"
+msgstr "十六进制颜色值 ( 预设为：#787399 )"
 
-msgid "A HEX Color ; ( Default: #483d8b )"
-msgstr "十六进制颜色值 ( 预设为：#483d8b )"
+msgid "A HEX Color ; ( Default: #787399 )"
+msgstr "十六进制颜色值 ( 预设为：#787399 )"
 
 msgid "[Light mode] Transparency"
 msgstr "[亮色模式] 透明度"

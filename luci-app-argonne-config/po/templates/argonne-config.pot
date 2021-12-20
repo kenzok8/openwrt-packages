@@ -21,7 +21,7 @@ msgstr ""
 
 #: applications/luci-app-argonne-config/luasrc/controller/argonne-config.lua:11
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:53
-msgid "argonne Config"
+msgid "Argonne Config"
 msgstr ""
 
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:195
@@ -77,7 +77,7 @@ msgid ""
 msgstr ""
 
 #: applications/luci-app-argonne-config/root/usr/share/rpcd/acl.d/luci-app-argonne-config.json:3
-msgid "Luci argonne theme config"
+msgid "Luci Argonne theme config"
 msgstr ""
 
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:201

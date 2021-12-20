@@ -50,7 +50,7 @@ local transparency_sets = {
 }
 
 -- [[ 模糊设置 ]]--
-br = SimpleForm('config', translate('argonne Config'), translate('Here you can set the blur and transparency of the login page of argonne theme, and manage the background pictures and videos.[Chrome is recommended]'))
+br = SimpleForm('config', translate('Argonne Config'), translate('Here you can set the blur and transparency of the login page of argonne theme, and manage the background pictures and videos.[Chrome is recommended]'))
 br.reset = false
 br.submit = false
 s = br:section(SimpleSection) 
