@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=app-store-ui
 PKG_VERSION:=1.0
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 PKG_HOST_ONLY=1
 

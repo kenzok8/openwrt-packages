@@ -45,6 +45,7 @@ rules:
 - RULE-SET,Microsoft,Microsoft
 - RULE-SET,PROXY,Proxy
 - RULE-SET,Apple,Apple
+- RULE-SET,FCM,FCM
 - RULE-SET,Scholar,Scholar
 - RULE-SET,Domestic,Domestic
 - RULE-SET,Domestic IPs,Domestic
@@ -100,6 +101,7 @@ script:
             "Microsoft": "Microsoft",
             "PROXY": "Proxy",
             "Apple": "Apple",
+            "FCM": "FCM",
             "Scholar": "Scholar",
             "Domestic": "Domestic",
             "Domestic IPs": "Domestic",
@@ -417,6 +419,12 @@ rule-providers:
     behavior: classical
     url: https://cdn.jsdelivr.net/gh/lhie1/Rules@master/Clash/Provider/Apple.yaml
     path: "./Rules/Apple"
+    interval: 86400
+  FCM:
+    type: http
+    behavior: classical
+    url: https://cdn.jsdelivr.net/gh/lhie1/Rules@master/Clash/Provider/FCM.yaml
+    path: "./Rules/FCM"
     interval: 86400
   Scholar:
     type: http

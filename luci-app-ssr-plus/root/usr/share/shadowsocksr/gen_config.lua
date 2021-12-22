@@ -33,7 +33,8 @@ function trojan_shadowsocks()
 				port = tonumber(server.server_port),
 				password = server.password,
 				method = (server.v2ray_protocol == "shadowsocks") and server.encrypt_method_v2ray_ss or nil,
-				flow = (server.v2ray_protocol == "trojan") and (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-splice") or nil
+				flow = (server.v2ray_protocol == "trojan") and (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-splice") or nil,
+				ivCheck = (server.v2ray_protocol == "shadowsocks") and (server.ivCheck == '1') or nil
 			}
 		}
 	}
@@ -117,7 +118,7 @@ local Xray = {
 		-- 底层传输配置
 		streamSettings = {
 			network = server.transport or "tcp",
-			security = (server.xtls == '1') and "xtls" or (server.tls == '1'or server.transport == "grpc") and "tls" or nil,
+			security = (server.xtls == '1') and "xtls" or (server.tls == '1') and "tls" or nil,
 			tlsSettings = (server.tls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
 				-- tls
 				fingerprint = server.fingerprint,
@@ -162,7 +163,9 @@ local Xray = {
 			httpSettings = (server.transport == "h2") and {
 				-- h2
 				path = server.h2_path or "",
-				host = {server.h2_host} or nil
+				host = {server.h2_host} or nil,
+				read_idle_timeout = tonumber(server.read_idle_timeout) or nil,
+				health_check_timeout = tonumber(server.health_check_timeout) or nil
 			} or nil,
 			quicSettings = (server.transport == "quic") and {
 				-- quic
@@ -173,7 +176,11 @@ local Xray = {
 			grpcSettings = (server.transport == "grpc") and {
 				-- grpc
 				serviceName = server.serviceName or "",
-				multiMode = (server.mux == "1") and true or false
+				multiMode = (server.mux == "1") and true or false,
+				idle_timeout = tonumber(server.idle_timeout) or nil,
+				health_check_timeout = tonumber(server.health_check_timeout) or nil,
+				permit_without_stream = (server.permit_without_stream == "1") and true or nil,
+				initial_windows_size = tonumber(server.initial_windows_size) or nil
 			} or nil
 		},
 		mux = (server.mux == "1" and server.xtls ~= "1" and server.transport ~= "grpc") and {

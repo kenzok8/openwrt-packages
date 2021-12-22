@@ -55,6 +55,7 @@ local function is_exec(cmd)
     local nixio = require "nixio"
     local os   = require "os"
     local fs   = require "nixio.fs"
+    local rshift  = nixio.bit.rshift
 
     local oflags = nixio.open_flags("wronly", "creat")
     local lock, code, msg = nixio.open("/var/lock/istore.lock", oflags)
@@ -83,7 +84,7 @@ local function is_exec(cmd)
     if r == 256 and e == "" then
         e = "os.execute failed, is /var/log full or not existed?"
     end
-    return r, o or "", e or ""
+    return rshift(r,8), o or "", e or ""
 end
 
 function redirect_index()

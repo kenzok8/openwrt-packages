@@ -513,6 +513,9 @@ msgstr "必须代理的流量"
 msgid "Apple"
 msgstr "苹果服务（Apple）"
 
+msgid "FCM"
+msgstr "谷歌FCM推送（FCM）"
+
 msgid "Scholar"
 msgstr "学术网站（Scholar）"
 
@@ -2207,9 +2210,6 @@ msgstr "警告：【Rule】写法已不再支持，自动替换为rules"
 msgid "Warning: rule-provider is no longer used. Auto replaced by rule-providers"
 msgstr "警告：【rule-provider】写法已不再支持，自动替换为rule-providers"
 
-msgid "Warning: Because of No Rules Field, Stop Setting BT/P2P DIRECT Rules!"
-msgstr "警告：未找到【rules】配置，停止添加BT/P2P直连规则！"
-
 msgid "Error: Load File Error,"
 msgstr "错误：文件解析失败，"
 
@@ -2480,11 +2480,23 @@ msgstr "Netflix 策略组筛选关键字"
 msgid "Disney Plus Group Filter Keywords"
 msgstr "Disney Plus 策略组筛选关键字"
 
-msgid "HBO Group Filter Keywords"
-msgstr "HBO 策略组筛选关键字"
+msgid "HBO Now Group Filter Keywords"
+msgstr "HBO Now 策略组筛选关键字"
+
+msgid "HBO Max Group Filter Keywords"
+msgstr "HBO Max 策略组筛选关键字"
+
+msgid "HBO GO Aaia Group Filter Keywords"
+msgstr "HBO GO Aaia 策略组筛选关键字"
 
 msgid "YouTube Premium Group Filter Keywords"
 msgstr "YouTube Premium 策略组筛选关键字"
+
+msgid "TVB Anywhere+ Group Filter Keywords"
+msgstr "TVB Anywhere+ 策略组筛选关键字"
+
+msgid "Amazon Prime Video Group Filter Keywords"
+msgstr "Amazon Prime Video 策略组筛选关键字"
 
 msgid "Tip: Start Auto Select Proxy For Netflix Unlock..."
 msgstr "提示：开始自动选择（检测）Netflix 解锁节点..."
@@ -2492,11 +2504,23 @@ msgstr "提示：开始自动选择（检测）Netflix 解锁节点..."
 msgid "Tip: Start Auto Select Proxy For Disney Plus Unlock..."
 msgstr "提示：开始自动选择（检测）Disney Plus 解锁节点..."
 
-msgid "Tip: Start Auto Select Proxy For HBO Unlock..."
-msgstr "提示：开始自动选择（检测）HBO 解锁节点..."
+msgid "Tip: Start Auto Select Proxy For HBO Now Unlock..."
+msgstr "提示：开始自动选择（检测）HBO Now 解锁节点..."
+
+msgid "Tip: Start Auto Select Proxy For HBO Max Unlock..."
+msgstr "提示：开始自动选择（检测）HBO Max 解锁节点..."
+
+msgid "Tip: Start Auto Select Proxy For HBO GO Aaia Unlock..."
+msgstr "提示：开始自动选择（检测）HBO GO Aaia 解锁节点..."
 
 msgid "Tip: Start Auto Select Proxy For YouTube Premium Unlock..."
 msgstr "提示：开始自动选择（检测）YouTube Premium 解锁节点..."
+
+msgid "Tip: Start Auto Select Proxy For TVB Anywhere+ Unlock..."
+msgstr "提示：开始自动选择（检测）TVB Anywhere+ 解锁节点..."
+
+msgid "Tip: Start Auto Select Proxy For Amazon Prime Video Unlock..."
+msgstr "提示：开始自动选择（检测）Amazon Prime Video 解锁节点..."
 
 msgid "Netflix Group:"
 msgstr "Netflix 策略组："
@@ -2504,14 +2528,26 @@ msgstr "Netflix 策略组："
 msgid "Disney Plus Group:"
 msgstr "Disney Plus 策略组："
 
-msgid "HBO Group:"
-msgstr "HBO 策略组："
+msgid "HBO Now Group:"
+msgstr "HBO Now 策略组："
+
+msgid "HBO Max Group:"
+msgstr "HBO Max 策略组："
+
+msgid "HBO GO Aaia Group:"
+msgstr "HBO GO Aaia 策略组："
+
+msgid "TVB Anywhere+ Group:"
+msgstr "TVB Anywhere+ 策略组："
+
+msgid "Amazon Prime Video Group:"
+msgstr "Amazon Prime Video 策略组："
 
 msgid "YouTube Premium Group:"
 msgstr "YouTube Premium 策略组："
 
-msgid "full support"
-msgstr "完整解锁"
+msgid "full support."
+msgstr "完整解锁。"
 
 msgid "full support, area:"
 msgstr "完整解锁，区域："
@@ -2563,3 +2599,9 @@ msgstr "，区域："
 
 msgid "failed to search based on keywords and automatically obtain the group, please confirm the validity of the keywords!"
 msgstr "根据关键字搜索且自动获取策略组失败，请确认关键字的有效性！"
+
+msgid "DNS Remote"
+msgstr "*远程域名解析"
+
+msgid "Add DNS Remote Support For Redir-Host"
+msgstr "Redir-Host模式强制进行远程域名解析"
