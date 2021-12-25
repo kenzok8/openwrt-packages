@@ -109,7 +109,7 @@ const CHECK_IP_URL = '<%=url([[admin]], [[services]], [[bypass]], [[ip]])%>';
         data.youtube ? $(".i4").attr("src", _ASSETS + "img/site_icon_04.png") : $(".i4").attr("src", _ASSETS + "img/site_icon1_04.png");
         setTimeout(function () { $("body").trigger("iploaded", [true]); }, 200);
     }
-    XHR.poll(10, CHECK_IP_URL, null,
+    XHR.poll(5, CHECK_IP_URL, null,
         function (x, data) {
             wirte_status(data);
         }

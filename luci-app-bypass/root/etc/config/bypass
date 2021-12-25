@@ -4,7 +4,7 @@ config global
 	option threads '0'
 	option run_mode 'router'
 	option dns_mode_o 'tcp'
-	option doh_dns_o '1.1.1.1,1.0.0.1'
+	option doh_dns_o '8.8.8.8,8.8.4.4'
 	option gfw_mode '1'
 	option dns_mode_d 'doh'
 	option doh_dns_d 'alidns'

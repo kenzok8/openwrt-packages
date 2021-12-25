@@ -91,7 +91,7 @@ o:value("cloudflare","Cloudflare DoH")
 o:value("google",""..translate("Google").." DoH")
 o:value("quad9","Quad9 DoH")
 o:value("opendns","OpenDNS DoH")
-o.default="cloudflare"
+o.default="google"
 o:depends("dns_mode_o","doh")
 
 o=s:option(Value,"tcp_dns_o",translate("Foreign DNS"),
@@ -100,7 +100,7 @@ o:value("1.1.1.1,1.0.0.1","1.1.1.1,1.0.0.1 (Cloudflare DNS)")
 o:value("8.8.8.8,8.8.4.4","8.8.8.8,8.8.4.4 (Google DNS)")
 o:value("9.9.9.9,149.112.112.112","9.9.9.9,149.112.112.112 (Quad9 DNS)")
 o:value("208.67.222.222,208.67.220.220","208.67.222.222,208.67.220.220 (OpenDNS)")
-o.default="1.1.1.1,1.0.0.1"
+o.default="8.8.8.8,8.8.4.4"
 o:depends("dns_mode_o","tcp")
 
 o=s:option(ListValue,"dns_mode_d",translate("Domestic Resolve Dns Mode"),
