@@ -986,10 +986,10 @@ start(){
 				uci -q del dhcp.lan.dhcp_option
 				uci -q add_list dhcp.lan.dhcp_option="6,$(uci -q get network.lan.ipaddr)"
 				uci commit dhcp
-				masqport="$(uci -q get AdGuardHome.AdGuardHome.old_port)"
 				adgconf="$(uci -q get AdGuardHome.AdGuardHome.configpath)"
-				[ "$masqport" ] || masqport="$(grep "  port:.*" $adgconf | cut -f 4 -d " ")"
-				[ -s $adgconf ] && cat $adgconf | tr '\n' '\r' | sed -e "s/upstream_dns:.*upstream_dns_file/upstream_dns:\n  - 127.0.0.1:$masqport\n  upstream_dns_file/" | tr '\r' '\n' >$adgconf
+				masqport="$(grep "  port:.*" $adgconf | cut -f 4 -d " ")"
+				[ -s $adgconf ] && adgc="$(cat $adgconf | tr '\n' '\r' | sed -e "s/upstream_dns:.*upstream_dns_file/upstream_dns:\n  - 127.0.0.1:$masqport\n  upstream_dns_file/" | tr '\r' '\n')"
+				[ -n "$adgc" ] && echo "${adgc}" >$adgconf
 				uci -q set AdGuardHome.AdGuardHome.enabled='1'
 				uci -q set AdGuardHome.AdGuardHome.redirect='exchange'
 				uci commit AdGuardHome

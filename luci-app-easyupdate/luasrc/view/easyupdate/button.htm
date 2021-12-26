@@ -58,6 +58,10 @@
 	body.apply-overlay-active #update_apply_overlay {
 		display: block;
 	}
+	
+	.cbi-input-textarea {
+	    width: 45VW!important;
+	}
 </style>
 <script type="text/javascript">
 function update_status_message(type, content) {
@@ -134,7 +138,6 @@ function check_version() {
         tb.disabled = true;
         XHR.get('<%=url([[admin]], [[services]], [[easyupdate]], [[download]])%>', null, (x, r) => {
             if (r.code == 1) {
-                tb.setAttribute('file', r.data);
                 XHR.poll(1, '<%=url([[admin]], [[services]], [[easyupdate]], [[getlog]])%>', null,(x, r) => {
                     if (r.data.indexOf(" error") > -1 || r.data.indexOf("Connection reset") > -1){
                         XHR.halt()
@@ -149,6 +152,8 @@ function check_version() {
                                 update_status_message();
                                 tb.value = '<%:Firmware Upgrade%>'
                                 tb.setAttribute('flash', 1);
+                                const file = r.data.match(/Writing to '([^\s]+img.gz)'/);
+                                tb.setAttribute('file', file[1]);
                             },3000);
                         }else{
                             update_status_message('notice', r.data);

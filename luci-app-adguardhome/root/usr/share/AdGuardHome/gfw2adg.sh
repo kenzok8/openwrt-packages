@@ -1,5 +1,7 @@
 #!/bin/sh
+
 PATH="/usr/sbin:/usr/bin:/sbin:/bin"
+
 checkmd5(){
 local nowmd5=$(md5sum /tmp/adguard.list 2>/dev/null)
 nowmd5=${nowmd5%% *}
@@ -10,6 +12,7 @@ if [ "$nowmd5" != "$lastmd5" ]; then
 	[ "$1" == "noreload" ] || /etc/init.d/AdGuardHome reload
 fi
 }
+
 configpath=$(uci get AdGuardHome.AdGuardHome.configpath 2>/dev/null)
 [ "$1" == "del" ] && sed -i '/programaddstart/,/programaddend/d' $configpath && checkmd5 "$2" && exit 0
 gfwupstream=$(uci get AdGuardHome.AdGuardHome.gfwupstream 2>/dev/null)
@@ -20,7 +23,7 @@ if [ ! -f "$configpath" ]; then
 	echo "please make a config first"
 	exit 1
 fi
-wget --no-check-certificate https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt -O- | base64 -d > /tmp/gfwlist.txt
+wget-ssl --no-check-certificate https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt -O- | base64 -d > /tmp/gfwlist.txt
 cat /tmp/gfwlist.txt | awk -v upst="$gfwupstream" 'BEGIN{getline;}{
 s1=substr($0,1,1);
 if (s1=="!")

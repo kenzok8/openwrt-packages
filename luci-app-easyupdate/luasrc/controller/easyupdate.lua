@@ -57,10 +57,8 @@ end
 
 function getver()
 	local e={}
-	local c=luci.model.uci.cursor()
-    local l=Split(c:get("easyupdate", "main", "github"), "/")
-    e.newver=luci.sys.exec("uclient-fetch -qO- 'https://api.github.com/repos/" .. l[4] .. "/" .. l[5] .. "/releases/latest' | jsonfilter -e '@.tag_name'")
-    e.newver=e.newver:sub(e.newver:find('_')+1,-2)
+    e.newver=luci.sys.exec("/usr/bin/easyupdate.sh -c")
+    e.newver=e.newver:sub(0,-2)
     e.newverint=os.time({day=e.newver:sub(7,8), month=e.newver:sub(5,6), year=e.newver:sub(1,4), hour=e.newver:sub(10,11), min=e.newver:sub(12,13), sec=e.newver:sub(14,15)})
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(e)
@@ -68,26 +66,8 @@ end
 
 function download()
 	local e={}
-	local c=luci.model.uci.cursor()
-    local l=Split(c:get("easyupdate", "main", "github"), "/")
-    local sedd
-    if nixio.fs.access("/sys/firmware/efi") then
-    	sedd="combined-efi.img.gz"
-    else
-        sedd="combined.img.gz"
-    end
-    local url=luci.sys.exec("uclient-fetch -qO- 'https://api.github.com/repos/" .. l[4] .. "/" .. l[5] .. "/releases/latest' | jsonfilter -e '@.assets[*].browser_download_url' | sed -n '/" .. sedd .. "/p'")
-    url=url:gsub("\n","")
-    local u=c:get("easyupdate", "main", "proxy")
-    if u then
-		u="https://ghproxy.com/"
-	else
-		u=""
-    end
-    local l=Split(url, "/")
-    luci.sys.exec("uclient-fetch -O '/tmp/" .. l[9] .. "' '" .. u .. url .. "' > /tmp/easyupdate.log  2>&1 &")
+    luci.sys.exec("/usr/bin/easyupdate.sh -d")
     e.code=1
-    e.data=l[9]
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(e)
 end
@@ -102,14 +82,7 @@ end
 function flash()
 	local e={}
 	local f = luci.http.formvalue('file')
-	local c=luci.model.uci.cursor()
-	local k=c:get("easyupdate", "main", "keepconfig")
-	if k then
-	    k=""
-	else
-	    k="-n"
-	end
-    luci.sys.exec("sysupgrade " .. k .. " '/tmp/" .. f .. "' > /tmp/easyupdate.log  2>&1 &")
+    luci.sys.exec("/usr/bin/easyupdate.sh -f " .. f)
     e.code=1
 	luci.http.prepare_content("application/json")
 	luci.http.write_json(e)

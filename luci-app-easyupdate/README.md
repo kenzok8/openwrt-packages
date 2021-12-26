@@ -1,15 +1,16 @@
-# luci-app-easyupdateï¼ˆç®€æ˜“æ›´æ–°ï¼‰
 
-ä¸»è¦ç”¨äºä½¿ç”¨P3TERX/Actions-OpenWrtè‡ªåŠ¨ç¼–è¯‘å›ºä»¶åçš„ä¸€é”®æ›´æ–°
+# luci-app-easyupdate£¨¼òÒ×¸üĞÂ£©
 
-### ä½¿ç”¨æ–¹æ³•
+Ö÷ÒªÓÃÓÚÊ¹ÓÃP3TERX/Actions-OpenWrt×Ô¶¯±àÒë¹Ì¼şºóµÄÒ»¼ü¸üĞÂ
 
-#### éœ€åœ¨ä¸‹æ–¹æ­¥éª¤å
+### Ê¹ÓÃ·½·¨
+
+#### ĞèÔÚÏÂ·½²½Öèºó
 ```yaml
     - name: Install feeds
       run: cd openwrt && ./scripts/feeds install -a -f
 ```
-#### æ·»åŠ å¦‚ä¸‹æ­¥éª¤
+#### Ìí¼ÓÈçÏÂ²½Öè
 ```yaml
     - name: Openwrt AutoUpdate
       run: |
@@ -25,7 +26,7 @@
         sed -i "s/OpenWrt /${{github.actor}} compiled (${TEMP:8}) \/ OpenWrt /g" openwrt/package/lean/default-settings/files/zzz-default-settings
 ```
 
-#### å°†å¦‚ä¸‹æ­¥éª¤çš„`tag_name`çš„å€¼`${{ steps.tag.outputs.release_tag }}`
+#### ½«ÈçÏÂ²½ÖèµÄ`tag_name`µÄÖµ`${{ steps.tag.outputs.release_tag }}`
 ```yaml
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
@@ -38,7 +39,7 @@
         files: ${{ env.FIRMWARE }}/*
 ```
 
-#### æ›´æ¢ä¸º`${{ env.RELEASE_TAG }}`
+#### ¸ü»»Îª`${{ env.RELEASE_TAG }}`
 ```yaml
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
@@ -51,10 +52,10 @@
         files: ${{ env.FIRMWARE }}/*
 ```
 
-#### ä¹Ÿå¯ä»¥ç›´æ¥ä½¿ç”¨æˆ‘ä¿®æ”¹å¥½çš„actions
+#### Ò²¿ÉÒÔÖ±½ÓÊ¹ÓÃÎÒĞŞ¸ÄºÃµÄactions
 [Actions-OpenWrt](https://github.com/sundaqiang/Actions-OpenWrt)
 
-### æ•ˆæœå±•ç¤º
+### Ğ§¹ûÕ¹Ê¾
 ![easyupdate][1]
 
   [1]: https://raw.githubusercontent.com/sundaqiang/openwrt-packages/master/img/easyupdate.png
