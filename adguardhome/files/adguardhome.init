@@ -11,8 +11,10 @@ STOP=89
 
 start_service() {
   config_load adguardhome
+  config_get_bool enabled config enabled
   config_get WORK_DIR config workdir
 
+  [ "$enabled" -eq "1" ] || exit 2
   [ -d "$WORK_DIR" ] || mkdir -m 0755 -p "$WORK_DIR"
 
   procd_open_instance
