@@ -1,7 +1,6 @@
 #!/bin/sh /etc/rc.common
 
 PROG=/usr/bin/AdGuardHome
-WORK_DIR=/tmp/adguardhome
 
 USE_PROCD=1
 
@@ -11,6 +10,9 @@ START=21
 STOP=89
 
 start_service() {
+  config_load adguardhome
+  config_get WORK_DIR config workdir
+
   [ -d "$WORK_DIR" ] || mkdir -m 0755 -p "$WORK_DIR"
 
   procd_open_instance

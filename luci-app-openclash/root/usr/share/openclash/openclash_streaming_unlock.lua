@@ -19,7 +19,7 @@ if enable == 0 then os.exit(0) end
 if not type then os.exit(0) end
 
 function unlock_auto_select()
-	local key_group, region, now, proxy, group_match, proxy_default, auto_get_group, info, group_now, con
+	local key_group, region, now, proxy, group_match, proxy_default, auto_get_group, info, group_now
 	local port = uci:get("openclash", "config", "cn_port")
 	local passwd = uci:get("openclash", "config", "dashboard_password") or ""
 	local ip = luci.sys.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n'")
@@ -57,73 +57,11 @@ function unlock_auto_select()
 		if not info or not info.proxies then os.exit(0) end
 	end
 	
-	--auto get group
-	if type == "Netflix" then
-		luci.sys.call('curl -sL -m 3 --retry 2 --limit-rate 1k -o /dev/null https://www.netflix.com &')
-	elseif type == "Disney Plus" then
-		luci.sys.call('curl -sL -m 3 --retry 2 --limit-rate 1k -o /dev/null https://www.disneyplus.com &')
-	elseif type == "HBO Now" then
-		luci.sys.call('curl -sL -m 3 --retry 2 --limit-rate 1K -o /dev/null https://play.hbonow.com/assets/fonts/Street2-Medium.ttf &')
-	elseif type == "HBO Max" then
-		luci.sys.call('curl -sL -m 3 --retry 2 --limit-rate 1k -o /dev/null https://www.hbomax.com &')
-	elseif type == "HBO GO Aaia" then
-		luci.sys.call('curl -sL -m 3 --retry 2 --limit-rate 1k -o /dev/null https://www.hbogoasia.sg/static/media/GothamLight.8566e233.ttf &')
-	elseif type == "YouTube Premium" then
-		luci.sys.call('curl -sL -m 3 --retry 2 --limit-rate 1k -o /dev/null https://m.youtube.com/premium &')
-	elseif type == "TVB Anywhere+" then
-		luci.sys.call('curl -sL -m 3 --retry 2 --limit-rate 1k -o /dev/null https://uapisfm.tvbanywhere.com.sg &')
-	elseif type == "Amazon Prime Video" then
-		luci.sys.call('curl -sL -m 3 --retry 2 --limit-rate 1k -o /dev/null https://www.primevideo.com &')
-	end
-	os.execute("sleep 1")
-	con = luci.sys.exec(string.format('curl -sL -m 3 --retry 2 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -XGET http://%s:%s/connections', passwd, ip, port))
-	if con then
-		con = json.parse(con)
-	end
-	if con then
-		for i = 1, #(con.connections) do
-			if type == "Netflix" then
-				if string.match(con.connections[i].metadata.host, "www%.netflix%.com") then
-					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
-					break
-				end
-			elseif type == "Disney Plus" then
-				if string.match(con.connections[i].metadata.host, "www%.disneyplus%.com") then
-					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
-					break
-				end
-			elseif type == "HBO Now" then
-				if string.match(con.connections[i].metadata.host, "play%.hbonow%.com") then
-					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
-					break
-				end
-			elseif type == "HBO Max" then
-				if string.match(con.connections[i].metadata.host, "www%.hbomax%.com") then
-					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
-					break
-				end
-			elseif type == "HBO GO Aaia" then
-				if string.match(con.connections[i].metadata.host, "www%.hbogoasia%.sg") then
-					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
-					break
-				end
-			elseif type == "YouTube Premium" then
-				if string.match(con.connections[i].metadata.host, "m%.youtube%.com") then
-					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
-					break
-				end
-			elseif type == "TVB Anywhere+" then
-				if string.match(con.connections[i].metadata.host, "uapisfm%.tvbanywhere%.com%.sg") then
-					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
-					break
-				end
-			elseif type == "Amazon Prime Video" then
-				if string.match(con.connections[i].metadata.host, "www%.primevideo%.com") then
-					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
-					break
-				end
-			end
-		end
+	--try to get group instead of matching the key
+	auto_get_group = auto_get_policy_group(passwd, ip, port)
+	
+	if not auto_get_group then
+		auto_get_group = auto_get_policy_group(passwd, ip, port)
 	end
 
 	if not auto_get_group then
@@ -132,17 +70,17 @@ function unlock_auto_select()
 		elseif type == "Disney Plus" then
 			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_disney") or "disney|迪士尼"
 		elseif type == "HBO Now" then
-			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_hbo_now") or "hbo"
+			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_hbo_now") or "hbo|hbonow|hbo now"
 		elseif type == "HBO Max" then
-			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_hbo_max") or "hbo"
-		elseif type == "HBO GO Aaia" then
-			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_hbo_go_asia") or "hbo"
+			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_hbo_max") or "hbo|hbomax|hbo max"
+		elseif type == "HBO GO Asia" then
+			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_hbo_go_asia") or "hbo|hbogo|hbo go"
 		elseif type == "YouTube Premium" then
-			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_ytb") or "YouTobe|油管"
+			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_ytb") or "youtobe|油管"
 		elseif type == "TVB Anywhere+" then
 			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_tvb_anywhere") or "tvb"
 		elseif type == "Amazon Prime Video" then
-			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_prime_video") or "Prime Video|Amazon"
+			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_prime_video") or "prime video|amazon"
 		end
 		string.gsub(key_group, '[^%|]+', function(w) table.insert(key_groups, w) end)
 		if #key_groups == 0 then table.insert(key_groups, type) end
@@ -361,7 +299,7 @@ function proxy_unlock_test()
 		region = hbo_now_unlock_test()
 	elseif type == "HBO Max" then
 		region = hbo_max_unlock_test()
-	elseif type == "HBO GO Aaia" then
+	elseif type == "HBO GO Asia" then
 		region = hbo_go_asia_unlock_test()
 	elseif type == "YouTube Premium" then
 		region = ytb_unlock_test()
@@ -384,6 +322,79 @@ function table_include(table, value)
 		end
 	end
 	return false
+end
+
+function auto_get_policy_group(passwd, ip, port)
+	local auto_get_group, con
+	
+	if type == "Netflix" then
+		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://www.netflix.com &')
+	elseif type == "Disney Plus" then
+		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://www.disneyplus.com &')
+	elseif type == "HBO Now" then
+		luci.sys.call('curl -s -m 5 --limit-rate 50B -o /dev/null https://play.hbonow.com/assets/fonts/Street2-Medium.ttf &')
+	elseif type == "HBO Max" then
+		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://www.hbomax.com &')
+	elseif type == "HBO GO Asia" then
+		luci.sys.call('curl -s -m 5 --limit-rate 50B -o /dev/null https://www.hbogoasia.sg/static/media/GothamLight.8566e233.ttf &')
+	elseif type == "YouTube Premium" then
+		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://m.youtube.com/premium &')
+	elseif type == "TVB Anywhere+" then
+		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://uapisfm.tvbanywhere.com.sg &')
+	elseif type == "Amazon Prime Video" then
+		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://www.primevideo.com &')
+	end
+	os.execute("sleep 1")
+	con = luci.sys.exec(string.format('curl -sL -m 5 --retry 2 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -XGET http://%s:%s/connections', passwd, ip, port))
+	if con then
+		con = json.parse(con)
+	end
+	if con then
+		for i = 1, #(con.connections) do
+			if type == "Netflix" then
+				if string.match(con.connections[i].metadata.host, "www%.netflix%.com") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			elseif type == "Disney Plus" then
+				if string.match(con.connections[i].metadata.host, "www%.disneyplus%.com") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			elseif type == "HBO Now" then
+				if string.match(con.connections[i].metadata.host, "play%.hbonow%.com") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			elseif type == "HBO Max" then
+				if string.match(con.connections[i].metadata.host, "www%.hbomax%.com") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			elseif type == "HBO GO Asia" then
+				if string.match(con.connections[i].metadata.host, "www%.hbogoasia%.sg") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			elseif type == "YouTube Premium" then
+				if string.match(con.connections[i].metadata.host, "m%.youtube%.com") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			elseif type == "TVB Anywhere+" then
+				if string.match(con.connections[i].metadata.host, "uapisfm%.tvbanywhere%.com%.sg") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			elseif type == "Amazon Prime Video" then
+				if string.match(con.connections[i].metadata.host, "www%.primevideo%.com") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			end
+		end
+	end
+	return auto_get_group
 end
 
 function get_group_now(info, group)

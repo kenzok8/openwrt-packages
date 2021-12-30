@@ -186,7 +186,9 @@ rm_port53()
 	config_editor "dns.port" "$dnsmasq_port" "$configpath"
 	uci set dhcp.@dnsmasq[0].port="53"
 	uci commit dhcp
-	/etc/init.d/dnsmasq reload
+	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
+	killall -9 $binpath
+	/etc/init.d/dnsmasq restart
 }
 
 use_port53()
@@ -499,6 +501,11 @@ start_service() {
 	echo "AdGuardHome service enabled"
 	echo "luci enable switch=$enabled"
 	(sleep 10 && [ -z "$(pgrep $binpath)" ] && logger "AdGuardHome" "no process in 10s cancel redirect" && _do_redirect 0 )&
+	if [[ "`uci get bypass.@global[0].global_server 2>/dev/null`" && "`uci get bypass.@global[0].adguardhome 2>/dev/null`" == 1 && "$(uci get dhcp.@dnsmasq[0].port)" == "53" ]]; then
+	 uci -q set AdGuardHome.AdGuardHome.redirect='exchange'
+	 uci commit AdGuardHome
+	 _do_redirect 1
+	fi
 }
 
 reload_service()
