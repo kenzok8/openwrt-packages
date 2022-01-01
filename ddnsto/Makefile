@@ -13,7 +13,7 @@ PKG_NAME:=ddnsto
 PKG_VERSION:=0.3.0
 PKG_RELEASE:=
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://firmware.koolshare.cn/binary/ddnsto/
+PKG_SOURCE_URL:=https://fw.koolcenter.com/binary/ddnsto/
 PKG_HASH:=skip
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
