@@ -175,7 +175,8 @@ function gen_outbound(node, tag, proxy_table)
                     multiMode = (node.grpc_mode == "multi") and true or nil,
                     idle_timeout = tonumber(node.grpc_idle_timeout) or nil,
                     health_check_timeout = tonumber(node.grpc_health_check_timeout) or nil,
-                    permit_without_stream = (node.grpc_permit_without_stream == "1") and true or nil
+                    permit_without_stream = (node.grpc_permit_without_stream == "1") and true or nil,
+                    initial_windows_size = tonumber(node.grpc_initial_windows_size) or nil
                 } or nil
             } or nil,
             settings = {
@@ -186,7 +187,6 @@ function gen_outbound(node, tag, proxy_table)
                         users = {
                             {
                                 id = node.uuid,
-                                alterId = tonumber(node.alter_id),
                                 level = 0,
                                 security = (node.protocol == "vmess") and node.security or nil,
                                 encryption = node.encryption or "none",

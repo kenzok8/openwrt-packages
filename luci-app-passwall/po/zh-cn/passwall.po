@@ -1102,9 +1102,6 @@ msgstr "Naiveproxy协议"
 msgid "V2ray Protocol"
 msgstr "V2ray协议"
 
-msgid "Alter ID"
-msgstr "额外ID(alterId)"
-
 msgid "User Level"
 msgstr "用户等级(level)"
 
@@ -1344,3 +1341,6 @@ msgstr "检查超时时间"
 
 msgid "Permit without stream"
 msgstr "无子连接时的健康检查"
+
+msgid "Initial Windows Size"
+msgstr "初始窗口大小"
