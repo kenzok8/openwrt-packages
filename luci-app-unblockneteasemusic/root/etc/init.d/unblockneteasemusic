@@ -89,6 +89,7 @@ start_service()
 	config_get music_source "config" "music_source" "default"
 	[ "${music_source}" != "default" ] && append_param -o "${music_source}"
 
+	append_param_arg "config" "cnrelay" "-c"
 	append_param_arg "config" "endpoint_url" "-e" "https://music.163.com"
 	append_param_arg "config" "netease_server_ip" "-f"
 	append_param_arg "config" "proxy_server_ip" "-u"

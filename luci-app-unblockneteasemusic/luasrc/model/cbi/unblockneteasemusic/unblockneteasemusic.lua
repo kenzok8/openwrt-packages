@@ -23,6 +23,7 @@ music_source:value("pyncmd", translate("网易云音乐（pyncmd）"))
 music_source:value("qq", translate("QQ音乐"))
 music_source:value("youtube", translate("Youtube音乐"))
 music_source:value("youtubedl", translate("Youtube音乐（youtube-dl）"))
+music_source:value("ytdlp", translate("Youtube音乐（yt-dlp）"))
 music_source:value("ytdownload", translate("Youtube音乐（ytdownload）"))
 music_source.description = translate("自定义模式下，多个音源请用空格隔开")
 music_source.default = "default"
@@ -139,6 +140,12 @@ endpoint_url.placeholder = "https://music.163.com"
 endpoint_url.datatype = "string"
 endpoint_url:depends("advanced_mode", 1)
 
+cnrelay = s:option(Value, "cnrelay", translate("UNM API 服务器"))
+cnrelay.description = translate("使用 UnblockNeteaseMusic 中继桥（API）以获取音源信息")
+cnrelay.placeholder = "http(s)://host:port"
+cnrelay.datatype = "string"
+cnrelay:depends("advanced_mode", 1)
+
 hijack = s:option(ListValue, "hijack_ways", translate("劫持方法"))
 hijack:value("dont_hijack", translate("不开启劫持"))
 hijack:value("use_ipset", translate("使用 IPSet 劫持"))
@@ -195,7 +202,7 @@ acl_rule.sortable = true
 acl_rule.anonymous = true
 acl_rule.addremove = true
 
-acl_ip_addr=acl_rule:option(Value, "ip_addr", translate("IP 地址"))
+acl_ip_addr = acl_rule:option(Value, "ip_addr", translate("IP 地址"))
 acl_ip_addr.width = "40%"
 acl_ip_addr.datatype = "ip4addr"
 acl_ip_addr.placeholder = "0.0.0.0/0"

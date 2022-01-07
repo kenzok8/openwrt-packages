@@ -39,22 +39,20 @@ update_core(){
 	mkdir -p "/usr/share/$NAME/core" > "/dev/null" 2>&1
 	rm -rf /usr/share/$NAME/core/* > "/dev/null" 2>&1
 
-	local mirror
-	for mirror in "https://cdn.jsdelivr.net/gh/UnblockNeteaseMusic/server@" "https://raw.githubusercontent.com/UnblockNeteaseMusic/server/"
+	for url in $(uclient-fetch -qO- "https://api.github.com/repos/UnblockNeteaseMusic/server/contents/precompiled" |jsonfilter -e '@[*].download_url')
 	do
-		{
-			uclient-fetch "${mirror}${core_latest_ver}/precompiled/app.js" -qO "/usr/share/$NAME/core/app.js"
-			uclient-fetch "${mirror}enhanced/ca.crt" -qO "/usr/share/$NAME/core/ca.crt"
-			uclient-fetch "${mirror}enhanced/server.crt" -qO "/usr/share/$NAME/core/server.crt"
-			uclient-fetch "${mirror}enhanced/server.key" -qO "/usr/share/$NAME/core/server.key"
-		} > "/dev/null" 2>&1 && break
+		uclient-fetch "${url}" -qO "/usr/share/$NAME/core/${url##*/}"
+		[ -s "/usr/share/$NAME/core/${url##*/}" ] || {
+			echo -e "Failed to download ${url##*/}." >> "/tmp/$NAME.log"
+			exit 1
+		}
 	done
 
-	local file
-	for file in "app.js" "ca.crt" "server.crt" "server.key"
+	for cert in "ca.crt" "server.crt" "server.key"
 	do
-		[ -s "/usr/share/$NAME/core/${file}" ] || {
-			echo -e "Failed to download ${file}." >> "/tmp/$NAME.log"
+		uclient-fetch "https://raw.githubusercontent.com/UnblockNeteaseMusic/server/enhanced/${cert}" -qO "/usr/share/$NAME/core/${cert}"
+		[ -s "/usr/share/$NAME/core/${cert}" ] || {
+			echo -e "Failed to download ${cert}." >> "/tmp/$NAME.log"
 			exit 1
 		}
 	done
