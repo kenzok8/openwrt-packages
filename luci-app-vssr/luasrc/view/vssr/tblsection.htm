@@ -145,17 +145,17 @@
         $html += '<div class="pure-g choose_node">';
         $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="global" data-node="' + node + '"> 主服务器 </button></div></div>';
         $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="udp_relay" data-node="' + node + '"> UDP游戏模式 </button></div></div>';
-        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="youtube" data-node="' + node + '"> Youtube </button></div></div>';
+        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="youtube" data-node="' + node + '"> Youtube 分流 </button></div></div>';
         //if ($('#cbi-' + CONFIG + '-' + node).attr("data-flag") == "tw") {
-            $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="tw_video" data-node="' + node + '"> TW Video </button></div></div>';
+            $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="tw_video" data-node="' + node + '"> 台湾视频 分流 </button></div></div>';
         //}
-        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="netflix" data-node="' + node + '"> Netflix </button></div></div>';
-        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="disney" data-node="' + node + '"> Diseny+ </button></div></div>';
-        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="prime" data-node="' + node + '"> Prime Video </button></div></div>';
+        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="netflix" data-node="' + node + '"> Netflix 分流 </button></div></div>';
+        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="disney" data-node="' + node + '"> Diseny+ 分流 </button></div></div>';
+        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="prime" data-node="' + node + '"> Prime Video 分流 </button></div></div>';
         //if ($('#cbi-' + CONFIG + '-' + node).attr("data-flag") == "hk") {
-            $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="tvb" data-node="' + node + '"> TVB Video </button></div></div>';
+            $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="tvb" data-node="' + node + '"> 香港TVB 分流 </button></div></div>';
         //}
-        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="custom" data-node="' + node + '"> 自定义 </button></div></div>';
+        $html += '<div class="pure-u-1-2"><div class="gap"><button class="cbi-button cbi-button-apply change-node" data-server="custom" data-node="' + node + '"> 自定义 分流 </button></div></div>';
         $html += '</div>';
         Swal.fire({
             title: '请选择应用于',
