@@ -193,7 +193,7 @@ start_dns(){
 		service_start $(which chinadns-ng) -l 5337 -c '127.0.0.1#5336' -t '127.0.0.1#5335' -4 china_v4 -6 china_v6 -f -n $([ $gfw_mode = 1 ] && echo -g $K/gfw.list)
 		log "ChinaDNS : Start ChinaDNS-NG successful!"
 	fi
-	if [[ "$(uci -q get dhcp.@dnsmasq[0].cachesize)" == "0" ]]; then
+	if [[ "$(uci -q get dhcp.@dnsmasq[0].cachesize)" == "0" && $adguardhome == 0 ]]; then
 		uci -q set dhcp.@dnsmasq[0].cachesize='1500'
 		uci commit dhcp
 	fi
