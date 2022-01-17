@@ -11,7 +11,7 @@ LUCI_PKGARCH:=all
 LUCI_DEPENDS:=+luci-compat
 
 define Package/$(PKG_NAME)/conffiles
-/etc/config/Argonne
+/etc/config/argonne
 endef
 
 include $(TOPDIR)/feeds/luci/luci.mk
