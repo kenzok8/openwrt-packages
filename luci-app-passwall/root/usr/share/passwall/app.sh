@@ -647,7 +647,7 @@ run_redir() {
 				UDP_NODE="nil"
 			}
 			_extra_param="${_extra_param} ${proto}"
-			[ "${DNS_MODE}" != "fakedns" ] && _extra_param="${_extra_param} -route_only 1"
+			_extra_param="${_extra_param} -route_only 1"
 			[ "${DNS_MODE}" = "v2ray" -o "${DNS_MODE}" = "xray" ] && {
 				local v2ray_dns_mode=$(config_t_get global v2ray_dns_mode tcp)
 				[ "$(config_t_get global dns_by)" = "tcp" -o "${v2ray_dns_mode}" = "fakedns" ] && {
@@ -677,6 +677,7 @@ run_redir() {
 							echolog "  - 域名解析 DNS Over HTTPS..."
 						;;
 						fakedns)
+							fakedns=1
 							CHINADNS_NG=0
 							_extra_param="${_extra_param} -dns_listen_port ${dns_listen_port} -dns_fakedns 1"
 							echolog "  - 域名解析 Fake DNS..."
@@ -1116,14 +1117,24 @@ start_dns() {
 		TUN_DNS="$(echo ${DNS_FORWARD} | sed 's/#/:/g' | sed -E 's/\:([^:]+)$/#\1/g')"
 		echolog "  - 域名解析：使用UDP协议请求DNS（$TUN_DNS）..."
 	;;
-	fakedns)
-		CHINADNS_NG=0
-		echolog "  - 域名解析：使用Dnsmasq直接返回假IP，请确保代理工具支持域名嗅探..."
-	;;
 	esac
 
 	[ "${use_tcp_node_resolve_dns}" = "1" ] && echolog "  * 请确认上游 DNS 支持 TCP 查询，如非直连地址，确保 TCP 代理打开，并且已经正确转发！"
 	[ "${use_udp_node_resolve_dns}" = "1" ] && echolog "  * 要求代理 DNS 请求，如上游 DNS 非直连地址，确保 UDP 代理打开，并且已经正确转发！"
+	
+	case "$DNS_SHUNT" in
+	smartdns)
+		if [ -n "$(first_type smartdns)" ]; then
+			local group_domestic=$(config_t_get global group_domestic)
+			CHINADNS_NG=0
+			source $APP_PATH/helper_smartdns.sh add DNS_MODE=$DNS_MODE SMARTDNS_CONF=/tmp/etc/smartdns/$CONFIG.conf REMOTE_FAKEDNS=$fakedns DEFAULT_DNS=$DEFAULT_DNS LOCAL_GROUP=$group_domestic TUN_DNS=$TUN_DNS TCP_NODE=$TCP_NODE PROXY_MODE=${TCP_PROXY_MODE}${LOCALHOST_TCP_PROXY_MODE} NO_PROXY_IPV6=${filter_proxy_ipv6}
+			source $APP_PATH/helper_smartdns.sh restart
+			echolog "  - 域名解析：使用SmartDNS，请确保配置正常。"
+		else
+			DNS_SHUNT="dnsmasq"
+		fi
+	;;
+	esac
 
 	[ -n "$chnlist" ] && [ "$CHINADNS_NG" = "1" ] && [ -n "$(first_type chinadns-ng)" ] && [ -s "${RULES_PATH}/chnlist" ] && {
 		china_ng_listen_port=$(expr $dns_listen_port + 1)
@@ -1151,8 +1162,11 @@ start_dns() {
 		ln_run "$(first_type chinadns-ng)" chinadns-ng "$log_path" -v -b 0.0.0.0 -l "${china_ng_listen_port}" ${china_ng_chn:+-c "${china_ng_chn}"} ${chnlist_param} ${china_ng_gfw:+-t "${china_ng_gfw}"} ${gfwlist_param:+-g "${gfwlist_param}"} -f
 		echolog "  + 过滤服务：ChinaDNS-NG(:${china_ng_listen_port})：国内DNS：${china_ng_chn}，可信DNS：${china_ng_gfw}"
 	}
-	source $APP_PATH/helper_${DNS_N}.sh stretch
-	source $APP_PATH/helper_${DNS_N}.sh add DNS_MODE=$DNS_MODE TMP_DNSMASQ_PATH=$TMP_DNSMASQ_PATH DNSMASQ_CONF_FILE=/tmp/dnsmasq.d/dnsmasq-passwall.conf DEFAULT_DNS=$DEFAULT_DNS LOCAL_DNS=$LOCAL_DNS TUN_DNS=$TUN_DNS CHINADNS_DNS=$china_ng_listen TCP_NODE=$TCP_NODE PROXY_MODE=${TCP_PROXY_MODE}${LOCALHOST_TCP_PROXY_MODE} NO_PROXY_IPV6=${filter_proxy_ipv6}
+	
+	[ "$DNS_SHUNT" = "dnsmasq" ] && {
+		source $APP_PATH/helper_dnsmasq.sh stretch
+		source $APP_PATH/helper_dnsmasq.sh add DNS_MODE=$DNS_MODE TMP_DNSMASQ_PATH=$TMP_DNSMASQ_PATH DNSMASQ_CONF_FILE=/tmp/dnsmasq.d/dnsmasq-passwall.conf REMOTE_FAKEDNS=$fakedns DEFAULT_DNS=$DEFAULT_DNS LOCAL_DNS=$LOCAL_DNS TUN_DNS=$TUN_DNS CHINADNS_DNS=$china_ng_listen TCP_NODE=$TCP_NODE PROXY_MODE=${TCP_PROXY_MODE}${LOCALHOST_TCP_PROXY_MODE} NO_PROXY_IPV6=${filter_proxy_ipv6}
+	}
 }
 
 gen_pdnsd_config() {
@@ -1406,8 +1420,10 @@ stop() {
 	unset V2RAY_LOCATION_ASSET
 	unset XRAY_LOCATION_ASSET
 	stop_crontab
-	source $APP_PATH/helper_${DNS_N}.sh del
-	source $APP_PATH/helper_${DNS_N}.sh restart no_log=1
+	source $APP_PATH/helper_smartdns.sh del
+	source $APP_PATH/helper_smartdns.sh restart no_log=1
+	source $APP_PATH/helper_dnsmasq.sh del
+	source $APP_PATH/helper_dnsmasq.sh restart no_log=1
 	rm -rf ${TMP_PATH}
 	rm -rf /tmp/lock/${CONFIG}_script.lock
 	echolog "清空并关闭相关程序和缓存完成。"
@@ -1448,10 +1464,11 @@ global=$(echo "${TCP_PROXY_MODE}${LOCALHOST_TCP_PROXY_MODE}${UDP_PROXY_MODE}${LO
 returnhome=$(echo "${TCP_PROXY_MODE}${LOCALHOST_TCP_PROXY_MODE}${UDP_PROXY_MODE}${LOCALHOST_UDP_PROXY_MODE}" | grep "returnhome")
 chnlist=$(echo "${TCP_PROXY_MODE}${LOCALHOST_TCP_PROXY_MODE}${UDP_PROXY_MODE}${LOCALHOST_UDP_PROXY_MODE}" | grep "chnroute")
 gfwlist=$(echo "${TCP_PROXY_MODE}${LOCALHOST_TCP_PROXY_MODE}${UDP_PROXY_MODE}${LOCALHOST_UDP_PROXY_MODE}" | grep "gfwlist")
+DNS_SHUNT=$(config_t_get global dns_shunt dnsmasq)
 DNS_MODE=$(config_t_get global dns_mode pdnsd)
 DNS_FORWARD=$(config_t_get global dns_forward 1.1.1.1:53 | sed 's/#/:/g' | sed -E 's/\:([^:]+)$/#\1/g')
 DNS_CACHE=$(config_t_get global dns_cache 0)
-CHINADNS_NG=$(config_t_get global chinadns_ng 1)
+CHINADNS_NG=$(config_t_get global chinadns_ng 0)
 filter_proxy_ipv6=$(config_t_get global filter_proxy_ipv6 0)
 dns_listen_port=${DNS_PORT}
 

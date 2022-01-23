@@ -176,6 +176,20 @@ udp_node:value("tcp", translate("Same as the tcp node"))
 
 s:tab("DNS", translate("DNS"))
 
+if api.is_finded("smartdns") then
+    dns_shunt = s:taboption("DNS", ListValue, "dns_shunt", translate("DNS Shunt"))
+    dns_shunt:value("dnsmasq", "Dnsmasq")
+    dns_shunt:value("smartdns", "SmartDNS")
+
+    group_domestic = s:taboption("DNS", Value, "group_domestic", translate("Domestic group name"))
+    group_domestic.placeholder = "local"
+    group_domestic:depends("dns_shunt", "smartdns")
+    group_domestic.description = translate("You only need to configure domestic DNS packets in SmartDNS and set it redirect or as Dnsmasq upstream, and fill in the domestic DNS group name here.")
+end
+
+o = s:taboption("DNS", Flag, "filter_proxy_ipv6", translate("Filter Proxy Host IPv6"), translate("Experimental feature."))
+o.default = "0"
+
 ---- DNS Forward Mode
 dns_mode = s:taboption("DNS", ListValue, "dns_mode", translate("Filter Mode"))
 dns_mode.rmempty = false
@@ -193,7 +207,6 @@ if has_xray then
     dns_mode:value("xray", "Xray")
 end
 dns_mode:value("udp", translatef("Requery DNS By %s", "UDP"))
-dns_mode:value("fakedns", "FakeDNS")
 
 o = s:taboption("DNS", ListValue, "v2ray_dns_mode", " ")
 o:value("tcp", "TCP")
@@ -288,7 +301,7 @@ o.rmempty = false
 
 if has_chnlist and api.is_finded("chinadns-ng") then
     o = s:taboption("DNS", Flag, "chinadns_ng", translate("ChinaDNS-NG"), translate("The effect is better, but will increase the memory."))
-    o.default = "1"
+    o.default = "0"
     o:depends({dns_mode = "dns2socks"})
     o:depends({dns_mode = "pdnsd"})
     o:depends({dns_mode = "v2ray", v2ray_dns_mode = "tcp"})
@@ -297,9 +310,6 @@ if has_chnlist and api.is_finded("chinadns-ng") then
     o:depends({dns_mode = "xray", v2ray_dns_mode = "doh"})
     o:depends({dns_mode = "udp"})
 end
-
-o = s:taboption("DNS", Flag, "filter_proxy_ipv6", translate("Filter Proxy Host IPv6"), translate("Experimental feature."))
-o.default = "0"
 
 o = s:taboption("DNS", Button, "clear_ipset", translate("Clear IPSET"), translate("Try this feature if the rule modification does not take effect."))
 o.inputstyle = "remove"
