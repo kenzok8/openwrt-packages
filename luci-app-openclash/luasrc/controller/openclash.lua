@@ -107,10 +107,10 @@ end
 
 local function is_watchdog()
 	local ps_version = luci.sys.exec("ps --version 2>&1 |grep -c procps-ng |tr -d '\n'")
-	if ps_version == "0" then
-		return luci.sys.call("ps |grep openclash_watchdog.sh |grep -v grep >/dev/null") == 0
+	if ps_version == "1" then
+		return luci.sys.call("ps -efw |grep openclash_watchdog.sh |grep -v grep >/dev/null") == 0
 	else
-		return luci.sys.call("ps -ef |grep openclash_watchdog.sh |grep -v grep >/dev/null") == 0
+		return luci.sys.call("ps -w |grep openclash_watchdog.sh |grep -v grep >/dev/null") == 0
 	end
 end
 
@@ -272,6 +272,10 @@ end
 
 local function corever()
 	return uci:get("openclash", "config", "core_version")
+end
+
+local function release_branch()
+	return uci:get("openclash", "config", "release_branch")
 end
 
 local function save_corever_branch()
@@ -919,6 +923,7 @@ function action_update()
 			coretuncv = coretuncv(),
 			opcv = opcv(),
 			corever = corever(),
+			release_branch = release_branch(),
 			upchecktime = upchecktime(),
 			corelv = corelv(),
 			oplv = oplv();
