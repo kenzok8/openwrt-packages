@@ -262,7 +262,6 @@ rules(){
 	fi
 	log "Check IP/GFW files successful!"
 	kcp_enable=$(uci_get_by_name $GLOBAL_SERVER kcp_enable 0)
-	[ $kcp_enable = 1 ] && kcp_server=$server
 	UDP_RELAY_SERVER=$(uci_get_by_type global udp_relay_server)
 	[ "$UDP_RELAY_SERVER" = same ] && UDP_RELAY_SERVER=$GLOBAL_SERVER
 	if [ "$(uci_get_by_name $UDP_RELAY_SERVER kcp_enable 0)" = 1 ];then
@@ -324,6 +323,7 @@ rules(){
 		all)mode=-z;;
 	esac
 
+	[ $kcp_enable = 1 ] && kcp_server=$server
 	if [ -n "$NF_SERVER" -a $run_mode != oversea ];then
 		nf_ip=$(uci_get_by_name $NF_SERVER server)
 		if ! echo $nf_ip | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$">/dev/null;then
