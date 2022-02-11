@@ -18,7 +18,7 @@ function read_config(){
 	"pushbot_sheep" "starttime" "endtime" "pushbot_whitelist" "pushbot_blacklist" "pushbot_interface" "MAC_online_list" "MAC_offline_list" \
 	"up_timeout" "down_timeout" "timeout_retry_count" "thread_num" "soc_code" "pve_host" "pve_port"\
 	"err_enable" "err_sheep_enable" "err_device_aliases" "network_err_event" "system_time_event" "autoreboot_time" "network_restart_time" "public_ip_event" "public_ip_retry_count" \
-	"jsonpath" "dd_webhook" "we_webhook" "pp_token" "pp_channel" "pp_webhook" "pp_topic_enable" "pp_topic" "fs_webhook" "bark_srv_enable" "bark_srv" "bark_token" "bark_sound" "bark_icon" "bark_icon_enable" "bark_level"
+	"jsonpath" "dd_webhook" "we_webhook" "pp_token" "pp_channel" "pp_webhook" "pp_topic_enable" "pp_topic" "fs_webhook" "pushdeer_key" "pushdeer_srv_enable" "pushdeer_srv" "bark_srv_enable" "bark_srv" "bark_token" "bark_sound" "bark_icon" "bark_icon_enable" "bark_level"
 	
 	for str_version in "wrtbwmon" "iputils-arping" "curl" "iw"; do
 		eval `echo ${str_version:0:2}"_version"`=`opkg list-installed|grep -w ^${str_version}|awk '{print $3}'` 2>/dev/null
@@ -45,6 +45,7 @@ function read_config(){
 	[ -z "$down_timeout" ] || [ "$down_timeout" -eq "0" ] && down_timeout="20";down_timeout=`expr ${down_timeout} / 2 + 1`
 	[ -z "$timeout_retry_count" ] && timeout_retry_count="2";[ "$timeout_retry_count" -eq "0" ] && timeout_retry_count="1"
 	[ ! -z "$bark_token" ] && [ -z "$bark_srv" ] && bark_srv="https://api.day.app"
+	[ ! -z "$pushdeer_key" ] && [ -z "$pushdeer_srv" ] && pushdeer_srv="https://api2.pushdeer.com"
 	
 # 字符串读取
 	str_title_start=`/usr/bin/jq -r '.str_title_start' ${jsonpath}`
@@ -85,7 +86,7 @@ function pushbot_init(){
 	[ ! -f "/usr/sbin/wrtbwmon" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】未安装 wrtbwmon ，流量统计不可用" >> ${logfile}
 	[ -z "$ip_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 iputils-arping 版本号，请确认插件是否正常运行" >> ${logfile}
 	[ -z "$cu_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 curl 版本号，请确认插件是否正常运行" >> ${logfile}
-	[ -z "${dd_webhook}${pp_token}${we_webhook}${fs_webhook}${bark_token}" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的Token/Webhook " >> ${logfile} && return 1
+	[ -z "${dd_webhook}${pp_token}${we_webhook}${fs_webhook}${bark_token}${pushdeer_key}" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的Token/Webhook " >> ${logfile} && return 1
 	local interfacelist=`getinterfacelist` && [ -z "$interfacelist" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法正确获取接口信息，请确认插件是否正常运行" >> ${logfile}
 	return 0
 }

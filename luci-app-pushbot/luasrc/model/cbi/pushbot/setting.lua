@@ -46,6 +46,7 @@ a:value("/usr/bin/pushbot/api/ent_wechat.json",translate("企业微信"))
 a:value("/usr/bin/pushbot/api/feishu.json",translate("飞书"))
 a:value("/usr/bin/pushbot/api/bark.json",translate("Bark"))
 a:value("/usr/bin/pushbot/api/pushplus.json",translate("PushPlus"))
+a:value("/usr/bin/pushbot/api/pushdeer.json",translate("PushDeer"))
 a:value("/usr/bin/pushbot/api/diy.json",translate("自定义推送"))
 
 a=s:taboption("basic", Value,"dd_webhook",translate('Webhook'), translate("钉钉机器人 Webhook").."，只输入access_token=后面的即可<br>调用代码获取<a href='https://developers.dingtalk.com/document/robots/custom-robot-access' target='_blank'>点击这里</a><br><br>")
@@ -83,6 +84,19 @@ a:depends("pp_channel","wechat")
 a=s:taboption("basic", Value,"pp_topic",translate('PushPlus Topic'), translate("PushPlus 群组编码").."<br>一对多推送时指定的群组编码<br>具体群组编码Topic设定参见：<a href='http://www.pushplus.plus/push2.html' target='_blank'>点击这里</a><br><br>")
 a.rmempty = true
 a:depends("pp_topic_enable","1")
+
+a=s:taboption("basic", Value,"pushdeer_key",translate('PushDeer Key'), translate("PushDeer Key").."<br>调用代码获取<a href='http://www.pushdeer.com/' target='_blank'>点击这里</a><br><br>")
+a.rmempty = true
+a:depends("jsonpath","/usr/bin/pushbot/api/pushdeer.json")
+
+a=s:taboption("basic", Flag,"pushdeer_srv_enable",translate("自建 PushDeer 服务器"))
+a.default=0
+a.rmempty = true
+a:depends("jsonpath","/usr/bin/pushbot/api/pushdeer.json")
+
+a=s:taboption("basic", Value,"pushdeer_srv",translate('PushDeer Server'), translate("PushDeer 自建服务器地址").."<br>如https://your.domain:port<br>具体自建服务器设定参见：<a href='http://www.pushdeer.com/selfhosted.html' target='_blank'>点击这里</a><br><br>")
+a.rmempty = true
+a:depends("pushdeer_srv_enable","1")
 
 a=s:taboption("basic", Value,"fs_webhook",translate('WebHook'), translate("飞书 WebHook").."<br>调用代码获取<a href='https://www.feishu.cn/hc/zh-CN/articles/360024984973' target='_blank'>点击这里</a><br><br>")
 a.rmempty = true
