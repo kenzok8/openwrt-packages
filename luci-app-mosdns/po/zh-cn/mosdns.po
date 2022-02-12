@@ -1,0 +1,107 @@
+msgid "Basic Setting"
+msgstr "基本设置"
+
+msgid "Manual Configuration"
+msgstr "手动配置"
+
+msgid "MosDNS is a 'programmable' DNS forwarder."
+msgstr "MosDNS 是一个插件化的 DNS 转发/分流器。"
+
+msgid "RUNNING"
+msgstr "运行中"
+
+msgid "NOT RUNNING"
+msgstr "未运行"
+
+msgid "Collecting data..."
+msgstr "获取数据中..."
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Enable DNS Redirect"
+msgstr "启用 DNS 重定向"
+
+msgid "Enable DNS ADblock"
+msgstr "启用 DNS 广告过滤"
+
+msgid "<font color=\"ff0000\"><strong>View the Custom YAML Configuration file used by this MosDNS. You can edit it as you own need."
+msgstr "<font color=\"ff0000\"><strong>注意！此页的更改仅当 'MosDNS 配置文件选择' 为 '自定义配置' 时才会生效"
+
+msgid "<font color=\"ff0000\"><strong>ADblock whitelist."
+msgstr "<font color=\"ff0000\"><strong>广告过滤白名单"
+
+msgid "Geodata Update"
+msgstr "数据库更新"
+
+msgid "Update Time (Every Day)"
+msgstr "更新时间（每天）"
+
+msgid "Update Cycle"
+msgstr "更新周期"
+
+msgid "Every Day"
+msgstr "每天"
+
+msgid "Every Monday"
+msgstr "每周一"
+
+msgid "Every Tuesday"
+msgstr "每周二"
+
+msgid "Every Wednesday"
+msgstr "每周三"
+
+msgid "Every Thursday"
+msgstr "每周四"
+
+msgid "Every Friday"
+msgstr "每周五"
+
+msgid "Every Saturday"
+msgstr "每周六"
+
+msgid "Every Sunday"
+msgstr "每周日"
+
+msgid "Database Update"
+msgstr "数据库更新"
+
+msgid "Check And Update"
+msgstr "检查并更新"
+
+msgid "Enable Auto Database Update"
+msgstr "启用数据库自动更新"
+
+msgid "Enable Config Update"
+msgstr "启用配置文件同步"
+
+msgid "Enable AutoConfiguration"
+msgstr "启用自动化配置"
+
+msgid "This will make the necessary adjustments to other plug-in settings."
+msgstr "对其他插件的设置进行必要的设置，目前仅支持 SSRP VSSR PASSWALL。"
+
+msgid "This will revert the adjustments."
+msgstr "还原设置助手对其他插件进行的配置设定。"
+
+msgid "DNS Helper"
+msgstr "DNS 设置助手"
+
+msgid "Revert Settings"
+msgstr "DNS 设置还原"
+
+msgid "Apply"
+msgstr "应用"
+
+msgid "MosDNS Config File"
+msgstr "MosDNS 配置文件选择"
+
+msgid "Def Config"
+msgstr "内置预设"
+
+msgid "Cus Config"
+msgstr "自定义配置"
+
+msgid "MosDNS Log File"
+msgstr "MosDNS 日志文件"
