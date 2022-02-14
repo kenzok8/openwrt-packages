@@ -285,8 +285,8 @@ msgstr "(通讯协议)"
 msgid "Proxy IPv6 Traffic"
 msgstr "IPv6 流量代理"
 
-msgid "Disable IPv6 DHCP To Avoid Abnormal Connection If You Do Not Use"
-msgstr "如果您不使用，请禁用IPv6的DHCP以避免连接异常"
+msgid "The Gateway and DNS of The Connected Device Must be The Router IP, Disable IPv6 DHCP To Avoid Abnormal Connection If You Do Not Use"
+msgstr "连接设备的网关和DNS须为路由器IP，如果您不使用，请禁用IPv6的DHCP以避免连接异常"
 
 msgid "IPv6 DNS Resolve"
 msgstr "允许IPv6类型DNS解析"
@@ -2641,3 +2641,39 @@ msgstr "*远程域名解析"
 
 msgid "Add DNS Remote Support For Redir-Host"
 msgstr "Redir-Host模式强制进行远程域名解析"
+
+msgid "Bypass Gateway Compatible"
+msgstr "旁路网关（旁路由）兼容"
+
+msgid "If The Ntwork Cannot be Connected in Bypass Gateway Mode, Please Try to Enable."
+msgstr "旁路网关（旁路由）模式下网络无法连接时请尝试启用。"
+
+msgid "Suggestion: If The Device Does Not Have WLAN, Please Disable The Lan Interface's Bridge Option"
+msgstr "建议：如果设备没有WLAN，请禁用Lan接口的桥接接口选项"
+
+msgid "Github Address Modify"
+msgstr "Github 地址修改"
+
+msgid "Modify The Github Address In The Config And OpenClash With Proxy(CDN) To Prevent File Download Faild. Format Reference:"
+msgstr "使用指定代理（CDN）反代插件和配置文件中的Github地址，以防止文件下载失败，格式参考："
+
+msgid "File Edit"
+msgstr "文件编辑"
+
+msgid "Create File"
+msgstr "新建文件"
+
+msgid "Paste the name of the new file (including the extension) here"
+msgstr "请在此输入要新建的文件名称（含扩展名）"
+
+msgid "Delay Start (s)"
+msgstr "延迟启动（秒）"
+
+msgid "Delay Start On Boot"
+msgstr "系统重启时延迟启动"
+
+msgid "Enable Delay Start, OpenClash Will Start After"
+msgstr "延迟启动已启用，OpenClash 将在"
+
+msgid "Secends..."
+msgstr "秒后开始启动..."

@@ -83,7 +83,7 @@ o:value("script", translate("Script Proxy Mode (Tun Core Only)"))
 o.default = "rule"
 
 o = s:taboption("op_mode", Flag, "ipv6_enable", font_red..bold_on..translate("Proxy IPv6 Traffic")..bold_off..font_off)
-o.description = font_red..bold_on..translate("Disable IPv6 DHCP To Avoid Abnormal Connection If You Do Not Use")..bold_off..font_off
+o.description = font_red..bold_on..translate("The Gateway and DNS of The Connected Device Must be The Router IP, Disable IPv6 DHCP To Avoid Abnormal Connection If You Do Not Use")..bold_off..font_off
 o.default=0
 
 o = s:taboption("op_mode", Flag, "china_ip6_route", translate("China IPv6 Route"))
@@ -113,6 +113,10 @@ o:depends("en_mode", "redir-host")
 o:depends("en_mode", "redir-host-tun")
 o:depends("en_mode", "redir-host-mix")
 
+o = s:taboption("op_mode", Flag, "bypass_gateway_compatible", translate("Bypass Gateway Compatible"))
+o.description = translate("If The Ntwork Cannot be Connected in Bypass Gateway Mode, Please Try to Enable.")..font_red..bold_on..translate("Suggestion: If The Device Does Not Have WLAN, Please Disable The Lan Interface's Bridge Option")..bold_off..font_off
+o.default=0
+
 o = s:taboption("op_mode", Flag, "small_flash_memory", translate("Small Flash Memory"))
 o.description = translate("Move Core And GEOIP Data File To /tmp/etc/openclash For Small Flash Memory Device")
 o.default=0
@@ -139,6 +143,17 @@ o:value("100")
 o:value("150")
 o.datatype = "uinteger"
 o.default = "0"
+
+o = s:taboption("settings", Value, "github_address_mod", font_red..bold_on..translate("Github Address Modify")..bold_off..font_off)
+o.description = translate("Modify The Github Address In The Config And OpenClash With Proxy(CDN) To Prevent File Download Faild. Format Reference:").." ".."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://ghproxy.com/\")'>https://ghproxy.com/</a>"
+o:value("0", translate("Disable"))
+o:value("https://cdn.jsdelivr.net/")
+o.default = "0"
+
+o = s:taboption("settings", Value, "delay_start", translate("Delay Start (s)"))
+o.description = translate("Delay Start On Boot")
+o.default = "0"
+o.datatype = "uinteger"
 
 o = s:taboption("settings", ListValue, "log_level", translate("Log Level"))
 o.description = translate("Select Core's Log Level")
@@ -571,7 +586,7 @@ o.placeholder = "HBO|HBOGO|HBO GO"
 o.description = translate("It Will Be Searched According To The Regex When Auto Search Group Fails")
 o:depends("stream_auto_select_hbo_go_asia", "1")
 
-o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_hbo_go_asia", translate("HBO Max Unlock Region Filter"))
+o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_hbo_go_asia", translate("HBO GO Asia Unlock Region Filter"))
 o.default = ""
 o.placeholder = "HK|SG|TW"
 o.description = translate("It Will Be Selected Region According To The Regex")
@@ -587,7 +602,7 @@ o.placeholder = "TVB"
 o.description = translate("It Will Be Searched According To The Regex When Auto Search Group Fails")
 o:depends("stream_auto_select_tvb_anywhere", "1")
 
-o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_tvb_anywhere", translate("HBO Max Unlock Region Filter"))
+o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_tvb_anywhere", translate("TVB Anywhere+ Unlock Region Filter"))
 o.default = ""
 o.placeholder = "HK|SG|TW"
 o.description = translate("It Will Be Selected Region According To The Regex")

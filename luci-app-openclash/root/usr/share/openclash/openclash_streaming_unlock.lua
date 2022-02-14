@@ -11,7 +11,7 @@ local UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 local filmId = 70143836
 local type = arg[1]
 local enable = tonumber(uci:get("openclash", "config", "stream_auto_select")) or 0
-local now_name, group_name, group_type, group_show, status
+local now_name, group_name, group_type, group_show, status, ip, port, passwd, group_match_name
 local groups = {}
 local proxies = {}
 
@@ -19,9 +19,6 @@ if enable == 0 or not type then os.exit(0) end
 
 function unlock_auto_select()
 	local key_group, region, now, proxy, group_match, proxy_default, auto_get_group, info, group_now
-	local port = uci:get("openclash", "config", "cn_port")
-	local passwd = uci:get("openclash", "config", "dashboard_password") or ""
-	local ip = luci.sys.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n'")
 	local original = {}
 	local other_region_unlock = {}
 	local tested_proxy = {}
@@ -48,12 +45,8 @@ function unlock_auto_select()
 	local other_region_unlock_no_select = "but not match the regex! the type of group is not select, auto select could not work!"
 	local other_region_unlock_test_start = "full support but not match the regex! start auto select unlock proxy..."
 	
-	if not ip or ip == "" then
-		ip = luci.sys.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
-	end
-	if not ip or not port then
-		os.exit(0)
-	end
+	--Get ip port and password
+	get_auth_info()
 	
 	info = luci.sys.exec(string.format('curl -sL -m 3 --retry 2 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -XGET http://%s:%s/proxies', passwd, ip, port))
 	if info then
@@ -107,6 +100,7 @@ function unlock_auto_select()
 				break
 			else
 				--get groups info
+				group_match_name = value.name
 				get_proxy(info, value.name, value.name)
 				table.insert(tested_proxy, now_name)
 				group_match = true
@@ -254,6 +248,7 @@ function unlock_auto_select()
 							break
 						end
 						if status == 2 then
+							close_connections()
 							break
 						elseif i == #(value.all) and (#original > 0 or #other_region_unlock > 0) then
 							if #other_region_unlock > 0 then
@@ -265,6 +260,7 @@ function unlock_auto_select()
 								luci.sys.exec(string.format("curl -sL -m 3 --retry 2 -w %%{http_code} -o /dev/null -H 'Authorization: Bearer %s' -H 'Content-Type:application/json' -X PUT -d '{\"name\":\"%s\"}' http://%s:%s/proxies/%s", passwd, v[1], ip, port, urlencode(value.name)))
 								luci.sys.exec(string.format("curl -sL -m 3 --retry 2 -w %%{http_code} -o /dev/null -H 'Authorization: Bearer %s' -H 'Content-Type:application/json' -X PUT -d '{\"name\":\"%s\"}' http://%s:%s/proxies/%s", passwd, v[3], ip, port, urlencode(v[2])))
 								if #other_region_unlock > 0 then
+									close_connections()
 									print(os.date("%Y-%m-%d %H:%M:%S").." "..type.." "..gorup_i18.."【"..value.name.."】"..select_faild_other_region.."【"..v[3].."】")
 								else
 									print(os.date("%Y-%m-%d %H:%M:%S").." "..type.." "..gorup_i18.."【"..value.name.."】"..select_faild.."【"..v[3].."】")
@@ -307,6 +303,41 @@ function unlock_auto_select()
 	end
 	if not group_match and not auto_get_group then
 		print(os.date("%Y-%m-%d %H:%M:%S").." "..type.." "..gorup_i18.."【"..key_group.."】"..no_group_find)
+	end
+end
+
+function get_auth_info()
+	port = uci:get("openclash", "config", "cn_port")
+	passwd = uci:get("openclash", "config", "dashboard_password") or ""
+	ip = luci.sys.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n'")
+	
+	if not ip or ip == "" then
+		ip = luci.sys.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
+	end
+	if not ip or not port then
+		os.exit(0)
+	end
+end
+
+function close_connections()
+	local con
+	local group_cons_id = {}
+	con = luci.sys.exec(string.format('curl -sL -m 5 --retry 2 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -XGET http://%s:%s/connections', passwd, ip, port))
+	if con then
+		con = json.parse(con)
+	end
+	if con then
+		for i = 1, #(con.connections) do
+			if con.connections[i].chains[#(con.connections[i].chains)] == group_match_name then
+				table.insert(group_cons_id, (con.connections[i].id))
+			end
+		end
+		--close connections
+		if #(group_cons_id) > 0 then
+			for i = 1, #(group_cons_id) do
+				luci.sys.exec(string.format('curl -sL -m 5 --retry 2 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -X DELETE http://%s:%s/connections/%s >/dev/null 2>&1', passwd, ip, port, group_cons_id[i]))
+			end
+		end
 	end
 end
 
@@ -536,6 +567,8 @@ function datamatch(data, regex)
 	if result == "true" then return true else return false end
 end
 
+-- Thanks https://github.com/lmc999/RegionRestrictionCheck --
+
 function netflix_unlock_test()
 	status = 0
 	local url = "https://www.netflix.com/title/"..filmId
@@ -566,33 +599,55 @@ end
 
 function disney_unlock_test()
 	status = 0
-	local url = "https://global.edge.bamgrid.com/token"
-	local url2 = "https://www.disneyplus.com"
-	local headers = '-H "Accept-Language: en" -H "authorization: Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84" -H "Content-Type: application/x-www-form-urlencoded"'
-	local auth = '"grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&latitude=0&longitude=0&platform=browser&subject_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJiNDAzMjU0NS0yYmE2LTRiZGMtOGFlOS04ZWI3YTY2NzBjMTIiLCJhdWQiOiJ1cm46YmFtdGVjaDpzZXJ2aWNlOnRva2VuIiwibmJmIjoxNjIyNjM3OTE2LCJpc3MiOiJ1cm46YmFtdGVjaDpzZXJ2aWNlOmRldmljZSIsImV4cCI6MjQ4NjYzNzkxNiwiaWF0IjoxNjIyNjM3OTE2LCJqdGkiOiI0ZDUzMTIxMS0zMDJmLTQyNDctOWQ0ZC1lNDQ3MTFmMzNlZjkifQ.g-QUcXNzMJ8DwC9JqZbbkYUSKkB1p4JGW77OON5IwNUcTGTNRLyVIiR8mO6HFyShovsR38HRQGVa51b15iAmXg&subject_token_type=urn%3Abamtech%3Aparams%3Aoauth%3Atoken-type%3Adevice"'
-	local httpcode = luci.sys.exec(string.format("curl -sL -m 3 --retry 2 -o /dev/null -w %%{http_code} %s -H 'User-Agent: %s' -d %s -XPOST %s", headers, UA, auth, url))
-	local region
+	local url = "https://global.edge.bamgrid.com/devices"
+	local url2 = "https://global.edge.bamgrid.com/token"
+	local url3 = "https://disney.api.edge.bamgrid.com/graph/v1/device/graphql"
+	local headers = '-H "Accept-Language: en" -H "Content-Type: application/json" -H "authorization: ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84"'
+	local auth = '-H "authorization: Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84"'
+	local body = '{"query":"mutation registerDevice($input: RegisterDeviceInput!) { registerDevice(registerDevice: $input) { grant { grantType assertion } } }","variables":{"input":{"deviceFamily":"browser","applicationRuntime":"chrome","deviceProfile":"windows","deviceLanguage":"en","attributes":{"osDeviceIds":[],"manufacturer":"microsoft","model":null,"operatingSystem":"windows","operatingSystemVersion":"10.0","browserName":"chrome","browserVersion":"96.0.4606"}}}}'
+	local region, assertion, data, preassertion, disneycookie, tokencontent
 	local regex = uci:get("openclash", "config", "stream_auto_select_region_key_disney") or ""
-	if tonumber(httpcode) == 200 then
-		status = 1
-		local url_effective = luci.sys.exec(string.format("curl -sL -m 3 --retry 2 -o /dev/null -w %%{url_effective} -H 'Content-Type: application/json' -H 'User-Agent: %s' %s", UA, url2))
-		if url_effective == "https://disneyplus.disney.co.jp/" then
-			status = 2
-			region = "JP"
-			if not datamatch(region, regex) then
-				status = 3
-			end
-			return region
-		elseif string.find(url_effective,"hotstar") then
+	
+	preassertion = luci.sys.exec(string.format("curl -sL -m 3 --retry 2 %s -H 'User-Agent: %s' -H 'content-type: application/json; charset=UTF-8' -d '{\"deviceFamily\":\"browser\",\"applicationRuntime\":\"chrome\",\"deviceProfile\":\"windows\",\"attributes\":{}}' -XPOST %s", auth, UA, url))
+
+	if preassertion and json.parse(preassertion) then
+		assertion = json.parse(preassertion).assertion
+	end
+	
+	if not assertion then return end
+
+	disneycookie = "grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Atoken-exchange&latitude=0&longitude=0&platform=browser&subject_token="..assertion.."&subject_token_type=urn%3Abamtech%3Aparams%3Aoauth%3Atoken-type%3Adevice"
+	tokencontent = luci.sys.exec(string.format("curl -sL -m 3 --retry 2 %s -H 'User-Agent: %s' -d '%s' -XPOST %s", auth, UA, disneycookie, url2))
+
+	if tokencontent and json.parse(tokencontent) then
+		if json.parse(tokencontent).error_description then
+			status = 1
 			return
 		end
-		local region = luci.sys.exec(string.format("curl -sL -m 3 --retry 2 -H 'Content-Type: application/json' -H 'User-Agent: %s' %s |grep 'Region: ' |awk '{print $2}' |tr -d '\n'", UA, url2))
-		if region and region ~= "" then
-			status = 2
-			if not datamatch(region, regex) then
-				status = 3
+	end
+	
+	data = luci.sys.exec(string.format("curl -sL -m 3 --retry 2 %s -H 'User-Agent: %s' -d '%s' -XPOST %s", headers, UA, body, url3))
+
+	if data and json.parse(data) then
+		status = 1
+		if json.parse(data).extensions and json.parse(data).extensions.sdk and json.parse(data).extensions.sdk.session then
+			region = json.parse(data).extensions.sdk.session.location.countryCode or ""
+			inSupportedLocation = json.parse(data).extensions.sdk.session.inSupportedLocation or ""
+			if region == "JP" then
+				status = 2
+				if not datamatch(region, regex) then
+					status = 3
+				end
+				return region
 			end
-			return region
+
+			if region and region ~= "" and inSupportedLocation then
+				status = 2
+				if not datamatch(region, regex) then
+					status = 3
+				end
+				return region
+			end
 		end
 	end
 	return

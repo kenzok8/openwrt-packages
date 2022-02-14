@@ -300,8 +300,16 @@ yml_provider_path()
          x['path']='./$3/'+v
       end
       #CDN Replace
-      if x['url'] and x['url'] =~ /^https:\/\/raw.githubusercontent.com/ then
-         x['url'] = 'https://cdn.jsdelivr.net/gh/' + x['url'].split('/')[3] + '/' + x['url'].split('/')[4] + '@' + x['url'].split(x['url'].split('/')[2] + '/' + x['url'].split('/')[3] + '/' + x['url'].split('/')[4] + '/')[1]
+      if '$4' != '0' then
+         if '$4' == 'https://cdn.jsdelivr.net/' then
+            if x['url'] and x['url'] =~ /^https:\/\/raw.githubusercontent.com/ then
+               x['url'] = 'https://cdn.jsdelivr.net/gh/' + x['url'].split('/')[3] + '/' + x['url'].split('/')[4] + '@' + x['url'].split(x['url'].split('/')[2] + '/' + x['url'].split('/')[3] + '/' + x['url'].split('/')[4] + '/')[1]
+            end
+         else
+            if x['url'] and x['url'] =~ /^https:\/\/(raw.|gist.)(githubusercontent.com|github.com)/ then
+               x['url'] = '$4' + x['url']
+            end
+         end
       end
       };
       if not Value_1.eql?(Value['$2']) then
@@ -434,7 +442,7 @@ yml_dns_get()
       return
    fi
    
-   if [[ $ip =~ $regex ]]; then
+   if [[ "$ip" =~ "$regex" ]]; then
       ip="[${ip}]"
    fi
 
@@ -756,7 +764,16 @@ yml_gen_rule_provider_file()
    RULE_PROVIDER_FILE_BEHAVIOR=$(grep ",$RULE_PROVIDER_FILE_NAME$" /usr/share/openclash/res/rule_providers.list |awk -F ',' '{print $3}' 2>/dev/null)
    RULE_PROVIDER_FILE_PATH="/etc/openclash/rule_provider/$RULE_PROVIDER_FILE_NAME"
    RULE_PROVIDER_FILE_URL_PATH="$(grep ",$RULE_PROVIDER_FILE_NAME$" /usr/share/openclash/res/rule_providers.list |awk -F ',' '{print $4$5}' 2>/dev/null)"
-   RULE_PROVIDER_FILE_URL="https://cdn.jsdelivr.net/gh/"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"@master"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F 'master' '{print $2}')""
+   if [ "$github_address_mod" -eq 0 ]; then
+      RULE_PROVIDER_FILE_URL="https://raw.githubusercontent.com/${RULE_PROVIDER_FILE_URL_PATH}"
+   else
+      if [ "$github_address_mod" == "https://cdn.jsdelivr.net/" ]; then
+         RULE_PROVIDER_FILE_URL="https://cdn.jsdelivr.net/gh/"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"@master"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F 'master' '{print $2}')""
+      else
+         RULE_PROVIDER_FILE_URL="${github_address_mod}https://raw.githubusercontent.com/${RULE_PROVIDER_FILE_URL_PATH}"
+      fi
+      
+   fi
    if [ -n "$(grep "$RULE_PROVIDER_FILE_URL" $RULE_PROVIDER_FILE 2>/dev/null)" ]; then
       return
    fi
@@ -1166,6 +1183,9 @@ do_run_mode()
 do_run_file()
 {
 
+   #Some MIPS devices file system cound not use db
+   source "/etc/openwrt_release"
+   [ "$small_flash_memory" == "1" ] || [ -n "$(echo $core_version |grep mips)" ] || [ -n "$(echo $DISTRIB_ARCH |grep mips)" ] || [ -n "$(opkg status libc 2>/dev/null |grep 'Architecture' |awk -F ': ' '{print $2}' |grep mips)" ] && mkdir -p /tmp/etc/openclash && CACHE_PATH="/tmp/etc/openclash/cache.db"
    if [ "$small_flash_memory" != "1" ]; then
       dev_core_path="/etc/openclash/core/clash"
       tun_core_path="/etc/openclash/core/clash_tun"
@@ -1176,23 +1196,22 @@ do_run_file()
       mv "/tmp/etc/openclash/china_ip_route.ipset" "$chnr_path" 2>/dev/null
       mv "/tmp/etc/openclash/china_ip6_route.ipset" "$chnr6_path" 2>/dev/null
       mv "/tmp/etc/openclash/core/" "/etc/openclash" 2>/dev/null
-      mv "/tmp/etc/openclash/cache.db" "/etc/openclash/cache.db" 2>/dev/null
-      rm -rf "/tmp/etc/openclash" 2>/dev/null
+      if [ "$CACHE_PATH" != "/tmp/etc/openclash/cache.db" ]; then
+         rm -rf "/tmp/etc/openclash" 2>/dev/null
+      fi
    else
       dev_core_path="/tmp/etc/openclash/core/clash"
       tun_core_path="/tmp/etc/openclash/core/clash_tun"
       geoip_path="/tmp/etc/openclash/Country.mmdb"
       chnr_path="/tmp/etc/openclash/china_ip_route.ipset"
       chnr6_path="/tmp/etc/openclash/china_ip6_route.ipset"
-      CACHE_PATH="/tmp/etc/openclash/cache.db"
-      mkdir -p /tmp/etc/openclash
       [ ! -h "/etc/openclash/Country.mmdb" ] && mv "/etc/openclash/Country.mmdb" "$geoip_path" 2>/dev/null
       [ ! -h "/etc/openclash/china_ip_route.ipset" ] && mv "/etc/openclash/china_ip_route.ipset" "$chnr_path" 2>/dev/null
       [ ! -h "/etc/openclash/china_ip6_route.ipset" ] && mv "/etc/openclash/china_ip6_route.ipset" "$chnr6_path" 2>/dev/null
       mv "/etc/openclash/core/" "/tmp/etc/openclash" 2>/dev/null
-      [ ! -h "/etc/openclash/cache.db" ] && mv "/etc/openclash/cache.db" "$CACHE_PATH" 2>/dev/null
    fi
     
+   rm -rf "/etc/openclash/cache.db" 2>/dev/null
    rm -rf "/etc/openclash/clash" 2>/dev/null
     
    if [ -n "$en_mode_tun" ]; then
@@ -1292,12 +1311,16 @@ do_run_file()
       ln -s "$chnr6_path" /etc/openclash/china_ip6_route.ipset 2>/dev/null
    }
    
-   #Resore history cache
+   #Restore history cache
    if [ -f "$HISTORY_PATH" ] && [ -f "$HISTORY_PATH_OLD" ]; then
       if [ "$(date -r $HISTORY_PATH +%s)" -ge "$(date -r $HISTORY_PATH_OLD +%s)" ]; then
          cmp -s "$CACHE_PATH" "$HISTORY_PATH"
          if [ "$?" -ne "0" ]; then
-            cp "$HISTORY_PATH" "$CACHE_PATH" 2>/dev/null
+            if [ "$CACHE_PATH" != "/tmp/etc/openclash/cache.db" ]; then
+               ln -s "$HISTORY_PATH" "$CACHE_PATH" 2>/dev/null
+            else
+               cp "$HISTORY_PATH" "$CACHE_PATH" 2>/dev/null
+            fi
          fi
       else
          cmp -s "$CACHE_PATH_OLD" "$HISTORY_PATH_OLD"
@@ -1305,11 +1328,15 @@ do_run_file()
             cp "$HISTORY_PATH_OLD" "$CACHE_PATH_OLD" 2>/dev/null
          fi
       fi
-   else
+   else  	
       if [ -f "$HISTORY_PATH" ]; then
          cmp -s "$CACHE_PATH" "$HISTORY_PATH"
          if [ "$?" -ne "0" ]; then
-            cp "$HISTORY_PATH" "$CACHE_PATH" 2>/dev/null
+            if [ "$CACHE_PATH" != "/tmp/etc/openclash/cache.db" ]; then
+               ln -s "$HISTORY_PATH" "$CACHE_PATH" 2>/dev/null
+            else
+               cp "$HISTORY_PATH" "$CACHE_PATH" 2>/dev/null
+            fi
          fi
       fi
       if [ -f "$HISTORY_PATH_OLD" ]; then
@@ -1319,10 +1346,15 @@ do_run_file()
          fi
       fi
    fi
-   [ -f "$CACHE_PATH" ] && [ "$small_flash_memory" = "1" ] && {
-      ln -s "$CACHE_PATH" /etc/openclash/cache.db 2>/dev/null
-   }
    
+   if [ "$CACHE_PATH" == "/tmp/etc/openclash/cache.db" ]; then
+      [ ! -f "$CACHE_PATH" ] && touch "$CACHE_PATH"
+      ln -s "$CACHE_PATH" /etc/openclash/cache.db 2>/dev/null
+   else
+      [ ! -f "$CACHE_PATH" ] && touch "$HISTORY_PATH"
+      ln -s "$HISTORY_PATH" "$CACHE_PATH" 2>/dev/null
+   fi
+       
    if [ -z "$_koolshare" ]; then
       if ! capsh --is-uid=0 >/dev/null || ! capsh --has-ambient >/dev/null; then
         LOG_OUT "Error: Could Not Load The Capsh Library, Please Verify The Capsh Shell Library Work Well"
@@ -1704,13 +1736,19 @@ if [ "$china_ip_route" = "1" ] || [ "$disable_udp_quic" = "1" ]; then
    ipset -! restore </etc/openclash/china_ip_route.ipset 2>/dev/null
 fi
 
-if [ "$enable_redirect_dns" -eq 1 ] && [ -z "$(iptables -t nat -nL PREROUTING --line-number |grep 'DNS Hijack')"]; then
+if [ "$enable_redirect_dns" -eq 1 ] && [ -z "$(iptables -t nat -nL PREROUTING --line-number |grep 'OpenClash DNS Hijack')"]; then
    DNSPORT=$(uci -q get dhcp.@dnsmasq[0].port)
    if [ -z "$DNSPORT" ]; then
       DNSPORT=$(netstat -nlp |grep -E '127.0.0.1:.*dnsmasq' |awk -F '127.0.0.1:' '{print $2}' |awk '{print $1}' |head -1 || echo "$dns_port")
    fi
-   iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
-   iptables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
+   iptables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "OpenClash DNS Hijack"
+   iptables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "OpenClash DNS Hijack"
+fi
+
+#Bypass Gateway Compatible
+if [ "$bypass_gateway_compatible" -eq 1 ]; then
+   iptables -t nat -I POSTROUTING -m addrtype ! --src-type LOCAL -m owner ! --uid-owner 65534 -m comment --comment "OpenClash Bypass Gateway Compatible" -j MASQUERADE
+   iptables -t nat -I POSTROUTING -m mark --mark "$PROXY_FWMARK" -m comment --comment "OpenClash Bypass Gateway Compatible" -j ACCEPT
 fi
 
 #lan_ac
@@ -1876,9 +1914,9 @@ if [ -z "$en_mode_tun" ] || [ "$en_mode_tun" -eq 2 ]; then
       if [ "$en_mode" = "fake-ip" ]; then
          iptables -t nat -N openclash_output
          iptables -t nat -F openclash_output
-         if [ "$enable_redirect_dns" -eq 1 ] && [ -z "$(iptables -t nat -nL OUTPUT --line-number |grep 'DNS Hijack')"]; then
-            iptables -t nat -I OUTPUT -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
-            iptables -t nat -I OUTPUT -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
+         if [ "$enable_redirect_dns" -eq 1 ] && [ -z "$(iptables -t nat -nL OUTPUT --line-number |grep 'OpenClash DNS Hijack')"]; then
+            iptables -t nat -I OUTPUT -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "OpenClash DNS Hijack"
+            iptables -t nat -I OUTPUT -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "OpenClash DNS Hijack"
          fi
          iptables -t nat -A openclash_output -m set --match-set localnetwork dst -j RETURN
          if [ "$intranet_allowed" -eq 1 ]; then
@@ -1940,6 +1978,7 @@ if [ -n "$en_mode_tun" ]; then
    iptables -t mangle -N openclash_dns_hijack
    iptables -t mangle -F openclash_dns_hijack
    #其他流量
+   iptables -t mangle -A openclash -i utun -j RETURN >/dev/null 2>&1
    iptables -t mangle -A openclash -m set --match-set localnetwork dst -j RETURN >/dev/null 2>&1
    iptables -t mangle -A openclash -m set --match-set wan_ac_black_ips dst -j RETURN >/dev/null 2>&1
    iptables -t mangle -A openclash -m set --match-set lan_ac_black_ips src -j RETURN >/dev/null 2>&1
@@ -1973,12 +2012,12 @@ if [ -n "$en_mode_tun" ]; then
          iptables -t nat -N openclash_post
          iptables -t nat -F openclash_post
          iptables -t nat -A openclash_post -m owner ! --uid-owner 65534 -i lo -d 127.0.0.1 -j SNAT --to-source "$lan_ip"
-         iptables -t nat -A POSTROUTING -j openclash_post
+         iptables -t nat -I POSTROUTING -j openclash_post
       elif [ "$en_mode" = "fake-ip" ]; then
          iptables -t nat -N openclash_post
          iptables -t nat -F openclash_post
          iptables -t nat -A openclash_post -i lo -d 127.0.0.1 -j SNAT --to-source "$lan_ip"
-         iptables -t nat -A POSTROUTING -j openclash_post
+         iptables -t nat -I POSTROUTING -j openclash_post
       fi
    fi
    
@@ -1991,13 +2030,11 @@ if [ -n "$en_mode_tun" ]; then
    fi
 fi
 
-
-
 #ipv6
 if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Chain')" ]; then
    if [ "$enable_redirect_dns" -eq 1 ] && [ -z "$(ip6tables -t nat -nL PREROUTING --line-number |grep 'dns_hijack')"]; then
-      ip6tables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
-      ip6tables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "DNS Hijack"
+      ip6tables -t nat -I PREROUTING -p udp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "OpenClash DNS Hijack"
+      ip6tables -t nat -I PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports "$DNSPORT" -m comment --comment "OpenClash DNS Hijack"
    fi
 
    if [ "$china_ip6_route" = "1" ] || [ "$disable_udp_quic" = "1" ]; then
@@ -2049,7 +2086,7 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
    if [ "$china_ip6_route" = "1" ]; then
       ip6tables -t mangle -A openclash -m set --match-set china_ip6_route dst -j RETURN >/dev/null 2>&1
    fi
-   ip6tables -t mangle -A openclash -p tcp -m comment --comment "OpenClash" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
+   ip6tables -t mangle -A openclash -p tcp -m comment --comment "OpenClash TCP Mark" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
    ip6tables -t mangle -A PREROUTING -j openclash
 
    if [ -z "$_koolshare" ]; then
@@ -2076,6 +2113,10 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
 	    ip6tables -I INPUT -p udp --dport 443 -m comment --comment "OpenClash QUIC REJECT" -m set ! --match-set china_ip6_route dst -j REJECT >/dev/null 2>&1
    fi
    
+   if [ "$bypass_gateway_compatible" -eq 1 ]; then
+   	  ip6tables -t nat -I POSTROUTING -m addrtype ! --src-type LOCAL -m owner ! --uid-owner 65534 -m comment --comment "OpenClash Bypass Gateway Compatible" -j MASQUERADE
+      ip6tables -t nat -I POSTROUTING -m mark --mark "$PROXY_FWMARK" -m comment --comment "OpenClash Bypass Gateway Compatible" -j ACCEPT
+   fi
 fi 2>/dev/null
 
 #端口转发
@@ -2101,7 +2142,7 @@ revert_firewall()
    ip tuntap del utun mode tun >/dev/null 2>&1
    
    for ipt in "iptables -nvL INPUT" "iptables -nvL FORWARD" "iptables -nvL POSTROUTING -t nat" "iptables -nvL OUTPUT -t nat" "iptables -nvL OUTPUT -t mangle" "iptables -nvL PREROUTING -t nat" "iptables -nvL PREROUTING -t mangle" "ip6tables -nvL PREROUTING -t mangle" "ip6tables -nvL OUTPUT -t mangle" "ip6tables -nvL PREROUTING -t nat" "ip6tables -nvL INPUT"; do
-      for comment in "openclash" "DNS Hijack" "OpenClash"; do
+      for comment in "openclash" "OpenClash"; do
          local lines=$($ipt |sed 1,2d |sed -n "/${comment}/=" 2>/dev/null |sort -rn)
          if [ -n "$lines" ]; then
             for line in $lines; do
@@ -2177,6 +2218,9 @@ get_config()
    append_wan_dns=$(uci -q get openclash.config.append_wan_dns || echo 1)
    store_fakeip=$(uci -q get openclash.config.store_fakeip || echo 1)
    dns_remote=$(uci -q get openclash.config.dns_remote || echo 1)
+   bypass_gateway_compatible=$(uci -q get openclash.config.bypass_gateway_compatible || echo 0)
+   core_version=$(uci -q get openclash.config.core_version || echo 0)
+   github_address_mod=$(uci -q get openclash.config.github_address_mod || echo 0)
    _koolshare=$(cat /usr/lib/os-release 2>/dev/null |grep OPENWRT_RELEASE 2>/dev/null |grep -i koolshare 2>/dev/null)
    [ -z "$dns_port" ] && dns_port=7874 && uci -q set openclash.config.dns_port=7874
    [ "$ipv6_enable" -eq 1 ] && [ "$intranet_allowed" -eq 1 ] && intranet_allowed=0 && uci -q set openclash.config.intranet_allowed=0
@@ -2214,8 +2258,8 @@ start()
       /usr/share/openclash/yml_rules_change.sh 2>/dev/null "$LOGTIME" "$rule_source" "$enable_custom_clash_rules" "$CONFIG_FILE" "$enable_rule_proxy" "$CONFIG_NAME"
       yml_custom_rule_provider
       yml_game_custom
-      yml_provider_path "$CONFIG_FILE" "proxy-providers" "proxy_provider"
-      yml_provider_path "$CONFIG_FILE" "rule-providers" "rule_provider"
+      yml_provider_path "$CONFIG_FILE" "proxy-providers" "proxy_provider" "$github_address_mod"
+      yml_provider_path "$CONFIG_FILE" "rule-providers" "rule_provider" "$github_address_mod"
       yml_vmess_compatible "$CONFIG_FILE" "proxies"
       yml_dns_check "$CONFIG_FILE"  "$FALLBACK_FILTER_FILE"
       yml_tolerance_set "$CONFIG_FILE" "$tolerance"
@@ -2300,17 +2344,19 @@ stop()
 
    LOG_OUT "Step 6: Delete OpenClash Residue File..."
    if [ "$enable" != "1" ]; then
-      rm -rf /www/luci-static/openclash
-      rm -rf /tmp/clash_last_version
-      rm -rf /tmp/Proxy_Group
-      rm -rf /tmp/rules_name
-      rm -rf /tmp/rule_providers_name
-      rm -rf /tmp/openclash_fake_filter.list
-      rm -rf /tmp/openclash_servers_fake_filter.conf
-      rm -rf /tmp/openclash_last_version
-      rm -rf /tmp/openclash_config.tmp
-      rm -rf /tmp/openclash.change
-      rm -rf /tmp/openclash_debug.log
+      rm -rf /www/luci-static/openclash >/dev/null 2>&1
+      rm -rf /tmp/clash_last_version >/dev/null 2>&1
+      rm -rf /tmp/Proxy_Group >/dev/null 2>&1
+      rm -rf /tmp/rules_name >/dev/null 2>&1
+      rm -rf /tmp/rule_providers_name >/dev/null 2>&1
+      rm -rf /tmp/openclash_fake_filter.list >/dev/null 2>&1
+      rm -rf /tmp/openclash_servers_fake_filter.conf >/dev/null 2>&1
+      rm -rf /tmp/openclash_last_version >/dev/null 2>&1
+      rm -rf /tmp/openclash_config.tmp >/dev/null 2>&1
+      rm -rf /tmp/openclash.change >/dev/null 2>&1
+      rm -rf /tmp/openclash_debug.log >/dev/null 2>&1
+      rm -rf /tmp/etc/openclash >/dev/null 2>&1
+      rm -rf /tmp/openclash_edit_file_name >/dev/null 2>&1
       del_lock
       LOG_OUT "OpenClash Already Stop!"
       sleep 3
@@ -2318,8 +2364,8 @@ stop()
    fi
    
    del_cron
-   rm -rf /tmp/yaml_*
-   rm -rf $START_LOG
+   rm -rf /tmp/yaml_* >/dev/null 2>&1
+   rm -rf $START_LOG >/dev/null 2>&1
    echo "OpenClash Already Stop!"
 }
 
@@ -2348,4 +2394,15 @@ reload()
       SLOG_CLEAN
       del_lock
    fi
+}
+
+boot()
+{
+	delay_start=$(uci -q get openclash.config.delay_start || echo 0)
+	enable=$(uci -q get openclash.config.enable)
+	if [ "$delay_start" -gt 0 ] && [ "$enable" == "1" ]; then
+		LOG_OUT "Enable Delay Start, OpenClash Will Start After【$delay_start】Secends..."
+		sleep "$delay_start"
+	fi
+	restart
 }
