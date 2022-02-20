@@ -6,7 +6,6 @@ config global
 	option udp_node 'nil'
 	option dns_mode 'pdnsd'
 	option dns_forward '1.1.1.1'
-	option filter_proxy_ipv6 '0'
 	option tcp_proxy_mode 'chnroute'
 	option udp_proxy_mode 'chnroute'
 	option localhost_tcp_proxy_mode 'default'
@@ -27,12 +26,15 @@ config global_delay
 config global_forwarding
 	option process '0'
 	option tcp_no_redir_ports 'disable'
-	option udp_no_redir_ports '53,80,443'
+	option udp_no_redir_ports '53'
+	option tcp_proxy_drop_ports 'disable'
+	option udp_proxy_drop_ports '80,443'
 	option tcp_redir_ports '22,25,53,143,465,587,853,993,995,80,443'
 	option udp_redir_ports '1:65535'
 	option accept_icmp '0'
 	option tcp_proxy_way 'redirect'
 	option ipv6_tproxy '0'
+	option sniffing '1'
 	option route_only '1'
 
 config global_other

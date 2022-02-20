@@ -1,9 +1,66 @@
 local e=require"nixio.fs"
 local t=require"luci.sys"
+local t=luci.model.uci.cursor()
 m=Map("advanced",translate("高级进阶设置"),translate("<font color=\"Red\"><strong>配置文档是直接编辑的除非你知道自己在干什么，否则请不要轻易修改这些配置文档。配置不正确可能会导致不能开机等错误。</strong></font><br/>"))
 m.apply_on_parse=true
 s=m:section(TypedSection,"advanced")
 s.anonymous=true
+
+if nixio.fs.access("/bin/nuc")then
+  s:tab("mode",translate("模式设置"),translate("<br />可以在这里切换旁路由和正常模式，重置你的网络设置。<br /><font color=\"Red\"><strong>点击后会立即重启设备，没有确认过程，请谨慎操作！</strong></font><br/>"))
+  o=s:taboption("mode",Button,"nucmode",translate("切换为旁路由模式"),translate("<font color=\"green\"><strong>本模式适合于单口和多网口主机，自动将网口全桥接好！<br />默认gateway是：192.168.1.1，ipaddr是192.168.1.2。用本机接口LAN接上级LAN当旁路由，主路由关闭DHCP服务。应用生效会重启软路由！</strong></font><br/>"))
+  o.inputtitle = translate("Apply")
+  o.inputstyle = "reset"
+  o.write = function()
+    luci.sys.exec("/bin/nuc &> /dev/null &")
+  end
+  o=s:taboption("mode",Button,"normalmode",translate("切换成路由模式"),translate("<font color=\"green\"><strong>本模式适合于有两个网口或以上的设备使用，如多网口软路由或者虚拟了两个以上网口的虚拟机使用！应用生效会重启软路由！。</strong></font><br/>"))
+  o.inputtitle = translate("Apply")
+  o.inputstyle = "reset"
+  o.write = function()
+   luci.sys.exec("/bin/normalmode &> /dev/null &")
+  end
+
+	o=s:taboption("mode",Button,"ipmode6",translate("设置为IPV6网络"),translate("<font color=\"green\"><strong>点击应用切换到IPV6模式！保存应用后即刻有效！</strong></font><br/>"))
+
+	o.inputtitle = translate("Apply")
+	o.inputstyle = "add"
+	o.write = function(self, section)
+  		luci.sys.exec("ipmode6  &> /dev/null &")
+	end
+
+	o=s:taboption("mode",Button,"ipmode4",translate("设置为IPV4网络"),translate("<font color=\"green\"><strong>点击应用切换到IPV4模式！保存应用后即刻有效！</strong></font><br/>"))
+
+	o.inputtitle = translate("Apply")
+	o.inputstyle = "add"
+	o.write = function(self, section)
+  		luci.sys.exec("ipmode4  &> /dev/null &")
+	end
+
+end
+if nixio.fs.access("/etc/dnsmasq.conf")then
+
+s:tab("dnsmasqconf",translate("dnsmasq"),translate("本页是配置/etc/dnsmasq.conf的文档内容。应用保存后自动重启生效"))
+
+conf=s:taboption("dnsmasqconf",Value,"dnsmasqconf",nil,translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template="cbi/tvalue"
+conf.rows=20
+conf.wrap="off"
+conf.cfgvalue=function(t,t)
+return e.readfile("/etc/dnsmasq.conf")or""
+end
+conf.write=function(a,a,t)
+if t then
+t=t:gsub("\r\n?","\n")
+e.writefile("/tmp/dnsmasq.conf",t)
+if(luci.sys.call("cmp -s /tmp/dnsmasq.conf /etc/dnsmasq.conf")==1)then
+e.writefile("/etc/dnsmasq.conf",t)
+luci.sys.call("/etc/init.d/dnsmasq restart >/dev/null")
+end
+e.remove("/tmp/dnsmasq.conf")
+end
+end
+end
 if nixio.fs.access("/etc/config/network")then
 s:tab("netwrokconf",translate("网络"),translate("本页是配置/etc/config/network包含网络配置文档内容。应用保存后自动重启生效"))
 conf=s:taboption("netwrokconf",Value,"netwrokconf",nil,translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
@@ -22,6 +79,51 @@ e.writefile("/etc/config/network",t)
 luci.sys.call("/etc/init.d/network restart >/dev/null")
 end
 e.remove("/tmp/network")
+end
+end
+end
+if nixio.fs.access("/etc/config/wireless")then
+s:tab("wirelessconf",translate("无线"), translate("本页是/etc/config/wireless的配置文件内容，应用保存后自动重启生效."))
+
+conf=s:taboption("wirelessconf",Value,"wirelessconf",nil,translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template="cbi/tvalue"
+conf.rows=20
+conf.wrap="off"
+conf.cfgvalue=function(t,t)
+return e.readfile("/etc/config/wireless")or""
+end
+conf.write=function(a,a,t)
+if t then
+t=t:gsub("\r\n?","\n")
+e.writefile("/etc/config/wireless.tmp",t)
+if(luci.sys.call("cmp -s /etc/config/wireless.tmp /etc/config/wireless")==1)then
+e.writefile("/etc/config/wireless",t)
+luci.sys.call("wifi reload >/dev/null &")
+end
+e.remove("/tmp//tmp/wireless.tmp")
+end
+end
+end
+
+if nixio.fs.access("/etc/hosts")then
+s:tab("hostsconf",translate("hosts"),translate("本页是配置/etc/hosts的文档内容。应用保存后自动重启生效"))
+
+conf=s:taboption("hostsconf",Value,"hostsconf",nil,translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template="cbi/tvalue"
+conf.rows=20
+conf.wrap="off"
+conf.cfgvalue=function(t,t)
+return e.readfile("/etc/hosts")or""
+end
+conf.write=function(a,a,t)
+if t then
+t=t:gsub("\r\n?","\n")
+e.writefile("/tmp/hosts.tmp",t)
+if(luci.sys.call("cmp -s /tmp/hosts.tmp /etc/hosts")==1)then
+e.writefile("/etc/hosts",t)
+luci.sys.call("/etc/init.d/dnsmasq restart >/dev/null")
+end
+e.remove("/tmp/hosts.tmp")
 end
 end
 end
@@ -195,27 +297,6 @@ end
 end
 end
 
-if nixio.fs.access("/etc/config/ksmbd")then
-s:tab("ksmbdconf",translate("网络共享"),translate("本页是配置/etc/config/ksmbd包含网络唤醒配置文档内容。应用保存后自动重启生效"))
-conf=s:taboption("ksmbdconf",Value,"ksmbdconf",nil,translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
-conf.template="cbi/tvalue"
-conf.rows=20
-conf.wrap="off"
-conf.cfgvalue=function(t,t)
-return e.readfile("/etc/config/ksmbd")or""
-end
-conf.write=function(a,a,t)
-if t then
-t=t:gsub("\r\n?","\n")
-e.writefile("/tmp/ksmbd",t)
-if(luci.sys.call("cmp -s /tmp/ksmbd/etc/config/ksmbd")==1)then
-e.writefile("/etc/config/ksmbd",t)
-luci.sys.call("/etc/init.d/ksmbd restart >/dev/null")
-end
-e.remove("/tmp/ksmbd")
-end
-end
-end
 if nixio.fs.access("/etc/config/smartdns")then
 s:tab("smartdnsconf",translate("SMARTDNS"),translate("本页是配置/etc/config/smartdns包含smartdns配置文档内容。应用保存后自动重启生效"))
 conf=s:taboption("smartdnsconf",Value,"smartdnsconf",nil,translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
@@ -237,4 +318,27 @@ e.remove("/tmp/smartdns")
 end
 end
 end
+if nixio.fs.access("/etc/config/openclash")then
+s:tab("openclashconf",translate("openclash"),translate("本页是配置/etc/config/openclash的文档内容。应用保存后自动重启生效"))
+conf=s:taboption("openclashconf",Value,"openclashconf",nil,translate("开头的数字符号（＃）或分号的每一行（;）被视为注释；删除（;）启用指定选项。"))
+conf.template="cbi/tvalue"
+conf.rows=20
+conf.wrap="off"
+conf.cfgvalue=function(t,t)
+return e.readfile("/etc/config/openclash")or""
+end
+conf.write=function(a,a,t)
+if t then
+t=t:gsub("\r\n?","\n")
+e.writefile("/tmp/openclash",t)
+if(luci.sys.call("cmp -s /tmp/openclash /etc/config/openclash")==1)then
+e.writefile("/etc/config/openclash",t)
+luci.sys.call("/etc/init.d/openclash restart >/dev/null")
+end
+e.remove("/tmp/openclash")
+end
+end
+end
+
+
 return m

@@ -205,20 +205,11 @@ msgstr "用于 DNS 查询时通知 DNS 服务器，客户端所在的地理位�
 msgid "This feature requires the DNS server to support the Edns Client Subnet (RFC7871)."
 msgstr "此功能需要 DNS 服务器支持 EDNS Client Subnet（RFC7871）。"
 
-msgid "Query Strategy"
-msgstr "查询策略"
-
 msgid "When the accessed domain name does not exist in the rule list, the default DNS used."
 msgstr "当访问的域名不存在规则列表中，使用的默认DNS。"
 
 msgid "The effect is better, but will increase the memory."
 msgstr "效果更好，但会增加内存使用。"
-
-msgid "Filter Proxy Host IPv6"
-msgstr "过滤代理域名 IPv6"
-
-msgid "Experimental feature."
-msgstr "实验性功能。"
 
 msgid "Clear IPSET"
 msgstr "清空 IPSET"
@@ -337,11 +328,11 @@ msgstr "添加节点"
 msgid "Add the node via the link"
 msgstr "通过链接添加节点"
 
-msgid "SS/SSR/Vmess/VLESS/Trojan Link"
-msgstr "SS/SSR/Vmess/VLESS/Trojan链接"
+msgid "SS/SSR/Vmess/VLESS/Trojan/Hysteria Link"
+msgstr "SS/SSR/Vmess/VLESS/Trojan/Hysteria 链接"
 
-msgid "Please enter the correct link, ss:// ssr:// vmess:// vless:// trojan://"
-msgstr "请输入正确的链接，ss:// ssr:// vmess:// vless:// trojan://"
+msgid "Please enter the correct link."
+msgstr "请输入正确的链接。"
 
 msgid "Clear all nodes"
 msgstr "清空所有节点"
@@ -622,6 +613,12 @@ msgstr "UDP不转发端口"
 msgid "Fill in the ports you don't want to be forwarded by the agent, with the highest priority."
 msgstr "填写你不希望被代理转发的端口，优先级最高。"
 
+msgid "TCP Proxy Drop Ports"
+msgstr "TCP转发屏蔽端口"
+
+msgid "UDP Proxy Drop Ports"
+msgstr "UDP转发屏蔽端口"
+
 msgid "TCP Redir Ports"
 msgstr "TCP转发端口"
 
@@ -658,8 +655,17 @@ msgstr "劫持ICMP (PING)"
 msgid "Hijacking ICMPv6 (IPv6 PING)"
 msgstr "劫持ICMPv6 (IPv6 PING)"
 
-msgid "Sniffing Route Only (V2Ray/Xray)"
-msgstr "流量嗅探只供路由使用 (V2Ray/Xray)"
+msgid "Sniffing (V2Ray/Xray)"
+msgstr "流量嗅探 (V2ray/Xray)"
+
+msgid "When using the V2ray/Xray shunt, must be enabled, otherwise the shunt will invalid."
+msgstr "使用 V2Ray/Xray 分流时，必须启用，否则分流将无效。"
+
+msgid "Sniffing Route Only (Xray)"
+msgstr "流量嗅探只供路由使用 (Xray)"
+
+msgid "When enabled, the server not will resolve the domain name again."
+msgstr "启用后，服务器不会再次解析域名。"
 
 msgid "TCP Proxy Way"
 msgstr "TCP代理方式"
