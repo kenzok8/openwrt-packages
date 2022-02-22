@@ -4,7 +4,7 @@ STOP=15
 SERVICE_DAEMONIZE=1
 NAME=bypass
 VAR=/var/etc/bypass
-FWI=$(uci -q get firewall.$NAME.path) || FWI=$VAR.include
+FWI=$(uci -q get firewall.$NAME.path 2>/dev/null) || FWI=$VAR.include
 T_FILE=/etc/bypass
 CRON_FILE=/etc/crontabs/root
 LOCK=/var/lock/bypassboot.lock
@@ -38,7 +38,7 @@ uci_get_by_name(){
 }
 
 uci_get_by_type(){
-	ret=$(uci -q get $NAME.@$1[0].$2)
+	ret=$(uci -q get $NAME.@$1[0].$2 2>/dev/null)
 	echo ${ret:=$3}
 }
 
