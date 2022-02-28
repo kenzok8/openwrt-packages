@@ -106,9 +106,10 @@
 }
 
 .card .general h1 {
-  font-size: 2rem;
+  font-size: 30px;
   text-align: center;
   margin-left: -12%;
+  padding-top: 5px;
 }
 
 .card .general .dler-info {
@@ -123,7 +124,7 @@
   color: #444;
   font-size:15px;
   display: inline-block;
-  width: 40%;
+  width: 45%;
   overflow: hidden;
   vertical-align:bottom;
   white-space: nowrap;
@@ -135,10 +136,9 @@
 .card .general .dler-result {
   color: #444;
   font-size:16px;
-  transform: translateX(35%);
   white-space: nowrap;
   display: inline-block;
-  width: 40%;
+  width: 55%;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align:bottom;
@@ -150,10 +150,9 @@
 .card .general .dler-result2 {
   color: #444;
   font-size:16px;
-  transform: translateX(10%);
   white-space: nowrap;
   display: inline-block;
-  width: 50%;
+  width: 55%;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align:bottom;
@@ -174,14 +173,13 @@
   font-weight: bold;
   display: inline-block;
   overflow: hidden;
-  margin-top: 20px;
   -webkit-appearance:button;
 }
 
 .card .general .more {
   float: right;
   top: 85%;
-  right: 2%;
+  right: 20px;
   font-size: 15px;
   height: 15%;
   position: absolute;
@@ -211,42 +209,42 @@
     <div class="general">
       <h1 id="dler-plan" ></h1>
       	<div class="dler-info">
-      		<div style="width: 40%">
-            <p>
+      		<div style="width: 35%">
+            <p style="margin: 10px -22% 10px 22%">
                 <span class="dler-title"><%:Plan Expiration Time%>:</span><span class="dler-result" id="dler-plantime"><%:Collecting data...%></span>
             </p>
-            <p>
+            <p style="margin: 10px -22% 10px 22%">
                 <span class="dler-title"><%:Account Balances%>:</span><span class="dler-result" id="dler-money"><%:Collecting data...%></span>
             </p>
-            <p>
+            <p style="margin: 10px -22% 10px 22%">
                 <span class="dler-title"><%:Aff Balances%>:</span><span class="dler-result" id="dler-affmoney"><%:Collecting data...%></span>
             </p>
-            <p>
+            <p style="margin: 10px -22% 10px 22%">
                 <span class="dler-title"><%:Account Integral%>:</span><span class="dler-result" id="dler-integral"><%:Collecting data...%></span>
             </p>
         	</div>
-        	<div style="width: 40%">
-            <p>
+        	<div style="width: 35%">
+            <p style="margin: 10px -28% 10px 28%">
                 <span class="dler-title"><%:Today Used%>:</span><span class="dler-result2" id="dler-today-used"><%:Collecting data...%></span>
             </p>
-            <p>
+            <p style="margin: 10px -28% 10px 28%">
                 <span class="dler-title"><%:Plan Used%>:</span><span class="dler-result2" id="dler-used"><%:Collecting data...%></span>
             </p>
-            <p>
+            <p style="margin: 10px -28% 10px 28%">
                 <span class="dler-title"><%:Plan Unused%>:</span><span class="dler-result2" id="dler-unused"><%:Collecting data...%></span>
             </p>
-            <p>
+            <p style="margin: 10px -28% 10px 28%">
                 <span class="dler-title"><%:Plan Traffic%>:</span><span class="dler-result2" id="dler-traffic"><%:Collecting data...%></span>
             </p>
         	</div>
         	<div style="width: 30%; text-align:center">
-        		<p>
+        		<p style="margin: 30px 0 10px 39%">
         			<input type="button" class="btn" value="<%:Checkin%>" onclick="return dler_checkin_btn(this)"
         		</p>
         	</div>
         </div>
     		<div>
-       	 <p class="more">Powered by <a onclick="return web_dler()" href="javascript:void(0);">dlercloud.com</a></p>
+       	 <p class="more">Powered by <a style="text-decoration: none; color: #666" onclick="return web_dler()" href="javascript:void(0);">dlercloud.com</a></p>
     		</div>
       </div>
     </div>

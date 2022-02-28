@@ -169,7 +169,7 @@ o.description = translate("Set Log File Size (KB)")
 o.default=1024
 
 o = s:taboption("settings", Flag, "intranet_allowed", translate("Only intranet allowed"))
-o.description = translate("When Enabled, The Control Panel And The Connection Broker Port Will Not Be Accessible From The Public Network, Not Support IPv6 Yet")
+o.description = translate("When Enabled, The Control Panel And The Connection Broker Port Will Not Be Accessible From The Public Network")
 o.default=0
 
 o = s:taboption("settings", Value, "dns_port")
@@ -237,6 +237,9 @@ if op_mode == "fake-ip" then
 o = s:taboption("dns", Flag, "store_fakeip", font_red..bold_on..translate("Persistence Fake-IP")..bold_off..font_off)
 o.description = font_red..bold_on..translate("Cache Fake-IP DNS Resolution Records To File, Improve The Response Speed After Startup")..bold_off..font_off
 o.default=1
+
+o = s:taboption("dns", DummyValue, "flush_fakeip_cache", translate("Flush Fake-IP Cache"))
+o.template = "openclash/flush_fakeip_cache"
 end
 
 o = s:taboption("dns", Flag, "ipv6_dns", translate("IPv6 DNS Resolve"))
