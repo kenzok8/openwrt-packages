@@ -17,7 +17,7 @@ local datatypes = require "luci.cbi.datatypes"
 local tinsert = table.insert
 local ssub, slen, schar, sbyte, sformat, sgsub = string.sub, string.len, string.char, string.byte, string.format, string.gsub
 local jsonParse, jsonStringify = luci.jsonc.parse, luci.jsonc.stringify
-local b64decode = nixio.bin.b64decode
+local base64Decode = api.base64Decode
 local uci = luci.model.uci.cursor()
 uci:revert(appname)
 
@@ -81,10 +81,6 @@ end
 
 local nodeResult = {} -- update result
 local debug = false
-
-local ss_rust_encrypt_method_list = {
-    "aes-128-gcm", "aes-256-gcm", "chacha20-ietf-poly1305"
-}
 
 local log = function(...)
 	local result = os.date("%Y-%m-%d %H:%M:%S: ") .. table.concat({...}, " ")
@@ -350,22 +346,6 @@ local function trim(text)
 	return (sgsub(text, "^%s*(.-)%s*$", "%1"))
 end
 
--- base64
-local function base64Decode(text)
-	local raw = text
-	if not text then return '' end
-	text = text:gsub("%z", "")
-	text = text:gsub("_", "/")
-	text = text:gsub("-", "+")
-	local mod4 = #text % 4
-	text = text .. string.sub('====', mod4 + 1)
-	local result = b64decode(text)
-	if result then
-		return result:gsub("%z", "")
-	else
-		return raw
-	end
-end
 -- 处理数据
 local function processData(szType, content, add_mode, add_from)
 	--log(content, add_mode, add_from)
@@ -378,12 +358,16 @@ local function processData(szType, content, add_mode, add_from)
 		local dat = split(content, "/%?")
 		local hostInfo = split(dat[1], ':')
 		result.type = "SSR"
-		result.address = hostInfo[1]
-		result.port = hostInfo[2]
-		result.protocol = hostInfo[3]
-		result.method = hostInfo[4]
-		result.obfs = hostInfo[5]
-		result.password = base64Decode(hostInfo[6])
+		result.address = ""
+		for i=1,#hostInfo-5,1 do
+			result.address = result.address .. hostInfo[i] .. ":"
+		end
+		result.address = string.sub(result.address, 0, #result.address-1) 
+		result.port = hostInfo[#hostInfo-4]
+		result.protocol = hostInfo[#hostInfo-3]
+		result.method = hostInfo[#hostInfo-2]
+		result.obfs = hostInfo[#hostInfo-1]
+		result.password = base64Decode(hostInfo[#hostInfo])	
 		local params = {}
 		for _, v in pairs(split(dat[2], '&')) do
 			local t = split(v, '=')
@@ -508,25 +492,34 @@ local function processData(szType, content, add_mode, add_from)
 		result.method = method
 		result.password = password
 
-		local flag = false
-		for k, v in ipairs(ss_rust_encrypt_method_list) do
-			if method:upper() == v:upper() then
-				flag = true
+		local aead = false
+		for k, v in ipairs({"aes-128-gcm", "aes-256-gcm", "chacha20-poly1305", "chacha20-ietf-poly1305"}) do
+			if method:lower() == v:lower() then
+				aead = true
 			end
 		end
-		if flag then
+		if aead then
 			if ss_aead_type_default == "shadowsocks-libev" and has_ss then
 				result.type = "SS"
 			elseif ss_aead_type_default == "shadowsocks-rust" and has_ss_rust then
 				result.type = 'SS-Rust'
+				if method:lower() == "chacha20-poly1305" then
+					result.method = "chacha20-ietf-poly1305"
+				end
 			elseif ss_aead_type_default == "v2ray" and has_v2ray and not result.plugin then
 				result.type = 'V2ray'
 				result.protocol = 'shadowsocks'
 				result.transport = 'tcp'
+				if method:lower() == "chacha20-ietf-poly1305" then
+					result.method = "chacha20-poly1305"
+				end
 			elseif ss_aead_type_default == "xray" and has_xray and not result.plugin then
 				result.type = 'Xray'
 				result.protocol = 'shadowsocks'
 				result.transport = 'tcp'
+				if method:lower() == "chacha20-ietf-poly1305" then
+					result.method = "chacha20-poly1305"
+				end
 			end
 		end
 	elseif szType == "trojan" then
@@ -1102,7 +1095,7 @@ local function parse_link(raw, add_mode, add_from)
 				if result then
 					if not result.type then
 						log('丢弃节点:' .. result.remarks .. ",找不到可使用二进制.")
-					elseif (add_mode == "2" and is_filter_keyword(result.remarks)) or not result.address or result.remarks == "NULL" or
+					elseif (add_mode == "2" and is_filter_keyword(result.remarks)) or not result.address or result.remarks == "NULL" or result.address=="127.0.0.1" or
 							(not datatypes.hostname(result.address) and not (datatypes.ipmask4(result.address) or datatypes.ipmask6(result.address))) then
 						log('丢弃过滤节点: ' .. result.type .. ' 节点, ' .. result.remarks)
 					else

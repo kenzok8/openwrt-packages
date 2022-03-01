@@ -59,7 +59,7 @@ update() {
 
 update_if_outdate() {
     local idle_t=$((`date '+%s'` - `date -r ${IS_ROOT}/.last_force_ts '+%s' 2>/dev/null || echo '0'`))
-    [ $idle_t -gt ${1:-120} ] || return 1
+    [ $idle_t -gt ${1:-120} ] || return 2
     update || return 1
     touch ${IS_ROOT}/.last_force_ts
     return 0
@@ -83,7 +83,13 @@ do_self_upgrade() {
     if opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed ; then
         true
     else
-        update_if_outdate || return 1
+        update_if_outdate
+        local code=$?
+        [ "$code" = 1 ] && return 1
+        if [ "$code" = 2 ] || ! opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed; then
+            echo "already the latest version!" >&2
+            return 1
+        fi
     fi
     opkg_wrap upgrade ${ISTORE_PKG}
 }

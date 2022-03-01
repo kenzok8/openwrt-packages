@@ -14,6 +14,23 @@ command_timeout = 300
 LEDE_BOARD = nil
 DISTRIB_TARGET = nil
 
+function base64Decode(text)
+	local raw = text
+	if not text then return '' end
+	text = text:gsub("%z", "")
+	text = text:gsub("%c", "")
+	text = text:gsub("_", "/")
+	text = text:gsub("-", "+")
+	local mod4 = #text % 4
+	text = text .. string.sub('====', mod4 + 1)
+	local result = nixio.bin.b64decode(text)
+	if result then
+		return result:gsub("%z", "")
+	else
+		return raw
+	end
+end
+
 function url(...)
     local url = string.format("admin/services/%s", appname)
     local args = { ... }
@@ -178,12 +195,6 @@ function get_valid_nodes()
                     if nodes_ping:find("info") then
                         e["remark"] = "%s：[%s] %s:%s" % {type2, e.remarks, address2, e.port}
                     end
-                    if e.use_kcp and e.use_kcp == "1" then
-                        e["remark"] = "%s+%s：[%s]" % {type2, "Kcptun", e.remarks}
-                        if nodes_ping:find("info") then
-                            e["remark"] = "%s+%s：[%s] %s" % {type2, "Kcptun", e.remarks, address2}
-                        end
-                    end
                     e.node_type = "normal"
                     nodes[#nodes + 1] = e
                 end
@@ -211,11 +222,7 @@ function get_full_node_remarks(n)
                 end
                 type2 = type2 .. " " .. protocol
             end
-            if n.use_kcp and n.use_kcp == "1" then
-                remarks = "%s+%s：[%s] %s" % {type2, "Kcptun", n.remarks, n.address}
-            else
-                remarks = "%s：[%s] %s:%s" % {type2, n.remarks, n.address, n.port}
-            end
+            remarks = "%s：[%s] %s:%s" % {type2, n.remarks, n.address, n.port}
         end
     end
     return remarks
@@ -325,17 +332,6 @@ end
 function get_trojan_go_version(file)
     if file == nil then file = get_trojan_go_path() end
     local cmd = "-version | awk '{print $2}' | sed -n 1P"
-    return get_bin_version_cache(file, cmd)
-end
-
-function get_kcptun_path()
-    local path = uci_get_type("global_app", "kcptun_client_file")
-    return path
-end
-
-function get_kcptun_version(file)
-    if file == nil then file = get_kcptun_path() end
-    local cmd = "-v | awk '{print $3}'"
     return get_bin_version_cache(file, cmd)
 end
 

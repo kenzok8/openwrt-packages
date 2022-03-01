@@ -8,7 +8,6 @@ local ucic = luci.model.uci.cursor()
 local http = require "luci.http"
 local util = require "luci.util"
 local i18n = require "luci.i18n"
-local kcptun = require("luci.model.cbi." .. appname ..".api.kcptun")
 local brook = require("luci.model.cbi." .. appname ..".api.brook")
 local v2ray = require("luci.model.cbi." .. appname ..".api.v2ray")
 local xray = require("luci.model.cbi." .. appname ..".api.xray")
@@ -66,15 +65,13 @@ function index()
 	entry({"admin", "services", appname, "haproxy_status"}, call("haproxy_status")).leaf = true
 	entry({"admin", "services", appname, "socks_status"}, call("socks_status")).leaf = true
 	entry({"admin", "services", appname, "connect_status"}, call("connect_status")).leaf = true
-	entry({"admin", "services", appname, "check_port"}, call("check_port")).leaf = true
 	entry({"admin", "services", appname, "ping_node"}, call("ping_node")).leaf = true
+	entry({"admin", "services", appname, "urltest_node"}, call("urltest_node")).leaf = true
 	entry({"admin", "services", appname, "set_node"}, call("set_node")).leaf = true
 	entry({"admin", "services", appname, "copy_node"}, call("copy_node")).leaf = true
 	entry({"admin", "services", appname, "clear_all_nodes"}, call("clear_all_nodes")).leaf = true
 	entry({"admin", "services", appname, "delete_select_nodes"}, call("delete_select_nodes")).leaf = true
 	entry({"admin", "services", appname, "update_rules"}, call("update_rules")).leaf = true
-	entry({"admin", "services", appname, "kcptun_check"}, call("kcptun_check")).leaf = true
-	entry({"admin", "services", appname, "kcptun_update"}, call("kcptun_update")).leaf = true
 	entry({"admin", "services", appname, "brook_check"}, call("brook_check")).leaf = true
 	entry({"admin", "services", appname, "brook_update"}, call("brook_update")).leaf = true
 	entry({"admin", "services", appname, "v2ray_check"}, call("v2ray_check")).leaf = true
@@ -255,6 +252,25 @@ function ping_node()
 	luci.http.write_json(e)
 end
 
+function urltest_node()
+	local index = luci.http.formvalue("index")
+	local id = luci.http.formvalue("id")
+	local e = {}
+	e.index = index
+	local result = luci.sys.exec(string.format("/usr/share/passwall/test.sh url_test_node %s %s", id, "urltest_node"))
+	local code = tonumber(luci.sys.exec("echo -n '" .. result .. "' | awk -F ':' '{print $1}'") or "0")
+	if code ~= 0 then
+		local use_time = luci.sys.exec("echo -n '" .. result .. "' | awk -F ':' '{print $2}'")
+		if use_time:find("%.") then
+			e.use_time = string.format("%.2f", use_time * 1000)
+		else
+			e.use_time = string.format("%.2f", use_time / 1000)
+		end
+	end
+	luci.http.prepare_content("application/json")
+	luci.http.write_json(e)
+end
+
 function set_node()
 	local protocol = luci.http.formvalue("protocol")
 	local section = luci.http.formvalue("section")
@@ -347,39 +363,6 @@ function delete_select_nodes()
 	luci.sys.call("/etc/init.d/" .. appname .. " restart > /dev/null 2>&1 &")
 end
 
-function check_port()
-	function socket_connect(type, address, port)
-		local socket = nixio.socket(type, "stream")
-		socket:setopt("socket", "rcvtimeo", 3)
-		socket:setopt("socket", "sndtimeo", 3)
-		local ret = socket:connect(address, port)
-		if socket then socket:close() end
-		if tostring(ret) == "true" then
-			return true
-		end
-		return false
-	end
-	local result = {}
-	ucic:foreach(appname, "nodes", function(s)
-		if (s.use_kcp and s.use_kcp == "1" and s.kcp_port) or (s.transport and s.transport == "mkcp" and s.port) then
-		else
-			local type = s.type
-			if type and s.address and s.port and s.remarks then
-				local ip_type = api.get_ip_type(s.address)
-				local o = {}
-				o.remark = "%s：[%s] %s:%s" % {s.type, s.remarks, ip_type == "6" and '[' .. s.address .. ']' or s.address, s.port}
-				o.flag = socket_connect(ip_type == "6" and "inet6" or "inet", s.address, s.port)
-				if not o.flag and ip_type == "" then
-					o.flag = socket_connect("inet6", s.address, s.port)
-				end
-				result[#result + 1] = o
-			end
-		end
-	end)
-	luci.http.prepare_content("application/json")
-	luci.http.write_json(result)
-end
-
 function update_rules()
 	local update = luci.http.formvalue("update")
 	luci.sys.call("lua /usr/share/passwall/rule_update.lua log '" .. update .. "' > /dev/null 2>&1 &")
@@ -410,25 +393,6 @@ end
 
 function server_clear_log()
 	luci.sys.call("echo '' > /tmp/log/passwall_server.log")
-end
-
-function kcptun_check()
-	local json = kcptun.to_check("")
-	http_write_json(json)
-end
-
-function kcptun_update()
-	local json = nil
-	local task = http.formvalue("task")
-	if task == "extract" then
-		json = kcptun.to_extract(http.formvalue("file"), http.formvalue("subfix"))
-	elseif task == "move" then
-		json = kcptun.to_move(http.formvalue("file"))
-	else
-		json = kcptun.to_download(http.formvalue("url"), http.formvalue("size"))
-	end
-
-	http_write_json(json)
 end
 
 function brook_check()

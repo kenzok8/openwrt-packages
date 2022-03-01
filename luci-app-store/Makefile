@@ -7,11 +7,11 @@ include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=LuCI based ipk store
 LUCI_DESCRIPTION:=luci-app-store is a ipk store developed by LinkEase team
-LUCI_DEPENDS:=+curl +opkg
+LUCI_DEPENDS:=+curl +opkg +luci-lib-ipkg
 LUCI_PKGARCH:=all
 
 PKG_VERSION:=0.1.7
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 ISTORE_UI_VERSION:=1.0
 ISTORE_UI_RELEASE:=7
