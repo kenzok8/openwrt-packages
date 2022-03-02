@@ -5,5 +5,5 @@
      const leftVersion = left.replace(/^v/, '');
      const rightVersion = right.replace(/^v/, '');
 -    return leftVersion === rightVersion;
-+    return leftVersion < rightVersion;
++    return leftVersion >= rightVersion;
  };
