@@ -1,27 +1,47 @@
 #!/bin/bash -e
-uci set shadowsocksr.@global[0].pdnsd_enable='0'
-uci del shadowsocksr.@global[0].tunnel_forward
-uci commit shadowsocksr
-uci set passwall.@global[0].dns_mode='udp'
-uci set passwall.@global[0].dns_forward='127.0.0.1:5335'
-uci del passwall.@global[0].dns_cache
-uci set passwall.@global[0].chinadns_ng='0'
-uci commit passwall
-uci set vssr.@global[0].pdnsd_enable='0'
-uci commit vssr
-ssrp="$(uci get shadowsocksr.@global[0].global_server)"
-count1="$(ps | grep ssrplus | grep -v 'grep' | wc -l)"
-if [ $ssrp != "nil" ] && [ $count1 -ne 0 ]; then
-  /etc/init.d/shadowsocksr restart
+# shellcheck source=/etc/mosdns/library.sh
+
+source /etc/mosdns/library.sh
+
+if L_exist ssrp; then
+	if [ "$1" = "unset" ]; then
+		uci set shadowsocksr.@global[0].pdnsd_enable='1'
+		uci set shadowsocksr.@global[0].tunnel_forward='8.8.4.4:53'
+	elif [ "$1" = "" ]; then
+		uci set shadowsocksr.@global[0].pdnsd_enable='0'
+		uci del shadowsocksr.@global[0].tunnel_forward
+	fi
+	uci commit shadowsocksr
+	if [ "$(pid ssrplus)" ]; then
+		/etc/init.d/shadowsocksr restart
+	fi
 fi
-pw="$(uci get passwall.@global[0].enabled)"
-count2="$(ps | grep passwall | grep -v 'grep' | wc -l)"
-if [ $pw -eq 1 ] && [ $count2 -ne 0 ]; then
-  /etc/init.d/passwall restart
+if L_exist pw; then
+	if [ "$1" = "unset" ]; then
+		uci set passwall.@global[0].dns_mode='pdnsd'
+		uci set passwall.@global[0].dns_forward='8.8.8.8'
+		uci set passwall.@global[0].dns_cache='1'
+		uci set passwall.@global[0].chinadns_ng='1'
+	elif [ "$1" = "" ]; then
+		uci set passwall.@global[0].dns_mode='udp'
+		uci set passwall.@global[0].dns_forward='127.0.0.1:5335'
+		uci del passwall.@global[0].dns_cache
+		uci set passwall.@global[0].chinadns_ng='0'
+	fi
+	uci commit passwall
+	if [ "$(pid passwall)" ]; then
+		/etc/init.d/passwall restart
+	fi
 fi
-vssr="$(uci get vssr.@global[0].global_server)"
-count3="$(ps | grep vssr | grep -v 'grep' | wc -l)"
-if [ $vssr != "nil" ] && [ $count3 -ne 0 ]; then
-  /etc/init.d/vssr restart
+if L_exist vssr; then
+	if [ "$1" = "unset" ]; then
+		uci set vssr.@global[0].pdnsd_enable='1'
+	elif [ "$1" = "" ]; then
+		uci set vssr.@global[0].pdnsd_enable='0'
+	fi
+	uci commit vssr
+	if [ "$(pid vssr)" ]; then
+		/etc/init.d/vssr restart
+	fi
 fi
 exit 0
