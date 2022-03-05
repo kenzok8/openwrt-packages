@@ -13,13 +13,13 @@
 				if (s)
 				{
 					if(status.ret == "0")
-						s.innerHTML = "<font color='green'>" + "<%:当前已是最新版本%>" + "</font>";
+						s.innerHTML = "<font style=\"color:green\">" + "<%:当前已是最新版本%>" + "</font>";
 					else if (status.ret == "1")
-						s.innerHTML = "<font color='red'>" + "<%:无法检测最新版本%>" + "</font>";
+						s.innerHTML = "<font style=\"color:red\">" + "<%:无法检测最新版本%>" + "</font>";
 					else if(status.ret == "2")
-						s.innerHTML = "<font color='red'>" + "<%:更新失败，请稍后重试%>" + "</font>";
+						s.innerHTML = "<font style=\"color:red\">" + "<%:更新失败，请稍后重试%>" + "</font>";
 					else
-						s.innerHTML = "<font color='green'>" + "<%:更新成功，当前版本号：%>" + status.ret + "</font>";
+						s.innerHTML = "<font style=\"color:green\">" + "<%:更新成功，当前版本号：%>" + status.ret + "</font>";
 				}
 				btn.disabled = false;
 				btn.value = '<%:点此更新核心%>';

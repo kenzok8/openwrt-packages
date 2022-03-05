@@ -112,6 +112,7 @@ start_service()
 		"lower_than_999kbps") procd_append_param env MIN_BR="600000" ;;
 		"replace_all") procd_append_param env MIN_BR="9999999" ;;
 	esac
+	procd_append_param env JSON_LOG="true"
 
 	procd_set_param stdout 1
 	procd_set_param stderr 1
