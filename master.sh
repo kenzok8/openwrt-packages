@@ -62,7 +62,6 @@ svn co https://github.com/lisaac/luci-app-dockerman/trunk/applications/luci-app-
 svn co https://github.com/Carseason/openwrt-themedog/trunk/luci/luci-themedog
 svn co https://github.com/xiaorouji/openwrt-passwall2/trunk/luci-app-passwall2
 svn co https://github.com/coolsnowwolf/packages/trunk/multimedia/UnblockNeteaseMusic
-svn co https://github.com/coolsnowwolf/packages/trunk/net/go-aliyundrive-webdav
 svn co https://github.com/immortalwrt/packages/trunk/net/gost
 svn co https://github.com/immortalwrt/packages/trunk/utils/filebrowser
 
