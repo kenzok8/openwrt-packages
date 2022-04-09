@@ -52,8 +52,7 @@ jobs:
         cd $GITHUB_WORKSPACE/${{matrix.target}}
         git add .
         git commit -m "update $(date +%Y-%m-%d" "%H:%M:%S)"
-        git push --quiet "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/openwrt-packages.git" HEAD:master
-        
+        git push --force "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/openwrt-packages.git"        
         
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
