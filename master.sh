@@ -63,7 +63,6 @@ svn co https://github.com/xiaorouji/openwrt-passwall2/trunk/luci-app-passwall2
 svn co https://github.com/coolsnowwolf/packages/trunk/multimedia/UnblockNeteaseMusic
 svn co https://github.com/coolsnowwolf/packages/trunk/net/go-aliyundrive-webdav
 svn co https://github.com/immortalwrt/packages/trunk/net/gost
-svn co https://github.com/immortalwrt/packages/trunk/net/smartdns
 svn co https://github.com/immortalwrt/packages/trunk/utils/filebrowser
 
 mv -n openwrt-passwall/* ./ ; rm -Rf openwrt-passwall
