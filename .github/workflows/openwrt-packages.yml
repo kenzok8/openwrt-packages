@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [master]
+        target: [main]
         
     steps:
     - name: Checkout
@@ -38,7 +38,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         chmod +x ${{matrix.target}}.sh
-        git clone -b ${{matrix.target}} https://github.com/kenzok8/openwrt-packages.git ${{matrix.target}}
+        git clone -b master https://github.com/kenzok8/openwrt-packages.git ${{matrix.target}}
         cd ${{matrix.target}}
         $GITHUB_WORKSPACE/${{matrix.target}}.sh
         $GITHUB_WORKSPACE/Modify.sh
@@ -52,7 +52,7 @@ jobs:
         cd $GITHUB_WORKSPACE/${{matrix.target}}
         git add .
         git commit -m "update $(date +%Y-%m-%d" "%H:%M:%S)"
-        git push --quiet "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/openwrt-packages.git" HEAD:${{matrix.target}}
+        git push --quiet "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/openwrt-packages.git" HEAD:master
         
         
     - name: Delete workflow runs
