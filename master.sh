@@ -66,10 +66,7 @@ svn co https://github.com/coolsnowwolf/packages/trunk/multimedia/UnblockNeteaseM
 svn co https://github.com/immortalwrt/packages/trunk/net/gost
 svn co https://github.com/immortalwrt/packages/trunk/utils/filebrowser
 
-mv -n openwrt-passwall/* ./ ; rm -Rf openwrt-passwall
-mv -n openwrt-package/* ./ ; rm -Rf openwrt-package
-
-rm -rf ./*/.git & rm -f ./*/.gitattributes
+rm -rf ./*/.git & rm -rf ./*/.gitattributes
 rm -rf ./*/.svn & rm -rf ./*/.github & rm -rf ./*/.gitignore
 
 exit 0

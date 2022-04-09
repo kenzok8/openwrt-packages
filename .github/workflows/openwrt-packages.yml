@@ -40,7 +40,6 @@ jobs:
         chmod +x ${{matrix.target}}.sh
         git clone -b ${{matrix.target}} https://github.com/kenzok8/openwrt-packages.git ${{matrix.target}}
         cd ${{matrix.target}}
-        git rm -r --cache * >/dev/null 2>&1 &
         $GITHUB_WORKSPACE/${{matrix.target}}.sh
         $GITHUB_WORKSPACE/Modify.sh
         

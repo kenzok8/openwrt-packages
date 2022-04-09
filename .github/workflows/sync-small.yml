@@ -40,7 +40,6 @@ jobs:
         chmod +x small.sh
         git clone -b ${{matrix.target}} https://github.com/kenzok8/small.git ${{matrix.target}}
         cd ${{matrix.target}}
-        git rm -r --cache * >/dev/null 2>&1 &
         $GITHUB_WORKSPACE/small.sh
         
     - name: Upload
