@@ -55,8 +55,8 @@ svn co https://github.com/linkease/nas-packages-luci/trunk/luci/luci-app-ddnsto
 svn co https://github.com/fw876/helloworld/trunk/luci-app-ssr-plus
 svn co https://github.com/fw876/helloworld/trunk/naiveproxy
 svn co https://github.com/fw876/helloworld/trunk/tcping
-svn co https://github.com/fw876/helloworld/trunk/microsocks
-svn co https://github.com/fw876/helloworld/trunk/redsocks2
+svn co https://github.com/coolsnowwolf/packages/trunk/net/microsocks
+svn co https://github.com/coolsnowwolf/packages/trunk/net/redsocks2
 svn co https://github.com/vernesong/OpenClash/trunk/luci-app-openclash
 svn co https://github.com/lisaac/luci-app-dockerman/trunk/applications/luci-app-dockerman
 svn co https://github.com/Carseason/openwrt-themedog/trunk/luci/luci-themedog
