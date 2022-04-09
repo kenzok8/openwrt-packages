@@ -25,7 +25,6 @@ git clone --depth 1 https://github.com/jerrykuku/luci-app-go-aliyundrive-webdav
 git clone --depth 1 https://github.com/sirpdboy/luci-app-advanced
 git clone --depth 1 https://github.com/jefferymvp/luci-app-koolproxyR
 git clone --depth 1 https://github.com/hubbylei/luci-app-clash
-git clone --depth 1 https://github.com/destan19/OpenAppFilter && mvdir OpenAppFilter
 git clone --depth 1 https://github.com/QiuSimons/openwrt-mos && mv -n openwrt-mos/*mosdns ./ ; rm -rf openwrt-mos
 git clone --depth 1 https://github.com/kenzok78/luci-theme-argonne
 git clone --depth 1 https://github.com/kenzok78/luci-app-argonne-config
@@ -56,15 +55,15 @@ svn co https://github.com/linkease/nas-packages/trunk/network/services/ddnsto
 svn co https://github.com/linkease/nas-packages-luci/trunk/luci/luci-app-ddnsto
 svn co https://github.com/fw876/helloworld/trunk/luci-app-ssr-plus
 svn co https://github.com/fw876/helloworld/trunk/naiveproxy
+svn co https://github.com/fw876/helloworld/trunk/tcping
+svn co https://github.com/fw876/helloworld/trunk/microsocks
+svn co https://github.com/fw876/helloworld/trunk/redsocks2
 svn co https://github.com/vernesong/OpenClash/trunk/luci-app-openclash
 svn co https://github.com/lisaac/luci-app-dockerman/trunk/applications/luci-app-dockerman
 svn co https://github.com/Carseason/openwrt-themedog/trunk/luci/luci-themedog
 svn co https://github.com/xiaorouji/openwrt-passwall2/trunk/luci-app-passwall2
 svn co https://github.com/coolsnowwolf/packages/trunk/multimedia/UnblockNeteaseMusic
 svn co https://github.com/coolsnowwolf/packages/trunk/net/go-aliyundrive-webdav
-svn co https://github.com/coolsnowwolf/packages/trunk/net/microsocks
-svn co https://github.com/coolsnowwolf/packages/trunk/net/tcping
-svn co https://github.com/coolsnowwolf/packages/trunk/net/redsocks2
 svn co https://github.com/immortalwrt/packages/trunk/net/gost
 svn co https://github.com/immortalwrt/packages/trunk/net/smartdns
 svn co https://github.com/immortalwrt/packages/trunk/utils/filebrowser
