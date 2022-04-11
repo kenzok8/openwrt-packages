@@ -5,6 +5,9 @@ uci -q batch <<-EOF >/dev/null
 	add ucitrack unblockneteasemusic
 	set ucitrack.@unblockneteasemusic[-1].init=unblockneteasemusic
 	commit ucitrack
+EOF
+[ -e "$(command -v fw4)" ] || {
+uci -q batch <<-EOF >/dev/null
 	delete firewall.unblockneteasemusic
 	set firewall.unblockneteasemusic=include
 	set firewall.unblockneteasemusic.type=script
@@ -12,6 +15,7 @@ uci -q batch <<-EOF >/dev/null
 	set firewall.unblockneteasemusic.reload=1
 	commit firewall
 EOF
+}
 
 rm -f /tmp/luci-indexcache
 exit 0

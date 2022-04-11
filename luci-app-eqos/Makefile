@@ -7,16 +7,14 @@
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=LuCI support for eqos.
-LUCI_DESCRIPTION:=LuCI support for Easy QoS(Support speed limit based on IP address).
-LUCI_DEPENDS:=+tc +kmod-sched-core +kmod-ifb
-LUCI_PKGARCH:=all
-
 PKG_NAME:=luci-app-eqos
+PKG_RELEASE:=1
+PKG_MAINTAINER:=Jianhui Zhao <jianhuizhao329@gmail.com> GaryPang <https://github.com/garypang13/luci-app-eqos>
 
-PKG_MAINTAINER:=Jianhui Zhao <jianhuizhao329@gmail.com>
+LUCI_TITLE:=EQOS - LuCI interface
+LUCI_DEPENDS:=+luci-base +tc +kmod-sched-core +kmod-ifb
+LUCI_PKGARCH:=all
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
-

@@ -1,42 +1,57 @@
 # Copyright (C) 2016 Openwrt.org
-#
+# 
 # This is free software, licensed under the Apache License, Version 2.0 .
 #
 
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=LuCI support for Koolddns
-LUCI_DEPENDS:=+curl +libcurl
-LUCI_PKGARCH:=all
 PKG_NAME:=luci-app-koolddns
-PKG_VERSION:=1.1
-PKG_RELEASE:=4
+PKG_VERSION:=20220321
+PKG_RELEASE:=2
+PKG_MAINTAINER:=fw867
 
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
+#PKG_USE_MIPS16:=0
 
-define Package/$(PKG_NAME)/description
-	Luci Support for koolddns.
+include $(INCLUDE_DIR)/package.mk
+
+define Package/$(PKG_NAME)
+	SECTION:=luci
+	CATEGORY:=LuCI
+	SUBMENU:=3. Applications
+	PKGARCH:=all
+	TITLE:=luci for koolddns
+        DEPENDS:=+koolddns
 endef
 
+define Package/$(PKG_NAME)/description
+    A luci app for koolddns, forked from koolshare Lede X64. Thanks to fw867.
+endef
+
+define Package/$(PKG_NAME)/preinst
+endef
+
+define Package/$(PKG_NAME)/postinst
+#!/bin/sh
+if [ -z "$${IPKG_INSTROOT}" ]; then
+	if [ -f /etc/uci-defaults/luci-koolddns ]; then
+		( . /etc/uci-defaults/luci-koolddns ) && rm -f /etc/uci-defaults/luci-koolddns
+	fi
+	rm -rf /tmp/luci-indexcache
+fi
+exit 0
+endef
 define Build/Prepare
-	$(foreach po,$(wildcard ${CURDIR}/po/zh-cn/*.po), \
-		po2lmo $(po) $(PKG_BUILD_DIR)/$(patsubst %.po,%.lmo,$(notdir $(po)));)
+endef
+
+define Build/Configure
 endef
 
 define Build/Compile
 endef
 
-define Package/$(PKG_NAME)/conffiles
-/etc/config/koolddns
-/etc/koolddns/
-endef
-
 define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci
-	cp -pR ./luasrc/* $(1)/usr/lib/lua/luci
-	$(INSTALL_DIR) $(1)/
-	cp -pR ./root/* $(1)/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/koolddns.lmo $(1)/usr/lib/lua/luci/i18n/
 endef
 
 include $(TOPDIR)/feeds/luci/luci.mk

@@ -73,19 +73,18 @@ start_service()
 	[ "${hijack_ways}" = "use_hosts" ] && { http_port="80"; https_port="443"; }
 	append_param "-p" "${http_port}":"${https_port}"
 
-	if is_enabled "config" "pub_access"; then
-		if [ -e "$(command -v fw4)" ]; then
-			uci -q batch <<-EOF
-				add firewall rule
-				set firewall.@rule[-1].name='unblockneteasemusic_pub_access'
-				set firewall.@rule[-1].proto='tcp'
-				set firewall.@rule[-1].src='wan'
-				set firewall.@rule[-1].dest_port='${http_port}-${https_port}'
-				set firewall.@rule[-1].target='ACCEPT'
-				commit firewall
-			EOF
-			fw4 reload
+	if [ -e "$(command -v fw4)" ]; then
+		json_init
+		if is_enabled "config" "pub_access"; then
+			json_add_int o_pub_access "1"
 		else
+			json_add_int o_pub_access "0"
+		fi
+		json_add_int o_http_port "${http_port}"
+		json_add_int o_https_port "${https_port}"
+		json_add_string o_hijack_ways "${hijack_ways}"
+	else
+		if is_enabled "config" "pub_access"; then
 			iptables -I "INPUT" -p "tcp" --dport "${http_port}" -j "ACCEPT"
 			iptables -I "INPUT" -p "tcp" --dport "${https_port}" -j "ACCEPT"
 			echo "${http_port}:${https_port}" > "/tmp/$NAME.ports"
@@ -129,6 +128,7 @@ start_service()
 	procd_set_param respawn
 
 	local lan_addr="$(uci -q get network.lan.ipaddr)"
+	local tmp="/tmp/$NAME"
 	if [ "${hijack_ways}" = "use_ipset" ]; then
 		# TODO: wating for dnsmasq support nftset
 		mkdir -p "/tmp/dnsmasq.d"
@@ -189,11 +189,8 @@ start_service()
 		local netease_music_ips="$(uclient-fetch -qO- "http://httpdns.n.netease.com/httpdns/v2/d?domain=music.163.com,interface.music.163.com,interface3.music.163.com,apm.music.163.com,apm3.music.163.com,clientlog.music.163.com,clientlog3.music.163.com" |jsonfilter -e '@.data.*.ip.*')"
 		local netease_music_ips2="$(uclient-fetch -qO- "https://music.httpdns.c.163.com/d" --post-data="music.163.com,interface.music.163.com,interface3.music.163.com,apm.music.163.com,apm3.music.163.com,clientlog.music.163.com,clientlog3.music.163.com" |jsonfilter -e '@.dns.*["ips"].*')"
 		if [ -e "$(command -v fw4)" ]; then
-			local tmp="/tmp/$NAME"
 			local neteasemusic_addr="$(echo -e "${netease_music_ips}\n${netease_music_ips2}" |sort -u |awk '{print $1}')"
-			json_init
-			json_add_int o_http_port "${http_port}"
-			json_add_int o_https_port "${https_port}"
+
 			json_add_string o_acl_http_addr "$acl_http_addr"
 			json_add_string o_acl_https_addr "$acl_https_addr"
 			json_add_string o_neteasemusic_addr "$neteasemusic_addr"
@@ -241,6 +238,19 @@ start_service()
 		/etc/init.d/dnsmasq reload
 
 		ip route add "223.252.199.10" dev lo
+		if [ -e "$(command -v fw4)" ]; then
+			json_dump -i >"$tmp.json"
+			if ucode -S -i "$RULES_UC" -E "$tmp.json" >"$tmp.nft" \
+				&& ! cmp -s "$tmp.nft" "$RULES_NFT"; then
+				echo "table inet chk {include \"$tmp.nft\";}" >"$tmp.nft.chk"
+				if nft -f "$tmp.nft.chk" -c; then
+					mv -f "$tmp.nft" "$RULES_NFT"
+					fw4 reload
+				fi
+				rm -f "$tmp.nft.chk"
+			fi
+			rm -f "$tmp.json" "$tmp.nft"
+		fi
 	fi
 
 	procd_close_instance
@@ -268,16 +278,7 @@ stop_service()
 	}
 
 	if [ -e "$(command -v fw4)" ]; then
-		local rule="$(uci show firewall | grep "name='unblockneteasemusic_pub_access'" | awk -F '.' '{ print $2}')"
-		[ -n "${rule}" ] && {
-			uci -q batch <<-EOF
-				delete firewall.${rule}
-				commit firewall
-			EOF
-		}
-
 		[ ! -e "$RULES_NFT" ] || rm -f "$RULES_NFT"
-
 		fw4 reload
 	else
 		[ ! -e "/tmp/$NAME.ports" ] || {
