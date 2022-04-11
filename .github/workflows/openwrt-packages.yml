@@ -43,7 +43,7 @@ jobs:
         $GITHUB_WORKSPACE/${{matrix.target}}.sh
         $GITHUB_WORKSPACE/Modify.sh
         cd ${{matrix.target}}
-        rm -rf *.sh *.github *.diy *.gitignore 
+        rm -rf *.sh && rm -rf .github && rm -rf .gitignore && rm -rf diy
         
     - name: Upload
       env: 
