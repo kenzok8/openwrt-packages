@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [main]
+        target: [master]
         
     steps:
     - name: Checkout
@@ -38,7 +38,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         chmod +x small.sh
-        git clone -b ${{matrix.target}} https://github.com/kenzok8/sync-openwrt-packages.git ${{matrix.target}}
+        git clone -b main https://github.com/kenzok8/sync-openwrt-packages.git ${{matrix.target}}
         cd ${{matrix.target}}
         $GITHUB_WORKSPACE/small.sh
         
@@ -46,12 +46,12 @@ jobs:
       env: 
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
-        [ -e $GITHUB_WORKSPACE/LICENSE ] && cp $GITHUB_WORKSPACE/LICENSE $GITHUB_WORKSPACE/${{matrix.target}}
         [ -e $GITHUB_WORKSPACE/README.md ] && cp $GITHUB_WORKSPACE/README.md $GITHUB_WORKSPACE/${{matrix.target}}
         cd $GITHUB_WORKSPACE/${{matrix.target}}
+        rm -rf *.sh *.github *.diy *.gitignore 
         git add .
         git commit -m "update $(date +%Y-%m-%d" "%H:%M:%S)"
-        git push --force "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/small.git"        
+        git push --force "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/small.git" HEAD:${{matrix.target}}        
         
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
