@@ -39,8 +39,9 @@ jobs:
         cd $GITHUB_WORKSPACE
         chmod +x small.sh
         git clone -b main https://github.com/kenzok8/sync-openwrt-packages.git ${{matrix.target}}
+        cd ${{matrix.target}}
         $GITHUB_WORKSPACE/small.sh
-        cd $GITHUB_WORKSPACE/${{matrix.target}}
+        cd ${{matrix.target}}
         rm -rf *.sh *.github *.diy *.gitignore 
         
     - name: Upload
