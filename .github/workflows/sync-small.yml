@@ -51,7 +51,7 @@ jobs:
         rm -rf *.sh && rm -rf .github && rm -rf .gitignore && rm -rf diy
         git add .
         git commit -m "update $(date +%Y-%m-%d" "%H:%M:%S)"
-        git push --force "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/small.git" HEAD:${{matrix.target}}        
+        git push --force "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/small.git"  
         
     - name: Delete workflow runs
       uses: GitRML/delete-workflow-runs@main
