@@ -1,0 +1,11 @@
+{
+	"luci-app-easyupdate": {
+		"description": "Grant UCI access for luci-app-easyupdate",
+		"read": {
+			"uci": [ "easyupdate" ]
+		},
+		"write": {
+			"uci": [ "easyupdate" ]
+		}
+	}
+}

@@ -33,4 +33,5 @@ config_foreach remove_firewall firewall
 # Convert ac_allowed_container to ac_allowed_ports
 (sleep 30s && /etc/init.d/dockerman convert;/etc/init.d/dockerman restart) &
 
+/etc/init.d/dockerd restart &
 exit 0

@@ -1,7 +1,7 @@
 # The bandwidth unit is Mbit/s
 config eqos
 	option enabled      0
-	option download     50
+	option download     100
 	option upload       20
 
 # Limiting the bandwidth of a single Device

@@ -1,0 +1,200 @@
+<%+cbi/valueheader%>
+	<input class="cbi-button cbi-input-reload" id="update" type="button" value="<%:Collecting data...%>" size="0" disabled onclick="check_version()">
+	<br>
+	<div class="cbi-value-description">
+		<span class="cbi-value-helpicon"><img src="/luci-static/resources/cbi/help.gif" alt="帮助"></span>
+		<span>
+		    <%:Local Firmware Version%>:<%=self.versions%>
+		</span>
+		<br>
+		<span class="cbi-value-helpicon"><img src="/luci-static/resources/cbi/help.gif" alt="帮助"></span>
+		<span id="cloudver">
+		    <%:Cloud Firmware Version%>:<%:Collecting data...%>
+		</span>
+	</div>
+<%+cbi/valuefooter%>
+<style type="text/css">
+	#update_apply_overlay {
+	    white-space: pre-line;
+		position: absolute;
+		top: 0;
+		left: 0;
+		bottom: 0;
+		right: 0;
+		background: rgba(0, 0, 0, 0.7);
+		display: none;
+		z-index: 20000;
+	}
+
+	#update_apply_overlay .alert-message {
+	    overflow: auto;
+		position: relative;
+		top: 10%;
+		width: 60%;
+		margin: auto;
+		display: flex;
+		flex-wrap: wrap;
+		min-height: 10%;
+		align-items: center;
+		max-height: 80%;
+	}
+
+	#update_apply_overlay .alert-message > h4,
+	#update_apply_overlay .alert-message > p,
+	#update_apply_overlay .alert-message > div {
+		flex-basis: 100%;
+	}
+
+	#update_apply_overlay .alert-message > img {
+		margin-right: 1em;
+		flex-basis: 32px;
+	}
+
+	body.apply-overlay-active {
+		overflow: hidden;
+		height: 100vh;
+	}
+
+	body.apply-overlay-active #update_apply_overlay {
+		display: block;
+	}
+	
+	.cbi-input-textarea {
+	    width: 45VW!important;
+	}
+</style>
+<script type="text/javascript">
+function update_status_message(type, content) {
+	document.getElementById('update_apply_overlay') || document.body.insertAdjacentHTML("beforeend",'<div id="update_apply_overlay"><div class="alert-message"></div></div>')
+	var overlay = document.getElementById('update_apply_overlay')
+	message = overlay.querySelector('.alert-message');
+	if (message && type) {
+		if (!message.classList.contains(type)) {
+			message.classList.remove('notice');
+			message.classList.remove('warning');
+			message.classList.add(type);
+		}
+		if (content)
+			message.innerHTML = content;
+            message.scrollTop = message.scrollHeight;
+		document.body.classList.add('apply-overlay-active');
+		document.body.scrollTop = document.documentElement.scrollTop = 0;
+	}
+	else {
+		document.body.classList.remove('apply-overlay-active');
+	}
+}
+function getver() {
+    XHR.get('<%=url([[admin]], [[services]], [[easyupdate]], [[getver]])%>', null,
+    	function(x, data) {
+            const tb = document.getElementById('cloudver');
+            const up = document.getElementById('update');
+            if (data && tb) {
+                if (data.newver) {
+                    tb.innerHTML = '<%:Cloud Firmware Version%>:' + data.newver;
+                    nowverint=<%=os.time({day=self.versions:sub(7,8), month=self.versions:sub(5,6), year=self.versions:sub(1,4), hour=self.versions:sub(10,11), min=self.versions:sub(12,13), sec=self.versions:sub(14,15)})%>
+                    if (data.newverint > nowverint){
+                        up.value = '<%:Download Firmware%>'
+                        up.disabled = false
+                        up.setAttribute('newver', data.newver);
+                    }else{
+                        up.value = '<%:Is the latest%>'
+                        up.disabled = true
+                    }
+                }else{
+                    tb.innerHTML = '<%:Cloud Firmware Version%>:<%:Collecting data...%>';
+                    up.value = '<%:Retry Firmware Check%>'
+                    up.disabled = false
+                }
+            }
+        }
+    );
+	XHR.get('<%=url([[admin]], [[services]], [[easyupdate]], [[check]])%>', {file: ''}, (x, r) => {
+		if (r.code == 1 && r.data.indexOf("OK") > -1) {
+			const tb = document.getElementById('update');
+			tb.setAttribute('file', r.data.slice(0,r.data.indexOf(".img.gz")) + ".img.gz");
+			tb.value = '<%:Firmware Upgrade%>'
+			tb.setAttribute('flash', 1);
+		}
+	});
+}
+getver()
+function check_version() {
+    const tb = document.getElementById('update');
+    const flash= tb.getAttribute("flash")
+    if (flash){
+        XHR.get('<%=url([[admin]], [[services]], [[easyupdate]], [[flash]])%>', {file: tb.getAttribute("file")}, (x, r) => {
+            if (r.code == 1) {
+                XHR.poll(1, '<%=url([[admin]], [[services]], [[easyupdate]], [[getlog]])%>', null,(x, r) => {
+                    update_status_message('notice', r.data);
+					if (r.data.indexOf("Image check failed.") > -1){
+                        XHR.halt()
+                        update_status_message('warning', r.data);
+                        document.getElementById('update_apply_overlay').addEventListener("click", (e)=>{
+                            update_status_message()
+                        })
+                    }else{
+						if (r.data.indexOf("Commencing upgrade") > -1 ){
+							XHR.halt()
+							setTimeout(() => {
+								location.replace(document.location.origin)
+							},180000);
+						}else{
+                            update_status_message('notice', r.data);
+                        }
+                    }
+
+                })
+            } else {
+                tb.disabled = false;
+                tb.value = '<%:Retry Firmware Upgrade%>';
+            }
+        });
+        return
+    }
+    const newver= tb.getAttribute("newver")
+    if (newver){
+        tb.disabled = true;
+        XHR.get('<%=url([[admin]], [[services]], [[easyupdate]], [[download]])%>', null, (x, r) => {
+            if (r.code == 1) {
+				tb.setAttribute('file', r.data);
+                XHR.poll(1, '<%=url([[admin]], [[services]], [[easyupdate]], [[getlog]])%>', null,(x, r) => {
+                    if (r.data.indexOf("transfer closed") > -1 || r.data.indexOf("Could not resolve host") > -1){
+                        XHR.halt()
+                        update_status_message('warning', r.data);
+                        document.getElementById('update_apply_overlay').addEventListener("click", (e)=>{
+                            update_status_message()
+                        })
+                    }else{
+                        if (/100\s.+M\s+100.+--:--:--/.test(r.data)){
+							XHR.get('<%=url([[admin]], [[services]], [[easyupdate]], [[check]])%>', {file: tb.getAttribute("file")}, (x, r) => {
+								XHR.halt()
+								if (r.code == 1 && r.data.indexOf("OK") > -1) {
+									setTimeout(() => {
+										update_status_message();
+										tb.value = '<%:Firmware Upgrade%>'
+										tb.setAttribute('flash', 1);
+									},3000);
+								}else{
+									update_status_message('warning', r.data);
+									document.getElementById('update_apply_overlay').addEventListener("click", (e)=>{
+										update_status_message()
+									})
+								}
+							});
+                        }else{
+                            update_status_message('notice', r.data);
+                        }
+                    }
+                    tb.disabled = false;
+                })
+            } else {
+                tb.disabled = false;
+                tb.value = '<%:Retry Firmware Download%>';
+            }
+        });
+    }else{
+        getver()
+    }
+}
+</script>

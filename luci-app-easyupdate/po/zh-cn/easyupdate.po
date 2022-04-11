@@ -1,0 +1,77 @@
+msgid "EasyUpdate"
+msgstr "简易更新"
+
+msgid "EasyUpdate LUCI supports scheduled upgrade & one-click firmware upgrade."
+msgstr "EasyUpdate 支持LUCI定时升级和一键式固件升级"
+
+msgid "Update may cause the restart failure, Exercise caution when selecting automatic update."
+msgstr "升级可能导致重启失败，请谨慎选择自动升级"
+
+msgid "When selected, firmware upgrade will be automatically at the specified time."
+msgstr "选中后，系统将在指定的时间自动升级固件。"
+
+msgid "When selected, will use the China mirror when accessing Github."
+msgstr "选中后，将在访问Github时使用中国镜像。"
+
+msgid "KEEP CONFIG"
+msgstr "保留配置"
+
+msgid "When selected, configuration is retained when firmware upgrade."
+msgstr "选中后，固件升级时配置将保留。"
+
+msgid "Preference Force Flashing"
+msgstr "强制刷入"
+
+msgid "When selected, Preference Force Flashing while firmware upgrading."
+msgstr "选中时，升级固件时将强制刷入。"
+
+msgid "Update Time"
+msgstr "更新时机"
+
+msgid "Advised to set the automatic update time to idle time."
+msgstr "建议将自动更新时间设置为空闲时间。"
+
+msgid "Everyday"
+msgstr "每天"
+
+msgid "Hour"
+msgstr "小时"
+
+msgid "Only 0 to 23 can be entered."
+msgstr "只能输入0 ~ 23"
+
+msgid "Minute"
+msgstr "分钟"
+
+msgid "Only 0 to 59 can be entered."
+msgstr "只能输入0 ~ 59"
+
+msgid "Github Url"
+msgstr "Github网址"
+
+msgid "Your Github project address."
+msgstr "你的Github项目地址"
+
+msgid "Firmware Upgrade"
+msgstr "固件升级"
+
+msgid "Local Firmware Version"
+msgstr "本地的固件版本"
+
+msgid "Cloud Firmware Version"
+msgstr "云端的固件版本"
+
+msgid "Download Firmware"
+msgstr "下载固件"
+
+msgid "Is the latest"
+msgstr "已是最新"
+
+msgid "Retry Firmware Check"
+msgstr "重试固件检查"
+
+msgid "Retry Firmware Upgrade"
+msgstr "重试固件升级"
+
+msgid "Retry Firmware Download"
+msgstr "重试固件下载"

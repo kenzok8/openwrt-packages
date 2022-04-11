@@ -2,15 +2,19 @@ msgid ""
 msgstr ""
 "Project-Id-Version: LuCi Chinese Translation\n"
 "Report-Msgid-Bugs-To: \n"
-"Language: zh_CN\n"
+"Language: zh_Hans\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.0.6\n"
 
+
 msgid "EQoS"
-msgstr "IP限速"
+msgstr "网速控制"
+
+msgid "eqos"
+msgstr "网速控制"
 
 msgid "Comment"
 msgstr "注解"
@@ -24,8 +28,8 @@ msgstr "开启"
 msgid "QoS"
 msgstr "QoS"
 
-msgid "Quality of Service"
-msgstr "IP限速"
+msgid "Network speed control service"
+msgstr "网速控制服务"
 
 msgid "Upload speed (Mbit/s)"
 msgstr "上传速度 (Mbit/s)"
@@ -35,3 +39,6 @@ msgstr "IP限速"
 
 msgid "Total bandwidth"
 msgstr "总带宽"
+
+msgid "Flow control setting"
+msgstr "流控设置"

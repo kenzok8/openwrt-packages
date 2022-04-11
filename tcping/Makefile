@@ -10,7 +10,7 @@ PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/Mattraks/tcping/tar.gz/$(PKG_VERSION)?
-PKG_HASH:=c703481d1751adf051dd3391c4dccdadc6dfca7484e636222b392e1213312e02
+PKG_HASH:=skip
 
 PKG_LICENSE:=GPL-2.0-only
 PKG_LICENSE_FILE:=license.txt
