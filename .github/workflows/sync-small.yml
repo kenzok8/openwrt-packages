@@ -38,7 +38,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         chmod +x small.sh
-        git clone -b master https://github.com/kenzok8/small.git ${{matrix.target}}
+        git clone -b ${{matrix.target}} https://github.com/kenzok8/sync-openwrt-packages.git ${{matrix.target}}
         cd ${{matrix.target}}
         $GITHUB_WORKSPACE/small.sh
         
