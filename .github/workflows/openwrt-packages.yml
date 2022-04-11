@@ -42,15 +42,15 @@ jobs:
         cd ${{matrix.target}}
         $GITHUB_WORKSPACE/${{matrix.target}}.sh
         $GITHUB_WORKSPACE/Modify.sh
-        cd ${{matrix.target}}
-        rm -rf *.sh && rm -rf .github && rm -rf .gitignore && rm -rf diy
         
     - name: Upload
       env: 
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       run: |
+        [ -e $GITHUB_WORKSPACE/LICENSE ] && cp $GITHUB_WORKSPACE/LICENSE $GITHUB_WORKSPACE/${{matrix.target}}
         [ -e $GITHUB_WORKSPACE/README.md ] && cp $GITHUB_WORKSPACE/README.md $GITHUB_WORKSPACE/${{matrix.target}}
         cd $GITHUB_WORKSPACE/${{matrix.target}}
+        rm -rf *.sh && rm -rf .github && rm -rf .gitignore && rm -rf diy
         git add .
         git commit -m "update $(date +%Y-%m-%d" "%H:%M:%S)"
         git push --force "https://${{ secrets.ACCESS_TOKEN }}@github.com/kenzok8/openwrt-packages.git" HEAD:${{matrix.target}}        
