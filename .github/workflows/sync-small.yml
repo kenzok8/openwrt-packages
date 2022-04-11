@@ -42,7 +42,7 @@ jobs:
         cd ${{matrix.target}}
         $GITHUB_WORKSPACE/small.sh
         cd ${{matrix.target}}
-        rm -rf *.sh *.github *.diy *.gitignore 
+        rm -rf *.sh && rm -rf .github && rm -rf .gitignore && rm -rf diy
         
     - name: Upload
       env: 
