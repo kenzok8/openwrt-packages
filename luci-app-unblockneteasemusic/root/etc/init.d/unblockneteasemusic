@@ -1,0 +1,316 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: GPL-3.0-only
+#
+# Copyright (C) 2019-2021 Tianling Shen <cnsztl@immortalwrt.org>
+
+USE_PROCD=1
+
+START=99
+STOP=10
+
+NAME="unblockneteasemusic"
+UPGRADE_CONF="/lib/upgrade/keep.d/$NAME"
+
+IPT_N="iptables -t nat"
+RULES_UC="/usr/share/$NAME/rules/default.uc"
+RULES_NFT="/etc/nftables.d/90-$NAME-rules.nft"
+
+is_enabled() {
+	local enabled
+	config_get_bool enabled "$1" "$2" "${3:-0}"
+	if [ "$enabled" -eq "1" ]; then
+		return 0
+	else
+		return 1
+	fi
+}
+
+append_param() {
+	procd_append_param command "$1" $2
+}
+
+append_param_arg() {
+	local value
+	config_get value "$1" "$2" $4
+	[ -n "$value" ] && append_param "$3" "$value"
+}
+
+append_param_env() {
+	local value
+	config_get value "$1" "$2" $4
+	[ -n "$value" ] && procd_append_param env "$3"="$value"
+}
+
+uci_get_by_name() {
+	local ret
+	ret="$(uci -q get "$NAME".@"$1"["${4:-0}"]."$2")"
+	echo "${ret:-$3}"
+}
+
+start_service()
+{
+	config_load "$NAME"
+	is_enabled "config" "enable" || exit 1
+
+	local update_time
+	config_get update_time "config" "update_time" "3"
+	sed -i "/$NAME/d" /etc/crontabs/root
+	is_enabled "config" "auto_update" && echo "0 ${update_time} * * * /usr/share/$NAME/update.sh update_core" >> "/etc/crontabs/root"
+	echo "*/5 * * * * /usr/share/$NAME/log_check.sh" >> "/etc/crontabs/root"
+	/etc/init.d/cron restart
+
+	[ ! -s "/usr/share/$NAME/core/app.js" ] && { rm -f "/usr/share/$NAME/local_ver"; sh "/usr/share/$NAME/update.sh" "update_core_non_restart"; }
+	[ ! -s "/usr/share/$NAME/core/app.js" ] && { echo "Core Not Found, please download it before starting." >> "/tmp/$NAME.log"; exit 1; }
+
+	procd_open_instance "$NAME"
+	procd_set_param command node "/usr/share/$NAME/core/app.js"
+	append_param "-a" "0.0.0.0"
+
+	local http_port https_port hijack_ways
+	config_get http_port "config" "http_port" "5200"
+	config_get https_port "config" "https_port" "5201"
+	config_get hijack_ways "config" "hijack_ways" "use_ipset"
+	[ "${hijack_ways}" = "use_hosts" ] && { http_port="80"; https_port="443"; }
+	append_param "-p" "${http_port}":"${https_port}"
+
+	if [ -e "$(command -v fw4)" ]; then
+		json_init
+		if is_enabled "config" "pub_access"; then
+			json_add_int o_pub_access "1"
+		else
+			json_add_int o_pub_access "0"
+		fi
+		json_add_int o_http_port "${http_port}"
+		json_add_int o_https_port "${https_port}"
+		json_add_string o_hijack_ways "${hijack_ways}"
+	else
+		if is_enabled "config" "pub_access"; then
+			iptables -I "INPUT" -p "tcp" --dport "${http_port}" -j "ACCEPT"
+			iptables -I "INPUT" -p "tcp" --dport "${https_port}" -j "ACCEPT"
+			echo "${http_port}:${https_port}" > "/tmp/$NAME.ports"
+
+			mkdir -p "/var/etc/"
+			echo "/etc/init.d/$NAME restart" > "/var/etc/$NAME.include"
+		fi
+	fi
+
+	local music_source
+	config_get music_source "config" "music_source" "default"
+	[ "${music_source}" != "default" ] && append_param -o "${music_source}"
+
+	append_param_arg "config" "cnrelay" "-c"
+	append_param_arg "config" "endpoint_url" "-e" "https://music.163.com"
+	append_param_arg "config" "netease_server_ip" "-f"
+	append_param_arg "config" "proxy_server_ip" "-u"
+	is_enabled "config" "strict_mode" && append_param "-s"
+
+	procd_set_param env LOG_FILE="/tmp/$NAME.log"
+
+	append_param_env "config" "joox_cookie" "JOOX_COOKIE"
+	append_param_env "config" "migu_cookie" "MIGU_COOKIE"
+	append_param_env "config" "qq_cookie" "QQ_COOKIE"
+	append_param_env "config" "youtube_key" "YOUTUBE_KEY"
+	append_param_env "config" "self_issue_cert_crt" "SIGN_CERT" "/usr/share/$NAME/core/server.crt"
+	append_param_env "config" "self_issue_cert_key" "SIGN_KEY" "/usr/share/$NAME/core/server.key"
+
+	is_enabled "config" "enable_flac" && procd_append_param env ENABLE_FLAC="true"
+	is_enabled "config" "local_vip" && procd_append_param env ENABLE_LOCAL_VIP="true"
+	case "$(config_get "config" "replace_music_source")" in
+		"lower_than_192kbps") procd_append_param env MIN_BR="192000" ;;
+		"lower_than_320kbps") procd_append_param env MIN_BR="320000" ;;
+		"lower_than_999kbps") procd_append_param env MIN_BR="600000" ;;
+		"replace_all") procd_append_param env MIN_BR="9999999" ;;
+	esac
+	procd_append_param env JSON_LOG="true"
+
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_set_param respawn
+
+	local lan_addr="$(uci -q get network.lan.ipaddr)"
+	local tmp="/tmp/$NAME"
+	if [ "${hijack_ways}" = "use_ipset" ]; then
+		# TODO: wating for dnsmasq support nftset
+		mkdir -p "/tmp/dnsmasq.d"
+		rm -f "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
+		cat <<-EOF > "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
+			dhcp-option=252,http://${lan_addr}:${http_port}/proxy.pac
+			ipset=/.music.163.com/neteasemusic
+			ipset=/interface.music.163.com/neteasemusic
+			ipset=/interface3.music.163.com/neteasemusic
+			ipset=/apm.music.163.com/neteasemusic
+			ipset=/apm3.music.163.com/neteasemusic
+			ipset=/clientlog.music.163.com/neteasemusic
+			ipset=/clientlog3.music.163.com/neteasemusic
+		EOF
+		/etc/init.d/dnsmasq reload
+
+		[ -e "$(command -v fw4)" ] || {
+			ipset create "acl_neteasemusic_http" hash:ip
+			ipset create "acl_neteasemusic_https" hash:ip
+			ipset create "neteasemusic" hash:ip
+		}
+
+		local ip_addr_num="$(uci show "$NAME" | grep -c "filter_mode")"
+		let ip_addr_num="ip_addr_num-1"
+		local acl_http_addr acl_https_addr
+		[ "${ip_addr_num}" -ge "0" ] && for i in $(seq 0 "${ip_addr_num}")
+		do
+			ip_addr="$(uci_get_by_name "acl_rule" "ip_addr" "" "$i")"
+			filter_mode="$(uci_get_by_name "acl_rule" "filter_mode" "" "$i")"
+
+			case "${filter_mode}" in
+			"disable_http")
+				if [ -e "$(command -v fw4)" ];then
+					acl_http_addr="${acl_http_addr}${ip_addr}\n"
+				else
+					ipset -! add "acl_neteasemusic_http" "${ip_addr}"
+				fi
+				;;
+			"disable_https")
+				if [ -e "$(command -v fw4)" ]; then
+					acl_https_addr="${acl_https_addr}${ip_addr}\n"
+				else
+					ipset -! add "acl_neteasemusic_https" "${ip_addr}"
+				fi
+				;;
+			"disable_all")
+				if [ -e "$(command -v fw4)" ]; then
+					acl_http_addr="${acl_http_addr}${ip_addr}\n"
+					acl_https_addr="${acl_https_addr}${ip_addr}\n"
+				else
+					ipset -! add "acl_neteasemusic_http" "${ip_addr}"
+					ipset -! add "acl_neteasemusic_https" "${ip_addr}"
+				fi
+				;;
+			esac
+		done
+
+		local netease_music_ips="$(uclient-fetch -qO- "http://httpdns.n.netease.com/httpdns/v2/d?domain=music.163.com,interface.music.163.com,interface3.music.163.com,apm.music.163.com,apm3.music.163.com,clientlog.music.163.com,clientlog3.music.163.com" |jsonfilter -e '@.data.*.ip.*')"
+		local netease_music_ips2="$(uclient-fetch -qO- "https://music.httpdns.c.163.com/d" --post-data="music.163.com,interface.music.163.com,interface3.music.163.com,apm.music.163.com,apm3.music.163.com,clientlog.music.163.com,clientlog3.music.163.com" |jsonfilter -e '@.dns.*["ips"].*')"
+		if [ -e "$(command -v fw4)" ]; then
+			local neteasemusic_addr="$(echo -e "${netease_music_ips}\n${netease_music_ips2}" |sort -u |awk '{print $1}')"
+
+			json_add_string o_acl_http_addr "$acl_http_addr"
+			json_add_string o_acl_https_addr "$acl_https_addr"
+			json_add_string o_neteasemusic_addr "$neteasemusic_addr"
+			json_dump -i >"$tmp.json"
+
+			if ucode -S -i "$RULES_UC" -E "$tmp.json" >"$tmp.nft" \
+				&& ! cmp -s "$tmp.nft" "$RULES_NFT"; then
+				echo "table inet chk {include \"$tmp.nft\";}" >"$tmp.nft.chk"
+				if nft -f "$tmp.nft.chk" -c; then
+					mv -f "$tmp.nft" "$RULES_NFT"
+					fw4 reload
+				fi
+				rm -f "$tmp.nft.chk"
+			fi
+			rm -f "$tmp.json" "$tmp.nft"
+		else
+			echo -e "${netease_music_ips}\n${netease_music_ips2}" |sort -u |awk '{print "ipset add neteasemusic "$1}' |sh
+
+			$IPT_N -N "netease_cloud_music"
+			for local_addr in "0.0.0.0/8" "10.0.0.0/8" "127.0.0.0/8" "169.254.0.0/16" "172.16.0.0/12" "192.168.0.0/16" "224.0.0.0/4" "240.0.0.0/4"; do
+				$IPT_N -A "netease_cloud_music" -d "${local_addr}" -j "RETURN"
+			done
+
+			$IPT_N -A "netease_cloud_music" -p "tcp" -m "set" ! --match-set "acl_neteasemusic_http" "src" --dport "80" -j "REDIRECT" --to-ports "${http_port}"
+			$IPT_N -A "netease_cloud_music" -p "tcp" -m "set" ! --match-set "acl_neteasemusic_https" "src" --dport "443" -j "REDIRECT" --to-ports "${https_port}"
+			$IPT_N -I "PREROUTING" -p "tcp" -m "set" --match-set "neteasemusic" "dst" -j "netease_cloud_music"
+
+			mkdir -p "/var/etc/"
+			echo "/etc/init.d/$NAME restart" > "/var/etc/$NAME.include"
+		fi
+	elif [ "${hijack_ways}" = "use_hosts" ]; then
+		mkdir -p "/tmp/dnsmasq.d"
+		rm -f "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
+		cat <<-EOF > "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
+			dhcp-option=252,http://${lan_addr}:${http_port}/proxy.pac
+			address=/music.163.com/${lan_addr}
+			address=/interface.music.163.com/${lan_addr}
+			address=/interface3.music.163.com/${lan_addr}
+			address=/apm.music.163.com/${lan_addr}
+			address=/apm3.music.163.com/${lan_addr}
+			address=/clientlog.music.163.com/${lan_addr}
+			address=/clientlog3.music.163.com/${lan_addr}
+			address=/music.httpdns.c.163.com/0.0.0.0
+		EOF
+		/etc/init.d/dnsmasq reload
+
+		ip route add "223.252.199.10" dev lo
+		if [ -e "$(command -v fw4)" ]; then
+			json_dump -i >"$tmp.json"
+			if ucode -S -i "$RULES_UC" -E "$tmp.json" >"$tmp.nft" \
+				&& ! cmp -s "$tmp.nft" "$RULES_NFT"; then
+				echo "table inet chk {include \"$tmp.nft\";}" >"$tmp.nft.chk"
+				if nft -f "$tmp.nft.chk" -c; then
+					mv -f "$tmp.nft" "$RULES_NFT"
+					fw4 reload
+				fi
+				rm -f "$tmp.nft.chk"
+			fi
+			rm -f "$tmp.json" "$tmp.nft"
+		fi
+	fi
+
+	procd_close_instance
+} >"/dev/null" 2>&1
+
+stop_service()
+{
+	config_load "$NAME"
+
+	sed -i "/$NAME/d" "/etc/crontabs/root"
+	/etc/init.d/cron restart
+
+	rm -f "${UPGRADE_CONF}"
+	is_enabled "config" "keep_core_when_upgrade" && {
+		echo "/usr/share/$NAME/core/" >> "${UPGRADE_CONF}"
+		echo "/usr/share/$NAME/local_ver" >> "${UPGRADE_CONF}"
+	}
+
+	local self_issue_cert_crt self_issue_cert_key
+	config_get "self_issue_cert_crt" "config" "self_issue_cert_crt"
+	config_get "self_issue_cert_key" "config" "self_issue_cert_key"
+	{ [ -f "${self_issue_cert_crt}" ] && [ -f "${self_issue_cert_key}" ]; } && {
+		echo "${self_issue_cert_crt}" >> "${UPGRADE_CONF}"
+		echo "${self_issue_cert_key}" >> "${UPGRADE_CONF}"
+	}
+
+	if [ -e "$(command -v fw4)" ]; then
+		[ ! -e "$RULES_NFT" ] || rm -f "$RULES_NFT"
+		fw4 reload
+	else
+		[ ! -e "/tmp/$NAME.ports" ] || {
+			iptables -D "INPUT" -p "tcp" --dport "$(awk -F ':' 'print $1' "/tmp/$NAME.ports")" -j "ACCEPT"
+			iptables -D "INPUT" -p "tcp" --dport "$(awk -F ':' 'print $2' "/tmp/$NAME.ports")" -j "ACCEPT"
+		}
+		rm -f "/tmp/$NAME.ports"
+
+		$IPT_N -D "PREROUTING" -p "tcp" -m set --match-set "neteasemusic" "dst" -j "netease_cloud_music"
+		$IPT_N -F "netease_cloud_music"
+		$IPT_N -X "netease_cloud_music"
+
+		ipset destroy "neteasemusic"
+		ipset destroy "acl_neteasemusic_http"
+		ipset destroy "acl_neteasemusic_https"
+
+		echo "" > "/var/etc/$NAME.include"
+	fi
+
+	rm -f "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
+	/etc/init.d/dnsmasq reload
+
+	ip route del "223.252.199.10"
+
+	rm -f "/tmp/$NAME.log"
+} >"/dev/null" 2>&1
+
+reload_service() {
+	stop
+	start
+}
+
+service_triggers() {
+	procd_add_reload_trigger "$NAME"
+}

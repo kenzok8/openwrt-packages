@@ -1,0 +1,18 @@
+## 更新：2022年3月24日：
+1、删除以前所有commits。升级到了最新的comiits：其中重要的几次如下
+
+## 更新：2022年2月12日：
+   删除不必要的rmempty：luci-app-ikoolproxy: drop rmempty
+ 感谢 [Beginner-Go](https://github.com/Beginner-Go) 
+ 
+## 更新：2022年1月3日：
+ 感谢 [Beginner-Go](https://github.com/Beginner-Go)  升级koolproxy: x86_64 bin update to 3.8.6
+   
+## 更新：2021年3月23日：
+感谢 [maple's sky](https://github.com/maplesky) 大佬提供技术支持，修复状态栏不动态问题。
+
+## 更新：2021年3月4日：
+感谢 [xiaoqi2020](https://github.com/xiaoqi2020) 提供，选择规则托管国内。
+
+## 更新：2021年2月26日（元宵）：
+原来的码云以及coding规则已经无法获取（被封）了。现在托管在github上。

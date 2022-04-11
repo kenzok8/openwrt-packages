@@ -1,0 +1,11 @@
+{
+    "luci-app-koolddns": {
+        "description": "Luci interface for the koolddns",
+        "read": {
+            "uci": [ "koolddns" ]
+        },
+        "write": {
+            "uci": [ "koolddns" ]
+        }
+    }
+}

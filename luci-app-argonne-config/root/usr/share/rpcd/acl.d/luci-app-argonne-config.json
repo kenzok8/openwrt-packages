@@ -1,0 +1,11 @@
+{
+    "luci-argonne-config": {
+        "description": "Luci Argonne theme config ",
+        "read": {
+            "uci": [ "argonne" ]
+        },
+        "write": {
+            "uci": [ "argonne" ]
+        }
+    }
+}

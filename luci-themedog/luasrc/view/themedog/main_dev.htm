@@ -1,0 +1,11 @@
+<%+header%>
+	<script>
+		(function(){
+			window.ThemeDog = {
+				HostName: "<%=luci.sys.hostname()%>",
+				BaseURL:"<%=media%>",
+			}
+		})()
+	</script>
+	<script type="module" src="http://localhost:3000/src/main.ts"></script>
+<%+footer%>

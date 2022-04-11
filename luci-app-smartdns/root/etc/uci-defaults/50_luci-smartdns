@@ -1,0 +1,13 @@
+#!/bin/sh
+# Copyright 2018-2020 Nick Peng <pymumu@gmail.com>
+# Licensed to the public under the GPL V3 License.
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@smartdns[-1]
+	add ucitrack smartdns
+	set ucitrack.@smartdns[-1].init=smartdns
+	commit ucitrack
+EOF
+
+rm -f /tmp/luci-indexcache
+exit 0

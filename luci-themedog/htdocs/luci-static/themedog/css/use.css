@@ -1,0 +1,48 @@
+:root {
+    --background-color-high-hsl: none;
+    --background-color-high: none;
+    --background-color-medium-hsl: none;
+    --background-color-medium: none;
+    --background-color-low-hsl: none;
+    --background-color-low: none;
+    --text-color-high: #eee;
+}
+#maincontent {
+    position: relative;
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 3rem 1rem 1rem;
+}
+.alert-message.fade-in.warning {
+    max-width: 1100px;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 1rem;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+}
+.alert-message.fade-in.warning.fade-out {
+    display: none !important;
+}
+/* html,body{
+    color-scheme: none !important;
+}
+body {
+    background: none !important;
+    background: url(/luci-static/themedog/image/bg.gif) no-repeat center center fixed;
+} */
+.modal {
+    background-color: #181c20c7;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+select{
+    background-color: #181c20c7;
+}
+option{
+    color: #fff;
+}
+.cbi-dropdown[open] > ul.dropdown {
+    background-color: #181c20;
+}

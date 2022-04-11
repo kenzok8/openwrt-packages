@@ -1,0 +1,9 @@
+{
+    "admin/themedog": {
+        "order": 0,
+        "action": {
+            "type": "template",
+            "path": "themedog/main"
+        }
+    }
+}

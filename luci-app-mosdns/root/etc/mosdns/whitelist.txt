@@ -1,0 +1,4 @@
+tracking.miui.com
+tracking.intl.miui.com
+api.intl.miui.com
+stat.xiaomi.com

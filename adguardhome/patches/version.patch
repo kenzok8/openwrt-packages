@@ -1,0 +1,9 @@
+--- a/client/src/helpers/version.js
++++ b/client/src/helpers/version.js
+@@ -13,5 +13,5 @@ export const areEqualVersions = (left, right) => {
+ 
+     const leftVersion = left.replace(/^v/, '');
+     const rightVersion = right.replace(/^v/, '');
+-    return leftVersion === rightVersion;
++    return leftVersion >= rightVersion;
+ };

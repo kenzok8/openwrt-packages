@@ -1,0 +1,24 @@
+<%+header%>
+<link rel="stylesheet" href="/luci-static/istore/style.css?v=<%=id.version%>">
+<script>
+    (function(){
+        var vue_prefix="<%=prefix%>";
+        var myurl = window.location.pathname;
+        window.addEventListener('popstate', function(){
+            if (myurl != window.location.pathname 
+              && window.location.pathname != vue_prefix 
+              && ! window.location.pathname.startsWith(vue_prefix+'/')) {
+                window.location.href = window.location.pathname;
+            }
+        });
+        window.vue_base = vue_prefix + '/';
+        window.token = "<%=token%>";
+        window.device_id = {arch:"<%=id.arch%>",uid:"<%=id.uid%>",version:"<%=id.version%>"};
+    })();
+</script>
+<h2 name="content">应用商店 v<%=id.version%></h2>
+<div id="app">
+</div>
+<script type="module" crossorigin src="/luci-static/istore/index.js?v=<%=id.version%>"></script>
+<link rel="modulepreload" href="/luci-static/istore/vendor.js?v=<%=id.version%>">
+<%+footer%>

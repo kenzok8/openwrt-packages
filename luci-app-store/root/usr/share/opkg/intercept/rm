@@ -1,0 +1,7 @@
+#!/bin/sh
+for i in "$@"; do
+	echo "$i" | grep -s -q "/etc/uci-defaults/" \
+		&& mkdir -p /etc/istore/uci-defaults_bak \
+		&& cp -f "$i" /etc/istore/uci-defaults_bak/
+done
+/bin/rm "$@"

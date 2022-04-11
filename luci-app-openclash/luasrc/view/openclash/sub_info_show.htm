@@ -1,0 +1,89 @@
+<%+cbi/valueheader%>
+<style>
+.sub_tab{
+	display: inline-block;
+	white-space: nowrap;
+	color: black;
+	font-size: 12px;
+	text-align: left;
+	margin-top: 5px;
+	opacity: 0;
+}
+
+.sub_tab_show{
+	display: inline-block;
+	white-space: nowrap;
+	color: black;
+	font-size: 12px;
+	margin-top: 5px;
+	text-align: left;
+	-webkit-transition: all 1.5s;  
+	-moz-transition: all 1.5s;  
+	-ms-transition: all 1.5s;  
+	-o-transition: all 1.5s;  
+	transition: all 1s;  
+	opacity: 1;
+}
+</style>
+
+<div>
+<%
+	local fs = require "luci.openclash"
+	local val = self:cfgvalue(section)
+	local filename = fs.filename(val)
+	local idname = math.random(1000)..(string.match(filename, "[%w_]+") or "")
+%>
+	<div id='<%=idname%>' class="sub_tab"></div>
+</div>
+
+<script type="text/javascript">//<![CDATA[
+
+var new_sub_info_get_<%=idname%> = true;
+sub_info_get_<%=idname%>();
+
+function sub_info_get_<%=idname%>()
+{
+	
+	if (document.getElementById('<%=idname%>').innerHTML != "" && ! new_sub_info_get_<%=idname%>) {
+		clearTimeout(s_<%=idname%>);
+		return
+	}
+	else {
+		if (localStorage.getItem("<%=filename%>")) {
+			var save_info = JSON.parse(localStorage.getItem("<%=filename%>"));
+			document.getElementById('<%=idname%>').className = "sub_tab_show";
+			if (save_info.sub_info == "No Sub Info Found") {
+				document.getElementById('<%=idname%>').innerHTML = "<span><%:No Sub Info Found%></span>";
+			}
+			else {
+				document.getElementById('<%=idname%>').innerHTML = "<%:Plan Traffic%>" + ": " + "<span style=color:green>" + save_info.used + "</span> | <span style=color:green>" + save_info.total + "</span> <br/> <%:Plan Expiration Time%>: " + "<span style=color:green>" + save_info.expire + "</span>";
+			}
+		}
+	};
+	
+	XHR.get('<%=luci.dispatcher.build_url("admin", "services", "openclash", "sub_info_get")%>', {filename: "<%=filename%>"}, function(x, status) {
+		if (x && x.status == 200 && status.sub_info != "" && status.sub_info != "No Sub Info Found") {
+			localStorage.setItem("<%=filename%>",JSON.stringify(status));
+			new_sub_info_get_<%=idname%> = false;
+			document.getElementById('<%=idname%>').className = "sub_tab_show";
+			document.getElementById('<%=idname%>').innerHTML = "<%:Plan Traffic%>" + ": " + "<span style=color:green>" + status.used + "</span> | <span style=color:green>" + status.total + "</span> <br/> <%:Plan Expiration Time%>: " + "<span style=color:green>" + status.expire + "</span>";
+		}
+		else if ( x && x.status == 200 && status.sub_info == "No Sub Info Found" ) {
+			localStorage.setItem("<%=filename%>",JSON.stringify(status));
+			new_sub_info_get_<%=idname%> = false;
+			document.getElementById('<%=idname%>').className = "sub_tab_show";
+			document.getElementById('<%=idname%>').innerHTML = "<span><%:No Sub Info Found%></span>";
+			clearTimeout(s_<%=idname%>);
+			return
+		}
+		else {
+			document.getElementById('<%=idname%>').className = "sub_tab_show";
+			document.getElementById('<%=idname%>').innerHTML = "<span style=color:red><%:Sub Info Get Error%></span>";
+		};
+	});
+	
+	var s_<%=idname%> = setTimeout("sub_info_get_<%=idname%>()",1000*600);
+};
+
+//]]></script>
+<%+cbi/valuefooter%>

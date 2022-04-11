@@ -1,0 +1,440 @@
+#!/bin/sh
+#set -x
+#IS_DEBUG=1
+
+IS_ROOT=/tmp/is-root
+DL_DIR=${IS_ROOT}/tmp/dl
+LISTS_DIR_O=/tmp/opkg-lists
+LISTS_DIR=${IS_ROOT}${LISTS_DIR_O}
+OPKG_CONF_DIR=${IS_ROOT}/etc/opkg
+APP_LIST_FILE=/etc/istore/app.list
+BACKUP_CONFIG_FILE=/etc/config/istore
+FEEDS_SERVER=https://istore.linkease.com/repo
+ARCH=`jsonfilter -i /etc/.app_store.id -e '$.arch'`
+
+# for istore self upgrade
+ISTORE_PKG=luci-app-store
+ISTORE_INDEX=https://istore.linkease.com/repo/all/store/Packages.gz
+
+action=${1}
+shift
+
+is_init() {
+    mkdir -p ${DL_DIR} ${LISTS_DIR} ${IS_ROOT}/etc ${IS_ROOT}/var
+
+    cat /etc/opkg.conf | grep -v lists_dir | grep -v check_signature > ${IS_ROOT}/etc/opkg.conf
+
+    cp ${IS_ROOT}/etc/opkg.conf ${IS_ROOT}/etc/opkg_o.conf
+
+    echo >> ${IS_ROOT}/etc/opkg.conf
+    echo "lists_dir ext ${LISTS_DIR}" >> ${IS_ROOT}/etc/opkg.conf
+    echo >> ${IS_ROOT}/etc/opkg_o.conf
+    echo "lists_dir ext ${LISTS_DIR_O}" >> ${IS_ROOT}/etc/opkg_o.conf
+
+    cp -au /etc/opkg ${IS_ROOT}/etc/
+    [ -e ${IS_ROOT}/var/lock ] || ln -s /var/lock ${IS_ROOT}/var/lock
+}
+
+opkg_wrap() {
+    OPKG_CONF_DIR=${OPKG_CONF_DIR} opkg -f ${IS_ROOT}/etc/opkg.conf "$@"
+}
+
+fcurl() {
+    curl --fail --show-error "$@"
+}
+
+update() {
+    if [ -z "${ARCH}" ]; then
+        echo "Get architecture failed" >&2
+        echo "/etc/.app_store.id:" >&2
+        cat /etc/.app_store.id >&2
+        return 1
+    fi
+
+    fcurl -o ${OPKG_CONF_DIR}/meta.conf "${FEEDS_SERVER}/all/meta.conf" && \
+      fcurl -o ${OPKG_CONF_DIR}/all.conf "${FEEDS_SERVER}/all/isfeeds.conf" && \
+      fcurl -o ${OPKG_CONF_DIR}/arch.conf "${FEEDS_SERVER}/${ARCH}/isfeeds.conf" || \
+      return 1
+
+    opkg -f ${IS_ROOT}/etc/opkg_o.conf --offline-root ${IS_ROOT} update
+
+    return 0
+}
+
+update_if_outdate() {
+    local idle_t=$((`date '+%s'` - `date -r ${IS_ROOT}/.last_force_ts '+%s' 2>/dev/null || echo '0'`))
+    [ $idle_t -gt ${1:-120} ] || return 2
+    update || return 1
+    touch ${IS_ROOT}/.last_force_ts
+    return 0
+}
+
+check_self_upgrade() {
+    local newest=`curl --connect-timeout 2 --max-time 5 -s ${ISTORE_INDEX} | gunzip | grep -FA10 "Package: ${ISTORE_PKG}" | grep -Fm1 'Version: ' | sed 's/^Version: //'`
+    local current=`grep -Fm1 'Version: ' /usr/lib/opkg/info/${ISTORE_PKG}.control | sed 's/^Version: //'`
+    if [ "v$newest" = "v" -o "v$current" = "v" ]; then
+        echo "Check version failed!" >&2
+        exit 255
+    fi
+    if [ "$newest" != "$current" ]; then
+        echo "$newest"
+    fi
+    return 0
+}
+
+do_self_upgrade() {
+    check_mtime || return 1
+    if opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed ; then
+        true
+    else
+        update_if_outdate
+        local code=$?
+        [ "$code" = 1 ] && return 1
+        if [ "$code" = 2 ] || ! opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed; then
+            echo "already the latest version!" >&2
+            return 1
+        fi
+    fi
+    opkg_wrap upgrade ${ISTORE_PKG}
+}
+
+check_mtime() {
+    find ${OPKG_CONF_DIR}/arch.conf -mtime -1 2>/dev/null | grep -q .  || update
+}
+
+wrapped_in_update() {
+    check_mtime || return 1
+    opkg_wrap "$@" && return 0
+    update_if_outdate || return 1
+    opkg_wrap "$@"
+}
+
+new_upgrade() {
+    check_mtime || return 1
+    local metapkg=`echo "$@" | sed 's/ /\n/g' | grep -F app-meta-`
+    if [ -z "$metapkg" ] || opkg_wrap info $metapkg | grep -qF not-installed ; then
+        true
+    else
+        update_if_outdate
+    fi
+    wrapped_in_update upgrade "$@"
+}
+
+opkg_list_installed_packages() {
+    target=$1
+    case $target in
+        "preinstalled")
+            OPKG_INFO_DIR="/rom/usr/lib/opkg/info"
+        ;;
+        "userinstalled")
+            OPKG_INFO_DIR="/overlay/upper/usr/lib/opkg/info"
+        ;;
+        "allinstalled")
+            OPKG_INFO_DIR="/usr/lib/opkg/info"
+        ;;
+        *)
+            echo "invalid target"
+            exit
+        ;;
+    esac
+    (cd $OPKG_INFO_DIR && find . -depth -maxdepth 1 -name "*.list" -type f | sed 's#^\./\(.*\)\.list$#\1#g')
+}
+
+ipk_build() {
+    PKG_NAME_TEMP=$1
+    IPK_OUTPUT_DIR=$2
+
+    UCI_BAK_DIR="/etc/istore/uci-defaults_bak/"
+    UCI_DEF_DIR="etc/uci-defaults"
+    OPKG_INFO_DIR="/usr/lib/opkg/info/"
+
+    [ -n "${PKG_NAME_TEMP}" ] || exit 1
+    #get real pkg name in opkg
+    PKG_NAME_TEMP=`cat ${IS_ROOT}/all_installed_package.list | sort -u | grep "^${PKG_NAME_TEMP}" | head -n 1`
+    [ -n "${PKG_NAME_TEMP}" ] || exit 1
+
+    PKG_NAME=`cat ${OPKG_INFO_DIR}${PKG_NAME_TEMP}.control | grep "^Package: " |  cut -d ' ' -f2`
+    PKG_VER=`cat ${OPKG_INFO_DIR}${PKG_NAME}.control | grep "^Version: " |  cut -d ' ' -f2`
+    PKG_ARCH=`cat ${OPKG_INFO_DIR}${PKG_NAME}.control | grep "^Architecture: " |  cut -d ' ' -f2`
+    IPK_FILE_NAME="${PKG_NAME}_${PKG_VER}_${PKG_ARCH}"
+
+    rm -rf ${IS_ROOT}/${IPK_FILE_NAME}
+    mkdir -p ${IS_ROOT}/${IPK_FILE_NAME}
+
+    #(1)make CONTROL dir; (2)copy control file to dir
+    cd ${IS_ROOT}/${IPK_FILE_NAME}
+    mkdir -p CONTROL
+    for control_file in `ls  ${OPKG_INFO_DIR}${PKG_NAME}.* | grep -v ".list$"`; do
+        file=${control_file##*/}
+        suffix=${file##*.}
+        cp ${control_file} CONTROL/${suffix}
+    done
+
+    #(1)make DATA depend dir; (2)copy uci-defaults_bak file to dir; (3)copy other file to dir
+    for pkgfile in `cat ${OPKG_INFO_DIR}${PKG_NAME}.list | cut -b 2-`; do
+        file=${pkgfile##*/}
+        path=${pkgfile%/*}
+        mkdir -p ${path}
+        if [ `echo "${path}" | grep "^${UCI_DEF_DIR}"` ]; then
+            cp "${UCI_BAK_DIR}${file}" "${pkgfile}"
+        else
+            cp "/${pkgfile}" "${pkgfile}"
+        fi
+    done
+
+    #call ipkg-build script to build ipk
+    ipkg-build ${IS_ROOT}/${IPK_FILE_NAME} ${IPK_OUTPUT_DIR}
+    echo "${IPK_FILE_NAME}.ipk" >> ${IPK_OUTPUT_DIR}/appdepipk.list
+
+    [ -n "${IS_DEBUG}" ] || rm -rf ${IS_ROOT}/${IPK_FILE_NAME}
+}
+
+# if arg is NULL, use light backup, otherwise use local backup
+backup() {
+    [ -n "$1" ] && BACKUP_PATH=$1
+
+    #1.add all istore self data to sysupgrade config file,
+    #sysupgrade will backup/restore it auto when flash new firmware
+    echo "/etc/.app_store.id" > /lib/upgrade/keep.d/luci-app-store
+    cat /usr/lib/opkg/info/luci-app-store.list >> /lib/upgrade/keep.d/luci-app-store
+    echo "/etc/rc.d/S45istore" >> /lib/upgrade/keep.d/luci-app-store
+    echo "/etc/istore/uci-defaults_bak" >> /lib/upgrade/keep.d/luci-app-store
+    echo "${APP_LIST_FILE}" >> /lib/upgrade/keep.d/luci-app-store
+    echo "${BACKUP_CONFIG_FILE}" >> /lib/upgrade/keep.d/luci-app-store
+
+    #write user installed package list to file
+    opkg_list_installed_packages "userinstalled" 2>/dev/null | sort -u > ${IS_ROOT}/user_installed_package.list
+
+    #write installed package list by istore feed to file
+    cat ${IS_ROOT}/user_installed_package.list | \
+        grep '^app-meta-' > ${IS_ROOT}/istore_installed_package.list
+
+    #if no input backup path, only back app.list
+    mkdir -p /etc/istore
+    cp ${IS_ROOT}/istore_installed_package.list ${APP_LIST_FILE}
+    echo "backup installed package list to ${APP_LIST_FILE}"
+
+    if [ ! -n "${BACKUP_PATH}" ]; then
+        echo "backup success"
+        exit 0
+    fi
+
+    #write all installed package list to file
+    opkg_list_installed_packages "allinstalled" 2>/dev/null | sort -u > ${IS_ROOT}/all_installed_package.list
+
+    #write system pre installed package list to file
+    opkg_list_installed_packages "preinstalled" 2>/dev/null | sort -u > ${IS_ROOT}/pre_installed_package.list
+
+    #write installed packages and depends list by istore feed to file by depend sequence
+    appdep_list=""
+    temp_list=`cat ${IS_ROOT}/istore_installed_package.list | sed 's/^/\t/'`
+    while [ -n "${temp_list}" ]
+    do
+        #get real pkg name
+        for PKG_NAME_TEMP in ${temp_list}; do
+            REAL_PKG_NAME=`cat ${IS_ROOT}/all_installed_package.list | sort -u | grep "^${PKG_NAME_TEMP}" | head -n 1`
+            if [ "${REAL_PKG_NAME}" != "${PKG_NAME_TEMP}" ]; then
+                temp_list=`echo "${temp_list}" | sed 's/^\t'"${PKG_NAME_TEMP}"'$/\t'"${REAL_PKG_NAME}"'/'`
+            fi
+        done
+
+        appdep_list=`echo -e "${temp_list}\n${appdep_list}"`
+        [ -n "${IS_DEBUG}" ] && echo -e "temp_list:\n""${temp_list}"
+        [ -n "${IS_DEBUG}" ] && echo -e "appdep_list:\n""${appdep_list}"
+
+        temp_list=`echo "${temp_list}" | xargs opkg depends | grep -v "depends on:" | grep -v " (>= " | grep -v " (= " | sort -u`
+    done
+
+    appdep_list_all=`echo "${appdep_list}" | cut -f2 | grep -v "^$" | awk '!seen[$0]++'`
+    [ -n "${IS_DEBUG}" ] && echo -e "appdep_list_all:\n""${appdep_list_all}"
+    echo "${appdep_list_all}" > ${IS_ROOT}/appdep.list
+
+
+    #3.rebuild all istore installed package to ipk and backup to userdata partation
+    if [ ! -d "${BACKUP_PATH}" ];then
+        echo "invalid backup path, can not backup ipk"
+        exit 1
+    fi
+
+    # 4. create dir
+    date=$(date +%Y-%m%d-%H%M)
+    if [ ! -d "$BACKUP_PATH/backup_istore_$date" ];then
+        mkdir $BACKUP_PATH/backup_istore_$date
+    fi
+    cp ${IS_ROOT}/istore_installed_package.list $BACKUP_PATH/backup_istore_$date/app.list
+    cp ${IS_ROOT}/appdep.list $BACKUP_PATH/backup_istore_$date/appdep.list
+
+    #only backup non pre installed ipk
+    cp ${IS_ROOT}/appdep.list ${IS_ROOT}/appdep_strip.list
+    for pre_installed_pkg in `cat ${IS_ROOT}/appdep.list ${IS_ROOT}/pre_installed_package.list | sort -n | uniq -d`; do
+        sed -i '/^'"$pre_installed_pkg"'$/d' ${IS_ROOT}/appdep_strip.list
+    done
+
+    rm -f $BACKUP_PATH/backup_istore_$date/appdepipk.list
+    echo "build ipk"
+    for pkg_name in `cat ${IS_ROOT}/appdep_strip.list`; do
+        ipk_build ${pkg_name} $BACKUP_PATH/backup_istore_$date
+    done
+
+    # 5. create tar.gz file,and remove fir
+    cd $BACKUP_PATH
+    echo "write backup file to $BACKUP_PATH/backup_istore_$date.backup.tar.gz"
+    tar -czf $BACKUP_PATH/backup_istore_$date.backup.tar.gz backup_istore_$date
+    rm -rf $BACKUP_PATH/backup_istore_$date
+    echo "backup success"
+}
+
+# if arg is NULL, use light backup, otherwise use local backup
+restore() {
+    if [ -n "$1" ]; then
+        BACKUP_PATH_FILE=$1
+    else
+        echo "install package by ${APP_LIST_FILE}"
+        update
+        for app in `cat ${APP_LIST_FILE}`; do
+            #skip resotre istore self
+            [ "A${app}" == "A""luci-app-store" ] && continue
+            opkg_wrap install ${app}
+        done
+        exit 0
+    fi
+
+    if [ ! -f "${BACKUP_PATH_FILE}" ];then
+        echo "invalid backup file, can not restore ipk"
+        exit 1
+    fi
+
+    #1. Unzip file to dir
+    BACKUP_PATH_FILE_NAME=${BACKUP_PATH_FILE##*/}
+    BACKUP_PATH=/tmp/${BACKUP_PATH_FILE_NAME%.backup.tar.gz*}
+    if [ -d "$BACKUP_PATH" ];then
+        rm -rf $BACKUP_PATH
+    fi
+    mkdir -p $BACKUP_PATH
+    echo "unpack input file..."
+    # fix tar path error
+    tar -zxf ${BACKUP_PATH_FILE} -C /tmp/
+
+    echo "check file"
+    if [ ! -f "${BACKUP_PATH}/appdep.list" ];then
+        echo "no available appdep.list, can not restore ipk"
+        exit 1
+    fi
+    echo "check success"
+
+    #2. install ipk by backup path
+    echo "restore begin"
+    for app in `cat ${BACKUP_PATH}/appdepipk.list`; do
+        opkg_wrap install ${BACKUP_PATH}/${app}
+    done
+
+    #3. rm dir
+    rm -rf ${BACKUP_PATH}
+    echo "restore success"
+}
+
+get_support_backup_features() {
+    echo "light_backup"
+    #istore custom img mean support local_backup
+    if [ -f /etc/istore_img_flag ];then
+        echo "local_backup"
+    fi
+}
+
+get_backup_app_list_file_path() {
+    echo "${APP_LIST_FILE}"
+}
+
+get_backup_app_list() {
+    if [ ! -f "${APP_LIST_FILE}" ];then
+        echo "no app.list, can not get backup app list"
+        exit 1
+    fi
+    cat ${APP_LIST_FILE}
+}
+
+get_available_backup_file_list() {
+    if [ -n "$1" ]; then
+        for backup_file in `ls $1/*.backup.tar.gz`; do
+            filename=${backup_file##*/}
+            echo "${filename}"
+        done
+    else
+        echo "input backup path is null"
+        exit 1
+    fi
+}
+
+usage() {
+    echo "usage: is-opkg sub-command [arguments...]"
+    echo "where sub-command is one of:"
+    echo "      update                          Update list of available packages"
+    echo "      upgrade <pkgs>                  Upgrade package(s)"
+    echo "      install <pkgs>                  Install package(s)"
+    echo "      remove <pkgs|regexp>            Remove package(s)"
+    echo "      info [pkg|regexp]               Display all info for <pkg>"
+    echo "      list-upgradable                 List installed and upgradable packages"
+    echo "      check_self_upgrade              Check iStore upgrade"
+    echo "      do_self_upgrade                 Upgrade iStore"
+    echo "      backup [dir]                    Backup all installed package(s) to [directory]"
+    echo "      restore [dir]                   Restore package(s) by [directory]"
+    echo "      get_support_backup_features     get device support backup features"
+    echo "      get_backup_app_list_file_path   get light backup app list file path"
+    echo "      get_backup_app_list             get light backup app list"
+    echo "      get_available_backup_file_list  get local available backup file list"
+    echo "      opkg                            sys opkg wrap"
+}
+
+is_init >/dev/null 2>&1
+
+case $action in
+    "update")
+        update
+    ;;
+    "install")
+        wrapped_in_update install "$@"
+    ;;
+    "upgrade")
+        new_upgrade "$@"
+    ;;
+    "remove")
+        opkg_wrap --autoremove --force-removal-of-dependent-packages remove "$@"
+    ;;
+    "info")
+        opkg_wrap info "$@"
+    ;;
+    "list-upgradable")
+        opkg_wrap list-upgradable
+    ;;
+    "check_self_upgrade")
+        check_self_upgrade
+    ;;
+    "do_self_upgrade")
+        do_self_upgrade
+    ;;
+    "get_support_backup_features")
+        get_support_backup_features
+    ;;
+    "backup")
+        backup "$@"
+    ;;
+    "restore")
+        restore "$@"
+    ;;
+    "get_backup_app_list_file_path")
+        get_backup_app_list_file_path
+    ;;
+    "get_backup_app_list")
+        get_backup_app_list
+    ;;
+    "get_available_backup_file_list")
+        get_available_backup_file_list "$@"
+    ;;
+    "opkg")
+        opkg_wrap "$@"
+    ;;
+
+    *)
+        usage
+    ;;
+esac
