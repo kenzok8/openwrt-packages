@@ -16,7 +16,7 @@ jobs:
   build:
     runs-on: Ubuntu-20.04
 
-    name: Update ${{matrix.target}}
+    name: Update small
     strategy:
       fail-fast: false
       matrix:
