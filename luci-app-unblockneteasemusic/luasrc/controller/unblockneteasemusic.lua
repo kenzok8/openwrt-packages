@@ -30,12 +30,13 @@ function act_status()
 end
 
 function update_core()
-	core_cloud_ver=luci.sys.exec("uclient-fetch -qO- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jsonfilter -e '@[0].sha'")
-	core_cloud_ver_mini=string.sub(core_cloud_ver, 1, 7)
+	local core_cloud_ver = luci.sys.exec("uclient-fetch -qO- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jsonfilter -e '@[0].sha'")
+	local core_cloud_ver_mini = string.sub(core_cloud_ver, 1, 7)
+	local core_local_ver
 	if not core_cloud_ver or not core_cloud_ver_mini then
 		return "1"
 	else
-		core_local_ver=luci.sys.exec("cat '/usr/share/unblockneteasemusic/core_local_ver' 2>'/dev/null'")
+		core_local_ver = luci.sys.exec("cat '/usr/share/unblockneteasemusic/core_local_ver' 2>'/dev/null'")
 		if not core_local_ver or (core_local_ver ~= core_cloud_ver) then
 			luci.sys.call("rm -f /usr/share/unblockneteasemusic/update_core_successfully")
 			luci.sys.call("/usr/share/unblockneteasemusic/update.sh update_core_from_luci")

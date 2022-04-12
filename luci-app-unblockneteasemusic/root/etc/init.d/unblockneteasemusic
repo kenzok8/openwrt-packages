@@ -196,7 +196,7 @@ start_service()
 			json_add_string o_neteasemusic_addr "$neteasemusic_addr"
 			json_dump -i >"$tmp.json"
 
-			if ucode -S -i "$RULES_UC" -E "$tmp.json" >"$tmp.nft" \
+			if utpl -F "$tmp.json" -S "$RULES_UC" >"$tmp.nft" \
 				&& ! cmp -s "$tmp.nft" "$RULES_NFT"; then
 				echo "table inet chk {include \"$tmp.nft\";}" >"$tmp.nft.chk"
 				if nft -f "$tmp.nft.chk" -c; then
@@ -240,7 +240,7 @@ start_service()
 		ip route add "223.252.199.10" dev lo
 		if [ -e "$(command -v fw4)" ]; then
 			json_dump -i >"$tmp.json"
-			if ucode -S -i "$RULES_UC" -E "$tmp.json" >"$tmp.nft" \
+			if utpl -F "$tmp.json" -S "$RULES_UC" >"$tmp.nft" \
 				&& ! cmp -s "$tmp.nft" "$RULES_NFT"; then
 				echo "table inet chk {include \"$tmp.nft\";}" >"$tmp.nft.chk"
 				if nft -f "$tmp.nft.chk" -c; then

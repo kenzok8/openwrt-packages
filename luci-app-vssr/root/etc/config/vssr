@@ -12,7 +12,6 @@ config global
 	option switch_try_count '3'
 	option adblock '0'
 	option dports '1'
-	option ip_data_url 'https://ispip.clang.cn/all_cn_cidr.txt'
 
 config socks5_proxy
 	option enable_server '0'
@@ -21,6 +20,7 @@ config socks5_proxy
 	option enable_auth '1'
 	option Socks_user 'user'
 	option Socks_pass 'password'
+	option ip_data_url 'https://ispip.clang.cn/all_cn_cidr.txt'
 
 config http_proxy
 	option enable_server '0'
