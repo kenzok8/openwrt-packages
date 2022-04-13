@@ -175,6 +175,8 @@ o:depends("direct_dns_protocol", "doh")
 o = s:taboption("DNS", ListValue, "remote_dns_protocol", translate("Remote DNS Protocol"))
 o:value("tcp", "TCP")
 o:value("doh", "DoH")
+o:value("udp", "UDP")
+o:value("udp+local", "UDP+Local")
 o:value("fakedns", "FakeDNS")
 
 ---- DNS Forward
@@ -189,6 +191,8 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9-Recommended)")
 o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
 o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
 o:depends("remote_dns_protocol", "tcp")
+o:depends("remote_dns_protocol", "udp")
+o:depends("remote_dns_protocol", "udp+local")
 
 ---- DoH
 o = s:taboption("DNS", Value, "remote_dns_doh", translate("Remote DNS DoH"))
@@ -211,6 +215,16 @@ o.description = translate("Notify the DNS server when the DNS query is notified,
 o.datatype = "ipaddr"
 o:depends("remote_dns_protocol", "tcp")
 o:depends("remote_dns_protocol", "doh")
+
+o = s:taboption("DNS", ListValue, "dns_query_strategy", translate("Query Strategy"))
+o.default = "UseIPv4"
+o:value("UseIP")
+o:value("UseIPv4")
+--o:value("UseIPv6")
+
+hosts = s:taboption("DNS", TextValue, "dns_hosts", translate("Domain Override"))
+hosts.rows = 5
+hosts.wrap = "off"
 
 s:tab("log", translate("Log"))
 o = s:taboption("log", Flag, "close_log", translate("Close Node Log"))

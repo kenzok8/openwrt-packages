@@ -233,4 +233,25 @@ o.datatype = "ipaddr"
 o:depends("remote_dns_protocol", "tcp")
 o:depends("remote_dns_protocol", "doh")
 
+o = s:option(ListValue, "dns_query_strategy", translate("Query Strategy"))
+o.default = "UseIPv4"
+o:value("UseIP")
+o:value("UseIPv4")
+--o:value("UseIPv6")
+o:depends("remote_dns_protocol", "tcp")
+o:depends("remote_dns_protocol", "doh")
+
+o = s:option(ListValue, "dns_hosts_mode", translate("Domain Override"))
+o.default = "default"
+o:value("default", translate("Default"))
+o:value("disable", translate("Disable"))
+o:value("custom", translate("Custom"))
+o:depends("remote_dns_protocol", "tcp")
+o:depends("remote_dns_protocol", "doh")
+
+hosts = s:option(TextValue, "dns_hosts", translate("Domain Override"))
+hosts.rows = 5
+hosts.wrap = "off"
+hosts:depends("dns_hosts_mode", "custom")
+
 return m

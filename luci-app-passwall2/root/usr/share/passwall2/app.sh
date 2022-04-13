@@ -265,7 +265,7 @@ lua_api() {
 
 run_v2ray() {
 	local flag node redir_port socks_address socks_port socks_username socks_password http_address http_port http_username http_password
-	local dns_listen_port direct_dns_protocol direct_dns_udp_server direct_dns_tcp_server direct_dns_doh remote_dns_protocol remote_dns_tcp_server remote_dns_doh remote_dns_client_ip dns_query_strategy dns_cache
+	local dns_listen_port direct_dns_protocol direct_dns_udp_server direct_dns_tcp_server direct_dns_doh remote_dns_protocol remote_dns_udp_server remote_dns_udp_local remote_dns_tcp_server remote_dns_doh remote_dns_client_ip dns_query_strategy dns_cache
 	local loglevel log_file config_file
 	local _extra_param=""
 	eval_set_val $@
@@ -327,10 +327,18 @@ run_v2ray() {
 			[ -z "${_doh_port}" ] && _doh_port=443
 			local _doh_bootstrap=$(echo $direct_dns_doh | cut -d ',' -sf 2-)
 			[ "${is_ip}" = "true" ] && _doh_bootstrap=${_doh_host}
-			_extra_param="${_extra_param} -direct_dns_server ${_doh_bootstrap} -direct_dns_port ${_doh_port} -direct_dns_doh_url ${_doh_url} -direct_dns_doh_host ${_doh_host}"
+			[ -n "$_doh_bootstrap" ] && _extra_param="${_extra_param} -direct_dns_server ${_doh_bootstrap}"
+			_extra_param="${_extra_param} -direct_dns_port ${_doh_port} -direct_dns_doh_url ${_doh_url} -direct_dns_doh_host ${_doh_host}"
 		;;
 	esac
 	case "$remote_dns_protocol" in
+		udp*)
+			local _dns=$(get_first_dns remote_dns_udp_server 53 | sed 's/#/:/g')
+			local _dns_address=$(echo ${_dns} | awk -F ':' '{print $1}')
+			local _dns_port=$(echo ${_dns} | awk -F ':' '{print $2}')
+			_extra_param="${_extra_param} -remote_dns_server ${_dns_address} -remote_dns_port ${_dns_port} -remote_dns_udp_server ${_dns_address}"
+			[ "$remote_dns_protocol" = "udp+local" ] && _extra_param="${_extra_param} -remote_dns_udp_local 1"
+		;;
 		tcp)
 			local _dns=$(get_first_dns remote_dns_tcp_server 53 | sed 's/#/:/g')
 			local _dns_address=$(echo ${_dns} | awk -F ':' '{print $1}')
@@ -347,7 +355,8 @@ run_v2ray() {
 			[ -z "${_doh_port}" ] && _doh_port=443
 			local _doh_bootstrap=$(echo $remote_dns_doh | cut -d ',' -sf 2-)
 			[ "${is_ip}" = "true" ] && _doh_bootstrap=${_doh_host}
-			_extra_param="${_extra_param} -remote_dns_server ${_doh_bootstrap} -remote_dns_port ${_doh_port} -remote_dns_doh_url ${_doh_url} -remote_dns_doh_host ${_doh_host}"
+			[ -n "$_doh_bootstrap" ] && _extra_param="${_extra_param} -remote_dns_server ${_doh_bootstrap}"
+			_extra_param="${_extra_param} -remote_dns_port ${_doh_port} -remote_dns_doh_url ${_doh_url} -remote_dns_doh_host ${_doh_host}"
 		;;
 		fakedns)
 			_extra_param="${_extra_param} -remote_dns_fake 1"
@@ -559,6 +568,10 @@ run_global() {
 	[ -n "$REMOTE_DNS_PROTOCOL" ] && {
 		V2RAY_ARGS="${V2RAY_ARGS} remote_dns_protocol=${REMOTE_DNS_PROTOCOL}"
 		case "$REMOTE_DNS_PROTOCOL" in
+			udp*)
+				V2RAY_ARGS="${V2RAY_ARGS} remote_dns_udp_server=${REMOTE_DNS}"
+				msg="${msg} 远程DNS：${REMOTE_DNS}"
+			;;
 			tcp)
 				V2RAY_ARGS="${V2RAY_ARGS} remote_dns_tcp_server=${REMOTE_DNS}"
 				msg="${msg} 远程DNS：${REMOTE_DNS}"
@@ -783,14 +796,13 @@ DIRECT_DNS_PROTOCOL=$(config_t_get global direct_dns_protocol tcp)
 DIRECT_DNS=$(config_t_get global direct_dns 119.29.29.29:53 | sed 's/#/:/g' | sed -E 's/\:([^:]+)$/#\1/g')
 REMOTE_DNS_PROTOCOL=$(config_t_get global remote_dns_protocol tcp)
 REMOTE_DNS=$(config_t_get global remote_dns 1.1.1.1:53 | sed 's/#/:/g' | sed -E 's/\:([^:]+)$/#\1/g')
+DNS_QUERY_STRATEGY=$(config_t_get global dns_query_strategy UseIPv4)
 DNS_CACHE=$(config_t_get global dns_cache 1)
 
 DEFAULT_DNS=$(uci show dhcp | grep "@dnsmasq" | grep "\.server=" | awk -F '=' '{print $2}' | sed "s/'//g" | tr ' ' '\n' | grep -v "\/" | head -2 | sed ':label;N;s/\n/,/;b label')
 [ -z "${DEFAULT_DNS}" ] && DEFAULT_DNS=$(echo -n $(sed -n 's/^nameserver[ \t]*\([^ ]*\)$/\1/p' "${RESOLVFILE}" | grep -v -E "0.0.0.0|127.0.0.1|::" | head -2) | tr ' ' ',')
 
 PROXY_IPV6=$(config_t_get global_forwarding ipv6_tproxy 0)
-DNS_QUERY_STRATEGY="UseIPv4"
-[ "$PROXY_IPV6" = "1" ] && DNS_QUERY_STRATEGY="UseIP"
 
 export V2RAY_LOCATION_ASSET=$(config_t_get global_rules v2ray_location_asset "/usr/share/v2ray/")
 export XRAY_LOCATION_ASSET=$V2RAY_LOCATION_ASSET
