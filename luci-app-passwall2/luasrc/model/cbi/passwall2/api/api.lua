@@ -188,6 +188,14 @@ function iprange(val)
     return false
 end
 
+function get_domain_from_url(url)
+    local domain = string.match(url, "//([^/]+)")
+    if domain then
+        return domain
+    end
+    return url
+end
+
 function get_valid_nodes()
     local nodes_ping = uci_get_type("global_other", "nodes_ping") or ""
     local nodes = {}

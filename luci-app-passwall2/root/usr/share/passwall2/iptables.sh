@@ -176,8 +176,8 @@ load_acl() {
 		dnsmasq_port=11400
 		echolog "访问控制："
 		for item in $items; do
-			local enabled sid remarks sources tcp_no_redir_ports udp_no_redir_ports node dns_protocol dns_forward dns_doh dns_client_ip
-			local _ip _mac _iprange _ipset _ip_or_mac rule_list redir_port node_remark config_file
+			local enabled sid remarks sources tcp_no_redir_ports udp_no_redir_ports node direct_dns_protocol direct_dns direct_dns_doh remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip
+			local _ip _mac _iprange _ipset _ip_or_mac rule_list node_remark config_file
 			sid=$(uci -q show "${CONFIG}.${item}" | grep "=acl_rule" | awk -F '=' '{print $1}' | awk -F '.' '{print $2}')
 			eval $(uci -q show "${CONFIG}.${item}" | cut -d'.' -sf 3-)
 			[ "$enabled" = "1" ] || continue
@@ -205,9 +205,12 @@ load_acl() {
 			tcp_proxy_mode="global"
 			udp_proxy_mode="global"
 			node=${node:-default}
-			dns_protocol=${dns_protocol:-tcp}
-			dns_forward=${dns_forward:-1.1.1.1}
-			[ "$dns_forward" = "doh" ] && dns_forward=${dns_doh:-https://cloudflare-dns.com/dns-query,1.1.1.1}
+			direct_dns_protocol=${direct_dns_protocol:-auto}
+			direct_dns=${direct_dns:-119.29.29.29}
+			[ "$direct_dns_protocol" = "doh" ] && direct_dns=${direct_dns_doh:-https://223.5.5.5/dns-query}
+			remote_dns_protocol=${remote_dns_protocol:-tcp}
+			remote_dns=${remote_dns:-1.1.1.1}
+			[ "$remote_dns_protocol" = "doh" ] && remote_dns=${remote_dns_doh:-https://1.1.1.1/dns-query}
 			[ "$tcp_no_redir_ports" = "default" ] && tcp_no_redir_ports=$TCP_NO_REDIR_PORTS
 			[ "$udp_no_redir_ports" = "default" ] && udp_no_redir_ports=$UDP_NO_REDIR_PORTS
 			[ "$tcp_redir_ports" = "default" ] && tcp_redir_ports=$TCP_REDIR_PORTS
@@ -228,7 +231,7 @@ load_acl() {
 							if [ -n "${type}" ] && ([ "${type}" = "v2ray" ] || [ "${type}" = "xray" ]); then
 								config_file=$TMP_ACL_PATH/${node}_TCP_UDP_DNS_${redir_port}.json
 								dns_port=$(get_new_port $(expr $dns_port + 1))
-								run_v2ray flag=acl_$sid node=$node redir_port=$redir_port dns_local=${DEFAULT_DNS} dns_listen_port=${dns_port} dns_proto=${dns_protocol} dns_tcp_server=${dns_forward} doh="${dns_forward}" dns_client_ip=${dns_client_ip} dns_query_strategy=${DNS_QUERY_STRATEGY} config_file=${config_file}
+								run_v2ray flag=acl_$sid node=$node redir_port=$redir_port dns_listen_port=${dns_port} direct_dns_protocol=${direct_dns_protocol} direct_dns_udp_server=${direct_dns} direct_dns_tcp_server=${direct_dns} direct_dns_doh="${direct_dns}" remote_dns_protocol=${remote_dns_protocol} remote_dns_tcp_server=${remote_dns} remote_dns_doh="${remote_dns}" remote_dns_client_ip=${remote_dns_client_ip} dns_query_strategy=${DNS_QUERY_STRATEGY} config_file=${config_file}
 							fi
 							dnsmasq_port=$(get_new_port $(expr $dnsmasq_port + 1))
 							redirect_dns_port=$dnsmasq_port
@@ -238,7 +241,7 @@ load_acl() {
 							echo "server=127.0.0.1#${dns_port}" >> $TMP_ACL_PATH/$sid/dnsmasq.conf
 							#source $APP_PATH/helper_dnsmasq.sh add TMP_DNSMASQ_PATH=$TMP_ACL_PATH/$sid/dnsmasq.d DNSMASQ_CONF_FILE=/dev/null TUN_DNS=127.0.0.1#${dns_port} NO_LOGIC_LOG=1
 							ln_run "$(first_type dnsmasq)" "dnsmasq_${sid}" "/dev/null" -C $TMP_ACL_PATH/$sid/dnsmasq.conf -x $TMP_ACL_PATH/$sid/dnsmasq.pid
-							eval node_${node}_$(echo -n "${tcp_proxy_mode}${dns_forward}" | md5sum | cut -d " " -f1)=${dnsmasq_port}
+							eval node_${node}_$(echo -n "${tcp_proxy_mode}${remote_dns}" | md5sum | cut -d " " -f1)=${dnsmasq_port}
 							filter_node $node TCP > /dev/null 2>&1 &
 							filter_node $node UDP > /dev/null 2>&1 &
 						fi
@@ -337,8 +340,8 @@ load_acl() {
 				$ipt_m -A PSW2 $(comment "$remarks") ${_ipt_source} -p udp -j RETURN
 				$ip6t_m -A PSW2 $(comment "$remarks") ${_ipt_source} -p udp -j RETURN 2>/dev/null
 			done
-			unset enabled sid remarks sources tcp_no_redir_ports udp_no_redir_ports node dns_protocol dns_forward dns_doh dns_client_ip
-			unset _ip _mac _iprange _ipset _ip_or_mac rule_list redir_port node_remark config_file
+			unset enabled sid remarks sources tcp_no_redir_ports udp_no_redir_ports node direct_dns_protocol direct_dns direct_dns_doh remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip
+			unset _ip _mac _iprange _ipset _ip_or_mac rule_list node_remark config_file
 			unset ipt_tmp msg msg2
 			unset redirect_dns_port
 		done

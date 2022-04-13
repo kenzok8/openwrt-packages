@@ -3,8 +3,9 @@ config global
 	option enabled '0'
 	option socks_enabled '0'
 	option node 'myshunt'
-	option dns_protocol 'tcp'
-	option dns_forward '1.1.1.1'
+	option direct_dns_protocol 'auto'
+	option remote_dns_protocol 'tcp'
+	option remote_dns '1.1.1.1'
 	option close_log '0'
 	option loglevel 'error'
 

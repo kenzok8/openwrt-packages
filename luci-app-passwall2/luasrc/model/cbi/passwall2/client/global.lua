@@ -146,44 +146,71 @@ end
 
 s:tab("DNS", translate("DNS"))
 
-o = s:taboption("DNS", ListValue, "dns_protocol", translate("DNS Protocol"))
+o = s:taboption("DNS", ListValue, "direct_dns_protocol", translate("Direct DNS Protocol"))
+o.default = "auto"
+o:value("auto", translate("Auto"))
+o:value("udp", "UDP")
+o:value("tcp", "TCP")
+o:value("doh", "DoH")
+
+---- DNS Forward
+o = s:taboption("DNS", Value, "direct_dns", translate("Direct DNS"))
+o.datatype = "or(ipaddr,ipaddrport)"
+o.default = "119.29.29.29"
+o:value("114.114.114.114", "114.114.114.114 (114DNS)")
+o:value("119.29.29.29", "119.29.29.29 (DNSPod)")
+o:value("223.5.5.5", "223.5.5.5 (AliDNS)")
+o:depends("direct_dns_protocol", "udp")
+o:depends("direct_dns_protocol", "tcp")
+
+---- DoH
+o = s:taboption("DNS", Value, "direct_dns_doh", translate("Direct DNS DoH"))
+o.default = "https://223.5.5.5/dns-query"
+o:value("https://1.12.12.12/dns-query", "DNSPod 1")
+o:value("https://120.53.53.53/dns-query", "DNSPod 2")
+o:value("https://223.5.5.5/dns-query", "AliDNS")
+o.validate = doh_validate
+o:depends("direct_dns_protocol", "doh")
+
+o = s:taboption("DNS", ListValue, "remote_dns_protocol", translate("Remote DNS Protocol"))
 o:value("tcp", "TCP")
 o:value("doh", "DoH")
 o:value("fakedns", "FakeDNS")
 
----- DoH
-o = s:taboption("DNS", Value, "up_trust_doh", translate("DoH request address"))
-o:value("https://cloudflare-dns.com/dns-query,1.1.1.1", "CloudFlare")
-o:value("https://security.cloudflare-dns.com/dns-query,1.1.1.2", "CloudFlare-Security")
-o:value("https://doh.opendns.com/dns-query,208.67.222.222", "OpenDNS")
-o:value("https://dns.google/dns-query,8.8.8.8", "Google")
-o:value("https://doh.libredns.gr/dns-query,116.202.176.26", "LibreDNS")
-o:value("https://doh.libredns.gr/ads,116.202.176.26", "LibreDNS (No Ads)")
-o:value("https://dns.quad9.net/dns-query,9.9.9.9", "Quad9-Recommended")
-o:value("https://dns.adguard.com/dns-query,176.103.130.130", "AdGuard")
-o.default = "https://cloudflare-dns.com/dns-query,1.1.1.1"
-o.validate = doh_validate
-o:depends("dns_protocol", "doh")
-
 ---- DNS Forward
-o = s:taboption("DNS", Value, "dns_forward", translate("Remote DNS"))
---o.description = translate("IP:Port mode acceptable, multi value split with english comma.") .. " " .. translate("If you use dns2socks, only the first one is valid.")
+o = s:taboption("DNS", Value, "remote_dns", translate("Remote DNS"))
 o.datatype = "or(ipaddr,ipaddrport)"
 o.default = "1.1.1.1"
-o:value("1.1.1.1", "1.1.1.1 (CloudFlare DNS)")
-o:value("1.1.1.2", "1.1.1.2 (CloudFlare DNS)")
-o:value("8.8.8.8", "8.8.8.8 (Google DNS)")
-o:value("8.8.4.4", "8.8.4.4 (Google DNS)")
-o:value("208.67.222.222", "208.67.222.222 (Open DNS)")
-o:value("208.67.220.220", "208.67.220.220 (Open DNS)")
-o:depends("dns_protocol", "tcp")
+o:value("1.1.1.1", "1.1.1.1 (CloudFlare)")
+o:value("1.1.1.2", "1.1.1.2 (CloudFlare-Security)")
+o:value("8.8.4.4", "8.8.4.4 (Google)")
+o:value("8.8.8.8", "8.8.8.8 (Google)")
+o:value("9.9.9.9", "9.9.9.9 (Quad9-Recommended)")
+o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
+o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
+o:depends("remote_dns_protocol", "tcp")
 
-o = s:taboption("DNS", Value, "dns_client_ip", translate("EDNS Client Subnet"))
+---- DoH
+o = s:taboption("DNS", Value, "remote_dns_doh", translate("Remote DNS DoH"))
+o.default = "https://1.1.1.1/dns-query"
+o:value("https://1.1.1.1/dns-query", "CloudFlare")
+o:value("https://1.1.1.2/dns-query", "CloudFlare-Security")
+o:value("https://8.8.4.4/dns-query", "Google 8844")
+o:value("https://8.8.8.8/dns-query", "Google 8888")
+o:value("https://9.9.9.9/dns-query", "Quad9-Recommended")
+o:value("https://208.67.222.222/dns-query", "OpenDNS")
+o:value("https://dns.adguard.com/dns-query,176.103.130.130", "AdGuard")
+o:value("https://doh.libredns.gr/dns-query,116.202.176.26", "LibreDNS")
+o:value("https://doh.libredns.gr/ads,116.202.176.26", "LibreDNS (No Ads)")
+o.validate = doh_validate
+o:depends("remote_dns_protocol", "doh")
+
+o = s:taboption("DNS", Value, "remote_dns_client_ip", translate("Remote DNS EDNS Client Subnet"))
 o.description = translate("Notify the DNS server when the DNS query is notified, the location of the client (cannot be a private IP address).") .. "<br />" ..
                 translate("This feature requires the DNS server to support the Edns Client Subnet (RFC7871).")
 o.datatype = "ipaddr"
-o:depends("dns_protocol", "tcp")
-o:depends("dns_protocol", "doh")
+o:depends("remote_dns_protocol", "tcp")
+o:depends("remote_dns_protocol", "doh")
 
 s:tab("log", translate("Log"))
 o = s:taboption("log", Flag, "close_log", translate("Close Node Log"))

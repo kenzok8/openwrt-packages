@@ -16,11 +16,17 @@ bold_off = [[</strong>]]
 
 local op_mode = string.sub(luci.sys.exec('uci get openclash.config.operation_mode 2>/dev/null'),0,-2)
 if not op_mode then op_mode = "redir-host" end
-local lan_ip=SYS.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
+local lan_ip = SYS.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n' || ip address show $(uci -q -p /tmp/state get network.lan.ifname) | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
 
 m = Map("openclash", translate("Global Settings(Will Modify The Config File Or Subscribe According To The Settings On This Page)"))
 m.pageaction = false
-m.description=translate("To restore the default configuration, try accessing:").." <a href='javascript:void(0)' onclick='javascript:restore_config(this)'>http://"..lan_ip.."/cgi-bin/luci/admin/services/openclash/restore</a>"
+m.description = translate("Note: To restore the default configuration, try accessing:").." <a href='javascript:void(0)' onclick='javascript:restore_config(this)'>http://"..lan_ip.."/cgi-bin/luci/admin/services/openclash/restore</a>"..
+"<br/>"..translate("Note: It is not recommended to enable IPv6 and related services for routing. Most of the network connection problems reported so far are related to it")..
+"<br/>"..font_green..translate("Note: Turning on secure DNS in the browser will cause abnormal shunting, please be careful to turn it off")..font_off..
+"<br/>"..font_green..translate("Note: Some software will modify the device HOSTS, which will cause abnormal shunt, please pay attention to check")..font_off..
+"<br/>"..font_green..translate("Note: Game proxy please use nodes except Vmess")..font_off..
+"<br/>"..translate("Note: The default proxy routes local traffic, BT, PT download, etc., please use redir mode as much as possible and pay attention to traffic avoidance")..
+"<br/>"..translate("Note: If the connection is abnormal, please follow the steps on this page to check first")..": ".."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://github.com/vernesong/OpenClash/wiki/%E7%BD%91%E7%BB%9C%E8%BF%9E%E6%8E%A5%E5%BC%82%E5%B8%B8%E6%97%B6%E6%8E%92%E6%9F%A5%E5%8E%9F%E5%9B%A0\")'>"..translate("Click to the page").."</a>"
 
 s = m:section(TypedSection, "openclash")
 s.anonymous = true
@@ -28,6 +34,7 @@ s.anonymous = true
 s:tab("op_mode", translate("Operation Mode"))
 s:tab("settings", translate("General Settings"))
 s:tab("dns", translate("DNS Setting"))
+s:tab("meta", translate("Meta Settings"))
 s:tab("stream_enhance", translate("Streaming Enhance"))
 s:tab("lan_ac", translate("Access Control"))
 if op_mode == "fake-ip" then
@@ -37,7 +44,7 @@ s:tab("rules", translate("Rules Setting"))
 end
 s:tab("dashboard", translate("Dashboard Settings"))
 s:tab("rules_update", translate("Rules Update"))
-s:tab("geo_update", translate("GEOIP Update"))
+s:tab("geo_update", translate("GEO Update"))
 s:tab("chnr_update", translate("Chnroute Update"))
 s:tab("auto_restart", translate("Auto Restart"))
 s:tab("version_update", translate("Version Update"))
@@ -362,6 +369,118 @@ function custom_domain_dns_policy.write(self, section, value)
 	end
 end
 
+-- Meta
+o = s:taboption("meta", Flag, "enable_meta_core", font_red..bold_on..translate("Enable Meta Core")..bold_off..font_off)
+o.description = font_red..bold_on..translate("Some Premium Core Features are Unavailable, For Other More Useful Functions Go Wiki:")..bold_off..font_off.." ".."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://clashmeta.gitbook.io/meta/\")'>https://clashmeta.gitbook.io/meta/</a>"
+o.default = 0
+
+o = s:taboption("meta", Flag, "enable_meta_sniffer", font_red..bold_on..translate("Enable Sniffer")..bold_off..font_off)
+o.description = font_red..bold_on..translate("Sniffer Will Prevent Domain Name Proxy and DNS Hijack Failure")..bold_off..font_off
+o.default = 1
+o:depends("enable_meta_core", "1")
+
+o = s:taboption("meta", Flag, "enable_meta_sniffer_force", translate("Force Sniffer"))
+o.description = translate("Override All Dns Query")
+o.default = 0
+o:depends("enable_meta_sniffer", "1")
+
+o = s:taboption("meta", ListValue, "geodata_loader", translate("Geodata Loader Mode"))
+o:value("memconservative", translate("Memconservative"))
+o:value("standard", translate("Standard"))
+o.default = "memconservative"
+o:depends("enable_meta_core", "1")
+
+o = s:taboption("meta", Flag, "enable_geoip_dat", translate("Enable GeoIP Dat"))
+o.description = translate("Replace GEOIP MMDB With GEOIP Dat, Large Size File, Need Download First")
+o.default = 0
+o:depends("enable_meta_core", "1")
+
+o = s:taboption("meta", Flag, "geoip_auto_update", translate("Auto Update GeoIP Dat"))
+o.default = 0
+o:depends("enable_geoip_dat", "1")
+
+o = s:taboption("meta", ListValue, "geoip_update_week_time", translate("Update Time (Every Week)"))
+o:value("*", translate("Every Day"))
+o:value("1", translate("Every Monday"))
+o:value("2", translate("Every Tuesday"))
+o:value("3", translate("Every Wednesday"))
+o:value("4", translate("Every Thursday"))
+o:value("5", translate("Every Friday"))
+o:value("6", translate("Every Saturday"))
+o:value("0", translate("Every Sunday"))
+o.default = "1"
+o:depends("geoip_auto_update", "1")
+
+o = s:taboption("meta", ListValue, "geoip_update_day_time", translate("Update time (every day)"))
+for t = 0,23 do
+o:value(t, t..":00")
+end
+o.default = "0"
+o:depends("geoip_auto_update", "1")
+
+o = s:taboption("meta", Value, "geoip_custom_url")
+o.title = translate("Custom GeoIP Dat URL")
+o.rmempty = true
+o.description = translate("Custom GeoIP Dat URL, Click Button Below To Refresh After Edit")
+o:value("https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat", translate("Loyalsoldier-Version")..translate("(Default)"))
+o.default = "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
+o:depends("geoip_auto_update", "1")
+
+o = s:taboption("meta", Button, translate("GEOIP Dat Update")) 
+o.title = translate("Update GeoIP Dat")
+o.inputtitle = translate("Check And Update")
+o.inputstyle = "reload"
+o.write = function()
+  m.uci:set("openclash", "config", "enable", 1)
+  m.uci:commit("openclash")
+  SYS.call("/usr/share/openclash/openclash_geoip.sh >/dev/null 2>&1 &")
+  HTTP.redirect(DISP.build_url("admin", "services", "openclash"))
+end
+o:depends("geoip_auto_update", "1")
+
+o = s:taboption("meta", Flag, "geosite_auto_update", translate("Auto Update GeoSite Database"))
+o.default = 0
+o:depends("enable_meta_core", "1")
+
+o = s:taboption("meta", ListValue, "geosite_update_week_time", translate("Update Time (Every Week)"))
+o:value("*", translate("Every Day"))
+o:value("1", translate("Every Monday"))
+o:value("2", translate("Every Tuesday"))
+o:value("3", translate("Every Wednesday"))
+o:value("4", translate("Every Thursday"))
+o:value("5", translate("Every Friday"))
+o:value("6", translate("Every Saturday"))
+o:value("0", translate("Every Sunday"))
+o.default = "1"
+o:depends("geosite_auto_update", "1")
+
+o = s:taboption("meta", ListValue, "geosite_update_day_time", translate("Update time (every day)"))
+for t = 0,23 do
+o:value(t, t..":00")
+end
+o.default = "0"
+o:depends("geosite_auto_update", "1")
+
+o = s:taboption("meta", Value, "geosite_custom_url")
+o.title = translate("Custom GeoSite URL")
+o.rmempty = true
+o.description = translate("Custom GeoSite Data URL, Click Button Below To Refresh After Edit")
+o:value("https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat", translate("Loyalsoldier-Version")..translate("(Default)"))
+o.default = "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
+o:depends("geosite_auto_update", "1")
+
+o = s:taboption("meta", Button, translate("GEOSITE Update")) 
+o.title = translate("Update GeoSite Database")
+o.inputtitle = translate("Check And Update")
+o.inputstyle = "reload"
+o.write = function()
+  m.uci:set("openclash", "config", "enable", 1)
+  m.uci:commit("openclash")
+  SYS.call("/usr/share/openclash/openclash_geosite.sh >/dev/null 2>&1 &")
+  HTTP.redirect(DISP.build_url("admin", "services", "openclash"))
+end
+o:depends("geosite_auto_update", "1")
+
 ---- Access Control
 if op_mode == "redir-host" then
 o = s:taboption("lan_ac", ListValue, "lan_ac_mode", translate("LAN Access Control Mode"))
@@ -467,7 +586,7 @@ end
 
 --Stream Enhance
 o = s:taboption("stream_enhance", Flag, "stream_domains_prefetch", font_red..bold_on..translate("Prefetch Netflix, Disney Plus Domains")..bold_off..font_off)
-o.description = translate("Prevent Some Devices From Directly Using IP Access To Cause Unlocking Failure")
+o.description = translate("Prevent Some Devices From Directly Using IP Access To Cause Unlocking Failure, Recommend Use meta Sniffer Function")
 o.default = 0
 
 o = s:taboption("stream_enhance", Value, "stream_domains_prefetch_interval", translate("Domains Prefetch Interval(min)"))
@@ -508,7 +627,7 @@ o:depends("stream_auto_select_netflix", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_netflix", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "HK|SG|TW"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_netflix", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_netflix", translate("Unlock Nodes Filter"))
@@ -536,7 +655,7 @@ o:depends("stream_auto_select_disney", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_disney", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "HK|SG|TW"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_disney", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_disney", translate("Unlock Nodes Filter"))
@@ -564,7 +683,7 @@ o:depends("stream_auto_select_ytb", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_ytb", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "HK|US"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_ytb", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_ytb", translate("Unlock Nodes Filter"))
@@ -592,7 +711,7 @@ o:depends("stream_auto_select_prime_video", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_prime_video", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "HK|US|SG"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_prime_video", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_prime_video", translate("Unlock Nodes Filter"))
@@ -642,7 +761,7 @@ o:depends("stream_auto_select_hbo_max", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_hbo_max", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "US"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_hbo_max", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_hbo_max", translate("Unlock Nodes Filter"))
@@ -670,7 +789,7 @@ o:depends("stream_auto_select_hbo_go_asia", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_hbo_go_asia", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "HK|SG|TW"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_hbo_go_asia", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_hbo_go_asia", translate("Unlock Nodes Filter"))
@@ -698,7 +817,7 @@ o:depends("stream_auto_select_tvb_anywhere", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_tvb_anywhere", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "HK|SG|TW"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_tvb_anywhere", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_tvb_anywhere", translate("Unlock Nodes Filter"))
@@ -726,7 +845,7 @@ o:depends("stream_auto_select_dazn", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_dazn", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "DE"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_dazn", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_dazn", translate("Unlock Nodes Filter"))
@@ -754,7 +873,7 @@ o:depends("stream_auto_select_paramount_plus", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_paramount_plus", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "US"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_paramount_plus", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_paramount_plus", translate("Unlock Nodes Filter"))
@@ -782,7 +901,7 @@ o:depends("stream_auto_select_discovery_plus", "1")
 o = s:taboption("stream_enhance", Value, "stream_auto_select_region_key_discovery_plus", translate("Unlock Region Filter"))
 o.default = ""
 o.placeholder = "US"
-o.description = translate("It Will Be Selected Region According To The Regex")
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_discovery_plus", "1")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_discovery_plus", translate("Unlock Nodes Filter"))

@@ -17,19 +17,25 @@ local local_http_port = var["-local_http_port"]
 local local_http_username = var["-local_http_username"]
 local local_http_password = var["-local_http_password"]
 local dns_listen_port = var["-dns_listen_port"]
-local local_dns_ip = var["-local_dns_ip"] or "119.29.29.29"
-local local_dns_address = var["-local_dns_address"] or "tcp+local://119.29.29.29"
-local local_dns_port = var["-local_dns_port"] or 53
-local dns_server = var["-dns_server"]
+local dns_query_strategy = var["-dns_query_strategy"]
+local direct_dns_server = var["-direct_dns_server"]
+local direct_dns_port = var["-direct_dns_port"]
+local direct_dns_udp_server = var["-direct_dns_udp_server"]
+local direct_dns_tcp_server = var["-direct_dns_tcp_server"]
+local direct_dns_doh_url = var["-direct_dns_doh_url"]
+local direct_dns_doh_host = var["-direct_dns_doh_host"]
+local remote_dns_server = var["-remote_dns_server"]
+local remote_dns_port = var["-remote_dns_port"]
+local remote_dns_tcp_server = var["-remote_dns_tcp_server"]
+local remote_dns_doh_url = var["-remote_dns_doh_url"]
+local remote_dns_doh_host = var["-remote_dns_doh_host"]
+local remote_dns_client_ip = var["-remote_dns_client_ip"]
+local remote_dns_fake = var["-remote_dns_fake"]
+local dns_cache = var["-dns_cache"]
 local dns_direct_domains = {}
 local dns_direct_expectIPs = {}
-local dns_tcp_server = var["-dns_tcp_server"]
-local dns_cache = var["-dns_cache"]
-local doh_url = var["-doh_url"]
-local doh_host = var["-doh_host"]
-local dns_client_ip = var["-dns_client_ip"]
-local dns_query_strategy = var["-dns_query_strategy"]
-local dns_fakedns = var["-dns_fakedns"]
+local dns_remote_domains = {}
+local dns_remote_expectIPs = {}
 local loglevel = var["-loglevel"] or "warning"
 local new_port
 
@@ -292,7 +298,7 @@ if true then
             protocol = "dokodemo-door",
             settings = {network = "tcp,udp", followRedirect = true},
             streamSettings = {sockopt = {tproxy = "tproxy"}},
-            sniffing = {enabled = sniffing and true or false, destOverride = {"http", "tls", (dns_fakedns) and "fakedns"}, metadataOnly = false, routeOnly = route_only and true or nil, domainsExcluded = (sniffing and not route_only) and get_domain_excluded() or nil}
+            sniffing = {enabled = sniffing and true or false, destOverride = {"http", "tls", (remote_dns_fake) and "fakedns"}, metadataOnly = false, routeOnly = route_only and true or nil, domainsExcluded = (sniffing and not route_only) and get_domain_excluded() or nil}
         }
         local tcp_inbound = api.clone(inbound)
         tcp_inbound.tag = "tcp_redir"
@@ -448,6 +454,10 @@ if true then
                                 table.insert(domains, w)
                                 if outboundTag == "direct" then
                                     table.insert(dns_direct_domains, w)
+                                else
+                                    if outboundTag ~= "nil" then
+                                        table.insert(dns_remote_domains, w)
+                                    end
                                 end
                             end)
                         end
@@ -458,6 +468,10 @@ if true then
                                 table.insert(ip, w)
                                 if outboundTag == "direct" then
                                     table.insert(dns_direct_expectIPs, w)
+                                else
+                                    if outboundTag ~= "nil" then
+                                        table.insert(dns_remote_expectIPs, w)
+                                    end
                                 end
                             end)
                         end
@@ -538,45 +552,58 @@ if true then
     end
 end
 
-if dns_server or dns_fakedns then
+if remote_dns_server or remote_dns_fake then
     local rules = {}
 
     dns = {
         tag = "dns-in1",
+        hosts = {},
         disableCache = (dns_cache and dns_cache == "0") and true or false,
         disableFallback = true,
         disableFallbackIfMatch = true,
         servers = {
-            dns_server
+            --remote_dns_server
         },
-        clientIp = (dns_client_ip and dns_client_ip ~= "") and dns_client_ip or nil,
+        clientIp = (remote_dns_client_ip and remote_dns_client_ip ~= "") and remote_dns_client_ip or nil,
         queryStrategy = (dns_query_strategy and dns_query_strategy ~= "") and dns_query_strategy or nil
     }
-    if doh_url and doh_host then
-        dns.hosts = {
-            [doh_host] = dns_server
-        }
-        dns.servers = {
-            doh_url
-        }
+    if remote_dns_doh_url and remote_dns_doh_host then
+        if remote_dns_doh_host ~= remote_dns_server and not api.is_ip(remote_dns_doh_host) then
+            table.insert(dns.hosts, {
+                [remote_dns_doh_host] = remote_dns_server
+            })
+        end
+        table.insert(dns.servers, {
+            tag = "remote",
+            address = remote_dns_doh_url,
+            port = tonumber(remote_dns_port) or 443,
+            domains = #dns_remote_domains > 0 and dns_remote_domains or nil,
+            --expectIPs = #dns_remote_expectIPs > 0 and dns_remote_expectIPs or nil
+        })
     end
 
-    if dns_tcp_server then
-        dns.servers = {
-            dns_tcp_server
-        }
+    if remote_dns_tcp_server then
+        table.insert(dns.servers, {
+            tag = "remote",
+            address = remote_dns_tcp_server,
+            port = tonumber(remote_dns_port) or 53,
+            domains = #dns_remote_domains > 0 and dns_remote_domains or nil,
+            --expectIPs = #dns_remote_expectIPs > 0 and dns_remote_expectIPs or nil
+        })
     end
 
-    if dns_fakedns then
+    if remote_dns_fake then
         fakedns = {}
         fakedns[#fakedns + 1] = {
             ipPool = "198.18.0.0/16",
             poolSize = 65535
         }
-        dns_server = "1.1.1.1"
-        dns.servers = {
-            "fakedns"
-        }
+        remote_dns_server = "1.1.1.1"
+        table.insert(dns.servers, {
+            tag = "remote",
+            address = "fakedns",
+            domains = #dns_remote_domains > 0 and dns_remote_domains or nil
+        })
     end
 
     local nodes_domain = {}
@@ -586,12 +613,40 @@ if dns_server or dns_fakedns then
         table.insert(dns_direct_domains, w)
     end)
 
-    table.insert(dns.servers, {
-        address = local_dns_address,
-        port = tonumber(local_dns_port),
-        domains = #dns_direct_domains > 0 and dns_direct_domains or nil,
-        --expectIPs = #dns_direct_expectIPs > 0 and dns_direct_expectIPs or nil
-    })
+    if direct_dns_udp_server then
+        table.insert(dns.servers, {
+            tag = "direct",
+            address = direct_dns_udp_server,
+            port = tonumber(direct_dns_port) or 53,
+            domains = #dns_direct_domains > 0 and dns_direct_domains or nil,
+            --expectIPs = #dns_direct_expectIPs > 0 and dns_direct_expectIPs or nil
+        })
+    end
+
+    if direct_dns_tcp_server then
+        table.insert(dns.servers, {
+            tag = "direct",
+            address = direct_dns_tcp_server:gsub("tcp://", "tcp+local://"),
+            port = tonumber(direct_dns_port) or 53,
+            domains = #dns_direct_domains > 0 and dns_direct_domains or nil,
+            --expectIPs = #dns_direct_expectIPs > 0 and dns_direct_expectIPs or nil
+        })
+    end
+
+    if direct_dns_doh_url and direct_dns_doh_host then
+        if direct_dns_doh_host ~= direct_dns_server and not api.is_ip(direct_dns_doh_host) then
+            table.insert(dns.hosts, {
+                [direct_dns_doh_host] = direct_dns_server
+            })
+        end
+        table.insert(dns.servers, {
+            tag = "direct",
+            address = direct_dns_doh_url:gsub("https://", "https+local://"),
+            port = tonumber(direct_dns_port) or 443,
+            domains = #dns_direct_domains > 0 and dns_direct_domains or nil,
+            --expectIPs = #dns_direct_expectIPs > 0 and dns_direct_expectIPs or nil
+        })
+    end
 
     if dns_listen_port then
         table.insert(inbounds, {
@@ -600,7 +655,7 @@ if dns_server or dns_fakedns then
             protocol = "dokodemo-door",
             tag = "dns-in",
             settings = {
-                address = dns_server,
+                address = remote_dns_server,
                 port = 53,
                 network = "tcp,udp"
             }
@@ -615,19 +670,25 @@ if dns_server or dns_fakedns then
         outboundTag = "dns-out"
     })
 
-    if node_id and redir_port and not dns_fakedns then
+    local default_dns_flag = "remote"
+    if node_id and redir_port then
         local outboundTag = node_id
         local node = uci:get_all(appname, node_id)
         if node.protocol == "_shunt" then
             outboundTag = "default"
+            if node.default_node == "_direct" then
+                default_dns_flag = "direct"
+            end
         end
-        table.insert(rules, {
-            type = "field",
-            inboundTag = {
-                "dns-in1"
-            },
-            outboundTag = outboundTag
-        })
+        if not remote_dns_fake then
+            table.insert(rules, {
+                type = "field",
+                inboundTag = {
+                    "dns-in1"
+                },
+                outboundTag = outboundTag
+            })
+        end
     end
 
     if nodes_domain and #nodes_domain > 0 then
@@ -638,14 +699,31 @@ if dns_server or dns_fakedns then
         })
     end
 
-    table.insert(rules, {
-        type = "field",
-        ip = {
-            local_dns_ip
-        },
-        outboundTag = "direct"
-    })
-    
+    if direct_dns_udp_server then
+        table.insert(rules, {
+            type = "field",
+            ip = {
+                direct_dns_udp_server
+            },
+            outboundTag = "direct"
+        })
+    end
+
+    if dns.servers and #dns.servers > 0 then
+        local dns_servers = nil
+        for index, value in ipairs(dns.servers) do
+            if not dns_servers and value.tag == default_dns_flag then
+                dns_servers = {
+                    address = value.address,
+                    port = value.port
+                }
+            end
+        end
+        if dns_servers then
+            table.insert(dns.servers, 1, dns_servers)
+        end
+    end
+
     if not routing then
         routing = {
             domainStrategy = "IPOnDemand",
@@ -655,6 +733,10 @@ if dns_server or dns_fakedns then
         for index, value in ipairs(rules) do
             table.insert(routing.rules, 1, value)
         end
+    end
+
+    if #dns.hosts == 0 then
+        dns.hosts = nil
     end
 end
 
