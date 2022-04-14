@@ -363,7 +363,8 @@ run_v2ray() {
 		;;
 	esac
 	lua $API_GEN_V2RAY -node $node -redir_port $redir_port -tcp_proxy_way $tcp_proxy_way -loglevel $loglevel ${_extra_param} > $config_file
-	ln_run "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $log_file -config="$config_file"
+	[ "$type" == "xray" ] && ln_run "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $log_file -config="$config_file"
+	[ "$type" == "v2ray" ] && ln_run "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $log_file run -config="$config_file"
 }
 
 run_socks() {
@@ -417,7 +418,8 @@ run_socks() {
 			local _extra_param="-local_http_port $http_port"
 		}
 		lua $API_GEN_V2RAY -node $node -local_socks_port $socks_port ${_extra_param} > $config_file
-		ln_run "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $log_file -config="$config_file"
+		[ "$type" == "xray" ] && ln_run "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $log_file -config="$config_file"
+		[ "$type" == "v2ray" ] && ln_run "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $log_file run -config="$config_file"
 	;;
 	naiveproxy)
 		lua $API_GEN_NAIVE -node $node -run_type socks -local_addr $bind -local_port $socks_port -server_host $server_host -server_port $port > $config_file
