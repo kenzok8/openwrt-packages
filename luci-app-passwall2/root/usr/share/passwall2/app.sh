@@ -302,7 +302,7 @@ run_v2ray() {
 	}
 	[ "$direct_dns_protocol" = "auto" ] && {
 		direct_dns_protocol="udp"
-		direct_dns_udp_server=${DEFAULT_DNS:-119.29.29.29}
+		direct_dns_udp_server=${LOCAL_DNS}
 	}
 	case "$direct_dns_protocol" in
 		udp)
@@ -548,9 +548,11 @@ run_global() {
 		V2RAY_ARGS="${V2RAY_ARGS} direct_dns_protocol=${DIRECT_DNS_PROTOCOL}"
 		case "$DIRECT_DNS_PROTOCOL" in
 			auto)
-				msg="${msg} 直连DNS：${DEFAULT_DNS:-119.29.29.29}"
+				LOCAL_DNS=${DEFAULT_DNS:-119.29.29.29}
+				msg="${msg} 直连DNS：${LOCAL_DNS}"
 			;;
 			udp)
+				LOCAL_DNS=${DIRECT_DNS}
 				V2RAY_ARGS="${V2RAY_ARGS} direct_dns_udp_server=${DIRECT_DNS}"
 				msg="${msg} 直连DNS：${DIRECT_DNS}"
 			;;
@@ -593,7 +595,7 @@ run_global() {
 	echolog ${msg}
 	
 	source $APP_PATH/helper_dnsmasq.sh stretch
-	source $APP_PATH/helper_dnsmasq.sh add TMP_DNSMASQ_PATH=$TMP_DNSMASQ_PATH DNSMASQ_CONF_FILE=/tmp/dnsmasq.d/dnsmasq-passwall2.conf DEFAULT_DNS=$DEFAULT_DNS TUN_DNS=$TUN_DNS
+	source $APP_PATH/helper_dnsmasq.sh add TMP_DNSMASQ_PATH=$TMP_DNSMASQ_PATH DNSMASQ_CONF_FILE=/tmp/dnsmasq.d/dnsmasq-passwall2.conf DEFAULT_DNS=$DEFAULT_DNS LOCAL_DNS=$LOCAL_DNS TUN_DNS=$TUN_DNS
 
 	V2RAY_CONFIG=$TMP_PATH/global.json
 	V2RAY_LOG=$TMP_PATH/global.log
@@ -787,8 +789,8 @@ RESOLVFILE=/tmp/resolv.conf.d/resolv.conf.auto
 [ -f "${RESOLVFILE}" ] && [ -s "${RESOLVFILE}" ] || RESOLVFILE=/tmp/resolv.conf.auto
 TCP_NO_REDIR_PORTS=$(config_t_get global_forwarding tcp_no_redir_ports 'disable')
 UDP_NO_REDIR_PORTS=$(config_t_get global_forwarding udp_no_redir_ports 'disable')
-TCP_REDIR_PORTS="1:65535"
-UDP_REDIR_PORTS="1:65535"
+TCP_REDIR_PORTS=$(config_t_get global_forwarding tcp_redir_ports '22,25,53,143,465,587,853,993,995,80,443')
+UDP_REDIR_PORTS=$(config_t_get global_forwarding udp_redir_ports '1:65535')
 TCP_PROXY_MODE="global"
 UDP_PROXY_MODE="global"
 LOCALHOST_TCP_PROXY_MODE="global"

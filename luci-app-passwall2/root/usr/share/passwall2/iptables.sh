@@ -176,7 +176,7 @@ load_acl() {
 		dnsmasq_port=11400
 		echolog "访问控制："
 		for item in $items; do
-			local enabled sid remarks sources tcp_no_redir_ports udp_no_redir_ports node direct_dns_protocol direct_dns direct_dns_doh remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip dns_query_strategy
+			local enabled sid remarks sources tcp_no_redir_ports udp_no_redir_ports tcp_redir_ports udp_redir_ports node direct_dns_protocol direct_dns direct_dns_doh remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip dns_query_strategy
 			local _ip _mac _iprange _ipset _ip_or_mac rule_list node_remark config_file
 			sid=$(uci -q show "${CONFIG}.${item}" | grep "=acl_rule" | awk -F '=' '{print $1}' | awk -F '.' '{print $2}')
 			eval $(uci -q show "${CONFIG}.${item}" | cut -d'.' -sf 3-)
@@ -341,7 +341,7 @@ load_acl() {
 				$ipt_m -A PSW2 $(comment "$remarks") ${_ipt_source} -p udp -j RETURN
 				$ip6t_m -A PSW2 $(comment "$remarks") ${_ipt_source} -p udp -j RETURN 2>/dev/null
 			done
-			unset enabled sid remarks sources tcp_no_redir_ports udp_no_redir_ports node direct_dns_protocol direct_dns direct_dns_doh remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip dns_query_strategy
+			unset enabled sid remarks sources tcp_no_redir_ports udp_no_redir_ports tcp_redir_ports udp_redir_ports node direct_dns_protocol direct_dns direct_dns_doh remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip dns_query_strategy
 			unset _ip _mac _iprange _ipset _ip_or_mac rule_list node_remark config_file
 			unset ipt_tmp msg msg2
 			unset redirect_dns_port
@@ -683,14 +683,12 @@ add_firewall_rule() {
 	if [ "$NODE" != "nil" ]; then
 		local ipt_tmp=$ipt_n
 		local blist_r=$(REDIRECT $REDIR_PORT)
-		local p_r=$(get_redirect_ipt $LOCALHOST_TCP_PROXY_MODE $REDIR_PORT)
 		echolog "加载路由器自身 TCP 代理..."
 
 		if [ -n "${is_tproxy}" ]; then
 			echolog "  - 启用 TPROXY 模式"
 			ipt_tmp=$ipt_m
 			blist_r=$(REDIRECT 1 MARK)
-			p_r=$(get_redirect_ipt $LOCALHOST_TCP_PROXY_MODE 1 MARK)
 		else
 			$ipt_n -A OUTPUT -p tcp -j PSW2_OUTPUT
 		fi
@@ -716,7 +714,6 @@ add_firewall_rule() {
 
 		$ipt_tmp -A PSW2_OUTPUT -p tcp -d $FAKE_IP $blist_r
 		$ipt_tmp -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") $blist_r
-		$ipt_tmp -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") $p_r
 
 		if [ -n "${is_tproxy}" ]; then
 			$ipt_m -A PSW2 $(comment "本机") -p tcp -i lo -d $FAKE_IP $(REDIRECT $REDIR_PORT TPROXY)

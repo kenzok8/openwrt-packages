@@ -69,6 +69,18 @@ o.default = "disable"
 o:value("disable", translate("No patterns are used"))
 o:value("1:65535", translate("All"))
 
+---- TCP Redir Ports
+o = s:option(Value, "tcp_redir_ports", translate("TCP Redir Ports"))
+o.default = "22,25,53,143,465,587,853,993,995,80,443"
+o:value("1:65535", translate("All"))
+o:value("22,25,53,143,465,587,853,993,995,80,443", translate("Common Use"))
+o:value("80,443", translate("Only Web"))
+
+---- UDP Redir Ports
+o = s:option(Value, "udp_redir_ports", translate("UDP Redir Ports"))
+o.default = "1:65535"
+o:value("1:65535", translate("All"))
+
 if os.execute("lsmod | grep -i REDIRECT >/dev/null") == 0 and os.execute("lsmod | grep -i TPROXY >/dev/null") == 0 then
     o = s:option(ListValue, "tcp_proxy_way", translate("TCP Proxy Way"))
     o.default = "redirect"

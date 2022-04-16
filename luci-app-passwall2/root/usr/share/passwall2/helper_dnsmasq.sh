@@ -86,7 +86,7 @@ gen_items() {
 }
 
 add() {
-	local TMP_DNSMASQ_PATH DNSMASQ_CONF_FILE DEFAULT_DNS TUN_DNS NO_LOGIC_LOG
+	local TMP_DNSMASQ_PATH DNSMASQ_CONF_FILE DEFAULT_DNS LOCAL_DNS TUN_DNS NO_LOGIC_LOG
 	eval_set_val $@
 	_LOG_FILE=$LOG_FILE
 	[ -n "$NO_LOGIC_LOG" ] && LOG_FILE="/dev/null"
@@ -94,7 +94,7 @@ add() {
 	
 	#始终用国内DNS解析节点域名
 	servers=$(uci show "${CONFIG}" | grep ".address=" | cut -d "'" -f 2)
-	hosts_foreach "servers" host_from_url | grep '[a-zA-Z]$' | sort -u | gen_items ipsets="vpsiplist,vpsiplist6" dnss="${DEFAULT_DNS}" outf="${TMP_DNSMASQ_PATH}/10-vpsiplist_host.conf" ipsetoutf="${TMP_DNSMASQ_PATH}/ipset.conf"
+	hosts_foreach "servers" host_from_url | grep '[a-zA-Z]$' | sort -u | gen_items ipsets="vpsiplist,vpsiplist6" dnss="${LOCAL_DNS:-${DEFAULT_DNS}}" outf="${TMP_DNSMASQ_PATH}/10-vpsiplist_host.conf" ipsetoutf="${TMP_DNSMASQ_PATH}/ipset.conf"
 	echolog "  - [$?]节点列表中的域名(vpsiplist)：${DEFAULT_DNS:-默认}"
 	
 	echo "conf-dir=${TMP_DNSMASQ_PATH}" > $DNSMASQ_CONF_FILE
@@ -114,6 +114,7 @@ add() {
 del() {
 	rm -rf /tmp/dnsmasq.d/dnsmasq-$CONFIG.conf
 	rm -rf $DNSMASQ_PATH/dnsmasq-$CONFIG.conf
+	rm -rf $TMP_DNSMASQ_PATH
 }
 
 arg1=$1
