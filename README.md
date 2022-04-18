@@ -66,7 +66,6 @@ make menuconfig
 | luci-app-mosdns              | mosdns dns offload            |DNS 国内外分流解析与广告过滤        |
 | luci-app-store               | store software repository            |  应用商店   |
 | luci-app-unblockneteasemusic | Unlock NetEase Cloud Music         | 解锁网易云音乐   |
-| luci-app-gpsysupgrade        | kiddin9 custom firmware upgrade plugin   |kiddin9自定义固件升级 |
 | luci-app-aliyundrive-webdav  | Aliyun Disk WebDAV Service            |  阿里云盘 WebDAV 服务   |
 
 * 修改argon为argonne，包括argonne-config，为防止同名argon，而影响编译
