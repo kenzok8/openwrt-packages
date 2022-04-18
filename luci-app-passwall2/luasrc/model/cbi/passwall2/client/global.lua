@@ -144,6 +144,10 @@ if (has_v2ray or has_xray) and #nodes_table > 0 then
     end
 end
 
+o = s:taboption("Main", Flag, "localhost_proxy", translate("Localhost Proxy"), translate("When selected, localhost can transparent proxy."))
+o.default = "1"
+o.rmempty = false
+
 s:tab("DNS", translate("DNS"))
 
 o = s:taboption("DNS", ListValue, "direct_dns_protocol", translate("Direct DNS Protocol"))

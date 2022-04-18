@@ -1,0 +1,222 @@
+<style>
+.NewsTdHeight{ line-height: 20px; }
+</style>
+<fieldset class="cbi-section">
+	<table width="100%" class="NewsTdHeight">
+		<tr><td width="100%" colspan="2">
+			<p align="center">
+				<%:The OpenWrt and kernel will be downloaded and updated according to the options filled in [Plugin Settings].%> <span id="_openwrt_mainline_version"></span>
+			</p>
+		</td></tr>
+		<tr><td width="35%" align="right"><input type="button" class="cbi-button cbi-button-reload" value="<%:Only update Amlogic Service%>" onclick="return b_check_plugin(this)"/></td><td  width="65%" align="left"><span id="_current_plugin_version"><%:Collecting data...%></span>　<span id="_check_plugin"></span></td></tr>
+		<tr><td width="35%" align="right"><input type="button" class="cbi-button cbi-button-reload" value="<%:Update system kernel only%>" onclick="return b_check_kernel(this, 'check')"/></td><td  width="65%" align="left"><span id="_current_kernel_version"><%:Collecting data...%></span>　<span id="_check_kernel"></span></td></tr>
+		<tr><td width="35%" align="right"><input type="button" class="cbi-button cbi-button-reload" value="<%:Complete system update%>" onclick="return b_check_firmware(this, 'check')"/></td><td  width="65%" align="left"><span id="_current_firmware_version"><%:Collecting data...%></span>　<span id="_check_firmware"></span></td></tr>
+	</table>
+</fieldset>
+<script type="text/javascript">//<![CDATA[
+
+	function amlogic_update(btn,amlogic_update_sel)
+	{
+		btn.disabled = true;
+		btn.value    = '<%:Updating...%> ';
+
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_amlogic_update")%>',
+			{
+				amlogic_update_sel: amlogic_update_sel
+			},
+			function(x,status)
+			{
+				if ( x && x.status == 200 ) {
+					if(status.rule_update_status=="1")
+					{
+						btn.value = '<%:Update Failed%>';
+					}
+					else
+					{
+						btn.value = '<%:Successful Update%>';
+					}
+				}
+				else {
+					btn.value = '<%:Update%>';
+				}
+			}
+		);
+		btn.disabled = false;
+		return false;
+	}
+
+	function amlogic_kernel(btn)
+	{
+		btn.disabled = true;
+		btn.value    = '<%:Updating...%> ';
+
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_amlogic_kernel")%>', null, function(x, status) {
+				if ( x && x.status == 200 ) {
+					if(status.rule_kernel_status=="1")
+					{
+						btn.value = '<%:Update Failed%>';
+					}
+					else
+					{
+						btn.value = '<%:Successful Update%>';
+					}
+				}
+				else {
+					btn.value = '<%:Update%>';
+				}
+			}
+		);
+		btn.disabled = false;
+		return false;
+	}
+
+	function amlogic_plugin(btn)
+	{
+		btn.disabled = true;
+		btn.value    = '<%:Updating...%> ';
+
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_amlogic_plugin")%>', null, function(x, status) {
+				if ( x && x.status == 200 ) {
+					if(status.rule_plugin_status=="1")
+					{
+						btn.value = '<%:Update Failed%>';
+					}
+					else
+					{
+						btn.value = '<%:Successful Update%>';
+					}
+				}
+				else {
+					btn.value = '<%:Update%>';
+				}
+			}
+		);
+		btn.disabled = false;
+		return false;
+	}
+
+	function b_check_firmware(btn,firmware_options)
+	{
+		btn.disabled = true;
+		btn.value = '<%:Checking...%>';
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "check_firmware")%>',
+			{
+				firmware_options: firmware_options
+			},
+			function(x,status)
+			{
+				if ( x && x.status == 200 ) {
+					if(status.check_firmware_status=="1")
+					{
+						btn.value = '<%:Complete system update%>';
+					}
+					else
+					{
+						btn.value = '<%:Complete system update%>';
+					}
+				}
+				else {
+					btn.value = '<%:Complete system update%>';
+				}
+			}
+		);
+		btn.disabled = false;
+		return false;
+	}
+
+	function b_check_plugin(btn)
+	{
+		btn.disabled = true;
+		btn.value = '<%:Checking...%>';
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "check_plugin")%>', null, function(x, status) {
+		if ( x && x.status == 200 ) {
+			btn.disabled = false;
+			btn.value = '<%:Only update Amlogic Service%>';
+		}
+		else {
+			btn.disabled = false;
+			btn.value = '<%:Only update Amlogic Service%>';
+		}
+		return false;
+		});
+	}
+
+	function b_check_kernel(btn,kernel_options)
+	{
+		btn.disabled = true;
+		btn.value = '<%:Checking...%>';
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "check_kernel")%>',
+			{
+				kernel_options: kernel_options
+			},
+			function(x,status)
+			{
+				if ( x && x.status == 200 ) {
+					if(status.check_kernel_status=="1")
+					{
+						btn.value = '<%:Update system kernel only%>';
+					}
+					else
+					{
+						btn.value = '<%:Update system kernel only%>';
+					}
+				}
+				else {
+					btn.value = '<%:Update system kernel only%>';
+				}
+			}
+		);
+		btn.disabled = false;
+		return false;
+	}
+
+	var _check_firmware = document.getElementById('_check_firmware');
+	XHR.poll(1, '<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_check_firmware")%>', status.start_check_firmware, function(x, status) {
+	if ( x && x.status == 200 ) {
+		if ( status.start_check_firmware != "\n" && status.start_check_firmware != "" ) {
+			_check_firmware.innerHTML = '<font color="blue"> '+status.start_check_firmware+'</font>';
+		}
+		if ( status.start_check_firmware == "\n" || status.start_check_firmware == "" ) {
+			_check_firmware.innerHTML = '';
+		}
+	}
+	});
+
+	var _check_plugin = document.getElementById('_check_plugin');
+	XHR.poll(1, '<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_check_plugin")%>', status.start_check_plugin, function(x, status) {
+	if ( x && x.status == 200 ) {
+		if ( status.start_check_plugin != "\n" && status.start_check_plugin != "" ) {
+			_check_plugin.innerHTML = '<font color="blue"> '+status.start_check_plugin+'</font>';
+		}
+		if ( status.start_check_plugin == "\n" || status.start_check_plugin == "" ) {
+			_check_plugin.innerHTML = '';
+		}
+	}
+	});
+
+	var _check_kernel = document.getElementById('_check_kernel');
+	XHR.poll(1, '<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_check_kernel")%>', status.start_check_kernel, function(x, status) {
+	if ( x && x.status == 200 ) {
+		if ( status.start_check_kernel != "\n" && status.start_check_kernel != "" ) {
+			_check_kernel.innerHTML = '<font color="blue"> '+status.start_check_kernel+'</font>';
+		}
+		if ( status.start_check_kernel == "\n" || status.start_check_kernel == "" ) {
+			_check_kernel.innerHTML = '';
+		}
+	}
+	});
+
+	var _current_firmware_version = document.getElementById('_current_firmware_version');
+	var _current_plugin_version = document.getElementById('_current_plugin_version');
+	var _current_kernel_version = document.getElementById('_current_kernel_version');
+	var _openwrt_mainline_version = document.getElementById('_openwrt_mainline_version');
+	XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "state")%>', null, function(x, status) {
+	if ( x && x.status == 200 ) {
+		_current_firmware_version.innerHTML = status.current_firmware_version ? "<font color=green><%:Current Version%> [ "+status.current_firmware_version+" ] </font>" : "<font color=red>"+"<%:Invalid value.%>"+"</font>";
+		_current_plugin_version.innerHTML = status.current_plugin_version ? "<font color=green><%:Current Version%> [ "+status.current_plugin_version+" ] </font>" : "<font color=red>"+"<%:Invalid value.%>"+"</font>";
+		_current_kernel_version.innerHTML = status.current_kernel_version ? "<font color=green><%:Current Version%> [ "+status.current_kernel_version+" ] </font>" : "<font color=red>"+"<%:Invalid value.%>"+"</font>";
+		_openwrt_mainline_version.innerHTML = status.current_kernel_branch ? " [ "+status.current_kernel_branch+".*** ] " : "[ "+"<%:Invalid value.%>"+" ]";
+	}
+	});
+
+//]]></script>

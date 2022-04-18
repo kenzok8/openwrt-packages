@@ -1,0 +1,152 @@
+<style>
+.NewsTdHeight{ line-height:20px; }
+.SnapshotsTitHeight{ line-height:40px; text-align: center; }
+.list{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    text-align: center;
+    position: relative;
+    width: 100%;
+	background-color: #FFF;
+}
+.item{
+    border: 1px solid #CACACA;
+    color: #888;
+    font-size: 14px;
+    width: 150px;
+    height: 130px;
+    margin:8px;
+    text-align: center;
+    align-items:center;
+}
+.item:hover{background:#e5f3f6;}
+.item:not(:nth-child(3n)){
+    content: "";
+    width: 150px;
+}
+.list:after {
+    content: "";
+    width: 150px;
+}
+</style>
+
+<div class="list" id="_check_snapshot">
+	<%:Collecting data...%>
+</div>
+
+<script type="text/javascript">//<![CDATA[
+
+    // Delete snapshot function
+	function delete_snapshot(btn,snapshot_delete_sel)
+	{
+
+		if (confirm('<%:You selected a snapshot:%> [ ' + snapshot_delete_sel + ' ] , <%:Confirm delete?%>') != true) { return false; }
+
+		btn.disabled = true;
+		btn.value    = '<%:Deleting...%> ';
+
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_snapshot_delete")%>',
+			{
+				snapshot_delete_sel: snapshot_delete_sel
+			},
+			function(x,status)
+			{
+				if ( x && x.status == 200 ) {
+					if(status.rule_delete_status=="1")
+					{
+						btn.value = '<%:Delete Failed%>';
+					}
+					else
+					{
+						btn.value = '<%:Successfully Deleted%>';
+					}
+				}
+				else {
+					btn.value = '<%:Delete Snapshot%>';
+				}
+			}
+		);
+		var sdiv = 'snapshots_div_' + snapshot_delete_sel;
+		document.getElementById(sdiv).style.display = 'none';
+		btn.disabled = false;
+		return false;
+
+	}
+
+	// Restore snapshot function
+	function restore_snapshot(btn,snapshot_restore_sel)
+	{
+
+		if (confirm('<%:You selected a snapshot:%> [ ' + snapshot_restore_sel + ' ] , <%:Confirm recovery and restart OpenWrt?%>') != true) { return false; }
+
+		btn.disabled = true;
+		btn.value    = '<%:Restoring...%> ';
+
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_snapshot_restore")%>',
+			{
+				snapshot_restore_sel: snapshot_restore_sel
+			},
+			function(x,status)
+			{
+				if ( x && x.status == 200 ) {
+					if(status.rule_restore_status=="1")
+					{
+						btn.value = '<%:Restore Failed%>';
+					}
+					else
+					{
+						btn.value = '<%:Successfully Restored%>';
+					}
+				}
+				else {
+					btn.value = '<%:Restore Snapshot%>';
+				}
+			}
+		);
+		btn.disabled = false;
+		return false;
+	}
+
+	// Show current snapshot list
+	mycars_arrlen = 0;
+	_no_snapshots = "<%:Currently OpenWrt does not support the snapshot function.%>";
+	_no_snapshots = _no_snapshots + "<%:Please use this plugin to reinstall or upgrade OpenWrt to enable the snapshot function.%>";
+	var _check_snapshot = document.getElementById('_check_snapshot');
+	XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_snapshot_list")%>', null, function(x, status) {
+		if ( x && x.status == 200 ) {
+
+			let userArer = status.current_snapshot;
+			let user_arer_clear = userArer.replace(/\.snapshots\//g, "");
+			let trimstr = user_arer_clear.replace(/(^\s*)|(\s*$)/g, "");
+			let user_arer = trimstr.replace(/\s+/g, ",");
+			var mycars = user_arer.split(',');
+			var mycars_arrlen = mycars.length;
+
+			_div_codes = ""
+			_snapshots_tit = ""
+			for ( j = 0; j < mycars_arrlen; j++ ) {
+
+				if ( mycars[j] == "etc-000" ) {
+					_snapshots_tit = "<%:Initialize Snapshot%>";
+				} else if ( mycars[j] == "etc-001" ) {
+					_snapshots_tit = "<%:Update Snapshot%>";
+				} else {
+					_snapshots_tit = mycars[j];
+				}
+
+				_div_codes = _div_codes + '<div class="item" id="snapshots_div_' + mycars[j] + '">';
+				_div_codes = _div_codes + '<div class="SnapshotsTitHeight">' + _snapshots_tit + '</div>'
+				_div_codes = _div_codes + '<div class="SnapshotsTitHeight"><input type="button" class="cbi-button cbi-button-apply" value="<%:Restore Snap%>" onclick="return restore_snapshot(this, \'' + mycars[j] + '\')"/></div>'
+				if ( mycars[j] != "etc-000" && mycars[j] != "etc-001" ) { _div_codes = _div_codes + '<div class="SnapshotsTitHeight"><input type="button" class="cbi-button cbi-button-remove" value="<%:Delete Snap%>" onclick="return delete_snapshot(this, \'' + mycars[j] + '\')"/></div>' }
+				_div_codes = _div_codes + '</div>';
+
+			}
+			_check_snapshot.innerHTML = _div_codes ? _div_codes : "<font color=red>"+"<%:Invalid value.%>"+"</font>";
+		} else {
+			_check_snapshot.innerHTML = "<font color=red>"+ _no_snapshots +"</font>";
+		}
+	});
+
+//]]></script>
+

@@ -1,4 +1,4 @@
-#-- Copyright (C) 2021 dz <dingzhong110@gmail.com>
+-- Copyright (C) 2021 dz <dingzhong110@gmail.com>
 
 module("luci.controller.easymesh", package.seeall)
 

@@ -1,0 +1,575 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: https://github.com/ophub/luci-app-amlogic \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN\n"
+"X-Generator: Poedit 2.3.1\n"
+
+msgid "Choose local file:"
+msgstr "选择本地文件："
+
+msgid "Couldn't open file:"
+msgstr "无法打开文件："
+
+msgid "The file Will download automatically."
+msgstr "文件将自动下载"
+
+msgid "Create upload file error."
+msgstr "创建上传文件失败。"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Download file"
+msgstr "下载文件"
+
+msgid "File name"
+msgstr "文件名"
+
+msgid "File saved to"
+msgstr "文件保存到"
+
+msgid "FileTransfer"
+msgstr "文件传输"
+
+msgid "Install"
+msgstr "安装"
+
+msgid "Attributes"
+msgstr "属性"
+
+msgid "Modify time"
+msgstr "修改时间"
+
+msgid "No specify upload file."
+msgstr "未指定上传文件。"
+
+msgid "Path on Route:"
+msgstr "路由根目录："
+
+msgid "Remove"
+msgstr "移除"
+
+msgid "Size"
+msgstr "大小"
+
+msgid "Upload"
+msgstr "上传"
+
+msgid "Upload file list"
+msgstr "上传文件列表"
+
+msgid "There are config file in the upload directory, and you can restore the config. "
+msgstr "上传文件列表中有配置文件，你可以恢复配置。"
+
+msgid "There are kernel files in the upload directory, and you can replace the kernel."
+msgstr "上传文件列表中有内核文件，你可以升级内核。"
+
+msgid "There are openwrt firmware file in the upload directory, and you can update the openwrt."
+msgstr "上传文件列表中有 OpenWrt 固件文件，你可以升级 OpenWrt。"
+
+msgid "After uploading [Firmware], [Kernel], [IPK] or [Backup Config], the operation buttons will be displayed."
+msgstr "当上传 [固件文件]，[内核文件]，[IPK文件]，[配置文件] 后，将自动显示相关操作按钮。"
+
+msgid "After uploading firmware (.img/.img.gz/.img.xz/.7z suffix) or kernel files (3 kernel files), the update button will be displayed."
+msgstr "当上传文件列表中有 OpenWrt 固件（.img/.img.gz/.img.xz/.7z 后缀）或内核文件（3个内核文件）时，将自动显示相关操作按钮。"
+
+msgid "Amlogic Service"
+msgstr "晶晨宝盒"
+
+msgid "Restore Config / Replace OpenWrt Kernel"
+msgstr "恢复配置 / 升级 OpenWrt 内核"
+
+msgid "Manually Upload Update"
+msgstr "手动上传更新"
+
+msgid "Install OpenWrt"
+msgstr "安装 OpenWrt"
+
+msgid "Select the device model:"
+msgstr "选择设备型号："
+
+msgid "Select List"
+msgstr "选择列表"
+
+msgid "[s905d] Phicomm N1"
+msgstr "[s905d] 斐讯-N1"
+
+msgid "[s905d] Phicomm N1 (DMA thresh)"
+msgstr "[s905d] 斐讯-N1 (流控)"
+
+msgid "[s905x] HG680P & B860H"
+msgstr "[s905x] 烽火HG680 & 中兴B860H"
+
+msgid "[s905w] X96-Mini & TX3-Mini"
+msgstr "[s905w] X96-Mini & TX3-Mini"
+
+msgid "[s912] Octopus Planet"
+msgstr "[s912] 章鱼星球"
+
+msgid "[s905x2] X96 Max 4G"
+msgstr "[s905x2] X96 Max 4G"
+
+msgid "[s905x2] X96 Max 2G"
+msgstr "[s905x2] X96 Max 2G"
+
+msgid "[s922x] Belink GT-King"
+msgstr "[s922x] Belink GT-King"
+
+msgid "[s922x] Belink GT-King Pro"
+msgstr "[s922x] Belink GT-King Pro"
+
+msgid "[s922x] Belink GT-King Pro H"
+msgstr "[s922x] Belink GT-King Pro H"
+
+msgid "[s922x] Belink GT-King Pro Rev_A"
+msgstr "[s922x] Belink GT-King Pro Rev_A"
+
+msgid "[s922x] Hardkernel ODROID N2"
+msgstr "[s922x] Hardkernel ODROID N2"
+
+msgid "[s922x] UGOOS AM6 Plus"
+msgstr "[s922x] UGOOS AM6 Plus"
+
+msgid "[a311d] Khadas VIM3"
+msgstr "[a311d] Khadas VIM3"
+
+msgid "[s905x3] X96 Max+"
+msgstr "[s905x3] X96 Max+"
+
+msgid "[s905x3] X96 Max+ (OverClock@2208Mhz)"
+msgstr "[s905x3] X96 Max+ (超频@2208Mhz)"
+
+msgid "[s905x3] HK1 Box"
+msgstr "[s905x3] HK1 Box"
+
+msgid "[s905x3] HK1 Box (OverClock@2208Mhz)"
+msgstr "[s905x3] HK1 Box (超频@2208Mhz)"
+
+msgid "[s905x3] H96 Max X3"
+msgstr "[s905x3] H96 Max X3"
+
+msgid "[s905x3] H96 Max X3 (OverClock@2208Mhz)"
+msgstr "[s905x3] H96 Max X3 (超频@2208Mhz)"
+
+msgid "[s905x3] Ugoos X3"
+msgstr "[s905x3] Ugoos X3"
+
+msgid "[s905x3] Ugoos X3 (OverClock@2208Mhz)"
+msgstr "[s905x3] Ugoos X3 (超频@2208Mhz)"
+
+msgid "[s905x3] TX3 BZ"
+msgstr "[s905x3] TX3 百兆"
+
+msgid "[s905x3] TX3 BZ (OverClock@2208Mhz)"
+msgstr "[s905x3] TX3 百兆 (超频@2208Mhz)"
+
+msgid "[s905x3] TX3 QZ"
+msgstr "[s905x3] TX3 千兆"
+
+msgid "[s905x3] TX3 QZ (OverClock@2208Mhz)"
+msgstr "[s905x3] TX3 千兆 (超频@2208Mhz)"
+
+msgid "Or enter the dtb file name:"
+msgstr "或者输入自定义 dtb 文件名："
+
+msgid "Enter the dtb file name"
+msgstr "输入自定义 dtb 文件名"
+
+msgid "Use custom dtb file:"
+msgstr "使用自定义 dtb 文件："
+
+msgid "Invalid value."
+msgstr "无效值"
+
+msgid "Install OpenWrt:"
+msgstr "安装 OpenWrt："
+
+msgid "Install OpenWrt to EMMC, Please select the device model, Or enter the dtb file name."
+msgstr "将 OpenWrt 安装到 EMMC，请选择设备型号，或输入 dtb 文件名。"
+
+msgid "Tip: Writing is in progress, and it will automatically restart after completion."
+msgstr "提示：正在写入，完成后将自动重启。"
+
+msgid "You have chosen:"
+msgstr "你选择了："
+
+msgid "Start install?"
+msgstr "开始安装吗？"
+
+msgid "Installing..."
+msgstr "正在安装..."
+
+msgid "Install Failed"
+msgstr "安装失败"
+
+msgid "Successful Install"
+msgstr "安装成功"
+
+msgid "Update"
+msgstr "升级"
+
+msgid "Updating..."
+msgstr "正在更新..."
+
+msgid "Update Failed"
+msgstr "更新失败"
+
+msgid "Successful Update"
+msgstr "更新成功"
+
+msgid "Update OpenWrt firmware"
+msgstr "升级 OpenWrt 固件"
+
+msgid "kernel"
+msgstr "内核"
+
+msgid "Replace OpenWrt Kernel"
+msgstr "更换 OpenWrt 内核"
+
+msgid "Tip: The kernel is being replaced, and it will automatically restart after completion."
+msgstr "提示：正在替换内核，完成后将自动重启。"
+
+msgid "Supports management of Amlogic s9xxx, Allwinner (V-Plus Cloud), and Rockchip (BeikeYun, Chainedbox L1 Pro) boxes."
+msgstr "支持对晶晨 s9xxx 系列（斐讯N1、HK1等），全志（微加云），以及瑞芯微（贝壳云、我家云）的盒子进行在线管理。"
+
+msgid "Supported functions:"
+msgstr "支持的功能："
+
+msgid "Provide services such as install to EMMC, Update Firmware and Kernel, Backup and Recovery Config, Snapshot management, etc."
+msgstr "支持将 OpenWrt 系统写入 EMMC、升级固件与内核，备份与恢复自定义配置，快照管理等功能。"
+
+msgid "Supported Boxes:"
+msgstr "支持的盒子："
+
+msgid "Amlogic s922x --- [ Belink, Belink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas VIM3(a311d) ]"
+msgstr "晶晨 s922x --- [ Belink, Belink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas VIM3(a311d) ]"
+
+msgid "Amlogic s905x3 -- [ X96-Max+, HK1-Box, H96-Max-X3, Ugoos-X3, TX3, X96-Air, A95XF3-Air ]"
+msgstr "晶晨 s905x3 -- [ X96-Max+, HK1-Box, H96-Max-X3, Ugoos-X3, TX3, X96-Air, A95XF3-Air ]"
+
+msgid "Amlogic s905x2 -- [ X96Max-4G, X96Max-2G ]"
+msgstr "晶晨 s905x2 -- [ X96Max-4G, X96Max-2G ]"
+
+msgid "Amlogic s905x --- [ HG680P, B860H ]"
+msgstr "晶晨 s905x --- [ 烽火HG680 & 中兴B860H ]"
+
+msgid "Amlogic s905w --- [ X96-Mini, TX3-Mini ]"
+msgstr "晶晨 s905w --- [ X96-Mini, TX3-Mini ]"
+
+msgid "Amlogic s912 ---- [ H96-Pro-Plus, Octopus-Planet ]"
+msgstr "晶晨 s912 ---- [ H96-Pro-Plus, 章鱼星球 ]"
+
+msgid "Amlogic s905d --- [ Phicomm-N1 ]"
+msgstr "晶晨 s905d --- [ 斐讯-N1 ]"
+
+msgid "Amlogic Other --- [ Optional DTB ]"
+msgstr "晶晨其他 ----- [ 自定义 DTB 文件 ]"
+
+msgid "Allwinner H6 ---- [ V-Plus Cloud ]"
+msgstr "全志 H6 ------ [ 微加云 ]"
+
+msgid "Rockchip 3328 --- [ BeikeYun, Chainedbox L1 Pro ]"
+msgstr "瑞芯微 3328 -- [ 贝壳云、我家云 ]"
+
+msgid "Install Ipk"
+msgstr "安装Ipk"
+
+msgid "Plugin Settings"
+msgstr "插件设置"
+
+msgid "Backup Firmware Config"
+msgstr "备份固件配置"
+
+msgid "Backup Config:"
+msgstr "备份配置："
+
+msgid "Download Backup"
+msgstr "下载备份"
+
+msgid "Backup OpenWrt config (openwrt_config.tar.gz). Use this file to restore the config in [Manually Upload Update]."
+msgstr "备份当前 OpenWrt 的相关配置信息(openwrt_config.tar.gz)。使用此文件可在 [手动上传更新] 中恢复配置。"
+
+msgid "Restore"
+msgstr "恢复"
+
+msgid "Restore Config"
+msgstr "恢复配置"
+
+msgid "Restore configuration"
+msgstr "还原配置"
+
+msgid "Config File"
+msgstr "配置文件"
+
+msgid "Tip: The config is being restored, and it will automatically restart after completion."
+msgstr "提示：正在还原配置，完成后将自动重启。"
+
+msgid "Snapshot Management"
+msgstr "快照管理"
+
+msgid "Create Snapshot"
+msgstr "创建快照"
+
+msgid "Creating..."
+msgstr "正在创建"
+
+msgid "Created successfully"
+msgstr "创建成功"
+
+msgid "Creation failed"
+msgstr "创建失败"
+
+msgid "Initialize Snapshot"
+msgstr "初始化快照"
+
+msgid "Update Snapshot"
+msgstr "更新点快照"
+
+msgid "Restore Snap"
+msgstr "还原快照"
+
+msgid "Restoring..."
+msgstr "正在还原"
+
+msgid "Restore Failed"
+msgstr "还原失败"
+
+msgid "Successfully Restored"
+msgstr "还原成功"
+
+msgid "Delete Snap"
+msgstr "删除快照"
+
+msgid "You selected a snapshot:"
+msgstr "你选择了快照："
+
+msgid "Confirm delete?"
+msgstr "确定删除吗？"
+
+msgid "Confirm recovery and restart OpenWrt?"
+msgstr "确定恢复并重启 OpenWrt 吗？"
+
+msgid "Delete Failed"
+msgstr "删除失败"
+
+msgid "Successfully Deleted"
+msgstr "删除成功"
+
+msgid "Create a snapshot of the current system configuration, or restore to a snapshot."
+msgstr "创建当前系统配置的快照，或还原到某个快照。"
+
+msgid "Currently OpenWrt does not support the snapshot function."
+msgstr "当前 OpenWrt 不支持快照功能。"
+
+msgid "Please use this plugin to reinstall or upgrade OpenWrt to enable the snapshot function."
+msgstr "请使用本插件重新安装或升级 OpenWrt 开启快照功能。"
+
+msgid "Deleting..."
+msgstr "正在删除..."
+
+msgid "Online Download Update"
+msgstr "在线下载更新"
+
+msgid "Config Source"
+msgstr "配置来源"
+
+msgid "You can customize the github.com download repository of OpenWrt files and kernels in [Online Download Update]."
+msgstr "您可以自定义 [在线下载和更新] 中 OpenWrt 固件和内核的 github.com 下载仓库。"
+
+msgid "Tips: The amlogic SoC (E.g: s905d) and mainline version of the kernel (E.g: 5.10) will automatically match the current openwrt firmware."
+msgstr "提示：OpenWrt 固件的型号（如：s905d）和内核的主线版本（如：5.10）将根据当前固件自动适配。"
+
+msgid "Download repository of OpenWrt:"
+msgstr "OpenWrt 固件的下载仓库："
+
+msgid "Set the download repository of the OpenWrt files on github.com in [Online Download Update]."
+msgstr "设置 [在线下载更新] 中 github.com 的 OpenWrt 固件的下载仓库。"
+
+msgid "Keywords of Tags in Releases:"
+msgstr "Releases 里 Tags 的关键字："
+
+msgid "Set the keywords of Tags in Releases of github.com in [Online Download Update]."
+msgstr "设置 [在线下载更新] 中 github.com 的 Releases 里 Tags 的关键字。"
+
+msgid "Suffix of OpenWrt files:"
+msgstr "OpenWrt 固件的后缀："
+
+msgid "Set the suffix of the OpenWrt in Releases of github.com in [Online Download Update]."
+msgstr "设置 [在线下载更新] 中 github.com 的 Releases 里 OpenWrt 固件的后缀。"
+
+msgid "Download path of OpenWrt kernel:"
+msgstr "OpenWrt 内核的下载路径："
+
+msgid "Set the download path of the kernel in the github.com repository in [Online Download Update]."
+msgstr "设置 [在线下载更新] 中 github.com 仓库里内核的下载路径。"
+
+msgid "Set version branch:"
+msgstr "设置版本分支："
+
+msgid "Set the version branch of the openwrt firmware and kernel selected in [Online Download Update]."
+msgstr "设置 [在线下载更新] 时 OpenWrt 固件与内核所选用的版本分支。"
+
+msgid "Keep config update:"
+msgstr "保留配置更新："
+
+msgid "Set whether to keep the current config during [Online Download Update] and [Manually Upload Update]."
+msgstr "设置是否在 [在线下载更新] 和 [手动上传更新] 时保留当前的配置。"
+
+msgid "Auto write bootloader:"
+msgstr "自动写入 bootloader："
+
+msgid "[Recommended choice] Set whether to auto write bootloader during install and update OpenWrt."
+msgstr "[推荐选择] 设置在安装和更新 OpenWrt 固件时是否自动写入 bootloader 文件。"
+
+msgid "Set the file system type:"
+msgstr "设置文件系统类型："
+
+msgid "[Default ext4] Set the file system type of the shared partition (/mnt/mmcblk*p4) when install OpenWrt."
+msgstr "[默认 ext4] 设置安装 OpenWrt 时共享分区 (/mnt/mmcblk*p4) 的文件系统类型。"
+
+msgid "Save Config:"
+msgstr "保存配置："
+
+msgid "Save"
+msgstr "保存"
+
+msgid "Check All Components Update"
+msgstr "插件和内核检查更新"
+
+msgid "Provide OpenWrt Firmware, Kernel and Plugin online check, download and update service."
+msgstr "提供 OpenWrt 固件，内核和插件在线检查，下载和更新服务。"
+
+msgid "Only update Amlogic Service"
+msgstr "仅更新晶晨宝盒"
+
+msgid "Update system kernel only"
+msgstr "仅更新系统内核"
+
+msgid "Complete system update"
+msgstr "完整更新全系统"
+
+msgid "Check Update"
+msgstr "检查更新"
+
+msgid "Checking..."
+msgstr "正在检查更新..."
+
+msgid "Current Version"
+msgstr "当前版本"
+
+msgid "Latest Version"
+msgstr "最新版本"
+
+msgid "Current Device:"
+msgstr "当前设备："
+
+msgid "If the current device shows (Unknown device), please report to github."
+msgstr "如果当前设备显示无法识别（Unknown device），请到 github 反馈。"
+
+msgid "The OpenWrt and kernel will be downloaded and updated according to the options filled in [Plugin Settings]."
+msgstr "将根据在 [插件设置] 里面填写的选项进行 OpenWrt 固件和内核的下载与更新。"
+
+msgid "Collecting data..."
+msgstr "正在收集数据…"
+
+msgid "Check All Components Update"
+msgstr "插件和内核检查更新"
+
+msgid "Server Logs"
+msgstr "操作日志"
+
+msgid "Display the execution log of the current operation."
+msgstr "显示当前操作的执行日志。"
+
+msgid "Stop Refresh Log"
+msgstr "停止刷新"
+
+msgid "Start Refresh Log"
+msgstr "开始刷新"
+
+msgid "Clean Log"
+msgstr "清理日志"
+
+msgid "Download Log"
+msgstr "下载日志"
+
+msgid "CPU Settings"
+msgstr "CPU 设置"
+
+msgid "CPU Freq"
+msgstr "CPU 性能优化调节"
+
+msgid "CPU Freq Settings"
+msgstr "CPU 性能优化调节设置"
+
+msgid "Set CPU Scaling Governor to Max Performance or Balance Mode"
+msgstr "设置路由器的 CPU 性能模式（高性能/均衡省电）"
+
+msgid "CPU Scaling Governor:"
+msgstr "CPU 调速器："
+
+msgid "ondemand"
+msgstr "Ondemand 自动平衡模式"
+
+msgid "performance"
+msgstr "Performance 高性能模式"
+
+msgid "schedutil"
+msgstr "Schedutil 敏捷调度器模式"
+
+msgid "CPU Freq from 48000 to 716000 (Khz)"
+msgstr "CPU 频率范围为 48000 到 716000 (Khz)"
+
+msgid "Min Freq:"
+msgstr "最小频率："
+
+msgid "Max Freq:"
+msgstr "最大频率："
+
+msgid "CPU Switching Threshold:"
+msgstr "CPU 切换频率触发阈值："
+
+msgid "Kernel make a decision on whether it should increase the frequency (%)"
+msgstr "当 CPU 占用率超过 (%) 的情况下触发内核切换频率"
+
+msgid "CPU Switching Sampling rate:"
+msgstr "CPU 切换周期："
+
+msgid "The sampling rate determines how frequently the governor checks to tune the CPU (ms)"
+msgstr "CPU 检查切换的周期 (ms) 。注意：过于频繁的切换频率会引起网络延迟抖动"
+
+msgid "Microarchitectures:"
+msgstr "微架构："
+
+msgid "Loading"
+msgstr "载入中"
+
+msgid "PowerOff"
+msgstr "关机"
+
+msgid "Shut down your router device."
+msgstr "关闭你的路由器设备。"
+
+msgid "Perform PowerOff"
+msgstr "执行关机"
+
+msgid "Are you sure you want to shut down?"
+msgstr "你确定要关机吗？"
+
+msgid "Device is shutting down..."
+msgstr "设备正在关机..."
+
+msgid "Waiting for the device to shut down..."
+msgstr "等待设备关机..."
+
+msgid "The device has been turned off"
+msgstr "设备已经关机"
+
+
