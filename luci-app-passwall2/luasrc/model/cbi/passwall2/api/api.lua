@@ -188,6 +188,14 @@ function iprange(val)
     return false
 end
 
+function get_domain_from_url(url)
+    local domain = string.match(url, "//([^/]+)")
+    if domain then
+        return domain
+    end
+    return url
+end
+
 function get_valid_nodes()
     local nodes_ping = uci_get_type("global_other", "nodes_ping") or ""
     local nodes = {}
@@ -319,8 +327,10 @@ function get_bin_version_cache(file, cmd)
             return sys.exec("echo -n $(cat /tmp/etc/passwall2_tmp/%s)" % md5)
         else
             local version = sys.exec(string.format("echo -n $(%s %s)", file, cmd))
-            sys.call("echo '" .. version .. "' > " .. "/tmp/etc/passwall2_tmp/" .. md5)
-            return version
+            if version and version ~= "" then
+                sys.call("echo '" .. version .. "' > " .. "/tmp/etc/passwall2_tmp/" .. md5)
+                return version
+            end
         end
     end
     return ""
@@ -333,7 +343,7 @@ end
 
 function get_v2ray_version(file)
     if file == nil then file = get_v2ray_path() end
-    local cmd = "-version | awk '{print $2}' | sed -n 1P"
+    local cmd = "version | awk '{print $2}' | sed -n 1P"
     return get_bin_version_cache(file, cmd)
 end
 

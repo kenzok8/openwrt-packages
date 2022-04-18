@@ -43,7 +43,7 @@ a:depends({soc_code="pve"})
 a=s:option(Value,"server_port",translate("宿主机 SSH 端口"))
 a.rmempty=true
 a.default="22"
-a.description = translate("SSH 端口默认为 22，如有自定义，请填写自定义 SSH 端口<br/>请确认已经设置好密钥登陆，否则会引起脚本无法运行等错误！<br/>PVE 安装 sensors 命令自行百度<br/>密钥登陆例（自行修改地址与端口号）：<br/>opkg update #更新列表<br/>opkg install openssh-client openssh-keygen #安装openssh客户端<br/>ssh-keygen -t rsa # 生成密钥文件（自行设定密码等信息）<br/>ssh root@10.0.0.2 -p 22 \"tee -a ~/.ssh/id_rsa.pub\" < ~/.ssh/id_rsa.pub # 传送公钥到 PVE<br/>ssh root@10.0.0.2 -p 22 \"cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys\" # 写入公钥到 PVE<br/>ssh -i /root/.ssh/id_rsa root@10.0.0.2 -p 22 sensors # 使用私钥连接 PVE 测试温度命令")
+a.description = translate("SSH 端口默认为 22，如有自定义，请填写自定义 SSH 端口<br/>请确认已经设置好密钥登陆，否则会引起脚本无法运行等错误！<br/>PVE 安装 sensors 命令自行百度<br/>密钥登陆例（自行修改地址与端口号）：<br/>opkg update #更新列表<br/>opkg install openssh-client openssh-keygen #安装openssh客户端<br/>echo -e \"\\n\" | ssh-keygen -t rsa # 生成密钥文件（空密码）<br/>pve_host=`uci get serverchan.serverchan.server_host` || pve_host=\"10.0.0.3\" # 读取配置文件中的 pve 主机地址，如果不存在请自行填写 <br/>pve_port=`uci get serverchan.serverchan.server_port` || pve_host=\"22\"       # 读取配置文件中的 pve 主机 ssh 端口号，，如果不存在请自行填写 <br/>ssh root@${pve_host} -p ${pve_port} \"tee -a ~/.ssh/id_rsa.pub\" < ~/.ssh/id_rsa.pub # 传送公钥到 PVE<br/>ssh root@${pve_host} -p ${pve_port} \"cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys\" # 写入公钥到 PVE<br/>ssh -i /root/.ssh/id_rsa root@${pve_host} -p ${pve_port} sensors # 使用私钥连接 PVE 测试温度命令")
 a:depends({soc_code="pve"})
 
 a=s:option(Button,"soc",translate("测试温度命令"))

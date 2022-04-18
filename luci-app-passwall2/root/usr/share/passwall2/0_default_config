@@ -3,8 +3,12 @@ config global
 	option enabled '0'
 	option socks_enabled '0'
 	option node 'myshunt'
-	option dns_protocol 'tcp'
-	option dns_forward '1.1.1.1'
+	option direct_dns_protocol 'auto'
+	option remote_dns_protocol 'tcp'
+	option remote_dns '1.1.1.1'
+	option dns_query_strategy 'UseIPv4'
+	option dns_hosts 'cloudflare-dns.com 1.1.1.1
+dns.google.com 8.8.8.8'
 	option close_log '0'
 	option loglevel 'error'
 
@@ -17,6 +21,8 @@ config global_forwarding
 	option process '0'
 	option tcp_no_redir_ports '5223'
 	option udp_no_redir_ports '53'
+	option tcp_redir_ports '22,25,53,143,465,587,853,993,995,80,443'
+	option udp_redir_ports '1:65535'
 	option accept_icmp '0'
 	option tcp_proxy_way 'redirect'
 	option ipv6_tproxy '0'

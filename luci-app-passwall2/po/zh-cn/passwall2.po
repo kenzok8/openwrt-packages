@@ -16,41 +16,11 @@ msgstr "连接正常"
 msgid "Problem detected!"
 msgstr "连接失败"
 
-msgid "Very Fast"
-msgstr "非常快"
-
-msgid "Fast"
-msgstr "很快"
-
-msgid "General"
-msgstr "一般般"
-
-msgid "Slow"
-msgstr "很慢"
-
-msgid "Very Slow"
-msgstr "非常慢"
-
 msgid "Touch Check"
 msgstr "点我检测"
 
 msgid "Kernel Unsupported"
 msgstr "内核不支持"
-
-msgid "Use IPv6"
-msgstr "使用IPv6"
-
-msgid "Parsing IP"
-msgstr "域名解析IP"
-
-msgid "TCP Server"
-msgstr "TCP服务器"
-
-msgid "UDP Server"
-msgstr "UDP服务器"
-
-msgid "Main Settings"
-msgstr "节点选择"
 
 msgid "Basic Settings"
 msgstr "基本设置"
@@ -106,12 +76,6 @@ msgstr "清除"
 msgid "Main switch"
 msgstr "主开关"
 
-msgid "TCP Node"
-msgstr "TCP节点"
-
-msgid "UDP Node"
-msgstr "UDP节点"
-
 msgid "Edit Current Node"
 msgstr "编辑当前节点"
 
@@ -127,32 +91,32 @@ msgstr "监听端口"
 msgid "0 is not use"
 msgstr "0为不使用"
 
-msgid "Same as the tcp node"
-msgstr "与TCP节点相同"
-
 msgid "Current node: %s"
 msgstr "当前节点：%s"
-
-msgid "For proxy specific list."
-msgstr "用于代理特定的列表。"
-
-msgid "For proxy game network."
-msgstr "用于代理游戏等。"
-
-msgid "Remote DNS"
-msgstr "远程DNS"
 
 msgid "IP:Port mode acceptable, multi value split with english comma."
 msgstr "接受 IP:Port 形式的输入，多个以英文逗号分隔。"
 
-msgid "DNS Protocol"
-msgstr "DNS 协议"
+msgid "Direct DNS Protocol"
+msgstr "直连 DNS 协议"
 
-msgid "DoH request address"
-msgstr "DoH 请求地址"
+msgid "Direct DNS"
+msgstr "直连 DNS"
 
-msgid "China list or gfwlist cannot be used together with outside China list!"
-msgstr "中国列表不能和中国列表外或防火墙表一起使用！"
+msgid "Direct DNS DoH"
+msgstr "直连 DNS DoH"
+
+msgid "Remote DNS Protocol"
+msgstr "远程 DNS 协议"
+
+msgid "Remote DNS"
+msgstr "远程 DNS"
+
+msgid "Remote DNS DoH"
+msgstr "远程 DNS DoH"
+
+msgid "Remote DNS EDNS Client Subnet"
+msgstr "远程 DNS EDNS Client Subnet"
 
 msgid "Notify the DNS server when the DNS query is notified, the location of the client (cannot be a private IP address)."
 msgstr "用于 DNS 查询时通知 DNS 服务器，客户端所在的地理位置（不能是私有 IP 地址）。"
@@ -160,11 +124,11 @@ msgstr "用于 DNS 查询时通知 DNS 服务器，客户端所在的地理位�
 msgid "This feature requires the DNS server to support the Edns Client Subnet (RFC7871)."
 msgstr "此功能需要 DNS 服务器支持 EDNS Client Subnet（RFC7871）。"
 
-msgid "When the accessed domain name does not exist in the rule list, the default DNS used."
-msgstr "当访问的域名不存在规则列表中，使用的默认DNS。"
+msgid "Query Strategy"
+msgstr "查询策略"
 
-msgid "The server client can also use this rule to scientifically surf the Internet."
-msgstr "本机服务器的客户端也可以使用这个代理模式上网。"
+msgid "Domain Override"
+msgstr "域名重写"
 
 msgid "About DNS issues:"
 msgstr "关于DNS问题："
@@ -211,56 +175,8 @@ msgstr "不指定"
 msgid "custom"
 msgstr "自定义"
 
-msgid "Process"
-msgstr "进程"
-
-msgid "1 Process"
-msgstr "单进程"
-
-msgid "Proxy Mode"
-msgstr "代理模式"
-
-msgid "%s Proxy Mode"
-msgstr "%s 代理模式"
-
 msgid "If not available, try clearing the cache."
 msgstr "如果无法使用，请尝试清除缓存。"
-
-msgid "No Proxy"
-msgstr "不代理"
-
-msgid "Global Proxy"
-msgstr "全局代理"
-
-msgid "GFW List"
-msgstr "GFW列表"
-
-msgid "Not China List"
-msgstr "中国列表以外"
-
-msgid "Game Mode"
-msgstr "游戏模式"
-
-msgid "China List"
-msgstr "中国列表"
-
-msgid "Only use direct/proxy list"
-msgstr "仅使用直连/代理列表"
-
-msgid "Localhost"
-msgstr "本机"
-
-msgid "Router Localhost"
-msgstr "路由器自身"
-
-msgid "Danger"
-msgstr "危险"
-
-msgid "Same as the %s default proxy mode"
-msgstr "与 %s 默认代理模式相同"
-
-msgid "Want different devices to use different proxy modes/ports/nodes? Please use access control."
-msgstr "希望不同设备使用不同的代理模式/端口/节点？请使用访问控制。"
 
 msgid "Operation"
 msgstr "操作"
@@ -484,18 +400,6 @@ msgstr "组"
 msgid "Auto Ping"
 msgstr "自动Ping"
 
-msgid "This will automatically ping the node for latency"
-msgstr "选中后保存应用后即自动Ping节点"
-
-msgid "Use TCP Detection delay"
-msgstr "使用TCP检测延迟"
-
-msgid "This will use tcping replace ping detection of node"
-msgstr "选中后保存应用后即使用tcping替换ping检测节点"
-
-msgid "Concise display nodes"
-msgstr "简洁显示节点"
-
 msgid "Show server address and port"
 msgstr "显示服务器地址和端口"
 
@@ -613,21 +517,6 @@ msgstr "启用后，服务器不会再次解析域名。"
 msgid "TCP Proxy Way"
 msgstr "TCP代理方式"
 
-msgid "Proxy Settings"
-msgstr "代理配置"
-
-msgid "TCP Redir Port"
-msgstr "TCP透明代理端口"
-
-msgid "UDP Redir Port"
-msgstr "UDP透明代理端口"
-
-msgid "Custom Dnsmasq"
-msgstr "自定义Dnsmasq设置"
-
-msgid "Setting a parameter error will cause dnsmasq fail to start."
-msgstr "参数设置错误将会导致Dnsmasq无法启动。"
-
 msgid "Auto Switch"
 msgstr "自动切换"
 
@@ -684,18 +573,6 @@ msgstr "手动更新"
 
 msgid "Enable custom URL"
 msgstr "启用自定义规则地址"
-
-msgid "GFW domains(gfwlist) Update URL"
-msgstr "防火墙域名列表(gfwlist)更新URL"
-
-msgid "China IPs(chnroute) Update URL"
-msgstr "中国IP段(chnroute)更新URL"
-
-msgid "China IPv6s(chnroute6) Update URL"
-msgstr "中国IPv6段(chnroute6)更新URL"
-
-msgid "China List(Chnlist) Update URL"
-msgstr "中国域名列表(Chnlist)更新URL"
 
 msgid "Rule status"
 msgstr "规则版本"

@@ -36,7 +36,7 @@ msgid "General Settings"
 msgstr "常规设置"
 
 msgid "DNS Setting"
-msgstr "DNS设置"
+msgstr "DNS 设置"
 
 msgid "Config Update"
 msgstr "配置文件订阅"
@@ -48,9 +48,6 @@ msgid "Rules Update"
 msgstr "第三方规则订阅"
 
 msgid "Dashboard Settings"
-msgstr "外部控制"
-
-msgid "GEOIP数据库订阅"
 msgstr "外部控制"
 
 msgid "Enable"
@@ -432,14 +429,20 @@ msgstr "管理页面映射端口"
 msgid "Port For Dashboard Login From Public Network"
 msgstr "设置映射端口，便于从公网访问时自动登录"
 
-msgid "GEOIP Update"
-msgstr "GEOIP数据库订阅"
+msgid "GEO Update"
+msgstr "GEO 数据库订阅"
 
 msgid "Auto Update GEOIP Database"
-msgstr "自动更新GEOIP数据库"
+msgstr "自动更新 GEOIP 数据库"
 
 msgid "Update GEOIP Database"
-msgstr "更新GEOIP数据库"
+msgstr "更新 GEOIP 数据库"
+
+msgid "Auto Update GeoSite Database"
+msgstr "自动更新 GeoSite 数据库"
+
+msgid "Update GeoSite Database"
+msgstr "更新 GeoSite 数据库"
 
 msgid "Auto Update Chnroute Lists"
 msgstr "自动更新大陆白名单"
@@ -1116,7 +1119,7 @@ msgid "Small Flash Memory"
 msgstr "小闪存模式"
 
 msgid "Move Core And GEOIP Data File To /tmp/etc/openclash For Small Flash Memory Device"
-msgstr "针对闪存空间不够的设备，移动内核和GEOIP数据库文件到 /tmp/etc/openclash 文件夹"
+msgstr "针对闪存空间不够的设备，移动内核和 GEOIP 数据库等文件到 /tmp/etc/openclash 文件夹"
 
 msgid "Round-robin"
 msgstr "轮询（轮流使用全部代理）"
@@ -1172,14 +1175,20 @@ msgstr "ConnersHua 规则更新日期"
 msgid "Mainland IP Update"
 msgstr "大陆IP白名单 更新日期"
 
+msgid "Mainland IPv6 Update"
+msgstr "大陆IPv6白名单 更新日期"
+
 msgid "lhie1 Rule Update"
 msgstr "lhie1 规则更新日期"
 
 msgid "ConnersHua Return Rule Update"
 msgstr "ConnersHua 回国规则更新日期"
 
-msgid "GEOIP（By MaxMind）Data Update"
-msgstr "GEOIP（By MaxMind）数据库日期"
+msgid "GEOIP Data Update"
+msgstr "GEOIP 数据库日期"
+
+msgid "GeoSite Data Update"
+msgstr "GeoSite 数据库日期"
 
 msgid "No Backup"
 msgstr "暂未备份"
@@ -1224,7 +1233,10 @@ msgid "Check Third Party Rules Update"
 msgstr "第三方规则检查更新"
 
 msgid "Check GEOIP Data Update"
-msgstr "GEOIP数据库检查更新"
+msgstr "GEOIP 数据库检查更新"
+
+msgid "Check GeoSite Data Update"
+msgstr "GeoSite 数据库检查更新"
 
 msgid "Check and update all Cores and plug-ins?"
 msgstr "确定要一键检查并更新所有内核及插件吗？"
@@ -1425,7 +1437,10 @@ msgid ",Try Enable If Network Loopback"
 msgstr ", 如发生回环死机请尝试启用"
 
 msgid "Custom GEOIP URL"
-msgstr "GEOIP数据库更新URL"
+msgstr "GEOIP 数据库更新URL"
+
+msgid "Custom GeoSite URL"
+msgstr "GeoSite 数据库更新URL"
 
 msgid "Custom Chnroute6 Lists URL"
 msgstr "大陆IPv6段更新URL"
@@ -1434,7 +1449,10 @@ msgid "Custom Chnroute Lists URL"
 msgstr "大陆IP段更新URL"
 
 msgid "Custom GEOIP Data URL, Click Button Below To Refresh After Edit"
-msgstr "自定义GEOIP数据库的更新来源，编辑后点击下方按钮生效"
+msgstr "自定义 GEOIP 数据库的更新来源，编辑后点击下方按钮生效"
+
+msgid "Custom GeoSite Data URL, Click Button Below To Refresh After Edit"
+msgstr "自定义 GeoSite 数据库的更新来源，编辑后点击下方按钮生效"
 
 msgid "Custom Chnroute Lists URL, Click Button Below To Refresh After Edit"
 msgstr "自定义大陆IP段的更新来源，编辑后点击下方按钮生效"
@@ -1730,6 +1748,42 @@ msgstr "大陆IP白名单下载失败，请检查网络或稍后再试..."
 msgid "Chnroute6 Cidr List Update Error, Please Try Again Later..."
 msgstr "大陆IPv6白名单下载失败，请检查网络或稍后再试..."
 
+msgid "Start Downloading GeoSite Database..."
+msgstr "开始下载 GeoSite 数据库..."
+
+msgid "GeoSite Database Download Success, Check Updated..."
+msgstr "GeoSite 数据库下载成功，检查数据库版本是否更新..."
+
+msgid "GeoSite Database Has Been Updated, Starting To Replace The Old Version..."
+msgstr "GeoSite 数据库版本有更新，开始替换数据库版本..."
+
+msgid "GeoSite Database Update Successful!"
+msgstr "GeoSite 数据库更新成功！"
+
+msgid "Updated GeoSite Database No Change, Do Nothing..."
+msgstr "GeoSite 数据库版本没有更新，停止继续操作..."
+
+msgid "GeoSite Database Update Error, Please Try Again Later..."
+msgstr "GeoSite 数据库下载失败，请检查网络或稍后再试..."
+
+msgid "Start Downloading GeoIP Dat..."
+msgstr "开始下载 GeoIP Dat 数据库..."
+
+msgid "GeoIP Dat Download Success, Check Updated..."
+msgstr "GeoIP Dat 数据库下载成功，检查数据库版本是否更新..."
+
+msgid "GeoIP Dat Has Been Updated, Starting To Replace The Old Version..."
+msgstr "GeoIP Dat 数据库版本有更新，开始替换数据库版本..."
+
+msgid "GeoIP Dat Update Successful!"
+msgstr "GeoIP Dat 数据库更新成功！"
+
+msgid "Updated GeoIP Dat No Change, Do Nothing..."
+msgstr "GeoIP Dat 数据库版本没有更新，停止继续操作..."
+
+msgid "GeoIP Dat Update Error, Please Try Again Later..."
+msgstr "GeoIP Dat 数据库下载失败，请检查网络或稍后再试..."
+
 msgid "Start Downloading Geoip Database..."
 msgstr "开始下载 GEOIP 数据库..."
 
@@ -1743,7 +1797,7 @@ msgid "Geoip Database Update Successful!"
 msgstr "GEOIP 数据库更新成功！"
 
 msgid "Updated Geoip Database No Change, Do Nothing..."
-msgstr "数据库版本没有更新，停止继续操作..."
+msgstr "GEOIP 数据库版本没有更新，停止继续操作..."
 
 msgid "Geoip Database Update Error, Please Try Again Later..."
 msgstr "GEOIP 数据库下载失败，请检查网络或稍后再试..."
@@ -1865,20 +1919,26 @@ msgstr "错误：配置文件格式校验失败..."
 msgid "Tip: Detected The Exclusive Function of The TUN Core, Use TUN Core to Start..."
 msgstr "提示: 检测到配置了 TUN 内核专属功能，调用 TUN 内核启动..."
 
+msgid "Tip: Detected The Exclusive Function of The Meta Core, Use Meta Core to Start..."
+msgstr "提示: 检测到配置了 Meta 内核专属功能，调用 Meta 内核启动..."
+
 msgid "Tip: No Special Configuration Detected, Use Dev Core to Start..."
 msgstr "提示: 未检测到特殊配置，调用 Dev 内核启动..."
 
 msgid "Tip: Detected that the Dev Core is not Installed, Use TUN Core to Start..."
 msgstr "提示: 检测到 Dev 内核未安装，调用 TUN 内核启动..."
 
-msgid "Tip: Detected that the Dev Core is not Installed, Use Game Core to Start..."
-msgstr "提示: 检测到 Dev 内核未安装，调用 Game 内核启动..."
-
-msgid "Tip: Detected that the Dev Core is not Installed, Use Game Core to Start..."
-msgstr "提示: 检测到 Dev 内核未安装，调用 Game 内核启动..."
+msgid "Tip: Detected that the Dev Core is not Installed, Use Meta Core to Start..."
+msgstr "提示: 检测到 Dev 内核未安装，调用 Meta 内核启动..."
 
 msgid "Tip: Detected that the GEOIP Database is not Installed, Ready to Download..."
-msgstr "提示: 检测到GEOIP数据库文件不存在，准备开始下载..."
+msgstr "提示: 检测到 GEOIP 数据库文件不存在，准备开始下载..."
+
+msgid "Tip: Detected that the GEOSITE Database is not Installed, Ready to Download..."
+msgstr "提示: 检测到 GEOSITE 数据库文件不存在，准备开始下载..."
+
+msgid "Tip: Detected that the GEOIP Dat is not Installed, Ready to Download..."
+msgstr "提示: 检测到 GEOIP Dat 数据库文件不存在，准备开始下载..."
 
 msgid "Tip: Detected that the Core is not Installed, Ready to Download..."
 msgstr "提示: 检测到内核文件不存在，准备开始下载..."
@@ -2030,8 +2090,8 @@ msgstr "游戏代理为测试功能，不保证规则可用性"
 msgid "Preparation steps:"
 msgstr "准备步骤："
 
-msgid "1. In the <server and policy group management> page, create the policy group and node you are going to use, and apply the configuration (when adding nodes, you must select the policy group you want to join). Policy group type suggestion: fallback, game nodes must support UDP"
-msgstr "1、在《服务器与策略组管理》页面创建您准备使用的策略组和节点，并应用配置（节点添加时必须选择要加入的策略组），策略组类型建议:FallBack，游戏节点必须支持UDP"
+msgid "1. In the <server and policy group management> page, create the policy group and node you are going to use, and apply the configuration (when adding nodes, you must select the policy group you want to join). Policy group type suggestion: fallback, game nodes must be support UDP and not a Vmess"
+msgstr "1、在《服务器与策略组管理》页面创建您准备使用的策略组和节点，并应用配置（节点添加时必须选择要加入的策略组），策略组类型建议:FallBack，游戏节点必须支持UDP且不是Vmess节点"
 
 msgid "2. Click the <manage third party game rules> or <manage third party rule set> button to enter the rule list and download the rules you want to use"
 msgstr "2、点击《管理第三方游戏规则》或者《管理第三方规则集》按钮进入规则列表下载您要使用的规则"
@@ -2057,8 +2117,8 @@ msgstr "如需自定义外部配置文件(订阅转换模板)，请按照说明�
 msgid "If you have a recommended external configuration file (subscription conversion template), you can modify by following The file format of /usr/share/opencrash/res/sub_ini.list and pr"
 msgstr "如您有值得推荐的外部配置文件(订阅转换模板)，可以按照 /usr/share/openclash/res/sub_ini.list 的文件格式修改后提交PR"
 
-msgid "To restore the default configuration, try accessing:"
-msgstr "如遇到配置丢失或者需要还原默认配置，请尝试访问地址:"
+msgid "Note: To restore the default configuration, try accessing:"
+msgstr "注意: 如遇到配置丢失或者需要还原默认配置，请尝试访问地址:"
 
 msgid "Take Effect If Fallback DNS Setted, Prevent DNS Pollution"
 msgstr "只有在配置文件设置了 Fallback 组的DNS时才会生效，正确设置可以有效防止DNS污染"
@@ -2234,8 +2294,8 @@ msgstr "错误：设置自定义规则失败，"
 msgid "Error: Set BT/P2P DIRECT Rules Failed,"
 msgstr "错误：设置仅代理命中规则流量（BT/P2P直连）失败，"
 
-msgid "Error: Set 198.18.0.1/16 REJECT Rule Failed,"
-msgstr "错误：设置198.18.0.1/16（REJECT）规则失败，"
+msgid "Error: Set Loop Protect Rules Failed,"
+msgstr "错误：设置防回环规则失败，"
 
 msgid "Error: Set lhie1 Rules Failed,"
 msgstr "错误：设置第三方规则（lhie1）失败，"
@@ -2387,8 +2447,8 @@ msgstr "点击更新规则"
 msgid "Prefetch Netflix, Disney Plus Domains"
 msgstr "实验性：预解析 Netflix、Disney Plus 域名"
 
-msgid "Prevent Some Devices From Directly Using IP Access To Cause Unlocking Failure"
-msgstr "防止部分设备直接使用IP访问导致DNS解锁失败"
+msgid "Prevent Some Devices From Directly Using IP Access To Cause Unlocking Failure, Recommend Use meta Sniffer Function"
+msgstr "防止部分设备直接使用IP访问导致DNS解锁失败，建议换用 meta 内核的探测功能"
 
 msgid "Update Preset Domains List"
 msgstr "更新预置域名列表"
@@ -2579,11 +2639,11 @@ msgstr "解锁检测失败！开始进行解锁节点自动选择..."
 msgid "It Will Be Searched According To The Regex When Auto Search Group Fails"
 msgstr "策略组自动获取失败时将会根据正则表达式进行匹配"
 
-msgid "It Will Be Selected Region According To The Regex"
-msgstr "解锁区域将会根据正则表达式进行匹配"
+msgid "It Will Be Selected Region(Country Shortcode) According To The Regex"
+msgstr "解锁区域(国家简码)将会根据正则表达式进行匹配"
 
 msgid "It Will Be Selected Nodes According To The Regex"
-msgstr "解锁节点将会根据正则表达式进行匹配"
+msgstr "解锁节点的名字将会根据正则表达式进行匹配"
 
 msgid "not support unlock!"
 msgstr "不支持解锁！"
@@ -2749,3 +2809,90 @@ msgstr "仅支持规则（Rule）模式，其他模式默认分流，禁用后�
 
 msgid "Error: Set Router Self Proxy Rule Failed,"
 msgstr "错误：修改路由自身代理规则失败，"
+
+msgid "Error: Streaming Unlock Now Disabled, Need Start From Luci Page, Exiting..."
+msgstr "错误：流媒体解锁处于禁用状态，请在LUCI界面启用，退出..."
+
+msgid "Error: Streaming Unlock Has No Parameter of Type, Exiting..."
+msgstr "错误：流媒体解锁没有指定需要检测的流媒体类型，退出..."
+
+msgid "Error: Streaming Unlock Could not Work Because of Router-Self Proxy Disabled, Exiting..."
+msgstr "错误：因为禁用了代理路由器自身流量，流媒体解锁无法工作，退出..."
+
+msgid "Error: Multiple Scripts Running, Exiting..."
+msgstr "错误：多个脚本运行中，退出..."
+
+msgid "Error: Streaming DNS Prefetch Could not Work Because of Router-Self Proxy Disabled, Exiting..."
+msgstr "错误：因为禁用了代理路由器自身流量，预解析无法工作，退出..."
+
+msgid "Enable Meta Core"
+msgstr "使用 Meta 内核"
+
+msgid "Some Premium Core Features are Unavailable, For Other More Useful Functions Go Wiki:"
+msgstr "Meta 内核还未支持 Premium 内核的全部功能，要了解其独有功能，请前往Wiki:"
+
+msgid "Enable Sniffer"
+msgstr "*启用流量（域名）探测"
+
+msgid "Sniffer Will Prevent Domain Name Proxy and DNS Hijack Failure"
+msgstr "流量（域名）探测能有效防止域名分流异常和DNS劫持失败"
+
+msgid "Force Sniffer"
+msgstr "强制流量（域名）探测"
+
+msgid "Override All Dns Query"
+msgstr "启用后将尽可能的覆盖DNS查询到的域名"
+
+msgid "(Support Vless By Pinyun)"
+msgstr "(由品云提供，支持 Vless)"
+
+msgid "Meta Settings"
+msgstr "Meta 设置"
+
+msgid "Geodata Loader Mode"
+msgstr "Geodata 数据加载方式"
+
+msgid "Memconservative"
+msgstr "小内存模式"
+
+msgid "Standard"
+msgstr "标准模式"
+
+msgid "Enable GeoIP Dat"
+msgstr "启用 GeoIP Dat 版数据库"
+
+msgid "Replace GEOIP MMDB With GEOIP Dat, Large Size File, Need Download First"
+msgstr "使用 Geoip Dat 替换 GEOIP MMDB 数据库, 文件体积较大且无内置，启动后会自动下载"
+
+msgid "Auto Update GeoIP Dat"
+msgstr "自动更新 GeoIP Dat 数据库"
+
+msgid "Custom GeoIP Dat URL"
+msgstr "GeoIP Dat 数据库更新URL"
+
+msgid "Custom GeoIP Dat URL, Click Button Below To Refresh After Edit"
+msgstr "自定义 GeoIP Dat 数据库的更新来源，编辑后点击下方按钮生效"
+
+msgid "Update GeoIP Dat"
+msgstr "更新 GeoIP Dat 数据库"
+
+msgid "Note: It is not recommended to enable IPv6 and related services for routing. Most of the network connection problems reported so far are related to it"
+msgstr "注意: 路由不建议开启 IPV6 和相关服务，目前反馈的网络连接问题多数与它有关"
+
+msgid "Note: Turning on secure DNS in the browser will cause abnormal shunting, please be careful to turn it off"
+msgstr "注意: 浏览器开启安全 DNS，会导致分流异常，请注意关闭"
+
+msgid "Note: Some software will modify the device HOSTS, which will cause abnormal shunt, please pay attention to check"
+msgstr "注意: 部分软件会修改设备 HOSTS，会导致分流异常，请注意检查"
+
+msgid "Note: The default proxy routes local traffic, BT, PT download, etc., please use redir mode as much as possible and pay attention to traffic avoidance"
+msgstr "注意: 默认代理路由本机流量，BT、PT 下载等请尽量使用 redir 模式并注意进行流量规避"
+
+msgid "Note: Game proxy please use nodes except Vmess"
+msgstr "注意: 游戏代理请使用 Vmess 以外的节点"
+
+msgid "Note: If the connection is abnormal, please follow the steps on this page to check first"
+msgstr "注意: 连接异常时请按照此页步骤先进行检查"
+
+msgid "Click to the page"
+msgstr "点击前往"
