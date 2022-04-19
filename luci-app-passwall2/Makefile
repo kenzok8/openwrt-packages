@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-passwall2
 PKG_VERSION:=1.3
-PKG_RELEASE:=14
+PKG_RELEASE:=15
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_Transparent_Proxy \
@@ -57,6 +57,7 @@ config PACKAGE_$(PKG_NAME)_Transparent_Proxy
 	select PACKAGE_iptables-mod-iprange
 	select PACKAGE_iptables-mod-socket
 	select PACKAGE_iptables-mod-tproxy
+	select PACKAGE_iptables-mod-conntrack-extra
 	select PACKAGE_kmod-ipt-nat
 	default y
 
