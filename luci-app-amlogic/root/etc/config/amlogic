@@ -1,0 +1,16 @@
+
+config amlogic 'config'
+	option enable '1'
+	option amlogic_firmware_repo 'https://github.com/breakings/OpenWrt'
+	option amlogic_firmware_tag 'ARMv8'
+	option amlogic_firmware_suffix '.img.gz'
+	option amlogic_kernel_path 'opt/kernel'
+	option amlogic_kernel_branch ''
+	option amlogic_firmware_config '1'
+	option amlogic_write_bootloader '0'
+	option amlogic_shared_fstype 'ext4'
+
+config settings 'armcpu'
+	option governor0 'schedutil'
+	option minfreq0 '500000'
+	option maxfreq0 '1512000'

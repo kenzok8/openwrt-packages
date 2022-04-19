@@ -5,4 +5,4 @@ You can set the blur and transparency of the login page of argonne theme, and ma
 
 + 修改为argonne ，用于配合luci-app-argonne主题，
 
-+ lean源码编译时无需再去删除源码自带的argon主题。
++ 编译时无需再去删除源码自带的argon主题。

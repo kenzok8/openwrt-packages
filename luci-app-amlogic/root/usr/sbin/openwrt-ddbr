@@ -1,0 +1,130 @@
+#!/bin/bash
+#===========================================================================
+# This file is licensed under the terms of the GNU General Public
+# License version 2. This program is licensed "as is" without any
+# warranty of any kind, whether express or implied.
+#
+# This file is a part of the make OpenWrt for Amlogic s9xxx tv box
+# https://github.com/ophub/luci-app-amlogic
+#
+# Description: Backup and restore the system in emmc
+# Copyright (C) 2017- The function borrowed from armbian/ddbr, Author: xXx
+# Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
+# Copyright (C) 2021- https://github.com/ophub/luci-app-amlogic
+#
+# Command: openwrt-ddbr
+#===========================================================================
+
+# Set font color
+blue_font_prefix="\033[34m"
+purple_font_prefix="\033[35m"
+green_font_prefix="\033[32m"
+yellow_font_prefix="\033[33m"
+red_font_prefix="\033[31m"
+font_color_suffix="\033[0m"
+INFO="[${blue_font_prefix}INFO${font_color_suffix}]"
+STEPS="[${purple_font_prefix}STEPS${font_color_suffix}]"
+SUCCESS="[${green_font_prefix}SUCCESS${font_color_suffix}]"
+OPT="[${yellow_font_prefix}OPT${font_color_suffix}]"
+ERROR="[${red_font_prefix}ERROR${font_color_suffix}]"
+# File name for backup/restore
+ddbr_image="BACKUP-arm-64-emmc.img.gz"
+# Need remaining space, unit: GB
+need_space="2"
+# Get device name
+mydevice_name=$(cat /proc/device-tree/model | tr -d '\000')
+
+# Find the EMMC drive
+emmc=$(lsblk -l -o NAME | grep -oE "mmcblk[0-9]boot0" | sort | uniq | sed "s/boot0//g")
+if [ "${emmc}" == "" ]; then
+	echo "${ERROR} Cannot find your EMMC drive!"
+	exit 1
+fi
+
+# Find the partition where root is located
+root_ptname=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
+if [ "${root_ptname}" == "" ]; then
+	echo -e "${ERROR} Cannot find the partition corresponding to the root file system!"
+	exit 1
+fi
+
+# Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
+case ${root_ptname} in
+mmcblk?p[1-4])
+	disk_name=$(echo ${root_ptname} | awk '{print substr($1, 1, length($1)-2)}')
+	if lsblk -l -o NAME | grep "${disk_name}boot0" >/dev/null; then
+		echo -e "${ERROR} The current system is running on emmc. Please perform backup/restore operation in [ SD/TF/USB ]!"
+		exit 1
+	fi
+	link_ptname="p"
+	;;
+[hsv]d[a-z][1-4])
+	disk_name=$(echo ${root_ptname} | awk '{print substr($1, 1, length($1)-1)}')
+	link_ptname=""
+	;;
+*)
+	echo -e "${ERROR} Unable to recognize the disk type of ${root_ptname}!"
+	exit 1
+	;;
+esac
+
+# Set check parameters
+out_path="/mnt/${disk_name}${link_ptname}4"
+dev_intsize="$(fdisk -s /dev/${emmc})"
+[ -z "$(echo "${dev_intsize}" | sed -n "/^[0-9]\+$/p")" ] && echo -e "${ERROR} Unable to get EMMC size." && exit 1
+
+# Check if the output directory exists
+if [ ! -d "${out_path}" ]; then
+	echo -e "${ERROR} The backup path [ ${out_path} ] is invalid!"
+	echo -e " Please use the [ openwrt-tf ] command to create an extended partition first."
+	exit 1
+fi
+
+# Check the remaining space
+do_checkspace() {
+	remaining_space="$(df -hT ${out_path} | grep '/dev/' | awk '{print $5}' | sed 's/.$//' | awk -F "." '{print $1}')"
+	if [ -z "$(echo "${remaining_space}" | sed -n "/^[0-9]\+$/p")" ]; then
+		echo -e "${ERROR} The path is not available, the remaining space cannot be obtained."
+		exit 1
+	fi
+	if [[ "${remaining_space}" -lt "${need_space}" ]]; then
+		echo -e "${ERROR} The remaining space is [ ${remaining_space} ] GB."
+		echo -e "It is recommended that the remaining space should not be less than [ ${need_space} ] GB."
+		exit 1
+	fi
+}
+
+# Backup the emmc system
+do_backup() {
+	echo -e "${STEPS} Start to backup the system in emmc."
+	do_checkspace
+	echo -e "Saving and Compressing [ /dev/${emmc} ] to [ ${out_path}/${ddbr_image} ], Please wait..."
+	rm -f ${out_path}/${ddbr_image} 2>/dev/null && sync
+	dd if=/dev/${emmc} | pv -s ${dev_intsize}"K" | gzip >${out_path}/${ddbr_image}
+	[ "$?" -eq "0" ] && sync && echo -e "${SUCCESS} Backup is complete."
+}
+
+# Restore the emmc system
+do_restore() {
+	echo -e "${STEPS} Start to restore the system in emmc."
+	[ ! -f ${out_path}/${ddbr_image} ] && echo -e "${ERROR} The [ ${out_path}/${ddbr_image} ] File not found." && exit 1
+	echo -e "Restoring [ ${out_path}/${ddbr_image} ] to [ /dev/${emmc} ], Please wait..."
+	gunzip -c ${out_path}/${ddbr_image} | pv -s ${dev_intsize}"K" | dd of=/dev/${emmc}
+	[ "$?" -eq "0" ] && sync && echo -e "${SUCCESS} Restore is complete."
+}
+
+# Output device information
+echo -e "${STEPS} Welcome to use the EMMC system backup/restore service."
+echo -e "${INFO} The device name: [ ${mydevice_name} ]"
+echo -e "${INFO} The device EMMC name: [ /dev/${emmc} ]"
+echo -e "${INFO} The device EMMC size: [ $(($dev_intsize / 1024 / 1024))GB ]"
+echo -e "${INFO} The ddbr file path: [ ${out_path}/${ddbr_image} ]\n"
+
+# Prompt the user to select backup/restore
+echo -ne "${OPT} Do you want to backup or restore? Backup=(b) Restore=(r): "
+read br
+case ${br} in
+	b | B | backup) do_backup ;;
+	r | R | restore) do_restore ;;
+	*) exit 0 ;;
+esac

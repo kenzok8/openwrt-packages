@@ -601,7 +601,6 @@ add_firewall_rule() {
 	$ipt_n -N PSW2
 	$ipt_n -A PSW2 $(dst $IPSET_LANIPLIST) -j RETURN
 	$ipt_n -A PSW2 $(dst $IPSET_VPSIPLIST) -j RETURN
-	$ipt_n -A PSW2 -m mark --mark 0xff -j RETURN
 
 	WAN_IP=$(get_wan_ip)
 	[ ! -z "${WAN_IP}" ] && $ipt_n -A PSW2 $(comment "WAN_IP_RETURN") -d "${WAN_IP}" -j RETURN
@@ -624,7 +623,6 @@ add_firewall_rule() {
 	$ipt_m -N PSW2
 	$ipt_m -A PSW2 $(dst $IPSET_LANIPLIST) -j RETURN
 	$ipt_m -A PSW2 $(dst $IPSET_VPSIPLIST) -j RETURN
-	$ipt_m -A PSW2 -m mark --mark 0xff -j RETURN
 	
 	[ ! -z "${WAN_IP}" ] && $ipt_m -A PSW2 $(comment "WAN_IP_RETURN") -d "${WAN_IP}" -j RETURN
 	unset WAN_IP
@@ -633,9 +631,10 @@ add_firewall_rule() {
 	insert_rule_before "$ipt_m" "PREROUTING" "PSW2" "-p tcp -m socket -j PSW2_DIVERT"
 
 	$ipt_m -N PSW2_OUTPUT
+	$ipt_m -A PSW2_OUTPUT -m mark --mark 0xff -j RETURN
+	$ipt_m -A PSW2_OUTPUT -j CONNMARK --restore-mark
 	$ipt_m -A PSW2_OUTPUT $(dst $IPSET_LANIPLIST) -j RETURN
 	$ipt_m -A PSW2_OUTPUT $(dst $IPSET_VPSIPLIST) -j RETURN
-	$ipt_m -A PSW2_OUTPUT -m mark --mark 0xff -j RETURN
 	$ipt_m -A OUTPUT -j PSW2_OUTPUT
 
 	ip rule add fwmark 1 lookup 100
@@ -645,7 +644,6 @@ add_firewall_rule() {
 		$ip6t_n -N PSW2
 		$ip6t_n -A PSW2 $(dst $IPSET_LANIPLIST6) -j RETURN
 		$ip6t_n -A PSW2 $(dst $IPSET_VPSIPLIST6) -j RETURN
-		$ip6t_n -A PSW2 -m mark --mark 0xff -j RETURN
 		$ip6t_n -A PREROUTING -p ipv6-icmp -j PSW2
 
 		$ip6t_n -N PSW2_OUTPUT
@@ -661,7 +659,6 @@ add_firewall_rule() {
 	$ip6t_m -N PSW2
 	$ip6t_m -A PSW2 $(dst $IPSET_LANIPLIST6) -j RETURN
 	$ip6t_m -A PSW2 $(dst $IPSET_VPSIPLIST6) -j RETURN
-	$ip6t_m -A PSW2 -m mark --mark 0xff -j RETURN
 	
 	WAN6_IP=$(get_wan6_ip)
 	[ ! -z "${WAN6_IP}" ] && $ip6t_m -A PSW2 $(comment "WAN6_IP_RETURN") -d ${WAN6_IP} -j RETURN
@@ -680,7 +677,7 @@ add_firewall_rule() {
 	ip -6 route add local ::/0 dev lo table 100
 
 	# 加载路由器自身代理 TCP
-	if [ "$NODE" != "nil" ]; then
+	if [ "$NODE" != "nil" ] && [ "$LOCALHOST_PROXY" = "1" ]; then
 		local ipt_tmp=$ipt_n
 		local blist_r=$(REDIRECT $REDIR_PORT)
 		echolog "加载路由器自身 TCP 代理..."
@@ -706,14 +703,12 @@ add_firewall_rule() {
 
 		[ "$TCP_NO_REDIR_PORTS" != "disable" ] && {
 			$ipt_tmp -A PSW2_OUTPUT -p tcp -m multiport --dport $TCP_NO_REDIR_PORTS -j RETURN
-			$ipt_tmp -A PSW2_OUTPUT -p tcp -m multiport --sport $TCP_NO_REDIR_PORTS -j RETURN
 			$ip6t_m -A PSW2_OUTPUT -p tcp -m multiport --dport $TCP_NO_REDIR_PORTS -j RETURN
-			$ip6t_m -A PSW2_OUTPUT -p tcp -m multiport --sport $TCP_NO_REDIR_PORTS -j RETURN
 			echolog "  - [$?]不代理TCP 端口：$TCP_NO_REDIR_PORTS"
 		}
 
-		$ipt_tmp -A PSW2_OUTPUT -p tcp -d $FAKE_IP $blist_r
-		$ipt_tmp -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") $blist_r
+		$ipt_tmp -A PSW2_OUTPUT -p tcp -d $FAKE_IP -m tcp --tcp-flags FIN,SYN,RST,ACK SYN $blist_r
+		$ipt_tmp -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -m tcp --tcp-flags FIN,SYN,RST,ACK SYN $blist_r
 
 		if [ -n "${is_tproxy}" ]; then
 			$ipt_m -A PSW2 $(comment "本机") -p tcp -i lo -d $FAKE_IP $(REDIRECT $REDIR_PORT TPROXY)
@@ -755,18 +750,16 @@ add_firewall_rule() {
 	filter_node $NODE UDP > /dev/null 2>&1 &
 
 	# 加载路由器自身代理 UDP
-	if [ "$NODE" != "nil" ]; then
+	if [ "$NODE" != "nil" ] && [ "$LOCALHOST_PROXY" = "1" ]; then
 		echolog "加载路由器自身 UDP 代理..."
 		[ "$UDP_NO_REDIR_PORTS" != "disable" ] && {
 			$ipt_m -A PSW2_OUTPUT -p udp -m multiport --dport $UDP_NO_REDIR_PORTS -j RETURN
-			$ipt_m -A PSW2_OUTPUT -p udp -m multiport --sport $UDP_NO_REDIR_PORTS -j RETURN
 			$ip6t_m -A PSW2_OUTPUT -p udp -m multiport --dport $UDP_NO_REDIR_PORTS -j RETURN
-			$ip6t_m -A PSW2_OUTPUT -p udp -m multiport --sport $UDP_NO_REDIR_PORTS -j RETURN
 			echolog "  - [$?]不代理 UDP 端口：$UDP_NO_REDIR_PORTS"
 		}
 		
-		$ipt_m -A PSW2_OUTPUT -p udp -d $FAKE_IP $(REDIRECT 1 MARK)
-		$ipt_m -A PSW2_OUTPUT -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") $(REDIRECT 1 MARK)
+		$ipt_m -A PSW2_OUTPUT -p udp -d $FAKE_IP -m conntrack --ctstate NEW $(REDIRECT 1 MARK)
+		$ipt_m -A PSW2_OUTPUT -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -m conntrack --ctstate NEW $(REDIRECT 1 MARK)
 
 		$ipt_m -A PSW2 $(comment "本机") -p udp -i lo -d $FAKE_IP $(REDIRECT $REDIR_PORT TPROXY)
 		$ipt_m -A PSW2 $(comment "本机") -p udp -i lo $(factor $UDP_REDIR_PORTS "-m multiport --dport") $(REDIRECT $REDIR_PORT TPROXY)
@@ -779,6 +772,7 @@ add_firewall_rule() {
 			$ip6t_m -A PSW2 $(comment "本机") -p udp -i lo -j RETURN
 		fi
 	fi
+	$ipt_m -A PSW2_OUTPUT -j CONNMARK --save-mark
 
 	#  加载ACLS
 	load_acl
