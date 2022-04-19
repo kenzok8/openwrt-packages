@@ -379,10 +379,50 @@ o.description = font_red..bold_on..translate("Sniffer Will Prevent Domain Name P
 o.default = 1
 o:depends("enable_meta_core", "1")
 
-o = s:taboption("meta", Flag, "enable_meta_sniffer_force", translate("Force Sniffer"))
-o.description = translate("Override All Dns Query")
+o = s:taboption("meta", Flag, "enable_meta_sniffer_custom", translate("Custom Sniffer Settings"))
+o.description = translate("Custom The Force and Skip Sniffing Doamin Lists")
 o.default = 0
 o:depends("enable_meta_sniffer", "1")
+
+sniffing_domain_force = s:taboption("meta", Value, "sniffing_domain_force", translate("Force Sniffing Domain Lists"))
+sniffing_domain_force:depends("enable_meta_sniffer_custom", "1")
+sniffing_domain_force.template = "cbi/tvalue"
+sniffing_domain_force.description = translate("Will Override Dns Queries If Domains in The List")
+sniffing_domain_force.rows = 20
+sniffing_domain_force.wrap = "off"
+
+function sniffing_domain_force.cfgvalue(self, section)
+	return NXFS.readfile("/etc/openclash/custom/openclash_force_sniffing_domain.yaml") or ""
+end
+function sniffing_domain_force.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		local old_value = NXFS.readfile("/etc/openclash/custom/openclash_force_sniffing_domain.yaml")
+	  if value ~= old_value then
+			NXFS.writefile("/etc/openclash/custom/openclash_force_sniffing_domain.yaml", value)
+		end
+	end
+end
+
+sniffing_domain_filter = s:taboption("meta", Value, "sniffing_domain_filter", translate("Force Sniffing Domain Filter"))
+sniffing_domain_filter:depends("enable_meta_sniffer_custom", "1")
+sniffing_domain_filter.template = "cbi/tvalue"
+sniffing_domain_filter.description = translate("Will Disable Sniffing If Domains in The List")
+sniffing_domain_filter.rows = 20
+sniffing_domain_filter.wrap = "off"
+
+function sniffing_domain_filter.cfgvalue(self, section)
+	return NXFS.readfile("/etc/openclash/custom/openclash_sniffing_domain_filter.yaml") or ""
+end
+function sniffing_domain_filter.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		local old_value = NXFS.readfile("/etc/openclash/custom/openclash_sniffing_domain_filter.yaml")
+	  if value ~= old_value then
+			NXFS.writefile("/etc/openclash/custom/openclash_sniffing_domain_filter.yaml", value)
+		end
+	end
+end
 
 o = s:taboption("meta", ListValue, "geodata_loader", translate("Geodata Loader Mode"))
 o:value("memconservative", translate("Memconservative"))
@@ -391,7 +431,7 @@ o.default = "memconservative"
 o:depends("enable_meta_core", "1")
 
 o = s:taboption("meta", Flag, "enable_geoip_dat", translate("Enable GeoIP Dat"))
-o.description = translate("Replace GEOIP MMDB With GEOIP Dat, Large Size File, Need Download First")
+o.description = translate("Replace GEOIP MMDB With GEOIP Dat, Large Size File")..", "..font_red..bold_on..translate("Need Download First")..bold_off..font_off
 o.default = 0
 o:depends("enable_meta_core", "1")
 
@@ -1187,6 +1227,7 @@ o:value("udp", translate("UDP"))
 o:value("tcp", translate("TCP"))
 o:value("tls", translate("TLS"))
 o:value("https", translate("HTTPS"))
+o:value("quic", translate("QUIC ")..translate("(Only Meta Core)"))
 o.default     = "udp"
 o.rempty      = false
 

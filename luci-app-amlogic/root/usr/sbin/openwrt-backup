@@ -65,6 +65,7 @@ BACKUP_LIST='./etc/AdGuardHome.yaml \
 ./etc/ssl/private/  \
 ./etc/ssrplus/ \
 ./etc/sysupgrade.conf \
+./etc/tailscale/ \
 ./etc/transmission/ \
 ./etc/uhttpd.crt \
 ./etc/uhttpd.key \
