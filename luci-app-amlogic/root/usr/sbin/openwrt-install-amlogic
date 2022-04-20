@@ -223,33 +223,8 @@ if [ ! -f "/boot/dtb/amlogic/${FDTFILE}" ]; then
     exit 1
 fi
 
-function get_k510_from_vmlinuz() {
-    local vmlinuz=$1
-    local K510=1
-    local temp_script=$(mktemp)
-    cat >$temp_script <<EOF
-use strict;
-my \$filename = \$ARGV[0];
-open my \$fh, '<', \$filename or die;
-binmode \$fh;
-seek \$fh, 0x8, 0;
-my \$buf = "";
-read \$fh, \$buf, 0x4;
-close(\$fh);
-my \$str = unpack 'H*', \$buf;
-print "\$str\n";
-EOF
-    local text_offset=$(perl "$temp_script" "$vmlinuz")
-    [ "$text_offset" == "00000801" ] && K510=0
-    rm -f $temp_script
-    echo "$K510"
-}
-
-#Check if writing to EMMC is supported
-CUR_KERNEL_VERSION=$(uname -r)
-echo -e "This Kernel [ ${CUR_KERNEL_VERSION} ]"
-K510=$(get_k510_from_vmlinuz "/boot/vmlinuz-${CUR_KERNEL_VERSION}")
-export K510
+K510="1"
+[[ "$(hexdump -n 15 -x "/boot/zImage" 2>/dev/null | head -n 1 | awk '{print $7}')" == "0108" ]] && K510="0"
 echo -e "K510 [ ${K510} ]"
 
 # backup old bootloader

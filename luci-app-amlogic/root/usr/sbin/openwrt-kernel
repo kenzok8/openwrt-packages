@@ -70,42 +70,20 @@ esac
 echo -e "Current device: ${MYDEVICE_NAME} [ ${MYDTB_FILE} ], Use in [ ${EMMC_NAME} ]"
 sleep 3
 
-function get_k510_from_vmlinuz() {
-    local vmlinuz=$1
-    local temp_script=$(mktemp)
-    cat >$temp_script <<EOF
-use strict;
-my \$filename = \$ARGV[0];
-open my \$fh, '<', \$filename or die;
-binmode \$fh;
-seek \$fh, 0x8, 0;
-my \$buf = "";
-read \$fh, \$buf, 0x4;
-close(\$fh);
-my \$str = unpack 'H*', \$buf;
-print "\$str\n";
-EOF
-    local result=1
-    local text_offset=$(perl "$temp_script" "$vmlinuz")
-    [ "$text_offset" == "00000801" ] && result=0
-    rm -f $temp_script
-    echo "$result"
-}
-
-function get_k510_from_boot_tgz() {
-    local boot_tgz=$1
-    local vmlinuz=$2
-    local temp_dir=$(mktemp -d)
-    (
-        cd $temp_dir
-        tar xzf "$boot_tgz" "$vmlinuz"
-    )
-    local result=$(get_k510_from_vmlinuz "${temp_dir}/${vmlinuz}")
-    rm -rf $temp_dir
-    echo "$result"
-}
-
 P4_PATH="/mnt/${EMMC_NAME}${PARTITION_NAME}4"
+
+get_textoffset_from_tgz() {
+    boot_tgz_file="${1}"
+    vmlinuz_name="${2}"
+    K510="1"
+    temp_dir="$(mktemp -d)"
+    (
+        cd ${temp_dir}
+        tar -xzf "${boot_tgz_file}" "${vmlinuz_name}"
+    )
+    # With TEXT_OFFSET patch is [ 0108 ], without TEXT_OFFSET patch is [ 0000 ]
+    [[ "$(hexdump -n 15 -x "${temp_dir}/${vmlinuz_name}" 2>/dev/null | head -n 1 | awk '{print $7}')" == "0108" ]] && K510="0"
+}
 
 # Move kernel related files to the ${P4_PATH} directory
 mv -f /tmp/upload/* ${P4_PATH}/ 2>/dev/null && sync
@@ -116,7 +94,7 @@ if [ $(ls ${P4_PATH}/*.tar.gz -l 2>/dev/null | grep "^-" | wc -l) -ge 3 ]; then
         build_boot_abs=$(ls ${P4_PATH}/boot-*.tar.gz | head -n 1) && build_boot=${build_boot_abs##*/}
         echo -e "Update using [ ${build_boot} ] files. Please wait a moment ..."
         flippy_version=${build_boot/boot-/} && flippy_version=${flippy_version/.tar.gz/}
-        K510=$(get_k510_from_boot_tgz "${build_boot_abs}" "vmlinuz-${flippy_version}")
+        get_textoffset_from_tgz "${build_boot_abs}" "vmlinuz-${flippy_version}"
     else
         error_msg "Have no boot-*.tar.gz file found in the ${P4_PATH} directory."
     fi
