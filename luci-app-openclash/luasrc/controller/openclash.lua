@@ -343,6 +343,7 @@ function action_restore_config()
 	luci.sys.call("/etc/init.d/openclash stop >/dev/null 2>&1")
 	luci.sys.call("cp '/usr/share/openclash/backup/openclash' '/etc/config/openclash' >/dev/null 2>&1 &")
 	luci.sys.call("cp /usr/share/openclash/backup/openclash_custom* /etc/openclash/custom/ >/dev/null 2>&1 &")
+	luci.sys.call("rm -rf /etc/openclash/history/* >/dev/null 2>&1 &")
 	luci.http.redirect(luci.dispatcher.build_url('admin/services/openclash/settings'))
 end
 
@@ -564,6 +565,9 @@ function sub_info_get()
 					if len and len > 1 then return end
 			  	sub_url = s.address
 			  	info = luci.sys.exec(string.format("curl -sLI -m 10 -w 'http_code='%%{http_code} -H 'User-Agent: Clash' '%s'", sub_url))
+			  	if not info or tonumber(string.sub(string.match(info, "http_code=%d+"), 11, -1)) ~= 200 then
+			  		info = luci.sys.exec(string.format("curl -sLI -m 10 -w 'http_code='%%{http_code} -H 'User-Agent: Quantumultx' '%s'", sub_url))
+			  	end
 			  	if info then
 			  		http_code=string.sub(string.match(info, "http_code=%d+"), 11, -1)
 			  		if tonumber(http_code) == 200 then
@@ -599,11 +603,12 @@ function sub_info_get()
 end
 
 function action_rule_mode()
-	local mode, info
+	local mode, info, core_type
 	if is_running() then
 		local daip = daip()
 		local dase = dase() or ""
 		local cn_port = cn_port()
+		core_type = uci:get("openclash", "config", "core_type") or "Dev"
 		if not daip or not cn_port then return end
 		info = json.parse(luci.sys.exec(string.format('curl -sL -m 3 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -XGET http://"%s":"%s"/configs', dase, daip, cn_port)))
 		if info then
@@ -611,12 +616,11 @@ function action_rule_mode()
 		else
 			mode = uci:get("openclash", "config", "proxy_mode") or "rule"
 		end
-	else
-		mode = uci:get("openclash", "config", "proxy_mode") or "rule"
 	end
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
-		mode = mode;
+		mode = mode,
+		core_type = core_type;
 	})
 end
 
@@ -626,7 +630,9 @@ function action_switch_rule_mode()
 		local daip = daip()
 		local dase = dase() or ""
 		local cn_port = cn_port()
+		local core_type = uci:get("openclash", "config", "core_type") or "Dev"
 		mode = luci.http.formvalue("rule_mode")
+		if mode == script and core_type ~= "TUN" then luci.http.status(500, "Switch Faild") return end
 		if not daip or not cn_port then luci.http.status(500, "Switch Faild") return end
 		info = luci.sys.exec(string.format('curl -sL -m 3 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -XPATCH http://"%s":"%s"/configs -d \'{\"mode\": \"%s\"}\'', dase, daip, cn_port, mode))
 		if info ~= "" then

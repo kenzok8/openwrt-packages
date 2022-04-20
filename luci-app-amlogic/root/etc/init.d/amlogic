@@ -1,0 +1,42 @@
+#!/bin/sh /etc/rc.common
+START=60
+
+NAME=amlogic
+
+uci_get_by_type() {
+    local ret=$(uci get $NAME.@$1[0].$2 2>/dev/null)
+    echo ${ret:=$3}
+}
+
+uci_set_by_type() {
+    uci set $NAME.@$1[0].$2=$3 2>/dev/null
+    uci commit $NAME
+}
+
+start() {
+    [ -x "/usr/sbin/fixcpufreq.pl" ] && /usr/sbin/fixcpufreq.pl && sync
+    local cpu_policys=$(ls /sys/devices/system/cpu/cpufreq 2>/dev/null | grep -E 'policy[0-9]{1,3}' | xargs)
+    if [ "${cpu_policys}" = "" ]; then
+        cpu_policys="policy0"
+    fi
+
+    config_load $NAME
+    for policy_name in ${cpu_policys}; do
+        local policy_id="${policy_name//policy/}"
+
+        # Get an optional value list for the current device
+        local governor_list="$(cat /sys/devices/system/cpu/cpufreq/${policy_name}/scaling_available_frequencies 2>/dev/null | xargs)"
+        local second_place_order="$(echo ${governor_list} | awk '{print $1}')"
+        local second_place_reverse="$(echo ${governor_list} | awk '{print $NF}')"
+
+        # Get the default value in the Config file
+        local governor=$(uci_get_by_type settings governor${policy_id} schedutil)
+        local minfreq=$(uci_get_by_type settings minfreq${policy_id} ${second_place_order})
+        local maxfreq=$(uci_get_by_type settings maxfreq${policy_id} ${second_place_reverse})
+
+        # Update result to the corresponding file
+        echo $governor >/sys/devices/system/cpu/cpufreq/${policy_name}/scaling_governor
+        echo $minfreq >/sys/devices/system/cpu/cpufreq/${policy_name}/scaling_min_freq
+        echo $maxfreq >/sys/devices/system/cpu/cpufreq/${policy_name}/scaling_max_freq
+    done
+}

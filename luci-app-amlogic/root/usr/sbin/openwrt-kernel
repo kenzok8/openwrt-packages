@@ -1,0 +1,296 @@
+#!/bin/bash
+#===========================================================================================
+# Function: Update the kernel for OpenWrt (Amlogic s9xxx, Allwinner, Rockchip)
+# Copyright (C) 2020-- https://github.com/unifreq/openwrt_packit
+# Copyright (C) 2021-- https://github.com/ophub/luci-app-amlogic
+#===========================================================================================
+
+# Support the kernel: boot-*.tar.gz, dtb-*.tar.gz, modules-*.tar .gz
+# When the kernel version is upgraded from 5.10 or lower to 5.10 or higher, Can choose to install the MAINLINE_UBOOT.
+# openwrt-kernel ${AUTO_MAINLINE_UBOOT}
+# E.g: openwrt-kernel yes
+# E.g: openwrt-kernel no
+
+# Receive one-key command related parameters
+AUTO_MAINLINE_UBOOT="${1}"
+
+# Encountered a serious error, abort the script execution
+error_msg() {
+    echo -e " [Error] ${1}"
+    exit 1
+}
+
+echo -e "Start update the openwrt kernel."
+# Operation environment check
+[ -x /usr/sbin/openwrt-kernel ] || error_msg "Please grant execution permission: chmod +x /usr/sbin/openwrt-kernel"
+
+# Current device model
+MYDEVICE_NAME=$(cat /proc/device-tree/model | tr -d '\000')
+if [[ -z "${MYDEVICE_NAME}" ]]; then
+    error_msg "The device name is empty and cannot be recognized."
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "Chainedbox L1 Pro")" != "" ]]; then
+    MYDTB_FILE="rockchip"
+    MYBOOT_VMLINUZ="Image"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "BeikeYun")" != "" ]]; then
+    MYDTB_FILE="rockchip"
+    MYBOOT_VMLINUZ="Image"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "V-Plus Cloud")" != "" ]]; then
+    MYDTB_FILE="allwinner"
+    MYBOOT_VMLINUZ="zImage"
+elif [[ -f "/etc/flippy-openwrt-release" ]]; then
+    MYDTB_FILE="amlogic"
+    MYBOOT_VMLINUZ="zImage"
+else
+    error_msg "Unknown device: [ ${MYDEVICE_NAME} ], Not supported."
+fi
+
+# Find the partition where root is located
+ROOT_PTNAME=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
+if [ "${ROOT_PTNAME}" == "" ]; then
+    error_msg "Cannot find the partition corresponding to the root file system!"
+fi
+
+# Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
+case ${ROOT_PTNAME} in
+mmcblk?p[1-4])
+    EMMC_NAME=$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-2)}')
+    PARTITION_NAME="p"
+    LB_PRE="EMMC_"
+    ;;
+[hsv]d[a-z][1-4])
+    EMMC_NAME=$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-1)}')
+    PARTITION_NAME=""
+    LB_PRE=""
+    ;;
+*)
+    error_msg "Unable to recognize the disk type of ${ROOT_PTNAME}!"
+    ;;
+esac
+
+echo -e "Current device: ${MYDEVICE_NAME} [ ${MYDTB_FILE} ], Use in [ ${EMMC_NAME} ]"
+sleep 3
+
+function get_k510_from_vmlinuz() {
+    local vmlinuz=$1
+    local temp_script=$(mktemp)
+    cat >$temp_script <<EOF
+use strict;
+my \$filename = \$ARGV[0];
+open my \$fh, '<', \$filename or die;
+binmode \$fh;
+seek \$fh, 0x8, 0;
+my \$buf = "";
+read \$fh, \$buf, 0x4;
+close(\$fh);
+my \$str = unpack 'H*', \$buf;
+print "\$str\n";
+EOF
+    local result=1
+    local text_offset=$(perl "$temp_script" "$vmlinuz")
+    [ "$text_offset" == "00000801" ] && result=0
+    rm -f $temp_script
+    echo "$result"
+}
+
+function get_k510_from_boot_tgz() {
+    local boot_tgz=$1
+    local vmlinuz=$2
+    local temp_dir=$(mktemp -d)
+    (
+        cd $temp_dir
+        tar xzf "$boot_tgz" "$vmlinuz"
+    )
+    local result=$(get_k510_from_vmlinuz "${temp_dir}/${vmlinuz}")
+    rm -rf $temp_dir
+    echo "$result"
+}
+
+P4_PATH="/mnt/${EMMC_NAME}${PARTITION_NAME}4"
+
+# Move kernel related files to the ${P4_PATH} directory
+mv -f /tmp/upload/* ${P4_PATH}/ 2>/dev/null && sync
+
+if [ $(ls ${P4_PATH}/*.tar.gz -l 2>/dev/null | grep "^-" | wc -l) -ge 3 ]; then
+
+    if [ $(ls ${P4_PATH}/boot-*.tar.gz -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
+        build_boot_abs=$(ls ${P4_PATH}/boot-*.tar.gz | head -n 1) && build_boot=${build_boot_abs##*/}
+        echo -e "Update using [ ${build_boot} ] files. Please wait a moment ..."
+        flippy_version=${build_boot/boot-/} && flippy_version=${flippy_version/.tar.gz/}
+        K510=$(get_k510_from_boot_tgz "${build_boot_abs}" "vmlinuz-${flippy_version}")
+    else
+        error_msg "Have no boot-*.tar.gz file found in the ${P4_PATH} directory."
+    fi
+
+    if [[ -f ${P4_PATH}/dtb-${MYDTB_FILE}-${flippy_version}.tar.gz ]]; then
+        build_dtb="dtb-${MYDTB_FILE}-${flippy_version}.tar.gz"
+    else
+        error_msg "Have no dtb-${MYDTB_FILE}-${flippy_version}.tar.gz file."
+    fi
+
+    if [ -f ${P4_PATH}/modules-${flippy_version}.tar.gz ]; then
+        build_modules="modules-${flippy_version}.tar.gz"
+    else
+        error_msg "Have no modules-*.tar.gz file found in the ${P4_PATH} directory."
+    fi
+
+    echo -e " \
+    Try to using this files to update the kernel: \n \
+    build_boot: ${build_boot} \n \
+    build_dtb: ${build_dtb} \n \
+    build_modules: ${build_modules} \n \
+    kernel_version: ${flippy_version} \n \
+    K510: ${K510}"
+
+else
+    error_msg "After upload the kernel files in [ /mnt/${EMMC_NAME}${PARTITION_NAME}4/ ], run again."
+fi
+
+# Check version consistency from amlogic s9xxx
+if [[ "${K510}" -eq "1" && "${MYDTB_FILE}" == "amlogic" ]]; then
+    echo -e "Update to kernel 5.10 or higher and install U-BOOT."
+    if [ -f "/etc/flippy-openwrt-release" ]; then
+        # U-BOOT adaptation
+        source /etc/flippy-openwrt-release 2>/dev/null
+        UBOOT_OVERLOAD="${UBOOT_OVERLOAD}"
+        MAINLINE_UBOOT="${MAINLINE_UBOOT//\/lib\/u-boot\//}"
+
+        # Check ${UBOOT_OVERLOAD}
+        if [[ -n "${UBOOT_OVERLOAD}" ]]; then
+            if [[ ! -f "/boot/${UBOOT_OVERLOAD}" ]]; then
+                error_msg "The [ ${UBOOT_OVERLOAD} ] file is missing, please complete it first."
+            else
+                echo -e "The ${UBOOT_OVERLOAD} file has been found."
+            fi
+        else
+            error_msg "The 5.10 kernel cannot be used without UBOOT_OVERLOAD."
+        fi
+
+        # Check ${MAINLINE_UBOOT}
+        if [[ -n "${MAINLINE_UBOOT}" && "${AUTO_MAINLINE_UBOOT}" == "yes" ]]; then
+            if [[ ! -f "/lib/u-boot/${MAINLINE_UBOOT}" ]]; then
+                error_msg "The [ ${MAINLINE_UBOOT} ] file is missing, please complete it first."
+            fi
+        fi
+    else
+        error_msg "The /etc/flippy-openwrt-release file is missing and cannot be update."
+    fi
+
+    # Copy u-boot.ext and u-boot.emmc
+    if [ -f "/boot/${UBOOT_OVERLOAD}" ]; then
+        cp -f "/boot/${UBOOT_OVERLOAD}" /boot/u-boot.ext && sync && chmod +x /boot/u-boot.ext
+        cp -f "/boot/${UBOOT_OVERLOAD}" /boot/u-boot.emmc && sync && chmod +x /boot/u-boot.emmc
+        echo -e "The ${UBOOT_OVERLOAD} file copy is complete."
+    else
+        error_msg "The UBOOT_OVERLOAD file is missing and cannot be update."
+    fi
+
+    # Write Mainline bootloader
+    if [[ -f "/lib/u-boot/${MAINLINE_UBOOT}" && "${AUTO_MAINLINE_UBOOT}" == "yes" ]]; then
+        echo -e "Write Mainline bootloader: [ ${MAINLINE_UBOOT} ] to [ /dev/${EMMC_NAME} ]"
+        dd if=/lib/u-boot/${MAINLINE_UBOOT} of=/dev/${EMMC_NAME} bs=1 count=442 conv=fsync
+        dd if=/lib/u-boot/${MAINLINE_UBOOT} of=/dev/${EMMC_NAME} bs=512 skip=1 seek=1 conv=fsync
+        echo -e "The MAINLINE_UBOOT file write is complete."
+    fi
+elif [[ "${K510}" -eq "0" && "${MYDTB_FILE}" == "amlogic" ]]; then
+    rm -f /boot/u-boot.ext 2>/dev/null
+    rm -f /boot/u-boot.emmc 2>/dev/null
+fi
+
+echo -e "Unpack [ ${flippy_version} ] related files ..."
+
+# 01. for /boot five files
+rm -f /boot/config-* /boot/initrd.img-* /boot/System.map-* /boot/uInitrd-* /boot/vmlinuz-* 2>/dev/null && sync
+rm -f /boot/uInitrd /boot/zImage /boot/Image 2>/dev/null && sync
+tar -xzf ${P4_PATH}/${build_boot} -C /boot && sync
+
+if [[ -f "/boot/uInitrd-${flippy_version}" ]]; then
+    i=1
+    max_try=10
+    while [ "${i}" -le "${max_try}" ]; do
+        cp -f /boot/uInitrd-${flippy_version} /boot/uInitrd 2>/dev/null && sync
+        uInitrd_original=$(md5sum /boot/uInitrd-${flippy_version} | awk '{print $1}')
+        uInitrd_new=$(md5sum /boot/uInitrd | awk '{print $1}')
+        if [[ "${uInitrd_original}" == "${uInitrd_new}" ]]; then
+            echo -e "Unpack [ /boot/uInitrd ] complete."
+            break
+        else
+            rm -f /boot/uInitrd && sync
+            let i++
+            continue
+        fi
+    done
+    [ "${i}" -eq "10" ] && error_msg "/boot/uInitrd-${flippy_version} file copy failed."
+else
+    error_msg "/boot/uInitrd-${flippy_version} file is missing."
+fi
+
+if [[ -f "/boot/vmlinuz-${flippy_version}" ]]; then
+    i=1
+    max_try=10
+    while [ "${i}" -le "${max_try}" ]; do
+        cp -f /boot/vmlinuz-${flippy_version} /boot/${MYBOOT_VMLINUZ} 2>/dev/null && sync
+        vmlinuz_original=$(md5sum /boot/vmlinuz-${flippy_version} | awk '{print $1}')
+        vmlinuz_new=$(md5sum /boot/${MYBOOT_VMLINUZ} | awk '{print $1}')
+        if [[ "${vmlinuz_original}" == "${vmlinuz_new}" ]]; then
+            echo -e "Unpack [ /boot/${MYBOOT_VMLINUZ} ] complete."
+            break
+        else
+            rm -f /boot/${MYBOOT_VMLINUZ} && sync
+            let i++
+            continue
+        fi
+    done
+    [ "${i}" -eq "10" ] && error_msg "/boot/vmlinuz-${flippy_version} file copy failed."
+else
+    error_msg "/boot/vmlinuz-${flippy_version} file is missing."
+fi
+
+[ -f "/boot/config-${flippy_version}" ] || error_msg "/boot/config-${flippy_version} file is missing."
+[ -f "/boot/System.map-${flippy_version}" ] || error_msg "/boot/System.map-${flippy_version} file is missing."
+
+echo -e "01. Unpack [ ${build_boot} ] complete."
+sleep 3
+
+# 02 for /boot/dtb/${MYDTB_FILE}/*
+[ -d /boot/dtb/${MYDTB_FILE} ] || mkdir -p /boot/dtb/${MYDTB_FILE}
+if [[ "${MYDTB_FILE}" == "rockchip" ]]; then
+    mkdir -p /boot/dtb-${flippy_version}/${MYDTB_FILE}
+    ln -sf /boot/dtb-${flippy_version} /boot/dtb
+fi
+tar -xzf ${P4_PATH}/${build_dtb} -C /boot/dtb/${MYDTB_FILE} && sync
+[ "$(ls /boot/dtb/${MYDTB_FILE} -l 2>/dev/null | grep "^-" | wc -l)" -ge "1" ] || error_msg "/boot/dtb/${MYDTB_FILE} file is missing."
+echo -e "02. Unpack [ ${build_dtb} ] complete."
+sleep 3
+
+# 03 for /lib/modules/*
+rm -rf /lib/modules/* 2>/dev/null && sync
+tar -xzf ${P4_PATH}/${build_modules} -C /lib/modules && sync
+cd /lib/modules/${flippy_version}/
+rm -f *.ko 2>/dev/null
+find ./ -type f -name '*.ko' -exec ln -s {} ./ \;
+sync && sleep 3
+x=$(ls *.ko -l 2>/dev/null | grep "^l" | wc -l)
+if [ "${x}" -eq "0" ]; then
+    error_msg "Error *.ko Files not found."
+fi
+echo -e "03. Unpack [ ${build_modules} ] complete."
+sleep 3
+
+rm -rf ${P4_PATH}/dtb-*.tar.gz ${P4_PATH}/boot-*.tar.gz ${P4_PATH}/modules-*.tar.gz ${P4_PATH}/header-*.tar.gz 2>/dev/null
+sync
+
+sed -i '/KERNEL_VERSION/d' /etc/flippy-openwrt-release 2>/dev/null
+echo "KERNEL_VERSION='${flippy_version}'" >>/etc/flippy-openwrt-release 2>/dev/null
+
+sed -i '/K510/d' /etc/flippy-openwrt-release 2>/dev/null
+echo "K510='${K510}'" >>/etc/flippy-openwrt-release 2>/dev/null
+
+sed -i "s/ Kernel.*/ Kernel: ${flippy_version}/g" /etc/banner 2>/dev/null
+
+sync
+wait
+
+echo "Successfully updated, automatic restarting..."
+sleep 3
+reboot
+exit 0

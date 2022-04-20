@@ -574,7 +574,11 @@ local has_xray = api.is_finded("xray")
 					queryParam[decodeURIComponent(params[0]).toLowerCase()] = decodeURIComponent(params[1] || '');
 				}
 			}
+			<% if has_v2ray then %>
 			opt.set('type', "V2ray");
+			<% elseif has_xray then %>
+			opt.set('type', "Xray");
+			<% end %>
 			opt.set('protocol', "trojan");
 			opt.set('address', m.hostname);
 			opt.set('port', m.port || "443");

@@ -1,0 +1,64 @@
+<style>
+.NewsTdHeight{ line-height:20px; }
+</style>
+<fieldset class="cbi-section">
+	<table width="100%" class="NewsTdHeight">
+		<tr><td colspan="2" width="100%" align="center">
+			<img id="logo_amlogic" src="<%=resource%>/amlogic/logo.png" alt="Logo" width="135" />
+		</td></tr>
+		<tr><td colspan="2" width="100%" align="center">
+			<img id="Packit" src="<%=resource%>/amlogic/packit.svg" alt="Packit" width="168px" height="20px" onclick="return homepage('packit')" />
+			&nbsp;&nbsp;
+			<img id="Author" src="<%=resource%>/amlogic/author.svg" alt="Author" width="168px" height="20px" onclick="return author_homepage('author')" />
+			&nbsp;&nbsp;
+			<img id="Plugin" src="<%=resource%>/amlogic/plugin.svg" alt="luci-app-amlogic" width="160px" height="20px" onclick="return homepage('plugin')" />
+		</td></tr>
+		<tr><td width="20%" align="right"><%:Supported functions:%></td><td  width="80%" align="left" id="_clash">
+			<%:Provide services such as install to EMMC, Update Firmware and Kernel, Backup and Recovery Config, Snapshot management, etc.%>
+		</td></tr>
+		<tr><td width="20%" align="right"><%:Supported Boxes:%></td><td  width="80%" align="left" id="_clash">
+			<%:Amlogic s922x --- [ Belink, Belink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas VIM3(a311d) ]%><br>
+			<%:Amlogic s905x3 -- [ X96-Max+, HK1-Box, H96-Max-X3, Ugoos-X3, TX3, X96-Air, A95XF3-Air ]%><br>
+			<%:Amlogic s905x2 -- [ X96Max-4G, X96Max-2G ]%><br>
+			<%:Amlogic s905x --- [ HG680P, B860H ]%><br>
+			<%:Amlogic s905w --- [ X96-Mini, TX3-Mini ]%><br>
+			<%:Amlogic s912 ---- [ H96-Pro-Plus, Octopus-Planet ]%><br>
+			<%:Amlogic s905d --- [ Phicomm-N1 ]%><br>
+			<%:Amlogic Other --- [ Optional DTB ]%><br>
+			<%:Allwinner H6 ---- [ V-Plus Cloud ]%><br>
+			<%:Rockchip 3328 --- [ BeikeYun, Chainedbox L1 Pro ]%>
+		</td></tr>
+	</table>
+</fieldset>
+<script type="text/javascript">//<![CDATA[
+
+	function winOpen(url)
+	{
+		var winOpen = window.open(url);
+		if( winOpen == null || typeof(winOpen) == 'undefined' ){ window.location.href=url; }
+	}
+
+	function homepage(website)
+	{
+		var url = "";
+		if( website == 'packit' ) { url = 'https://github.com/unifreq/openwrt_packit'; }
+		if( website == 'plugin' ) { url = 'https://github.com/ophub/luci-app-amlogic'; }
+		if ( url != "" ) { winOpen(url); }
+	}
+
+	function author_homepage(website)
+	{
+		var openwrt_author_repo = "";
+		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_openwrt_author")%>', null, function(x, status) {
+		if ( x && x.status == 200 ) {
+			let openwrt_author_repo = status.openwrt_author;
+			let trimstr_au = openwrt_author_repo.replace(/(^\s*)|(\s*$)/g, "");
+			if (trimstr_au.indexOf("https") == -1) {
+				trimstr_au = 'https://github.com/' + trimstr_au;
+			}
+			if ( trimstr_au != "" ) { winOpen(trimstr_au); }
+		}
+		});
+	}
+
+//]]></script>

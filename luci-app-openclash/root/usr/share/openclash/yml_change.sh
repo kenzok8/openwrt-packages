@@ -1,9 +1,11 @@
 #!/bin/sh
 . /usr/share/openclash/ruby.sh
+. /usr/share/openclash/log.sh
 
 LOG_FILE="/tmp/openclash.log"
 LOGTIME=$(echo $(date "+%Y-%m-%d %H:%M:%S"))
 dns_advanced_setting=$(uci -q get openclash.config.dns_advanced_setting)
+core_type=$(uci -q get openclash.config.core_type)
 
 if [ -n "$(ruby_read "$5" "['tun']")" ]; then
    uci -q set openclash.config.config_reload=0
@@ -26,24 +28,28 @@ else
 fi
 
 if [ "${22}" != "1" ]; then
-   sniffer_force="false"
-else
-   sniffer_force="true"
-fi
-
-if [ "${23}" != "1" ]; then
    enable_geoip_dat="false"
 else
    enable_geoip_dat="true"
 fi
 
 if [ "$(ruby_read "$5" "['external-controller']")" != "$controller_address:$3" ]; then
-   uci set openclash.config.config_reload=0
+   uci -q set openclash.config.config_reload=0
 fi
     
 if [ "$(ruby_read "$5" "['secret']")" != "$2" ]; then
-   uci set openclash.config.config_reload=0
+   uci -q set openclash.config.config_reload=0
 fi
+
+if [ "$core_type" != "TUN" ] && [ "${10}" == "script" ]; then
+   rule_mode="rule"
+   uci -q set openclash.config.proxy_mode="$rule_mode"
+   uci -q set openclash.config.router_self_proxy="1"
+   LOG_OUT "Warning: Only TUN Core Support Script Mode, Switch To The Rule Mode!"
+else
+   rule_mode="${10}"
+fi
+
 uci commit openclash
 
 ruby -ryaml -E UTF-8 -e "
@@ -58,7 +64,7 @@ begin
    Value['port']=$7;
    Value['socks-port']=$8;
    Value['mixed-port']=${14};
-   Value['mode']='${10}';
+   Value['mode']='$rule_mode';
    Value['log-level']='$9';
    Value['allow-lan']=true;
    Value['external-controller']='0.0.0.0:$3';
@@ -67,7 +73,7 @@ begin
    Value['external-ui']='/usr/share/openclash/dashboard';
 if ${21} == 1 then
    Value['geodata-mode']=$enable_geoip_dat;
-   Value['geodata-loader']='${24}';
+   Value['geodata-loader']='${23}';
 else
    if Value.key?('geodata-mode') then
       Value.delete('geodata-mode')
@@ -106,9 +112,22 @@ Value['dns']['listen']='0.0.0.0:${13}'
 if ${21} == 1 then
    Value_sniffer={'sniffer'=>{'enable'=>true}};
    Value['sniffer']=Value_sniffer['sniffer'];
-   Value['sniffer']['force']=$sniffer_force
    Value_sniffer={'sniffing'=>['tls']}
    Value['sniffer'].merge!(Value_sniffer)
+   if File::exist?('/etc/openclash/custom/openclash_force_sniffing_domain.yaml') and ${24} == 1 then
+     Value_7 = YAML.load_file('/etc/openclash/custom/openclash_force_sniffing_domain.yaml')
+     if Value_7 != false and not Value_7['force-domain'].to_a.empty? then
+        Value['sniffer']['force-domain']=Value_7['force-domain']
+        Value['sniffer']['force-domain']=Value['sniffer']['force-domain'].uniq
+     end
+   end
+   if File::exist?('/etc/openclash/custom/openclash_sniffing_domain_filter.yaml') and ${24} == 1 then
+     Value_7 = YAML.load_file('/etc/openclash/custom/openclash_sniffing_domain_filter.yaml')
+     if Value_7 != false and not Value_7['skip-sni'].to_a.empty? then
+        Value['sniffer']['skip-sni']=Value_7['skip-sni']
+        Value['sniffer']['skip-sni']=Value['sniffer']['skip-sni'].uniq
+     end
+   end
 else
    if Value.key?('sniffer') then
       Value.delete('sniffer')
@@ -169,7 +188,7 @@ begin
 if '$1' == 'fake-ip' then
    if File::exist?('/tmp/openclash_fake_filter.list') then
      Value_4 = YAML.load_file('/tmp/openclash_fake_filter.list')
-     if Value_4 != false then
+     if Value_4 != false and not Value_4['fake-ip-filter'].to_a.empty? then
         if Value['dns'].has_key?('fake-ip-filter') and not Value['dns']['fake-ip-filter'].to_a.empty? then
            Value_5 = Value_4['fake-ip-filter'].reverse!
            Value_5.each{|x| Value['dns']['fake-ip-filter'].insert(-1,x)}

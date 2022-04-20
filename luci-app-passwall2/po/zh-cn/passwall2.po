@@ -79,6 +79,12 @@ msgstr "主开关"
 msgid "Edit Current Node"
 msgstr "编辑当前节点"
 
+msgid "Localhost Proxy"
+msgstr "路由器本机代理"
+
+msgid "When selected, localhost can transparent proxy."
+msgstr "当勾选时，路由器本机可以透明代理。"
+
 msgid "Socks Config"
 msgstr "Socks配置"
 
