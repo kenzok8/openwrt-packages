@@ -692,8 +692,8 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
         end
 
         if direct_dns_doh_url and direct_dns_doh_host then
-            if direct_dns_doh_host ~= direct_dns_server and not api.is_ip(direct_dns_doh_host) then
-                dns.hosts[remote_dns_doh_host] = direct_dns_server
+            if direct_dns_server and direct_dns_doh_host ~= direct_dns_server and not api.is_ip(direct_dns_doh_host) then
+                dns.hosts[direct_dns_doh_host] = direct_dns_server
             end
             _direct_dns.address = direct_dns_doh_url:gsub("https://", "https+local://")
             _direct_dns.port = tonumber(direct_dns_port) or 443

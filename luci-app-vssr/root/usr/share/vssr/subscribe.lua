@@ -1,10 +1,9 @@
 #!/usr/bin/lua
+
 ------------------------------------------------
 -- This file is part of the luci-app-ssr-plus subscribe.lua
 -- @author William Chan <root@williamchan.me>
 ------------------------------------------------
-
-
 require 'nixio'
 require 'luci.util'
 require 'luci.jsonc'
@@ -14,13 +13,9 @@ require 'luci.sys'
 -- so caching them is worth the effort
 local luci = luci
 local tinsert = table.insert
-local ssub, slen, schar, sbyte, sformat, sgsub =
-    string.sub,
-    string.len,
-    string.char,
-    string.byte,
-    string.format,
-    string.gsub
+local ssub, slen, schar, sbyte, sformat, sgsub = string.sub, string.len,
+                                                 string.char, string.byte,
+                                                 string.format, string.gsub
 local jsonParse, jsonStringify = luci.jsonc.parse, luci.jsonc.stringify
 local b64decode = nixio.bin.b64decode
 local cache = {}
@@ -30,39 +25,44 @@ local uciType = 'servers'
 local ucic = luci.model.uci.cursor()
 local proxy = ucic:get_first(name, 'server_subscribe', 'proxy', '0')
 local switch = '0'
-local subscribe_url = ucic:get_first(name, 'server_subscribe', 'subscribe_url', {})
-local filter_words = ucic:get_first(name, 'server_subscribe', 'filter_words', '过期时间/剩余流量')
+local subscribe_url = ucic:get_first(name, 'server_subscribe', 'subscribe_url',
+                                     {})
+local filter_words = ucic:get_first(name, 'server_subscribe', 'filter_words',
+                                    '过期时间/剩余流量')
 
-function print_r ( t )  
-    local print_r_cache={}
-    local function sub_print_r(t,indent)
+function print_r(t)
+    local print_r_cache = {}
+    local function sub_print_r(t, indent)
         if (print_r_cache[tostring(t)]) then
-            print(indent.."*"..tostring(t))
+            print(indent .. "*" .. tostring(t))
         else
-            print_r_cache[tostring(t)]=true
-            if (type(t)=="table") then
-                for pos,val in pairs(t) do
-                    if (type(val)=="table") then
-                        print(indent.."["..pos.."] => "..tostring(t).." {")
-                        sub_print_r(val,indent..string.rep(" ",string.len(pos)+8))
-                        print(indent..string.rep(" ",string.len(pos)+6).."}")
-                    elseif (type(val)=="string") then
-                        print(indent.."["..pos..'] => "'..val..'"')
+            print_r_cache[tostring(t)] = true
+            if (type(t) == "table") then
+                for pos, val in pairs(t) do
+                    if (type(val) == "table") then
+                        print(indent .. "[" .. pos .. "] => " .. tostring(t) ..
+                                  " {")
+                        sub_print_r(val, indent ..
+                                        string.rep(" ", string.len(pos) + 8))
+                        print(indent .. string.rep(" ", string.len(pos) + 6) ..
+                                  "}")
+                    elseif (type(val) == "string") then
+                        print(indent .. "[" .. pos .. '] => "' .. val .. '"')
                     else
-                        print(indent.."["..pos.."] => "..tostring(val))
+                        print(indent .. "[" .. pos .. "] => " .. tostring(val))
                     end
                 end
             else
-                print(indent..tostring(t))
+                print(indent .. tostring(t))
             end
         end
     end
-    if (type(t)=="table") then
-        print(tostring(t).." {")
-        sub_print_r(t,"  ")
+    if (type(t) == "table") then
+        print(tostring(t) .. " {")
+        sub_print_r(t, "  ")
         print("}")
     else
-        sub_print_r(t,"  ")
+        sub_print_r(t, "  ")
     end
     print()
 end
@@ -90,25 +90,25 @@ local function split(full, sep)
     return result
 end
 
---table去重
+-- table去重
 
-local function clone( object )
+local function clone(object)
     local lookup_table = {}
-    local function copyObj( object )
-        if type( object ) ~= "table" then
+    local function copyObj(object)
+        if type(object) ~= "table" then
             return object
         elseif lookup_table[object] then
             return lookup_table[object]
         end
-       
+
         local new_table = {}
         lookup_table[object] = new_table
-        for key, value in pairs( object ) do
-            new_table[copyObj( key )] = copyObj( value )
+        for key, value in pairs(object) do
+            new_table[copyObj(key)] = copyObj(value)
         end
-        return setmetatable( new_table, getmetatable( object ) )
+        return setmetatable(new_table, getmetatable(object))
     end
-    return copyObj( object )
+    return copyObj(object)
 end
 
 local function table_unique(list)
@@ -119,7 +119,7 @@ local function table_unique(list)
             if v1.alias ~= v2.alias and v1.hashkey == v2.hashkey then
                 table.remove(temp1, k1)
                 table.remove(temp2, k1)
-                
+
             end
         end
     end
@@ -127,9 +127,7 @@ local function table_unique(list)
 end
 
 -- urlencode
-local function get_urlencode(c)
-    return sformat('%%%02X', sbyte(c))
-end
+local function get_urlencode(c) return sformat('%%%02X', sbyte(c)) end
 
 local function urlEncode(szText)
     local str = szText:gsub('([^0-9a-zA-Z ])', get_urlencode)
@@ -137,32 +135,27 @@ local function urlEncode(szText)
     return str
 end
 
-local function get_urldecode(h)
-    return schar(tonumber(h, 16))
-end
+local function get_urldecode(h) return schar(tonumber(h, 16)) end
 local function UrlDecode(szText)
     return szText:gsub('+', ' '):gsub('%%(%x%x)', get_urldecode)
 end
 
 -- trim
 local function trim(text)
-    if not text or text == '' then
-        return ''
-    end
+    if not text or text == '' then return '' end
     return (sgsub(text, '^%s*(.-)%s*$', '%1'))
 end
 -- md5
 local function md5(content)
-    local stdout = luci.sys.exec('echo "' .. urlEncode(content) .. '" | md5sum | cut -d " "  -f1')
+    local stdout = luci.sys.exec('echo "' .. urlEncode(content) ..
+                                     '" | md5sum | cut -d " "  -f1')
     -- assert(nixio.errno() == 0)
     return trim(stdout)
 end
 -- base64
 local function base64Decode(text)
     local raw = text
-    if not text then
-        return ''
-    end
+    if not text then return '' end
     text = text:gsub('%z', '')
     text = text:gsub('_', '/')
     text = text:gsub('-', '+')
@@ -205,9 +198,7 @@ local function processData(szType, content, groupName)
         result.obfs_param = base64Decode(params.obfsparam)
         result.protocol_param = base64Decode(params.protoparam)
         local group = base64Decode(params.group)
-        if group then
-            result.alias = '[' .. group .. '] '
-        end
+        if group then result.alias = '[' .. group .. '] ' end
         result.alias = result.alias .. base64Decode(params.remarks)
     elseif szType == 'vmess' then
         local info = jsonParse(content)
@@ -247,9 +238,7 @@ local function processData(szType, content, groupName)
             result.quic_key = info.key
             result.quic_security = info.securty
         end
-        if info.security then
-            result.security = info.security
-        end
+        if info.security then result.security = info.security end
         if info.tls == 'tls' or info.tls == '1' then
             result.tls = '1'
             result.tls_host = info.host
@@ -285,9 +274,14 @@ local function processData(szType, content, groupName)
                 local idx_pn = plugin_info:find(';')
                 if idx_pn then
                     result.plugin = plugin_info:sub(1, idx_pn - 1)
-                    result.plugin_opts = plugin_info:sub(idx_pn + 1, #plugin_info)
+                    result.plugin_opts =
+                        plugin_info:sub(idx_pn + 1, #plugin_info)
                 else
                     result.plugin = plugin_info
+                end
+                -- 部分机场下发的插件名为 simple-obfs，这里应该改为 obfs-local
+                if result.plugin == "simple-obfs" then
+                    result.plugin = "obfs-local"
                 end
             end
         else
@@ -331,8 +325,13 @@ local function processData(szType, content, groupName)
         result.server_port = content.port
         result.password = content.password
         result.encrypt_method_ss = content.encryption
-        result.plugin = content.plugin
+        if content.plugin == "simple-obfs" then
+			result.plugin = "obfs-local"
+		else
+			result.plugin = content.plugin
+		end
         result.plugin_opts = content.plugin_options
+        
         result.alias = '[' .. content.airport .. '] ' .. content.remarks
     end
     if not result.alias then
@@ -357,24 +356,23 @@ local function processData(szType, content, groupName)
 end
 -- wget
 local function wget(url)
-    local stdout =
-        luci.sys.exec(
-        'wget-ssl -q --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36" --no-check-certificate -t 3 -T 10 -O- "' ..
-            url .. '"'
-    )
+    local stdout = luci.sys.exec(
+                       'wget-ssl -q --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36" --no-check-certificate -t 3 -T 10 -O- "' ..
+                           url .. '"')
     return trim(stdout)
 end
 
 local function check_filer(result)
-	do
-		local filter_word = split(filter_words, "/")
-		for i, v in pairs(filter_word) do
-			if result.alias:find(v) then
-				log('订阅节点关键字过滤:“' .. v ..'” ，该节点被丢弃')
-				return true
-			end
-		end
-	end
+    do
+        local filter_word = split(filter_words, "/")
+        for i, v in pairs(filter_word) do
+            if result.alias:find(v) then
+                log('订阅节点关键字过滤:“' .. v ..
+                        '” ，该节点被丢弃')
+                return true
+            end
+        end
+    end
 end
 
 local execute = function()
@@ -387,7 +385,8 @@ local execute = function()
         for k, url in ipairs(subscribe_url) do
             local groupName = ""
             urlTable = split(url, ",")
-            groupName = table.getn(urlTable) > 1 and '[' .. urlTable[1] .. '] ' or ""
+            groupName =
+                table.getn(urlTable) > 1 and '[' .. urlTable[1] .. '] ' or ""
             url = table.getn(urlTable) > 1 and urlTable[2] or url
             local raw = wget(url)
             if #raw > 0 then
@@ -428,9 +427,12 @@ local execute = function()
                             local dat = split(node, '://')
                             if dat and dat[1] and dat[2] then
                                 if dat[1] == 'ss' then
-                                    result = processData(dat[1], dat[2], groupName)
+                                    result =
+                                        processData(dat[1], dat[2], groupName)
                                 else
-                                    result = processData(dat[1], base64Decode(dat[2]), groupName)
+                                    result = processData(dat[1],
+                                                         base64Decode(dat[2]),
+                                                         groupName)
                                 end
                             end
                         else
@@ -438,69 +440,67 @@ local execute = function()
                         end
                         -- log(result)
                         if result then
-                            if
-                                not result.server or
-                                not result.server_port or
-                                result.alias == "NULL" or
-                                check_filer(result) or
+                            if not result.server or not result.server_port or
+                                result.alias == "NULL" or check_filer(result) or
                                 result.server:match("[^0-9a-zA-Z%-%.%s]") -- 中文做地址的 也没有人拿中文域名搞，就算中文域也有Puny Code SB 机场
-                             then
-                                log('丢弃无效节点: ' .. result.type .. ' 节点, ' .. result.alias)
+                            then
+                                log('丢弃无效节点: ' .. result.type ..
+                                        ' 节点, ' .. result.alias)
                             else
-                                log('成功解析: ' .. result.type .. ' 节点, ' .. result.alias)
+                                log('成功解析: ' .. result.type ..
+                                        ' 节点, ' .. result.alias)
                                 result.grouphashkey = groupHash
                                 tinsert(nodeResult[index], result)
-                                cache[groupHash][result.hashkey] = nodeResult[index][#nodeResult[index]]
+                                cache[groupHash][result.hashkey] =
+                                    nodeResult[index][#nodeResult[index]]
                             end
                         end
                     end
                 end
                 log('成功解析节点数量: ' .. #nodes)
             else
-				log(url .. ': 获取内容为空')
-			end
+                log(url .. ': 获取内容为空')
+            end
         end
     end
     -- diff
     do
         if next(nodeResult) == nil then
-			log("更新失败，没有可用的节点信息")
-			if proxy == '0' then
-				luci.sys.init.start(name)
-				log('订阅失败, 恢复服务')
-			end
-			return
-		end
+            log("更新失败，没有可用的节点信息")
+            if proxy == '0' then
+                luci.sys.init.start(name)
+                log('订阅失败, 恢复服务')
+            end
+            return
+        end
         local add, del = 0, 0
-        ucic:foreach(
-            name,
-            uciType,
-            function(old)
-                if old.grouphashkey or old.hashkey then -- 没有 hash 的不参与删除
-                    if not nodeResult[old.grouphashkey] or not nodeResult[old.grouphashkey][old.hashkey] then
-                        ucic:delete(name, old['.name'])
-                        del = del + 1
-                    else
-                        local dat = nodeResult[old.grouphashkey][old.hashkey]
-                        ucic:tset(name, old['.name'], dat)
-                        -- 标记一下
-                        setmetatable(nodeResult[old.grouphashkey][old.hashkey], {__index = {_ignore = true}})
-                    end
+        ucic:foreach(name, uciType, function(old)
+            if old.grouphashkey or old.hashkey then -- 没有 hash 的不参与删除
+                if not nodeResult[old.grouphashkey] or
+                    not nodeResult[old.grouphashkey][old.hashkey] then
+                    ucic:delete(name, old['.name'])
+                    del = del + 1
                 else
-                    if not old.alias then
-                        if not old.server or old.server_port then
-                            ucic:delete(name, old['.name'])
-                        else
-                            old.alias = old.server .. ':' .. old.server_port
-                            log('忽略手动添加的节点: ' .. old.alias)
-                        end
+                    local dat = nodeResult[old.grouphashkey][old.hashkey]
+                    ucic:tset(name, old['.name'], dat)
+                    -- 标记一下
+                    setmetatable(nodeResult[old.grouphashkey][old.hashkey],
+                                 {__index = {_ignore = true}})
+                end
+            else
+                if not old.alias then
+                    if not old.server or old.server_port then
+                        ucic:delete(name, old['.name'])
                     else
+                        old.alias = old.server .. ':' .. old.server_port
                         log('忽略手动添加的节点: ' .. old.alias)
                     end
+                else
+                    log('忽略手动添加的节点: ' .. old.alias)
                 end
             end
-        )
-        
+        end)
+
         for k, v in ipairs(nodeResult) do
             -- 如果订阅节点中有相同的节点信息 需要先去重。
             new_nodes = table_unique(v)
@@ -519,13 +519,15 @@ local execute = function()
         local firstServer = ucic:get_first(name, uciType)
         if not ucic:get(name, globalServer) then
             if firstServer then
-                ucic:set(name, ucic:get_first(name, 'global'), 'global_server', firstServer)
+                ucic:set(name, ucic:get_first(name, 'global'), 'global_server',
+                         firstServer)
                 ucic:commit(name)
                 log('当前主服务器已更新，正在自动更换。')
             end
         end
         if firstServer then
-            luci.sys.call('/etc/init.d/' .. name .. ' restart > /dev/null 2>&1 &') -- 不加&的话日志会出现的更早
+            luci.sys.call('/etc/init.d/' .. name ..
+                              ' restart > /dev/null 2>&1 &') -- 不加&的话日志会出现的更早
         else
             luci.sys.call('/etc/init.d/' .. name .. ' stop > /dev/null 2>&1 &') -- 不加&的话日志会出现的更早
         end
@@ -536,19 +538,17 @@ local execute = function()
 end
 
 if subscribe_url and #subscribe_url > 0 then
-    xpcall(
-        execute,
-        function(e)
-            log(e)
-            -- log(debug.traceback())
-            log('发生错误, 正在恢复服务')
-            log('END SUBSCRIBE')
-            local firstServer = ucic:get_first(name, uciType)
-            if firstServer then
-                luci.sys.call('/etc/init.d/' .. name .. ' restart > /dev/null 2>&1 &') -- 不加&的话日志会出现的更早
-            else
-                luci.sys.call('/etc/init.d/' .. name .. ' stop > /dev/null 2>&1 &') -- 不加&的话日志会出现的更早
-            end
+    xpcall(execute, function(e)
+        log(e)
+        -- log(debug.traceback())
+        log('发生错误, 正在恢复服务')
+        log('END SUBSCRIBE')
+        local firstServer = ucic:get_first(name, uciType)
+        if firstServer then
+            luci.sys.call('/etc/init.d/' .. name ..
+                              ' restart > /dev/null 2>&1 &') -- 不加&的话日志会出现的更早
+        else
+            luci.sys.call('/etc/init.d/' .. name .. ' stop > /dev/null 2>&1 &') -- 不加&的话日志会出现的更早
         end
-    )
+    end)
 end

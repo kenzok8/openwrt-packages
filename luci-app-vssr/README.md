@@ -20,7 +20,7 @@
   </a>
 
   <a href="https://github.com/jerrykuku/luci-app-vssr/releases">
-    <img src="https://img.shields.io/badge/release-v1.22-blue.svg?">
+    <img src="https://img.shields.io/badge/release-v1.24-blue.svg?">
   </a>
 
   <a href="https://github.com/jerrykuku/luci-app-vssr/releases">
@@ -37,7 +37,9 @@
 目前Lean最新版本的openwrt 已经可以直接拉取源码到 package/lean 下直接进行勾选并编译。  
 
 
-### 更新日志 2022-01-08  v1.23
+### 更新日志 2022-04-21  v1.24
+- UPDATE: 更新maxminddb到最新版本。
+- UPDATE: 变更订阅脚本中simple-obfs为Local-obfs。
 - FIX: 增强订阅节点时旗帜匹配的准确性。
 
 
