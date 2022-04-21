@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-passwall2
 PKG_VERSION:=1.3
-PKG_RELEASE:=17
+PKG_RELEASE:=18
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_Transparent_Proxy \

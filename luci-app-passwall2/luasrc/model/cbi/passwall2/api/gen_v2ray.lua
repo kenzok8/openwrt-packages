@@ -27,7 +27,6 @@ local direct_dns_doh_host = var["-direct_dns_doh_host"]
 local remote_dns_server = var["-remote_dns_server"]
 local remote_dns_port = var["-remote_dns_port"]
 local remote_dns_udp_server = var["-remote_dns_udp_server"]
-local remote_dns_udp_local = var["-remote_dns_udp_local"]
 local remote_dns_tcp_server = var["-remote_dns_tcp_server"]
 local remote_dns_doh_url = var["-remote_dns_doh_url"]
 local remote_dns_doh_host = var["-remote_dns_doh_host"]
@@ -619,15 +618,6 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
         if remote_dns_udp_server then
             _remote_dns.address = remote_dns_udp_server
             _remote_dns.port = tonumber(remote_dns_port) or 53
-            if remote_dns_udp_local == "1" then
-                table.insert(routing.rules, 1, {
-                    type = "field",
-                    ip = {
-                        remote_dns_udp_server
-                    },
-                    outboundTag = "direct"
-                })
-            end
         end
 
         if remote_dns_tcp_server then
@@ -735,22 +725,11 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
 
     local default_dns_flag = "remote"
     if node_id and redir_port then
-        local outboundTag = node_id
         local node = uci:get_all(appname, node_id)
         if node.protocol == "_shunt" then
-            outboundTag = "default"
             if node.default_node == "_direct" then
                 default_dns_flag = "direct"
             end
-        end
-        if not remote_dns_fake then
-            table.insert(rules, {
-                type = "field",
-                inboundTag = {
-                    "dns-in1"
-                },
-                outboundTag = outboundTag
-            })
         end
     end
 

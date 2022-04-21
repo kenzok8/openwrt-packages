@@ -265,7 +265,7 @@ lua_api() {
 
 run_v2ray() {
 	local flag node redir_port socks_address socks_port socks_username socks_password http_address http_port http_username http_password
-	local dns_listen_port direct_dns_protocol direct_dns_udp_server direct_dns_tcp_server direct_dns_doh remote_dns_protocol remote_dns_udp_server remote_dns_udp_local remote_dns_tcp_server remote_dns_doh remote_dns_client_ip dns_query_strategy dns_cache
+	local dns_listen_port direct_dns_protocol direct_dns_udp_server direct_dns_tcp_server direct_dns_doh remote_dns_protocol remote_dns_udp_server remote_dns_tcp_server remote_dns_doh remote_dns_client_ip dns_query_strategy dns_cache
 	local loglevel log_file config_file
 	local _extra_param=""
 	eval_set_val $@
@@ -332,12 +332,11 @@ run_v2ray() {
 		;;
 	esac
 	case "$remote_dns_protocol" in
-		udp*)
+		udp)
 			local _dns=$(get_first_dns remote_dns_udp_server 53 | sed 's/#/:/g')
 			local _dns_address=$(echo ${_dns} | awk -F ':' '{print $1}')
 			local _dns_port=$(echo ${_dns} | awk -F ':' '{print $2}')
 			_extra_param="${_extra_param} -remote_dns_server ${_dns_address} -remote_dns_port ${_dns_port} -remote_dns_udp_server ${_dns_address}"
-			[ "$remote_dns_protocol" = "udp+local" ] && _extra_param="${_extra_param} -remote_dns_udp_local 1"
 		;;
 		tcp)
 			local _dns=$(get_first_dns remote_dns_tcp_server 53 | sed 's/#/:/g')
