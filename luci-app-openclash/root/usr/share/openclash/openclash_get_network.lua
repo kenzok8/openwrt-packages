@@ -64,7 +64,6 @@ if type == "dns" then
 					print(rv.wan[o].dns[i])
 				end
 			end
-			print(rv.wan[o].gwaddr)
 		end
 	end
 end
@@ -77,7 +76,6 @@ if type == "dns6" then
 					print(rv.wan6[o].dns[i])
 				end
 			end
-			print(rv.wan6[o].gw6addr)
 		end
 	end
 end
@@ -109,6 +107,23 @@ if type == "dhcp" then
 	if wan6 then
 		for o = 1, #(rv.wan6) do
 			if rv.wan6[o].proto == "dhcpv6" then
+				print(rv.wan6[o].ifname)
+			end
+		end
+	end
+end
+
+if type == "pppoe" then
+	if wan then
+		for o = 1, #(rv.wan) do
+			if rv.wan[o].proto == "pppoe" then
+				print(rv.wan[o].ifname)
+			end
+		end
+	end
+	if wan6 then
+		for o = 1, #(rv.wan6) do
+			if rv.wan6[o].proto == "pppoe" then
 				print(rv.wan6[o].ifname)
 			end
 		end

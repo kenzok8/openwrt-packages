@@ -2837,9 +2837,6 @@ msgstr "*启用流量（域名）探测"
 msgid "Sniffer Will Prevent Domain Name Proxy and DNS Hijack Failure"
 msgstr "流量（域名）探测能有效防止域名分流异常和DNS劫持失败"
 
-msgid "Force Sniffer"
-msgstr "强制流量（域名）探测"
-
 msgid "Override All Dns Query"
 msgstr "启用后将尽可能的覆盖DNS查询到的域名"
 
@@ -2861,8 +2858,11 @@ msgstr "标准模式"
 msgid "Enable GeoIP Dat"
 msgstr "启用 GeoIP Dat 版数据库"
 
-msgid "Replace GEOIP MMDB With GEOIP Dat, Large Size File, Need Download First"
-msgstr "使用 Geoip Dat 替换 GEOIP MMDB 数据库, 文件体积较大且无内置，启动后会自动下载"
+msgid "Replace GEOIP MMDB With GEOIP Dat, Large Size File"
+msgstr "使用 Geoip Dat 替换 GEOIP MMDB 数据库, 文件体积较大且无内置"
+
+msgid "Need Download First"
+msgstr "请提前下载"
 
 msgid "Auto Update GeoIP Dat"
 msgstr "自动更新 GeoIP Dat 数据库"
@@ -2896,3 +2896,33 @@ msgstr "注意: 连接异常时请按照此页步骤先进行检查"
 
 msgid "Click to the page"
 msgstr "点击前往"
+
+msgid "(Only Meta Core)"
+msgstr "（仅 Meta 内核）"
+
+msgid "Warning: Only Meta Core Support QUIC Type DNS, Skip"
+msgstr "警告：仅 Meta 内核支持 QUIC 类型的 DNS，跳过"
+
+msgid "Policy Filter"
+msgstr "节点筛选"
+
+msgid "Force Sniffing Domain Lists"
+msgstr "强制探测（嗅探）域名列表"
+
+msgid "Force Sniffing Domain Filter"
+msgstr "忽略探测（嗅探）域名列表"
+
+msgid "Will Override Dns Queries If Domains in The List"
+msgstr "列表中的域名将会使用探测（嗅探）的结果进行连接"
+
+msgid "Will Disable Sniffing If Domains in The List"
+msgstr "列表中的域名将不会使用探测（嗅探）的结果进行连接"
+
+msgid "Custom Sniffer Settings"
+msgstr "自定义流量探测（嗅探）设置"
+
+msgid "Custom The Force and Skip Sniffing Doamin Lists"
+msgstr "自定义强制和忽略流量探测（嗅探）的域名列表"
+
+msgid "Warning: Only TUN Core Support Script Mode, Switch To The Rule Mode!"
+msgstr "警告：仅 TUN 内核支持 Script 模式，已切换为 Rule 模式！"

@@ -437,26 +437,17 @@ sys_dns_append()
       wan_gate=$(/usr/share/openclash/openclash_get_network.lua "gateway")
       wan6_gate=$(/usr/share/openclash/openclash_get_network.lua "gateway6")
       dhcp_iface=$(/usr/share/openclash/openclash_get_network.lua "dhcp")
-      if [ -z "$dhcp_iface" ]; then
+      pppoe_iface=$(/usr/share/openclash/openclash_get_network.lua "pppoe")
+      if [ -z "$dhcp_iface" ] && [ -z "$pppoe_iface" ]; then
          if [ -n "$wan_dns" ]; then
-            if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
-               echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
-            fi
             for i in $wan_dns; do
                echo "    - \"$i\"" >>/tmp/yaml_config.namedns.yaml
             done
          fi
          if [ -n "$wan6_dns" ] && [ "$2" = 1 ]; then
-            if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
-               echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
-            fi
             for i in $wan6_dns; do
                echo "    - \"[${i}]:53\"" >>/tmp/yaml_config.namedns.yaml
             done
-         fi
-      else
-         if [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
-            echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
          fi
          if [ -n "$wan_gate" ]; then
             for i in $wan_gate; do
@@ -468,9 +459,37 @@ sys_dns_append()
                echo "    - \"[${i}]:53\"" >>/tmp/yaml_config.namedns.yaml
             done
          fi
-         for i in $dhcp_iface; do
-            echo "    - dhcp://\"$i\"" >>/tmp/yaml_config.namedns.yaml
-         done
+      else
+         if [ -n "$dhcp_iface" ]; then
+            for i in $dhcp_iface; do
+               echo "    - dhcp://\"$i\"" >>/tmp/yaml_config.namedns.yaml
+            done
+            if [ -n "$wan_gate" ]; then
+               for i in $wan_gate; do
+                   echo "    - \"$i\"" >>/tmp/yaml_config.namedns.yaml
+               done
+            fi
+            if [ -n "$wan6_gate" ] && [ "$2" = 1 ]; then
+               for i in $wan6_gate; do
+                  echo "    - \"[${i}]:53\"" >>/tmp/yaml_config.namedns.yaml
+               done
+            fi
+         fi
+         if [ -n "$pppoe_iface" ]; then
+            if [ -n "$wan_dns" ]; then
+		           for i in $wan_dns; do
+		              echo "    - \"$i\"" >>/tmp/yaml_config.namedns.yaml
+		           done
+		       fi
+		       if [ -n "$wan6_dns" ] && [ "$2" = 1 ]; then
+		          for i in $wan6_dns; do
+		             echo "    - \"[${i}]:53\"" >>/tmp/yaml_config.namedns.yaml
+		          done
+		       fi
+         fi
+      fi
+      if [ -f "/tmp/yaml_config.namedns.yaml" ] && [ -z "$(grep "^ \{0,\}nameserver:$" /tmp/yaml_config.namedns.yaml 2>/dev/null)" ]; then
+         sed -i '1i\  nameserver:'  "/tmp/yaml_config.namedns.yaml"
       fi
    fi
 }
@@ -507,6 +526,8 @@ yml_dns_get()
       dns_type=""
    elif [ "$type" = "https" ]; then
       dns_type="https://"
+   elif [ "$type" = "quic" ]; then
+      dns_type="quic://"
    fi
 
    if [ -n "$port" ] && [ -n "$ip" ]; then
@@ -514,6 +535,11 @@ yml_dns_get()
    elif [ -z "$port" ] && [ -n "$ip" ]; then
       dns_address="$ip"
    else
+      return
+   fi
+   
+   if [ "$type" == "quic" ] && [ "$enable_meta_core" != "1" ]; then
+      LOG_OUT "Warning: Only Meta Core Support QUIC Type DNS, Skip【$dns_type$dns_address】"
       return
    fi
 
@@ -1162,7 +1188,7 @@ yml_other_rules_get()
 check_run_quick()
 {
    quick_start=true
-   check_file="$RAW_CONFIG_FILE /etc/openclash/custom/openclash_custom_domain_dns.list /etc/openclash/custom/openclash_custom_domain_dns_policy.list /etc/openclash/custom/openclash_custom_fake_filter.list /etc/openclash/custom/openclash_custom_fallback_filter.yaml /etc/openclash/custom/openclash_custom_hosts.list /etc/openclash/custom/openclash_custom_rules.list /etc/openclash/custom/openclash_custom_rules_2.list $dev_core_path $tun_core_path $meta_core_path $ipdb_path $geosite_path $geoip_path $chnr_path $chnr6_path /usr/share/openclash/res/ConnersHua.yaml /usr/share/openclash/res/ConnersHua_return.yaml /usr/share/openclash/res/lhie1.yaml /usr/share/openclash/res/openclash_version /tmp/openclash_fake_filter.list"
+   check_file="$RAW_CONFIG_FILE /etc/openclash/custom/openclash_custom_domain_dns.list /etc/openclash/custom/openclash_custom_domain_dns_policy.list /etc/openclash/custom/openclash_custom_fake_filter.list /etc/openclash/custom/openclash_custom_fallback_filter.yaml /etc/openclash/custom/openclash_custom_hosts.list /etc/openclash/custom/openclash_custom_rules.list /etc/openclash/custom/openclash_custom_rules_2.list $dev_core_path $tun_core_path $meta_core_path $ipdb_path $geosite_path $geoip_path $chnr_path $chnr6_path /usr/share/openclash/res/ConnersHua.yaml /usr/share/openclash/res/ConnersHua_return.yaml /usr/share/openclash/res/lhie1.yaml /usr/share/openclash/res/openclash_version /tmp/openclash_fake_filter.list /etc/openclash/custom/openclash_force_sniffing_domain.list /etc/openclash/custom/openclash_sniffing_domain_filter.list"
 	 if [ ! -f "$CONFIG_FILE" ] || [ ! -f "/tmp/openclash_config.tmp" ] || [ ! -f "/tmp/openclash.change" ]; then
 	    quick_start=false
 	    return
@@ -1514,6 +1540,8 @@ start_run_core()
          touch "/tmp/openclash.log" 2>/dev/null
          chmod o+w /etc/openclash/proxy_provider/* 2>/dev/null
          chmod o+w /etc/openclash/rule_provider/* 2>/dev/null
+         chmod o+w /etc/openclash/history/* 2>/dev/null
+         chmod o+w /etc/openclash/cache.db 2>/dev/null
          chmod o+w /tmp/openclash.log 2>/dev/null
          chown nobody:nogroup /etc/openclash/core/* 2>/dev/null
          #使用nobody启动内核方便代理路由自身流量
@@ -2092,17 +2120,19 @@ if [ -n "$en_mode_tun" ]; then
    if [ "$en_mode" = "fake-ip" ]; then
       iptables -t mangle -N openclash_output
       iptables -t mangle -F openclash_output
+      iptables -t mangle -A openclash_output -i utun -j RETURN >/dev/null 2>&1
       iptables -t mangle -A openclash_output -m set --match-set localnetwork dst -j RETURN
       if [ "$en_mode_tun" -eq 1 ]; then
          if [ -z "$_koolshare" ]; then
             iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -d 198.18.0.0/16 -j MARK --set-mark "$PROXY_FWMARK"
             iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -m set ! --match-set common_ports dst -j RETURN >/dev/null 2>&1
             iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -p tcp -j MARK --set-mark "$PROXY_FWMARK"
+            iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -p udp -j MARK --set-mark "$PROXY_FWMARK"
          else
             iptables -t mangle -A openclash_output -d 198.18.0.0/16 -j MARK --set-mark "$PROXY_FWMARK"
          fi
       elif [ -z "$_koolshare" ]; then
-         iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -p udp -d 198.18.0.0/16 -j MARK --set-mark "$PROXY_FWMARK"
+         iptables -t mangle -A openclash_output -m owner ! --uid-owner 65534 -p udp -j MARK --set-mark "$PROXY_FWMARK"
       fi
       iptables -t mangle -A OUTPUT -j openclash_output
    elif [ -z "$_koolshare" ] && [ "$en_mode" = "redir-host" ] && [ "$en_mode_tun" -eq 1 ]; then
@@ -2287,6 +2317,7 @@ revert_firewall()
    #TUN
    ip route del default dev utun table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
    ip rule del fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
+   route delete -net 198.18.0.0/16 dev utun >/dev/null 2>&1
    ip link set dev utun down >/dev/null 2>&1
    ip tuntap del utun mode tun >/dev/null 2>&1
    
@@ -2379,7 +2410,7 @@ get_config()
    router_self_proxy=$(uci -q get openclash.config.router_self_proxy || echo 1)
    enable_meta_core=$(uci -q get openclash.config.enable_meta_core || echo 0)
    enable_meta_sniffer=$(uci -q get openclash.config.enable_meta_sniffer || echo 0)
-   enable_meta_sniffer_force=$(uci -q get openclash.config.enable_meta_sniffer_force || echo 0)
+   enable_meta_sniffer_custom=$(uci -q get openclash.config.enable_meta_sniffer_custom || echo 0)
    geodata_loader=$(uci -q get openclash.config.geodata_loader || echo "memconservative")
    enable_geoip_dat=$(uci -q get openclash.config.enable_geoip_dat || echo 0)
    _koolshare=$(cat /usr/lib/os-release 2>/dev/null |grep OPENWRT_RELEASE 2>/dev/null |grep -i koolshare 2>/dev/null)
@@ -2414,7 +2445,7 @@ start()
       config_foreach yml_auth_get "authentication"
       yml_auth_custom "$TMP_CONFIG_FILE"
       yml_dns_custom "$enable_custom_dns" "$TMP_CONFIG_FILE" "$append_wan_dns" "$ipv6_dns"
-      /usr/share/openclash/yml_change.sh 2>/dev/null "$en_mode" "$da_password" "$cn_port" "$proxy_port" "$TMP_CONFIG_FILE" "$ipv6_enable" "$http_port" "$socks_port" "$log_level" "$proxy_mode" "$en_mode_tun" "$stack_type" "$dns_port" "$mixed_port" "$tproxy_port" "$ipv6_dns" "$store_fakeip" "$stream_domains_prefetch" "$dns_remote" "$enable_meta_core" "$enable_meta_sniffer" "$enable_meta_sniffer_force" "$enable_geoip_dat" "$geodata_loader"
+      /usr/share/openclash/yml_change.sh 2>/dev/null "$en_mode" "$da_password" "$cn_port" "$proxy_port" "$TMP_CONFIG_FILE" "$ipv6_enable" "$http_port" "$socks_port" "$log_level" "$proxy_mode" "$en_mode_tun" "$stack_type" "$dns_port" "$mixed_port" "$tproxy_port" "$ipv6_dns" "$store_fakeip" "$stream_domains_prefetch" "$dns_remote" "$enable_meta_core" "$enable_meta_sniffer" "$enable_geoip_dat" "$geodata_loader" "$enable_meta_sniffer_custom"
       /usr/share/openclash/yml_rules_change.sh 2>/dev/null "$rule_source" "$enable_custom_clash_rules" "$TMP_CONFIG_FILE" "$enable_rule_proxy" "$CONFIG_NAME" "$router_self_proxy" "$lan_ip" "$proxy_port" "$tproxy_port"
       yml_custom_rule_provider "$TMP_CONFIG_FILE"
       yml_game_custom "$TMP_CONFIG_FILE"
