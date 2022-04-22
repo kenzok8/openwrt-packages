@@ -2,7 +2,10 @@
  *  Argonne is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argonne Template
  *
  *  luci-theme-argonne
- *      Copyright 2021 kenzo <kenzok78@gmail.com>
+ *      Copyright 2020 Jerryk <jerrykuku@gmail.com>
+ *
+ *  Have a bug? Please create an issue here on GitHub!
+ *      https://github.com/kenzok78/luci-theme-argonne/issues
  *
  *  luci-theme-bootstrap:
  *      Copyright 2008 Steven Barth <steven@midlink.org>
@@ -312,7 +315,7 @@ li {
   position: relative;
 }
 .login-page .login-container .login-form .form-login .input-group::before {
-  font-family: 'argon' !important;
+  font-family: 'argonne' !important;
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
@@ -630,7 +633,7 @@ footer a {
   position: relative;
 }
 .main .main-left .nav li.slide .menu::before {
-  font-family: 'argon' !important;
+  font-family: 'argonne' !important;
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
@@ -649,7 +652,7 @@ footer a {
   position: absolute;
   right: 0.5rem;
   top: 0.8rem;
-  font-family: 'argon' !important;
+  font-family: 'argonne' !important;
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
@@ -1631,7 +1634,7 @@ body.lang_pl.node-main-login .cbi-value-title {
 .cbi-value-helpicon,
 .showSide,
 .main > .loading > span {
-  font-family: 'argon' !important;
+  font-family: 'argonne' !important;
   font-style: normal !important;
   font-weight: normal !important;
   font-variant: normal !important;

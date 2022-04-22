@@ -180,7 +180,6 @@ o = s:taboption("DNS", ListValue, "remote_dns_protocol", translate("Remote DNS P
 o:value("tcp", "TCP")
 o:value("doh", "DoH")
 o:value("udp", "UDP")
-o:value("udp+local", "UDP+Local")
 o:value("fakedns", "FakeDNS")
 
 ---- DNS Forward
@@ -196,7 +195,6 @@ o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
 o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
 o:depends("remote_dns_protocol", "tcp")
 o:depends("remote_dns_protocol", "udp")
-o:depends("remote_dns_protocol", "udp+local")
 
 ---- DoH
 o = s:taboption("DNS", Value, "remote_dns_doh", translate("Remote DNS DoH"))
