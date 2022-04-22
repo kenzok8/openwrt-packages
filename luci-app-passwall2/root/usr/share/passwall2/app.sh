@@ -300,6 +300,8 @@ run_v2ray() {
 		local route_only=$(config_t_get global_forwarding route_only 0)
 		[ "${route_only}" = "1" ] && _extra_param="${_extra_param} -route_only 1"
 	}
+	local buffer_size=$(config_t_get global_forwarding buffer_size)
+	[ -n "${buffer_size}" ] && _extra_param="${_extra_param} -buffer_size ${buffer_size}"
 	[ "$direct_dns_protocol" = "auto" ] && {
 		direct_dns_protocol="udp"
 		direct_dns_udp_server=${AUTO_DNS}
@@ -749,8 +751,8 @@ start() {
 			run_global
 			source $APP_PATH/iptables.sh start
 			source $APP_PATH/helper_dnsmasq.sh logic_restart
-			sysctl -w net.bridge.bridge-nf-call-iptables=0 2>/dev/null
-			[ "$PROXY_IPV6" == "1" ] && sysctl -w net.bridge.bridge-nf-call-ip6tables=0 2>/dev/null
+			sysctl -w net.bridge.bridge-nf-call-iptables=0 >/dev/null 2>&1
+			[ "$PROXY_IPV6" == "1" ] && sysctl -w net.bridge.bridge-nf-call-ip6tables=0 >/dev/null 2>&1
 		fi
 	}
 	start_crontab
