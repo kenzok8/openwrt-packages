@@ -45,7 +45,7 @@
     function wirte_status(data) {
         if (data.outboard) {
             json = data.outboardip;
-            country = (json.flag == "tw") ? "中国 台湾" : json.country;
+            country = json.country;
             $(".flag img").attr("src", VSSR_ASSETS + "flags/4x3/" + json.flag + ".svg");
             $(".status-info").html(data.outboard + "<br>" + country);
         }
