@@ -47,14 +47,11 @@ msgstr "[亮色模式] 主色调"
 msgid "[Dark mode] Primary Color"
 msgstr "[暗色模式] 主色调"
 
-msgid "A HEX Color ; ( Default: #787399 )"
-msgstr "十六进制颜色值 ( 预设为：#787399 )"
+msgid "A HEX Color ; ( Default: #5e72e4 )"
+msgstr "十六进制颜色值 ( 预设为：#5e72e4 )"
 
-msgid "A HEX Color ; ( Default: #787399 )"
-msgstr "十六进制颜色值 ( 预设为：#787399 )"
-
-msgid "[Light mode] Transparency"
-msgstr "[亮色模式] 透明度"
+msgid "A HEX Color ; ( Default: #483d8b )"
+msgstr "十六进制颜色值 ( 预设为：#483d8b )"
 
 msgid "[Light mode] Transparency"
 msgstr "[亮色模式] 透明度"
@@ -91,7 +88,6 @@ msgstr "无法打开文件："
 
 msgid "Create upload file error."
 msgstr "创建上传文件失败。"
-
 
 msgid "File name"
 msgstr "文件名"
