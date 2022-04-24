@@ -19,7 +19,7 @@ msgstr ""
 msgid "A HEX Color ; ( Default: #5e72e4 )"
 msgstr ""
 
-#: applications/luci-app-argon-config/luasrc/controller/argon-config.lua:11
+#: applications/luci-app-argon-config/luasrc/controller/argon-config.lua:8
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:53
 msgid "Argon Config"
 msgstr ""
@@ -64,6 +64,10 @@ msgstr ""
 msgid "Force Light"
 msgstr ""
 
+#: applications/luci-app-argon-config/root/usr/share/rpcd/acl.d/luci-app-argon-config.json:3
+msgid "Grant UCI access for luci-app-argon-config"
+msgstr ""
+
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:53
 msgid ""
 "Here you can set the blur and transparency of the login page of argon theme, "
@@ -74,10 +78,6 @@ msgstr ""
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:105
 msgid ""
 "Larger value will more blurred ; ( Suggest: clear: 1 or blur preset: 10 )"
-msgstr ""
-
-#: applications/luci-app-argon-config/root/usr/share/rpcd/acl.d/luci-app-argon-config.json:3
-msgid "Luci Argon theme config"
 msgstr ""
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:201
