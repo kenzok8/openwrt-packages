@@ -1,2 +1,2 @@
 Drop background here!
-accept jpg png gif and mp4
+accept jpg png gif mp4 webm

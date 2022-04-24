@@ -37,13 +37,15 @@ return baseclass.extend({
 
 	handleMenuExpand: function (ev) {
 		var a = ev.target, slide = a.parentNode, slide_menu = a.nextElementSibling;
+		var collapse = false;
 
 		document.querySelectorAll('.main .main-left .nav > li >ul.active').forEach(function (ul) {
-			if (ul !== slide_menu) {
-				$(ul).stop(true).slideUp("fast", function () {
-					ul.classList.remove('active');
-					ul.previousElementSibling.classList.remove('active');
-				});
+			$(ul).stop(true).slideUp("fast", function () {
+				ul.classList.remove('active');
+				ul.previousElementSibling.classList.remove('active');
+			});
+			if (!collapse && ul === slide_menu) {
+				collapse = true;
 			}
 
 		});
@@ -52,11 +54,13 @@ return baseclass.extend({
 			return;
 		
 		
-		$(slide).find(".slide-menu").slideDown("fast",function(){
-			slide_menu.classList.add('active');
-			a.classList.add('active');
-		});
-		a.blur();
+		if (!collapse) {
+			$(slide).find(".slide-menu").slideDown("fast",function(){
+				slide_menu.classList.add('active');
+				a.classList.add('active');
+			});
+			a.blur();
+		}
 		ev.preventDefault();
 		ev.stopPropagation();
 	},

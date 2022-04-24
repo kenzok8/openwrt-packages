@@ -42,6 +42,9 @@
 	end
 
 
+	local imageTypes = " jpg png gif "
+	local videoTypes = " mp4 webm "
+	local allTypes = imageTypes .. videoTypes
 	function fetchMedia(path,themeDir)
 		local backgroundTable 	= {}
 		local backgroundCount 	= 0
@@ -49,7 +52,7 @@
 			attr = fs.stat(f)
 			if attr then
 				local ext = fs.basename(f):match(".+%.(%w+)$")
-				if ext == "jpg" or ext == "png" or ext == "gif" or ext == "mp4" then
+				if ext ~= nil and string.match(allTypes, " "..ext.." ") ~= nil then
 					local bg = {}
 					bg.type = ext
 					bg.url = themeDir .. fs.basename(f)
@@ -62,24 +65,23 @@
 	end
 
 	local boardinfo			= util.ubus("system", "board")
-	local bingUrl 			= "http://www.bing.com/"
-	local bingApiUrl 		= bingUrl .. "HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
 	local themeDir			= media .. "/background/"
 	local bgUrl 			= media .. "/img/bg1.jpg"
-	local useBing			= fs.access('/etc/config/argon') and "1" or "0"
 	local backgroundTable, backgroundCount 		= fetchMedia("/www" .. themeDir .. "*",themeDir)
 	local backgroundType 	= "Image"
+	local mimeType 			= ""
 
 	if ( backgroundCount > 0 ) then
 		local currentBg = backgroundTable[math.random(1,backgroundCount)]
 		bgUrl 			= currentBg.url
-		if (currentBg.type == "mp4" ) then
+		if (string.match(videoTypes, " "..currentBg.type.." ") ~= nil) then
 			backgroundType 	= "Video"
+			mimeType 		= "video/" .. currentBg.type
 		end
 	else
-		local bing = sys.exec("wget --timeout=0.5 -qO- '%s'" %bingApiUrl)
+		local bing = sys.exec("/usr/libexec/argon/bing_wallpaper")
 		if (bing and bing ~= '') then
-			bgUrl 	= bingUrl .. json.parse(bing).images[1].url
+			bgUrl 	= bing
 		end
 	end
 %>
@@ -89,7 +91,7 @@
 	<!-- Video Player Start -->
 	<div class="video">
 		<video autoplay loop muted id="video">
-			<source src="<%=bgUrl%>" type="video/mp4">
+			<source src="<%=bgUrl%>" type="<%=mimeType%>">
 		</video>
 	</div>
 	<div class="volume-control mute"></div>

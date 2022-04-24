@@ -1,0 +1,27 @@
+msgid "LinkEase"
+msgstr "易有云文件管理器"
+
+msgid "Running state"
+msgstr "运行状态"
+
+msgid "Click to open LinkEase"
+msgstr "点击打开易有云"
+
+msgid "LinkEase is an efficient data transfer tool."
+msgstr "易有云是一个微型家庭数据服务中心，主要用于文件的集中存放、读取、备份及日常管理。释放用户终端设备空间，实现个人、家庭文件长久留存；支持家庭相册、视频文件随时随地多终端查看、播放，满足家庭文件的日常管理。"
+
+msgid "Port"
+msgstr "端口"
+
+msgid "The LinkEase service is running."
+msgstr "易有云服务已启动"
+
+msgid "The LinkEase service is not running."
+msgstr "易有云服务未启动"
+
+msgid "LinkEase Status"
+msgstr "易有云服务状态"
+
+msgid "Collecting data..."
+msgstr "收集数据..."
+

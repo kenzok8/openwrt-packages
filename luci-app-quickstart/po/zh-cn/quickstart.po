@@ -1,0 +1,7 @@
+msgid "NetworkGuide"
+msgstr "网络向导"
+
+msgid "QuickStart"
+msgstr "首页"
+
+

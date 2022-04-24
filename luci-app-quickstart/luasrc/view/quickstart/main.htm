@@ -1,0 +1,12 @@
+<%+header%>
+<script>
+    (function(){
+      var vue_prefix="<%=prefix%>";
+      window.vue_base = vue_prefix + '/';
+    })();
+</script>
+<div id="app">
+</div>
+<script type="module" crossorigin src="/luci-static/quickstart/index.js<%# ?v=PKG_VERSION %>"></script>
+<link rel="stylesheet" href="/luci-static/quickstart/style.css<%# ?v=PKG_VERSION %>">
+<%+footer%>

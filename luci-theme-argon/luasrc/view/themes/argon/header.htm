@@ -21,6 +21,7 @@
 	local util = require "luci.util"
 	local http = require "luci.http"
 	local disp = require "luci.dispatcher"
+    local ver = require "luci.version"
 
 	local boardinfo = util.ubus("system", "board")
 
@@ -85,7 +86,7 @@
     <meta name="msapplication-TileColor" content="<%=bar_color%>">
     <meta name="msapplication-TileImage" content="<%=media%>/icon/ms-icon-144x144.png">
     <meta name="theme-color" content="<%=bar_color%>">
-    <link rel="stylesheet" href="<%=media%>/css/cascade.css?v=<%=math.random(1,100000)%>">
+    <link rel="stylesheet" href="<%=media%>/css/cascade.css<%# ?v=PKG_VERSION %>">
     <style title="text/css">
         <% if mode == 'normal' then %>
             @media (prefers-color-scheme: dark) {
@@ -115,10 +116,10 @@
 	</style>
 	<% end -%>
 	<script src="<%=media%>/js/polyfill.min.js"></script>
-	<script src="<%=url('admin/translations', luci.i18n.context.lang)%>?v=2.2.4"></script>
-	<script src="<%=resource%>/cbi.js?v=2.2.4"></script>
-	<script src="<%=resource%>/luci.js?v=2.2.4"></script>
-	<script src="<%=media%>/js/jquery.min.js?v=2.2.4"></script>
+	<script src="<%=url('admin/translations', luci.i18n.context.lang)%>?v=<%=ver.luciversion%>"></script>
+	<script src="<%=resource%>/cbi.js?v=<%=ver.luciversion%>"></script>
+	<script src="<%=resource%>/luci.js?v=<%=ver.luciversion%>"></script>
+	<script src="<%=media%>/js/jquery.min.js?v=3.5.1"></script>
 </head>
 
 <body
