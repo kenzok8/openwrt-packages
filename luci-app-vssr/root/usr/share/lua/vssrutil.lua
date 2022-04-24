@@ -17,7 +17,7 @@ function _M.get_flag(remark, host)
     local search_table = json.decode(json_string)
 
     local iso_code = nil
-    local delete_table = {'%b[]', 'networks', 'test', 'game', 'gaming', 'tls', 'iepl', 'aead', 'hgc', 'hkbn', 'netflix', 'disney', 'hulu', 'hinet','Sb','az','aws','cn'}
+    local delete_table = {'%b[]', 'networks', 'test', 'game', 'gaming', 'tls', 'iepl', 'aead', 'hgc', 'hkbn', 'netflix', 'disney', 'hulu', 'hinet','sb','az','aws','cn','ss','ssr','trojan','all'}
     if (remark ~= nil) then
         -- 过滤
         remark = string.lower(remark)

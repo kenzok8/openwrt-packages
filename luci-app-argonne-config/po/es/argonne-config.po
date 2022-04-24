@@ -26,12 +26,12 @@ msgstr ""
 "preestablecido: 0.5)"
 
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:92
-msgid "A HEX Color ; ( Default: #787399 )"
-msgstr "Un color HEX; (Predeterminado: #787399)"
+msgid "A HEX Color ; ( Default: #483d8b )"
+msgstr "Un color HEX; (Predeterminado: #483d8b)"
 
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:72
-msgid "A HEX Color ; ( Default: #787399 )"
-msgstr "Un color HEX; (Predeterminado: #787399)"
+msgid "A HEX Color ; ( Default: #5e72e4 )"
+msgstr "Un color HEX; (Predeterminado: #5e72e4)"
 
 #: applications/luci-app-argonne-config/luasrc/controller/argonne-config.lua:11
 #: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:53

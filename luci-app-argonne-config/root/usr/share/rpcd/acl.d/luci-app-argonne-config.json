@@ -1,6 +1,6 @@
 {
-    "luci-argonne-config": {
-        "description": "Luci Argonne theme config ",
+    "luci-app-argonne-config": {
+        "description": "Grant UCI access for luci-app-argonne-config",
         "read": {
             "uci": [ "argonne" ]
         },
