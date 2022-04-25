@@ -191,6 +191,7 @@ ac_rule() {
 	else
 		for name in $Interface; do
 			local IFNAME=$(uci -P /var/state get network.$name.ifname 2>/dev/null)
+			[ -z "$IFNAME" ] && IFNAME=$(uci -P /var/state get network.$name.device 2>/dev/null)
 			[ -n "$IFNAME" ] && $IPT -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p tcp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_WAN_AC
 		done
 	fi
@@ -262,6 +263,7 @@ tp_rule() {
 	else
 		for name in $Interface; do
 			local IFNAME=$(uci -P /var/state get network.$name.ifname 2>/dev/null)
+			[ -z "$IFNAME" ] && IFNAME=$(uci -P /var/state get network.$name.device 2>/dev/null)
 			[ -n "$IFNAME" ] && $ipt -I PREROUTING 1 ${IFNAME:+-i $IFNAME} -p udp $EXT_ARGS $MATCH_SET -m comment --comment "$TAG" -j SS_SPEC_TPROXY
 		done
 	fi

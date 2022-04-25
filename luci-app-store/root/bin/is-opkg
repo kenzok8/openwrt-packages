@@ -219,6 +219,11 @@ backup() {
         exit 0
     fi
 
+    if [ ! -d "${BACKUP_PATH}" ] && ! mkdir -p "${BACKUP_PATH}" ; then
+        echo "invalid backup path, can not backup ipk"
+        exit 1
+    fi
+
     #write all installed package list to file
     opkg_list_installed_packages "allinstalled" 2>/dev/null | sort -u > ${IS_ROOT}/all_installed_package.list
 
@@ -249,12 +254,7 @@ backup() {
     [ -n "${IS_DEBUG}" ] && echo -e "appdep_list_all:\n""${appdep_list_all}"
     echo "${appdep_list_all}" > ${IS_ROOT}/appdep.list
 
-
     #3.rebuild all istore installed package to ipk and backup to userdata partation
-    if [ ! -d "${BACKUP_PATH}" ];then
-        echo "invalid backup path, can not backup ipk"
-        exit 1
-    fi
 
     # 4. create dir
     date=$(date +%Y-%m%d-%H%M)
