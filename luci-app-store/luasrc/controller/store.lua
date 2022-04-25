@@ -35,6 +35,7 @@ function index()
     entry({"admin", "store", "get_available_backup_file_list"}, call("get_available_backup_file_list"))
     entry({"admin", "store", "set_local_backup_dir_path"}, post("set_local_backup_dir_path"))
     entry({"admin", "store", "get_local_backup_dir_path"}, call("get_local_backup_dir_path"))
+    entry({"admin", "store", "get_block_devices"}, call("get_block_devices"))
 
     for _, action in ipairs({"update", "install", "upgrade", "remove"}) do
         store_api(action, true)
@@ -285,7 +286,7 @@ function store_upload()
     out = ""
     if finished then
         if string.lower(string.sub(path, -4, -1)) == ".run" then
-            code, out, err = _action("sh", "-c", "chmod 755 \"%s\" && \"%s\"" %{ path, path })
+            code, out, err = _action("sh", "-c", "ls -l \"%s\"; md5sum \"%s\" 2>/dev/null; chmod 755 \"%s\" && \"%s\"" %{ path, path, path, path })
         else
             code, out, err = _action("opkg", "install", path)
         end
@@ -619,6 +620,69 @@ function get_local_backup_dir_path()
             luci.http.prepare_content("application/json")
             luci.http.write_json(success_ret)
         end 
+    else
+        luci.http.prepare_content("application/json")
+        luci.http.write_json(error_ret)
+    end
+end
+
+-- copy from /usr/lib/lua/luci/model/diskman.lua
+local function byte_format(byte)
+  local suff = {"B", "KB", "MB", "GB", "TB"}
+  for i=1, 5 do
+    if byte > 1024 and i < 5 then
+      byte = byte / 1024
+    else
+      return string.format("%.2f %s", byte, suff[i]) 
+    end 
+  end
+end
+
+-- copy from /usr/libexec/rpcd/luci
+local function getBlockDevices()
+    local fs = require "nixio.fs"
+
+    local block = io.popen("/sbin/block info", "r")
+    if block then
+        local rv = {}
+
+        while true do
+            local ln = block:read("*l")
+            if not ln then
+                break
+            end
+
+            local dev = ln:match("^/dev/(.-):")
+            if dev then
+                local s = tonumber((fs.readfile("/sys/class/block/" .. dev .."/size")))
+                local e = {
+                    dev = "/dev/" .. dev,
+                    size = s and byte_format(s * 512)
+                }
+
+                local key, val = { }
+                for key, val in ln:gmatch([[(%w+)="(.-)"]]) do
+                    e[key:lower()] = val
+                end
+
+                rv[dev] = e
+            end
+        end
+
+        block:close()
+
+        return rv
+    else
+        return
+    end
+end
+
+function get_block_devices()
+    local error_ret = {code = 500, msg = "Unable to execute block utility"}
+    local devices = getBlockDevices()
+    if devices ~= nil then
+        luci.http.prepare_content("application/json")
+        luci.http.write_json({code = 200, data = devices})
     else
         luci.http.prepare_content("application/json")
         luci.http.write_json(error_ret)
