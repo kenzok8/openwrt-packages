@@ -1,6 +1,0 @@
-#!/bin/sh
- 
-/etc/init.d/quickstart enable
-/etc/init.d/quickstart start
-
-exit 0
