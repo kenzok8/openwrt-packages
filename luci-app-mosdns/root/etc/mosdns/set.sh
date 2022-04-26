@@ -10,6 +10,7 @@ if L_exist ssrp; then
 	elif [ "$1" = "" ]; then
 		uci set shadowsocksr.@global[0].pdnsd_enable='0'
 		uci del shadowsocksr.@global[0].tunnel_forward
+		uci del shadowsocksr.@global[0].adblock_url
 	fi
 	uci commit shadowsocksr
 	if [ "$(pid ssrplus)" ]; then
