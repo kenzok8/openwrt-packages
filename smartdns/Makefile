@@ -9,7 +9,7 @@ PKG_VERSION:=Release36.1
 PKG_RELEASE:=19
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/pymumu/smartdns/tar.gz/Release$(PKG_VERSION)?
+PKG_SOURCE_URL:=https://codeload.github.com/pymumu/smartdns/tar.gz/$(PKG_VERSION)?
 PKG_HASH:=skip
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-Release$(PKG_VERSION)
 
