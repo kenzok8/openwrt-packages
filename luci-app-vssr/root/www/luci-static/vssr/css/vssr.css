@@ -362,6 +362,8 @@ footer.mobile-hide {
 
 .status-bar .inner .right-part {
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
 }
 
 .status-bar .inner .flag {
@@ -592,6 +594,13 @@ footer.mobile-hide {
 @media screen and (max-width: 480px) {
     .status {
         margin-bottom: -0.375rem;
+    }
+    .icon-con{
+        margin-right: -0.1rem !important;
+    }
+    .icon-con img{
+        width: 2.5rem !important;
+        height: auto !important;
     }
 }
 
