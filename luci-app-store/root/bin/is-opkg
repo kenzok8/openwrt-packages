@@ -84,18 +84,24 @@ check_self_upgrade() {
 
 do_self_upgrade() {
     check_mtime || return 1
-    if opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed ; then
-        true
-    else
-        update_if_outdate
-        local code=$?
-        [ "$code" = 1 ] && return 1
-        if [ "$code" = 2 ] || ! opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed; then
-            echo "already the latest version!" >&2
-            return 1
-        fi
+    local newest=`curl --connect-timeout 2 --max-time 5 -s ${ISTORE_INDEX} | gunzip | grep -FA10 "Package: ${ISTORE_PKG}" | grep -Fm1 'Version: ' | sed 's/^Version: //'`
+    local current=`grep -Fm1 'Version: ' /usr/lib/opkg/info/${ISTORE_PKG}.control | sed 's/^Version: //'`
+    if [ "v$newest" = "v" -o "v$current" = "v" ]; then
+        echo "Check version failed!" >&2
+        return 1
     fi
-    opkg_wrap upgrade ${ISTORE_PKG}
+    if [ "$newest" = "$current" ]; then
+        echo "Already the latest version!" >&2
+        return 1
+    fi
+    if opkg_wrap info ${ISTORE_PKG} | grep -qFm1 "Version: $newest"; then
+        opkg_wrap upgrade ${ISTORE_PKG} && return 0
+        update_if_outdate || return 1
+        opkg_wrap upgrade ${ISTORE_PKG}
+    else
+        update_if_outdate || return 1
+        opkg_wrap upgrade ${ISTORE_PKG}
+    fi
 }
 
 check_mtime() {

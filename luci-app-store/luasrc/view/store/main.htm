@@ -16,7 +16,11 @@
         window.device_id = {arch:"<%=id.arch%>",uid:"<%=id.uid%>",version:"<%=id.version%>"};
     })();
 </script>
-<h2 name="content">应用商店 <a href="https://github.com/linkease/istore/issues/22" target="_blank">v<%=id.version%></a></h2>
+<h2 name="content">应用商店 
+    <a onclick="void(0)" href="https://github.com/linkease/istore/issues/22" target="_blank" style="text-decoration: none;">
+        v<%=id.version%>
+    </a>
+</h2>
 <link rel="stylesheet" href="/luci-static/istore/style.css?v=<%=id.version%>">
 <div id="app">
 </div>
