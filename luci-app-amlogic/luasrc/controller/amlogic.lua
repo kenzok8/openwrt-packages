@@ -41,7 +41,7 @@ function index()
 	entry({"admin", "system", "amlogic", "start_poweroff"}, call("action_poweroff")).leaf = true
 end
 
-local fs = require "luci.fs"
+local fs = require "luci.fs2"
 
 --Remove the spaces in the string
 function trim(str)

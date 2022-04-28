@@ -3,7 +3,7 @@
 --Extended support: https://github.com/ophub/luci-app-amlogic
 --Function: Support multi-core
 
-local fs = require "luci.fs"
+local fs = require "luci.fs2"
 local mp
 
 --Remove the spaces in the string

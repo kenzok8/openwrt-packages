@@ -22,18 +22,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-]]--
+]] --
 
 local io    = require "io"
 local os    = require "os"
 local ltn12 = require "luci.ltn12"
-local fs	= require "nixio.fs"
+local fs    = require "nixio.fs"
 local nutil = require "nixio.util"
-
 local type  = type
 
 --- LuCI filesystem library.
-module "luci.fs"
+module "luci.fs2"
 
 --- Test for file access permission on given path.
 -- @class		function
@@ -149,8 +148,8 @@ function dir(...)
 	local iter, code, msg = fs.dir(...)
 	if iter then
 		local t = nutil.consume(iter)
-		t[#t+1] = "."
-		t[#t+1] = ".."
+		t[#t + 1] = "."
+		t[#t + 1] = ".."
 		return t
 	else
 		return nil, code, msg

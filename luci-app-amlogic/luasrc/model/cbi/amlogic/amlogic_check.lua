@@ -1,4 +1,4 @@
-local fs = require "luci.fs"
+local fs = require "luci.fs2"
 local http = require "luci.http"
 local DISP = require "luci.dispatcher"
 local b
