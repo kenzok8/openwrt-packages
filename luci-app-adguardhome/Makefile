@@ -25,6 +25,7 @@ define Package/luci-app-adguardhome/conffiles
 /usr/share/AdGuardHome/links.txt
 /etc/config/AdGuardHome
 /etc/AdGuardHome.yaml
+/etc/AdGuardHome.yaml
 endef
 
 define Package/luci-app-adguardhome/postinst
