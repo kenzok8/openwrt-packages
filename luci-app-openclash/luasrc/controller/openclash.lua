@@ -23,7 +23,6 @@ function index()
 	entry({"admin", "services", "openclash", "update_other_rules"},call("action_update_other_rules"))
 	entry({"admin", "services", "openclash", "update_geoip"},call("action_update_geoip"))
 	entry({"admin", "services", "openclash", "update_geosite"},call("action_update_geosite"))
-	entry({"admin", "services", "openclash", "currentversion"},call("action_currentversion"))
 	entry({"admin", "services", "openclash", "lastversion"},call("action_lastversion"))
 	entry({"admin", "services", "openclash", "save_corever_branch"},call("action_save_corever_branch"))
 	entry({"admin", "services", "openclash", "update"},call("action_update"))
@@ -118,6 +117,10 @@ local function is_watchdog()
 	return process_status("openclash_watchdog.sh")
 end
 
+local function is_start()
+	return process_status("/etc/init.d/openclash")
+end
+
 local function cn_port()
 	return uci:get("openclash", "config", "cn_port")
 end
@@ -157,6 +160,9 @@ end
 local function daip()
 	local daip = luci.sys.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n'")
 	if not daip or daip == "" then
+		local daip = luci.sys.exec("ip address show $(uci -q -p /tmp/state get network.lan.ifname) | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n'")
+	end
+	if not daip or daip == "" then
 		local daip = luci.sys.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
 	end
 	return daip
@@ -177,10 +183,6 @@ end
 local function check_lastversion()
 	luci.sys.exec("sh /usr/share/openclash/openclash_version.sh 2>/dev/null")
 	return luci.sys.exec("sed -n '/^https:/,$p' /tmp/openclash_last_version 2>/dev/null")
-end
-
-local function check_currentversion()
-	return luci.sys.exec("sed -n '/^data:image/,$p' /usr/share/openclash/res/openclash_version 2>/dev/null")
 end
 
 local function startlog()
@@ -238,7 +240,7 @@ local function corelv()
 end
 
 local function opcv()
-	return luci.sys.exec("sed -n 1p /usr/share/openclash/res/openclash_version 2>/dev/null")
+	return luci.sys.exec("opkg status luci-app-openclash 2>/dev/null |grep 'Version' |awk -F 'Version: ' '{print \"v\"$2}'")
 end
 
 local function oplv()
@@ -557,7 +559,7 @@ function sub_info_get()
 	local filename, sub_url, sub_info, info, upload, download, total, expire, http_code, len
 	filename = luci.http.formvalue("filename")
 	sub_info = ""
-	if filename then
+	if filename and not is_start() then
 		uci:foreach("openclash", "config_subscribe",
 			function(s)
 				if s.name == filename and s.address and string.find(s.address, "http") then
@@ -924,13 +926,6 @@ function action_lastversion()
 	})
 end
 
-function action_currentversion()
-	luci.http.prepare_content("application/json")
-	luci.http.write_json({
-			currentversion = check_currentversion();
-	})
-end
-
 function action_start()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
@@ -1060,7 +1055,7 @@ function action_refresh_log()
 		line_trans = line
 		ex_match = false
 		while true do
-			ex_keys = {"^Sec%-Fetch%-Mode", "^User%-Agent", "^Access%-Control", "^Accept", "^Origin", "^Referer", "^Connection", "^Pragma", "^Cache-"}
+			ex_keys = {"UDP%-Receive%-Buffer%-Size", "^Sec%-Fetch%-Mode", "^User%-Agent", "^Access%-Control", "^Accept", "^Origin", "^Referer", "^Connection", "^Pragma", "^Cache-"}
     	for key=1, #ex_keys do
     		if string.find (line, ex_keys[key]) then
     			ex_match = true
