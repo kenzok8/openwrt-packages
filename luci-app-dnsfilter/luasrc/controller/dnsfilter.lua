@@ -1,4 +1,4 @@
-module("luci.controller.dnsfilter",package.seeall)
+module("luci.controller.dnsfilter", package.seeall)
 
 function index()
 	if not nixio.fs.access("/etc/config/dnsfilter") then
