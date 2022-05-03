@@ -34439,6 +34439,7 @@ metrics.apartmentfinder.com
 metrics.apartments.com
 metrics.api.drift.com
 metrics.apple.com
+metrics.articulate.com
 metrics.asdafinance.com
 metrics.autobytel.com
 metrics.automobilemag.com
