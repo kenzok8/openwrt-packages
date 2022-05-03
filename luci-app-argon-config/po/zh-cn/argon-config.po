@@ -56,9 +56,6 @@ msgstr "十六进制颜色值 ( 预设为：#483d8b )"
 msgid "[Light mode] Transparency"
 msgstr "[亮色模式] 透明度"
 
-msgid "[Light mode] Transparency"
-msgstr "[亮色模式] 透明度"
-
 msgid "[Dark mode] Transparency"
 msgstr "[暗色模式] 透明度"
 
@@ -91,7 +88,6 @@ msgstr "无法打开文件："
 
 msgid "Create upload file error."
 msgstr "创建上传文件失败。"
-
 
 msgid "File name"
 msgstr "文件名"

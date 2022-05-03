@@ -1,7 +1,16 @@
-local fs = require "luci.fs"
-local http = require "luci.http"
-local DISP = require "luci.dispatcher"
+--Copyright: https://github.com/coolsnowwolf/luci/tree/master/applications/luci-app-filetransfer
+--Extended support: https://github.com/ophub/luci-app-amlogic
+--Function: Download files
+
+local io = require "io"
+local os = require "os"
+local fs = require "nixio.fs"
 local b, c
+
+-- Checks wheather the given path exists and points to a directory.
+function isdirectory(dirname)
+	return fs.stat(dirname, "type") == "dir"
+end
 
 --SimpleForm for Backup Config
 b = SimpleForm("backup", nil)
@@ -33,9 +42,9 @@ o.write = function(self, section, scope)
 
 	local sPath, sFile, fd, block
 	sPath = "/.reserved/openwrt_config.tar.gz"
-	sFile = nixio.fs.basename(sPath)
-	if luci.fs.isdirectory(sPath) then
-		fd = io.popen('tar -C "%s" -cz .' % {sPath}, "r")
+	sFile = fs.basename(sPath)
+	if isdirectory(sPath) then
+		fd = io.popen('tar -C "%s" -cz .' % { sPath }, "r")
 		sFile = sFile .. ".tar.gz"
 	else
 		fd = nixio.open(sPath, "r")
@@ -47,18 +56,18 @@ o.write = function(self, section, scope)
 		um.value = translate("The file Will download automatically.") .. sPath
 	end
 
-	http.header('Content-Disposition', 'attachment; filename="%s"' % {sFile})
-	http.prepare_content("application/octet-stream")
+	luci.http.header('Content-Disposition', 'attachment; filename="%s"' % { sFile })
+	luci.http.prepare_content("application/octet-stream")
 	while true do
 		block = fd:read(nixio.const.buffersize)
-		if (not block) or (#block ==0) then
+		if (not block) or (#block == 0) then
 			break
 		else
-			http.write(block)
+			luci.http.write(block)
 		end
 	end
 	fd:close()
-	http.close()
+	luci.http.close()
 end
 
 -- SimpleForm for Create Snapshot
@@ -82,7 +91,7 @@ end
 
 w.write = function(self, section, scope)
 	local x = luci.sys.exec("btrfs subvolume snapshot -r /etc /.snapshots/etc-" .. os.date("%m.%d.%H%M%S") .. " 2>/dev/null && sync")
-	http.redirect(DISP.build_url("admin", "system", "amlogic", "backup"))
+	luci.http.redirect(luci.dispatcher.build_url("admin", "system", "amlogic", "backup"))
 end
 w = d:option(TextValue, "snapshot_list", nil)
 w.template = "amlogic/other_snapshot"

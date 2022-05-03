@@ -2,10 +2,10 @@
 	Argonne is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI and Argonne Template
 
 	luci-theme-argonne
-	Copyright 2021 kenzo <kenzok78@gmail.com>
+	Copyright 2021 Jerryk <jerrykuku@gmail.com>
 
 	Have a bug? Please create an issue here on GitHub!
-	https://github.com/jerrykuku/luci-theme-argonne/issues
+	https://github.com/kenzok78/luci-theme-argonne/issues
 
 	luci-theme-bootstrap:
 	Copyright 2008 Steven Barth <steven@midlink.org>
@@ -16,19 +16,22 @@
 	https://github.com/muicss/mui
 	
 	Agron Theme
-	https://demos.creative-tim.com/argonne-dashboard/index.html
+	https://demos.creative-tim.com/argon-dashboard/index.html
 
 	Licensed to the public under the Apache License 2.0
 -%>
 
 <%+header_login%>
 <%
-	local util = require "luci.util"
-	local boardinfo = util.ubus("system", "board")
+	local util	= require "luci.util"
 	local fs	= require "nixio.fs"
 	local nutil = require "nixio.util"
-	local uci = require 'luci.model.uci'.cursor()
-	local theme_dir = media .. "/background/"
+	local sys 	= require "luci.sys"
+	local json 	= require "luci.jsonc"
+	local uci 	= require 'luci.model.uci'.cursor()
+	
+	-- Fetch Local Background Media
+
 	function glob(...)
 		local iter, code, msg = fs.glob(...)
 		if iter then
@@ -38,81 +41,71 @@
 		end
 	end
 
-	function getExtension(str)
-		return str:match(".+%.(%w+)$")
-	end
-
-	function fetchMedia(path)
-		local bgArr = {}
-		local numBg = 0
+	function fetchMedia(path,themeDir)
+		local backgroundTable 	= {}
+		local backgroundCount 	= 0
 		for i, f in ipairs(glob(path)) do
 			attr = fs.stat(f)
 			if attr then
-				local ext = getExtension(fs.basename(f))
+				local ext = fs.basename(f):match(".+%.(%w+)$")
 				if ext == "jpg" or ext == "png" or ext == "gif" or ext == "mp4" then
 					local bg = {}
 					bg.type = ext
-					bg.url = theme_dir .. fs.basename(f)
-					table.insert(bgArr,bg)
-					numBg = numBg + 1
+					bg.url = themeDir .. fs.basename(f)
+					table.insert(backgroundTable,bg)
+					backgroundCount = backgroundCount + 1
 				end
 			end
 		end
-		return bgArr,numBg
+		return backgroundTable,backgroundCount
 	end
 
-	local bgcount = 0
-	local currentBg = {}
-	local bgs = {}
-	local theme_dir = media .. "/background/"
-	local bing_background = fs.access('/etc/config/argonne') and uci:get_first('argonne', 'global', 'bing_background') or "0"
-	bgs,bgcount=fetchMedia("/www" .. theme_dir .. "*")
+	local boardinfo			= util.ubus("system", "board")
+	local bingUrl 			= "http://www.bing.com/"
+	local bingApiUrl 		= bingUrl .. "HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
+	local themeDir			= media .. "/background/"
+	local bgUrl 			= media .. "/img/bg1.jpg"
+	local useBing			= fs.access('/etc/config/argonne') and uci:get_first('argonne', 'global', 'bing_background') or "0"
+	local backgroundTable, backgroundCount 		= fetchMedia("/www" .. themeDir .. "*",themeDir)
+	local backgroundType 	= "Image"
+
+	function getBing()
+		local bing = sys.exec("wget --timeout=0.5 -qO- '%s'" %bingApiUrl)
+		if (bing and bing ~= '') then
+			bgUrl 	= bingUrl .. json.parse(bing).images[1].url
+		end
+	end
+
+	if ( useBing == "0" ) then
+		if ( backgroundCount > 0 ) then
+			local currentBg = backgroundTable[math.random(1,backgroundCount)]
+			bgUrl 			= currentBg.url
+			if (currentBg.type == "mp4" ) then
+				backgroundType 	= "Video"
+			end
+		end
+	else
+		pcall(getBing)
+	end
 %>
+<!-- Login Page Start -->
 <div class="login-page">
 	
-	<%
-	local bg_url = media .. "/img/bg1.jpg"
-	if ( bing_background == "0" ) then
-		if bgcount > 0 then
-			currentBg =  bgs[math.random(1,bgcount)]
-		end
-		if ( bgcount > 0 and currentBg.type == "mp4" ) then
-	%>
-	<div class="video">
+	<% if ( backgroundType == "Video" ) then %>
+	<!-- Video Player Start -->
+	<div class="video ar-flex ar-justify-content-center ar-align-items-center">
 		<video autoplay loop muted id="video">
-			<source src="<%=currentBg.url%>" type="video/mp4">
+			<source src="<%=bgUrl%>" type="video/mp4">
 		</video>
 	</div>
 	<div class="volume-control mute"></div>
-	<script>
-		$(".volume-control").click(function(){
-			if($(this).hasClass("mute")){
-				$(this).removeClass("mute")
-				$("#video").prop('muted', false);
-			}else{
-				$(this).addClass("mute")
-				$("#video").prop('muted', true);
-			}
-		})
-	</script>
-	<%  elseif ( bgcount > 0 and currentBg["type"] ~= "mp4") then
-			bg_url = currentBg.url
-		end
-	else
-		local bing = "123"
-		local sys = require "luci.sys"
-		local json = require "luci.jsonc"
-		local remote_bg_url="http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US"
-		--bing = sys.httpget(remote_bg_url)
-		bing = sys.exec("wget --timeout=0.5 -qO- '%s'" %remote_bg_url)
-		if (bing and bing ~= '') then
-			bg_url = "https://www.bing.com" .. json.parse(bing).images[1].url
-		end
-	end
-	%>
-	<% if(currentBg["type"] ~= "mp4") then %>
-	<div class="main-bg" id="main-bg" style="background-image:url(<%=bg_url%>)"></div>
+	<!-- Video Player End -->
+	<% else %>
+	<!-- Image Background Start -->
+	<div class="main-bg" id="main-bg" style="background-image:url(<%=bgUrl%>)"></div>
+	<!-- Image Background End -->
 	<% end %>
+	<!-- Login Container Start -->
 	<div class="login-container">
 		<div class="login-form">
 			<a class="brand" href="/"><img src="<%=media%>/img/argonne.svg" class="icon"><span

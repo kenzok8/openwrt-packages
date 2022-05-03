@@ -94,7 +94,7 @@ make -j1 V=s
 ### For Lean openwrt 18.06 LuCI
 
 ```
-wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v1.7.0/luci-theme-argon_1.7.0-20200909_all.ipk
+wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v1.7.3/luci-theme-argon-18.06_1.7.3-20220421_all.ipk
 opkg install luci-theme-argon*.ipk
 ```
 
@@ -102,7 +102,8 @@ opkg install luci-theme-argon*.ipk
 
 ```
 opkg install luci-compat
-wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.2.5/luci-theme-argon_2.2.5-20200914_all.ipk
+opkg install luci-lib-ipkg
+wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.2.9/luci-theme-argon_2.2.9-20211016-1_all.ipk
 opkg install luci-theme-argon*.ipk
 ```
 ![](/Screenshots/screenshot_pc.jpg)

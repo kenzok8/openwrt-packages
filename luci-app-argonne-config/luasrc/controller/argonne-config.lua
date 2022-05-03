@@ -1,7 +1,3 @@
---[[
-luci-app-argonne-config
-]]--
-
 module("luci.controller.argonne-config", package.seeall)
 
 function index()
@@ -9,5 +5,6 @@ function index()
 		return
 	end
 
-	entry({"admin", "system", "argonne-config"}, form("argonne-config"), _("Argonne Config"), 90)
+	local page = entry({"admin", "system", "argonne-config"}, form("argonne-config"), _("Argonne Config"), 90)
+	page.acl_depends = { "luci-app-argonne-config" }
 end

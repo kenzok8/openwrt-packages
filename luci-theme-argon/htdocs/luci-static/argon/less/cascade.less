@@ -1434,6 +1434,10 @@ fieldset>fieldset,
     padding: 1rem;
 }
 
+.cbi-tblsection {
+    overflow-x: scroll;
+}
+
 table {
     border-spacing: 0;
     border-collapse: collapse;
@@ -1521,6 +1525,11 @@ tr>th,
     width: 100%;
 }
 
+.cbi-section-table-row>.cbi-value-field .cbi-input-text,
+.cbi-section-table-row>.cbi-value-field .cbi-input-password {
+    min-width: 80px;
+}
+
 .cbi-section-table-row>.cbi-value-field [data-dynlist]>input,
 .cbi-section-table-row>.cbi-value-field input.cbi-input-password {
     width: calc(100% - 1.5rem);
@@ -1528,6 +1537,11 @@ tr>th,
 
 .cbi-section-table-row .td {
     text-align: center !important;
+}
+
+.cbi-section-table-row>.cbi-value-field .control-group {
+    display: inline-flex;
+    width: 100%;
 }
 
 div>table>tbody>tr:nth-of-type(2n),
@@ -2901,7 +2915,7 @@ td>.ifacebadge,
 }
 
 .cbi-section-table-row>.cbi-value-field .cbi-dropdown {
-    min-width: 7rem;
+    min-width: 3rem;
 }
 
 .cbi-section-create {

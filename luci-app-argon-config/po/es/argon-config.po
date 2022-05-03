@@ -1,16 +1,16 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
 "Project-Id-Version: \n"
 "POT-Creation-Date: 2021-03-15 21:25-0300\n"
-"PO-Revision-Date: 2021-03-15 21:58-0300\n"
-"Language-Team: \n"
-"MIME-Version: 1.0\n"
-"Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 2.4.2\n"
+"PO-Revision-Date: 2022-04-23 15:21-0300\n"
 "Last-Translator: Franco Castillo <castillofrancodamian@gmail.com>\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language-Team: \n"
 "Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.0.1\n"
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:97
 msgid "0 transparent - 1 opaque ; ( Suggest: Black translucent preset: 0.5 )"
@@ -33,7 +33,7 @@ msgstr "Un color HEX; (Predeterminado: #483d8b)"
 msgid "A HEX Color ; ( Default: #5e72e4 )"
 msgstr "Un color HEX; (Predeterminado: #5e72e4)"
 
-#: applications/luci-app-argon-config/luasrc/controller/argon-config.lua:11
+#: applications/luci-app-argon-config/luasrc/controller/argon-config.lua:8
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:53
 msgid "Argon Config"
 msgstr "Configuración de Argon"
@@ -72,11 +72,15 @@ msgstr "Seguir el sistema"
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:67
 msgid "Force Dark"
-msgstr "Fuerza oscuro"
+msgstr "Forzar oscuro"
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:66
 msgid "Force Light"
 msgstr "Forzar claro"
+
+#: applications/luci-app-argon-config/root/usr/share/rpcd/acl.d/luci-app-argon-config.json:3
+msgid "Grant UCI access for luci-app-argon-config"
+msgstr "Otorgar acceso UCI para luci-app-argon-config"
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:53
 msgid ""
@@ -94,10 +98,6 @@ msgid ""
 msgstr ""
 "El valor más grande se verá más borroso; (Sugerencia: claro: 1 o desenfoque "
 "predeterminado: 10)"
-
-#: applications/luci-app-argon-config/root/usr/share/rpcd/acl.d/luci-app-argon-config.json:3
-msgid "Luci Argon theme config"
-msgstr "Configuración del tema Luci Argon"
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:201
 msgid "Modify time"
@@ -174,3 +174,6 @@ msgstr "[Modo claro] Color primario"
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:79
 msgid "[Light mode] Transparency"
 msgstr "[Modo claro] Transparencia"
+
+#~ msgid "Luci Argon theme config"
+#~ msgstr "Configuración del tema Luci Argon"

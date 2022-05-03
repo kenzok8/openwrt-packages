@@ -8,6 +8,7 @@ local tcp_proxy_way = var["-tcp_proxy_way"]
 local redir_port = var["-redir_port"]
 local sniffing = var["-sniffing"]
 local route_only = var["-route_only"]
+local buffer_size = var["-buffer_size"]
 local local_socks_address = var["-local_socks_address"] or "0.0.0.0"
 local local_socks_port = var["-local_socks_port"]
 local local_socks_username = var["-local_socks_username"]
@@ -27,7 +28,6 @@ local direct_dns_doh_host = var["-direct_dns_doh_host"]
 local remote_dns_server = var["-remote_dns_server"]
 local remote_dns_port = var["-remote_dns_port"]
 local remote_dns_udp_server = var["-remote_dns_udp_server"]
-local remote_dns_udp_local = var["-remote_dns_udp_local"]
 local remote_dns_tcp_server = var["-remote_dns_tcp_server"]
 local remote_dns_doh_url = var["-remote_dns_doh_url"]
 local remote_dns_doh_host = var["-remote_dns_doh_host"]
@@ -566,6 +566,7 @@ end
 
 if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
     local rules = {}
+    local _remote_dns_proto
 
     if not routing then
         routing = {
@@ -619,20 +620,13 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
         if remote_dns_udp_server then
             _remote_dns.address = remote_dns_udp_server
             _remote_dns.port = tonumber(remote_dns_port) or 53
-            if remote_dns_udp_local == "1" then
-                table.insert(routing.rules, 1, {
-                    type = "field",
-                    ip = {
-                        remote_dns_udp_server
-                    },
-                    outboundTag = "direct"
-                })
-            end
+            _remote_dns_proto = "udp"
         end
 
         if remote_dns_tcp_server then
             _remote_dns.address = remote_dns_tcp_server
             _remote_dns.port = tonumber(remote_dns_port) or 53
+            _remote_dns_proto = "tcp"
         end
 
         if remote_dns_doh_url and remote_dns_doh_host then
@@ -641,6 +635,7 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
             end
             _remote_dns.address = remote_dns_doh_url
             _remote_dns.port = tonumber(remote_dns_port) or 443
+            _remote_dns_proto = "tcp"
         end
 
         if remote_dns_fake then
@@ -682,6 +677,8 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
                 ip = {
                     direct_dns_udp_server
                 },
+                port = tonumber(direct_dns_port) or 53,
+                network = "udp",
                 outboundTag = "direct"
             })
         end
@@ -692,8 +689,8 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
         end
 
         if direct_dns_doh_url and direct_dns_doh_host then
-            if direct_dns_doh_host ~= direct_dns_server and not api.is_ip(direct_dns_doh_host) then
-                dns.hosts[remote_dns_doh_host] = direct_dns_server
+            if direct_dns_server and direct_dns_doh_host ~= direct_dns_server and not api.is_ip(direct_dns_doh_host) then
+                dns.hosts[direct_dns_doh_host] = direct_dns_server
             end
             _direct_dns.address = direct_dns_doh_url:gsub("https://", "https+local://")
             _direct_dns.port = tonumber(direct_dns_port) or 443
@@ -720,7 +717,8 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
             protocol = "dns",
             settings = {
                 address = remote_dns_server or "1.1.1.1",
-                network = "tcp"
+                port = tonumber(remote_dns_port) or 53,
+                network = _remote_dns_proto or "tcp",
             }
         })
 
@@ -735,22 +733,11 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
 
     local default_dns_flag = "remote"
     if node_id and redir_port then
-        local outboundTag = node_id
         local node = uci:get_all(appname, node_id)
         if node.protocol == "_shunt" then
-            outboundTag = "default"
             if node.default_node == "_direct" then
                 default_dns_flag = "direct"
             end
-        end
-        if not remote_dns_fake then
-            table.insert(rules, {
-                type = "field",
-                inboundTag = {
-                    "dns-in1"
-                },
-                outboundTag = outboundTag
-            })
         end
     end
 
@@ -811,25 +798,23 @@ if inbounds or outbounds then
         -- 路由
         routing = routing,
         -- 本地策略
-        --[[
         policy = {
             levels = {
                 [0] = {
-                    handshake = 4,
-                    connIdle = 300,
-                    uplinkOnly = 2,
-                    downlinkOnly = 5,
-                    bufferSize = 10240,
+                    -- handshake = 4,
+                    -- connIdle = 300,
+                    -- uplinkOnly = 2,
+                    -- downlinkOnly = 5,
+                    bufferSize = buffer_size and tonumber(buffer_size) or nil,
                     statsUserUplink = false,
                     statsUserDownlink = false
                 }
             },
-            system = {
-                statsInboundUplink = false,
-                statsInboundDownlink = false
-            }
+            -- system = {
+            --     statsInboundUplink = false,
+            --     statsInboundDownlink = false
+            -- }
         }
-        ]]--
     }
     table.insert(outbounds, {
         protocol = "freedom",

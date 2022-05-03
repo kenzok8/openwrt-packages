@@ -1,12 +1,56 @@
-local fs = require "luci.fs"
-local http = require "luci.http"
-local DISP = require "luci.dispatcher"
+--Copyright: https://github.com/coolsnowwolf/luci/tree/master/applications/luci-app-filetransfer
+--Extended support: https://github.com/ophub/luci-app-amlogic
+--Function: Upload files
+
+local os    = require "os"
+local fs    = require "nixio.fs"
+local nutil = require "nixio.util"
+local type  = type
 local b, form
 
 --Remove the spaces in the string
 function trim(str)
 	--return (string.gsub(str, "^%s*(.-)%s*$", "%1"))
 	return (string.gsub(str, "%s+", ""))
+end
+
+-- Evaluate given shell glob pattern and return a table containing all matching
+function glob(...)
+	local iter, code, msg = fs.glob(...)
+	if iter then
+		return nutil.consume(iter)
+	else
+		return nil, code, msg
+	end
+end
+
+-- Checks wheather the given path exists and points to a regular file.
+function isfile(filename)
+	return fs.stat(filename, "type") == "reg"
+end
+
+-- Get the last modification time of given file path in Unix epoch format.
+function mtime(path)
+	return fs.stat(path, "mtime")
+end
+
+local stat_tr = {
+	reg = "regular",
+	dir = "directory",
+	lnk = "link",
+	chr = "character device",
+	blk = "block device",
+	fifo = "fifo",
+	sock = "socket"
+}
+-- Get information about given file or directory.
+function stat(path, key)
+	local data, code, msg = fs.stat(path)
+	if data then
+		data.mode = data.modestr
+		data.type = stat_tr[data.type] or "?"
+	end
+	return key and data and data[key] or data, code, msg
 end
 
 --Set default upload path
@@ -46,26 +90,26 @@ um.template = "amlogic/other_dvalue"
 
 local dir, fd
 dir = upload_path
-nixio.fs.mkdir(dir)
-http.setfilehandler(
+fs.mkdir(dir)
+luci.http.setfilehandler(
 	function(meta, chunk, eof)
+	if not fd then
+		if not meta then return end
+		if meta and chunk then fd = nixio.open(dir .. meta.file, "w") end
 		if not fd then
-			if not meta then return end
-			if meta and chunk then fd = nixio.open(dir .. meta.file, "w") end
-			if not fd then
-				um.value = translate("Create upload file error.") .. " Error Info: " .. trim(upload_path .. meta.file)
-				return
-			end
-		end
-		if chunk and fd then
-			fd:write(chunk)
-		end
-		if eof and fd then
-			fd:close()
-			fd = nil
-			um.value = translate("File saved to") .. trim(upload_path .. meta.file)
+			um.value = translate("Create upload file error.") .. " Error Info: " .. trim(upload_path .. meta.file)
+			return
 		end
 	end
+	if chunk and fd then
+		fd:write(chunk)
+	end
+	if eof and fd then
+		fd:close()
+		fd = nil
+		um.value = translate("File saved to") .. trim(upload_path .. meta.file)
+	end
+end
 )
 
 if luci.http.formvalue("upload") then
@@ -77,18 +121,18 @@ end
 
 local function getSizeStr(size)
 	local i = 0
-	local byteUnits = {' kB', ' MB', ' GB', ' TB'}
+	local byteUnits = { ' kB', ' MB', ' GB', ' TB' }
 	repeat
 		size = size / 1024
 		i = i + 1
-	until(size <= 1024)
+	until (size <= 1024)
 	return string.format("%.1f", size) .. byteUnits[i]
 end
 
 local inits, attr = {}
-for i, f in ipairs(fs.glob(trim(upload_path .. "*"))) do
-	attr = fs.stat(f)
-	itisfile = fs.isfile(f)
+for i, f in ipairs(glob(trim(upload_path .. "*"))) do
+	attr = stat(f)
+	itisfile = isfile(f)
 	if attr and itisfile then
 		inits[i] = {}
 		inits[i].name = fs.basename(f)
@@ -161,7 +205,7 @@ if openwrt_firmware_file then
 end
 
 if description_info ~= "" then
-	form.description =  ' <span style="color: green"><b> Tip: ' .. description_info .. ' </b></span> '
+	form.description = ' <span style="color: green"><b> Tip: ' .. description_info .. ' </b></span> '
 end
 
 tb = form:section(Table, inits)
@@ -175,7 +219,7 @@ btnrm.render = function(self, section, scope)
 	Button.render(self, section, scope)
 end
 btnrm.write = function(self, section)
-	local v = luci.fs.unlink(trim(upload_path .. luci.fs.basename(inits[section].name)))
+	local v = fs.unlink(trim(upload_path .. fs.basename(inits[section].name)))
 	if v then table.remove(inits, section) end
 	return v
 end
@@ -213,16 +257,16 @@ end
 btnis.write = function(self, section)
 	if IsIpkFile(inits[section].name) then
 		local r = luci.sys.exec(string.format('opkg --force-reinstall install ' .. upload_path .. '%s', inits[section].name))
-	local x = luci.sys.exec("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null")
+		local x = luci.sys.exec("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null")
 		form.description = string.format('<span style="color: red">%s</span>', r)
 	elseif IsConfigFile(inits[section].name) then
-		form.description =  ' <span style="color: green"><b> ' .. translate("Tip: The config is being restored, and it will automatically restart after completion.") .. ' </b></span> '
+		form.description = ' <span style="color: green"><b> ' .. translate("Tip: The config is being restored, and it will automatically restart after completion.") .. ' </b></span> '
 		local x = luci.sys.exec("chmod +x /usr/sbin/openwrt-backup 2>/dev/null")
 		local r = luci.sys.exec("/usr/sbin/openwrt-backup -r > /tmp/amlogic/amlogic.log && sync 2>/dev/null")
 	end
 end
 
 --SimpleForm for Check upload files
-form:section(SimpleSection).template  = "amlogic/other_upfiles"
+form:section(SimpleSection).template = "amlogic/other_upfiles"
 
 return b, form

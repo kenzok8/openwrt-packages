@@ -52,24 +52,24 @@ o.description = translate("Should be enabled when rules addresses are slow to do
 o.rmempty = false
 o.default = 0
 
-if tmp_rule==1 then
+if tmp_rule == 1 then
 o = s:option(Button, "delete", translate("Delete All Subscribe Rules"))
 o.inputstyle = "reset"
 o.description = translate("Delete rules files and delete the subscription link<br/>There is no need to click for modify the subscription link,The script will automatically replace the old rule file")
 o.write = function()
 	SYS.exec("[ -d /etc/dnsfilter/rules ] && rm -rf /etc/dnsfilter/rules")
 	SYS.exec("grep -wq 'list url' /etc/config/dnsfilter && sed -i '/list url/d' /etc/config/dnsfilter && /etc/init.d/dnsfilter restart 2>&1 &")
-	luci.http.redirect(luci.dispatcher.build_url("admin","services","dnsfilter","base"))
+	luci.http.redirect(luci.dispatcher.build_url("admin", "services", "dnsfilter", "base"))
 end
 end
 
-if luci.sys.call("[ -h /tmp/dnsfilter/url ] || exit 9")==9 then
+if luci.sys.call("[ -h /tmp/dnsfilter/url ] || exit 9") == 9 then
 	if nixio.fs.access("/etc/dnsfilter/rules") then
 		o = s:option(Button, "delete_1", translate("Delete Subscribe Rules On The Flash"))
 		o.inputstyle = "reset"
 		o.write = function()
 			SYS.exec("rm -rf /etc/dnsfilter/rules")
-			luci.http.redirect(luci.dispatcher.build_url("admin","services","dnsfilter","base"))
+			luci.http.redirect(luci.dispatcher.build_url("admin", "services", "dnsfilter", "base"))
 		end
 	end
 end

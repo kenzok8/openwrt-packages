@@ -116,6 +116,7 @@ else
 
 # Amlogic GXM Family
 21:Octopus Planet:s912:meson-gxm-octopus-planet.dtb:u-boot-zyxq.bin:NA:NA:4C@1512Mhz+4C@1000Mhz,2GB Mem,1Gb Nic
+22:*FAKE* Octopus Planet *FAKE*:s912:meson-gxm-fake-octopus-planet.dtb:u-boot-zyxq.bin:NA:/lib/u-boot/bl-fake-octopus-planet.bin:4C@1512Mhz+4C@1000Mhz,2GB Mem,1Gb Nic
 
 # Amlogic G12A Family
 31:X96 Max 4GB:s905x2:meson-g12a-x96-max.dtb:u-boot-x96max.bin:/lib/u-boot/x96max-u-boot.bin.sd.bin:NA:4C@1908Mhz,4GB Mem,1Gb Nic
@@ -143,6 +144,7 @@ else
 5a:TX3 BZ (OverClock):s905x3:meson-sm1-tx3-bz-oc.dtb:u-boot-tx3-bz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2208Mhz,4GB Mem,100Mb Nic,bcm4330 wifi
 5b:TX3 QZ:s905x3:meson-sm1-tx3-qz.dtb:u-boot-tx3-qz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2100Mhz,4GB Mem,1Gb Nic,bcm4330 wifi
 5c:TX3 QZ (OverClock):s905x3:meson-sm1-tx3-qz-oc.dtb:u-boot-tx3-qz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2208Mhz,4GB Mem,1Gb Nic,bcm4330 wifi
+5d:X96 Max+ (IP1001M phy):s905x3:meson-sm1-x96-max-plus-ip1001m.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic (IP1001M phy),bcm4354 wifi
 
 # Other
 0:Other::NA:NA:NA:NA:Enter the dtb file name of your box
@@ -223,33 +225,8 @@ if [ ! -f "/boot/dtb/amlogic/${FDTFILE}" ]; then
     exit 1
 fi
 
-function get_k510_from_vmlinuz() {
-    local vmlinuz=$1
-    local K510=1
-    local temp_script=$(mktemp)
-    cat >$temp_script <<EOF
-use strict;
-my \$filename = \$ARGV[0];
-open my \$fh, '<', \$filename or die;
-binmode \$fh;
-seek \$fh, 0x8, 0;
-my \$buf = "";
-read \$fh, \$buf, 0x4;
-close(\$fh);
-my \$str = unpack 'H*', \$buf;
-print "\$str\n";
-EOF
-    local text_offset=$(perl "$temp_script" "$vmlinuz")
-    [ "$text_offset" == "00000801" ] && K510=0
-    rm -f $temp_script
-    echo "$K510"
-}
-
-#Check if writing to EMMC is supported
-CUR_KERNEL_VERSION=$(uname -r)
-echo -e "This Kernel [ ${CUR_KERNEL_VERSION} ]"
-K510=$(get_k510_from_vmlinuz "/boot/vmlinuz-${CUR_KERNEL_VERSION}")
-export K510
+K510="1"
+[[ "$(hexdump -n 15 -x "/boot/zImage" 2>/dev/null | head -n 1 | awk '{print $7}')" == "0108" ]] && K510="0"
 echo -e "K510 [ ${K510} ]"
 
 # backup old bootloader

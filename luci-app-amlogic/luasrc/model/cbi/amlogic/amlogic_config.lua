@@ -1,15 +1,15 @@
 --Remove the spaces in the string
 function trim(str)
-   --return (string.gsub(str, "^%s*(.-)%s*$", "%1"))
-   return (string.gsub(str, "%s+", ""))
+	--return (string.gsub(str, "^%s*(.-)%s*$", "%1"))
+	return (string.gsub(str, "%s+", ""))
 end
 
 --Auto-complete node
 local check_config_amlogic = luci.sys.exec("uci get amlogic.@amlogic[0].amlogic_firmware_repo 2>/dev/null") or ""
 if (trim(check_config_amlogic) == "") then
-    luci.sys.exec("uci delete amlogic.@amlogic[0] 2>/dev/null")
-    luci.sys.exec("uci set amlogic.config='amlogic' 2>/dev/null")
-    luci.sys.exec("uci commit amlogic 2>/dev/null")
+	luci.sys.exec("uci delete amlogic.@amlogic[0] 2>/dev/null")
+	luci.sys.exec("uci set amlogic.config='amlogic' 2>/dev/null")
+	luci.sys.exec("uci commit amlogic 2>/dev/null")
 end
 
 b = Map("amlogic")

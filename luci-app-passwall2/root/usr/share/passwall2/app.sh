@@ -265,7 +265,7 @@ lua_api() {
 
 run_v2ray() {
 	local flag node redir_port socks_address socks_port socks_username socks_password http_address http_port http_username http_password
-	local dns_listen_port direct_dns_protocol direct_dns_udp_server direct_dns_tcp_server direct_dns_doh remote_dns_protocol remote_dns_udp_server remote_dns_udp_local remote_dns_tcp_server remote_dns_doh remote_dns_client_ip dns_query_strategy dns_cache
+	local dns_listen_port direct_dns_protocol direct_dns_udp_server direct_dns_tcp_server direct_dns_doh remote_dns_protocol remote_dns_udp_server remote_dns_tcp_server remote_dns_doh remote_dns_client_ip dns_query_strategy dns_cache
 	local loglevel log_file config_file
 	local _extra_param=""
 	eval_set_val $@
@@ -300,6 +300,8 @@ run_v2ray() {
 		local route_only=$(config_t_get global_forwarding route_only 0)
 		[ "${route_only}" = "1" ] && _extra_param="${_extra_param} -route_only 1"
 	}
+	local buffer_size=$(config_t_get global_forwarding buffer_size)
+	[ -n "${buffer_size}" ] && _extra_param="${_extra_param} -buffer_size ${buffer_size}"
 	[ "$direct_dns_protocol" = "auto" ] && {
 		direct_dns_protocol="udp"
 		direct_dns_udp_server=${AUTO_DNS}
@@ -332,12 +334,11 @@ run_v2ray() {
 		;;
 	esac
 	case "$remote_dns_protocol" in
-		udp*)
+		udp)
 			local _dns=$(get_first_dns remote_dns_udp_server 53 | sed 's/#/:/g')
 			local _dns_address=$(echo ${_dns} | awk -F ':' '{print $1}')
 			local _dns_port=$(echo ${_dns} | awk -F ':' '{print $2}')
 			_extra_param="${_extra_param} -remote_dns_server ${_dns_address} -remote_dns_port ${_dns_port} -remote_dns_udp_server ${_dns_address}"
-			[ "$remote_dns_protocol" = "udp+local" ] && _extra_param="${_extra_param} -remote_dns_udp_local 1"
 		;;
 		tcp)
 			local _dns=$(get_first_dns remote_dns_tcp_server 53 | sed 's/#/:/g')
@@ -750,8 +751,8 @@ start() {
 			run_global
 			source $APP_PATH/iptables.sh start
 			source $APP_PATH/helper_dnsmasq.sh logic_restart
-			sysctl -w net.bridge.bridge-nf-call-iptables=0 2>/dev/null
-			[ "$PROXY_IPV6" == "1" ] && sysctl -w net.bridge.bridge-nf-call-ip6tables=0 2>/dev/null
+			sysctl -w net.bridge.bridge-nf-call-iptables=0 >/dev/null 2>&1
+			[ "$PROXY_IPV6" == "1" ] && sysctl -w net.bridge.bridge-nf-call-ip6tables=0 >/dev/null 2>&1
 		fi
 	}
 	start_crontab

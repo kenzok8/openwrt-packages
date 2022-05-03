@@ -84,18 +84,24 @@ check_self_upgrade() {
 
 do_self_upgrade() {
     check_mtime || return 1
-    if opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed ; then
-        true
-    else
-        update_if_outdate
-        local code=$?
-        [ "$code" = 1 ] && return 1
-        if [ "$code" = 2 ] || ! opkg_wrap info ${ISTORE_PKG} | grep -qF not-installed; then
-            echo "already the latest version!" >&2
-            return 1
-        fi
+    local newest=`curl --connect-timeout 2 --max-time 5 -s ${ISTORE_INDEX} | gunzip | grep -FA10 "Package: ${ISTORE_PKG}" | grep -Fm1 'Version: ' | sed 's/^Version: //'`
+    local current=`grep -Fm1 'Version: ' /usr/lib/opkg/info/${ISTORE_PKG}.control | sed 's/^Version: //'`
+    if [ "v$newest" = "v" -o "v$current" = "v" ]; then
+        echo "Check version failed!" >&2
+        return 1
     fi
-    opkg_wrap upgrade ${ISTORE_PKG}
+    if [ "$newest" = "$current" ]; then
+        echo "Already the latest version!" >&2
+        return 1
+    fi
+    if opkg_wrap info ${ISTORE_PKG} | grep -qFm1 "Version: $newest"; then
+        opkg_wrap upgrade ${ISTORE_PKG} && return 0
+        update_if_outdate || return 1
+        opkg_wrap upgrade ${ISTORE_PKG}
+    else
+        update_if_outdate || return 1
+        opkg_wrap upgrade ${ISTORE_PKG}
+    fi
 }
 
 check_mtime() {
@@ -219,6 +225,11 @@ backup() {
         exit 0
     fi
 
+    if [ ! -d "${BACKUP_PATH}" ] && ! mkdir -p "${BACKUP_PATH}" ; then
+        echo "invalid backup path, can not backup ipk"
+        exit 1
+    fi
+
     #write all installed package list to file
     opkg_list_installed_packages "allinstalled" 2>/dev/null | sort -u > ${IS_ROOT}/all_installed_package.list
 
@@ -249,12 +260,7 @@ backup() {
     [ -n "${IS_DEBUG}" ] && echo -e "appdep_list_all:\n""${appdep_list_all}"
     echo "${appdep_list_all}" > ${IS_ROOT}/appdep.list
 
-
     #3.rebuild all istore installed package to ipk and backup to userdata partation
-    if [ ! -d "${BACKUP_PATH}" ];then
-        echo "invalid backup path, can not backup ipk"
-        exit 1
-    fi
 
     # 4. create dir
     date=$(date +%Y-%m%d-%H%M)

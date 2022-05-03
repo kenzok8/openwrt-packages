@@ -1,0 +1,52 @@
+#!/bin/sh
+# author jjm2473
+
+BING_BASE=http://www.bing.com
+CACHE=/var/run/argon_bing.url
+WRLOCK=/var/lock/argon_bing.lock
+
+fetch_url_path() {
+    curl --fail --show-error --max-time 1 \
+        "$BING_BASE/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=en-US" 2>/dev/null \
+        | jsonfilter -q -e '@.images[0].url'
+}
+
+try_update() {
+    local lock="$WRLOCK"
+    exec 200>$lock
+
+    if flock -n 200 >/dev/null 2>&1; then
+        local path=`fetch_url_path`
+        if [ -n "$path" ]; then
+            echo "${BING_BASE}${path}" | tee "$CACHE"
+        else
+            if [ -s "$CACHE" ]; then
+                cat "$CACHE"
+            else
+                touch "$CACHE"
+            fi
+        fi
+        flock -u 200 >/dev/null 2>&1
+    elif [ -s "$CACHE" ]; then
+        cat "$CACHE"
+    fi
+}
+
+get_url() {
+    if [ -f "$CACHE" ]; then
+        local idle_t=$((`date '+%s'` - `date -r "$CACHE" '+%s' 2>/dev/null || echo '0'`))
+        if [ -s "$CACHE" ]; then
+            if [ $idle_t -le 43200 ]; then
+                cat "$CACHE"
+                return
+            fi
+        else
+            if [ $idle_t -le 120 ]; then
+                return
+            fi
+        fi
+    fi
+    try_update
+}
+
+get_url

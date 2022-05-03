@@ -104,7 +104,7 @@ o.default = 0
 o:depends("ipv6_enable", "1")
 
 o = s:taboption("op_mode", Flag, "disable_udp_quic", font_red..bold_on..translate("Disable QUIC")..bold_off..font_off)
-o.description = translate("Prevent YouTube and Others To Use QUIC Transmission")..", "..font_red..bold_on..translate("REJECT UDP Traffic On Port 443")..bold_off..font_off
+o.description = translate("Prevent YouTube and Others To Use QUIC Transmission")..", "..font_red..bold_on..translate("REJECT UDP Traffic(Not Include CN) On Port 443")..bold_off..font_off
 o.default = 1
 
 o = s:taboption("op_mode", Flag, "enable_rule_proxy", font_red..bold_on..translate("Rule Match Proxy Mode")..bold_off..font_off)
@@ -374,6 +374,11 @@ o = s:taboption("meta", Flag, "enable_meta_core", font_red..bold_on..translate("
 o.description = font_red..bold_on..translate("Some Premium Core Features are Unavailable, For Other More Useful Functions Go Wiki:")..bold_off..font_off.." ".."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://clashmeta.gitbook.io/meta/\")'>https://clashmeta.gitbook.io/meta/</a>"
 o.default = 0
 
+o = s:taboption("meta", Flag, "enable_tcp_concurrent", font_red..bold_on..translate("Enable Tcp Concurrent")..bold_off..font_off)
+o.description = font_red..bold_on..translate("TCP Concurrent Request IPs, Choose The Lowest Latency One To Connection")..bold_off..font_off
+o.default = 1
+o:depends("enable_meta_core", "1")
+
 o = s:taboption("meta", Flag, "enable_meta_sniffer", font_red..bold_on..translate("Enable Sniffer")..bold_off..font_off)
 o.description = font_red..bold_on..translate("Sniffer Will Prevent Domain Name Proxy and DNS Hijack Failure")..bold_off..font_off
 o.default = 1
@@ -384,7 +389,7 @@ o.description = translate("Custom The Force and Skip Sniffing Doamin Lists")
 o.default = 0
 o:depends("enable_meta_sniffer", "1")
 
-sniffing_domain_force = s:taboption("meta", Value, "sniffing_domain_force", translate("Force Sniffing Domain Lists"))
+sniffing_domain_force = s:taboption("meta", Value, "sniffing_domain_force", translate("Force Sniffing Domains Lists"))
 sniffing_domain_force:depends("enable_meta_sniffer_custom", "1")
 sniffing_domain_force.template = "cbi/tvalue"
 sniffing_domain_force.description = translate("Will Override Dns Queries If Domains in The List")
@@ -404,10 +409,30 @@ function sniffing_domain_force.write(self, section, value)
 	end
 end
 
-sniffing_domain_filter = s:taboption("meta", Value, "sniffing_domain_filter", translate("Force Sniffing Domain Filter"))
+sniffing_port_filter = s:taboption("meta", Value, "sniffing_port_filter", translate("Sniffing Ports Filter"))
+sniffing_port_filter:depends("enable_meta_sniffer_custom", "1")
+sniffing_port_filter.template = "cbi/tvalue"
+sniffing_port_filter.description = translate("Will Only Sniffing If Ports in The List")
+sniffing_port_filter.rows = 20
+sniffing_port_filter.wrap = "off"
+
+function sniffing_port_filter.cfgvalue(self, section)
+	return NXFS.readfile("/etc/openclash/custom/openclash_sniffing_port_filter.yaml") or ""
+end
+function sniffing_port_filter.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		local old_value = NXFS.readfile("/etc/openclash/custom/openclash_sniffing_port_filter.yaml")
+	  if value ~= old_value then
+			NXFS.writefile("/etc/openclash/custom/openclash_sniffing_port_filter.yaml", value)
+		end
+	end
+end
+
+sniffing_domain_filter = s:taboption("meta", Value, "sniffing_domain_filter", translate("Force Sniffing Domains(sni) Filter"))
 sniffing_domain_filter:depends("enable_meta_sniffer_custom", "1")
 sniffing_domain_filter.template = "cbi/tvalue"
-sniffing_domain_filter.description = translate("Will Disable Sniffing If Domains in The List")
+sniffing_domain_filter.description = translate("Will Disable Sniffing If Domains(sni) in The List")
 sniffing_domain_filter.rows = 20
 sniffing_domain_filter.wrap = "off"
 
@@ -463,6 +488,7 @@ o.title = translate("Custom GeoIP Dat URL")
 o.rmempty = true
 o.description = translate("Custom GeoIP Dat URL, Click Button Below To Refresh After Edit")
 o:value("https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat", translate("Loyalsoldier-Version")..translate("(Default)"))
+o:value("https://mirrors.tuna.tsinghua.edu.cn/osdn/storage/g/v/v2/v2raya/dists/v2ray-rules-dat/geoip.dat", translate("Tuna-Version")..translate("(Default)"))
 o.default = "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
 o:depends("geoip_auto_update", "1")
 
@@ -506,6 +532,7 @@ o.title = translate("Custom GeoSite URL")
 o.rmempty = true
 o.description = translate("Custom GeoSite Data URL, Click Button Below To Refresh After Edit")
 o:value("https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat", translate("Loyalsoldier-Version")..translate("(Default)"))
+o:value("https://mirrors.tuna.tsinghua.edu.cn/osdn/storage/g/v/v2/v2raya/dists/v2ray-rules-dat/geosite.dat", translate("Tuna-Version")..translate("(Default)"))
 o.default = "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
 o:depends("geosite_auto_update", "1")
 
