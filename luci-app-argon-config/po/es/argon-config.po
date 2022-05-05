@@ -145,10 +145,10 @@ msgstr "Puede elegir el modo de color del tema aquí"
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:124
 msgid ""
-"You can upload files such as jpg,png,gif,mp4 files, To change the login page "
+"You can upload files such as jpg,png,gif,mp4,webm files, To change the login page "
 "background."
 msgstr ""
-"Puede cargar archivos como jpg, png, gif, mp4, para cambiar el fondo de la "
+"Puede cargar archivos como jpg, png, gif, mp4, webm, para cambiar el fondo de la "
 "página de inicio de sesión."
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:105
