@@ -325,7 +325,7 @@ Thread.new{
    if ${20} == 1 and ${21} == 1 then
       Value_sniffer={'sniffer'=>{'enable'=>true}};
       Value['sniffer']=Value_sniffer['sniffer'];
-      Value_sniffer={'sniffing'=>['tls']};
+      Value_sniffer={'sniffing'=>['tls','http']};
       Value['sniffer'].merge!(Value_sniffer);
       if File::exist?('/etc/openclash/custom/openclash_force_sniffing_domain.yaml') and ${24} == 1 then
          Value_7 = YAML.load_file('/etc/openclash/custom/openclash_force_sniffing_domain.yaml');
@@ -337,8 +337,12 @@ Thread.new{
       if File::exist?('/etc/openclash/custom/openclash_sniffing_domain_filter.yaml') and ${24} == 1 then
          Value_7 = YAML.load_file('/etc/openclash/custom/openclash_sniffing_domain_filter.yaml');
          if Value_7 != false and not Value_7['skip-sni'].to_a.empty? then
-            Value['sniffer']['skip-sni']=Value_7['skip-sni'];
-            Value['sniffer']['skip-sni']=Value['sniffer']['skip-sni'].uniq;
+            Value['sniffer']['skip-domain']=Value_7['skip-sni'];
+            Value['sniffer']['skip-domain']=Value['sniffer']['skip-domain'].uniq;
+         end
+         if Value_7 != false and not Value_7['skip-domain'].to_a.empty? then
+            Value['sniffer']['skip-domain']=Value_7['skip-domain'];
+            Value['sniffer']['skip-domain']=Value['sniffer']['skip-domain'].uniq;
          end
       end;
       if File::exist?('/etc/openclash/custom/openclash_sniffing_port_filter.yaml') and ${24} == 1 then

@@ -658,7 +658,7 @@ small {
 
 
     .sidenav-header {
-        padding: 1.5rem;
+        padding: 1.5rem .5rem;
         text-align: center;
 
         .brand {
@@ -670,7 +670,6 @@ small {
             text-align: center;
             cursor: default;
             vertical-align: text-bottom;
-            white-space: nowrap;
         }
     }
 
@@ -1016,7 +1015,6 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#fff"] {
                             list-style: none;
 
                             a {
-                                white-space: nowrap;
                                 text-decoration: none;
                             }
 
@@ -1539,9 +1537,11 @@ tr>th,
     text-align: center !important;
 }
 
-.cbi-section-table-row>.cbi-value-field .control-group {
+.control-group {
     display: inline-flex;
     width: 100%;
+    flex-wrap: wrap;
+    gap: 2px;
 }
 
 div>table>tbody>tr:nth-of-type(2n),
@@ -2643,6 +2643,7 @@ body.modal-overlay-active #modal_overlay {
 .cbi-page-actions {
     padding-top: 1rem;
     text-align: right;
+    justify-content: flex-end;
 }
 
 .cbi-page-actions>form[method="post"] {
@@ -2659,6 +2660,7 @@ body.modal-overlay-active #modal_overlay {
 
 .ifacebadge {
     display: inline-flex;
+    gap: .2rem;
     padding: .5rem .8rem;
     border-bottom: thin solid #ccc;
     background: #eee;
@@ -2676,7 +2678,6 @@ td>.ifacebadge,
 .ifacebadge>img {
     display: inline-block;
     align-self: flex-start;
-    margin: 0 .2rem;
 }
 
 .ifacebadge>img+img {
@@ -2709,6 +2710,7 @@ td>.ifacebadge,
 .network-status-table .ifacebox-body>div {
     display: flex;
     flex-wrap: wrap;
+    gap: .7rem;
 }
 
 .network-status-table .ifacebox-body .ifacebadge {
@@ -3831,8 +3833,7 @@ pre.command-output {
     }
 
     .cbi-progressbar::after {
-        font-size: .5rem;
-        line-height: 1.5;
+        font-size: .6rem;
     }
 
 
