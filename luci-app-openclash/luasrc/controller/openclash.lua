@@ -26,6 +26,7 @@ function index()
 	entry({"admin", "services", "openclash", "lastversion"},call("action_lastversion"))
 	entry({"admin", "services", "openclash", "save_corever_branch"},call("action_save_corever_branch"))
 	entry({"admin", "services", "openclash", "update"},call("action_update"))
+	entry({"admin", "services", "openclash", "update_info"},call("action_update_info"))
 	entry({"admin", "services", "openclash", "update_ma"},call("action_update_ma"))
 	entry({"admin", "services", "openclash", "opupdate"},call("action_opupdate"))
 	entry({"admin", "services", "openclash", "coreupdate"},call("action_coreupdate"))
@@ -89,6 +90,10 @@ local fs = require "luci.openclash"
 local json = require "luci.jsonc"
 local uci = require("luci.model.uci").cursor()
 local datatype = require "luci.cbi.datatypes"
+local opkg
+if pcall(require, "luci.model.ipkg") then
+	opkg = require "luci.model.ipkg"
+end
 
 local core_path_mode = uci:get("openclash", "config", "small_flash_memory")
 if core_path_mode ~= "1" then
@@ -193,42 +198,45 @@ local function startlog()
 		line_trans = info
 		if string.len(info) > 0 then
 			if not string.find (info, "【") and not string.find (info, "】") then
-   			line_trans = luci.i18n.translate(string.sub(info, 0, -1))
-   		else
-   			line_trans = trans_line(info)
+   				line_trans = luci.i18n.translate(string.sub(info, 0, -1))
+   			else
+   				line_trans = trans_line(info)
+   			end
    		end
-   	end
 	end
 	return line_trans
 end
 
 local function coremodel()
-  local coremodel = luci.sys.exec("opkg status libc 2>/dev/null |grep 'Architecture' |awk -F ': ' '{print $2}' 2>/dev/null")
-  return coremodel
+	if opkg and opkg.info("libc") and opkg.info("libc")["libc"] then
+		return opkg.info("libc")["libc"]["Architecture"]
+	else
+		return luci.sys.exec("opkg status libc 2>/dev/null |grep 'Architecture' |awk -F ': ' '{print $2}' 2>/dev/null")
+	end
 end
 
 local function corecv()
-if not nixio.fs.access(dev_core_path) then
-  return "0"
-else
-	return luci.sys.exec(string.format("%s -v 2>/dev/null |awk -F ' ' '{print $2}'",dev_core_path))
-end
+	if not nixio.fs.access(dev_core_path) then
+		return "0"
+	else
+		return luci.sys.exec(string.format("%s -v 2>/dev/null |awk -F ' ' '{print $2}'",dev_core_path))
+	end
 end
 
 local function coretuncv()
-if not nixio.fs.access(tun_core_path) then
-  return "0"
-else
-	return luci.sys.exec(string.format("%s -v 2>/dev/null |awk -F ' ' '{print $2}'",tun_core_path))
-end
+	if not nixio.fs.access(tun_core_path) then
+		return "0"
+	else
+		return luci.sys.exec(string.format("%s -v 2>/dev/null |awk -F ' ' '{print $2}'",tun_core_path))
+	end
 end
 
 local function coremetacv()
-if not nixio.fs.access(meta_core_path) then
-  return "0"
-else
-	return luci.sys.exec(string.format("%s -v 2>/dev/null |awk -F ' ' '{print $3}'",meta_core_path))
-end
+	if not nixio.fs.access(meta_core_path) then
+		return "0"
+	else
+		return luci.sys.exec(string.format("%s -v 2>/dev/null |awk -F ' ' '{print $3}'",meta_core_path))
+	end
 end
 
 local function corelv()
@@ -240,18 +248,22 @@ local function corelv()
 end
 
 local function opcv()
-	return luci.sys.exec("opkg status luci-app-openclash 2>/dev/null |grep 'Version' |awk -F 'Version: ' '{print \"v\"$2}'")
+	if opkg and opkg.info("luci-app-openclash") and opkg.info("luci-app-openclash")["luci-app-openclash"] then
+		return "v" .. opkg.info("luci-app-openclash")["luci-app-openclash"]["Version"]
+	else
+		return luci.sys.exec("opkg status luci-app-openclash 2>/dev/null |grep 'Version' |awk -F 'Version: ' '{print \"v\"$2}'")
+	end
 end
 
 local function oplv()
-	 local new = luci.sys.call(string.format("sh /usr/share/openclash/openclash_version.sh"))
-	 local oplv = luci.sys.exec("sed -n 1p /tmp/openclash_last_version 2>/dev/null")
-   return oplv .. "," .. new
+	local new = luci.sys.call(string.format("sh /usr/share/openclash/openclash_version.sh"))
+	local oplv = luci.sys.exec("sed -n 1p /tmp/openclash_last_version 2>/dev/null")
+	return oplv .. "," .. new
 end
 
 local function opup()
-   luci.sys.call("rm -rf /tmp/*_last_version 2>/dev/null && sh /usr/share/openclash/openclash_version.sh >/dev/null 2>&1")
-   return luci.sys.call("sh /usr/share/openclash/openclash_update.sh >/dev/null 2>&1 &")
+	luci.sys.call("rm -rf /tmp/*_last_version 2>/dev/null && sh /usr/share/openclash/openclash_version.sh >/dev/null 2>&1")
+	return luci.sys.call("sh /usr/share/openclash/openclash_update.sh >/dev/null 2>&1 &")
 end
 
 local function coreup()
@@ -282,18 +294,18 @@ local function save_corever_branch()
 end
 
 local function upchecktime()
-   local corecheck = os.date("%Y-%m-%d %H:%M:%S",fs.mtime("/tmp/clash_last_version"))
-   local opcheck
-   if not corecheck or corecheck == "" then
-      opcheck = os.date("%Y-%m-%d %H:%M:%S",fs.mtime("/tmp/openclash_last_version"))
-      if not opcheck or opcheck == "" then
-         return "1"
-      else
-         return opcheck
-      end
-   else
-      return corecheck
-   end
+	local corecheck = os.date("%Y-%m-%d %H:%M:%S",fs.mtime("/tmp/clash_last_version"))
+	local opcheck
+	if not corecheck or corecheck == "" then
+    	opcheck = os.date("%Y-%m-%d %H:%M:%S",fs.mtime("/tmp/openclash_last_version"))
+    	if not opcheck or opcheck == "" then
+        	return "1"
+    	else
+        	return opcheck
+    	end
+	else
+    	return corecheck
+	end
 end
 
 local function historychecktime()
@@ -310,18 +322,18 @@ end
 
 function download_rule()
 	local filename = luci.http.formvalue("filename")
-  local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_rule_list.sh "%s" >/dev/null 2>&1',filename))
-  return state
+	local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_rule_list.sh "%s" >/dev/null 2>&1',filename))
+	return state
 end
 
 function download_disney_domains()
-  local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_rule_list.sh "%s" >/dev/null 2>&1',"disney_domains"))
-  return state
+	local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_rule_list.sh "%s" >/dev/null 2>&1',"disney_domains"))
+	return state
 end
 
 function download_netflix_domains()
-  local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_rule_list.sh "%s" >/dev/null 2>&1',"netflix_domains"))
-  return state
+	local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_rule_list.sh "%s" >/dev/null 2>&1',"netflix_domains"))
+	return state
 end
 
 function action_flush_fakeip_cache()
@@ -936,16 +948,22 @@ end
 function action_update()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
-			coremodel = coremodel(),
 			corecv = corecv(),
 			coretuncv = coretuncv(),
 			coremetacv = coremetacv(),
+			coremodel = coremodel(),
 			opcv = opcv(),
-			corever = corever(),
-			release_branch = release_branch(),
 			upchecktime = upchecktime(),
 			corelv = corelv(),
 			oplv = oplv();
+	})
+end
+
+function action_update_info()
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+			corever = corever(),
+			release_branch = release_branch();
 	})
 end
 
