@@ -21,13 +21,15 @@ if L_exist pw; then
 	if [ "$1" = "unset" ]; then
 		uci set passwall.@global[0].dns_mode='pdnsd'
 		uci set passwall.@global[0].dns_forward='8.8.8.8'
+		uci set passwall.@global[0].remote_dns='8.8.8.8'
 		uci set passwall.@global[0].dns_cache='1'
 		uci set passwall.@global[0].chinadns_ng='1'
 	elif [ "$1" = "" ]; then
 		uci set passwall.@global[0].dns_mode='udp'
 		uci set passwall.@global[0].dns_forward='127.0.0.1:5335'
+		uci set passwall.@global[0].remote_dns='127.0.0.1:5335'
 		uci del passwall.@global[0].dns_cache
-		uci set passwall.@global[0].chinadns_ng='0'
+		uci del passwall.@global[0].chinadns_ng
 	fi
 	uci commit passwall
 	if [ "$(pid passwall)" ]; then
