@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 bakdns() {
 	if [ "$1" == "0" ]; then
 		echo "119.29.29.29"
@@ -37,6 +37,8 @@ L_exist() {
 		uci get shadowsocksr.@global[0].global_server &>/dev/null
 	elif [ "$1" == "pw" ]; then
 		uci get passwall.@global[0].enabled &>/dev/null
+	elif [ "$1" == "pw2" ]; then
+		uci get passwall2.@global[0].enabled &>/dev/null
 	elif [ "$1" == "vssr" ]; then
 		uci get vssr.@global[0].global_server &>/dev/null
 	fi

@@ -1,9 +1,10 @@
 /**	
-*	ifit is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
+*	InfinityFreedom is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
 *
 *	luci-theme-ifit
-*	Copyright 2020-2021 Richard Yu <xiaoqingfengatgm@gmail.com>
 *
+*	Have a bug? Please create an issue here on GitHub!
+*	https://github.com/kenzok8/luci-theme-ifit/issues
 *	
 *	luci-theme-material:
 *	Copyright 2015 Lutty Yang
@@ -2054,6 +2055,13 @@ div#cbi-timewol.cbi-map .cbi-value.cbi-value-last div.cbi-value-field font.timew
 	display: block;
 	padding-top:6px;
 }
+
+/* For luci-app-timecontrol */
+div#cbi-timecontrol.cbi-map fieldset.cbi-section-node > div.cbi-value > div.cbi-value-field > font {
+	display: block;
+	padding-top:6px;
+}
+
 /* For luci-app-kodexplorer */
 div#cbi-kodexplorer.cbi-map div#_nginx_status.cbi-value-field font {
 	display: block;
@@ -2143,10 +2151,43 @@ textarea.ddns_logview
 }
 
 /* For luci-app-passwall */
-#_passwall_status_fieldset > div > div:nth-child(10) > div > div.pure-u-1-5 > div > img
+#_passwall_status_fieldset > div > div > div 
+{
+	background-color: rgba(0,0,0,0);
+    margin: 0.5rem;
+    padding: 0;
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    font-family: inherit;
+    min-width: inherit;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: .375rem;
+    box-shadow: 0 0 2rem 0 rgb(136 152 170 / 15%);
+}
+
+#_passwall_status_fieldset > div > div > div > div > h4
+{
+	font-size: 1.2rem;
+}
+
+#_passwall_status_fieldset > div > div > div > div > h4 > span
+{
+	font-size: 1rem;
+}
+
+#_passwall_status_fieldset > div > div:nth-child(10) > div > div.pure-u-1-6 > div > img
 {
 	filter:invert(100%);
 }
+
+div#cbi-passwall.cbi-map > fieldset#cbi-passwall-nodes.cbi-section > div.cbi-section-node > table > tbody > tr._now_use
+{
+    background: #ff853469 !important;
+}
+
 div#cbi-passwall.cbi-map fieldset > fieldset > div > div > div  label
 {
 	padding: 7px 10px;
@@ -2187,6 +2228,23 @@ fieldset#cbi-passwall-nodes > div.cbi-section-node input.cbi-input-checkbox.node
     margin-top: 5px;
 	width : 1.3rem;
 	height: 1.3rem;
+}
+
+#_passwall_status_fieldset > div > div:nth-child(5) > div > div.pure-u-1-3 > div > img{
+    filter: brightness(5.5);
+}
+
+#_passwall_status_fieldset > div > div:nth-child(7) > div > div.pure-u-1-3 > div > img
+{
+    filter:invert(1);
+}
+
+fieldset#cbi-passwall-global > fieldset.cbi-section-node-tabbed > div.cbi-tabcontainer > div.cbi-value > label > a,
+#dns_div > ul > b, 
+#dns_div > ul > li,
+fieldset#cbi-passwall-global > fieldset.cbi-section-node-tabbed > div.cbi-tabcontainer > div.cbi-value > div.cbi-value-field > a
+{
+    color: #FAC536!important;
 }
 
 /* For luci-app-beamInDocker */

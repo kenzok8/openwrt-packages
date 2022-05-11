@@ -319,7 +319,7 @@ function import_ssr_url(btn, urlname, sid) {
 			}
 			switch (queryParam.type) {
 			case "ws":
-				document.getElementsByName('cbid.shadowsocksr.' + sid + '.ws_host')[0].value = queryParam.host;
+				//document.getElementsByName('cbid.shadowsocksr.' + sid + '.ws_host')[0].value = queryParam.host;
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.ws_path')[0].value = queryParam.path || "/";
 				break;
 			case "kcp":

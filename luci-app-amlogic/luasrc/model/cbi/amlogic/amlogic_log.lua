@@ -1,6 +1,3 @@
-local fs = require "luci.fs"
-local http = require "luci.http"
-local DISP = require "luci.dispatcher"
 local b
 
 --SimpleForm for Server Logs

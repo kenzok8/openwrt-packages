@@ -5,43 +5,41 @@ function index()
 		return
 	end
 
-	local page = entry({"admin", "system", "amlogic"}, alias("admin", "system", "amlogic", "info"), _("Amlogic Service"), 88)
+	local page = entry({ "admin", "system", "amlogic" }, alias("admin", "system", "amlogic", "info"), _("Amlogic Service"), 88)
 	page.dependent = true
 	page.acl_depends = { "luci-app-amlogic" }
 
-	entry({"admin", "system", "amlogic", "info"}, cbi("amlogic/amlogic_info"), _("Amlogic Service"), 1).leaf = true
-	entry({"admin", "system", "amlogic", "install"}, cbi("amlogic/amlogic_install"), _("Install OpenWrt"), 2).leaf = true
-	entry({"admin", "system", "amlogic", "upload"}, cbi("amlogic/amlogic_upload"), _("Manually Upload Update"), 3).leaf = true
-	entry({"admin", "system", "amlogic", "check"}, cbi("amlogic/amlogic_check"), _("Online Download Update"), 4).leaf = true
-	entry({"admin", "system", "amlogic", "backup"}, cbi("amlogic/amlogic_backup"), _("Backup Firmware Config"), 5).leaf = true
-	entry({"admin", "system", "amlogic", "armcpu"}, cbi("amlogic/amlogic_armcpu"), _("CPU Settings"), 6).leaf = true
-	entry({"admin", "system", "amlogic", "config"}, cbi("amlogic/amlogic_config"), _("Plugin Settings"), 7).leaf = true
-	entry({"admin", "system", "amlogic", "log"}, cbi("amlogic/amlogic_log"), _("Server Logs"), 8).leaf = true
-	entry({"admin", "system", "amlogic", "poweroff"}, cbi("amlogic/amlogic_poweroff"), _("PowerOff"), 9).leaf = true
-	entry({"admin", "system", "amlogic", "check_firmware"}, call("action_check_firmware"))
-	entry({"admin", "system", "amlogic", "check_plugin"}, call("action_check_plugin"))
-	entry({"admin", "system", "amlogic", "check_kernel"}, call("action_check_kernel"))
-	entry({"admin", "system", "amlogic", "refresh_log"}, call("action_refresh_log"))
-	entry({"admin", "system", "amlogic", "del_log"}, call("action_del_log"))
-	entry({"admin", "system", "amlogic", "start_model_database"}, call("action_check_model_database")).leaf = true
-	entry({"admin", "system", "amlogic", "start_check_install"}, call("action_start_check_install")).leaf = true
-	entry({"admin", "system", "amlogic", "start_check_firmware"}, call("action_start_check_firmware")).leaf = true
-	entry({"admin", "system", "amlogic", "start_check_plugin"}, call("action_start_check_plugin")).leaf = true
-	entry({"admin", "system", "amlogic", "start_check_kernel"}, call("action_start_check_kernel")).leaf = true
-	entry({"admin", "system", "amlogic", "start_check_upfiles"}, call("action_start_check_upfiles")).leaf = true
-	entry({"admin", "system", "amlogic", "start_amlogic_install"}, call("action_start_amlogic_install")).leaf = true
-	entry({"admin", "system", "amlogic", "start_amlogic_update"}, call("action_start_amlogic_update")).leaf = true
-	entry({"admin", "system", "amlogic", "start_amlogic_kernel"}, call("action_start_amlogic_kernel")).leaf = true
-	entry({"admin", "system", "amlogic", "start_amlogic_plugin"}, call("action_start_amlogic_plugin")).leaf = true
-	entry({"admin", "system", "amlogic", "start_snapshot_delete"}, call("action_start_snapshot_delete")).leaf = true
-	entry({"admin", "system", "amlogic", "start_snapshot_restore"}, call("action_start_snapshot_restore")).leaf = true
-	entry({"admin", "system", "amlogic", "start_snapshot_list"}, call("action_check_snapshot")).leaf = true
-	entry({"admin", "system", "amlogic", "start_openwrt_author"}, call("action_openwrt_author")).leaf = true
-	entry({"admin", "system", "amlogic", "state"}, call("action_state")).leaf = true
-	entry({"admin", "system", "amlogic", "start_poweroff"}, call("action_poweroff")).leaf = true
+	entry({ "admin", "system", "amlogic", "info" }, cbi("amlogic/amlogic_info"), _("Amlogic Service"), 1).leaf = true
+	entry({ "admin", "system", "amlogic", "install" }, cbi("amlogic/amlogic_install"), _("Install OpenWrt"), 2).leaf = true
+	entry({ "admin", "system", "amlogic", "upload" }, cbi("amlogic/amlogic_upload"), _("Manually Upload Update"), 3).leaf = true
+	entry({ "admin", "system", "amlogic", "check" }, cbi("amlogic/amlogic_check"), _("Online Download Update"), 4).leaf = true
+	entry({ "admin", "system", "amlogic", "backup" }, cbi("amlogic/amlogic_backup"), _("Backup Firmware Config"), 5).leaf = true
+	entry({ "admin", "system", "amlogic", "armcpu" }, cbi("amlogic/amlogic_armcpu"), _("CPU Settings"), 6).leaf = true
+	entry({ "admin", "system", "amlogic", "config" }, cbi("amlogic/amlogic_config"), _("Plugin Settings"), 7).leaf = true
+	entry({ "admin", "system", "amlogic", "log" }, cbi("amlogic/amlogic_log"), _("Server Logs"), 8).leaf = true
+	entry({ "admin", "system", "amlogic", "poweroff" }, cbi("amlogic/amlogic_poweroff"), _("PowerOff"), 9).leaf = true
+	entry({ "admin", "system", "amlogic", "check_firmware" }, call("action_check_firmware"))
+	entry({ "admin", "system", "amlogic", "check_plugin" }, call("action_check_plugin"))
+	entry({ "admin", "system", "amlogic", "check_kernel" }, call("action_check_kernel"))
+	entry({ "admin", "system", "amlogic", "refresh_log" }, call("action_refresh_log"))
+	entry({ "admin", "system", "amlogic", "del_log" }, call("action_del_log"))
+	entry({ "admin", "system", "amlogic", "start_model_database" }, call("action_check_model_database")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_check_install" }, call("action_start_check_install")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_check_firmware" }, call("action_start_check_firmware")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_check_plugin" }, call("action_start_check_plugin")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_check_kernel" }, call("action_start_check_kernel")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_check_upfiles" }, call("action_start_check_upfiles")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_amlogic_install" }, call("action_start_amlogic_install")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_amlogic_update" }, call("action_start_amlogic_update")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_amlogic_kernel" }, call("action_start_amlogic_kernel")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_amlogic_plugin" }, call("action_start_amlogic_plugin")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_snapshot_delete" }, call("action_start_snapshot_delete")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_snapshot_restore" }, call("action_start_snapshot_restore")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_snapshot_list" }, call("action_check_snapshot")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_openwrt_author" }, call("action_openwrt_author")).leaf = true
+	entry({ "admin", "system", "amlogic", "state" }, call("action_state")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_poweroff" }, call("action_poweroff")).leaf = true
 end
-
-local fs = require "luci.fs"
 
 --Remove the spaces in the string
 function trim(str)
@@ -102,10 +100,10 @@ end
 function string.split(input, delimiter)
 	input = tostring(input)
 	delimiter = tostring(delimiter)
-	if (delimiter=='') then return false end
-	local pos,arr = 0, {}
+	if (delimiter == '') then return false end
+	local pos, arr = 0, {}
 	-- for each divider found
-	for st,sp in function() return string.find(input, delimiter, pos, true) end do
+	for st, sp in function() return string.find(input, delimiter, pos, true) end do
 		table.insert(arr, string.sub(input, pos, st - 1))
 		pos = sp + 1
 	end
@@ -115,8 +113,8 @@ end
 
 --Refresh the log
 function action_refresh_log()
-	local logfile="/tmp/amlogic/amlogic.log"
-	if not fs.access(logfile) then
+	local logfile = "/tmp/amlogic/amlogic.log"
+	if not nixio.fs.access(logfile) then
 		luci.sys.exec("uname -a > /tmp/amlogic/amlogic.log && sync")
 		luci.sys.exec("echo '' > /tmp/amlogic/amlogic_check_install.log && sync >/dev/null 2>&1")
 		luci.sys.exec("echo '' > /tmp/amlogic/amlogic_check_upfiles.log && sync >/dev/null 2>&1")
@@ -126,9 +124,9 @@ function action_refresh_log()
 		luci.sys.exec("echo '' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
 	end
 	luci.http.prepare_content("text/plain; charset=utf-8")
-	local f=io.open(logfile, "r+")
+	local f = io.open(logfile, "r+")
 	f:seek("set")
-	local a=f:read(2048000) or ""
+	local a = f:read(2048000) or ""
 	f:close()
 	luci.http.write(a)
 end
@@ -229,7 +227,7 @@ end
 --Check the kernel
 function action_check_kernel()
 	luci.http.prepare_content("application/json")
-		luci.http.write_json({
+	luci.http.write_json({
 		check_kernel_status = check_kernel();
 	})
 end

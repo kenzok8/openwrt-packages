@@ -126,7 +126,7 @@ msgstr ""
 
 #: applications/luci-app-argon-config/luasrc/model/cbi/argon-config.lua:124
 msgid ""
-"You can upload files such as jpg,png,gif,mp4 files, To change the login page "
+"You can upload files such as jpg,png,gif,mp4,webm files, To change the login page "
 "background."
 msgstr ""
 

@@ -4,7 +4,7 @@ local conffile = "/etc/dnsfilter/black.list"
 f = SimpleForm("custom")
 t = f:field(TextValue, "conf")
 t.rmempty = true
-t.rows=13
+t.rows = 13
 t.description = translate("Will Always block these Domain")
 
 function t.cfgvalue()

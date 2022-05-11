@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 # shellcheck source=/etc/mosdns/library.sh
 source /etc/mosdns/library.sh
 
