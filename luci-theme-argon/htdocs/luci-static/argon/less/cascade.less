@@ -2700,6 +2700,7 @@ td>.ifacebadge,
     display: flex;
     flex-direction: column;
     height: 100%;
+    gap: 0.5em;
 }
 
 .network-status-table .ifacebox-body>span {
@@ -2710,16 +2711,21 @@ td>.ifacebadge,
 .network-status-table .ifacebox-body>div {
     display: flex;
     flex-wrap: wrap;
-    gap: .7rem;
+    gap: .5rem;
 }
 
 .network-status-table .ifacebox-body .ifacebadge {
     align-items: center;
     flex: 1 1 auto;
     min-width: 220px;
-    margin: .5em 0em 0 0em;
     padding: .5em;
     background-color: #fff;
+
+    >span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 /* textarea */
