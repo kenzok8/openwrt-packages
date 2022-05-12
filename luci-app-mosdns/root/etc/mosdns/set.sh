@@ -8,9 +8,14 @@ if L_exist ssrp; then
 		uci set shadowsocksr.@global[0].pdnsd_enable='1'
 		uci set shadowsocksr.@global[0].tunnel_forward='8.8.4.4:53'
 	elif [ "$1" = "" ]; then
-		uci set shadowsocksr.@global[0].pdnsd_enable='0'
-		uci del shadowsocksr.@global[0].tunnel_forward
-		uci del shadowsocksr.@global[0].adblock_url
+		if [ "$(uci -q get mosdns.mosdns.listen_port)" = "5335" ]; then
+			uci set shadowsocksr.@global[0].pdnsd_enable='0'
+			uci del shadowsocksr.@global[0].tunnel_forward
+			uci del shadowsocksr.@global[0].adblock_url
+		else
+			uci set shadowsocksr.@global[0].pdnsd_enable='1'
+			uci set shadowsocksr.@global[0].tunnel_forward="127.0.0.1:$(uci -q get mosdns.mosdns.listen_port)"
+		fi
 	fi
 	uci commit shadowsocksr
 	if [ "$(pid ssrplus)" ]; then
@@ -26,8 +31,8 @@ if L_exist pw; then
 		uci set passwall.@global[0].chinadns_ng='1'
 	elif [ "$1" = "" ]; then
 		uci set passwall.@global[0].dns_mode='udp'
-		uci set passwall.@global[0].dns_forward='127.0.0.1:5335'
-		uci set passwall.@global[0].remote_dns='127.0.0.1:5335'
+		uci set passwall.@global[0].dns_forward="127.0.0.1:$(uci -q get mosdns.mosdns.listen_port)"
+		uci set passwall.@global[0].remote_dns="127.0.0.1:$(uci -q get mosdns.mosdns.listen_port)"
 		uci del passwall.@global[0].dns_cache
 		uci del passwall.@global[0].chinadns_ng
 	fi
@@ -45,9 +50,9 @@ if L_exist pw2; then
 		uci set passwall2.@global[0].dns_query_strategy='UseIPv4'
 	elif [ "$1" = "" ]; then
 		uci set passwall2.@global[0].direct_dns_protocol='udp'
-		uci set passwall2.@global[0].direct_dns='127.0.0.1:5335'
+		uci set passwall2.@global[0].direct_dns="127.0.0.1:$(uci -q get mosdns.mosdns.listen_port)"
 		uci set passwall2.@global[0].remote_dns_protocol='udp'
-		uci set passwall2.@global[0].remote_dns='127.0.0.1:5335'
+		uci set passwall2.@global[0].remote_dns="127.0.0.1:$(uci -q get mosdns.mosdns.listen_port)"
 		uci set passwall2.@global[0].dns_query_strategy='UseIP'
 	fi
 	uci commit passwall2
