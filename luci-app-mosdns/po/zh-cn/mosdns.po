@@ -25,8 +25,8 @@ msgstr "启用 DNS 重定向"
 msgid "Enable DNS ADblock"
 msgstr "启用 DNS 广告过滤"
 
-msgid "<font color=\"ff0000\"><strong>View the Custom YAML Configuration file used by this MosDNS. You can edit it as you own need."
-msgstr "<font color=\"ff0000\"><strong>注意！此页的更改仅当 'MosDNS 配置文件选择' 为 '自定义配置' 时才会生效"
+msgid "View the Custom YAML Configuration file used by this MosDNS. You can edit it as you own need."
+msgstr "注意！此页的更改仅当 'MosDNS 配置文件选择' 为 '自定义配置' 时才会生效"
 
 msgid "Geodata Update"
 msgstr "数据库更新"
@@ -114,6 +114,9 @@ msgstr "规则列表"
 
 msgid "Rule Settings"
 msgstr "自定义规则列表"
+
+msgid "<br>The list of rules only apply to 'Custom Config' profiles."
+msgstr "<br>规则列表仅适用于 “自定义配置” 配置文件"
 
 msgid "<br>The list of rules only apply to 'Default Config' profiles."
 msgstr "<br>规则列表仅适用于 “内置预设” 配置文件"

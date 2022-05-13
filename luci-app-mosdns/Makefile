@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-mosdns
-PKG_VERSION:=1.2
+PKG_VERSION:=1.3
 PKG_RELEASE:=1
 
 LUCI_TITLE:=LuCI Support for mosdns

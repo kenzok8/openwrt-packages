@@ -19,7 +19,6 @@ configfile.default = "./def_config.yaml"
 listenport = s:option(Value, "listen_port", translate("Listen port"))
 listenport.datatype = "and(port,min(1))"
 listenport.default = 5335
-listenport.rmempty = false
 listenport:depends( "configfile", "./def_config.yaml")
 
 loglv = s:option(ListValue, "loglv", translate("Log Level"))
@@ -27,7 +26,7 @@ loglv:value("debug", translate("Debug"))
 loglv:value("info", translate("Info"))
 loglv:value("warn", translate("Warning"))
 loglv:value("error", translate("Error"))
-loglv.default = "info"
+loglv.default = "error"
 loglv:depends( "configfile", "./def_config.yaml")
 
 logfile = s:option(Value, "logfile", translate("MosDNS Log File"))
@@ -36,7 +35,6 @@ logfile.default = "/tmp/mosdns.txt"
 logfile:depends( "configfile", "./def_config.yaml")
 
 remote_dns = s:option(Value, "remote_dns1", translate("Remote DNS"))
-remote_dns.rmempty = false
 remote_dns.default = "tls://8.8.4.4"
 remote_dns:value("tls://8.8.8.8", "8.8.8.8 (Google DNS)")
 remote_dns:value("tls://8.8.4.4", "8.8.4.4 (Google DNS)")
@@ -48,7 +46,6 @@ remote_dns:value("208.67.222.222", "208.67.222.222 (Open DNS)")
 remote_dns:value("208.67.220.220", "208.67.220.220 (Open DNS)")
 remote_dns:depends( "configfile", "./def_config.yaml")
 remote_dns = s:option(Value, "remote_dns2", " ")
-remote_dns.rmempty = false
 remote_dns.default = "tls://9.9.9.9"
 remote_dns:value("tls://8.8.8.8", "8.8.8.8 (Google DNS)")
 remote_dns:value("tls://8.8.4.4", "8.8.4.4 (Google DNS)")
@@ -66,7 +63,7 @@ redirect.default = true
 
 adblock = s:option(Flag, "adblock", translate("Enable DNS ADblock"))
 adblock:depends( "configfile", "./def_config.yaml")
-adblock.default = true
+adblock.default = false
 
 set_config = s:option(Button, "set_config", translate("DNS Helper"))
 set_config.inputtitle = translate("Apply")
