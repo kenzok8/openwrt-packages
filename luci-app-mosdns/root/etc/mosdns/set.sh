@@ -24,7 +24,7 @@ if L_exist ssrp; then
 fi
 if L_exist pw; then
 	if [ "$1" = "unset" ]; then
-		uci set passwall.@global[0].dns_mode='pdnsd'
+		uci set passwall.@global[0].dns_mode='dns2tcp'
 		uci set passwall.@global[0].dns_forward='8.8.8.8'
 		uci set passwall.@global[0].remote_dns='8.8.8.8'
 		uci set passwall.@global[0].dns_cache='1'

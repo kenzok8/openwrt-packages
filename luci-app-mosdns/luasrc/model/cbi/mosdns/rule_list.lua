@@ -22,16 +22,6 @@ o.cfgvalue = function(self, section) return nixio.fs.readfile(white_list_file) o
 o.write = function(self, section, value) nixio.fs.writefile(white_list_file , value:gsub("\r\n", "\n")) end
 o.remove = function(self, section, value) nixio.fs.writefile(white_list_file , "") end
 o.validate = function(self, value)
-    local hosts= {}
-    string.gsub(value, '[^' .. "\r\n" .. ']+', function(w) table.insert(hosts, w) end)
-    for index, host in ipairs(hosts) do
-        if host:find("#") and host:find("#") == 1 then
-            return value
-        end
-        if not datatypes.hostname(host) then
-            return nil, host .. " " .. translate("Not valid domain name, Please Re-enter.")
-        end
-    end
     return value
 end
 
@@ -42,16 +32,6 @@ o.cfgvalue = function(self, section) return nixio.fs.readfile(block_list_file) o
 o.write = function(self, section, value) nixio.fs.writefile(block_list_file, value:gsub("\r\n", "\n")) end
 o.remove = function(self, section, value) nixio.fs.writefile(block_list_file, "") end
 o.validate = function(self, value)
-    local hosts= {}
-    string.gsub(value, '[^' .. "\r\n" .. ']+', function(w) table.insert(hosts, w) end)
-    for index, host in ipairs(hosts) do
-        if host:find("#") and host:find("#") == 1 then
-            return value
-        end
-        if not datatypes.hostname(host) then
-            return nil, host .. " " .. translate("Not valid domain name, Please Re-enter.")
-        end
-    end
     return value
 end
 
@@ -62,13 +42,6 @@ o.cfgvalue = function(self, section) return nixio.fs.readfile(hosts_list_file) o
 o.write = function(self, section, value) nixio.fs.writefile(hosts_list_file, value:gsub("\r\n", "\n")) end
 o.remove = function(self, section, value) nixio.fs.writefile(hosts_list_file, "") end
 o.validate = function(self, value)
-    local hosts= {}
-    string.gsub(value, '[^' .. "\r\n" .. ']+', function(w) table.insert(hosts, w) end)
-    for index, host in ipairs(hosts) do
-        if host:find("#") and host:find("#") == 1 then
-            return value
-        end
-    end
     return value
 end
 
@@ -79,13 +52,6 @@ o.cfgvalue = function(self, section) return nixio.fs.readfile(redirect_list_file
 o.write = function(self, section, value) nixio.fs.writefile(redirect_list_file, value:gsub("\r\n", "\n")) end
 o.remove = function(self, section, value) nixio.fs.writefile(redirect_list_file, "") end
 o.validate = function(self, value)
-    local hosts= {}
-    string.gsub(value, '[^' .. "\r\n" .. ']+', function(w) table.insert(hosts, w) end)
-    for index, host in ipairs(hosts) do
-        if host:find("#") and host:find("#") == 1 then
-            return value
-        end
-    end
     return value
 end
 

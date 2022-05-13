@@ -130,9 +130,6 @@ msgstr "黑名单"
 msgid "These domains are blocked from DNS resolution. Please input the domain names of websites, every line can input only one website domain. For example: baidu.com."
 msgstr "加入的域名将屏蔽 DNS 解析（每个域名一行，允许使用规则匹配）"
 
-msgid "Not valid domain name, Please Re-enter."
-msgstr "不是有效域名，请重新输入"
-
 msgid "Hosts For example: baidu.com 10.0.0.1"
 msgstr "自定义 Hosts 重写，如：baidu.com 10.0.0.1（每个规则一行）"
 
