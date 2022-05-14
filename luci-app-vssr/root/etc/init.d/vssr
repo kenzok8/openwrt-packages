@@ -327,7 +327,14 @@ start_shunt() {
             ss | ssr)
                 bin=$(find_bin "ss-local")
                 [ "$server_type" == "ssr" ] && bin=$(find_bin "ssr-local")
-                $bin -c $config_file $ARG_OTA -f /var/run/vssr-${shunt_type}.pid1 >/dev/null 2>&1
+                
+                g_threads=$threads
+                if [ "$shunt_type" != "global" ]; then
+                    g_threads=1
+                fi
+                for i in $(seq 1 $g_threads); do
+                    $bin -c $config_file $ARG_OTA -f /var/run/vssr-${shunt_type}.pid$i >/dev/null 2>&1
+                done
                 ;;
             trojan)
                 $bin --config $config_file >/dev/null 2>&1 &

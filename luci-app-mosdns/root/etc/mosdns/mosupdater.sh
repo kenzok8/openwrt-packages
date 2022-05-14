@@ -23,14 +23,16 @@ syncconfig=$(uci -q get mosdns.mosdns.syncconfig)
 if [ "$syncconfig" -eq 1 ]; then
   #wget https://cdn.jsdelivr.net/gh/QiuSimons/openwrt-mos@master/luci-app-mosdns/root/etc/mosdns/def_config.yaml -nv -O /tmp/mosdns/def_config.yaml
   TMPDIR=$(mktemp -d) || exit 2
-  getdat def_config.yaml
+  getdat def_config_new.yaml
   getdat serverlist.txt
 
   if [ "$(grep -o .com "$TMPDIR"/serverlist.txt | wc -l)" -lt "1000" ]; then
     rm -rf "$TMPDIR"/serverlist.txt
   fi
-  if [ "$(grep -o plugin "$TMPDIR"/def_config.yaml | wc -l)" -eq "0" ]; then
-    rm -rf "$TMPDIR"/def_config.yaml
+  if [ "$(grep -o plugin "$TMPDIR"/def_config_new.yaml | wc -l)" -eq "0" ]; then
+    rm -rf "$TMPDIR"/def_config_new.yaml
+  else
+    mv "$TMPDIR"/def_config_new.yaml "$TMPDIR"/def_config.yaml
   fi
   cp -rf "$TMPDIR"/* /etc/mosdns
   rm -rf /etc/mosdns/serverlist.bak
