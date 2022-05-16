@@ -12,9 +12,9 @@ t.anonymous=true
 t.addremove=false
 e=t:option(Flag,"enabled",translate("Enable"))
 e.rmempty=false
-e=t:option(Value,"time",translate("Update Time"),translate("0 means disable this feature, unit: min"))
-e.datatype="range(0,59)"
-e.default=30
+e=t:option(Value,"time",translate("Update Time"))
+e.datatype="uinteger"
+e.default=10
 e.rmempty=false
 t=a:section(TypedSection,"koolddns",translate("Domain List"))
 t.anonymous=true
@@ -50,30 +50,15 @@ e.width="15%"
 e.template="koolddns/url"
 e.cfgvalue=function(t,o)
 local t=a.uci:get(i,o,"interface")or""
-local b=a.uci:get(i,o,"ipurl")or""
-local c=a.uci:get(i,o,"urlinterface")or""
-if t=="url"then
-c=luci.sys.exec("uci -P /var/state get network.%s.ifname 2>/dev/null"%c)or""
-if c==""then return""end
-c=luci.sys.exec("curl --interface %q -s %q 2>&1"%{c,b})or""
-return c end
+local a=a.uci:get(i,o,"ipurl")or""
+if t=="url"then return a end
 if t==""then return""end
 local t=luci.sys.exec("uci -P /var/state get network.%s.ifname 2>/dev/null"%t)or""
 if t==""then return""end
 local t=luci.sys.exec("ifconfig %q|grep 'inet addr'|awk '{print $2}'|cut -d: -f2"%t)or""
 return t
 end
-e=t:option(DummyValue,"nslookupip",translate("Nslookup").." IP")
-e.width="15%"
-e.template="koolddns/domain"
-e.cfgvalue=function(t,n)
-local t=a.uci:get(i,n,"domain")or""
-local a=a.uci:get(i,n,"name")or""
-if t==""or a==""then return""end
-if a=="@" then o="%s"%{t} return o end
-o="%s.%s"%{a,t}
-return o
-end
+
 e=t:option(Flag,"enable",translate("Enable State"))
 e.width="10%"
 e.rmempty=false
@@ -88,7 +73,7 @@ luci.http.redirect(luci.dispatcher.build_url("admin","services","koolddns"))
 end
 e=t:option(TextValue,"log")
 e.rows=20
-e.wrap="off"
+e.wrap="on"
 e.readonly=true
 e.cfgvalue=function(t,t)
 return s.readfile("/var/log/koolddns.log")or""
