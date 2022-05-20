@@ -104,8 +104,11 @@ msgstr "[s905d] 斐讯-N1"
 msgid "[s905d] Phicomm N1 (DMA thresh)"
 msgstr "[s905d] 斐讯-N1 (流控)"
 
-msgid "[s905x] HG680P & B860H"
-msgstr "[s905x] 烽火HG680 & 中兴B860H"
+msgid "[s905x] HG680P"
+msgstr "[s905x] 烽火HG680"
+
+msgid "[s905x] B860H"
+msgstr "[s905x] 中兴B860H"
 
 msgid "[s905w] X96-Mini & TX3-Mini"
 msgstr "[s905w] X96-Mini & TX3-Mini"
