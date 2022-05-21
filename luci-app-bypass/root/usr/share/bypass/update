@@ -17,11 +17,11 @@ C=$(uci -q get bypass.@global[0].run_mode)
 mkdir -p $T_FILE 2>/dev/null
 if [ "$C" = router ];then
 	if [ ! -f $T_FILE/china.txt ];then
-		while ! (curl -kLfsm 3 -o /tmp/china.txt https://op.supes.top/all_cn.txt || curl -kLfsm 5 -o /tmp/china.txt https://cdn.jsdelivr.net/gh/kiddin9/china_ip_list@main/china_ip_list.txt);do
+		while ! (curl -kLfsm 3 -o /tmp/china.txt https://supes.top/bypass/all_cn.txt || curl -kLfsm 5 -o /tmp/china.txt https://cdn.jsdelivr.net/gh/kiddin9/china_ip_list@main/china_ip_list.txt);do
 			sleep 1
 		done
 	else
-		curl -kLfsm 3 -o /tmp/china.txt https://op.supes.top/all_cn.txt || curl -kLfsm 5 -o /tmp/china.txt https://cdn.jsdelivr.net/gh/kiddin9/china_ip_list@main/china_ip_list.txt
+		curl -kLfsm 3 -o /tmp/china.txt https://supes.top/bypass/all_cn.txt || curl -kLfsm 5 -o /tmp/china.txt https://cdn.jsdelivr.net/gh/kiddin9/china_ip_list@main/china_ip_list.txt
 	fi
 	[[ -f /tmp/china.txt && $? == 0 ]] && {
 	if ! cmp -s /tmp/china.txt $T_FILE/china.txt;then
@@ -32,11 +32,11 @@ if [ "$C" = router ];then
 	}
 
 	if [ ! -f $T_FILE/china_v6.txt ];then
-		while ! (curl -kLfsm 2 -o /tmp/china_v6.txt https://ispip.clang.cn/all_cn_ipv6.txt || curl -kLfsm 2 -o /tmp/china_v6.txt https://op.supes.top/all_cn_ipv6.txt);do
+		while ! (curl -kLfsm 3 -o /tmp/china_v6.txt https://ispip.clang.cn/all_cn_ipv6.txt || curl -kLfsm 3 -o /tmp/china_v6.txt https://supes.top/bypass/all_cn_ipv6.txt);do
 			sleep 1
 		done
 	elif [ $A = N ];then
-		curl -kLfsm 2 -o /tmp/china_v6.txt https://ispip.clang.cn/all_cn_ipv6.txt || curl -kLfsm 2 -o /tmp/china_v6.txt https://op.supes.top/all_cn_ipv6.txt
+		curl -kLfsm 3 -o /tmp/china_v6.txt https://ispip.clang.cn/all_cn_ipv6.txt || curl -kLfsm 3 -o /tmp/china_v6.txt https://supes.top/bypass/all_cn_ipv6.txt
 	fi
 	[[ -f /tmp/china_v6.txt && $? == 0 ]] && {
 	if ! cmp -s /tmp/china_v6.txt $T_FILE/china_v6.txt;then
@@ -49,11 +49,11 @@ fi
 
 if [ "$C" = gfw -o "$(uci -q get bypass.@global[0].gfw_mode)" = 1 ];then
 	if [ ! -f $T_FILE/gfw.list ];then
-		while ! (curl -kLfsm 3 -o /tmp/gfw.b64 https://op.supes.top/gfwlist.txt || curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt);do
+		while ! (curl -kLfsm 3 -o /tmp/gfw.b64 https://supes.top/bypass/gfwlist.txt || curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt);do
 			sleep 1
 		done
 	elif [ "$C" = gfw -o $A = N ];then
-		curl -kLfsm 3 -o /tmp/gfw.b64 https://op.supes.top/gfwlist.txt || curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt
+		curl -kLfsm 3 -o /tmp/gfw.b64 https://supes.top/bypass/gfwlist.txt || curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt
 	fi
 	if [[ -f /tmp/gfw.b64 && $? == 0 ]];then
 	$DIR/by-gfw

@@ -99,9 +99,8 @@ const CHECK_IP_URL = '<%=url([[admin]], [[services]], [[bypass]], [[ip]])%>';
     function wirte_status(data) {
         if (data.outboard) {
             json = data.outboardip;
-            country = json.country;
             $(".flag img").attr("src", _ASSETS + "flags/" + json.flag + ".svg");
-            $(".status-info").html(data.outboard + "<br>" + country);
+            $(".status-info").html(data.outboard + "<br>" + json.country);
         }
         data.baidu ? $(".i1").attr("src", _ASSETS + "img/site_icon_01.png") : $(".i1").attr("src", _ASSETS + "img/site_icon1_01.png");
         data.taobao ? $(".i2").attr("src", _ASSETS + "img/site_icon_02.png") : $(".i2").attr("src", _ASSETS + "img/site_icon1_02.png");

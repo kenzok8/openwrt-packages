@@ -1544,6 +1544,10 @@ tr>th,
     gap: 2px;
 }
 
+.control-group > * {
+    vertical-align: middle;
+}
+
 div>table>tbody>tr:nth-of-type(2n),
 div>.table>.tr:nth-of-type(2n) {
     background-color: #f9f9f9;
@@ -1958,7 +1962,10 @@ td>table>tbody>tr>td,
     background-color: #f9f9f9;
 }
 
-.cbi-value-field,
+.cbi-value-field {
+    display: table-cell;
+}
+
 .cbi-value-description {
     line-height: 1.25;
     display: table-cell;
@@ -2760,6 +2767,11 @@ td>.ifacebadge,
 /* config changes */
 .uci-change-list {
     font-family: monospace;
+    overflow: scroll;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
 }
 
 .uci-change-list ins,

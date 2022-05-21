@@ -16,12 +16,11 @@ function read_conf(file)
     local ltable = {}
     for line in rfile:lines() do
         local re = string.gsub(line, "\r", "")
-        table.insert(ltable,re)
+        table.insert(ltable, re)
     end
     local rtable = next(ltable) ~= nil and ltable or nil
     return rtable
 end
-
 
 local v2ray_flow = ucursor:get_first(name, 'global', 'v2ray_flow', '0')
 
@@ -120,28 +119,6 @@ local flow_table = {
     }
 }
 
-local bt_rules = {
-    type = 'field',
-    outboundTag = 'bt',
-    protocol = {
-        'bittorrent'
-    }
-}
-local bt_rules1 = {
-    type = 'field',
-    outboundTag = 'bt',
-    domain = {
-        'torrent',
-        'peer_id=',
-        'info_hash',
-        'get_peers',
-        'find_node',
-        'BitTorrent',
-        'announce_peer',
-        'announce.php?passkey='
-    }
-}
-
 function gen_outbound(server_node, tags, local_ports)
     local bound = {}
     if server_node == nil or server_node == 'nil' then
@@ -156,7 +133,7 @@ function gen_outbound(server_node, tags, local_ports)
                 protocol = 'socks',
                 settings = {
                     servers = {
-                        {address = '127.0.0.1', port = tonumber(local_ports)}
+                        { address = '127.0.0.1', port = tonumber(local_ports) }
                     }
                 }
             }
@@ -173,7 +150,7 @@ function gen_outbound(server_node, tags, local_ports)
                                 {
                                     id = server.vmess_id,
                                     alterId = server.type == "v2ray" and tonumber(server.alter_id) or nil,
-                                    security =  server.type == "v2ray" and server.security or nil,
+                                    security = server.type == "v2ray" and server.security or nil,
                                     flow = (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-origin") or nil,
                                     encryption = server.type == "vless" and server.vless_encryption or nil
                                 }
@@ -185,8 +162,8 @@ function gen_outbound(server_node, tags, local_ports)
                 streamSettings = {
                     network = server.transport,
                     security = (server.tls == '1') and ((server.xtls == '1') and "xtls" or "tls") or "none",
-                    tlsSettings = (server.tls == '1' and server.xtls ~= '1') and {allowInsecure = (server.insecure ~= "0") and true or false,serverName=server.tls_host,} or nil,
-                    xtlsSettings = (server.xtls == '1') and {allowInsecure = (server.insecure ~= "0") and true or false,serverName=server.tls_host,} or nil,
+                    tlsSettings = (server.tls == '1' and server.xtls ~= '1') and { allowInsecure = (server.insecure ~= "0") and true or false, serverName = server.tls_host, } or nil,
+                    xtlsSettings = (server.xtls == '1') and { allowInsecure = (server.insecure ~= "0") and true or false, serverName = server.tls_host, } or nil,
                     kcpSettings = (server.transport == 'kcp') and
                         {
                             mtu = tonumber(server.mtu),
@@ -196,21 +173,21 @@ function gen_outbound(server_node, tags, local_ports)
                             congestion = (server.congestion == '1') and true or false,
                             readBufferSize = tonumber(server.read_buffer_size),
                             writeBufferSize = tonumber(server.write_buffer_size),
-                            header = {type = server.kcp_guise}
+                            header = { type = server.kcp_guise }
                         } or
                         nil,
                     wsSettings = (server.transport == 'ws') and (server.ws_path ~= nil or server.ws_host ~= nil) and
                         {
                             path = server.ws_path,
-                            headers = (server.ws_host ~= nil) and {Host = server.ws_host} or nil
+                            headers = (server.ws_host ~= nil) and { Host = server.ws_host } or nil
                         } or
                         nil,
-                    httpSettings = (server.transport == 'h2') and {path = server.h2_path, host = server.h2_host} or nil,
+                    httpSettings = (server.transport == 'h2') and { path = server.h2_path, host = server.h2_host } or nil,
                     quicSettings = (server.transport == 'quic') and
                         {
                             security = server.quic_security,
                             key = server.quic_key,
-                            header = {type = server.quic_guise}
+                            header = { type = server.quic_guise }
                         } or
                         nil
                 },
@@ -224,51 +201,36 @@ function gen_outbound(server_node, tags, local_ports)
     return bound
 end
 
-function gen_bt_outbounds()
-    local bound = {
-        tag = 'bt',
-        protocol = 'freedom',
-        settings = {
-            a = 1
-        }
-    }
-    return bound
-end
-
 if v2ray_flow == '1' then
-    
+
     table.insert(outbounds_table, gen_outbound(server_section, 'global', 2080))
     for _, v in pairs(flow_table) do
-        if(v.rules.domain ~= nil or v.rules.ip ~= nil) then
+        if (v.rules.domain ~= nil or v.rules.ip ~= nil) then
             local server = ucursor:get_first(name, 'global', v.name .. '_server')
             table.insert(outbounds_table, gen_outbound(server, v.name, v.port))
 
-            if(v.rules.domain ~= nil) then
+            if (v.rules.domain ~= nil) then
                 domain_rules = {
                     type = 'field',
                     domain = v.rules.domain,
                     outboundTag = v.rules.outboundTag
                 }
-                table.insert(rules_table, (server ~= nil and server ~= 'nil' ) and domain_rules or nil)
+                table.insert(rules_table, (server ~= nil and server ~= 'nil') and domain_rules or nil)
             end
-            
-            if(v.rules.ip ~= nil) then
+
+            if (v.rules.ip ~= nil) then
                 ip_rules = {
                     type = 'field',
                     ip = v.rules.ip,
                     outboundTag = v.rules.outboundTag
                 }
-                table.insert(rules_table, (server ~= nil and server ~= 'nil' ) and ip_rules or nil)
+                table.insert(rules_table, (server ~= nil and server ~= 'nil') and ip_rules or nil)
             end
         end
     end
 else
     table.insert(outbounds_table, gen_outbound(server_section, 'main', local_port))
 end
-
-table.insert(outbounds_table, gen_bt_outbounds())
-table.insert(rules_table, bt_rules)
-table.insert(rules_table, bt_rules1)
 
 local v2ray = {
     log = {
@@ -281,15 +243,15 @@ local v2ray = {
         {
             port = tonumber(local_port),
             protocol = 'dokodemo-door',
-            settings = {network = proto, followRedirect = true},
-            sniffing = {enabled = true, destOverride = {'http', 'tls'}},
+            settings = { network = proto, followRedirect = true },
+            sniffing = { enabled = true, destOverride = { 'http', 'tls' } },
             streamSettings = {
-                sockopt = {tproxy = (proto == 'tcp') and 'redirect' or 'tproxy'}
+                sockopt = { tproxy = (proto == 'tcp') and 'redirect' or 'tproxy' }
             }
         }
     },
     -- 传出连接
     outbounds = outbounds_table,
-    routing = {domainStrategy = 'IPIfNonMatch', rules = rules_table}
+    routing = { domainStrategy = 'IPIfNonMatch', rules = rules_table }
 }
 print(json.stringify(v2ray, 1))
