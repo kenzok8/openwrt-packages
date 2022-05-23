@@ -21,6 +21,8 @@ CONFIG_UDP_FILE=/var/etc/${NAME}_u.json
 CONFIG_SOCK5_FILE=/var/etc/${NAME}_s.json
 CRON_FILE=/etc/crontabs/root
 
+LOCK_FILE=/var/lock/vssr.lock
+
 #定义可执行文件路径
 VSSR_RULES_BIN=/usr/bin/vssr-rules
 
@@ -38,6 +40,30 @@ shunt_enable=0
 switch_server=$1
 MAXFD=32768
 threads=1
+
+set_lock() {
+	exec 1000>"$LOCK_FILE"
+	flock -xn 1000
+}
+
+unset_lock() {
+	flock -u 1000
+	rm -rf "$LOCK_FILE"
+}
+
+unlock() {
+	failcount=1
+	while [ "$failcount" -le 10 ]; do
+		if [ -f "$LOCK_FILE" ]; then
+            echo "$(date "+%Y-%m-%d %H:%M:%S") wait for file unlock: $failcount count" >> /tmp/vssr.log
+			let "failcount++"
+			sleep 1s
+			[ "$failcount" -ge 10 ] && unset_lock
+		else
+			break
+		fi
+	done
+}
 
 
 #读取 uci 数据
@@ -374,8 +400,6 @@ start_redir() {
     local stype=$(uci_get_by_name $GLOBAL_SERVER type)
     sscmd=$(find_bin $stype)
 
-    
-
     if [ "$(uci_get_by_type global threads 0)" = "0" ]; then
         threads=$(cat /proc/cpuinfo | grep 'processor' | wc -l)
     else
@@ -576,6 +600,7 @@ rules() {
 }
 
 start() {
+    set_lock
     if [ -z "$switch_server" ]; then
         GLOBAL_SERVER=$(uci_get_by_type global global_server)
     else
@@ -635,6 +660,8 @@ EOF
         fi
     fi
 
+    unset_lock
+
     ENABLE_SERVER=$(uci_get_by_type global global_server)
     [ "$ENABLE_SERVER" = "nil" ] && return 1
 }
@@ -644,6 +671,9 @@ boot() {
 }
 
 stop() {
+    unlock
+	set_lock
+
     echo "stop"
     /usr/bin/vssr-rules -f
     srulecount=$(iptables -L | grep SSR-SERVER-RULE | wc -l)
@@ -665,4 +695,6 @@ stop() {
         /etc/init.d/dnsmasq restart >/dev/null 2>&1
     fi
     del_cron
+
+    unset_lock
 }

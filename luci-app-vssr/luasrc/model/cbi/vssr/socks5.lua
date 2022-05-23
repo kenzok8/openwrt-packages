@@ -1,11 +1,4 @@
---[[
-Author: your name
-Date: 2019-11-11 09:33:07
-LastEditTime: 2021-01-14 18:50:06
-LastEditors: Please set LastEditors
-Description: In User Settings Edit
-FilePath: \luci-app-vssr\luasrc\model\cbi\vssr\socks5.lua
---]]
+
 local vssr = 'vssr'
 local uci = luci.model.uci.cursor()
 local server_table = {}
