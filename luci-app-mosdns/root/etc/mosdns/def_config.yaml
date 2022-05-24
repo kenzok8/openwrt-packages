@@ -107,6 +107,7 @@ plugin:
     args:
       domain:
         - "ext:/usr/share/v2ray/geosite.dat:cn"
+        - "ext:/usr/share/v2ray/geosite.dat:apple-cn"
 
   - tag: query_is_non_local_domain
     type: query_matcher
