@@ -90,7 +90,7 @@ o:value("script", translate("Script Proxy Mode (Tun Core Only)"))
 o.default = "rule"
 
 o = s:taboption("op_mode", Flag, "router_self_proxy", font_red..bold_on..translate("Router-Self Proxy")..bold_off..font_off)
-o.description = font_red..bold_on..translate("Only Supported for Rule Mode, ALL Functions In Stream Enhance Tag Will Not Work After Disable")..bold_off..font_off
+o.description = translate("Only Supported for Rule Mode")..", "..font_red..bold_on..translate("ALL Functions In Stream Enhance Tag Will Not Work After Disable")..bold_off..font_off
 o.default = 1
 o:depends("proxy_mode", "rule")
 
@@ -163,8 +163,8 @@ o.default = "0"
 o = s:taboption("settings", Value, "github_address_mod", font_red..bold_on..translate("Github Address Modify")..bold_off..font_off)
 o.description = translate("Modify The Github Address In The Config And OpenClash With Proxy(CDN) To Prevent File Download Faild. Format Reference:").." ".."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://ghproxy.com/\")'>https://ghproxy.com/</a>"
 o:value("0", translate("Disable"))
-o:value("https://cdn.jsdelivr.net/")
 o:value("https://fastly.jsdelivr.net/")
+o:value("https://cdn.jsdelivr.net/")
 o.default = "0"
 
 o = s:taboption("settings", Value, "delay_start", translate("Delay Start (s)"))
@@ -240,6 +240,7 @@ if op_mode == "redir-host" then
 o = s:taboption("dns", Flag, "dns_remote", font_red..bold_on..translate("DNS Remote")..bold_off..font_off)
 o.description = font_red..bold_on..translate("Add DNS Remote Support For Redir-Host")..bold_off..font_off
 o.default = 1
+o:depends("enable_meta_core", 0)
 end
 
 o = s:taboption("dns", Flag, "append_wan_dns", font_red..bold_on..translate("Append Upstream DNS")..bold_off..font_off)
@@ -291,17 +292,6 @@ o.description = translate("DNS Advanced Settings")..font_red..bold_on..translate
 o.default = 0
 
 if op_mode == "fake-ip" then
-o = s:taboption("dns", Button, translate("Fake-IP-Filter List Update")) 
-o.title = translate("Fake-IP-Filter List Update")
-o:depends("dns_advanced_setting", "1")
-o.inputtitle = translate("Check And Update")
-o.inputstyle = "reload"
-o.write = function()
-  m.uci:set("openclash", "config", "enable", 1)
-  m.uci:commit("openclash")
-  SYS.call("rm -rf /tmp/openclash_fake_filter.list >/dev/null 2>&1 && /etc/init.d/openclash restart >/dev/null 2>&1 &")
-  HTTP.redirect(DISP.build_url("admin", "services", "openclash"))
-end
 
 custom_fake_black = s:taboption("dns", Value, "custom_fake_filter")
 custom_fake_black.template = "cbi/tvalue"
@@ -656,6 +646,10 @@ end
 o = s:taboption("stream_enhance", Flag, "stream_domains_prefetch", font_red..bold_on..translate("Prefetch Netflix, Disney Plus Domains")..bold_off..font_off)
 o.description = translate("Prevent Some Devices From Directly Using IP Access To Cause Unlocking Failure, Recommend Use meta Sniffer Function")
 o.default = 0
+o:depends({router_self_proxy = "1", proxy_mode = "rule"})
+o:depends("proxy_mode", "global")
+o:depends("proxy_mode", "direct")
+o:depends("proxy_mode", "script")
 
 o = s:taboption("stream_enhance", Value, "stream_domains_prefetch_interval", translate("Domains Prefetch Interval(min)"))
 o.default = "1440"
@@ -670,6 +664,10 @@ o.template = "openclash/download_stream_domains"
 o = s:taboption("stream_enhance", Flag, "stream_auto_select", font_red..bold_on..translate("Auto Select Unlock Proxy")..bold_off..font_off)
 o.description = translate("Auto Select Proxy For Streaming Unlock, Support Netflix, Disney Plus, HBO And YouTube Premium, etc")
 o.default = 0
+o:depends({router_self_proxy = "1", proxy_mode = "rule"})
+o:depends("proxy_mode", "global")
+o:depends("proxy_mode", "direct")
+o:depends("proxy_mode", "script")
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_interval", translate("Auto Select Interval(min)"))
 o.default = "30"
@@ -1020,6 +1018,7 @@ end
 o = s:taboption("geo_update", Flag, "geo_auto_update", translate("Auto Update"))
 o.description = translate("Auto Update GEOIP Database")
 o.default = 0
+o:depends("enable_geoip_dat", 0)
 
 o = s:taboption("geo_update", ListValue, "geo_update_week_time", translate("Update Time (Every Week)"))
 o:value("*", translate("Every Day"))
@@ -1031,22 +1030,25 @@ o:value("5", translate("Every Friday"))
 o:value("6", translate("Every Saturday"))
 o:value("0", translate("Every Sunday"))
 o.default = "1"
+o:depends("enable_geoip_dat", 0)
 
 o = s:taboption("geo_update", ListValue, "geo_update_day_time", translate("Update time (every day)"))
 for t = 0,23 do
 o:value(t, t..":00")
 end
 o.default = "0"
+o:depends("enable_geoip_dat", 0)
 
 o = s:taboption("geo_update", Value, "geo_custom_url")
 o.title = translate("Custom GEOIP URL")
-o.rmempty = false
+o.rmempty = true
 o.description = translate("Custom GEOIP Data URL, Click Button Below To Refresh After Edit")
 o:value("https://cdn.jsdelivr.net/gh/alecthw/mmdb_china_ip_list@release/lite/Country.mmdb", translate("Alecthw-lite-Version")..translate("(Default mmdb)"))
 o:value("https://cdn.jsdelivr.net/gh/alecthw/mmdb_china_ip_list@release/Country.mmdb", translate("Alecthw-Version")..translate("(All Info mmdb)"))
 o:value("https://cdn.jsdelivr.net/gh/Hackl0us/GeoIP2-CN@release/Country.mmdb", translate("Hackl0us-Version")..translate("(Only CN)"))
 o:value("https://geolite.clash.dev/Country.mmdb", translate("Geolite.clash.dev"))
 o.default = "http://www.ideame.top/mmdb/Country.mmdb"
+o:depends("enable_geoip_dat", 0)
 
 o = s:taboption("geo_update", Button, translate("GEOIP Update")) 
 o.title = translate("Update GEOIP Database")
@@ -1058,6 +1060,7 @@ o.write = function()
   SYS.call("/usr/share/openclash/openclash_ipdb.sh >/dev/null 2>&1 &")
   HTTP.redirect(DISP.build_url("admin", "services", "openclash"))
 end
+o:depends("enable_geoip_dat", 0)
 
 o = s:taboption("chnr_update", Flag, "chnr_auto_update", translate("Auto Update"))
 o.description = translate("Auto Update Chnroute Lists")
@@ -1135,7 +1138,7 @@ o.title = translate("Dashboard Port")
 o.default = "9090"
 o.datatype = "port"
 o.rmempty = false
-o.description = translate("Dashboard Address Example:").." "..font_green..bold_on..lan_ip.."/luci-static/openclash、"..lan_ip..':'..cn_port..'/ui'..bold_off..font_off
+o.description = translate("Dashboard Address Example:").." "..font_green..bold_on..lan_ip..':'..cn_port..'/ui/yacd'..'、'..lan_ip..':'..cn_port..'/ui/dashboard'..bold_off..font_off
 
 o = s:taboption("dashboard", Value, "dashboard_password")
 o.title = translate("Dashboard Secret")
@@ -1154,6 +1157,11 @@ o.title = translate("Public Dashboard Port")
 o.datatype = "port"
 o.rmempty = true
 o.description = translate("Port For Dashboard Login From Public Network")
+
+o = s:taboption("dashboard", Flag, "dashboard_forward_ssl")
+o.title = translate("Public Dashboard SSL enabled")
+o.default = 0
+o.description = translate("Is SSL enabled For Dashboard Login From Public Network")
 
 ---- version update
 core_update = s:taboption("version_update", DummyValue, "", nil)

@@ -118,7 +118,7 @@ change_dns() {
    
    if [ "$ipv6_dns" == 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Chain')" ]; then
       #dnsmasq answer ipv6
-      uci -q set openclash.config.dnsmasq_filter_aaaa="$(uci -q get dhcp.@dnsmasq[0].filter_aaaa)"
+       uci -q set openclash.config.dnsmasq_filter_aaaa="$(uci -q get dhcp.@dnsmasq[0].filter_aaaa)"
 	    uci -q set dhcp.@dnsmasq[0].filter_aaaa=0
 	    uci -q set openclash.config.filter_aaaa_dns=1
 	 else
@@ -127,8 +127,6 @@ change_dns() {
 	 
    uci -q commit dhcp
    uci -q commit openclash
-   
-   /usr/share/openclash/openclash_custom_domain_dns.sh >/dev/null 2>&1
 }
 
 revert_dns() {
@@ -366,7 +364,7 @@ yml_other_rules_get()
 check_run_quick()
 {
    quick_start=true
-   check_file="$RAW_CONFIG_FILE /etc/openclash/custom/openclash_custom_domain_dns.list /etc/openclash/custom/openclash_custom_domain_dns_policy.list /etc/openclash/custom/openclash_custom_fake_filter.list /etc/openclash/custom/openclash_custom_fallback_filter.yaml /etc/openclash/custom/openclash_custom_hosts.list /etc/openclash/custom/openclash_custom_rules.list /etc/openclash/custom/openclash_custom_rules_2.list $dev_core_path $tun_core_path $meta_core_path $ipdb_path $geosite_path $geoip_path $chnr_path $chnr6_path /usr/share/openclash/res/ConnersHua.yaml /usr/share/openclash/res/ConnersHua_return.yaml /usr/share/openclash/res/lhie1.yaml /usr/share/openclash/res/openclash_version /tmp/openclash_fake_filter.list /etc/openclash/custom/openclash_force_sniffing_domain.list /etc/openclash/custom/openclash_sniffing_domain_filter.list /etc/openclash/custom/openclash_sniffing_port_filter.yaml"
+   check_file="$RAW_CONFIG_FILE /etc/openclash/custom/openclash_custom_domain_dns.list /etc/openclash/custom/openclash_custom_domain_dns_policy.list /etc/openclash/custom/openclash_custom_fake_filter.list /etc/openclash/custom/openclash_custom_fallback_filter.yaml /etc/openclash/custom/openclash_custom_hosts.list /etc/openclash/custom/openclash_custom_rules.list /etc/openclash/custom/openclash_custom_rules_2.list $dev_core_path $tun_core_path $meta_core_path $ipdb_path $geosite_path $geoip_path $chnr_path $chnr6_path /usr/share/openclash/res/ConnersHua.yaml /usr/share/openclash/res/ConnersHua_return.yaml /usr/share/openclash/res/lhie1.yaml /usr/share/openclash/res/openclash_version /etc/openclash/custom/openclash_force_sniffing_domain.list /etc/openclash/custom/openclash_sniffing_domain_filter.list /etc/openclash/custom/openclash_sniffing_port_filter.yaml"
 	 if [ ! -f "$CONFIG_FILE" ] || [ ! -f "/tmp/openclash_config.tmp" ] || [ ! -f "/tmp/openclash.change" ]; then
 	    quick_start=false
 	    return
@@ -589,17 +587,6 @@ do_run_file()
    [ ! -x "$tun_core_path" ] && chmod 4755 "$tun_core_path" 2>/dev/null
    [ ! -x "$dev_core_path" ] && chmod 4755 "$dev_core_path" 2>/dev/null
    [ ! -x "$meta_core_path" ] && chmod 4755 "$meta_core_path" 2>/dev/null
-
-   #fake_ip_filter
-   if [ "$3" = "fake-ip" ]; then
-      if [ ! -f "/tmp/openclash_fake_filter.list" ] || [ -n "$(grep "config servers" /etc/config/openclash 2>/dev/null)" ]; then
-         /usr/share/openclash/openclash_fake_filter.sh
-      fi
-      if [ -s "/tmp/openclash_servers_fake_filter.conf" ]; then
-         mkdir -p /tmp/dnsmasq.d
-         cp /tmp/openclash_servers_fake_filter.conf /tmp/dnsmasq.d/dnsmasq_openclash.conf
-      fi
-   fi
   
    [ -f "$ipdb_path" ] && [ "$small_flash_memory" = "1" ] && {
       ln -s "$ipdb_path" /etc/openclash/Country.mmdb 2>/dev/null
@@ -1115,13 +1102,11 @@ fi
    ipset create localnetwork hash:net
    ipset add localnetwork 0.0.0.0/8
    ipset add localnetwork 127.0.0.0/8
-   ipset add localnetwork 10.0.0.0/8
-   ipset add localnetwork 169.254.0.0/16
-   ipset add localnetwork 192.168.0.0/16
    ipset add localnetwork 224.0.0.0/4
-   ipset add localnetwork 240.0.0.0/4
+   ipset add localnetwork 169.254.0.0/16
    ipset add localnetwork 172.16.0.0/12
    ipset add localnetwork 100.64.0.0/10
+   ipset add localnetwork 240.0.0.0/4
    
    if [ -n "$lan_ip_cidrs" ]; then
       for lan_ip_cidr in $lan_ip_cidrs; do
@@ -1287,7 +1272,6 @@ if [ -n "$en_mode_tun" ]; then
    if [ "$en_mode" = "fake-ip" ]; then
       iptables -t mangle -N openclash_output
       iptables -t mangle -F openclash_output
-      iptables -t mangle -A openclash_output -i utun -j RETURN >/dev/null 2>&1
       iptables -t mangle -A openclash_output -m set --match-set localnetwork dst -j RETURN
       if [ "$en_mode_tun" -eq 1 ]; then
          if [ -z "$_koolshare" ]; then
@@ -1320,7 +1304,6 @@ if [ -n "$en_mode_tun" ]; then
    iptables -t mangle -N openclash_dns_hijack
    iptables -t mangle -F openclash_dns_hijack
    #其他流量
-   iptables -t mangle -A openclash -i utun -j RETURN >/dev/null 2>&1
    iptables -t mangle -A openclash -m set --match-set localnetwork dst -j RETURN >/dev/null 2>&1
    iptables -t mangle -A openclash -m set --match-set wan_ac_black_ips dst -j RETURN >/dev/null 2>&1
    iptables -t mangle -A openclash -m set --match-set lan_ac_black_ips src -j RETURN >/dev/null 2>&1
@@ -1382,6 +1365,12 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
    ipset add localnetwork6 fe80::/10
    ipset add localnetwork6 ff00::/8
 
+   if [ -n "$lan_ip6_cidrs" ]; then
+      for lan_ip6_cidr in $lan_ip6_cidrs; do
+         ipset add localnetwork6 "$lan_ip6_cidr" 2>/dev/null
+      done
+   fi
+
    if [ -n "$wan_ip6s" ]; then
       for wan_ip6 in $wan_ip6s; do
          ipset add localnetwork6 "$wan_ip6"
@@ -1410,7 +1399,7 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
    if [ "$china_ip6_route" = "1" ]; then
       ip6tables -t mangle -A openclash -m set --match-set china_ip6_route dst -j RETURN >/dev/null 2>&1
    fi
-   ip6tables -t mangle -A openclash -p tcp -m comment --comment "OpenClash TCP Mark" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
+   ip6tables -t mangle -A openclash -p tcp -m comment --comment "OpenClash TCP Tproxy" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
    ip6tables -t mangle -A PREROUTING -j openclash
 
    if [ -z "$_koolshare" ]; then
@@ -1429,7 +1418,7 @@ if [ "$ipv6_enable" -eq 1 ] && [ -n "$(ip6tables -t mangle -L 2>&1 | grep -o 'Ch
    #udp
    if [ "$enable_udp_proxy" -eq 1 ] || [ -n "$en_mode_tun" ]; then
       ip6tables -t mangle -A openclash_output -p udp -m owner ! --uid-owner 65534 -j MARK --set-xmark "$PROXY_FWMARK"
-      ip6tables -t mangle -A openclash -p udp -m comment --comment "OpenClash" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
+      ip6tables -t mangle -A openclash -p udp -m comment --comment "OpenClash TCP Tproxy" -j TPROXY --on-port "$tproxy_port" --tproxy-mark "$PROXY_FWMARK"
    fi
    
    #quic
@@ -1543,6 +1532,7 @@ get_config()
    enable_redirect_dns=$(uci -q get openclash.config.enable_redirect_dns)
    lan_ip=$(uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null || ip address show $(uci -q -p /tmp/state get network.lan.ifname) | grep -w "inet"  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1)
    lan_ip_cidrs=$(ip route | grep "/" | awk '{print $1}' | grep -vE "^198.18" 2>/dev/null)
+   lan_ip6_cidrs=$(ip -6 route | grep "/" | awk '{print $1}' | grep -vE "^unreachable" 2>/dev/null)
    wan_ip4s=$(ifconfig | grep 'inet addr' | awk '{print $2}' | cut -d: -f2 | grep -vE "(^198.18|^192.168|^127.0)" 2>/dev/null)
    wan_ip6s=$(ifconfig | grep 'inet6 addr' | awk '{print $3}' 2>/dev/null)
    disable_masq_cache=$(uci -q get openclash.config.disable_masq_cache)
@@ -1563,7 +1553,7 @@ get_config()
    dns_port=$(uci -q get openclash.config.dns_port)
    stream_domains_prefetch=$(uci -q get openclash.config.stream_domains_prefetch || echo 0)
    store_fakeip=$(uci -q get openclash.config.store_fakeip || echo 1)
-   dns_remote=$(uci -q get openclash.config.dns_remote || echo 1)
+   dns_remote=$(uci -q get openclash.config.dns_remote || echo 0)
    bypass_gateway_compatible=$(uci -q get openclash.config.bypass_gateway_compatible || echo 0)
    core_version=$(uci -q get openclash.config.core_version || echo 0)
    router_self_proxy=$(uci -q get openclash.config.router_self_proxy || echo 1)
@@ -1593,7 +1583,7 @@ start()
    
    LOG_OUT "Step 2: Check The Components..."
    #检查文件是否存在
-   do_run_file "$RAW_CONFIG_FILE" "$BACKUP_FILE" "$en_mode"
+   do_run_file "$RAW_CONFIG_FILE" "$BACKUP_FILE"
    
    #快速启动判断
    check_run_quick
@@ -1603,6 +1593,8 @@ start()
       config_check
       /usr/share/openclash/yml_change.sh 2>/dev/null "$en_mode" "$da_password" "$cn_port" "$proxy_port" "$TMP_CONFIG_FILE" "$ipv6_enable" "$http_port" "$socks_port" "$log_level" "$proxy_mode" "$en_mode_tun" "$stack_type" "$dns_port" "$mixed_port" "$tproxy_port" "$ipv6_dns" "$store_fakeip" "$stream_domains_prefetch" "$dns_remote" "$enable_meta_core" "$enable_meta_sniffer" "$enable_geoip_dat" "$geodata_loader" "$enable_meta_sniffer_custom" "$interface_name" "$enable_tcp_concurrent"
       /usr/share/openclash/yml_rules_change.sh 2>/dev/null "$rule_source" "$enable_custom_clash_rules" "$TMP_CONFIG_FILE" "$enable_rule_proxy" "$CONFIG_NAME" "$router_self_proxy" "$lan_ip" "$proxy_port" "$tproxy_port"
+      /usr/share/openclash/openclash_server_fake_filter.sh >/dev/null 2>&1
+      /usr/share/openclash/openclash_custom_domain_dns.sh >/dev/null 2>&1
    fi
    
    LOG_OUT "Step 4: Start Running The Clash Core..."
@@ -1613,21 +1605,20 @@ start()
 
    #检测proxy_provider配置文件状态
    LOG_OUT "Step 6: Wait For The File Downloading..."
-   yml_provider_check "$CONFIG_FILE" "proxy-providers" "proxies"
-   yml_provider_check "$CONFIG_FILE" "rule-providers" "payload"
+   if [ "$enable_meta_core" != "1" ]; then
+      yml_provider_check "$CONFIG_FILE" "proxy-providers" "proxies"
+      yml_provider_check "$CONFIG_FILE" "rule-providers" "payload"
+   fi
    try_restore_start
-
-   LOG_OUT "Step 7: Set Control Panel..."
-   ln -s /usr/share/openclash/yacd /www/luci-static/openclash 2>/dev/null
        
-   LOG_OUT "Step 8: Set Firewall Rules..."
+   LOG_OUT "Step 7: Set Firewall Rules..."
    set_firewall
 
-   LOG_OUT "Step 9: Restart Dnsmasq..."
+   LOG_OUT "Step 8: Restart Dnsmasq..."
    change_dns "$enable_redirect_dns" "$disable_masq_cache"
    /etc/init.d/dnsmasq restart >/dev/null 2>&1
    
-   LOG_OUT "Step 10: Add Cron Rules, Start Daemons..."
+   LOG_OUT "Step 9: Add Cron Rules, Start Daemons..."
    add_cron
    if [ "$(uci -q get openclash.config.restricted_mode)" != "1" ]; then
       if [ -z "$(uci -q get dhcp.lan.dhcpv6)" ] || [ "$(uci -q get dhcp.lan.dhcpv6)" == "disabled" ]; then
@@ -1693,13 +1684,12 @@ stop()
 
    LOG_OUT "Step 6: Delete OpenClash Residue File..."
    if [ "$enable" != "1" ]; then
-      rm -rf /www/luci-static/openclash >/dev/null 2>&1
       rm -rf /tmp/clash_last_version >/dev/null 2>&1
       rm -rf /tmp/Proxy_Group >/dev/null 2>&1
       rm -rf /tmp/rules_name >/dev/null 2>&1
       rm -rf /tmp/rule_providers_name >/dev/null 2>&1
-      rm -rf /tmp/openclash_fake_filter.list >/dev/null 2>&1
-      rm -rf /tmp/openclash_servers_fake_filter.conf >/dev/null 2>&1
+      rm -rf /tmp/dnsmasq.d/dnsmasq_openclash.conf >/dev/null 2>&1
+      rm -rf /tmp/dnsmasq.d/dnsmasq_openclash_custom_domain.conf >/dev/null 2>&1
       rm -rf /tmp/openclash_last_version >/dev/null 2>&1
       rm -rf /tmp/openclash_config.tmp >/dev/null 2>&1
       rm -rf /tmp/openclash.change >/dev/null 2>&1
