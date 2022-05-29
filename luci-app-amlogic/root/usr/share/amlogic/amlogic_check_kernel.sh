@@ -24,7 +24,7 @@ github_api_kernel_library="${TMP_CHECK_DIR}/github_api_kernel_library"
 github_api_kernel_file="${TMP_CHECK_DIR}/github_api_kernel_file"
 support_platform=("allwinner" "rockchip" "amlogic")
 MYDEVICE_NAME="$(cat /proc/device-tree/model | tr -d '\000')"
-LOGTIME=$(date "+%Y-%m-%d %H:%M:%S")
+LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
 
 # Clean the running log
@@ -79,11 +79,11 @@ KERNEL_DOWNLOAD_PATH="/mnt/${EMMC_NAME}${PARTITION_NAME}4"
 if [[ -s "${AMLOGIC_SOC_FILE}" ]]; then
     source "${AMLOGIC_SOC_FILE}" 2>/dev/null
     PLATFORM="${PLATFORM}"
+    SOC="${SOC}"
 else
     tolog "${AMLOGIC_SOC_FILE} file is missing!" "1"
 fi
-
-if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" ]]; then
+if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${SOC}" ]]; then
     tolog "Missing [ PLATFORM ] value in ${AMLOGIC_SOC_FILE} file." "1"
 fi
 
@@ -109,7 +109,7 @@ server_kernel_path="$(uci get amlogic.config.amlogic_kernel_path 2>/dev/null)"
 # server_kernel_path="amlogic-s9xxx/amlogic-kernel"
 #
 if [[ "${server_firmware_url}" == http* ]]; then
-    server_firmware_url=${server_firmware_url#*com\/}
+    server_firmware_url="${server_firmware_url#*com\/}"
 fi
 
 if [[ "${server_kernel_path}" == http* && -n "$(echo ${server_kernel_path} | grep "tree")" ]]; then
@@ -210,11 +210,11 @@ download_kernel() {
     fi
     boot_file_name="${server_kernel_boot##*/}"
     server_kernel_boot_name="${boot_file_name//%2B/+}"
-    wget -c "${server_kernel_boot}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_boot_name}" >/dev/null 2>&1 && sync
+    wget "${server_kernel_boot}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_boot_name}" >/dev/null 2>&1 && sync
     if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_boot_name}" ]]; then
-        tolog "03.03 The boot file complete."
+        tolog "03.03 The boot file download complete."
     else
-        tolog "03.04 The boot file failed to download." "1"
+        tolog "03.04 The boot file download failed." "1"
     fi
     sleep 2
 
@@ -226,11 +226,11 @@ download_kernel() {
     fi
     dtb_file_name="${server_kernel_dtb##*/}"
     server_kernel_dtb_name="${dtb_file_name//%2B/+}"
-    wget -c "${server_kernel_dtb}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" >/dev/null 2>&1 && sync
+    wget "${server_kernel_dtb}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" >/dev/null 2>&1 && sync
     if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" ]]; then
-        tolog "03.05 The dtb file complete."
+        tolog "03.05 The dtb file download complete."
     else
-        tolog "03.06 The dtb file failed to download." "1"
+        tolog "03.06 The dtb file download failed." "1"
     fi
     sleep 2
 
@@ -242,11 +242,11 @@ download_kernel() {
     fi
     modules_file_name="${server_kernel_modules##*/}"
     server_kernel_modules_name="${modules_file_name//%2B/+}"
-    wget -c "${server_kernel_modules}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_modules_name}" >/dev/null 2>&1 && sync
+    wget "${server_kernel_modules}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_modules_name}" >/dev/null 2>&1 && sync
     if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_modules_name}" ]]; then
-        tolog "03.07 The modules file complete."
+        tolog "03.07 The modules file download complete."
     else
-        tolog "03.08 The modules file failed to download." "1"
+        tolog "03.08 The modules file download failed." "1"
     fi
     sleep 2
 
@@ -258,11 +258,11 @@ download_kernel() {
     fi
     if [[ -n "${server_kernel_sha256sums}" ]]; then
         server_kernel_sha256sums_name="sha256sums"
-        wget -c "${server_kernel_sha256sums}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_sha256sums_name}" >/dev/null 2>&1 && sync
+        wget "${server_kernel_sha256sums}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_sha256sums_name}" >/dev/null 2>&1 && sync
         if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_sha256sums_name}" ]]; then
-            tolog "03.09 The sha256sums file complete."
+            tolog "03.09 The sha256sums file download complete."
         else
-            tolog "03.10 The sha256sums file failed to download." "1"
+            tolog "03.10 The sha256sums file download failed." "1"
         fi
         sleep 2
     fi
