@@ -12,40 +12,38 @@ function read_conf(file)
     if not nixio.fs.access(file) then
         return nil
     end
-    local rfile = io.open(file, "r")
+    local rfile = io.open(file, 'r')
     local ltable = {}
     for line in rfile:lines() do
-        local re = string.gsub(line, "\r", "")
-        table.insert(ltable,re)
+        local re = string.gsub(line, '\r', '')
+        table.insert(ltable, re)
     end
     local rtable = next(ltable) ~= nil and ltable or nil
     return rtable
 end
 
-
 local v2ray_flow = ucursor:get_first(name, 'global', 'v2ray_flow', '0')
 
-local custom_domain = read_conf("/etc/vssr/custom_domain.list")
-local custom_ip = read_conf("/etc/vssr/custom_ip.list")
+local custom_domain = read_conf('/etc/vssr/custom_domain.list')
+local custom_ip = read_conf('/etc/vssr/custom_ip.list')
 
-local youtube_domain = read_conf("/etc/vssr/youtube_domain.list")
-local youtube_ip = read_conf("/etc/vssr/youtube_ip.list")
+local youtube_domain = read_conf('/etc/vssr/youtube_domain.list')
+local youtube_ip = read_conf('/etc/vssr/youtube_ip.list')
 
-local tw_video_domain = read_conf("/etc/vssr/tw_video_domain.list")
-local tw_video_ip = read_conf("/etc/vssr/tw_video_ip.list")
+local tw_video_domain = read_conf('/etc/vssr/tw_video_domain.list')
+local tw_video_ip = read_conf('/etc/vssr/tw_video_ip.list')
 
-local netflix_domain = read_conf("/etc/vssr/netflix_domain.list")
-local netflix_ip = read_conf("/etc/vssr/netflix_ip.list")
+local netflix_domain = read_conf('/etc/vssr/netflix_domain.list')
+local netflix_ip = read_conf('/etc/vssr/netflix_ip.list')
 
-local disney_domain = read_conf("/etc/vssr/disney_domain.list")
-local disney_ip = read_conf("/etc/vssr/disney_ip.list")
+local disney_domain = read_conf('/etc/vssr/disney_domain.list')
+local disney_ip = read_conf('/etc/vssr/disney_ip.list')
 
-local prime_domain = read_conf("/etc/vssr/prime_domain.list")
-local prime_ip = read_conf("/etc/vssr/prime_ip.list")
+local prime_domain = read_conf('/etc/vssr/prime_domain.list')
+local prime_ip = read_conf('/etc/vssr/prime_ip.list')
 
-local tvb_domain = read_conf("/etc/vssr/tvb_domain.list")
-local tvb_ip = read_conf("/etc/vssr/tvb_ip.list")
-
+local tvb_domain = read_conf('/etc/vssr/tvb_domain.list')
+local tvb_ip = read_conf('/etc/vssr/tvb_ip.list')
 
 local flow_table = {
     yotube = {
@@ -120,35 +118,13 @@ local flow_table = {
     }
 }
 
-local bt_rules = {
-    type = 'field',
-    outboundTag = 'bt',
-    protocol = {
-        'bittorrent'
-    }
-}
-local bt_rules1 = {
-    type = 'field',
-    outboundTag = 'bt',
-    domain = {
-        'torrent',
-        'peer_id=',
-        'info_hash',
-        'get_peers',
-        'find_node',
-        'BitTorrent',
-        'announce_peer',
-        'announce.php?passkey='
-    }
-}
-
 function gen_outbound(server_node, tags, local_ports)
     local bound = {}
     if server_node == nil or server_node == 'nil' then
         bound = nil
     else
         local server = ucursor:get_all(name, server_node)
-        local node_type = server.type == "vless" and "vless" or "vmess"
+        local node_type = server.type == 'vless' and 'vless' or 'vmess'
 
         if server.type ~= 'v2ray' and server.type ~= 'vless' then
             bound = {
@@ -172,10 +148,10 @@ function gen_outbound(server_node, tags, local_ports)
                             users = {
                                 {
                                     id = server.vmess_id,
-                                    alterId = server.type == "v2ray" and tonumber(server.alter_id) or nil,
-                                    security =  server.type == "v2ray" and server.security or nil,
-                                    flow = (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-origin") or nil,
-                                    encryption = server.type == "vless" and server.vless_encryption or nil
+                                    alterId = server.type == 'v2ray' and tonumber(server.alter_id) or nil,
+                                    security = server.type == 'v2ray' and server.security or nil,
+                                    flow = (server.xtls == '1') and (server.vless_flow and server.vless_flow or 'xtls-rprx-origin') or nil,
+                                    encryption = server.type == 'vless' and server.vless_encryption or nil
                                 }
                             }
                         }
@@ -184,9 +160,9 @@ function gen_outbound(server_node, tags, local_ports)
                 -- 底层传输配置
                 streamSettings = {
                     network = server.transport,
-                    security = (server.tls == '1') and ((server.xtls == '1') and "xtls" or "tls") or "none",
-                    tlsSettings = (server.tls == '1' and server.xtls ~= '1') and {allowInsecure = (server.insecure ~= "0") and true or false,serverName=server.tls_host,} or nil,
-                    xtlsSettings = (server.xtls == '1') and {allowInsecure = (server.insecure ~= "0") and true or false,serverName=server.tls_host,} or nil,
+                    security = (server.tls == '1') and ((server.xtls == '1') and 'xtls' or 'tls') or 'none',
+                    tlsSettings = (server.tls == '1' and server.xtls ~= '1') and {allowInsecure = (server.insecure ~= '0') and true or false, serverName = server.tls_host} or nil,
+                    xtlsSettings = (server.xtls == '1') and {allowInsecure = (server.insecure ~= '0') and true or false, serverName = server.tls_host} or nil,
                     kcpSettings = (server.transport == 'kcp') and
                         {
                             mtu = tonumber(server.mtu),
@@ -224,51 +200,35 @@ function gen_outbound(server_node, tags, local_ports)
     return bound
 end
 
-function gen_bt_outbounds()
-    local bound = {
-        tag = 'bt',
-        protocol = 'freedom',
-        settings = {
-            a = 1
-        }
-    }
-    return bound
-end
-
 if v2ray_flow == '1' then
-    
     table.insert(outbounds_table, gen_outbound(server_section, 'global', 2080))
     for _, v in pairs(flow_table) do
-        if(v.rules.domain ~= nil or v.rules.ip ~= nil) then
+        if (v.rules.domain ~= nil or v.rules.ip ~= nil) then
             local server = ucursor:get_first(name, 'global', v.name .. '_server')
             table.insert(outbounds_table, gen_outbound(server, v.name, v.port))
 
-            if(v.rules.domain ~= nil) then
+            if (v.rules.domain ~= nil) then
                 domain_rules = {
                     type = 'field',
                     domain = v.rules.domain,
                     outboundTag = v.rules.outboundTag
                 }
-                table.insert(rules_table, (server ~= nil and server ~= 'nil' ) and domain_rules or nil)
+                table.insert(rules_table, (server ~= nil and server ~= 'nil') and domain_rules or nil)
             end
-            
-            if(v.rules.ip ~= nil) then
+
+            if (v.rules.ip ~= nil) then
                 ip_rules = {
                     type = 'field',
                     ip = v.rules.ip,
                     outboundTag = v.rules.outboundTag
                 }
-                table.insert(rules_table, (server ~= nil and server ~= 'nil' ) and ip_rules or nil)
+                table.insert(rules_table, (server ~= nil and server ~= 'nil') and ip_rules or nil)
             end
         end
     end
 else
     table.insert(outbounds_table, gen_outbound(server_section, 'main', local_port))
 end
-
-table.insert(outbounds_table, gen_bt_outbounds())
-table.insert(rules_table, bt_rules)
-table.insert(rules_table, bt_rules1)
 
 local v2ray = {
     log = {

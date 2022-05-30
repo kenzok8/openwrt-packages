@@ -5,6 +5,7 @@ uci -q batch <<-EOF >/dev/null
 	add ucitrack koolproxy
 	set ucitrack.@koolproxy[-1].init=koolproxy
 	commit ucitrack
+
 	delete firewall.koolproxy
 	set firewall.koolproxy=include
 	set firewall.koolproxy.type=script

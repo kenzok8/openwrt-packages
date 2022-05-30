@@ -185,6 +185,10 @@ local function db_foward_port()
 	return uci:get("openclash", "config", "dashboard_forward_port")
 end
 
+local function db_foward_ssl()
+	return uci:get("openclash", "config", "dashboard_forward_ssl") or 0
+end
+
 local function check_lastversion()
 	luci.sys.exec("sh /usr/share/openclash/openclash_version.sh 2>/dev/null")
 	return luci.sys.exec("sed -n '/^https:/,$p' /tmp/openclash_last_version 2>/dev/null")
@@ -568,7 +572,7 @@ function action_switch_config()
 end
 
 function sub_info_get()
-	local filename, sub_url, sub_info, info, upload, download, total, expire, http_code, len
+	local filename, sub_url, sub_info, info, upload, download, total, expire, http_code, len, percent
 	filename = luci.http.formvalue("filename")
 	sub_info = ""
 	if filename and not is_start() then
@@ -590,9 +594,12 @@ function sub_info_get()
 			  				info = luci.sys.exec("echo '%s' |grep 'subscription-userinfo'" %info)
 			  				upload = string.sub(string.match(info, "upload=%d+"), 8, -1) or nil
 			  				download = string.sub(string.match(info, "download=%d+"), 10, -1) or nil
-			  				total = fs.filesize(string.sub(string.match(info, "total=%d+"), 7, -1)) or nil
+			  				total = string.sub(string.match(info, "total=%d+"), 7, -1) or nil
 			  				expire = os.date("%Y-%m-%d %H:%M:%S", string.sub(string.match(info, "expire=%d+"), 8, -1)) or nil
-			  				used = fs.filesize(upload + download) or nil
+			  				used = (upload + download) or nil
+							percent = string.format("%g",string.format("%.1f",(tonumber(used)/tonumber(total))*100)) or nil
+							total = fs.filesize(total) or nil
+							used = fs.filesize(used) or nil
 			  				sub_info = "Successful"
 			  			else
 			  				sub_info = "No Sub Info Found"
@@ -612,6 +619,7 @@ function sub_info_get()
 		sub_info = sub_info,
 		used = used,
 		total = total,
+		percent = percent,
 		expire = expire;
 	})
 end
@@ -756,8 +764,8 @@ function action_toolbar_show_sys()
 		mem = tonumber(luci.sys.exec(string.format("cat /proc/%s/status 2>/dev/null |grep -w VmRSS |awk '{print $2}'", pid)))
 		cpu = luci.sys.exec(string.format("top -b -n1 |grep -E '%s' 2>/dev/null |grep -v grep |awk '{for (i=1;i<=NF;i++) {if ($i ~ /clash/) break; else cpu=i}}; {print $cpu}' 2>/dev/null", pid))
 		if mem and cpu then
-			mem = fs.filesize(mem*1024)
-			cpu = string.match(cpu, "%d+")
+			mem = fs.filesize(mem*1024) or "0 KB"
+			cpu = string.match(cpu, "%d+") or "0"
 		else
 			mem = "0 KB"
 			cpu = "0"
@@ -798,8 +806,8 @@ function action_toolbar_show()
 		mem = tonumber(luci.sys.exec(string.format("cat /proc/%s/status 2>/dev/null |grep -w VmRSS |awk '{print $2}'", pid)))
 		cpu = luci.sys.exec(string.format("top -b -n1 |grep -E '%s' 2>/dev/null |grep -v grep |awk '{for (i=1;i<=NF;i++) {if ($i ~ /clash/) break; else cpu=i}}; {print $cpu}' 2>/dev/null", pid))
 		if mem and cpu then
-			mem = fs.filesize(mem*1024)
-			cpu = string.match(cpu, "%d+")
+			mem = fs.filesize(mem*1024) or "0 KB"
+			cpu = string.match(cpu, "%d+") or  "0"
 		else
 			mem = "0 KB"
 			cpu = "0"
@@ -911,6 +919,7 @@ function action_status()
 		dase = dase(),
 		db_foward_port = db_foward_port(),
 		db_foward_domain = db_foward_domain(),
+		db_forward_ssl = db_foward_ssl(),
 		web = is_web(),
 		cn_port = cn_port(),
 		restricted_mode = restricted_mode();

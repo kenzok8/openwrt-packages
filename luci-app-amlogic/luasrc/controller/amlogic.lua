@@ -76,17 +76,12 @@ else
 end
 
 --Device identification
-mydevice_logs = luci.sys.exec("cat /proc/device-tree/model | tr -d \'\\000\' > /tmp/amlogic/amlogic_mydevice_name.log && sync")
-mydevice_name = luci.sys.exec("cat /proc/device-tree/model | tr -d \'\\000\'") or "Unknown device"
-if string.find(mydevice_name, "Chainedbox L1 Pro") ~= nil then
+device_platfrom = trim(luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner)'")) or "Unknown PLATFORM"
+if (device_platfrom == "rockchip") then
 	device_install_script = ""
 	device_update_script = "openwrt-update-rockchip"
 	device_kernel_script = "openwrt-kernel"
-elseif string.find(mydevice_name, "BeikeYun") ~= nil then
-	device_install_script = ""
-	device_update_script = "openwrt-update-rockchip"
-	device_kernel_script = "openwrt-kernel"
-elseif string.find(mydevice_name, "V-Plus Cloud") ~= nil then
+elseif (device_platfrom == "allwinner") then
 	device_install_script = ""
 	device_update_script = "openwrt-update-allwinner"
 	device_kernel_script = "openwrt-kernel"

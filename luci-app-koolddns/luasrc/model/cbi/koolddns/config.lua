@@ -1,10 +1,9 @@
 local n="koolddns"
 local i=require"luci.dispatcher"
 local o=require"luci.model.network".init()
-local m=require"nixio.fs"
 local a,t,e
 arg[1]=arg[1]or""
-a=Map(n,translate("Koolddns Config"))
+a=Map(n,translate("DDNS Config"))
 a.redirect=i.build_url("admin","services","koolddns")
 t=a:section(NamedSection,arg[1],"koolddns","")
 t.addremove=false
@@ -19,42 +18,14 @@ e.datatype="host"
 e.rmempty=false
 e=t:option(Value,"name",translate("Sub Domain"))
 e.rmempty=false
-e=t:option(ListValue,"record_type",translate("Record Type"))
-e.rmempty=false
-e.default="A"
-e:value("A",translate("A Record"))
-e:value("AAAA",translate("AAAA Record"))
-e:depends("service","aliddns")
-e=t:option(ListValue,"ttl_time",translate("TTL"))
-e.rmempty=false
-e.default="600"
-e:value("600",translate("600s"))
-e:value("120",translate("120s"))
-e:value("60",translate("60s"))
-e:value("10",translate("10s"))
-e:depends("service","aliddns")
 e=t:option(ListValue,"service",translate("Service Providers"))
-if m.access("/usr/bin/klaliddns")then
 e:value("aliddns",translate("AliDDNS"))
-end
-if m.access("/usr/bin/klcloudxns")then
-e:value("cloudxns",translate("CloudXNS"))
-end
-if m.access("/usr/bin/kldnspod")then
 e:value("dnspod",translate("DNSPOD"))
-end
 e.rmempty=false
-e=t:option(Value,"accesskey",translate("Access Key"))
+e=t:option(Value,"accesskey",translate("Token ID"))
 e.rmempty=false
-e:depends("service","aliddns")
-e:depends("service","cloudxns")
-e=t:option(Value,"signature",translate("Signature"))
+e=t:option(Value,"signature",translate("Token Key"))
 e.rmempty=false
-e:depends("service","aliddns")
-e:depends("service","cloudxns")
-e=t:option(Value,"apitoken",translate("API Token"),translate("Go to dnspod.cn/console/user/security settings, (format: ID, Token), such as: 11220,2d11d8bd2711s8dr56y10564f9648523"))
-e.rmempty=false
-e:depends("service","dnspod")
 e=t:option(Value,"interface",translate("Interface"))
 e.rmempty=false
 e:value("url",translate("Use the URL to obtain the public IP"))
