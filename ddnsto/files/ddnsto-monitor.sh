@@ -21,6 +21,9 @@ echo "ddnsto version device_id is is:"
 
 _term() {
   killall ddnsto 2>/dev/null
+  rm -f /tmp/.ddnsto.pid
+  rm -f /tmp/.ddnsto.status
+  rm -f /tmp/.ddnsto.up
   exit
 }
 
@@ -28,7 +31,6 @@ trap "_term;" SIGTERM
 
 while true ; do
   if ! pidof "ddnsto" > /dev/null ; then
-    echo "ddnsto try running"
     /usr/sbin/ddnsto -u ${TOKEN} -x ${DEVICE_IDX} &
     PID=$!
     wait $PID
