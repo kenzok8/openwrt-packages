@@ -19,11 +19,11 @@ log(){
 get_ip(){
 	if ! echo $ip | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$">/dev/null;then
 		r=1
-		while ! nslookup $ip 127.0.0.1#5336 >/dev/null 2>&1;do
+		while ! nslookup $ip 127.0.0.1:5336 >/dev/null 2>&1;do
 			[ $r -ge 10 ] && return 1 || let r++
 			sleep 1
 		done
-		ip=$(nslookup $ip 127.0.0.1#5336 2>/dev/null | grep Address | awk -F' ' '{print$NF}' | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$");i=$?
+		ip=$(nslookup $ip 127.0.0.1:5336 2>/dev/null | grep Address | awk -F' ' '{print$NF}' | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$");i=$?
 		ip=$(echo "$ip" | sed -n 1p)
 	fi
 	return $i
