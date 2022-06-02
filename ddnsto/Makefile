@@ -10,11 +10,11 @@ include $(TOPDIR)/rules.mk
 PKG_ARCH_DDNSTO:=$(ARCH)
 
 PKG_NAME:=ddnsto
-PKG_VERSION:=0.3.1
+PKG_VERSION:=0.3.3
 PKG_RELEASE:=2
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://fw.koolcenter.com/binary/ddnsto/
-PKG_HASH:=2f066540cad16e1ccdaad626937578bfb5c1a13479bd54f36373c479eb4b02d6
+PKG_HASH:=8a51602f8849db96d4c57dca27064ec5e68c0b7169510041500f016d354427cb
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
 
@@ -58,6 +58,7 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ddnsto.$(PKG_ARCH_DDNSTO) $(1)/usr/sbin/ddnsto
 	$(INSTALL_CONF) ./files/ddnsto.config $(1)/etc/config/ddnsto
 	$(INSTALL_BIN) ./files/ddnsto.init $(1)/etc/init.d/ddnsto
+	$(INSTALL_BIN) ./files/ddnsto-monitor.sh $(1)/usr/sbin/ddnsto-monitor.sh
 	$(INSTALL_BIN) ./files/ddnsto.uci-default $(1)/etc/uci-defaults/ddnsto
 endef
 
