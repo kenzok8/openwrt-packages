@@ -2694,44 +2694,46 @@ td>.ifacebadge,
 .network-status-table {
     display: flex;
     flex-wrap: wrap;
-}
 
-.network-status-table .ifacebox {
-    flex-grow: 1;
-    border-radius: 4px;
-    overflow: hidden;
-    margin: 0 1.25rem 1rem 1.25rem;
-}
-
-.network-status-table .ifacebox-body {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    gap: 0.5em;
-}
-
-.network-status-table .ifacebox-body>span {
-    flex: 10 10 auto;
-    height: 100%;
-}
-
-.network-status-table .ifacebox-body>div {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
-}
-
-.network-status-table .ifacebox-body .ifacebadge {
-    align-items: center;
-    flex: 1 1 auto;
-    min-width: 220px;
-    padding: .5em;
-    background-color: #fff;
-
-    >span {
-        white-space: nowrap;
+    .ifacebox {
+        flex-grow: 1;
+        border-radius: 4px;
         overflow: hidden;
-        text-overflow: ellipsis;
+        margin: 0 1.25rem 1rem 1.25rem;
+    }
+
+    .ifacebox-body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        gap: 0.5em;
+
+        >span {
+            flex: 10 10 auto;
+        }
+
+        >div {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            height: 100%;
+        }
+
+        .ifacebadge {
+            align-items: center;
+            flex: 1 1 auto;
+            min-width: 220px;
+            padding: .5em;
+            background-color: #fff;
+
+            >span {
+                height: 100%;
+                align-self: flex-start;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+        }
     }
 }
 
