@@ -85,7 +85,7 @@ while [ "1" == "1" ]; do #死循环
 	#pdnsd
 	if [ "$pdnsd_process" -eq 1 ]; then
 		icount=$(busybox ps -w | grep $TMP_BIN_PATH/pdnsd | grep -v grep | wc -l)
-		if [ "$icount" -lt "$pdnsd_process" ]; then #如果进程挂掉就重启它
+		if [ "$icount" -lt 1 ]; then #如果进程挂掉就重启它
 			logger -t "$NAME" "pdnsd tunnel error.restart!"
 			echolog "pdnsd tunnel error.restart!"
 			if [ -f /var/run/pdnsd.pid ]; then
@@ -95,9 +95,8 @@ while [ "1" == "1" ]; do #死循环
 			fi
 			ln_start_bin $(first_type pdnsd) pdnsd -c $TMP_PATH/pdnsd.conf
 		fi
-	fi
 	#dns2socks
-	if [ "$pdnsd_process" -eq 2 ]; then
+	elif [ "$pdnsd_process" -eq 2 ]; then
 		icount=$(busybox ps -w | grep -e ssrplus-dns -e "dns2socks 127.0.0.1 $tmp_dns_port" | grep -v grep | wc -l)
 		if [ "$icount" -lt 2 ]; then #如果进程挂掉就重启它
 			logger -t "$NAME" "dns2socks $dnsstr tunnel error.restart!"
@@ -109,6 +108,18 @@ while [ "1" == "1" ]; do #死循环
 			kill -9 $(busybox ps -w | grep "dns2socks 127.0.0.1 $tmp_dns_port" | grep -v grep | awk '{print $1}') >/dev/null 2>&1
 			ln_start_bin $(first_type microsocks) microsocks -i 127.0.0.1 -p $tmp_dns_port ssrplus-dns
 			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver:$dnsport 127.0.0.1:$dns_port -q
+		fi
+	#dns2tcp
+	elif [ "$pdnsd_process" -eq 3 ]; then
+		icount=$(busybox ps -w | grep $TMP_BIN_PATH/dns2tcp | grep -v grep | wc -l)
+		if [ "$icount" -lt 1 ]; then #如果进程挂掉就重启它
+			logger -t "$NAME" "dns2tcp tunnel error.restart!"
+			echolog "dns2tcp tunnel error.restart!"
+			dnsstr=$(uci_get_by_type global tunnel_forward 8.8.4.4:53)
+			dnsserver=$(echo "$dnsstr" | awk -F ':' '{print $1}')
+			dnsport=$(echo "$dnsstr" | awk -F ':' '{print $2}')
+			kill -9 $(busybox ps -w | grep $TMP_BIN_PATH/dns2tcp | grep -v grep | awk '{print $1}') >/dev/null 2>&1
+			ln_start_bin $(first_type dns2tcp) dns2tcp -L "127.0.0.1#$dns_port" -R "$dnsserver#$dnsport"
 		fi
 	fi
 done

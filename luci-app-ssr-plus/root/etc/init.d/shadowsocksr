@@ -221,6 +221,10 @@ start_dns() {
 			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver:$dnsport 127.0.0.1:$dns_port -q
 			pdnsd_enable_flag=2
 			;;
+		3)
+			ln_start_bin $(first_type dns2tcp) dns2tcp -L "127.0.0.1#$dns_port" -R "$dnsserver#$dnsport"
+			pdnsd_enable_flag=3
+			;;
 		esac
 	fi
 }

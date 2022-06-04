@@ -430,6 +430,9 @@ msgstr "使用PDNSD TCP查询并缓存"
 msgid "Use DNS2SOCKS query and cache"
 msgstr "使用 DNS2SOCKS 查询并缓存"
 
+msgid "Use DNS2TCP query"
+msgstr "使用 DNS2TCP 查询"
+
 msgid "DNS Server IP:Port"
 msgstr "DNS服务器 IP:Port"
 
