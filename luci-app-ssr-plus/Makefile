@@ -2,13 +2,13 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ssr-plus
 PKG_VERSION:=185
-PKG_RELEASE:=4
+PKG_RELEASE:=5
 
 PKG_CONFIG_DEPENDS:= \
-	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_DNS2TCP \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_IPT2Socks \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_PDNSD \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2 \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server \
@@ -25,13 +25,13 @@ LUCI_TITLE:=SS/SSR/V2Ray/Trojan/NaiveProxy/Socks5/Tun LuCI interface
 LUCI_PKGARCH:=all
 LUCI_DEPENDS:= \
 	@(PACKAGE_libustream-mbedtls||PACKAGE_libustream-openssl||PACKAGE_libustream-wolfssl) \
-	+coreutils +coreutils-base64 +dns2socks +dnsmasq-full +ipset +kmod-ipt-nat +ip-full \
-	+iptables +iptables-mod-tproxy +lua +libuci-lua +microsocks +pdnsd-alt +tcping \
+	+coreutils +coreutils-base64 +dns2socks +dns2tcp +dnsmasq-full +ipset +kmod-ipt-nat \
+	+ip-full +iptables +iptables-mod-tproxy +lua +libuci-lua +microsocks +tcping \
 	+resolveip +shadowsocksr-libev-ssr-check +uclient-fetch \
-	+PACKAGE_$(PKG_NAME)_INCLUDE_DNS2TCP:dns2tcp \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun:kcptun-client \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_IPT2Socks:ipt2socks \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy:naiveproxy \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_PDNSD:pdnsd-alt \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2:redsocks2 \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client:shadowsocks-libev-ss-local \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client:shadowsocks-libev-ss-redir \
@@ -48,10 +48,6 @@ LUCI_DEPENDS:= \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Xray:xray-core
 
 define Package/$(PKG_NAME)/config
-config PACKAGE_$(PKG_NAME)_INCLUDE_DNS2TCP
-	bool "Include DNS2TCP"
-	default n
-
 config PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun
 	bool "Include Kcptun"
 	default n
@@ -63,6 +59,10 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_IPT2Socks
 	bool "Include ipt2socks"
+	default n
+
+config PACKAGE_$(PKG_NAME)_INCLUDE_PDNSD
+	bool "Include PDNSD"
 	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2
