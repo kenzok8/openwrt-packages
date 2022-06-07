@@ -1,14 +1,21 @@
 -- Copyright (C) 2017 yushi studio <ywb94@qq.com> github.com/ywb94
 -- Licensed to the public under the GNU General Public License v3.
+
 require "nixio.fs"
 require "luci.sys"
 require "luci.http"
-local m, s, o, kcp_enable
+require "luci.model.ipkg"
+
+local m, s, o
 local sid = arg[1]
 local uuid = luci.sys.exec("cat /proc/sys/kernel/random/uuid")
 
-function is_finded(e)
+local function is_finded(e)
 	return luci.sys.exec('type -t -p "%s"' % e) ~= "" and true or false
+end
+
+local function is_installed(e)
+	return luci.model.ipkg.installed(e)
 end
 
 local server_table = {}
@@ -40,12 +47,19 @@ local encrypt_methods = {
 }
 
 local encrypt_methods_ss = {
+	-- plain
+	"none",
+	"plain",
 	-- aead
 	"aes-128-gcm",
 	"aes-192-gcm",
 	"aes-256-gcm",
 	"chacha20-ietf-poly1305",
-	"xchacha20-ietf-poly1305"
+	"xchacha20-ietf-poly1305",
+	-- aead 2022
+	"2022-blake3-aes-128-gcm",
+	"2022-blake3-aes-256-gcm",
+	"2022-blake3-chacha20-poly1305"
 	--[[ stream
 	"none",
 	"plain",
@@ -67,22 +81,6 @@ local encrypt_methods_ss = {
 	"chacha20-ietf" ]]
 }
 
-local encrypt_methods_v2ray_ss = {
-	-- xray_ss
-	"none",
-	"plain",
-	-- aead
-	"aes-128-gcm",
-	"aes-256-gcm",
-	"chacha20-poly1305",
-	"chacha20-ietf-poly1305",
-	"xchacha20-ietf-poly1305",
-	"aead_aes_128_gcm",
-	"aead_aes_256_gcm",
-	"aead_chacha20_poly1305",
-	"aead_xchacha20_poly1305"
-}
-
 local protocol = {
 	-- ssr
 	"origin",
@@ -98,7 +96,7 @@ local protocol = {
 	"auth_chain_f"
 }
 
-obfs = {
+local obfs = {
 	-- ssr
 	"plain",
 	"http_simple",
@@ -117,7 +115,7 @@ local securitys = {
 }
 
 local flows = {
-	-- xlts
+	-- xtls
 	"xtls-rprx-origin",
 	"xtls-rprx-origin-udp443",
 	"xtls-rprx-direct",
@@ -184,6 +182,9 @@ o:value("vless", translate("VLESS"))
 o:value("vmess", translate("VMess"))
 o:value("trojan", translate("Trojan"))
 o:value("shadowsocks", translate("Shadowsocks"))
+if is_installed("sagernet-core") then
+	o:value("wireguard", translate("WireGuard"))
+end
 o:value("socks", translate("Socks"))
 o:value("http", translate("HTTP"))
 o:depends("type", "v2ray")
@@ -248,13 +249,13 @@ for _, v in ipairs(encrypt_methods_ss) do
 end
 o.rmempty = true
 o:depends("type", "ss")
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
 
-o = s:option(ListValue, "encrypt_method_v2ray_ss", translate("Encrypt Method"))
-for _, v in ipairs(encrypt_methods_v2ray_ss) do
-	o:value(v)
-end
+o = s:option(Flag, "uot", translate("UDP over TCP"))
+o.description = translate("Enable the SUoT protocol, requires server support.")
 o.rmempty = true
 o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
+o.default = "0"
 
 o = s:option(Flag, "ivCheck", translate("Bloom Filter"))
 o.rmempty = true
@@ -267,7 +268,7 @@ o:value("none", translate("None"))
 if is_finded("obfs-local") then
 	o:value("obfs-local", translate("obfs-local"))
 end
-if is_finded("v2ray-plugin") then
+if is_finded("v2ray-plugin") or is_installed("sagernet-core") then
 	o:value("v2ray-plugin", translate("v2ray-plugin"))
 end
 if is_finded("xray-plugin") then
@@ -275,12 +276,12 @@ if is_finded("xray-plugin") then
 end
 o.rmempty = true
 o:depends("type", "ss")
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
 
 o = s:option(Value, "plugin_opts", translate("Plugin Opts"))
 o.rmempty = true
-o:depends({type = "ss", plugin = "obfs-local"})
-o:depends({type = "ss", plugin = "v2ray-plugin"})
-o:depends({type = "ss", plugin = "xray-plugin"})
+o:depends("type", "ss")
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
 
 o = s:option(ListValue, "protocol", translate("Protocol"))
 for _, v in ipairs(protocol) do
@@ -332,7 +333,12 @@ o:value("h2", "HTTP/2")
 o:value("quic", "QUIC")
 o:value("grpc", "gRPC")
 o.rmempty = true
-o:depends("type", "v2ray")
+o:depends({type = "v2ray", v2ray_protocol = "vless"})
+o:depends({type = "v2ray", v2ray_protocol = "vmess"})
+o:depends({type = "v2ray", v2ray_protocol = "trojan"})
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
+o:depends({type = "v2ray", v2ray_protocol = "socks"})
+o:depends({type = "v2ray", v2ray_protocol = "http"})
 
 -- [[ TCP部分 ]]--
 -- TCP伪装
@@ -452,7 +458,8 @@ o.rmempty = true
 o = s:option(Value, "mtu", translate("MTU"))
 o.datatype = "uinteger"
 o:depends("transport", "kcp")
-o.default = 1350
+o:depends({type = "v2ray", v2ray_protocol = "wireguard"})
+-- o.default = 1350
 o.rmempty = true
 
 o = s:option(Value, "tti", translate("TTI"))
@@ -493,12 +500,35 @@ o = s:option(Flag, "congestion", translate("Congestion"))
 o:depends("transport", "kcp")
 o.rmempty = true
 
+-- [[ WireGuard 部分 ]]--
+o = s:option(DynamicList, "local_addresses", translate("Local addresses"))
+o:depends({type = "v2ray", v2ray_protocol = "wireguard"})
+o.rmempty = true
+
+o = s:option(Value, "private_key", translate("Private key"))
+o:depends({type = "v2ray", v2ray_protocol = "wireguard"})
+o.password = true
+o.rmempty = true
+
+o = s:option(Value, "peer_pubkey", translate("Peer public key"))
+o:depends({type = "v2ray", v2ray_protocol = "wireguard"})
+o.rmempty = true
+
+o = s:option(Value, "preshared_key", translate("Pre-shared key"))
+o:depends({type = "v2ray", v2ray_protocol = "wireguard"})
+o.password = true
+o.rmempty = true
+
 -- [[ TLS ]]--
 o = s:option(Flag, "tls", translate("TLS"))
 o.rmempty = true
 o.default = "0"
-o:depends({type = "v2ray", xtls = false})
--- o:depends({type = "v2ray", v2ray_protocol = "vless", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "vless", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "vmess", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "trojan", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocks", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "socks", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "http", xtls = false})
 o:depends("type", "trojan")
 
 -- XTLS
@@ -552,7 +582,12 @@ o.description = translate("If true, allowss insecure connection at TLS client, e
 -- [[ Mux ]]--
 o = s:option(Flag, "mux", translate("Mux"))
 o.rmempty = false
-o:depends({type = "v2ray", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "vless", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "vmess", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "trojan", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocks", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "socks", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "http", xtls = false})
 
 o = s:option(Value, "concurrency", translate("Concurrency"))
 o.datatype = "uinteger"
@@ -619,6 +654,17 @@ o:depends("type", "ssr")
 o:depends("type", "ss")
 o:depends("type", "trojan")
 
+if is_installed("sagernet-core") then
+	o = s:option(ListValue, "packet_encoding", translate("Packet Encoding"))
+	o:value("none", translate("none"))
+	o:value("packet", translate("packet (v2ray-core v5+)"))
+	o:value("xudp", translate("xudp (Xray-core)"))
+	o.default = "xudp"
+	o.rmempty = true
+	o:depends({type = "v2ray", v2ray_protocol = "vless"})
+	o:depends({type = "v2ray", v2ray_protocol = "vmess"})
+end
+
 o = s:option(Flag, "switch_enable", translate("Enable Auto Switch"))
 o.rmempty = false
 o.default = "1"
@@ -629,11 +675,11 @@ o.default = 1234
 o.rmempty = false
 
 if is_finded("kcptun-client") then
-	kcp_enable = s:option(Flag, "kcp_enable", translate("KcpTun Enable"))
-	kcp_enable.rmempty = true
-	kcp_enable.default = "0"
-	kcp_enable:depends("type", "ssr")
-	kcp_enable:depends("type", "ss")
+	o = s:option(Flag, "kcp_enable", translate("KcpTun Enable"))
+	o.rmempty = true
+	o.default = "0"
+	o:depends("type", "ssr")
+	o:depends("type", "ss")
 
 	o = s:option(Value, "kcp_port", translate("KcpTun Port"))
 	o.datatype = "port"

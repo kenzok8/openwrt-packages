@@ -1,11 +1,16 @@
-local ucursor = require"luci.model.uci".cursor()
+#!/usr/bin/lua
+
+local ucursor = require "luci.model.uci".cursor()
 local json = require "luci.jsonc"
+
 local server_section = arg[1]
 local proto = arg[2]
 local local_port = arg[3] or "0"
 local socks_port = arg[4] or "0"
+
 local server = ucursor:get_all("shadowsocksr", server_section)
 local outbound_settings = nil
+
 function vmess_vless()
 	outbound_settings = {
 		vnext = {
@@ -21,19 +26,23 @@ function vmess_vless()
 					}
 				}
 			}
-		}
+		},
+		packetEncoding = server.packet_encoding or nil
 	}
 end
 function trojan_shadowsocks()
 	outbound_settings = {
+		plugin = (server.v2ray_protocol == "shadowsocks") and server.plugin ~= "none" and server.plugin or nil,
+		pluginOpts = (server.v2ray_protocol == "shadowsocks") and server.plugin_opts or nil,
 		servers = {
 			{
 				address = server.server,
 				port = tonumber(server.server_port),
 				password = server.password,
-				method = (server.v2ray_protocol == "shadowsocks") and server.encrypt_method_v2ray_ss or nil,
-				flow = (server.v2ray_protocol == "trojan") and (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-splice") or nil,
-				ivCheck = (server.v2ray_protocol == "shadowsocks") and (server.ivCheck == '1') or nil
+				method = (server.v2ray_protocol == "shadowsocks") and server.encrypt_method_ss or nil,
+				uot = (server.v2ray_protocol == "shadowsocks") and (server.uot == '1') or nil,
+				ivCheck = (server.v2ray_protocol == "shadowsocks") and (server.ivCheck == '1') or nil,
+				flow = (server.v2ray_protocol == "trojan") and (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-splice") or nil
 			}
 		}
 	}
@@ -52,6 +61,17 @@ function socks_http()
 				} or nil
 			}
 		}
+	}
+end
+function wireguard()
+	outbound_settings = {
+		address = server.server,
+		port = tonumber(server.server_port),
+		localAddresses = server.local_addresses,
+		privateKey = server.private_key,
+		peerPublicKey = server.peer_pubkey,
+		preSharedKey = server.preshared_key or nil,
+		mtu = tonumber(server.mtu) or 1500
 	}
 end
 local outbound = {}
@@ -80,6 +100,9 @@ function outbound:handleIndex(index)
 		end,
 		http = function()
 			socks_http()
+		end,
+		wireguard = function()
+			wireguard()
 		end
 	}
 	if switch[index] then
@@ -185,7 +208,8 @@ local Xray = {
 		mux = (server.mux == "1" and server.xtls ~= "1" and server.transport ~= "grpc") and {
 			-- mux
 			enabled = true,
-			concurrency = tonumber(server.concurrency)
+			concurrency = tonumber(server.concurrency),
+			packetEncoding = (server.v2ray_protocol == "vmess" or server.v2ray_protocol == "vless") and server.packet_encoding or nil
 		} or nil
 	} or nil
 }

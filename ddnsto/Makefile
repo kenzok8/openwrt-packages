@@ -11,7 +11,7 @@ PKG_ARCH_DDNSTO:=$(ARCH)
 
 PKG_NAME:=ddnsto
 PKG_VERSION:=0.3.3
-PKG_RELEASE:=2
+PKG_RELEASE:=$(PKG_ARCH_DDNSTO)-2
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://fw.koolcenter.com/binary/ddnsto/
 PKG_HASH:=8a51602f8849db96d4c57dca27064ec5e68c0b7169510041500f016d354427cb
@@ -29,6 +29,7 @@ define Package/$(PKG_NAME)
 	SUBMENU:=Web Servers/Proxies
 	TITLE:=DDNS.to - the reverse proxy
 	DEPENDS:=
+	PKGARCH:=all
 	URL:=https://www.ddnsto.com/
 endef
 
