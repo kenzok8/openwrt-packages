@@ -23,20 +23,20 @@ msgstr "全局设置"
 msgid "Rule Providers and Groups"
 msgstr "规则集与策略组管理"
 
-msgid "Game Rules and Groups (Only TUN Core Support)"
-msgstr "游戏规则与策略组管理（仅 TUN 内核）"
+msgid "Game Rules and Groups (Only TUN & Meta Core Support)"
+msgstr "游戏规则与策略组管理（仅 TUN & Meta 内核）"
 
-msgid "Other Rule Providers and Groups (Only TUN Core Support)"
-msgstr "第三方规则集与策略组管理（仅 TUN 内核）"
+msgid "Other Rule Providers and Groups (Only TUN & Meta Core Support)"
+msgstr "第三方规则集与策略组管理（仅 TUN & Meta 内核）"
 
-msgid "Custom Rule Providers and Groups (Only TUN Core Support)"
-msgstr "自定义规则集与策略组管理（仅 TUN 内核）"
+msgid "Custom Rule Providers and Groups (Only TUN & Meta Core Support)"
+msgstr "自定义规则集与策略组管理（仅 TUN & Meta 内核）"
 
 msgid "General Settings"
 msgstr "常规设置"
 
-msgid "DNS Setting"
-msgstr "DNS 设置"
+msgid "Settings"
+msgstr "设置"
 
 msgid "Config Update"
 msgstr "配置文件订阅"
@@ -2896,6 +2896,12 @@ msgstr "点击前往"
 msgid "(Only Meta Core)"
 msgstr "（仅 Meta 内核）"
 
+msgid "(Only TUN Core)"
+msgstr "（仅 TUN 内核）"
+
+msgid "(TUN&Meta Core)"
+msgstr "（TUN&Meta 内核）"
+
 msgid "Warning: Only Meta Core Support QUIC Type DNS, Skip"
 msgstr "警告：仅 Meta 内核支持 QUIC 类型的 DNS，跳过"
 
@@ -2934,3 +2940,48 @@ msgstr "*启用 TCP 并发"
 
 msgid "TCP Concurrent Request IPs, Choose The Lowest Latency One To Connection"
 msgstr "TCP 并发请求所有 IP 地址，然后选择延迟最低的一个进行连接"
+
+msgid "Remaining"
+msgstr "剩余"
+
+msgid "days"
+msgstr "天"
+
+msgid "Douyin"
+msgstr "抖音（Douyin）"
+
+msgid "Warning: Skip the Custom Rule that Core not Support"
+msgstr "警告：跳过核心不支持的自定义规则"
+
+msgid "Specific Interface"
+msgstr "指定接口"
+
+msgid "Specific Group"
+msgstr "指定策略组"
+
+msgid "Warning: Only Meta Core Support Specific Group, Skip Setting"
+msgstr "警告：仅 Meta 内核支持指定 DNS 的策略组，跳过设置"
+
+msgid "Node Resolve"
+msgstr "节点解析"
+
+msgid "Warning: Only Meta Core Support proxy-server-nameserver, Skip Setting"
+msgstr "警告：仅 Meta 内核支持设置解析节点域名的 DNS，跳过设置"
+
+msgid "Warning: Meta Core not Support Specific Interface, Skip Setting"
+msgstr "警告：Meta 内核不支持设置指定 DNS 的出口，跳过设置"
+
+msgid "Lan Bypassed Port List"
+msgstr "绕过核心的来源端口"
+
+msgid "The Traffic From The Local Specified Port Will Not Pass The Core, Try To Set When The Bypass Gateway Forwarding Fails"
+msgstr "来自本地指定端口的流量不会通过核心，在旁路网关（旁路由）下转发失败时尝试设置"
+
+msgid "Local IPv4 Network Bypassed List"
+msgstr "本地 IPv4 绕过地址"
+
+msgid "Local IPv6 Network Bypassed List"
+msgstr "本地 IPv6 绕过地址"
+
+msgid "The Traffic of The Destination For The Specified Address Will Not Pass The Core"
+msgstr "目的地为指定地址的流量不会通过核心"

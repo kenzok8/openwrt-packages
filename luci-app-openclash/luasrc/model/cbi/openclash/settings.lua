@@ -33,7 +33,7 @@ s.anonymous = true
 
 s:tab("op_mode", translate("Operation Mode"))
 s:tab("settings", translate("General Settings"))
-s:tab("dns", translate("DNS Setting"))
+s:tab("dns", "DNS "..translate("Settings"))
 s:tab("meta", translate("Meta Settings"))
 s:tab("stream_enhance", translate("Streaming Enhance"))
 s:tab("lan_ac", translate("Access Control"))
@@ -164,6 +164,7 @@ o = s:taboption("settings", Value, "github_address_mod", font_red..bold_on..tran
 o.description = translate("Modify The Github Address In The Config And OpenClash With Proxy(CDN) To Prevent File Download Faild. Format Reference:").." ".."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://ghproxy.com/\")'>https://ghproxy.com/</a>"
 o:value("0", translate("Disable"))
 o:value("https://fastly.jsdelivr.net/")
+o:value("https://raw.fastgit.org/")
 o:value("https://cdn.jsdelivr.net/")
 o.default = "0"
 
@@ -588,6 +589,48 @@ end
 o = s:taboption("lan_ac", DynamicList, "wan_ac_black_ips", translate("WAN Bypassed Host List"))
 o.datatype = "ipaddr"
 o.description = translate("In The Fake-IP Mode, Only Pure IP Requests Are Supported")
+
+o = s:taboption("lan_ac", DynamicList, "lan_ac_black_ports", translate("Lan Bypassed Port List"))
+o.datatype = "port"
+o.description = translate("The Traffic From The Local Specified Port Will Not Pass The Core, Try To Set When The Bypass Gateway Forwarding Fails")
+
+o = s:taboption("lan_ac", Value, "local_network_pass", translate("Local IPv4 Network Bypassed List"))
+o.template = "cbi/tvalue"
+o.description = translate("The Traffic of The Destination For The Specified Address Will Not Pass The Core")
+o.rows = 20
+o.wrap = "off"
+
+function o.cfgvalue(self, section)
+	return NXFS.readfile("/etc/openclash/custom/openclash_custom_localnetwork_ipv4.list") or ""
+end
+function o.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		local old_value = NXFS.readfile("/etc/openclash/custom/openclash_custom_localnetwork_ipv4.list")
+	  if value ~= old_value then
+			NXFS.writefile("/etc/openclash/custom/openclash_custom_localnetwork_ipv4.list", value)
+		end
+	end
+end
+
+o = s:taboption("lan_ac", Value, "local_network6_pass", translate("Local IPv6 Network Bypassed List"))
+o.template = "cbi/tvalue"
+o.description = translate("The Traffic of The Destination For The Specified Address Will Not Pass The Core")
+o.rows = 20
+o.wrap = "off"
+
+function o.cfgvalue(self, section)
+	return NXFS.readfile("/etc/openclash/custom/openclash_custom_localnetwork_ipv6.list") or ""
+end
+function o.write(self, section, value)
+	if value then
+		value = value:gsub("\r\n?", "\n")
+		local old_value = NXFS.readfile("/etc/openclash/custom/openclash_custom_localnetwork_ipv6.list")
+	  if value ~= old_value then
+			NXFS.writefile("/etc/openclash/custom/openclash_custom_localnetwork_ipv6.list", value)
+		end
+	end
+end
 
 ---- Rules Settings
 o = s:taboption("rules", Flag, "rule_source", translate("Enable Other Rules"))
@@ -1219,7 +1262,7 @@ else
 	o.value = font_red..bold_on..translate("Account not logged in")..bold_off..font_off
 end
 
--- [[ Edit Server ]] --
+-- [[ Edit Custom DNS ]] --
 s = m:section(TypedSection, "dns_servers", translate("Add Custom DNS Servers")..translate("(Take Effect After Choose Above)"))
 s.anonymous = true
 s.addremove = true
@@ -1233,6 +1276,14 @@ o.rmempty     = false
 o.default     = o.enabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "1"
+end
+
+---- enable flag
+o = s:option(Flag, "node_resolve", translate("Node Resolve"), font_red..bold_on..translate("(Only Meta Core)")..bold_off..font_off)
+o.rmempty     = false
+o.default     = o.disbled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "0"
 end
 
 ---- group
@@ -1266,6 +1317,31 @@ o:value("https", translate("HTTPS"))
 o:value("quic", translate("QUIC ")..translate("(Only Meta Core)"))
 o.default     = "udp"
 o.rempty      = false
+
+---- interface
+o = s:option(Value, "interface", translate("Specific Interface"))
+o.description = font_red..bold_on..translate("(Only TUN Core)")..bold_off..font_off
+for interface in string.gmatch(interfaces, "%S+") do
+	o:value(interface)
+end
+o:value("Disable", translate("Disable"))
+o.default = "Disable"
+o.rempty = false
+
+---- Proxy group
+o = s:option(Value, "specific_group", translate("Specific Group"))
+o.description = font_red..bold_on..translate("(Only Meta Core)")..bold_off..font_off
+uci:foreach("openclash", "groups",
+		function(s)
+		  if s.name ~= "" and s.name ~= nil then
+			   o:value(s.name)
+			end
+		end)
+o:value("DIRECT")
+o:value("REJECT")
+o:value("Disable", translate("Disable"))
+o.default = "Disable"
+o.rempty = false
 
 -- [[ Other Rules Manage ]]--
 ss = m:section(TypedSection, "other_rules", translate("Other Rules Edit")..translate("(Take Effect After Choose Above)"))

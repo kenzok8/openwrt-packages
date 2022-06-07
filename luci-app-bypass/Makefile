@@ -82,7 +82,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Trojan-Go
 	bool "Include Trojan Go"
-	default y
+	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy
 	bool "Include NaiveProxy"

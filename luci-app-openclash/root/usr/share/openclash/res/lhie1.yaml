@@ -23,6 +23,7 @@ rules:
 - RULE-SET,DAZN,Global TV
 - RULE-SET,Discovery Plus,Global TV
 - RULE-SET,encoreTVB,Global TV
+- RULE-SET,F1 TV,Global TV
 - RULE-SET,Fox Now,Global TV
 - RULE-SET,Fox+,Global TV
 - RULE-SET,HBO Go,Global TV
@@ -41,6 +42,7 @@ rules:
 - RULE-SET,Soundcloud,Global TV
 - RULE-SET,ViuTV,Global TV
 - RULE-SET,Telegram,Telegram
+- RULE-SET,Douyin,Douyin
 - RULE-SET,Steam,Steam
 - RULE-SET,Speedtest,Speedtest
 - RULE-SET,PayPal,PayPal
@@ -81,6 +83,7 @@ script:
             "DAZN": "Global TV",
             "Discovery Plus": "Global TV",
             "encoreTVB": "Global TV",
+            "F1 TV": "Global TV",
             "Fox Now": "Global TV",
             "Fox+": "Global TV",
             "HBO Go": "Global TV",
@@ -99,6 +102,7 @@ script:
             "Soundcloud": "Global TV",
             "ViuTV": "Global TV",
             "Telegram": "Telegram",
+            "Douyin": "Douyin",
             "Steam": "Steam",
             "Speedtest": "Speedtest",
             "PayPal": "PayPal",
@@ -286,6 +290,12 @@ rule-providers:
     url: https://dler.cloud/Rules/Clash/Provider/Media/encoreTVB.yaml
     path: "./Rules/Media/encoreTVB"
     interval: 86400
+  F1 TV:
+    type: http
+    behavior: classical
+    url: https://dler.cloud/Rules/Clash/Provider/Media/F1%20TV.yaml
+    path: "./Rules/Media/F1_TV"
+    interval: 86400
   Fox Now:
     type: http
     behavior: classical
@@ -393,6 +403,12 @@ rule-providers:
     behavior: classical
     url: https://dler.cloud/Rules/Clash/Provider/Telegram.yaml
     path: "./Rules/Telegram"
+    interval: 86400
+  Douyin:
+    type: http
+    behavior: classical
+    url: https://dler.cloud/Rules/Clash/Provider/Douyin.yaml
+    path: "./Rules/Douyin"
     interval: 86400
   Steam:
     type: http
