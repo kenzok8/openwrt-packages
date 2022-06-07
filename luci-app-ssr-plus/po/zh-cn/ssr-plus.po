@@ -61,6 +61,12 @@ msgstr "密码"
 msgid "Encrypt Method"
 msgstr "加密方式"
 
+msgid "Enable the SUoT protocol, requires server support."
+msgstr "启用 SUoT 协议，需要服务端支持。"
+
+msgid "Bloom Filter"
+msgstr "布隆过滤器"
+
 msgid "VLESS Encryption"
 msgstr "VLESS 加密"
 
@@ -706,9 +712,6 @@ msgstr "微信视频通话"
 msgid "DTLS 1.2"
 msgstr "DTLS 1.2 数据包"
 
-msgid "WireGuard"
-msgstr "WireGuard 数据包"
-
 msgid "MTU"
 msgstr "最大传输单元"
 
@@ -729,6 +732,21 @@ msgstr "写入缓冲区大小"
 
 msgid "Congestion"
 msgstr "拥塞控制"
+
+msgid "Local addresses"
+msgstr "本地地址"
+
+msgid "Private key"
+msgstr "私钥"
+
+msgid "Peer public key"
+msgstr "节点公钥"
+
+msgid "Pre-shared key"
+msgstr "预共享密钥"
+
+msgid "Packet Encoding"
+msgstr "数据包编码"
 
 msgid "Network interface to use"
 msgstr "使用的网络接口"
@@ -756,6 +774,9 @@ msgstr "重新应用"
 
 msgid "Apply"
 msgstr "应用"
+
+msgid "Default Packet Encoding"
+msgstr "默认数据包编码"
 
 msgid "Enable Netflix Mode"
 msgstr "启用 Netflix 分流模式"
