@@ -410,6 +410,17 @@ o = s:option(Value, "ws_path", translate("WebSocket Path"))
 o:depends("transport", "ws")
 o.rmempty = true
 
+-- WS前置数据
+o = s:option(Value, "ws_ed", translate("Max Early Data"))
+o:depends("transport", "ws")
+o.datatype = "uinteger"
+o.rmempty = true
+
+-- WS前置数据标头
+o = s:option(Value, "ws_ed_header", translate("Early Data Header Name"))
+o:depends("transport", "ws")
+o.rmempty = true
+
 -- [[ H2部分 ]]--
 
 -- H2域名
@@ -423,8 +434,16 @@ o:depends("transport", "h2")
 o.rmempty = true
 
 -- gRPC
-o = s:option(Value, "serviceName", translate("serviceName"))
+o = s:option(Value, "serviceName", translate("gRPC Service Name"))
 o:depends("transport", "grpc")
+o.rmempty = true
+
+-- gPRC模式
+o = s:option(ListValue, "grpc_mode", translate("gRPC Mode"))
+o:depends("transport", "grpc")
+o:value("gun", translate("Gun"))
+o:value("multi", translate("Multi"))
+o:value("raw", translate("Raw"))
 o.rmempty = true
 
 -- gRPC初始窗口

@@ -3,61 +3,6 @@ log:
   file: ${{ uci -q get mosdns.mosdns.logfile }}
 
 plugin:
-  - tag: main_server
-    type: server
-    args:
-      entry:
-        - _no_ecs
-        - lazy_cache
-        - _prefer_ipv4
-        - _single_flight
-        - main_sequence
-      server:
-        - protocol: udp
-          addr: ":${{ uci -q get mosdns.mosdns.listen_port }}"
-        - protocol: tcp
-          addr: ":${{ uci -q get mosdns.mosdns.listen_port }}"
-
-  - tag: main_sequence
-    type: sequence
-    args:
-      exec:
-        - query_is_hosts_domain
-        - query_is_redirect_domain
-        - if:
-            - query_is_whitelist_domain
-          exec:
-            - forward_local
-            - _return
-        - if:
-            - query_is_blocklist_domain
-            - query_is_ad_domain
-            - qtype65
-          exec:
-            - _block_with_nxdomain
-            - _return
-        - if:
-            - query_is_local_domain
-            - "!_query_is_common"
-          exec:
-            - forward_local
-            - _return
-        - if:
-            - query_is_non_local_domain
-          exec:
-            - forward_remote
-            - _return
-        - primary:
-            - forward_local
-            - if:
-                - "!response_has_local_ip"
-              exec:
-                - _drop_response
-          secondary:
-            - forward_remote
-          fast_fallback: 150
-          always_standby: true
-
   - tag: forward_local
     type: fast_forward
     args:
@@ -131,3 +76,67 @@ plugin:
     type: query_matcher
     args:
       qtype: [65]
+      
+  - tag: query_is_local_ptr
+    type: query_matcher
+    args:
+      logical_and: true
+      qtype: [12]
+      domain:
+        - "ext:./local-ptr.txt"
+      
+  - tag: main_sequence
+    type: sequence
+    args:
+      exec:
+        - query_is_hosts_domain
+        - query_is_redirect_domain
+        - if:
+            - query_is_whitelist_domain
+          exec:
+            - forward_local
+            - _return
+        - if:
+            - query_is_blocklist_domain
+            - query_is_ad_domain
+            - qtype65
+            - query_is_local_ptr
+          exec:
+            - _block_with_nxdomain
+            - _return
+        - if:
+            - query_is_local_domain
+            - "!_query_is_common"
+          exec:
+            - forward_local
+            - _return
+        - if:
+            - query_is_non_local_domain
+          exec:
+            - forward_remote
+            - _return
+        - primary:
+            - forward_local
+            - if:
+                - "!response_has_local_ip"
+              exec:
+                - _drop_response
+          secondary:
+            - forward_remote
+          fast_fallback: 150
+          always_standby: true
+      
+  - tag: main_server
+    type: server
+    args:
+      entry:
+        - _no_ecs
+        - lazy_cache
+        - _prefer_ipv4
+        - _single_flight
+        - main_sequence
+      server:
+        - protocol: udp
+          addr: ":${{ uci -q get mosdns.mosdns.listen_port }}"
+        - protocol: tcp
+          addr: ":${{ uci -q get mosdns.mosdns.listen_port }}"

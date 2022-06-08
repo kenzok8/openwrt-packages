@@ -5,7 +5,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=sagernet-core
-BASE_VERSION:=5.0.12
+BASE_VERSION:=5.0.14
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git

@@ -712,6 +712,57 @@ msgstr "V2Ray/XRay 协议"
 msgid "Camouflage Type"
 msgstr "伪装类型"
 
+msgid "HTTP Host"
+msgstr "HTTP 主机名"
+
+msgid "HTTP Path"
+msgstr "HTTP 路径"
+
+msgid "WebSocket Host"
+msgstr "WebSocket 主机名"
+
+msgid "WebSocket Path"
+msgstr "WebSocket 路径"
+
+msgid "Max Early Data"
+msgstr "最大前置数据"
+
+msgid "Early Data Header Name"
+msgstr "前置数据标头"
+
+msgid "HTTP/2 Host"
+msgstr "HTTP/2 主机名"
+
+msgid "HTTP/2 Path"
+msgstr "HTTP/2 路径"
+
+msgid "gRPC Service Name"
+msgstr "gRPC 服务名称"
+
+msgid "gRPC Mode"
+msgstr "gRPC 模式"
+
+msgid "Initial Windows Size"
+msgstr "初始窗口大小"
+
+msgid "H2/gRPC Health Check"
+msgstr "H2/gRPC 健康检查"
+
+msgid "H2 Read Idle Timeout"
+msgstr "H2 读取空闲超时"
+
+msgid "gRPC Idle Timeout"
+msgstr "gPRC 空闲超时"
+
+msgid "Health Check Timeout"
+msgstr "健康检查超时"
+
+msgid "QUIC Security"
+msgstr "QUIC 加密方式"
+
+msgid "QUIC Key"
+msgstr "QUIC 密钥"
+
 msgid "VideoCall (SRTP)"
 msgstr "视频通话 (SRTP)"
 
