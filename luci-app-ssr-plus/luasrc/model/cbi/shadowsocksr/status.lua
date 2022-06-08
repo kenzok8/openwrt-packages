@@ -88,7 +88,7 @@ if Process_list:find("ssr.server") then
 	server_run = 1
 end
 
-if Process_list:find("ssrplus/bin/pdnsd") or Process_list:find("ssrplus/bin/dns2tcp") or (Process_list:find("ssrplus.dns") and Process_list:find("dns2socks.127.0.0.1.*127.0.0.1.5335")) then
+if Process_list:find("ssrplus/bin/dns2tcp") or (Process_list:find("ssrplus.dns") and Process_list:find("dns2socks.127.0.0.1.*127.0.0.1.5335")) then
 	pdnsd_run = 1
 end
 
@@ -181,11 +181,6 @@ if uci:get_first("shadowsocksr", 'global', 'adblock', '0') == '1' then
 	s.rawhtml = true
 	s.template = "shadowsocksr/refresh"
 	s.value = ad_count .. " " .. translate("Records")
-end
-
-if uci:get_first("shadowsocksr", 'global', 'pdnsd_enable', '0') == '1' then
-	s = m:field(DummyValue, "cache", translate("Reset pdnsd cache"))
-	s.template = "shadowsocksr/cache"
 end
 
 s = m:field(DummyValue, "check_port", translate("Check Server Port"))

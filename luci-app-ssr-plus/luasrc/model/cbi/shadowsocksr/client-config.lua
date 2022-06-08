@@ -157,6 +157,9 @@ end
 if is_finded("naive") then
 	o:value("naiveproxy", translate("NaiveProxy"))
 end
+if is_finded("hysteria") then
+	o:value("hysteria", translate("Hysteria"))
+end
 if is_finded("ipt2socks") then
 	o:value("socks5", translate("Socks5"))
 end
@@ -197,6 +200,7 @@ o:depends("type", "ss")
 o:depends("type", "v2ray")
 o:depends("type", "trojan")
 o:depends("type", "naiveproxy")
+o:depends("type", "hysteria")
 o:depends("type", "socks5")
 
 o = s:option(Value, "server_port", translate("Server Port"))
@@ -207,6 +211,7 @@ o:depends("type", "ss")
 o:depends("type", "v2ray")
 o:depends("type", "trojan")
 o:depends("type", "naiveproxy")
+o:depends("type", "hysteria")
 o:depends("type", "socks5")
 
 o = s:option(Flag, "auth_enable", translate("Enable Authentication"))
@@ -290,7 +295,7 @@ end
 o.rmempty = true
 o:depends("type", "ssr")
 
-o = s:option(Value, "protocol_param", translate("Protocol param(optional)"))
+o = s:option(Value, "protocol_param", translate("Protocol param (optional)"))
 o:depends("type", "ssr")
 
 o = s:option(ListValue, "obfs", translate("Obfs"))
@@ -300,8 +305,43 @@ end
 o.rmempty = true
 o:depends("type", "ssr")
 
-o = s:option(Value, "obfs_param", translate("Obfs param(optional)"))
+o = s:option(Value, "obfs_param", translate("Obfs param (optional)"))
 o:depends("type", "ssr")
+
+-- [[ Hysteria ]]--
+o = s:option(ListValue, "hysteria_protocol", translate("Protocol"))
+o:depends("type", "hysteria")
+o:value("udp", translate("udp"))
+o:value("wechat-video", translate("wechat-video"))
+o:value("faketcp", translate("faketcp"))
+o.default = "udp"
+o.rmempty = true
+
+o = s:option(ListValue, "auth_type", translate("Authentication type"))
+o:depends("type", "hysteria")
+o:value("0", translate("disabled"))
+o:value("1", translate("base64"))
+o:value("2", translate("string"))
+o.rmempty = true
+
+o = s:option(Value, "auth_payload", translate("Authentication payload"))
+o:depends({type = "hysteria", auth_type = "1"})
+o:depends({type = "hysteria", auth_type = "2"})
+o.rmempty = true
+
+o = s:option(Value, "recv_window", translate("QUIC connection receive window"))
+o.datatype = "uinteger"
+o:depends("type", "hysteria")
+o.rmempty = true
+
+o = s:option(Value, "recv_window_conn", translate("QUIC stream receive window"))
+o.datatype = "uinteger"
+o:depends("type", "hysteria")
+o.rmempty = true
+
+o = s:option(Flag, "disable_mtu_discovery", translate("Disable Path MTU discovery"))
+o:depends("type", "hysteria")
+o.rmempty = true
 
 -- VmessId
 o = s:option(Value, "vmess_id", translate("Vmess/VLESS ID (UUID)"))
@@ -471,12 +511,14 @@ o.rmempty = true
 o = s:option(Value, "uplink_capacity", translate("Uplink Capacity"))
 o.datatype = "uinteger"
 o:depends("transport", "kcp")
+o:depends("type", "hysteria")
 o.default = 5
 o.rmempty = true
 
 o = s:option(Value, "downlink_capacity", translate("Downlink Capacity"))
 o.datatype = "uinteger"
 o:depends("transport", "kcp")
+o:depends("type", "hysteria")
 o.default = 20
 o.rmempty = true
 
@@ -494,6 +536,7 @@ o.rmempty = true
 
 o = s:option(Value, "seed", translate("Obfuscate password (optional)"))
 o:depends({v2ray_protocol = "vless", transport = "kcp"})
+o:depends("type", "hysteria")
 o.rmempty = true
 
 o = s:option(Flag, "congestion", translate("Congestion"))
@@ -570,6 +613,11 @@ o = s:option(Value, "tls_host", translate("TLS Host"))
 o.datatype = "hostname"
 o:depends("tls", true)
 o:depends("xtls", true)
+o:depends("type", "hysteria")
+o.rmempty = true
+
+o = s:option(Value, "quic_tls_alpn", translate("QUIC TLS ALPN"))
+o:depends("type", "hysteria")
 o.rmempty = true
 
 -- [[ allowInsecure ]]--
@@ -577,6 +625,7 @@ o = s:option(Flag, "insecure", translate("allowInsecure"))
 o.rmempty = false
 o:depends("tls", true)
 o:depends("xtls", true)
+o:depends("type", "hysteria")
 o.description = translate("If true, allowss insecure connection at TLS client, e.g., TLS server uses unverifiable certificates.")
 
 -- [[ Mux ]]--
@@ -600,6 +649,7 @@ o:depends("type", "naiveproxy")
 o = s:option(Flag, "certificate", translate("Self-signed Certificate"))
 o.rmempty = true
 o.default = "0"
+o:depends({type = "hysteria", insecure = false})
 o:depends({type = "trojan", tls = true, insecure = false})
 o:depends({type = "v2ray", v2ray_protocol = "vmess", tls = true, insecure = false})
 o:depends({type = "v2ray", v2ray_protocol = "vless", tls = true, insecure = false})

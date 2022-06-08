@@ -79,6 +79,9 @@ msgstr "传输协议"
 msgid "Protocol"
 msgstr "传输协议"
 
+msgid "TLS Host"
+msgstr "TLS 主机名"
+
 msgid "allowInsecure"
 msgstr "允许不安全连接"
 
@@ -88,14 +91,29 @@ msgstr "最大并发连接数"
 msgid "If true, allowss insecure connection at TLS client, e.g., TLS server uses unverifiable certificates."
 msgstr "是否允许不安全连接。当选择时，将不会检查远端主机所提供的 TLS 证书的有效性。"
 
-msgid "Protocol param(optional)"
+msgid "Protocol param (optional)"
 msgstr "传输协议参数（可选）"
 
 msgid "Obfs"
 msgstr "混淆插件"
 
-msgid "Obfs param(optional)"
+msgid "Obfs param (optional)"
 msgstr "混淆参数（可选）"
+
+msgid "Authentication type"
+msgstr "验证类型"
+
+msgid "Authentication payload"
+msgstr "验证载荷"
+
+msgid "QUIC connection receive window"
+msgstr "QUIC 连接接收窗口"
+
+msgid "QUIC stream receive window"
+msgstr "QUIC 流接收窗口"
+
+msgid "Disable Path MTU discovery"
+msgstr "禁用 MTU 探测"
 
 msgid "Enable Tunnel(DNS)"
 msgstr "启用隧道（DNS）转发"
@@ -370,9 +388,6 @@ msgstr "DNS解析方式"
 msgid "Use SSR DNS Tunnel"
 msgstr "使用SSR-DNS隧道"
 
-msgid "Use Pdnsd"
-msgstr "使用Pdnsd"
-
 msgid "DNS Anti-pollution"
 msgstr "DNS 防污染服务"
 
@@ -432,9 +447,6 @@ msgstr "格式为 IP:PORT (默认: 8.8.4.4:53)"
 
 msgid "Use DNS2TCP query"
 msgstr "使用 DNS2TCP 查询"
-
-msgid "Use Pdnsd tcp query and cache"
-msgstr "使用PDNSD TCP查询并缓存"
 
 msgid "Use DNS2SOCKS query and cache"
 msgstr "使用 DNS2SOCKS 查询并缓存"
@@ -762,9 +774,6 @@ msgstr "重置完成"
 
 msgid "Reset Error"
 msgstr "重置错误"
-
-msgid "Reset pdnsd cache"
-msgstr "重置PDNSD缓存"
 
 msgid "Finger Print"
 msgstr "指纹伪造"

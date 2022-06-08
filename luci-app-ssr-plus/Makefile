@@ -2,13 +2,13 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ssr-plus
 PKG_VERSION:=186
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Hysteria \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_IPT2Socks \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy \
-	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_PDNSD \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2 \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_SagerNet_Core \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client \
@@ -29,9 +29,9 @@ LUCI_DEPENDS:= \
 	+ip-full +iptables +iptables-mod-tproxy +lua +libuci-lua +microsocks +tcping \
 	+resolveip +shadowsocksr-libev-ssr-check +uclient-fetch \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun:kcptun-client \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_Hysteria:hysteria \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_IPT2Socks:ipt2socks \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy:naiveproxy \
-	+PACKAGE_$(PKG_NAME)_INCLUDE_PDNSD:pdnsd-alt \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2:redsocks2 \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_SagerNet_Core:curl \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_SagerNet_Core:sagernet-core \
@@ -54,17 +54,17 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun
 	bool "Include Kcptun"
 	default n
 
-config PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy
-	bool "Include NaiveProxy"
-	depends on !(arc||armeb||mips||mips64||powerpc||TARGET_gemini)
+config PACKAGE_$(PKG_NAME)_INCLUDE_Hysteria
+	bool "Include Hysteria"
 	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_IPT2Socks
 	bool "Include ipt2socks"
 	default n
 
-config PACKAGE_$(PKG_NAME)_INCLUDE_PDNSD
-	bool "Include PDNSD"
+config PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy
+	bool "Include NaiveProxy"
+	depends on !(arc||armeb||mips||mips64||powerpc||TARGET_gemini)
 	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2
