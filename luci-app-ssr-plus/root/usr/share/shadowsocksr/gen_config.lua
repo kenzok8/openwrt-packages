@@ -47,9 +47,14 @@ function trojan_shadowsocks()
 		}
 	}
 
-	if (not outbound_settings.plugin) and (not server.transport or server.transport == "tcp") and (not server.xtls) then
-		server.v2ray_protocol = server.v2ray_protocol .. "_sing"
+	if (server.v2ray_protocol == "shadowsocks") and (server.mux ~= "1") and (not (outbound_settings.plugin or server.transport ~= "tcp" or server.tls or server.xtls)) then
+		server.v2ray_protocol = "shadowsocks_sing"
 		outbound_settings = outbound_settings.servers[1]
+	elseif (server.v2ray_protocol == "trojan") and (server.tls and server.mux ~= "1") and (not (server.transport ~= "tcp" or server.xtls)) then
+		server.v2ray_protocol = "trojan_sing"
+		outbound_settings = outbound_settings.servers[1]
+		outbound_settings.serverName = server.tls_host
+		outbound_settings.insecure = (server.insecure == "1") and true or false
 	end
 end
 function socks_http()
@@ -143,7 +148,7 @@ local Xray = {
 		protocol = server.v2ray_protocol,
 		settings = outbound_settings,
 		-- 底层传输配置
-		streamSettings = {
+		streamSettings = (server.v2ray_protocol and server.v2ray_protocol:sub(-#"_sing") ~= "_sing") and {
 			network = server.transport or "tcp",
 			security = (server.xtls == '1') and "xtls" or (server.tls == '1') and "tls" or nil,
 			tlsSettings = (server.tls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
@@ -211,7 +216,7 @@ local Xray = {
 				permit_without_stream = (server.permit_without_stream == "1") and true or nil,
 				initial_windows_size = tonumber(server.initial_windows_size) or nil
 			} or nil
-		},
+		} or nil,
 		mux = (server.mux == "1" and server.xtls ~= "1" and server.transport ~= "grpc") and {
 			-- mux
 			enabled = true,
