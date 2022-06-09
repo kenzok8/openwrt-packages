@@ -10,13 +10,13 @@ LUCI_DESCRIPTION:=luci-app-store is a ipk store developed by LinkEase team
 LUCI_DEPENDS:=+curl +opkg +luci-base +tar +coreutils +coreutils-stat +libuci-lua +mount-utils
 LUCI_PKGARCH:=all
 
-PKG_VERSION:=0.1.10-1
+PKG_VERSION:=0.1.10-3
 # PKG_RELEASE MUST be empty for luci.mk
 PKG_RELEASE:=
 
 ISTORE_UI_VERSION:=0.1.9
-ISTORE_UI_RELEASE:=6
-PKG_HASH:=fd10902e790b1bc357cc6d78c3ece170ff55928a042d3242f947bc1adca351be
+ISTORE_UI_RELEASE:=9
+PKG_HASH:=2069b4f4b78dcb10764e3f6245727ae6af672361d5558c3ce5eac082b5ff0a67
 
 PKG_SOURCE_URL_FILE:=v$(ISTORE_UI_VERSION)-$(ISTORE_UI_RELEASE).tar.gz
 PKG_SOURCE:=istore-ui-$(PKG_SOURCE_URL_FILE)
