@@ -414,11 +414,13 @@ o.rmempty = true
 o = s:option(Value, "ws_ed", translate("Max Early Data"))
 o:depends("transport", "ws")
 o.datatype = "uinteger"
+o.default = 2048
 o.rmempty = true
 
 -- WS前置数据标头
 o = s:option(Value, "ws_ed_header", translate("Early Data Header Name"))
 o:depends("transport", "ws")
+o.default = "Sec-WebSocket-Protocol"
 o.rmempty = true
 
 -- [[ H2部分 ]]--
