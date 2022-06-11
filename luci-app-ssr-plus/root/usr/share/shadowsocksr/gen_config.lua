@@ -302,8 +302,8 @@ local hysteria = {
 	server_name = server.tls_host,
 	insecure = (server.insecure == "1") and true or false,
 	ca = (server.certificate) and server.certpath or nil,
-	recv_window_conn = server.recv_window_conn,
-	recv_window = server.recv_window,
+	recv_window_conn = tonumber(server.recv_window_conn),
+	recv_window = tonumber(server.recv_window),
 	disable_mtu_discovery = (server.disable_mtu_discovery == "1") and true or false
 }
 local config = {}
