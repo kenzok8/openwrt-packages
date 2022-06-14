@@ -70,6 +70,9 @@ msgstr "布隆过滤器"
 msgid "VLESS Encryption"
 msgstr "VLESS 加密"
 
+msgid "Socks Version"
+msgstr "Socks 版本"
+
 msgid "Flow"
 msgstr "流控 (Flow)"
 

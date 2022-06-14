@@ -32,14 +32,21 @@ function vmess_vless()
 end
 function trojan_shadowsocks()
 	outbound_settings = {
-		plugin = (server.v2ray_protocol == "shadowsocks") and server.plugin ~= "none" and server.plugin or nil,
+		plugin = ((server.v2ray_protocol == "shadowsocks") and server.plugin ~= "none" and server.plugin) or (server.v2ray_protocol == "shadowsocksr" and "shadowsocksr") or nil,
 		pluginOpts = (server.v2ray_protocol == "shadowsocks") and server.plugin_opts or nil,
+		pluginArgs = (server.v2ray_protocol == "shadowsocksr") and {
+			"--protocol=" .. server.protocol,
+			"--protocol-param=" .. (server.protocol_param or ""),
+			"--obfs=" .. server.obfs,
+			"--obfs-param=" .. (server.obfs_param or "")
+		} or nil,
 		servers = {
 			{
 				address = server.server,
 				port = tonumber(server.server_port),
 				password = server.password,
 				method = (server.v2ray_protocol == "shadowsocks") and server.encrypt_method_ss or nil,
+				method = (server.v2ray_protocol == "shadowsocksr") and server.encrypt_method or nil,
 				uot = (server.v2ray_protocol == "shadowsocks") and (server.uot == '1') or nil,
 				ivCheck = (server.v2ray_protocol == "shadowsocks") and (server.ivCheck == '1') or nil,
 				flow = (server.v2ray_protocol == "trojan") and (server.xtls == '1') and (server.vless_flow and server.vless_flow or "xtls-rprx-splice") or nil
@@ -47,7 +54,9 @@ function trojan_shadowsocks()
 		}
 	}
 
-	if (server.v2ray_protocol == "shadowsocks") and (server.mux ~= "1") and (not (outbound_settings.plugin or server.transport ~= "tcp" or server.tls or server.xtls)) then
+	if server.v2ray_protocol == "shadowsocksr" then
+		server.v2ray_protocol = "shadowsocks"
+	elseif (server.v2ray_protocol == "shadowsocks") and (server.mux ~= "1") and (not (outbound_settings.plugin or server.transport ~= "tcp" or server.tls or server.xtls)) then
 		server.v2ray_protocol = "shadowsocks_sing"
 		outbound_settings = outbound_settings.servers[1]
 	elseif (server.v2ray_protocol == "trojan") and (server.tls and server.mux ~= "1") and (not (server.transport ~= "tcp" or server.xtls)) then
@@ -59,6 +68,7 @@ function trojan_shadowsocks()
 end
 function socks_http()
 	outbound_settings = {
+		version = server.socks_ver or nil,
 		servers = {
 			{
 				address = server.server,
@@ -103,6 +113,9 @@ function outbound:handleIndex(index)
 			trojan_shadowsocks()
 		end,
 		shadowsocks = function()
+			trojan_shadowsocks()
+		end,
+		shadowsocksr = function()
 			trojan_shadowsocks()
 		end,
 		socks = function()
