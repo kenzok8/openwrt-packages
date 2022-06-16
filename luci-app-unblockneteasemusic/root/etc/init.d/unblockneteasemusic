@@ -130,18 +130,22 @@ start_service()
 	local tmp="/tmp/$NAME"
 	if [ "${hijack_ways}" = "use_ipset" ]; then
 		local ipset="ipset"
-		[ -n "$(dnsmasq --version | grep -m1 'Compile time options:' | cut -d: -f2 | grep ' nftset')" ] && ipset="nftset"
+		local nftflag=""
+		[ -n "$(dnsmasq --version | grep -m1 'Compile time options:' | cut -d: -f2 | grep ' nftset')" ] && {
+			ipset="nftset"
+			nftflag="inet#fw4#"
+		}
 		mkdir -p "/tmp/dnsmasq.d"
 		rm -f "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
 		cat <<-EOF > "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
 			dhcp-option=252,http://${lan_addr}:${http_port}/proxy.pac
-			${ipset}=/.music.163.com/neteasemusic
-			${ipset}=/interface.music.163.com/neteasemusic
-			${ipset}=/interface3.music.163.com/neteasemusic
-			${ipset}=/apm.music.163.com/neteasemusic
-			${ipset}=/apm3.music.163.com/neteasemusic
-			${ipset}=/clientlog.music.163.com/neteasemusic
-			${ipset}=/clientlog3.music.163.com/neteasemusic
+			${ipset}=/.music.163.com/${nftflag}neteasemusic
+			${ipset}=/interface.music.163.com/${nftflag}neteasemusic
+			${ipset}=/interface3.music.163.com/${nftflag}neteasemusic
+			${ipset}=/apm.music.163.com/${nftflag}neteasemusic
+			${ipset}=/apm3.music.163.com/${nftflag}neteasemusic
+			${ipset}=/clientlog.music.163.com/${nftflag}neteasemusic
+			${ipset}=/clientlog3.music.163.com/${nftflag}neteasemusic
 		EOF
 		/etc/init.d/dnsmasq reload
 
