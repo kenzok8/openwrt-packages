@@ -1,0 +1,167 @@
+# 日志设置
+log:
+  level:                   loglvl
+  file:                    logfile
+
+# 数据源设置
+data_providers:
+  - tag:                   geosite
+    file:                  "/usr/share/v2ray/geosite.dat"
+    auto_reload:           true
+
+  - tag:                   geoip
+    file:                  "/usr/share/v2ray/geoip.dat"
+    auto_reload:           true
+
+  - tag:                   adlist
+    file:                  "./rule/serverlist.txt"
+    auto_reload:           true
+
+  - tag:                   whitelist
+    file:                  "./rule/whitelist.txt"
+    auto_reload:           true
+
+  - tag:                   hosts
+    file:                  "./rule/hosts.txt"
+    auto_reload:           true
+
+  - tag:                   blocklist
+    file:                  "./rule/blocklist.txt"
+    auto_reload:           true
+
+  - tag:                   local_ptr
+    file:                  "./rule/local-ptr.txt"
+    auto_reload:           true
+    
+  - tag:                   redirect
+    file:                  "./rule/redirect.txt"
+    auto_reload:           true
+
+# 插件
+plugins:
+  - tag:                   "query_is_whitelist_domain"
+    type:                  query_matcher
+    args:
+      domain:
+            - "provider:whitelist"
+
+  - tag:                   "query_is_blocklist_domain"
+    type:                  query_matcher
+    args:
+      domain:
+            - "provider:blocklist"
+
+  - tag:                   "query_is_local_domain"
+    type:                  query_matcher
+    args:
+      domain:
+        - "provider:geosite:cn"
+
+  - tag:                   "query_is_non_local_domain"
+    type:                  query_matcher
+    args:
+      domain:
+        - "provider:geosite:geolocation-!cn"
+
+  - tag:                   "query_is_qtype65"
+    type:                  query_matcher
+    args:
+      qtype:               [65]
+
+  - tag:                   "query_is_local_ptr"
+    type:                  query_matcher
+    args:
+      qtype:               [12]
+      domain:
+        - "provider:local_ptr"
+
+  - tag:                   "query_is_ad_domain"
+    type:                  query_matcher
+    args:
+      domain:
+        - "provider:adlist"
+
+  - tag:                   "response_has_local_ip"
+    type:                  response_matcher
+    args:
+      ip:
+        - "provider:geoip:cn"
+
+  - tag:                   "query_is_hosts_domain"
+    type:                  hosts
+    args:
+      hosts:
+           - "provider:hosts"
+
+  - tag:                   "query_is_redirect_domain"
+    type:                  redirect
+    args:
+      rule:
+          - "provider:redirect"
+
+  - tag:                   "lazy_cache"
+    type:                  cache
+    args:
+      size:                512000
+      lazy_cache_ttl:      259200
+
+  - tag:                   "forward_local"
+    type:                  fast_forward
+    args:
+      upstream:
+        - addr:            localdns1
+        - addr:            localdns2
+
+  - tag:                   "forward_remote"
+    type:                  fast_forward
+    args:
+      upstream:
+        - addr:            remotedns1
+        - addr:            remotedns2
+
+  - tag:                   main_sequence
+    type:                  sequence
+    args:
+      exec:
+        - _misc_optm
+        - _single_flight
+        - lazy_cache
+        - query_is_hosts_domain
+        - query_is_redirect_domain
+        - _no_ecs
+        - if:              "query_is_whitelist_domain"
+          exec:
+            - forward_local
+            - _return
+        - if:              "query_is_blocklist_domain || query_is_ad_domain || query_is_qtype65 || query_is_local_ptr"
+          exec:
+            - _new_nxdomain_response
+            - _return
+        - if:              "query_is_local_domain"
+          exec:
+            - forward_local
+            - _return
+        - if:              "query_is_non_local_domain"
+          exec:
+            - _prefer_ipv4
+            - forward_remote
+            - _return
+        - primary:
+            - forward_local
+            - if:          "(! response_has_local_ip) && [_response_valid_answer]"
+              exec:
+                - _drop_response
+          secondary:
+            - _prefer_ipv4
+            - forward_remote
+          fast_fallback:   150
+          always_standby:  true
+
+# 服务器设置
+servers:
+  - exec:                  main_sequence
+    listeners:
+      - protocol:          udp
+        addr:              :listenport
+      - protocol:          tcp
+        addr:              :listenport

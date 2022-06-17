@@ -368,7 +368,7 @@ EOF
 fdisk /dev/${EMMC_NAME} </tmp/fdisk.script 2>/dev/null
 if [ $? -ne 0 ]; then
     echo "The fdisk partition fails, Please try again."
-    dd if=/root/BackupOldBootloader.img of=/dev/${EMMC_NAME} conf=fsync && sync
+    dd if=/root/BackupOldBootloader.img of=/dev/${EMMC_NAME} conv=fsync && sync
     dd if=/dev/zero of=/dev/${EMMC_NAME} bs=512 count=1 && sync
     exit 1
 fi

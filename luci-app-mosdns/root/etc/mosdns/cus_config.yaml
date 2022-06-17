@@ -1,96 +1,31 @@
+# 日志设置
 log:
-  level: error
-  file: ""
+  level: info   # 日志级别。可选 "debug" "info" "warn" "error"。默认 "info"。
+  file: "/path/to/log/file"      # 记录日志到文件。
 
-plugin:
-  - tag: main_server
-    type: server
-    args:
-      entry:
-        - _no_ecs
-        - lazy_cache
-        - _prefer_ipv4
-        - _single_flight
-        - main_sequence
-      server:
-        - protocol: udp
-          addr: "127.0.0.1:5335"
-        - protocol: tcp
-          addr: "127.0.0.1:5335"
+# 数据源设置
+data_providers:
+  - tag: data1        # 数据源的 tag。由用户自由设定。不能重复。
+    file: "/path/to/data/file"     # 文件位置
+    auto_reload: true # 文件有变化时是否自动重载。
 
-  - tag: main_sequence
-    type: sequence
-    args:
-      exec:
-        - if:
-            - query_is_ad_domain
-          exec:
-            - _block_with_nxdomain
-            - _return
-        - if:
-            - query_is_local_domain
-            - "!_query_is_common"
-          exec:
-            - forward_local
-            - _return
-        - if:
-            - query_is_non_local_domain
-          exec:
-            - forward_remote
-            - _return
-        - primary:
-            - forward_local
-            - if:
-                - "!response_has_local_ip"
-              exec:
-                - _drop_response
-          secondary:
-            - forward_remote
-          fast_fallback: 150
-          always_standby: true
+# 插件设置
+plugins:
+  - tag: tag1     # 插件的 tag。由用户自由设定。不能重复。
+    type: type1   # 插件类型。详见下文。
+    args:         # 插件参数。取决于插件类型。详见下文。
+      key1: value1
+      key2: value2
 
-  - tag: forward_local
-    type: fast_forward
-    args:
-      upstream:
-        - addr: ${{ ./dns.sh 0 }}
-        - addr: ${{ ./dns.sh 1 }}
-
-  - tag: forward_remote
-    type: fast_forward
-    args:
-      upstream:
-        - addr: "tls://8.8.4.4"
-          idle_timeout: 10
-        - addr: "tls://9.9.9.9"
-          idle_timeout: 10
-
-  - tag: lazy_cache
-    type: cache
-    args:
-      size: 512000
-      lazy_cache_ttl: 259200
-
-  - tag: query_is_local_domain
-    type: query_matcher
-    args:
-      domain:
-        - "ext:/usr/share/v2ray/geosite.dat:cn"
-
-  - tag: query_is_non_local_domain
-    type: query_matcher
-    args:
-      domain:
-        - "ext:/usr/share/v2ray/geosite.dat:geolocation-!cn"
-
-  - tag: response_has_local_ip
-    type: response_matcher
-    args:
-      ip:
-        - "ext:/usr/share/v2ray/geoip.dat:cn"
-
-  - tag: query_is_ad_domain
-    type: query_matcher
-    args:
-      domain:
-        - "ext:./serverlist.txt"
+# 服务器设置
+servers:
+  - exec: tag1    # 本服务器运行插件的 tag。
+    timeout: 5    # 请求处理超时时间。单位: 秒。默认: 5。
+    listener:     # 监听设置
+      - protocol: https           # 协议，支持 "udp", "tcp", "tls", "https" 和 "http"
+        addr: ":443"              # 监听地址。
+        cert: "/path/to/my/cert"  # TLS 所需证书文件。
+        key: "/path/to/my/key"    # TLS 所需密钥文件。
+        url_path: "/dns-query"    # DoH 路径。
+        get_user_ip_from_header: "X-Forwarded-For" # DoH 尝试从 HTTP 头获取用户 IP。
+        idle_timeout: 10          # 连接复用空连接超时时间。单位: 秒。默认: 10。
