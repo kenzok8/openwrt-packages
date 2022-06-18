@@ -55,14 +55,15 @@ function trojan_shadowsocks()
 
 	if server.v2ray_protocol == "shadowsocksr" then
 		server.v2ray_protocol = "shadowsocks"
-	-- elseif (server.v2ray_protocol == "shadowsocks") and (server.mux ~= "1") and (not (outbound_settings.plugin or server.transport ~= "tcp" or server.tls or server.xtls)) then
-	-- 	server.v2ray_protocol = "shadowsocks_sing"
-	-- 	outbound_settings = outbound_settings.servers[1]
+	--[[ elseif (server.v2ray_protocol == "shadowsocks") and (server.mux ~= "1") and (not (outbound_settings.plugin or server.transport ~= "tcp" or server.tls or server.xtls)) then
+		server.v2ray_protocol = "shadowsocks_sing"
+		outbound_settings = outbound_settings.servers[1]
 	elseif (server.v2ray_protocol == "trojan") and (server.tls and server.mux ~= "1") and (not (server.transport ~= "tcp" or server.xtls)) then
 		server.v2ray_protocol = "trojan_sing"
 		outbound_settings = outbound_settings.servers[1]
 		outbound_settings.serverName = server.tls_host
 		outbound_settings.insecure = (server.insecure == "1") and true or false
+		]]
 	end
 end
 function socks_http()
