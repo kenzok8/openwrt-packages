@@ -549,7 +549,7 @@ yml_other_set()
                if defined? Value_2 then
                   Value_2.each{|x|
                      if ${10} != 1 then
-                        if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
+                        if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                            puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
                            next
                         end;
@@ -583,7 +583,7 @@ yml_other_set()
                   end;
                   Value_4.each{|x|
                      if ${10} != 1 then
-                        if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
+                        if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                            puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
                            next
                         end;
@@ -602,7 +602,7 @@ yml_other_set()
                  if not Value_1['rules'].to_a.empty? and Value_1['rules'].class.to_s == 'Array' then
                      Value_1.each{|x|
                      if ${10} != 1 then
-                        if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
+                        if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                            puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
                            Value_1.delete(x);
                         end;
@@ -614,7 +614,7 @@ yml_other_set()
                elsif Value_1.class.to_s == 'Array' then
                   Value_1.each{|x|
                      if ${10} != 1 then
-                        if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
+                        if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                            puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
                            Value_1.delete(x);
                         end;
@@ -633,7 +633,7 @@ yml_other_set()
                      if not Value_2['rules'].to_a.empty? and Value_2['rules'].class.to_s == 'Array' then
                         Value_2.each{|x|
                            if ${10} != 1 then
-                              if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
+                              if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                                  puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
                                  Value_2.delete(x);
                               end;
@@ -645,7 +645,7 @@ yml_other_set()
                   elsif Value_2.class.to_s == 'Array' then
                      Value_2.each{|x|
                         if ${10} != 1 then
-                           if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
+                           if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                               puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
                               Value_2.delete(x);
                            end;
@@ -675,7 +675,7 @@ yml_other_set()
                      end
                      Value_3.each{|x|
                         if ${10} != 1 then
-                           if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
+                           if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                               puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
                               next
                            end;
@@ -794,6 +794,7 @@ yml_other_rules_get()
    config_get "Netease_Music" "$section" "Netease_Music" ""
    config_get "Speedtest" "$section" "Speedtest" ""
    config_get "Telegram" "$section" "Telegram" ""
+   config_get "Crypto" "$section" "Crypto" "$Proxy"
    config_get "Microsoft" "$section" "Microsoft" ""
    config_get "PayPal" "$section" "PayPal" ""
    config_get "Domestic" "$section" "Domestic" ""
@@ -854,6 +855,7 @@ if [ "$1" != "0" ]; then
 	 || [ -z "$(grep -F "$AdBlock" /tmp/Proxy_Group)" ]\
 	 || [ -z "$(grep -F "$Speedtest" /tmp/Proxy_Group)" ]\
     || [ -z "$(grep -F "$Telegram" /tmp/Proxy_Group)" ]\
+    || [ -z "$(grep -F "$Crypto" /tmp/Proxy_Group)" ]\
     || [ -z "$(grep -F "$Douyin" /tmp/Proxy_Group)" ]\
     || [ -z "$(grep -F "$Microsoft" /tmp/Proxy_Group)" ]\
     || [ -z "$(grep -F "$PayPal" /tmp/Proxy_Group)" ]\
@@ -912,6 +914,7 @@ if [ "$1" != "0" ]; then
                .gsub(/,AdBlock$/, ',$AdBlock#d')
                .gsub(/,Speedtest$/, ',$Speedtest#d')
                .gsub(/,Telegram$/, ',$Telegram#d')
+               .gsub(/,Crypto$/, ',$Crypto#d')
                .gsub(/,Microsoft$/, ',$Microsoft#d')
                .to_s.gsub(/,PayPal$/, ',$PayPal#d')
                .gsub(/,Domestic$/, ',$Domestic#d')
@@ -940,6 +943,7 @@ if [ "$1" != "0" ]; then
                .gsub!(/: \"AdBlock\"/,': \"$AdBlock#d\"')
                .gsub!(/: \"Speedtest\"/,': \"$Speedtest#d\"')
                .gsub!(/: \"Telegram\"/,': \"$Telegram#d\"')
+               .gsub!(/: \"Crypto\"/,': \"$Crypto#d\"')
                .gsub!(/: \"Microsoft\"/,': \"$Microsoft#d\"')
                .gsub!(/: \"PayPal\"/,': \"$PayPal#d\"')
                .gsub!(/: \"Domestic\"/,': \"$Domestic#d\"')

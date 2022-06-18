@@ -236,6 +236,21 @@ yml_servers_set()
    config_get "routing_mark" "$section" "routing_mark" ""
    config_get "obfs_vless" "$section" "obfs_vless" ""
    config_get "vless_flow" "$section" "vless_flow" ""
+   config_get "http_headers" "$section" "http_headers" ""
+   config_get "hysteria_protocol" "$section" "hysteria_protocol" ""
+   config_get "up_mbps" "$section" "up_mbps" ""
+   config_get "down_mbps" "$section" "down_mbps" ""
+   config_get "hysteria_up" "$section" "hysteria_up" ""
+   config_get "hysteria_down" "$section" "hysteria_down" ""
+   config_get "hysteria_alpn" "$section" "hysteria_alpn" ""
+   config_get "hysteria_obfs" "$section" "hysteria_obfs" ""
+   config_get "hysteria_auth" "$section" "hysteria_auth" ""
+   config_get "hysteria_auth_str" "$section" "hysteria_auth_str" ""
+   config_get "hysteria_ca" "$section" "hysteria_ca" ""
+   config_get "hysteria_ca_str" "$section" "hysteria_ca_str" ""
+   config_get "recv_window_conn" "$section" "recv_window_conn" ""
+   config_get "recv_window" "$section" "recv_window" ""
+   config_get "disable_mtu_discovery" "$section" "disable_mtu_discovery" ""
 
    if [ "$enabled" = "0" ]; then
       return
@@ -538,7 +553,93 @@ EOF
          fi
       fi
    fi
-   
+
+#hysteria
+   if [ "$type" = "hysteria" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  - name: "$name"
+    type: $type
+    server: "$server"
+    port: $port
+    protocol: $hysteria_protocol
+EOF
+      if [ -n "$up_mbps" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    up_mbps: "$up_mbps"
+EOF
+      fi
+      if [ -n "$down_mbps" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    down_mbps: "$down_mbps"
+EOF
+      fi
+      if [ -n "$hysteria_up" ] && [ -z "$up_mbps" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    up: "$hysteria_up"
+EOF
+      fi
+      if [ -n "$hysteria_down" ] && [ -z "$down_mbps" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    down: "$hysteria_down"
+EOF
+      fi
+      if [ -n "$skip_cert_verify" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    skip-cert-verify: $skip_cert_verify
+EOF
+      fi
+      if [ -n "$sni" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    sni: "$sni"
+EOF
+      fi
+      if [ -n "$hysteria_alpn" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    alpn: "$hysteria_alpn"
+EOF
+      fi
+      if [ -n "$hysteria_obfs" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    obfs: "$hysteria_obfs"
+EOF
+      fi
+      if [ -n "$hysteria_auth" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    auth: "$hysteria_auth"
+EOF
+      fi
+      if [ -n "$hysteria_auth_str" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    auth_str: "$hysteria_auth_str"
+EOF
+      fi
+      if [ -n "$hysteria_ca" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    ca: "$hysteria_ca"
+EOF
+      fi
+      if [ -n "$hysteria_ca_str" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    ca_str: "$hysteria_ca_str"
+EOF
+      fi
+      if [ -n "$recv_window_conn" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    recv_window_conn: "$recv_window_conn"
+EOF
+      fi
+      if [ -n "$recv_window" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    recv_window: "$recv_window"
+EOF
+      fi
+      if [ -n "$disable_mtu_discovery" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    disable_mtu_discovery: $disable_mtu_discovery
+EOF
+      fi
+   fi
+
 #vless
    if [ "$type" = "vless" ]; then
 cat >> "$SERVER_FILE" <<-EOF
@@ -672,6 +773,12 @@ EOF
 cat >> "$SERVER_FILE" <<-EOF
     sni: "$sni"
 EOF
+      fi
+      if [ -n "$ws_opts_headers" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    headers:
+EOF
+      config_list_foreach "$section" "http_headers" set_ws_headers
       fi
    fi
 
@@ -1284,6 +1391,20 @@ EOF
 fi
 cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
 cat >> "$SERVER_FILE" <<-EOF
+  - name: Crypto
+    type: select
+    proxies:
+      - Proxy
+      - DIRECT
+EOF
+cat /tmp/Proxy_Server >> $SERVER_FILE 2>/dev/null
+if [ -f "/tmp/Proxy_Provider" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    use:
+EOF
+fi
+cat /tmp/Proxy_Provider >> $SERVER_FILE 2>/dev/null
+cat >> "$SERVER_FILE" <<-EOF
   - name: PayPal
     type: select
     proxies:
@@ -1328,6 +1449,7 @@ ${uci_set}Steam="Steam"
 ${uci_set}AdBlock="AdBlock"
 ${uci_set}Speedtest="Speedtest"
 ${uci_set}Telegram="Telegram"
+${uci_set}Crypto="Crypto"
 ${uci_set}PayPal="PayPal"
 ${uci_set}Domestic="Domestic"
 ${uci_set}Others="Others"
@@ -1356,6 +1478,7 @@ ${uci_set}Others="Others"
 	${UCI_DEL_LIST}="Spotify" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Spotify" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Steam" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Steam" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Telegram" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Telegram" >/dev/null 2>&1
+   ${UCI_DEL_LIST}="Crypto" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Crypto" >/dev/null 2>&1
 	${UCI_DEL_LIST}="PayPal" >/dev/null 2>&1 && ${UCI_ADD_LIST}="PayPal" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Speedtest" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Speedtest" >/dev/null 2>&1
 }

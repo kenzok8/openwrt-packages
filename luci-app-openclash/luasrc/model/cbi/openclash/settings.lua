@@ -592,6 +592,7 @@ o.description = translate("In The Fake-IP Mode, Only Pure IP Requests Are Suppor
 
 o = s:taboption("lan_ac", DynamicList, "lan_ac_black_ports", translate("Lan Bypassed Port List"))
 o.datatype = "port"
+o:value("5000", translate("5000(NAS)"))
 o.description = translate("The Traffic From The Local Specified Port Will Not Pass The Core, Try To Set When The Bypass Gateway Forwarding Fails")
 
 o = s:taboption("lan_ac", Value, "local_network_pass", translate("Local IPv4 Network Bypassed List"))
@@ -1279,7 +1280,7 @@ o.cfgvalue    = function(...)
 end
 
 ---- enable flag
-o = s:option(Flag, "node_resolve", translate("Node Resolve"), font_red..bold_on..translate("(Only Meta Core)")..bold_off..font_off)
+o = s:option(Flag, "node_resolve", translate("Node Domain Resolve"), font_red..bold_on..translate("(Only Meta Core)")..bold_off..font_off)
 o.rmempty     = false
 o.default     = o.disbled
 o.cfgvalue    = function(...)

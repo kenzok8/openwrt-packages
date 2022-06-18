@@ -2893,6 +2893,9 @@ msgstr "注意: 连接异常时请按照此页步骤先进行检查"
 msgid "Click to the page"
 msgstr "点击前往"
 
+msgid "Only Meta Core"
+msgstr "仅 Meta 内核"
+
 msgid "(Only Meta Core)"
 msgstr "（仅 Meta 内核）"
 
@@ -2962,8 +2965,8 @@ msgstr "指定策略组"
 msgid "Warning: Only Meta Core Support Specific Group, Skip Setting"
 msgstr "警告：仅 Meta 内核支持指定 DNS 的策略组，跳过设置"
 
-msgid "Node Resolve"
-msgstr "节点解析"
+msgid "Node Domain Resolve"
+msgstr "节点域名解析"
 
 msgid "Warning: Only Meta Core Support proxy-server-nameserver, Skip Setting"
 msgstr "警告：仅 Meta 内核支持设置解析节点域名的 DNS，跳过设置"
@@ -2985,3 +2988,12 @@ msgstr "本地 IPv6 绕过地址"
 
 msgid "The Traffic of The Destination For The Specified Address Will Not Pass The Core"
 msgstr "目的地为指定地址的流量不会通过核心"
+
+msgid "Mutual Exclusion With down_mbps"
+msgstr "与 down_mbps 二选一进行设置"
+
+msgid "Mutual Exclusion With up_mbps"
+msgstr "与 up_mbps 二选一进行设置"
+
+msgid "Only Meta Core Support SS2022"
+msgstr "仅 Meta 内核支持 SS2022"
