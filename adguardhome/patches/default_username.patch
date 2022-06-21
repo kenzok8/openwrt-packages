@@ -1,10 +1,11 @@
 --- a/client/src/login/Login/Form.js
 +++ b/client/src/login/Login/Form.js
-@@ -23,6 +23,7 @@ const Form = (props) => {
-                         id="username1"
-                         name="username"
+@@ -25,7 +25,7 @@ const Form = (props) => {
                          type="text"
-+                        value="root"
                          className="form-control"
                          component={renderInputField}
-                         placeholder={t('username_placeholder')}
+-                        placeholder={t('username_placeholder')}
++                        placeholder="默认用户名密码都是root"
+                         autoComplete="username"
+                         autocapitalize="none"
+                         disabled={processing}
