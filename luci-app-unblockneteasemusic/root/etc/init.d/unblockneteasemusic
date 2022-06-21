@@ -195,8 +195,8 @@ start_service()
 		if [ -e "$(command -v fw4)" ]; then
 			local neteasemusic_addr="$(echo -e "${netease_music_ips}\n${netease_music_ips2}" |sort -u |awk '{print $1}')"
 
-			json_add_string o_acl_http_addr "$acl_http_addr"
-			json_add_string o_acl_https_addr "$acl_https_addr"
+			json_add_string o_acl_http_addr "$(echo -e "${acl_http_addr}" |sort -u |awk '{print $1}')"
+			json_add_string o_acl_https_addr "$(echo -e "${acl_https_addr}" |sort -u |awk '{print $1}')"
 			json_add_string o_neteasemusic_addr "$neteasemusic_addr"
 			json_dump -i >"$tmp.json"
 
@@ -282,7 +282,19 @@ stop_service()
 	}
 
 	if [ -e "$(command -v fw4)" ]; then
-		[ ! -e "$RULES_NFT" ] || rm -f "$RULES_NFT"
+		rm -f "$RULES_NFT"
+		for chain in "netease_cloud_music_redir" "netease_cloud_music"; do
+			nft --check list chain inet fw4 $chain > /dev/null 2>&1
+			if [ $? -eq "0" ]; then
+				nft flush chain inet fw4 $chain
+			fi
+		done
+		for set in "acl_neteasemusic_http" "acl_neteasemusic_https" "local_addr" "neteasemusic"; do
+			nft --check list set inet fw4 $set > /dev/null 2>&1
+			if [ $? -eq "0" ]; then
+				nft flush set inet fw4 $set
+			fi
+		done
 		fw4 reload
 	else
 		[ ! -e "/tmp/$NAME.ports" ] || {
