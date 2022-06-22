@@ -55,12 +55,6 @@ local function get_data()
         feat_port = tonumber(uci:get_first("ddnsto", "ddnsto", "feat_port")),
         index = (tonumber(uci:get_first("ddnsto", "ddnsto", "index")) or 0),
         token = uci:get_first("ddnsto", "ddnsto", "token")
-        -- feat_disk_path_selected = "/mnt/sda1",
-        -- feat_enabled = 0,
-        -- feat_password = "",
-        -- feat_port = 3030,
-        -- feat_username = "username",
-        -- index = 0,
     }
     return data
 end
@@ -136,7 +130,7 @@ local function status_container()
         },
         {
             key = "webdav地址",
-            value = webdav_url
+            value = "<a href=\""..webdav_url.."\" target=\"_blank\">"..webdav_url.."</a>"
         }, 
         {
             key = "远程开机服务",
@@ -315,7 +309,7 @@ function ddnsto_submit()
     local error = ""
     local scope = ""
     local success = 0
-    local log = "正在验证参数...<br />"
+    local log = "正在验证参数...\n"
     
     local jsonc = require "luci.jsonc"
     local json_parse = jsonc.parse
@@ -425,20 +419,20 @@ function ddnsto_submit()
         
     
     if success == 0 then     
-        log = log .. "正在保存参数...<br />"
-        log = log .. "保存成功!<br />" 
-        log = log .. "请关闭对话框<br />" 
+        log = log .. "正在保存参数...\n"
+        log = log .. "保存成功!\n"
+        log = log .. "请关闭对话框\n"
         ddnsto_writelog(log)
         
         luci.util.exec("/etc/init.d/ddnsto restart")
         luci.util.exec("sleep 1")
     else
-        log = log .. "参数错误：<br />"
-        log = log .. "<br />"
-        log = log .. error .."<br />"
-        log = log .. "<br />"
-        log = log .. "保存失败！<br />"
-        log = log .. "请关闭对话框<br />"
+        log = log .. "参数错误：\n"
+        log = log .. "\n"
+        log = log .. error .."\n"
+        log = log .. "\n"
+        log = log .. "保存失败！\n"
+        log = log .. "请关闭对话框\n"
         ddnsto_writelog(log) 
         luci.util.exec("sleep 1")
     end
@@ -462,7 +456,7 @@ function ddnsto_log()
     local fs   = require "nixio.fs"
     local data = fs.readfile("/tmp/ddnsto/ddnsto-luci.log")
 
-    http.prepare_content("text/plain")
+    http.prepare_content("text/plain;charset=utf-8")
     http.write(data)
 end
 
