@@ -58,7 +58,7 @@ echo -e "\n"
 echo -e "Running info:"
 procd_running_status="$(/etc/init.d/unblockneteasemusic status)"
 echo -e "PROCD running status: $procd_running_status"
-[ "$procd_running_status" = "running" ] && { ps -w | grep "unblockneteasemusic" | grep "app\.js" || echo -e "Thread is not found."; }
+[ "$procd_running_status" = "running" ] && { busybox ps -w | grep "unblockneteasemusic" | grep "app\.js" || echo -e "Thread is not found."; }
 echo -e "\n"
 
 [ "$procd_running_status" != "running" ] || {
