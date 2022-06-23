@@ -40,6 +40,9 @@ local encrypt_methods_ss = {
 	"xchacha20",
 	"chacha20-ietf-poly1305",
 	"xchacha20-ietf-poly1305",
+	"2022-blake3-aes-128-gcm",
+	"2022-blake3-aes-256-gcm",
+	"2022-blake3-chacha20-poly1305"
 }
 
 local encrypt_methods_ssr = {
@@ -52,7 +55,7 @@ local encrypt_methods_ssr = {
 	"aes-192-ctr",
 	"aes-256-ctr",
 	"chacha20-ietf",
-	"xchacha20",
+	"xchacha20"
 }
 
 local securitys = {
@@ -68,7 +71,13 @@ local protocols = {
 	"auth_aes128_md5",
 	"auth_aes128_sha1",
 	"auth_chain_a",
-	"auth_chain_b",
+	"auth_chain_b"
+}
+
+local hysteria_protocols = {
+	"udp",
+	"wechat-video",
+	"faketcp"
 }
 
 local obfs = {
@@ -77,7 +86,7 @@ local obfs = {
 	"http_post",
 	"random_head",
 	"tls1.2_ticket_auth",
-	"tls1.2_ticket_fastauth",
+	"tls1.2_ticket_fastauth"
 }
 
 m = Map(openclash, translate("Edit Server"))
@@ -118,6 +127,7 @@ o:value("ss", translate("Shadowsocks"))
 o:value("ssr", translate("ShadowsocksR"))
 o:value("vmess", translate("Vmess"))
 o:value("vless", translate("Vless ")..translate("(Only Meta Core)"))
+o:value("hysteria", translate("Hysteria ")..translate("(Only Meta Core)"))
 o:value("trojan", translate("trojan"))
 o:value("snell", translate("Snell"))
 o:value("socks5", translate("Socks5"))
@@ -147,8 +157,33 @@ o:depends("type", "ss")
 o:depends("type", "ssr")
 o:depends("type", "trojan")
 
-o = s:option(Value, "psk", translate("Psk"))
+o = s:option(ListValue, "hysteria_protocol", translate("Protocol"))
+for _, v in ipairs(hysteria_protocols) do o:value(v) end
 o.rmempty = false
+o:depends("type", "hysteria")
+
+o = s:option(Value, "up_mbps", translate("up_mbps"))
+o.rmempty = true
+o.datatype = "uinteger"
+o:depends("type", "hysteria")
+
+o = s:option(Value, "down_mbps", translate("down_mbps"))
+o.rmempty = true
+o.datatype = "uinteger"
+o:depends("type", "hysteria")
+
+o = s:option(Value, "hysteria_up", translate("Up"))
+o.rmempty = true
+o.description = translate("Mutual Exclusion With up_mbps")
+o:depends("type", "hysteria")
+
+o = s:option(Value, "hysteria_down", translate("Down"))
+o.rmempty = true
+o.description = translate("Mutual Exclusion With down_mbps")
+o:depends("type", "hysteria")
+
+o = s:option(Value, "psk", translate("Psk"))
+o.rmempty = true
 o:depends("type", "snell")
 
 o = s:option(ListValue, "snell_version", translate("Version"))
@@ -158,6 +193,7 @@ o:depends("type", "snell")
 
 o = s:option(ListValue, "cipher", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods_ss) do o:value(v) end
+o.description = translate("Only Meta Core Support SS2022")
 o.rmempty = true
 o:depends("type", "ss")
 
@@ -321,7 +357,7 @@ o:depends("obfs_vmess", "websocket")
 -- [[ skip-cert-verify ]]--
 o = s:option(ListValue, "skip_cert_verify", translate("skip-cert-verify"))
 o.rmempty = true
-o.default = "false"
+o.default = "true"
 o:value("true")
 o:value("false")
 o:depends("obfs", "websocket")
@@ -332,6 +368,7 @@ o:depends("type", "socks5")
 o:depends("type", "http")
 o:depends("type", "trojan")
 o:depends("type", "vless")
+o:depends("type", "hysteria")
 
 -- [[ TLS ]]--
 o = s:option(ListValue, "tls", translate("tls"))
@@ -383,6 +420,14 @@ o.placeholder = translate("example.com")
 o.rmempty = true
 o:depends("type", "trojan")
 o:depends("type", "http")
+o:depends("type", "hysteria")
+
+-- [[ headers ]]--
+o = s:option(DynamicList, "http_headers", translate("headers"))
+o.description = translate("Only Meta Core")
+o.rmempty = true
+o.placeholder = translate("User-Agent: okhttp/3.11.0 Dalvik/2.1.0 ...... ")
+o:depends("type", "http")
 
 -- 验证用户名
 o = s:option(Value, "auth_name", translate("Auth Username"))
@@ -402,6 +447,12 @@ o.rmempty = true
 o:value("h2")
 o:value("http/1.1")
 o:depends("type", "trojan")
+
+-- [[ alpn ]]--
+o = s:option(Value, "hysteria_alpn", translate("alpn"))
+o.rmempty = true
+o.default = "h3"
+o:depends("type", "hysteria")
 
 -- [[ grpc ]]--
 o = s:option(Value, "grpc_service_name", translate("grpc-service-name"))
@@ -423,6 +474,58 @@ o = s:option(DynamicList, "trojan_ws_headers", translate("Headers"))
 o.rmempty = true
 o.placeholder = translate("Host: v2ray.com")
 o:depends("obfs_trojan", "ws")
+
+-- [[ hysteria_obfs ]]--
+o = s:option(Value, "hysteria_obfs", translate("obfs"))
+o.rmempty = false
+o.placeholder = translate("yourpassword")
+o:depends("type", "hysteria")
+
+-- [[ hysteria_auth ]]--
+o = s:option(Value, "hysteria_auth", translate("auth"))
+o.rmempty = true
+o.placeholder = translate("[BASE64]")
+o:depends("type", "hysteria")
+
+-- [[ hysteria_auth_str ]]--
+o = s:option(Value, "hysteria_auth_str", translate("auth_str"))
+o.rmempty = true
+o.placeholder = translate("yubiyubi")
+o:depends("type", "hysteria")
+
+-- [[ hysteria_ca ]]--
+o = s:option(Value, "hysteria_ca", translate("ca"))
+o.rmempty = true
+o.placeholder = translate("./my.ca")
+o:depends("type", "hysteria")
+
+-- [[ hysteria_ca_str ]]--
+o = s:option(Value, "hysteria_ca_str", translate("ca_str"))
+o.rmempty = true
+o.placeholder = translate("xyz")
+o:depends("type", "hysteria")
+
+-- [[ recv_window_conn ]]--
+o = s:option(Value, "recv_window_conn", translate("recv_window_conn"))
+o.rmempty = true
+o.placeholder = translate("QUIC stream receive window")
+o.datatype = "uinteger"
+o:depends("type", "hysteria")
+
+-- [[ recv_window ]]--
+o = s:option(Value, "recv_window", translate("recv_window"))
+o.rmempty = true
+o.placeholder = translate("QUIC connection receive window")
+o.datatype = "uinteger"
+o:depends("type", "hysteria")
+
+-- [[ disable_mtu_discovery ]]--
+o = s:option(ListValue, "disable_mtu_discovery", translate("disable_mtu_discovery"))
+o.rmempty = true
+o:value("true")
+o:value("false")
+o.default = "false"
+o:depends("type", "hysteria")
 
 -- [[ interface-name ]]--
 o = s:option(Value, "interface_name", translate("interface-name"))

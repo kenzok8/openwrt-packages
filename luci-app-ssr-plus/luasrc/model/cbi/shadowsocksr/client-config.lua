@@ -157,6 +157,9 @@ end
 if is_finded("naive") then
 	o:value("naiveproxy", translate("NaiveProxy"))
 end
+if is_finded("hysteria") then
+	o:value("hysteria", translate("Hysteria"))
+end
 if is_finded("ipt2socks") then
 	o:value("socks5", translate("Socks5"))
 end
@@ -183,6 +186,7 @@ o:value("vmess", translate("VMess"))
 o:value("trojan", translate("Trojan"))
 o:value("shadowsocks", translate("Shadowsocks"))
 if is_installed("sagernet-core") then
+	o:value("shadowsocksr", translate("ShadowsocksR"))
 	o:value("wireguard", translate("WireGuard"))
 end
 o:value("socks", translate("Socks"))
@@ -197,6 +201,7 @@ o:depends("type", "ss")
 o:depends("type", "v2ray")
 o:depends("type", "trojan")
 o:depends("type", "naiveproxy")
+o:depends("type", "hysteria")
 o:depends("type", "socks5")
 
 o = s:option(Value, "server_port", translate("Server Port"))
@@ -207,6 +212,7 @@ o:depends("type", "ss")
 o:depends("type", "v2ray")
 o:depends("type", "trojan")
 o:depends("type", "naiveproxy")
+o:depends("type", "hysteria")
 o:depends("type", "socks5")
 
 o = s:option(Flag, "auth_enable", translate("Enable Authentication"))
@@ -232,8 +238,9 @@ o:depends("type", "trojan")
 o:depends("type", "naiveproxy")
 o:depends({type = "socks5", auth_enable = true})
 o:depends({type = "v2ray", v2ray_protocol = "http", auth_enable = true})
-o:depends({type = "v2ray", v2ray_protocol = "socks", auth_enable = true})
+o:depends({type = "v2ray", v2ray_protocol = "socks", socks_ver = "5", auth_enable = true})
 o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocksr"})
 o:depends({type = "v2ray", v2ray_protocol = "trojan"})
 
 o = s:option(ListValue, "encrypt_method", translate("Encrypt Method"))
@@ -242,6 +249,7 @@ for _, v in ipairs(encrypt_methods) do
 end
 o.rmempty = true
 o:depends("type", "ssr")
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocksr"})
 
 o = s:option(ListValue, "encrypt_method_ss", translate("Encrypt Method"))
 for _, v in ipairs(encrypt_methods_ss) do
@@ -265,7 +273,7 @@ o.default = "1"
 -- Shadowsocks Plugin
 o = s:option(Value, "plugin", translate("Obfs"))
 o:value("none", translate("None"))
-if is_finded("obfs-local") then
+if is_finded("obfs-local") or is_installed("sagernet-core") then
 	o:value("obfs-local", translate("obfs-local"))
 end
 if is_finded("v2ray-plugin") or is_installed("sagernet-core") then
@@ -276,12 +284,16 @@ if is_finded("xray-plugin") then
 end
 o.rmempty = true
 o:depends("type", "ss")
-o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
+if is_installed("sagernet-core") then
+	o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
+end
 
 o = s:option(Value, "plugin_opts", translate("Plugin Opts"))
 o.rmempty = true
 o:depends("type", "ss")
-o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
+if is_installed("sagernet-core") then
+	o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
+end
 
 o = s:option(ListValue, "protocol", translate("Protocol"))
 for _, v in ipairs(protocol) do
@@ -289,9 +301,11 @@ for _, v in ipairs(protocol) do
 end
 o.rmempty = true
 o:depends("type", "ssr")
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocksr"})
 
-o = s:option(Value, "protocol_param", translate("Protocol param(optional)"))
+o = s:option(Value, "protocol_param", translate("Protocol param (optional)"))
 o:depends("type", "ssr")
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocksr"})
 
 o = s:option(ListValue, "obfs", translate("Obfs"))
 for _, v in ipairs(obfs) do
@@ -299,9 +313,46 @@ for _, v in ipairs(obfs) do
 end
 o.rmempty = true
 o:depends("type", "ssr")
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocksr"})
 
-o = s:option(Value, "obfs_param", translate("Obfs param(optional)"))
+o = s:option(Value, "obfs_param", translate("Obfs param (optional)"))
 o:depends("type", "ssr")
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocksr"})
+
+-- [[ Hysteria ]]--
+o = s:option(ListValue, "hysteria_protocol", translate("Protocol"))
+o:depends("type", "hysteria")
+o:value("udp", translate("udp"))
+o:value("wechat-video", translate("wechat-video"))
+o:value("faketcp", translate("faketcp"))
+o.default = "udp"
+o.rmempty = true
+
+o = s:option(ListValue, "auth_type", translate("Authentication type"))
+o:depends("type", "hysteria")
+o:value("0", translate("disabled"))
+o:value("1", translate("base64"))
+o:value("2", translate("string"))
+o.rmempty = true
+
+o = s:option(Value, "auth_payload", translate("Authentication payload"))
+o:depends({type = "hysteria", auth_type = "1"})
+o:depends({type = "hysteria", auth_type = "2"})
+o.rmempty = true
+
+o = s:option(Value, "recv_window", translate("QUIC connection receive window"))
+o.datatype = "uinteger"
+o:depends("type", "hysteria")
+o.rmempty = true
+
+o = s:option(Value, "recv_window_conn", translate("QUIC stream receive window"))
+o.datatype = "uinteger"
+o:depends("type", "hysteria")
+o.rmempty = true
+
+o = s:option(Flag, "disable_mtu_discovery", translate("Disable Path MTU discovery"))
+o:depends("type", "hysteria")
+o.rmempty = true
 
 -- VmessId
 o = s:option(Value, "vmess_id", translate("Vmess/VLESS ID (UUID)"))
@@ -323,6 +374,15 @@ for _, v in ipairs(securitys) do
 end
 o.rmempty = true
 o:depends({type = "v2ray", v2ray_protocol = "vmess"})
+
+-- SOCKS Version
+o = s:option(ListValue, "socks_ver", translate("Socks Version"))
+o:value("4", "Socks4")
+o:value("4a", "Socks4A")
+o:value("5", "Socks5")
+o.rmempty = true
+o.default = "5"
+o:depends({type = "v2ray", v2ray_protocol = "socks"})
 
 -- 传输协议
 o = s:option(ListValue, "transport", translate("Transport"))
@@ -370,6 +430,21 @@ o = s:option(Value, "ws_path", translate("WebSocket Path"))
 o:depends("transport", "ws")
 o.rmempty = true
 
+if is_finded("v2ray") then
+	-- WS前置数据
+	o = s:option(Value, "ws_ed", translate("Max Early Data"))
+	o:depends("transport", "ws")
+	o.datatype = "uinteger"
+	o.default = 2048
+	o.rmempty = true
+
+	-- WS前置数据标头
+	o = s:option(Value, "ws_ed_header", translate("Early Data Header Name"))
+	o:depends("transport", "ws")
+	o.default = "Sec-WebSocket-Protocol"
+	o.rmempty = true
+end
+
 -- [[ H2部分 ]]--
 
 -- H2域名
@@ -383,44 +458,56 @@ o:depends("transport", "h2")
 o.rmempty = true
 
 -- gRPC
-o = s:option(Value, "serviceName", translate("serviceName"))
+o = s:option(Value, "serviceName", translate("gRPC Service Name"))
 o:depends("transport", "grpc")
 o.rmempty = true
 
--- gRPC初始窗口
-o = s:option(Value, "initial_windows_size", translate("Initial Windows Size"))
-o.datatype = "uinteger"
-o:depends("transport", "grpc")
-o.default = 0
-o.rmempty = true
+if is_installed("sagernet-core") then
+	-- gPRC模式
+	o = s:option(ListValue, "grpc_mode", translate("gRPC Mode"))
+	o:depends("transport", "grpc")
+	o:value("gun", translate("Gun"))
+	o:value("multi", translate("Multi"))
+	o:value("raw", translate("Raw"))
+	o.rmempty = true
+end
 
--- H2/gRPC健康检查
-o = s:option(Flag, "health_check", translate("H2/gRPC Health Check"))
-o:depends("transport", "h2")
-o:depends("transport", "grpc")
-o.rmempty = true
+if is_finded("xray") or is_installed("sagernet-core") then
+	-- gRPC初始窗口
+	o = s:option(Value, "initial_windows_size", translate("Initial Windows Size"))
+	o.datatype = "uinteger"
+	o:depends("transport", "grpc")
+	o.default = 0
+	o.rmempty = true
 
-o = s:option(Value, "read_idle_timeout", translate("H2 Read Idle Timeout"))
-o.datatype = "uinteger"
-o:depends({health_check = true, transport = "h2"})
-o.default = 60
-o.rmempty = true
+	-- H2/gRPC健康检查
+	o = s:option(Flag, "health_check", translate("H2/gRPC Health Check"))
+	o:depends("transport", "h2")
+	o:depends("transport", "grpc")
+	o.rmempty = true
 
-o = s:option(Value, "idle_timeout", translate("gRPC Idle Timeout"))
-o.datatype = "uinteger"
-o:depends({health_check = true, transport = "grpc"})
-o.default = 60
-o.rmempty = true
+	o = s:option(Value, "read_idle_timeout", translate("H2 Read Idle Timeout"))
+	o.datatype = "uinteger"
+	o:depends({health_check = true, transport = "h2"})
+	o.default = 60
+	o.rmempty = true
 
-o = s:option(Value, "health_check_timeout", translate("Health Check Timeout"))
-o.datatype = "uinteger"
-o:depends("health_check", 1)
-o.default = 20
-o.rmempty = true
+	o = s:option(Value, "idle_timeout", translate("gRPC Idle Timeout"))
+	o.datatype = "uinteger"
+	o:depends({health_check = true, transport = "grpc"})
+	o.default = 60
+	o.rmempty = true
 
-o = s:option(Flag, "permit_without_stream", translate("Permit Without Stream"))
-o:depends({health_check = true, transport = "grpc"})
-o.rmempty = true
+	o = s:option(Value, "health_check_timeout", translate("Health Check Timeout"))
+	o.datatype = "uinteger"
+	o:depends("health_check", 1)
+	o.default = 20
+	o.rmempty = true
+
+	o = s:option(Flag, "permit_without_stream", translate("Permit Without Stream"))
+	o:depends({health_check = true, transport = "grpc"})
+	o.rmempty = true
+end
 
 -- [[ QUIC部分 ]]--
 o = s:option(ListValue, "quic_security", translate("QUIC Security"))
@@ -471,12 +558,14 @@ o.rmempty = true
 o = s:option(Value, "uplink_capacity", translate("Uplink Capacity"))
 o.datatype = "uinteger"
 o:depends("transport", "kcp")
+o:depends("type", "hysteria")
 o.default = 5
 o.rmempty = true
 
 o = s:option(Value, "downlink_capacity", translate("Downlink Capacity"))
 o.datatype = "uinteger"
 o:depends("transport", "kcp")
+o:depends("type", "hysteria")
 o.default = 20
 o.rmempty = true
 
@@ -493,7 +582,8 @@ o.default = 2
 o.rmempty = true
 
 o = s:option(Value, "seed", translate("Obfuscate password (optional)"))
-o:depends({v2ray_protocol = "vless", transport = "kcp"})
+o:depends("transport", "kcp")
+o:depends("type", "hysteria")
 o.rmempty = true
 
 o = s:option(Flag, "congestion", translate("Congestion"))
@@ -527,7 +617,7 @@ o:depends({type = "v2ray", v2ray_protocol = "vless", xtls = false})
 o:depends({type = "v2ray", v2ray_protocol = "vmess", xtls = false})
 o:depends({type = "v2ray", v2ray_protocol = "trojan", xtls = false})
 o:depends({type = "v2ray", v2ray_protocol = "shadowsocks", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "socks", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "socks", socks_ver = "5", xtls = false})
 o:depends({type = "v2ray", v2ray_protocol = "http", xtls = false})
 o:depends("type", "trojan")
 
@@ -556,20 +646,27 @@ o = s:option(Flag, "tls_sessionTicket", translate("Session Ticket"))
 o:depends({type = "trojan", tls = true})
 o.default = "0"
 
--- [[ uTLS ]]--
-o = s:option(ListValue, "fingerprint", translate("Finger Print"))
-o:value("disable", translate("disable"))
-o:value("firefox", translate("firefox"))
-o:value("chrome", translate("chrome"))
-o:value("safari", translate("safari"))
-o:value("randomized", translate("randomized"))
-o:depends({type = "v2ray", tls = true})
-o.default = "disable"
+if is_finded("xray") then
+	-- [[ uTLS ]]--
+	o = s:option(ListValue, "fingerprint", translate("Finger Print"))
+	o:value("disable", translate("disable"))
+	o:value("firefox", translate("firefox"))
+	o:value("chrome", translate("chrome"))
+	o:value("safari", translate("safari"))
+	o:value("randomized", translate("randomized"))
+	o:depends({type = "v2ray", tls = true})
+	o.default = "disable"
+end
 
 o = s:option(Value, "tls_host", translate("TLS Host"))
 o.datatype = "hostname"
 o:depends("tls", true)
 o:depends("xtls", true)
+o:depends("type", "hysteria")
+o.rmempty = true
+
+o = s:option(Value, "quic_tls_alpn", translate("QUIC TLS ALPN"))
+o:depends("type", "hysteria")
 o.rmempty = true
 
 -- [[ allowInsecure ]]--
@@ -577,6 +674,7 @@ o = s:option(Flag, "insecure", translate("allowInsecure"))
 o.rmempty = false
 o:depends("tls", true)
 o:depends("xtls", true)
+o:depends("type", "hysteria")
 o.description = translate("If true, allowss insecure connection at TLS client, e.g., TLS server uses unverifiable certificates.")
 
 -- [[ Mux ]]--
@@ -600,6 +698,7 @@ o:depends("type", "naiveproxy")
 o = s:option(Flag, "certificate", translate("Self-signed Certificate"))
 o.rmempty = true
 o.default = "0"
+o:depends({type = "hysteria", insecure = false})
 o:depends({type = "trojan", tls = true, insecure = false})
 o:depends({type = "v2ray", v2ray_protocol = "vmess", tls = true, insecure = false})
 o:depends({type = "v2ray", v2ray_protocol = "vless", tls = true, insecure = false})

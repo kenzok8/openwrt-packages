@@ -28,6 +28,7 @@ local filter_words = ucic:get_first(name, 'server_subscribe', 'filter_words', 'è
 local save_words = ucic:get_first(name, 'server_subscribe', 'save_words', '')
 local packet_encoding = luci.model.ipkg.installed("sagernet-core") and ucic:get_first(name, 'global', 'default_packet_encoding', 'xudp') or nil
 local v2_ss = luci.sys.exec('type -t -p ss-redir sslocal') ~= "" and "ss" or "v2ray"
+local v2_ssr = luci.sys.exec('type -t -p ssr-redir') ~= "" and "ssr" or "v2ray"
 local v2_tj = luci.sys.exec('type -t -p trojan') ~= "" and "trojan" or "v2ray"
 local log = function(...)
 	print(os.date("%Y-%m-%d %H:%M:%S ") .. table.concat({...}, " "))
@@ -147,6 +148,8 @@ local function processData(szType, content)
 	if szType == 'ssr' then
 		local dat = split(content, "/%?")
 		local hostInfo = split(dat[1], ':')
+		result.type = v2_ssr
+		result.v2ray_protocol = (v2_ssr == "v2ray") and "shadowsocksr" or nil
 		result.server = hostInfo[1]
 		result.server_port = hostInfo[2]
 		result.protocol = hostInfo[3]

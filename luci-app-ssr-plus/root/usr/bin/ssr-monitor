@@ -108,18 +108,5 @@ while [ "1" == "1" ]; do #死循环
 			ln_start_bin $(first_type microsocks) microsocks -i 127.0.0.1 -p $tmp_dns_port ssrplus-dns
 			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver:$dnsport 127.0.0.1:$dns_port -q
 		fi
-	#pdnsd
-	elif [ "$pdnsd_process" -eq 3 ]; then
-		icount=$(busybox ps -w | grep $TMP_BIN_PATH/pdnsd | grep -v grep | wc -l)
-		if [ "$icount" -lt 1 ]; then #如果进程挂掉就重启它
-			logger -t "$NAME" "pdnsd tunnel error.restart!"
-			echolog "pdnsd tunnel error.restart!"
-			if [ -f /var/run/pdnsd.pid ]; then
-				kill $(cat /var/run/pdnsd.pid) >/dev/null 2>&1
-			else
-				kill -9 $(ps | grep $TMP_PATH/pdnsd.conf | grep -v grep | awk '{print $1}') >/dev/null 2>&1
-			fi
-			ln_start_bin $(first_type pdnsd) pdnsd -c $TMP_PATH/pdnsd.conf
-		fi
 	fi
 done

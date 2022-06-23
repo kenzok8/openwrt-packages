@@ -405,6 +405,9 @@ iv_check = s:option(Flag, "iv_check", translate("IV Check"))
 iv_check:depends({ type = "V2ray", protocol = "shadowsocks" })
 iv_check:depends({ type = "Xray", protocol = "shadowsocks" })
 
+uot = s:option(Flag, "uot", translate("UDP over TCP"), translate("Need Xray server side with Shadowsocks-2022 protocol"))
+uot:depends({ type = "Xray", protocol = "shadowsocks" })
+
 ssr_protocol = s:option(Value, "ssr_protocol", translate("Protocol"))
 for a, t in ipairs(ssr_protocol_list) do ssr_protocol:value(t) end
 ssr_protocol:depends("type", "SSR")
@@ -689,17 +692,14 @@ ws_path:depends("trojan_transport", "ws")
 ws_path:depends({ type = "Brook", brook_protocol = "wsclient" })
 
 ws_enableEarlyData = s:option(Flag, "ws_enableEarlyData", translate("Enable early data"))
-ws_enableEarlyData:depends("transport", "ws")
+ws_enableEarlyData:depends({ type = "V2ray", transport = "ws" })
 
 ws_maxEarlyData = s:option(Value, "ws_maxEarlyData", translate("Early data length"))
 ws_maxEarlyData.default = "1024"
 ws_maxEarlyData:depends("ws_enableEarlyData", true)
-function ws_maxEarlyData.cfgvalue(self, section)
-	return m:get(section, "ws_maxEarlyData")
-end
-function ws_maxEarlyData.write(self, section, value)
-	m:set(section, "ws_maxEarlyData", value)
-end
+
+ws_earlyDataHeaderName = s:option(Value, "ws_earlyDataHeaderName", translate("Early data header name"), translate("Recommended value: Sec-WebSocket-Protocol"))
+ws_earlyDataHeaderName:depends("ws_enableEarlyData", true)
 
 -- [[ HTTP/2部分 ]]--
 h2_host = s:option(Value, "h2_host", translate("HTTP/2 Host"))

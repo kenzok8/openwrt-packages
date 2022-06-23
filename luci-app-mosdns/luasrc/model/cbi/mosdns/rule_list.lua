@@ -1,6 +1,6 @@
 local datatypes = require "luci.cbi.datatypes"
 
-local white_list_file = "/etc/mosdns/whitelist.txt"
+local white_list_file = "/etc/mosdns/rule/whitelist.txt"
 local block_list_file = "/etc/mosdns/rule/blocklist.txt"
 local hosts_list_file = "/etc/mosdns/rule/hosts.txt"
 local redirect_list_file = "/etc/mosdns/rule/redirect.txt"

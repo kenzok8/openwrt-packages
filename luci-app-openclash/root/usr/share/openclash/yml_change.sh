@@ -165,12 +165,15 @@ sys_dns_append()
 yml_dns_get()
 {
    local section="$1" regex='^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$'
-   local enabled port type ip group dns_type dns_address
+   local enabled port type ip group dns_type dns_address interface specific_group
    config_get_bool "enabled" "$section" "enabled" "1"
    config_get "port" "$section" "port" ""
    config_get "type" "$section" "type" ""
    config_get "ip" "$section" "ip" ""
    config_get "group" "$section" "group" ""
+   config_get "interface" "$section" "interface" ""
+   config_get "specific_group" "$section" "specific_group" ""
+   config_get_bool "node_resolve" "$section" "node_resolve" "0"
 
    if [ "$enabled" = "0" ]; then
       return
@@ -203,11 +206,40 @@ yml_dns_get()
    else
       return
    fi
-   
+
    if [ "$type" == "quic" ] && [ "$enable_meta_core" != "1" ]; then
       LOG_OUT "Warning: Only Meta Core Support QUIC Type DNS, Skip【$dns_type$dns_address】"
       return
    fi
+
+   if [ "$node_resolve" = "1" ] && [ "$enable_meta_core" = "1" ]; then
+      if [ -z "$(grep "^ \{0,\}proxy-server-nameserver:$" /tmp/yaml_config.proxynamedns.yaml 2>/dev/null)" ]; then
+         echo "  proxy-server-nameserver:" >/tmp/yaml_config.proxynamedns.yaml
+      fi
+      echo "    - \"$dns_type$dns_address\"" >>/tmp/yaml_config.proxynamedns.yaml
+   elif [ "$node_resolve" = "1" ]; then
+      LOG_OUT "Warning: Only Meta Core Support proxy-server-nameserver, Skip Setting【$dns_type$dns_address】"
+   fi
+
+   if [ "$specific_group" != "Disable" ] && [ -n "$specific_group" ] && [ "$enable_meta_core" = "1" ]; then
+      specific_group="#$specific_group"
+   elif [ "$specific_group" != "Disable" ] && [ -n "$specific_group" ]; then
+      LOG_OUT "Warning: Only Meta Core Support Specific Group, Skip Setting【$dns_type$dns_address】"
+      specific_group=""
+   else
+      specific_group=""
+   fi
+
+   if [ "$interface" != "Disable" ] && [ -n "$interface" ] && [ "$enable_meta_core" != "1" ]; then
+      interface="#$interface"
+   elif [ "$interface" != "Disable" ] && [ -n "$interface" ]; then
+      LOG_OUT "Warning: Meta Core not Support Specific Interface, Skip Setting【$dns_type$dns_address】"
+      interface=""
+   else
+      interface=""
+   fi
+
+   dns_address="$dns_address$interface$specific_group"
 
    if [ -n "$group" ]; then
       if [ "$group" = "nameserver" ]; then
@@ -234,8 +266,9 @@ ruby -ryaml -E UTF-8 -e "
 begin
    Value = YAML.load_file('$5');
 rescue Exception => e
-   puts '${LOGTIME} Error: Load File Failed,【' + e.message + '】'
-end
+   puts '${LOGTIME} Error: Load File Failed,【' + e.message + '】';
+end;
+
 #field name check
 begin
 Thread.new{
@@ -393,23 +426,12 @@ Thread.new{
    if Value.key?('routing-mark') then
       Value.delete('routing-mark');
    end;
-}.join;
-rescue Exception => e
-   puts '${LOGTIME} Error: Set General Failed,【' + e.message + '】';
-end;
-
-#auth
-begin
-Thread.new{
-   if File::exist?('/tmp/yaml_openclash_auth') then
-      Value_1 = YAML.load_file('/tmp/yaml_openclash_auth');
-      Value['authentication']=Value_1
-   elsif Value.key?('authentication') then
-       Value.delete('authentication');
+   if Value.key?('auto-redir') then
+      Value.delete('auto-redir');
    end;
 }.join;
 rescue Exception => e
-   puts '${LOGTIME} Error: Set authentication Failed,【' + e.message + '】';
+   puts '${LOGTIME} Error: Set General Failed,【' + e.message + '】';
 end;
 
 #custom dns
@@ -432,39 +454,96 @@ Thread.new{
 }.join;
 end;
 
+# dns check
 begin
 Thread.new{
-   if '$tolerance' != '0' then
-      Value['proxy-groups'].each{
-         |x|
-            if x['type'] == 'url-test' then
-               x['tolerance']='${tolerance}';
-            end
-         };
+   if not Value['dns'].key?('nameserver') or Value['dns']['nameserver'].to_a.empty? then
+      puts '${LOGTIME} Detected That The nameserver DNS Option Has No Server Set, Starting To Complete...';
+      Value_1={'nameserver'=>['114.114.114.114','119.29.29.29','223.5.5.5','https://doh.pub/dns-query','https://223.5.5.5/dns-query']};
+      Value_2={'fallback'=>['https://dns.cloudflare.com/dns-query','https://public.dns.iij.jp/dns-query','https://jp.tiar.app/dns-query','https://jp.tiarap.org/dns-query']};
+      Value['dns'].merge!(Value_1);
+      Value['dns'].merge!(Value_2);
    end;
 }.join;
-rescue Exception => e
-	puts '${LOGTIME} Error: Set Url-Test Group Tolerance Failed,【' + e.message + '】';
 end;
 
-#custom hosts
+#default-nameserver
 begin
 Thread.new{
-   if File::exist?('/etc/openclash/custom/openclash_custom_hosts.list') then
-      Value_3 = YAML.load_file('/etc/openclash/custom/openclash_custom_hosts.list');
-      if Value_3 != false then
-         Value['dns']['use-hosts']=true;
-         if Value.has_key?('hosts') and not Value['hosts'].to_a.empty? then
-            Value['hosts'].merge!(Value_3);
-            Value['hosts'].uniq;
+   if ${20} == 1 then
+      reg = /(^https:\/\/|^tls:\/\/|^quic:\/\/)?((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?/;
+      reg6 = /(^https:\/\/|^tls:\/\/|^quic:\/\/)?(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))|\[(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))\](?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?/i;
+   else
+      reg = /^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$/;
+      reg6 = /^(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))|\[(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))\](?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$/i;
+   end;
+   if Value['dns'].has_key?('fallback') then
+      Value_1=Value['dns']['nameserver'] | Value['dns']['fallback'];
+   else
+      Value_1=Value['dns']['nameserver'];
+   end;
+   Value_1.each{|x|
+      if x =~ reg or x =~ reg6 then
+         if Value['dns'].has_key?('default-nameserver') then
+            Value['dns']['default-nameserver']=Value['dns']['default-nameserver'].to_a.insert(-1,x).uniq;
          else
-            Value['hosts']=Value_3;
+            Value_2={'default-nameserver'=>[x]};
+            Value['dns'].merge!(Value_2);
+         end;
+      end;
+      };
+}.join;
+rescue Exception => e
+   puts '${LOGTIME} Error: Set default-nameserver Failed,【' + e.message + '】';
+end;
+
+#proxy server dns
+begin
+Thread.new{
+   if '$enable_custom_dns' == '1' then
+      if File::exist?('/tmp/yaml_config.proxynamedns.yaml') then
+         Value_1 = YAML.load_file('/tmp/yaml_config.proxynamedns.yaml');
+         Value_1['proxy-server-nameserver'] = Value_1['proxy-server-nameserver'].uniq;
+         Value['dns']['proxy-server-nameserver'] = Value_1['proxy-server-nameserver'];
+      end;
+   end;
+}.join;
+end;
+
+#fallback-filter
+begin
+Thread.new{
+   if '$custom_fallback_filter' == '1' then
+      if not Value['dns'].key?('fallback') then
+         puts '${LOGTIME} Error: Fallback-Filter Need fallback of DNS Been Setted, Ignore...';
+      elsif not YAML.load_file('/etc/openclash/custom/openclash_custom_fallback_filter.yaml') then
+         puts '${LOGTIME} Error: Unable To Parse Custom Fallback-Filter File, Ignore...';
+      else
+         Value['dns']['fallback-filter'] = YAML.load_file('/etc/openclash/custom/openclash_custom_fallback_filter.yaml')['fallback-filter'];
+      end;
+   end;
+}.join;
+end;
+
+#nameserver-policy
+begin
+Thread.new{
+   if '$dns_advanced_setting' == '1' then
+      if File::exist?('/etc/openclash/custom/openclash_custom_domain_dns_policy.list') then
+         Value_6 = YAML.load_file('/etc/openclash/custom/openclash_custom_domain_dns_policy.list');
+         if Value_6 != false and not Value_6.nil? then
+            if Value['dns'].has_key?('nameserver-policy') and not Value['dns']['nameserver-policy'].to_a.empty? then
+               Value['dns']['nameserver-policy'].merge!(Value_6);
+            else
+               Value['dns']['nameserver-policy']=Value_6;
+            end;
+            Value['dns']['nameserver-policy'].uniq;
          end;
       end;
    end;
 }.join;
 rescue Exception => e
-   puts '${LOGTIME} Error: Set Hosts Rules Failed,【' + e.message + '】';
+   puts '${LOGTIME} Error: Set Nameserver-Policy Failed,【' + e.message + '】';
 end;
 
 #fake-ip-filter
@@ -515,31 +594,73 @@ rescue Exception => e
    puts '${LOGTIME} Error: Set Fake-IP-Filter Failed,【' + e.message + '】';
 end;
 
-#nameserver-policy
+#custom hosts
 begin
 Thread.new{
-   if '$dns_advanced_setting' == '1' then
-      if File::exist?('/etc/openclash/custom/openclash_custom_domain_dns_policy.list') then
-         Value_6 = YAML.load_file('/etc/openclash/custom/openclash_custom_domain_dns_policy.list');
-         if Value_6 != false then
-            if Value['dns'].has_key?('nameserver-policy') and not Value['dns']['nameserver-policy'].to_a.empty? then
-               Value['dns']['nameserver-policy'].merge!(Value_6);
-               Value['dns']['nameserver-policy'].uniq;
+   if File::exist?('/etc/openclash/custom/openclash_custom_hosts.list') then
+      begin
+         Value_3 = YAML.load_file('/etc/openclash/custom/openclash_custom_hosts.list');
+         if Value_3 != false and not Value_3.nil? then
+            Value['dns']['use-hosts']=true;
+            if Value.has_key?('hosts') and not Value['hosts'].to_a.empty? then
+               Value['hosts'].merge!(Value_3);
             else
-               Value['dns']['nameserver-policy']=Value_6;
+               Value['hosts']=Value_3;
             end;
+            Value['hosts'].uniq;
+         end;
+      rescue
+         Value_3 = IO.readlines('/etc/openclash/custom/openclash_custom_hosts.list');
+         if not Value_3.empty? then
+            Value_3 = Value_3.map!{|x| x.gsub(/#.*$/,'').strip} - ['', nil];
+            Value['dns']['use-hosts']=true;
+            if Value.has_key?('hosts') and not Value['hosts'].to_a.empty? then
+               Value_3.each{|x| Value['hosts'].merge!(x)};
+            else
+               Value_3.each{|x| Value['hosts'].merge!(x)};
+            end;
+            Value['hosts'].uniq;
          end;
       end;
    end;
 }.join;
 rescue Exception => e
-   puts '${LOGTIME} Error: Set Nameserver-Policy Failed,【' + e.message + '】';
+   puts '${LOGTIME} Error: Set Hosts Rules Failed,【' + e.message + '】';
+end;
+
+begin
+Thread.new{
+   if '$tolerance' != '0' then
+      Value['proxy-groups'].each{
+         |x|
+            if x['type'] == 'url-test' then
+               x['tolerance']='${tolerance}';
+            end
+         };
+   end;
+}.join;
+rescue Exception => e
+	puts '${LOGTIME} Error: Set Url-Test Group Tolerance Failed,【' + e.message + '】';
+end;
+
+#auth
+begin
+Thread.new{
+   if File::exist?('/tmp/yaml_openclash_auth') then
+      Value_1 = YAML.load_file('/tmp/yaml_openclash_auth');
+      Value['authentication']=Value_1
+   elsif Value.key?('authentication') then
+       Value.delete('authentication');
+   end;
+}.join;
+rescue Exception => e
+   puts '${LOGTIME} Error: Set authentication Failed,【' + e.message + '】';
 end;
 
 #Vmess-ws formalt check, not support proxy-provider
 begin
 Thread.new{
-   if Value.key?('proxies') then
+   if Value.key?('proxies') and not Value['proxies'].nil? then
       Value['proxies'].each{
       |x|
       if x['type'] != 'vmess' then
@@ -579,59 +700,6 @@ Thread.new{
 }.join;
 rescue Exception => e
    puts '${LOGTIME} Error: Edit Vmess Compatible Failed,【' + e.message + '】';
-end;
-
-# dns check
-begin
-Thread.new{
-   if not Value['dns'].key?('nameserver') or Value['dns']['nameserver'].to_a.empty? then
-      puts '${LOGTIME} Detected That The nameserver DNS Option Has No Server Set, Starting To Complete...';
-      Value_1={'nameserver'=>['114.114.114.114','119.29.29.29','223.5.5.5']};
-      Value_2={'fallback'=>['https://dns.cloudflare.com/dns-query','https://public.dns.iij.jp/dns-query','https://jp.tiar.app/dns-query','https://jp.tiarap.org/dns-query']};
-      Value['dns'].merge!(Value_1);
-      Value['dns'].merge!(Value_2);
-   end;
-}.join;
-end;
-
-#fallback-filter
-begin
-Thread.new{
-   if '$custom_fallback_filter' == '1' then
-      if not Value['dns'].key?('fallback') then
-         puts '${LOGTIME} Error: Fallback-Filter Need fallback of DNS Been Setted, Ignore...';
-      elsif not YAML.load_file('/etc/openclash/custom/openclash_custom_fallback_filter.yaml') then
-         puts '${LOGTIME} Error: Unable To Parse Custom Fallback-Filter File, Ignore...';
-      else
-         Value['dns']['fallback-filter'] = YAML.load_file('/etc/openclash/custom/openclash_custom_fallback_filter.yaml')['fallback-filter'];
-      end;
-   end;
-}.join;
-end;
-
-#default-nameserver
-begin
-Thread.new{
-   reg = /^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$/;
-   reg6 = /^(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))|\[(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))\](?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$/i;
-   if Value['dns'].has_key?('fallback') then
-      Value_1=Value['dns']['nameserver'] | Value['dns']['fallback'];
-   else
-      Value_1=Value['dns']['nameserver'];
-   end;
-   Value_1.each{|x|
-      if x =~ reg or x =~ reg6 then
-         if Value['dns'].has_key?('default-nameserver') then
-            Value['dns']['default-nameserver']=Value['dns']['default-nameserver'].to_a.insert(-1,x).uniq;
-         else
-            Value_2={'default-nameserver'=>[x]};
-            Value['dns'].merge!(Value_2);
-         end;
-      end;
-      };
-}.join;
-rescue Exception => e
-   puts '${LOGTIME} Error: Set default-nameserver Failed,【' + e.message + '】';
 ensure
    File.open('$5','w') {|f| YAML.dump(Value, f)};
 end" 2>/dev/null >> $LOG_FILE

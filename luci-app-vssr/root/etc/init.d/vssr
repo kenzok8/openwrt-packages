@@ -353,7 +353,7 @@ start_shunt() {
             ss | ssr)
                 bin=$(find_bin "ss-local")
                 [ "$server_type" == "ssr" ] && bin=$(find_bin "ssr-local")
-                
+
                 g_threads=$threads
                 if [ "$shunt_type" != "global" ]; then
                     g_threads=1

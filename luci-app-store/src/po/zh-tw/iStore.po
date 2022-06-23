@@ -5,4 +5,4 @@ msgid "istore_vue_lang"
 msgstr "zh-cn"
 
 msgid "iStore"
-msgstr "应用商店"
+msgstr "iStore"
