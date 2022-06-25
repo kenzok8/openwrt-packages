@@ -30,7 +30,6 @@ LUCI_DEPENDS:=+ipset +kmod-ipt-nat +ip-full +iptables-mod-tproxy +dnsmasq-full +
 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-redir \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server:shadowsocksr-libev-ssr-server \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Simple_obfs:simple-obfs \
-	+PACKAGE_$(PKG_NAME)_INCLUDE_Simple_obfs_server:simple-obfs-server \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_plugin:v2ray-plugin \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Xray:xray-core \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Trojan:trojan-plus \
@@ -60,12 +59,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Simple_Obfs
 	bool "Include Shadowsocks Simple Obfs Plugin"
-	default y if i386||x86_64||arm
-
-config PACKAGE_$(PKG_NAME)_INCLUDE_Simple_obfs_server
-	bool "Include Shadowsocks Simple-obfs-server Plugin"
-	depends on PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server
-	default n
+	default y
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_plugin
 	bool "Include Shadowsocks V2ray Plugin"
