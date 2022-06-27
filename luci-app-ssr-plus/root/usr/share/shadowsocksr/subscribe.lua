@@ -439,7 +439,7 @@ local function processData(szType, content)
 end
 -- wget
 local function wget(url)
-	local stdout = luci.sys.exec('uclient-fetch -q --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36" --no-check-certificate -O- "' .. url .. '"')
+	local stdout = luci.sys.exec('wget -q --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36" --no-check-certificate -O- "' .. url .. '"')
 	return trim(stdout)
 end
 
