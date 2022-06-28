@@ -9,7 +9,7 @@ LUCI_TITLE:=LuCI support for ddnsto
 LUCI_DEPENDS:=+ddnsto
 LUCI_PKGARCH:=all
 PKG_VERSION:=1.5.1
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 include $(TOPDIR)/feeds/luci/luci.mk
 

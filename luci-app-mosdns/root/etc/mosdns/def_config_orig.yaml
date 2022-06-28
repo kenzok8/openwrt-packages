@@ -124,7 +124,6 @@ plugins:
     args:
       exec:
         - _misc_optm
-        - _single_flight
         - lazy_cache
         - query_is_hosts_domain
         - query_is_redirect_domain

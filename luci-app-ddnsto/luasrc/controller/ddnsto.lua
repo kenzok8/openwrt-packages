@@ -362,57 +362,56 @@ function ddnsto_submit()
     end
 
     if success == 0 then
-        local uci = require "uci"
-        local x = uci.cursor()
+        local uci = require "luci.model.uci".cursor()
 
         local enabled = "0"
         if req.enabled == true then
             enabled = "1"
         end
-        x:set("ddnsto","@ddnsto[0]","enabled",enabled)
+        uci:set("ddnsto","@ddnsto[0]","enabled",enabled)
 
         local token = ""
         if req.token then
             token = trim(req.token)
         end
-        x:set("ddnsto","@ddnsto[0]","token",token)
+        uci:set("ddnsto","@ddnsto[0]","token",token)
 
         local index = 0
         if req.index then
             index = req.index
         end
-        x:set("ddnsto","@ddnsto[0]","index",index)
+        uci:set("ddnsto","@ddnsto[0]","index",index)
 
         local f_enabled = "0"
         if req.feat_enabled == true then
             f_enabled = "1"
         end
-        x:set("ddnsto","@ddnsto[0]","feat_enabled",f_enabled)
+        uci:set("ddnsto","@ddnsto[0]","feat_enabled",f_enabled)
 
         local port = 3033
         if req.feat_port ~= nil then
             port = req.feat_port
         end
-        x:set("ddnsto","@ddnsto[0]","feat_port",port)
+        uci:set("ddnsto","@ddnsto[0]","feat_port",port)
 
         local username = ""
         if req.feat_username ~= nil then
             username = trim(req.feat_username)
         end
-        x:set("ddnsto","@ddnsto[0]","feat_username",username)
+        uci:set("ddnsto","@ddnsto[0]","feat_username",username)
 
         local password = ""
         if req.feat_password ~= nil then
             password = trim(req.feat_password)
         end
-        x:set("ddnsto","@ddnsto[0]","feat_password",password)
+        uci:set("ddnsto","@ddnsto[0]","feat_password",password)
         
         local path = ""
         if req.feat_disk_path_selected ~= nil then
             path = trim(req.feat_disk_path_selected)
         end
-        x:set("ddnsto","@ddnsto[0]","feat_disk_path_selected",path)
-        x:commit("ddnsto")  
+        uci:set("ddnsto","@ddnsto[0]","feat_disk_path_selected",path)
+        uci:commit("ddnsto")  
     end
         
     
