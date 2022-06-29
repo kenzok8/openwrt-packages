@@ -46,7 +46,7 @@ endef
 
 define Package/mosdns-neo
   $(call Package/mosdns/Default)
-  DEPENDS:=$(GO_ARCH_DEPENDS) +mosdns
+  DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
 define Package/mosdns/config
@@ -78,6 +78,10 @@ endif
 endef
 
 define Package/mosdns/install
+	$(call GoPackage/Package/Install/Bin,$(1))
+endef
+
+define Package/mosdns-neo/install
 	$(call GoPackage/Package/Install/Bin,$(1))
 endef
 

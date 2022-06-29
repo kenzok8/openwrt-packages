@@ -8,8 +8,8 @@ include $(TOPDIR)/rules.mk
 LUCI_TITLE:=LuCI support for ddnsto
 LUCI_DEPENDS:=+ddnsto
 LUCI_PKGARCH:=all
-PKG_VERSION:=1.5.1
-PKG_RELEASE:=6
+PKG_VERSION:=3.0.0
+PKG_RELEASE:=1
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
