@@ -4,7 +4,7 @@
 
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=mosdns-neo
+PKG_NAME:=mosdns
 PKG_VERSION:=259bb47
 PKG_RELEASE:=$(AUTORELEASE)
 
@@ -31,7 +31,7 @@ GO_PKG_LDFLAGS_X:=main.version=$(PKG_VERSION)
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
-define Package/mosdns-neo/Default
+define Package/mosdns/Default
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=IP Addresses and Names
@@ -39,12 +39,17 @@ define Package/mosdns-neo/Default
   URL:=https://github.com/IrineSistiana/mosdns
 endef
 
-define Package/mosdns-neo
-  $(call Package/mosdns-neo/Default)
+define Package/mosdns
+  $(call Package/mosdns/Default)
   DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
-define Package/mosdns-neo/config
+define Package/mosdns-neo
+  $(call Package/mosdns/Default)
+  DEPENDS:=$(GO_ARCH_DEPENDS) +mosdns
+endef
+
+define Package/mosdns/config
 config MOSDNS_COMPRESS_GOPROXY
 	bool "Compiling with GOPROXY proxy"
 	default n
@@ -66,16 +71,16 @@ endef
 GO_PKG_TARGET_VARS:=$(filter-out CGO_ENABLED=%,$(GO_PKG_TARGET_VARS)) CGO_ENABLED=0
 
 define Build/Compile
-	cp -rfn $(BUILD_DIR)/mosdns-$(PKG_VERSION)/* $(PKG_BUILD_DIR)
 	$(call GoPackage/Build/Compile)
 ifneq ($(CONFIG_MOSDNS_COMPRESS_UPX),)
 	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(GO_PKG_BUILD_BIN_DIR)/mosdns
 endif
 endef
 
-define Package/mosdns-neo/install
+define Package/mosdns/install
 	$(call GoPackage/Package/Install/Bin,$(1))
 endef
 
-$(eval $(call GoBinPackage,mosdns-neo))
+$(eval $(call GoBinPackage,mosdns))
+$(eval $(call BuildPackage,mosdns))
 $(eval $(call BuildPackage,mosdns-neo))
