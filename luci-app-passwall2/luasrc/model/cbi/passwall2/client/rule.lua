@@ -31,6 +31,16 @@ o = s:option(Value, "v2ray_location_asset", translate("Location of V2ray/Xray as
 o.default = "/usr/share/v2ray/"
 o.rmempty = false
 
+---- Custom geo file url
+o = s:option(Value, "geoip_url", translate("Custom geoip URL"))
+o.default = "https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases/latest"
+o.rmempty = false
+
+o = s:option(Value, "geosite_url", translate("Custom geosite URL"))
+o.default = "https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases/latest"
+o.rmempty = false
+----
+
 s = m:section(TypedSection, "shunt_rules", "V2ray/Xray " .. translate("Shunt Rule"), "<a style='color: red'>" .. translate("Please note attention to the priority, the higher the order, the higher the priority.") .. "</a>")
 s.template = "cbi/tblsection"
 s.anonymous = false

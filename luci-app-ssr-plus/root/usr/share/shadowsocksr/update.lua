@@ -101,7 +101,7 @@ end
 
 local function update(url, file, type, file2)
 	local Num = 1
-	local refresh_cmd = "uclient-fetch --no-check-certificate -q -O /tmp/ssr-update." .. type .. " " .. url
+	local refresh_cmd = "wget --no-check-certificate -q -O /tmp/ssr-update." .. type .. " " .. url
 	local sret = luci.sys.call(refresh_cmd)
 	if sret == 0 then
 		if type == "gfw_data" then

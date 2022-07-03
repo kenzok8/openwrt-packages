@@ -6,7 +6,7 @@ function index()
                 return
         end
 
-        entry({"admin","services", "ddnsto"}, call("redirect_index"), _("DDNSTO"), 20).dependent = true
+        entry({"admin","services", "ddnsto"}, call("redirect_index"), _("DDNSTO 远程控制"), 20).dependent = true
         entry({"admin","services", "ddnsto", "pages"}, call("ddnsto_index")).leaf = true
         if nixio.fs.access("/usr/lib/lua/luci/view/ddnsto/main_dev.htm") then
             entry({"admin","services", "ddnsto", "dev"}, call("ddnsto_dev")).leaf = true
@@ -106,8 +106,7 @@ local function status_container()
         labels = { 
             {
             key = "服务状态",
-            value = running,
-            tt = non_system_mounts
+            value = running
         },
         {
             key = "插件版本",
@@ -141,7 +140,7 @@ local function status_container()
             value = "<a href=\"https://www.ddnsto.com/app/#/devices\" target=\"_blank\">点击前往DDNSTO控制台</a>"
         } 
     },
-    title = "DDNSTO 服务状态"
+    title = "服务状态"
   }  
   return c1
 end
@@ -245,6 +244,7 @@ local function feat_container()
             name = "feat_disk_path_selected",
             enum = getBlockDevices(),
             enumNames = getBlockDevices(),
+            required = true,
             title = "共享磁盘",
             type = "string",
             ["ui:hidden"] = "{{rootValue.feat_enabled !== true }}"
@@ -275,7 +275,7 @@ local function get_schema()
         actions = actions,
         containers = get_containers(),
         description = "DDNSTO远程控制是Koolcenter小宝开发的，支持http2的远程穿透控制插件。<br />\n            支持通过浏览器访问自定义域名访问内网设备后台、远程RDP/VNC桌面、远程文件管理等多种功能。<br />\n            详情请查看    <a href=\"https://www.ddnsto.com/\" target=\"_blank\">https://www.ddnsto.com</a>",
-        title = "ddnsto"
+        title = "DDNSTO 远程控制"
     }
     return schema
 end
@@ -322,11 +322,8 @@ function ddnsto_submit()
             success = -1000
             error = "请填写正确用户Token（令牌）"
         end
-        if req.enabled == false then
-            req.feat_enabled = false
-        end
 
-        if string.find(req.token, " ") then
+        if req.token ~= nil and string.find(req.token, " ") then
             success = -1000
             error = "令牌勿包含空格"
         end
@@ -336,6 +333,7 @@ function ddnsto_submit()
         end
 
         if req.feat_enabled == true then
+
             if (req.feat_port == nil or tonumber(req.feat_port) == nil or req.feat_port == 0)  then
                 success = -1000
                 error = "请填写正确的端口"
@@ -364,57 +362,56 @@ function ddnsto_submit()
     end
 
     if success == 0 then
-        local uci = require "uci"
-        local x = uci.cursor()
+        local uci = require "luci.model.uci".cursor()
 
         local enabled = "0"
         if req.enabled == true then
             enabled = "1"
         end
-        x:set("ddnsto","@ddnsto[0]","enabled",enabled)
+        uci:set("ddnsto","@ddnsto[0]","enabled",enabled)
 
         local token = ""
         if req.token then
             token = trim(req.token)
         end
-        x:set("ddnsto","@ddnsto[0]","token",token)
+        uci:set("ddnsto","@ddnsto[0]","token",token)
 
         local index = 0
         if req.index then
             index = req.index
         end
-        x:set("ddnsto","@ddnsto[0]","index",index)
+        uci:set("ddnsto","@ddnsto[0]","index",index)
 
         local f_enabled = "0"
         if req.feat_enabled == true then
             f_enabled = "1"
         end
-        x:set("ddnsto","@ddnsto[0]","feat_enabled",f_enabled)
+        uci:set("ddnsto","@ddnsto[0]","feat_enabled",f_enabled)
 
-        local port = 3030
+        local port = 3033
         if req.feat_port ~= nil then
             port = req.feat_port
         end
-        x:set("ddnsto","@ddnsto[0]","feat_port",port)
+        uci:set("ddnsto","@ddnsto[0]","feat_port",port)
 
         local username = ""
         if req.feat_username ~= nil then
             username = trim(req.feat_username)
         end
-        x:set("ddnsto","@ddnsto[0]","feat_username",username)
+        uci:set("ddnsto","@ddnsto[0]","feat_username",username)
 
         local password = ""
         if req.feat_password ~= nil then
             password = trim(req.feat_password)
         end
-        x:set("ddnsto","@ddnsto[0]","feat_password",password)
+        uci:set("ddnsto","@ddnsto[0]","feat_password",password)
         
-        local path = req.feat_disk_path_selected
+        local path = ""
         if req.feat_disk_path_selected ~= nil then
             path = trim(req.feat_disk_path_selected)
         end
-        x:set("ddnsto","@ddnsto[0]","feat_disk_path_selected",path)
-        x:commit("ddnsto")  
+        uci:set("ddnsto","@ddnsto[0]","feat_disk_path_selected",path)
+        uci:commit("ddnsto")  
     end
         
     
@@ -424,7 +421,9 @@ function ddnsto_submit()
         log = log .. "请关闭对话框\n"
         ddnsto_writelog(log)
         
-        luci.util.exec("/etc/init.d/ddnsto restart")
+        luci.util.exec("/etc/init.d/ddnsto stop")
+        luci.util.exec("sleep 1")
+        luci.util.exec("/etc/init.d/ddnsto start")
         luci.util.exec("sleep 1")
     else
         log = log .. "参数错误：\n"

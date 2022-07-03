@@ -11,9 +11,12 @@ local arg1 = arg[1]
 local reboot = 0
 local geoip_update = 0
 local geosite_update = 0
-local geoip_api =  "https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases/latest"
-local geosite_api =  "https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases/latest"
 local v2ray_asset_location = ucic:get_first(name, 'global_rules', "v2ray_location_asset", "/usr/share/v2ray/")
+
+-- Custom geo file
+local geoip_api = ucic:get_first(name, 'global_rules', "geoip_url", "https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases/latest")
+local geosite_api = ucic:get_first(name, 'global_rules', "geosite_url", "https://api.github.com/repos/Loyalsoldier/v2ray-rules-dat/releases/latest")
+--
 
 local log = function(...)
     if arg1 then
