@@ -9,7 +9,7 @@ echo -e "Launching luci-app-unblockneteasmusic Debugging Tool..."
 echo -e "\n"
 
 echo -e "OpenWrt info:"
-cat "/etc/openwrt_release"
+ubus call system board || cat "/etc/openwrt_release"
 echo -e "\n"
 
 echo -e "uclient-fetch info:"
@@ -56,12 +56,17 @@ netstat -tlpen | grep "$unm_ports" || echo -e "No instance found on port $unm_po
 echo -e "\n"
 
 echo -e "Running info:"
-procd_running_status="$(/etc/init.d/unblockneteasemusic status)"
-echo -e "PROCD running status: $procd_running_status"
-[ "$procd_running_status" = "running" ] && { busybox ps -w | grep "unblockneteasemusic" | grep "app\.js" || echo -e "Thread is not found."; }
+busybox ps -w | grep "unblockneteasemusic" | grep "app\.js" || { is_stopped=1; echo -e "Thread is not found."; }
+if ! /etc/init.d/unblockneteasemusic info | grep -q "Available commands"; then
+	echo -e "PROCD running info: \n$(/etc/init.d/unblockneteasemusic info | sed -e 's,"YOUTUBE_KEY".*","YOUTUBE_KEY": "set",g' \
+		-e 's,"QQ_COOKIE".*","QQ_COOKIE": "set",g')"
+else
+	echo -e "PROCD too old, cannot dump service info."
+fi
+
 echo -e "\n"
 
-[ "$procd_running_status" != "running" ] || {
+[ -n "$is_stopped" ] || {
 	echo -e "Firewall info:"
 	if [ -e "$(command -v fw4)" ]; then
 		[ -e "/etc/nftables.d/90-unblockneteasemusic-rules.nft" ] || echo -e 'netease_cloud_music nft rule file not found.'

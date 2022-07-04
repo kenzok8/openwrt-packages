@@ -105,6 +105,7 @@ start_service()
 	is_enabled "config" "strict_mode" && append_param "-s"
 
 	procd_set_param env LOG_FILE="/tmp/$NAME.log"
+	procd_append_param env JSON_LOG="true"
 
 	append_param_env "config" "joox_cookie" "JOOX_COOKIE"
 	append_param_env "config" "qq_cookie" "QQ_COOKIE"
@@ -120,7 +121,6 @@ start_service()
 		"lower_than_999kbps") procd_append_param env MIN_BR="600000" ;;
 		"replace_all") procd_append_param env MIN_BR="9999999" ;;
 	esac
-	procd_append_param env JSON_LOG="true"
 
 	procd_set_param stdout 1
 	procd_set_param stderr 1
