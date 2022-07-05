@@ -224,6 +224,7 @@ local Xray = {
 				-- grpc
 				serviceName = server.serviceName or "",
 				mode = (server.grpc_mode ~= "gun") and server.grpc_mode or nil,
+				multiMode = (server.grpc_mode == "multi") and true or false,
 				idle_timeout = tonumber(server.idle_timeout) or nil,
 				health_check_timeout = tonumber(server.health_check_timeout) or nil,
 				permit_without_stream = (server.permit_without_stream == "1") and true or nil,
