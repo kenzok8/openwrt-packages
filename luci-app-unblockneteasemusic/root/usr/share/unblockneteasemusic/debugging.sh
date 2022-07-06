@@ -1,7 +1,9 @@
 #!/bin/sh
-# Copyright (C) 2021 Tianling Shen <cnsztl@immortalwrt.org>
+# Copyright (C) 2021-2022 Tianling Shen <cnsztl@immortalwrt.org>
 
 . /lib/functions.sh
+
+NAME="unblockneteasemusic"
 
 command -v "curl" >"/dev/null" || { echo -e "curl is not found."; exit 1; }
 
@@ -26,23 +28,23 @@ echo -e "\n"
 
 echo -e "luci-app-unblockneteasmusic info:"
 opkg info "luci-app-unblockneteasemusic"
-ls -lh "/etc/config/unblockneteasemusic" "/etc/init.d/unblockneteasemusic" "/usr/share/unblockneteasemusic"
-cat "/etc/config/unblockneteasemusic" | sed -e "s,joox_cookie .*,joox_cookie 'set',g" \
+ls -lh "/etc/config/$NAME" "/etc/init.d/$NAME" "/usr/share/$NAME"
+cat "/etc/config/$NAME" | sed -e "s,joox_cookie .*,joox_cookie 'set',g" \
 	-e "s,qq_cookie .*,qq_cookie 'set',g" \
 	-e "s,youtube_key .*,youtube_key 'set',g" \
 	-e "s,proxy_server_ip .*,proxy_server_ip 'set',g"
 echo -e "\n"
 
 echo -e "UnblockNeteaseMusic Node.js info:"
-echo -e "Git HEAD version: $(cat "/usr/share/unblockneteasemusic/core_local_ver" 2>"/dev/null" || echo "Not Found")"
-echo -e "Core version: $(node "/usr/share/unblockneteasemusic/core/app.js" -v 2>"/dev/null" || echo "Not Found")"
-ls -lh "/usr/share/unblockneteasemusic/core" 2>"/dev/null"
+echo -e "Git HEAD version: $(cat "/usr/share/$NAME/core_local_ver" 2>"/dev/null" || echo "Not Found")"
+echo -e "Core version: $(node "/usr/share/$NAME/core/app.js" -v 2>"/dev/null" || echo "Not Found")"
+ls -lh "/usr/share/$NAME/core" 2>"/dev/null"
 echo -e "\n"
 
 echo -e "Netease networking info:"
 curl -fsv "http://music.163.com/song/media/outer/url?id=641644.mp3" 2>&1 | grep "Location" || echo -e "Cannot connect to NeteaseMusic."
 curl -sSL "http://httpdns.n.netease.com/httpdns/v2/d?domain=music.163.com" || echo -e "Cannot connect to Netease HTTPDNS."
-config_load "unblockneteasemusic"
+config_load "$NAME"
 config_get custom_proxy "config" "proxy_server_ip"
 [ -n "$custom_proxy" ] && { curl -sL -x "$custom_proxy" "http://music.163.com/song/media/outer/url?id=641644.mp3" 2>&1 | grep "Location" || echo -e "Cannot connect to NeteaseMusic via proxy."; }
 echo -e "\n"
@@ -50,26 +52,22 @@ echo -e "\n"
 echo -e "Port status:"
 config_get unm_port "config" "http_port" "5200"
 config_get unm_ports "config" "https_port" "5201"
-[ "x$(config_get "config" "hijack_ways")" = "xuse_hosts" ] && { unm_port="80"; unm_ports="443"; }
+[ "$(config_get "config" "hijack_ways")" = "use_hosts" ] && { unm_port="80"; unm_ports="443"; }
 netstat -tlpen | grep "$unm_port" || echo -e "No instance found on port $unm_port."
 netstat -tlpen | grep "$unm_ports" || echo -e "No instance found on port $unm_ports."
 echo -e "\n"
 
-echo -e "Running info:"
-busybox ps -w | grep "unblockneteasemusic" | grep "app\.js" || { is_stopped=1; echo -e "Thread is not found."; }
-if ! /etc/init.d/unblockneteasemusic info | grep -q "Available commands"; then
-	echo -e "PROCD running info: \n$(/etc/init.d/unblockneteasemusic info | sed -e 's,"YOUTUBE_KEY".*","YOUTUBE_KEY": "set",g' \
-		-e 's,"QQ_COOKIE".*","QQ_COOKIE": "set",g')"
-else
-	echo -e "PROCD too old, cannot dump service info."
-fi
+echo -e "PROCD running info:"
+running_stat="$(ubus call service list '{"name": "unblockneteasemusic", "verbose": true}' | sed -e 's,"YOUTUBE_KEY".*","YOUTUBE_KEY": "set",g' -e 's,"QQ_COOKIE".*","QQ_COOKIE": "set",g')"
+[ "$(echo -e "$running_stat" | jsonfilter -e "@.$NAME.instances.$NAME.running")" == "true" ] || is_stopped=1
+echo -e "$running_stat"
 
 echo -e "\n"
 
 [ -n "$is_stopped" ] || {
 	echo -e "Firewall info:"
 	if [ -e "$(command -v fw4)" ]; then
-		[ -e "/etc/nftables.d/90-unblockneteasemusic-rules.nft" ] || echo -e 'netease_cloud_music nft rule file not found.'
+		[ -e "/etc/nftables.d/90-$NAME-rules.nft" ] || echo -e 'netease_cloud_music nft rule file not found.'
 		echo -e ""
 		nft list set inet fw4 "acl_neteasemusic_http" 2>&1
 		echo -e ""
@@ -96,7 +94,7 @@ echo -e "\n"
 		ipset list "acl_neteasemusic_https" 2>"/dev/null" || echo -e 'Table "acl_neteasemusic_https" not found.'
 	fi
 	echo -e ""
-	cat "/tmp/dnsmasq.d/dnsmasq-unblockneteasemusic.conf"
+	cat "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
 	echo -e "\n"
 
 	echo -e "Testing source replacing..."
@@ -109,4 +107,4 @@ echo -e "\n"
 	echo -e ""
 }
 
-cat "/tmp/unblockneteasemusic.log"
+cat "/tmp/$NAME.log" 2>"/dev/null" || echo -e "Log is not avaiable."
