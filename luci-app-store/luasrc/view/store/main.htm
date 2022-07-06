@@ -12,11 +12,13 @@
         });
         window.vue_base = vue_prefix + '/';
         // window.istore_api_base = "https://istore.linkease.com";
+        window.vue_lang_data = '/luci-static/istore/i18n/<%=lang%>.json?v=<%=id.version%>';
+        window.vue_lang = '<%=lang%>';
         window.token = "<%=token%>";
         window.device_id = {arch:"<%=id.arch%>",uid:"<%=id.uid%>",version:"<%=id.version%>"};
     })();
 </script>
-<h2 name="content">应用商店 
+<h2 name="content"><%:iStore%> 
     <a onclick="void(0)" href="https://github.com/linkease/istore/issues/22" target="_blank" style="text-decoration: none;">
         v<%=id.version%>
     </a>

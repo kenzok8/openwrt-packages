@@ -10,11 +10,11 @@ include $(TOPDIR)/rules.mk
 PKG_ARCH_DDNSTO:=$(ARCH)
 
 PKG_NAME:=ddnsto
-PKG_VERSION:=0.3.3
-PKG_RELEASE:=2
+PKG_VERSION:=3.0.0
+PKG_RELEASE:=$(PKG_ARCH_DDNSTO)-1
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=http://fw.koolcenter.com/binary/ddnsto/
-PKG_HASH:=8a51602f8849db96d4c57dca27064ec5e68c0b7169510041500f016d354427cb
+PKG_HASH:=361dee2ef52f711a35155d6a3ec180de6cdccb591c6bce34e24d8e51ceb75682
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-binary-$(PKG_VERSION)
 
@@ -29,6 +29,7 @@ define Package/$(PKG_NAME)
 	SUBMENU:=Web Servers/Proxies
 	TITLE:=DDNS.to - the reverse proxy
 	DEPENDS:=
+	PKGARCH:=all
 	URL:=https://www.ddnsto.com/
 endef
 
@@ -56,6 +57,7 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/config $(1)/etc/init.d $(1)/etc/uci-defaults
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ddnsto.$(PKG_ARCH_DDNSTO) $(1)/usr/sbin/ddnsto
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ddwebdav.$(PKG_ARCH_DDNSTO) $(1)/usr/sbin/ddwebdav
 	$(INSTALL_CONF) ./files/ddnsto.config $(1)/etc/config/ddnsto
 	$(INSTALL_BIN) ./files/ddnsto.init $(1)/etc/init.d/ddnsto
 	$(INSTALL_BIN) ./files/ddnsto-monitor.sh $(1)/usr/sbin/ddnsto-monitor.sh

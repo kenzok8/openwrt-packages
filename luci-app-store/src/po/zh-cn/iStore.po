@@ -1,0 +1,8 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+msgid "istore_vue_lang"
+msgstr "zh-cn"
+
+msgid "iStore"
+msgstr "iStore"

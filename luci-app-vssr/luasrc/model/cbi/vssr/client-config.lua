@@ -139,6 +139,10 @@ if nixio.fs.access('/usr/sbin/trojan') then
     o:value('trojan', translate('Trojan'))
 end
 
+if nixio.fs.access('/usr/bin/hysteria') then
+    o:value('hysteria', translate('Hysteria'))
+end
+
 o.description = translate('Using incorrect encryption mothod may causes service fail to start')
 
 o = s:option(Value, 'alias', translate('Alias(optional)'))
@@ -180,6 +184,37 @@ for _, v in ipairs(encrypt_methods_ss) do
 end
 o.rmempty = true
 o:depends('type', 'ss')
+
+-- o:depends("type", "hysteria")
+o = s:option(Value, 'h_obfs', translate('Hysteria Obfs'))
+o.datatype = "minlength(1)"
+o.rmempty = false
+o:depends('type', 'hysteria')
+
+-- 协议
+o = s:option(ListValue, 'h_protocol', translate('Protocol'))
+o:value('udp', 'UDP')
+o:value('wechat-video', 'Wechat Video')
+o:value('faketcp', 'Fake TCP')
+o.rmempty = false
+o:depends('type', 'hysteria')
+
+-- up_mbps
+o = s:option(Value, 'h_up_mbps', translate('Up Mbps'))
+o.datatype = "uinteger"
+o.rmempty = false
+o:depends('type', 'hysteria')
+
+-- down_mbps
+o = s:option(Value, 'h_down_mbps', translate('Down Mbps'))
+o.datatype = "uinteger"
+o.rmempty = false
+o:depends('type', 'hysteria')
+
+o = s:option(Value, 'h_server_name', translate('Server Name'))
+o.datatype = 'host'
+o.rmempty = true
+o:depends('type', 'hysteria')
 
 -- Shadowsocks Plugin
 o = s:option(Value, 'plugin', translate('Plugin'))
@@ -381,6 +416,7 @@ o:depends('type', 'v2ray')
 o:depends('type', 'trojan')
 o:depends('type', 'vless')
 o:depends('type', 'xray')
+o:depends('type', 'hysteria')
 
 -- [[ TLS ]]--
 o = s:option(Flag, 'tls', translate('TLS'))

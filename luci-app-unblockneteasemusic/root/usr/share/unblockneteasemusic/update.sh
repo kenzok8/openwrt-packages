@@ -5,7 +5,7 @@
 NAME="unblockneteasemusic"
 
 check_core_if_already_running(){
-	running_tasks="$(ps -w |grep "$NAME" |grep "update.sh" |grep "update_core" |grep -v "grep" |awk '{print $1}' |wc -l)"
+	running_tasks="$(busybox ps -w |grep "$NAME" |grep "update.sh" |grep "update_core" |grep -v "grep" |awk '{print $1}' |wc -l)"
 	[ "${running_tasks}" -gt "2" ] && { echo -e "\nA task is already running." >> "/tmp/$NAME.log"; exit 2; }
 }
 

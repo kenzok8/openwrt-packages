@@ -180,7 +180,8 @@ function gen_outbound(node, tag, proxy_table)
                     path = node.ws_path or "",
                     headers = (node.ws_host ~= nil) and
                         {Host = node.ws_host} or nil,
-                    maxEarlyData = tonumber(node.ws_maxEarlyData) or nil
+                    maxEarlyData = tonumber(node.ws_maxEarlyData) or nil,
+                    earlyDataHeaderName = (node.ws_earlyDataHeaderName) and node.ws_earlyDataHeaderName or nil
                 } or nil,
                 httpSettings = (node.transport == "h2") and {
                     path = node.h2_path,
@@ -227,6 +228,7 @@ function gen_outbound(node, tag, proxy_table)
                         method = node.method or nil,
                         flow = node.flow or nil,
                         ivCheck = (node.protocol == "shadowsocks") and node.iv_check == "1" or nil,
+                        uot = (node.protocol == "shadowsocks") and node.uot == "1" or nil,
                         password = node.password or "",
                         users = (node.username and node.password) and {
                             {

@@ -147,6 +147,7 @@ else
 5b:TX3 QZ:s905x3:meson-sm1-tx3-qz.dtb:u-boot-tx3-qz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2100Mhz,4GB Mem,1Gb Nic,bcm4330 wifi
 5c:TX3 QZ (OverClock):s905x3:meson-sm1-tx3-qz-oc.dtb:u-boot-tx3-qz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2208Mhz,4GB Mem,1Gb Nic,bcm4330 wifi
 5d:X96 Max+ (IP1001M phy):s905x3:meson-sm1-x96-max-plus-ip1001m.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic (IP1001M phy),bcm4354 wifi
+5e:X96 Max+ Q2 & X96 Air Q1000:s905x3:meson-sm1-x96-max-plus-q2.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic,qca9377 wifi
 
 # Other
 0:Other::NA:NA:NA:NA:Enter the dtb file name of your box
@@ -367,7 +368,7 @@ EOF
 fdisk /dev/${EMMC_NAME} </tmp/fdisk.script 2>/dev/null
 if [ $? -ne 0 ]; then
     echo "The fdisk partition fails, Please try again."
-    dd if=/root/BackupOldBootloader.img of=/dev/${EMMC_NAME} conf=fsync && sync
+    dd if=/root/BackupOldBootloader.img of=/dev/${EMMC_NAME} conv=fsync && sync
     dd if=/dev/zero of=/dev/${EMMC_NAME} bs=512 count=1 && sync
     exit 1
 fi

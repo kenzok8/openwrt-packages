@@ -9,6 +9,7 @@ require "nixio"
 require "luci.util"
 require "luci.sys"
 require "luci.jsonc"
+require "luci.model.ipkg"
 -- these global functions are accessed all the time by the event handler
 -- so caching them is worth the effort
 local tinsert = table.insert
@@ -25,18 +26,27 @@ local switch = ucic:get_first(name, 'server_subscribe', 'switch', '1')
 local subscribe_url = ucic:get_first(name, 'server_subscribe', 'subscribe_url', {})
 local filter_words = ucic:get_first(name, 'server_subscribe', 'filter_words', '过期时间/剩余流量')
 local save_words = ucic:get_first(name, 'server_subscribe', 'save_words', '')
+local packet_encoding = luci.model.ipkg.installed("sagernet-core") and ucic:get_first(name, 'global', 'default_packet_encoding', 'xudp') or nil
 local v2_ss = luci.sys.exec('type -t -p ss-redir sslocal') ~= "" and "ss" or "v2ray"
+local v2_ssr = luci.sys.exec('type -t -p ssr-redir') ~= "" and "ssr" or "v2ray"
 local v2_tj = luci.sys.exec('type -t -p trojan') ~= "" and "trojan" or "v2ray"
 local log = function(...)
 	print(os.date("%Y-%m-%d %H:%M:%S ") .. table.concat({...}, " "))
 end
 local encrypt_methods_ss = {
+	-- plain
+	"none",
+	"plain",
 	-- aead
 	"aes-128-gcm",
 	"aes-192-gcm",
 	"aes-256-gcm",
 	"chacha20-ietf-poly1305",
-	"xchacha20-ietf-poly1305"
+	"xchacha20-ietf-poly1305",
+	-- aead 2022
+	"2022-blake3-aes-128-gcm",
+	"2022-blake3-aes-256-gcm",
+	"2022-blake3-chacha20-poly1305"
 	--[[ stream
 	"table",
 	"rc4",
@@ -138,6 +148,8 @@ local function processData(szType, content)
 	if szType == 'ssr' then
 		local dat = split(content, "/%?")
 		local hostInfo = split(dat[1], ':')
+		result.type = v2_ssr
+		result.v2ray_protocol = (v2_ssr == "v2ray") and "shadowsocksr" or nil
 		result.server = hostInfo[1]
 		result.server_port = hostInfo[2]
 		result.protocol = hostInfo[3]
@@ -165,6 +177,7 @@ local function processData(szType, content)
 		result.transport = info.net
 		result.vmess_id = info.id
 		result.alias = info.ps
+		result.packet_encoding = packet_encoding
 		-- result.mux = 1
 		-- result.concurrency = 8
 		if info.net == 'ws' then
@@ -237,6 +250,8 @@ local function processData(szType, content)
 		local password = userinfo:sub(userinfo:find(":") + 1, #userinfo)
 		result.alias = UrlDecode(alias)
 		result.type = v2_ss
+		result.v2ray_protocol = (v2_ss == "v2ray") and "shadowsocks" or nil
+		result.encrypt_method_ss = method
 		result.password = password
 		result.server = host[1]
 		if host[2]:find("/%?") then
@@ -267,33 +282,27 @@ local function processData(szType, content)
 		if not checkTabValue(encrypt_methods_ss)[method] then
 			-- 1202 年了还不支持 SS AEAD 的屑机场
 			result.server = nil
-		elseif v2_ss == "v2ray" then
-			result.v2ray_protocol = "shadowsocks"
-			result.encrypt_method_v2ray_ss = method
-		else
-			result.encrypt_method_ss = method
 		end
 	elseif szType == "sip008" then
 		result.type = v2_ss
+		result.v2ray_protocol = (v2_ss == "v2ray") and "shadowsocks" or nil
 		result.server = content.server
 		result.server_port = content.server_port
 		result.password = content.password
+		result.encrypt_method_ss = content.method
 		result.plugin = content.plugin
 		result.plugin_opts = content.plugin_opts
 		result.alias = content.remarks
 		if not checkTabValue(encrypt_methods_ss)[content.method] then
 			result.server = nil
-		elseif v2_ss == "v2ray" then
-			result.v2ray_protocol = "shadowsocks"
-			result.encrypt_method_v2ray_ss = content.method
-		else
-			result.encrypt_method_ss = content.method
 		end
 	elseif szType == "ssd" then
 		result.type = v2_ss
+		result.v2ray_protocol = (v2_ss == "v2ray") and "shadowsocks" or nil
 		result.server = content.server
 		result.server_port = content.port
 		result.password = content.password
+		result.encrypt_method_ss = content.method
 		result.plugin_opts = content.plugin_options
 		result.alias = "[" .. content.airport .. "] " .. content.remarks
 		if content.plugin == "simple-obfs" then
@@ -303,11 +312,6 @@ local function processData(szType, content)
 		end
 		if not checkTabValue(encrypt_methods_ss)[content.encryption] then
 			result.server = nil
-		elseif v2_ss == "v2ray" then
-			result.v2ray_protocol = "shadowsocks"
-			result.encrypt_method_v2ray_ss = content.method
-		else
-			result.encrypt_method_ss = content.method
 		end
 	elseif szType == "trojan" then
 		local idx_sp = 0
@@ -370,6 +374,7 @@ local function processData(szType, content)
 			result.vmess_id = uuid
 			result.vless_encryption = params.encryption or "none"
 			result.transport = params.type and (params.type == 'http' and 'h2' or params.type) or "tcp"
+			result.packet_encoding = packet_encoding
 			if not params.type or params.type == "tcp" then
 				if params.security == "xtls" then
 					result.xtls = "1"
@@ -434,7 +439,7 @@ local function processData(szType, content)
 end
 -- wget
 local function wget(url)
-	local stdout = luci.sys.exec('uclient-fetch -q --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36" --no-check-certificate -O- "' .. url .. '"')
+	local stdout = luci.sys.exec('wget -q --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36" --no-check-certificate -O- "' .. url .. '"')
 	return trim(stdout)
 end
 

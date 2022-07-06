@@ -65,6 +65,15 @@ local function user_id()
     return id
 end
 
+local function vue_lang()
+    local i18n = require("luci.i18n")
+    local lang = i18n.translate("istore_vue_lang")
+    if lang == "istore_vue_lang" or lang == "" then
+        lang = "en"
+    end
+    return lang
+end
+
 local function is_exec(cmd)
     local nixio = require "nixio"
     local os   = require "os"
@@ -106,11 +115,11 @@ function redirect_index()
 end
 
 function store_index()
-    luci.template.render("store/main", {prefix=luci.dispatcher.build_url(unpack(page_index)),id=user_id()})
+    luci.template.render("store/main", {prefix=luci.dispatcher.build_url(unpack(page_index)),id=user_id(),lang=vue_lang()})
 end
 
 function store_dev()
-    luci.template.render("store/main_dev", {prefix=luci.dispatcher.build_url(unpack({"admin", "store", "dev"})),id=user_id()})
+    luci.template.render("store/main_dev", {prefix=luci.dispatcher.build_url(unpack({"admin", "store", "dev"})),id=user_id(),lang=vue_lang()})
 end
 
 function store_log()

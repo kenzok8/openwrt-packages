@@ -56,6 +56,12 @@ o:value("https://ispip.clang.cn/all_cn.txt", translate("Clang.CN"))
 o:value("https://ispip.clang.cn/all_cn_cidr.txt", translate("Clang.CN.CIDR"))
 o.default = "https://ispip.clang.cn/all_cn.txt"
 
+o = s:option(ListValue, "default_packet_encoding", translate("Default Packet Encoding"))
+o:value("none", translate("none"))
+o:value("packet", translate("packet (v2ray-core v5+)"))
+o:value("xudp", translate("xudp (Xray-core)"))
+o.default = "xudp"
+
 o = s:option(Flag, "netflix_enable", translate("Enable Netflix Mode"))
 o.rmempty = false
 
