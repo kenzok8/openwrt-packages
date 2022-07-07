@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2021 Tianling Shen <cnsztl@immortalwrt.org>
+# Copyright (C) 2021-2022 Tianling Shen <cnsztl@immortalwrt.org>
 
 command -v "curl" >"/dev/null" || { echo -e "curl is not found."; exit 1; }
 
