@@ -7,7 +7,7 @@ uci:foreach(bypass,"servers",function(s)
 	server_count=server_count+1
 end)
 
-m=Map(bypass,translate("Servers subscription and manage"),translate("Support SS/SSR/XRAY/TROJAN/TROJAN-GO/NAIVEPROXY/SOCKS5/TUN etc."))
+m=Map(bypass,translate("Servers subscription and manage"),translate("Support SS/SSR/XRAY/TROJAN/NAIVEPROXY/SOCKS5/TUN etc."))
 s=m:section(TypedSection,"server_subscribe")
 s.anonymous=true
 
