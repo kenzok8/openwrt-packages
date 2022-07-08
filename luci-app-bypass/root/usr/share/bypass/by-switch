@@ -33,7 +33,7 @@ f_bin(){
 	case $1 in
 		ss)w=$(which ss-local);;
 		ssr)w=$(which ssr-local);;
-		v2ray)w=$(which xray);;
+		v2ray)w=$(which xray)||w=$(which r2ray);;
 		trojan)w=$(which trojan-plus);;
 		naiveproxy)w=$(which naive);;
 	esac

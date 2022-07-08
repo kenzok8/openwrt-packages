@@ -43,11 +43,11 @@ define Package/$(PKG_NAME)/config
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client
 	bool "Include Shadowsocks Libev Client"
-	default y if i386||x86_64||arm
+	default y if i386||x86_64||arm||aarch64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server
 	bool "Include Shadowsocks Libev Server"
-	default y if i386||x86_64||arm
+	default y if i386||x86_64||arm||aarch64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client
 	bool "Include ShadowsocksR Libev Client"
@@ -55,11 +55,11 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server
 	bool "Include ShadowsocksR Libev Server"
-	default y if i386||x86_64||arm
+	default y if i386||x86_64||aarch64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Simple_Obfs
 	bool "Include Shadowsocks Simple Obfs Plugin"
-	default y if i386||x86_64||arm
+	default y if i386||x86_64||arm||aarch64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_plugin
 	bool "Include Shadowsocks V2ray Plugin"
