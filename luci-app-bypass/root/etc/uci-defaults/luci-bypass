@@ -16,7 +16,7 @@ EOF
 
 if [[ "$(grep "option type 'vless'" /etc/config/bypass)" || "$(grep "option type 'vmess'" /etc/config/bypass)" ]]; then
 sed -i "s/option uuid/option vmess_id/" /etc/config/bypass
-for i in {1..100}
+for i in {0..100}
 do
 	uci -q set bypass.@servers[$i].type='v2ray'
 	[ "$(uci -q get bypass.@servers[$i].type)" == 'vless' ] && uci -q set bypass.@servers[$i].v2ray_protocol='vless' || uci -q set bypass.@servers[$i].v2ray_protocol='vmess'

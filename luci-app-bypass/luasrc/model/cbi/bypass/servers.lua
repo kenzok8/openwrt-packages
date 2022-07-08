@@ -25,13 +25,13 @@ o.rmempty=false
 o=s:option(DynamicList,"subscribe_url",translate("Subscribe URL"))
 o.rmempty=true
 
-o=s:option(ListValue,"filter_mode",translate("Filter Words Mode"))
-o:value("",translate("Discard Mode"))
-o:value(1,translate("Keep Mode"))
+o = s:option(Value, "filter_words", translate("Subscribe Filter Words"))
+o.rmempty = true
+o.description = translate("Filter Words splited by /")
 
-o=s:option(Value,"filter_words",translate("Subscribe Filter Words"))
-o.rmempty=true
-o.description=translate("Filter Words splited by /")
+o = s:option(Value, "save_words", translate("Subscribe Save Words"))
+o.rmempty = true
+o.description = translate("Save Words splited by /")
 
 o=s:option(Button,"update_Sub",translate("Update Subscribe List"))
 o.inputstyle="reload"

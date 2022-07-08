@@ -122,12 +122,12 @@ curl_check(){
 	case $type in
 		ss|ssr)
 			$cmd -c $J >/dev/null 2>&1 &;;
-		v2ray)
-			$S/genv2config $1 tcp 0 $lport $ip > $J
+		v2ray|hysteria)
+			$S/gen_config $1 tcp 0 $lport $ip > $J
 			sed -i 's/\\//g' $J
 			$cmd -c $J >/dev/null 2>&1 &;;
 		trojan)
-			$S/gentrojanconfig $1 client $lport $ip > $J
+			$S/gen_config $1 client $lport $ip > $J
 			sed -i 's/\\//g' $J
 			$cmd --config $J >/dev/null 2>&1 &;;
 		naiveproxy)
