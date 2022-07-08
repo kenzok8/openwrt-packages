@@ -72,9 +72,9 @@ f_bin(){
 	ssr) ret=$(which ssr-redir);;
 	ssr-local) ret=$(which ssr-local);;
 	ssr-server) ret=$(which ssr-server);;
-	vmess|vless) ret=$(which xray);;
+	v2ray) ret=$(which xray);;
+	hysteria) ret=$(which hysteria);;
 	trojan) ret=$(which trojan-plus);;
-	trojan-go) ret=$(which trojan-go);;
 	naiveproxy) ret=$(which naive);;
 	socks5|tun) ret=$(which redsocks2);;
 	esac
@@ -150,13 +150,13 @@ gen_config_file(){
 			}
 		EOF
 		;;
-	vmess|vless)
+	v2ray|hysteria)
 		[ $rtype = udp ] && smode=udp || smode=tcp
 		[ $rtype = socks ] && lport=0
-		lua $BIN_DIR/genv2config $1 $smode $lport $ssport $serv_ip >$config_file
+		lua $BIN_DIR/gen_config $1 $smode $lport $ssport $serv_ip >$config_file
 		sed -i 's/\\//g' $config_file
 		;;
-	trojan|trojan-go)
+	trojan)
 		case $rtype in
 		tcp|udp|nf) smode=nat;;
 		socks) smode=client;;
@@ -397,7 +397,7 @@ start_retcp(){
 		[ $ttype = ss ] && name=Shadowsocks || name=ShadowsocksR
 		log "Main Node: $name $threads Threads Started!"
 		;;
-	vmess|vless)
+	v2ray|hysteria)
 		if [ $SO_SERVER = $GLOBAL_SERVER ];then
 			port=$(uci_get_by_type socks5_proxy local_port 1080)
 			socks5_start=1
@@ -412,20 +412,14 @@ start_retcp(){
 			log "Socks5 Node: $($cmd -version | head -1 | awk '{print$1,$2}') Started!"
 		fi
 		;;
-	trojan|trojan-go)
+	trojan)
 		gen_config_file $GLOBAL_SERVER $rtype "" $server
-		if [ $type = trojan ];then
-			redir_tcp=$threads
-			for i in $(seq 1 $threads);do
-				$cmd --config $config_file >$log_file 2>&1 &
-			done
-			name=Trojan-Plus
-			ver="$($cmd --version 2>&1 | head -1 | awk '{print$3}')"
-		else
+		redir_tcp=$threads
+		for i in $(seq 1 $threads);do
 			$cmd --config $config_file >$log_file 2>&1 &
-			name=Trojan-Go
-			ver="$($cmd --version 2>&1 | head -1 | awk '{print$2}')"
-		fi
+		done
+		name=Trojan-Plus
+		ver="$($cmd --version 2>&1 | head -1 | awk '{print$3}')"
 		log "Main Node: $name (Ver $ver) $threads Threads Started!"
 		;;
 	naiveproxy)
@@ -468,21 +462,16 @@ start_reudp(){
 		[ $utype = ss ] && name=Shadowsocks || name=ShadowsocksR
 		log "UDP Relay: $name Started!"
 		;;
-	vmess|vless)
+	v2ray|hysteria)
 		gen_config_file $UDP_RELAY_SERVER $rtype 0 $udp_server
 		$cmd -c $config_file >$log_file 2>&1 &
 		log "UDP Relay: $($cmd -version | head -1 | awk '{print$1,$2}') Started!"
 		;;
-	trojan|trojan-go)
+	trojan)
 		gen_config_file $UDP_RELAY_SERVER $rtype "" $udp_server
 		$cmd --config $config_file >$log_file 2>&1 &
-		[ $utype = trojan ] && {
-			name=Trojan-Plus
-			ver="$($cmd --version 2>&1 | head -1 | awk '{print$3}')"
-		} || {
-			name=Trojan-Go
-			ver="$($cmd --version 2>&1 | head -1 | awk '{print$2}')"
-		}
+		name=Trojan-Plus
+		ver="$($cmd --version 2>&1 | head -1 | awk '{print$3}')"
 		log "UDP Relay: $name (Ver $ver) Started!"
 		;;
 	naiveproxy)
@@ -518,20 +507,17 @@ start_renf(){
 		[ $ntype = ss ] && name=Shadowsocks || name=ShadowsocksR
 		log "NF Shunt : $name Started!"
 		;;
-	vmess|vless)
+	v2ray|hysteria)
 		gen_config_file $NF_SERVER $rtype 0 $nf_ip
 		$cmd -c $config_file >$log_file 2>&1 &
 		log "NF Shunt : $($cmd -version | head -1 | awk '{print$1,$2}') Started!"
 		;;
-	trojan|trojan-go)
+	trojan)
 		gen_config_file $NF_SERVER $rtype "" $nf_ip
 		$cmd --config $config_file >$log_file 2>&1 &
 		[ $ntype = trojan ] && {
 			name=Trojan-Plus
 			ver="$($cmd --version 2>&1 | head -1 | awk '{print$3}')"
-		} || {
-			name=Trojan-Go
-			ver="$($cmd --version 2>&1 | head -1 | awk '{print$2}')"
 		}
 		log "NF Shunt : $name (Ver $ver) Started!"
 		;;
@@ -572,20 +558,17 @@ start_local(){
 		[ $type = ss ] && name=Shadowsocks || name=ShadowsocksR
 		log "Socks5 Node: $name Started!"
 		;;
-	vmess|vless)
+	v2ray|hysteria)
 		gen_config_file $SO_SERVER $rtype $socks5_port $socks5_ip
 		$cmd -c $config_file >$log_file 2>&1 &
 		log "Socks5 Node: $($cmd -version | head -1 | awk '{print$1,$2}') Started!"
 		;;
-	trojan|trojan-go)
+	trojan)
 		gen_config_file $SO_SERVER $rtype "" $socks5_ip
 		$cmd --config $config_file >$log_file 2>&1 &
 		[ $type = trojan ] && {
 			name=Trojan-Plus
 			ver="$($cmd --version 2>&1 | head -1 | awk '{print$3}')"
-		} || {
-			name=Trojan-Go
-			ver="$($cmd --version 2>&1 | head -1 | awk '{print$2}')"
 		}
 		log "Socks5 Node: $name (Ver $ver) Started!"
 		;;

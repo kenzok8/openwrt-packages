@@ -2,7 +2,6 @@ module("luci.controller.bypass",package.seeall)
 local http = require "luci.http"
 local api = require "luci.model.cbi.bypass.api"
 local xray = require "luci.model.cbi.bypass.xray"
-local trojan_go = require "luci.model.cbi.bypass.trojan_go"
 function index()
 	if not nixio.fs.access("/etc/config/bypass") then
 		return
@@ -29,8 +28,6 @@ function index()
 	entry({"admin", "services", "bypass", "xray_update"}, call("xray_update")).leaf = true
 	entry({"admin", "services", "bypass", "v2ray_check"}, call("v2ray_check")).leaf = true
 	entry({"admin", "services", "bypass", "v2ray_update"}, call("v2ray_update")).leaf = true
-	entry({"admin", "services", "bypass", "trojan_go_check"}, call("trojan_go_check")).leaf = true
-	entry({"admin", "services", "bypass", "trojan_go_update"}, call("trojan_go_update")).leaf = true
 	entry({'admin', 'services', "bypass", 'ip'}, call('check_ip')) -- 获取ip情况
 	entry({"admin", "services", "bypass", "status"}, call("status")).leaf = true
 	entry({"admin", "services", "bypass", "socks_status"}, call("socks_status")).leaf = true
@@ -150,25 +147,6 @@ function xray_update()
 		json = xray.to_move(http.formvalue("file"))
 	else
 		json = xray.to_download(http.formvalue("url"))
-	end
-
-	http_write_json(json)
-end
-
-function trojan_go_check()
-	local json = trojan_go.to_check("")
-	http_write_json(json)
-end
-
-function trojan_go_update()
-	local json = nil
-	local task = http.formvalue("task")
-	if task == "extract" then
-		json = trojan_go.to_extract(http.formvalue("file"), http.formvalue("subfix"))
-	elseif task == "move" then
-		json = trojan_go.to_move(http.formvalue("file"))
-	else
-		json = trojan_go.to_download(http.formvalue("url"))
 	end
 
 	http_write_json(json)
