@@ -13,7 +13,7 @@ uci batch <<EOF
 	rm -rf /tmp/luci-modulecache/
 EOF
 
-if [[ "$(grep "option type 'vless'" /etc/config/bypass)" || "$(grep "option type 'vmess'" /etc/config/bypass)" ]]; then
+if [[ "$(grep "option uuid" /etc/config/bypass)" ]]; then
 sed -i "s/option uuid/option vmess_id/" /etc/config/bypass
 for i in {0..100}
 do
