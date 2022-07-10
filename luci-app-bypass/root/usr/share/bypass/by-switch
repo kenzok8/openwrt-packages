@@ -33,9 +33,8 @@ f_bin(){
 	case $1 in
 		ss)w=$(which ss-local);;
 		ssr)w=$(which ssr-local);;
-		vmess|vless)w=$(which xray);;
+		v2ray)w=$(which xray)||w=$(which r2ray);;
 		trojan)w=$(which trojan-plus);;
-		trojan-go)w=$(which trojan-go);;
 		naiveproxy)w=$(which naive);;
 	esac
 	echo ${w:=0}
@@ -123,12 +122,12 @@ curl_check(){
 	case $type in
 		ss|ssr)
 			$cmd -c $J >/dev/null 2>&1 &;;
-		vmess|vless)
-			$S/genv2config $1 tcp 0 $lport $ip > $J
+		v2ray|hysteria)
+			$S/gen_config $1 tcp 0 $lport $ip > $J
 			sed -i 's/\\//g' $J
 			$cmd -c $J >/dev/null 2>&1 &;;
-		trojan|trojan-go)
-			$S/gentrojanconfig $1 client $lport $ip > $J
+		trojan)
+			$S/gen_config $1 client $lport $ip > $J
 			sed -i 's/\\//g' $J
 			$cmd --config $J >/dev/null 2>&1 &;;
 		naiveproxy)

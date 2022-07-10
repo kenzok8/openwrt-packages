@@ -90,6 +90,7 @@ find_bin() {
     ssr-server) ret="ssr-server" ;;
     v2ray | vless) ret="xray" ;;
     trojan) ret="trojan" ;;
+    hysteria) ret="hysteria" ;;
     esac
     echo $(find /usr -perm /+x -type f -name $ret)
 }
@@ -365,6 +366,9 @@ start_shunt() {
             trojan)
                 $bin --config $config_file >/dev/null 2>&1 &
                 ;;
+            hysteria)
+                $bin -c $config_file >/dev/null 2>&1 &
+                ;;
             esac
             echo "$(date "+%Y-%m-%d %H:%M:%S") ${shunt_type}: $server_type 分流服务已启动!" >>/tmp/vssr.log
         fi
@@ -424,6 +428,10 @@ start_redir() {
             $sscmd -config $last_config_file >/dev/null 2>&1 &
             echo "$(date "+%Y-%m-%d %H:%M:%S") $($sscmd -version | head -1) 已启动!" >>/tmp/vssr.log
             ;;
+        hysteria)
+            $sscmd -c $last_config_file >/dev/null 2>&1 &
+            echo "$(date "+%Y-%m-%d %H:%M:%S") $($sscmd -v | head -1) 已启动!" >>/tmp/vssr.log
+            ;;
         trojan)
             for i in $(seq 1 $threads); do
                 $sscmd -c $last_config_file >/dev/null 2>&1 &
@@ -465,6 +473,10 @@ start_redir() {
         v2ray | vless)
             $ucmd -config $last_config_file >/dev/null 2>&1 &
             echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay: $($sscmd -version | head -1) 已启动!" >>/tmp/vssr.log
+            ;;
+        hysteria)
+            $ucmd -c $last_config_file >/dev/null 2>&1 &
+            echo "$(date "+%Y-%m-%d %H:%M:%S") UDP TPROXY Relay: $($sscmd -v | head -1) 已启动!" >>/tmp/vssr.log
             ;;
         trojan)
             $ucmd --config $last_config_file >/dev/null 2>&1 &
@@ -688,7 +700,7 @@ stop() {
     if [ $(uci_get_by_type global monitor_enable) = 1 ]; then
         kill -9 $(busybox ps -w | grep vssr-monitor | grep -v grep | awk '{print $1}') >/dev/null 2>&1
     fi
-    killall -q -9 ss-redir ss-local obfs-local ssr-redir ssr-local ssr-server xray-plugin xray trojan microsocks ipt2socks dns2socks pdnsd
+    killall -q -9 ss-redir ss-local obfs-local ssr-redir ssr-local ssr-server xray-plugin xray hysteria trojan microsocks ipt2socks dns2socks pdnsd
 
     if [ -f "/tmp/dnsmasq.d/dnsmasq-ssr.conf" ]; then
         rm -rf /tmp/dnsmasq.d/dnsmasq-ssr.conf /tmp/dnsmasq.ssr /tmp/dnsmasq.oversea

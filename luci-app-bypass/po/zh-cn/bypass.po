@@ -4,8 +4,8 @@ msgstr "基本设置"
 msgid "Bypass Settings"
 msgstr "Bypass 设置"
 
-msgid "Support SS/SSR/XRAY/TROJAN/TROJAN-GO/NAIVEPROXY/SOCKS5/TUN etc."
-msgstr "支持 SS/SSR/Xray/Trojan/Trojan-Go/NavieProxy/Socks5/TUN 等协议"
+msgid "Support SS/SSR/XRAY/TROJAN/NAIVEPROXY/SOCKS5/TUN etc."
+msgstr "支持 SS/SSR/Xray/Trojan/NavieProxy/Socks5/TUN 等协议"
 
 msgid "Bypass RUNNING"
 msgstr "Bypass 客户端运行中"
@@ -304,13 +304,28 @@ msgstr "插件参数"
 msgid "Protocol"
 msgstr "传输协议"
 
-msgid "Protocol param(optional)"
+msgid "Protocol param (optional)"
 msgstr "传输协议参数（可选）"
+
+msgid "Authentication type"
+msgstr "验证类型"
+
+msgid "Authentication payload"
+msgstr "验证载荷"
+
+msgid "QUIC connection receive window"
+msgstr "QUIC 连接接收窗口"
+
+msgid "QUIC stream receive window"
+msgstr "QUIC 流接收窗口"
+
+msgid "Disable Path MTU discovery"
+msgstr "禁用 MTU 探测"
 
 msgid "Obfs"
 msgstr "混淆插件"
 
-msgid "Obfs param(optional)"
+msgid "Obfs param (optional)"
 msgstr "混淆参数（可选）"
 
 msgid "VLESS Encryption"
@@ -723,3 +738,4 @@ msgstr "与AdGuardHome搭配使用"
 
 msgid "Luci-app-adguardhome require"
 msgstr "请确保luci-app-adguardhome能正常启用,本插件会联动开启并配置ADG,ADG无需任何设置"
+
