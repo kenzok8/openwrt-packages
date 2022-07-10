@@ -72,7 +72,7 @@ f_bin(){
 	ssr) ret=$(which ssr-redir);;
 	ssr-local) ret=$(which ssr-local);;
 	ssr-server) ret=$(which ssr-server);;
-	v2ray) ret=$(which xray);;
+	v2ray) ret=$(which xray) || ret=$(which v2ray);;
 	hysteria) ret=$(which hysteria);;
 	trojan) ret=$(which trojan-plus);;
 	naiveproxy) ret=$(which naive);;

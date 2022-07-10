@@ -709,7 +709,7 @@ o:depends({type = "v2ray", v2ray_protocol = "vless", xtls = true, insecure = fal
 o.description = translate("If you have a self-signed certificate,please check the box")
 
 o = s:option(DummyValue, "upload", translate("Upload"))
-o.template = "shadowsocksr/certupload"
+o.template = "bypass/certupload"
 o:depends("certificate", 1)
 
 cert_dir = "/etc/ssl/private/"
