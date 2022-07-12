@@ -22,10 +22,6 @@ local local_http_address = var["-local_http_address"] or "0.0.0.0"
 local local_http_port = var["-local_http_port"]
 local local_http_username = var["-local_http_username"]
 local local_http_password = var["-local_http_password"]
-local local_tcp_redir_port = var["-local_tcp_redir_port"]
-local local_tcp_redir_address = var["-local_tcp_redir_address"] or "0.0.0.0"
-local local_udp_redir_port = var["-local_udp_redir_port"]
-local local_udp_redir_address = var["-local_udp_redir_address"] or "0.0.0.0"
 
 if api.is_ipv6(server_host) then
     server_host = api.get_ipv6_only(server_host)
@@ -41,8 +37,7 @@ local config = {
     method = node.method,
     timeout = tonumber(node.timeout),
     fast_open = (node.tcp_fast_open and node.tcp_fast_open == "true") and true or false,
-    reuse_port = true,
-    tcp_tproxy = var["-tcp_tproxy"] and true or nil
+    reuse_port = true
 }
 
 if node.type == "SS" then
@@ -84,23 +79,6 @@ elseif node.type == "SS-Rust" then
             protocol = "http",
             local_address = local_http_address,
             local_port = tonumber(local_http_port)
-        })
-    end
-    if local_tcp_redir_address and local_tcp_redir_port then
-        table.insert(config.locals, {
-            protocol = "redir",
-            mode = "tcp_only",
-            tcp_redir = var["-tcp_tproxy"] and "tproxy" or nil,
-            local_address = local_tcp_redir_address,
-            local_port = tonumber(local_tcp_redir_port)
-        })
-    end
-    if local_udp_redir_address and local_udp_redir_port then
-        table.insert(config.locals, {
-            protocol = "redir",
-            mode = "udp_only",
-            local_address = local_udp_redir_address,
-            local_port = tonumber(local_udp_redir_port)
         })
     end
 end
