@@ -13,9 +13,9 @@ function index()
 	page.dependent = false
 	page.acl_depends = { "luci-app-unblockneteasemusic" }
 
-	entry({"admin", "services", "unblockneteasemusic", "general"}, cbi("unblockneteasemusic/unblockneteasemusic"), _("基本设定"), 1)
-	entry({"admin", "services", "unblockneteasemusic", "upgrade"}, form("unblockneteasemusic/unblockneteasemusic_upgrade"), _("更新组件"), 2).leaf = true
-	entry({"admin", "services", "unblockneteasemusic", "log"}, form("unblockneteasemusic/unblockneteasemusic_log"), _("日志"), 3)
+	entry({"admin", "services", "unblockneteasemusic", "general"}, cbi("unblockneteasemusic/main"), _("基本设定"), 1)
+	entry({"admin", "services", "unblockneteasemusic", "upgrade"}, form("unblockneteasemusic/upgrade"), _("更新组件"), 2).leaf = true
+	entry({"admin", "services", "unblockneteasemusic", "log"}, form("unblockneteasemusic/log"), _("日志"), 3)
 
 	entry({"admin", "services", "unblockneteasemusic", "status"}, call("act_status")).leaf = true
 	entry({"admin", "services", "unblockneteasemusic", "update_core"}, call("act_update_core"))
