@@ -117,7 +117,9 @@ plugins:
     args:
       upstream:
         - addr:            remotedns1
+          enable_pipeline: true
         - addr:            remotedns2
+          enable_pipeline: true
 
   - tag:                   main_sequence
     type:                  sequence
