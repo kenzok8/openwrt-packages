@@ -1,0 +1,157 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2022 jjm2473@gmail.com
+
+USE_PROCD=1
+START=49
+
+extra_command "task_add" "<task_id> <task_cmd> [<time_wait>] Add and run a task, time_wait is wait time before auto delete stopped task, in seconds, -1 means forever"
+extra_command "task_del" "<task_id> Stop and delete task"
+extra_command "task_status" "[<task_id>] Dump task status, dump all tasks if no task_id specified"
+extra_command "task_gc" "Auto delete exipred (stopped and after timw_wait) tasks"
+extra_command "_task_onstop" "<task_id> Update stop time, for internal usage"
+
+_task_add() {
+	local task_id="${1}"
+	local task_cmd="${2}"
+	local time_wait="${3}"
+	> "/var/log/tasks/$task_id.log"
+	procd_open_instance "$task_id"
+	procd_set_param data start=`date +'%s'` time_wait="$time_wait"
+	procd_set_param command sh -c "exec /usr/libexec/taskd '$task_id' \"\$0\"" "$task_cmd"
+	procd_set_param stderr 1
+	procd_close_instance
+}
+
+task_add() {
+	local task_id="${1}"
+	local task_cmd="${2}"
+	local time_wait="${3}"
+	[ -z "$task_id" -o -z "$task_cmd" ] && return 127
+
+	if service_running "$task_id"; then
+		echo "already running" >&2
+		return 1
+	fi
+	if ! mkdir -p /var/log/tasks; then
+		echo "create /var/log/tasks failed!" >&2
+		return 1
+	fi
+	rc_procd _task_add "$task_id" "$task_cmd" "$time_wait"
+	return 0
+}
+
+_task_del() {
+	local service="${1}"
+	local task_id="${2}"
+	procd_kill "$service" "$task_id"
+	> "/var/log/tasks/$task_id.log"
+	rm -f "/var/log/tasks/$task_id.log"
+}
+
+task_del() {
+	local task_id="${1}"
+	[ -z "$task_id" ] && return 127
+	procd_lock
+	_task_del "$(basename ${basescript:-$initscript})" "$task_id"
+	if [ "$(_task_status "$task_id" | jsonfilter -e '$.running' 2>/dev/null)" = "true" ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+_task_status() {
+	local service="$(basename ${basescript:-$initscript})"
+	local instance="$1"
+	local data
+
+	json_init
+	json_add_string name "$service"
+
+	data=$(_procd_ubus_call list | jsonfilter -e '@["'"$service"'"]')
+	[ -z "$data" ] && return 1
+
+	data=$(echo "$data" | jsonfilter -e '$.instances')
+	if [ -z "$data" ]; then
+		if [ -z "$instance" ]; then
+			echo "{}"
+			return 0
+		fi
+		return 1
+	fi
+
+	if [ -z "$instance" ]; then
+		echo "$data"
+	else
+		instance="\"$instance\""
+		echo "$data" | jsonfilter -e '$['"$instance"']'
+	fi
+	return 0
+}
+
+task_status() {
+	local task_id="${1}"
+	_task_status "$task_id"
+}
+
+task_gc() {
+	local service="$(basename ${basescript:-$initscript})"
+	local task_id instance time_wait
+	local data
+
+	json_init
+	[ -n "$service" ] && json_add_string name "$service"
+
+	data=$(_procd_ubus_call list | jsonfilter -e '@["'"$service"'"]')
+	[ -z "$data" ] && return 1
+
+	data=$(echo "$data" | jsonfilter -e '$.instances')
+	[ -z "$data" ] && return 1
+
+	procd_lock
+
+	ls /var/log/tasks/ | sed 's/.log$//g' | while read task_id; do
+		instance=$(echo "$data" | jsonfilter -e '$["'"$task_id"'"]')
+		[ "$(echo "$instance" | jsonfilter -e '$.running')" = "false" ] || continue
+		time_wait=$(echo "$instance" | jsonfilter -e '$.data.time_wait')
+		[ "$time_wait" = "-1" ] && continue
+		[ $(($(date +'%s' -r "/var/log/tasks/$task_id.log") + ${time_wait:-0})) -lt `date +'%s'` ] && _task_del "$service" "$task_id"
+	done
+}
+
+_insert_exit() {
+	local exit_code="$2"
+	eval "`jshn -r "$1" | grep -v json_init`"
+	json_select data || {
+		_procd_set_param data stop=`date +'%s'` exit_code="$exit_code"
+		return
+	}
+	json_add_string stop `date +'%s'`
+	json_add_string exit_code "$exit_code"
+	json_select ..
+}
+
+_task_exit() {
+	local task_id="$1"
+	local exit_code="$2"
+	local inst_json="$3"
+
+	_procd_call json_add_object "$task_id"
+	_procd_call _insert_exit "$inst_json" "$exit_code"
+	_procd_call json_close_object
+}
+
+_task_onstop() {
+	local task_id="${1}"
+	local exit_code="${2}"
+	[ -z "$task_id" ] && return 127
+	local service="$(basename ${basescript:-$initscript})"
+
+	json_init
+	json_add_string name "$service"
+	data=$(_procd_ubus_call list | jsonfilter -e '@["'"$service"'"].instances["'"$task_id"'"]')
+	[ -z "$data" ] && return 1
+	json_cleanup
+
+	rc_procd _task_exit "$task_id" "$exit_code" "$data"
+}

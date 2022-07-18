@@ -1,0 +1,32 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+msgid "Stop running task?"
+msgstr "删除运行中的任务？"
+
+msgid "Finished at:"
+msgstr "完成于："
+
+msgid "Failed at:"
+msgstr "失败于："
+
+msgid "Stop and Remove"
+msgstr "停止并删除"
+
+msgid "Hide"
+msgstr "隐藏"
+
+msgid "Config saved, but apply failed"
+msgstr "配置已保存，但应用失败"
+
+msgid "Unknown command: "
+msgstr "未知命令："
+
+msgid "Another task running, try again later."
+msgstr "已有后台任务运行中，请稍后重试。"
+
+msgid "Click here to check running task"
+msgstr "点此查看运行中的任务"
+
+msgid "Task Running"
+msgstr "任务执行中"

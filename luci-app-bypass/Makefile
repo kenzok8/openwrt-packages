@@ -71,7 +71,7 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Xray
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
 	bool "Include Trojan"
-	default n
+	default y if i386||x86_64||arm||aarch64
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy
 	bool "Include NaiveProxy"
