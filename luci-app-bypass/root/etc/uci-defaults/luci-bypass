@@ -9,9 +9,10 @@ uci batch <<EOF
 	set firewall.bypass.path=/var/etc/bypass.include
 	set firewall.bypass.reload=1
 	commit firewall
-	chmod +x /etc/init.d/bypass /usr/share/bypass/* >/dev/null 2>&1
-	rm -rf /tmp/luci-modulecache/
 EOF
+
+chmod +x /etc/init.d/bypass /usr/share/bypass/* >/dev/null 2>&1
+rm -rf /tmp/luci-*
 
 if [[ "$(grep "option uuid" /etc/config/bypass)" ]]; then
 sed -i "s/option uuid/option vmess_id/" /etc/config/bypass

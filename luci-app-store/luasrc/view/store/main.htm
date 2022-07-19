@@ -1,4 +1,7 @@
 <%+header%>
+<%
+    local jsonc = require "luci.jsonc"
+%>
 <script>
     (function(){
         var vue_prefix="<%=prefix%>";
@@ -16,6 +19,7 @@
         window.vue_lang = '<%=lang%>';
         window.token = "<%=token%>";
         window.device_id = {arch:"<%=id.arch%>",uid:"<%=id.uid%>",version:"<%=id.version%>"};
+        window.istore_features = <%=jsonc.stringify(features)%>;
     })();
 </script>
 <h2 name="content"><%:iStore%> 
@@ -26,5 +30,32 @@
 <link rel="stylesheet" href="/luci-static/istore/style.css?v=<%=id.version%>">
 <div id="app">
 </div>
+<%+tasks/embed%>
+
+<script>
+    (function() {
+        let beforeunloadRegistered = false;
+        window.istore_log = function(flush_menu_onclose) {
+            if (flush_menu_onclose && !beforeunloadRegistered) {
+                beforeunloadRegistered = true;
+                window.addEventListener("beforeunload", function(event) {
+                    try { window.L.ui.menu.flushCache() } catch (e) { }
+                    return true;
+                });
+            }
+            taskd.show_log("istore", true);
+        };
+    })();
+<%
+local taskd = require "luci.model.tasks"
+local status = taskd.status("istore")
+if status.running then
+-%>
+    window.istore_log(true);
+<%
+end
+%>
+</script>
+
 <script type="module" crossorigin src="/luci-static/istore/index.js?v=<%=id.version%>"></script>
 <%+footer%>

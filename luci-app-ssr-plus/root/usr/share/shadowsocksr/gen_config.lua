@@ -296,7 +296,7 @@ local hysteria = {
 	protocol = server.hysteria_protocol,
 	up_mbps = tonumber(server.uplink_capacity),
 	down_mbps = tonumber(server.downlink_capacity),
-	socks5 = (proto:find("tcp") and tonumber(socks_port) and tonumber(socks_port) ~= "0") and {
+	socks5 = (proto:find("tcp") and tonumber(socks_port) and tonumber(socks_port) ~= 0) and {
 		listen = "0.0.0.0:" .. tonumber(socks_port),
 		timeout = 300,
 		disable_udp = false

@@ -1,0 +1,56 @@
+
+<% if self.task_start_failed then %>
+<div class="alert-message warning"><%:Another task running, try again later.%> <a href="javascript:void(taskd.show_log('<%=self.task_id%>'))"><%:Click here to check running task%></a></div>
+<% end %>
+
+<%+cbi/map%>
+<%
+local task_running = false
+local taskd = require "luci.model.tasks"
+local status = taskd.status(self.task_id)
+task_running = status.running
+-%>
+<div class="cbi-page-actions control-group">
+<%
+if not task_running then
+%>
+    <%
+    local util  = require "luci.util"
+    local container_status = util.trim(util.exec(self.script_path.." status"))
+    local container_install = (string.len(container_status) > 0)
+    local container_running = container_status == "running"
+    if container_install then
+    -%>
+    <input class="btn cbi-button cbi-button-apply" type="button" value="<%:Upgrade%>/<%:Apply%>" onclick="cbi_submit(this, 'cbi.apply', 'upgrade')" />
+    <%
+        if container_running then
+    -%>
+    <input class="btn cbi-button cbi-button-remove" type="button" value="<%:Stop%>" onclick="cbi_submit(this, 'cbi.apply', 'stop')" />
+
+    <input class="btn cbi-button cbi-button-reload" type="button" value="<%:Restart%>" onclick="cbi_submit(this, 'cbi.apply', 'restart')" />
+        <% else %>
+    <input class="btn cbi-button cbi-button-apply" type="button" value="<%:Start%>" onclick="cbi_submit(this, 'cbi.apply', 'start')" />
+
+    <input class="btn cbi-button cbi-button-remove" type="button" value="<%:Remove%>" onclick="cbi_submit(this, 'cbi.apply', 'rm')" />
+        <% end
+      else %>
+    <input class="btn cbi-button cbi-button-apply" type="button" value="<%:Install%>" onclick="cbi_submit(this, 'cbi.apply', 'install')" />
+    <% end
+else
+    %>
+    <input class="btn cbi-button cbi-button-apply" type="button" value="<%:Task Running%>&hellip;" onclick="taskd.show_log('<%=self.task_id%>')" />
+<%
+end
+%>
+</div>
+
+<%+tasks/embed%>
+<%
+if self.auto_show_task and task_running then
+-%>
+<script>
+    taskd.show_log("<%=self.task_id%>");
+</script>
+<%
+end
+%>

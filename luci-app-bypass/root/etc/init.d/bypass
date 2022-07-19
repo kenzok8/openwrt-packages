@@ -161,7 +161,7 @@ gen_config_file(){
 		tcp|udp|nf) smode=nat;;
 		socks) smode=client;;
 		esac
-		lua $BIN_DIR/gentrojanconfig $1 $smode $lport $serv_ip $threads >$config_file
+		lua $BIN_DIR/gen_config $1 $smode $lport $ssport $serv_ip >$config_file
 		sed -i 's/\\//g' $config_file
 		;;
 	esac

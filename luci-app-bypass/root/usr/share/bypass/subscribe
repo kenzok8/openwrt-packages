@@ -32,10 +32,10 @@ local v2_ss = luci.sys.exec('type -t -p ss-redir sslocal') ~= "" and "ss" or "v2
 local v2_ssr = luci.sys.exec('type -t -p ssr-redir') ~= "" and "ssr" or "v2ray"
 local v2_tj = luci.sys.exec('type -t -p trojan') ~= "" and "trojan" or "v2ray"
 local log = function(...)
-												 
-				
-	print(os.date("%Y-%m-%d %H:%M:%S ") .. table.concat({...}, " "))
-			   
+	local file = io.open("/var/log/bypass.log", "a")
+	io.output(file)
+	io.write(os.date("%Y-%m-%d %H:%M:%S ") .. "Subscribe       : " .. table.concat({ ... }, " ") .. "\n")
+	io.close(file)
 end
 local encrypt_methods_ss = {
 	-- plain
