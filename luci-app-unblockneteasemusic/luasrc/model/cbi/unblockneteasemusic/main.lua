@@ -5,9 +5,7 @@ m.description = translate("原理：采用 [Bilibili/JOOX/酷狗/酷我/咪咕/p
 
 m:section(SimpleSection).template = "unblockneteasemusic/status"
 
-s = m:section(TypedSection, "unblockneteasemusic")
-s.anonymous = true
-s.addremove = false
+s = m:section(NamedSection, "config", "unblockneteasemusic")
 
 o = s:option(Flag, "enable", translate("启用本插件"))
 o.description = translate("启用本插件以解除网易云音乐播放限制")
