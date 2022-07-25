@@ -24,9 +24,8 @@ o.anonymouse = true
 --1.Set OpenWrt Firmware Repository
 mydevice = o:option(DummyValue, "mydevice", translate("Current Device:"))
 mydevice.description = translate("If the current device shows (Unknown device), please report to github.")
-mydevice_platfrom = trim(luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner)'")) or "Unknown PLATFORM"
-mydevice_name = trim(luci.sys.exec("cat /proc/device-tree/model | tr -d \'\\000\'")) or "Unknown device"
-mydevice.default = mydevice_name .. " (" .. mydevice_platfrom .. ")"
+mydevice_platfrom = trim(luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)'")) or "Unknown"
+mydevice.default = "PLATFORM: " .. mydevice_platfrom
 mydevice.rmempty = false
 
 --2.Set OpenWrt Firmware Repository

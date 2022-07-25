@@ -22,8 +22,7 @@ RUNNING_LOG="${TMP_CHECK_DIR}/amlogic_running_script.log"
 LOG_FILE="${TMP_CHECK_DIR}/amlogic.log"
 github_api_kernel_library="${TMP_CHECK_DIR}/github_api_kernel_library"
 github_api_kernel_file="${TMP_CHECK_DIR}/github_api_kernel_file"
-support_platform=("allwinner" "rockchip" "amlogic")
-MYDEVICE_NAME="$(cat /proc/device-tree/model | tr -d '\000')"
+support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
 
@@ -43,8 +42,8 @@ tolog() {
 this_running_log="2@Kernel update in progress, try again later!"
 running_script="$(cat ${RUNNING_LOG} 2>/dev/null | xargs)"
 if [[ -n "${running_script}" ]]; then
-    run_num=$(echo "${running_script}" | awk -F "@" '{print $1}')
-    run_log=$(echo "${running_script}" | awk -F "@" '{print $2}')
+    run_num="$(echo "${running_script}" | awk -F "@" '{print $1}')"
+    run_log="$(echo "${running_script}" | awk -F "@" '{print $2}')"
 fi
 if [[ -n "${run_log}" && "${run_num}" -ne "2" ]]; then
     echo -e "${run_log}" >${START_LOG} 2>/dev/null && sync && exit 1
@@ -87,7 +86,7 @@ if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATF
     tolog "Missing [ PLATFORM ] value in ${AMLOGIC_SOC_FILE} file." "1"
 fi
 
-tolog "Device: ${MYDEVICE_NAME} [ ${PLATFORM} ], Use in [ ${EMMC_NAME} ]"
+tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
 sleep 2
 
 # Step 1: URL formatting start -----------------------------------------------------------
@@ -218,21 +217,23 @@ download_kernel() {
     fi
     sleep 2
 
-    # 02. Download dtb file from the kernel directory under the path: ${server_kernel_url}/${download_version}/
-    server_kernel_dtb="$(cat ${github_api_kernel_file} | grep "download_url" | grep -o "https.*/dtb-${PLATFORM}-${download_version}.*.tar.gz" | head -n 1)"
-    # Download dtb file from current path: ${server_kernel_url}/
-    if [[ -z "${server_kernel_dtb}" ]]; then
-        server_kernel_dtb="$(cat ${github_api_kernel_library} | grep "download_url" | grep -o "https.*/dtb-${PLATFORM}-${download_version}.*.tar.gz" | head -n 1)"
+    if [[ "${PLATFORM}" != "qemu-aarch64" ]]; then
+        # 02. Download dtb file from the kernel directory under the path: ${server_kernel_url}/${download_version}/
+        server_kernel_dtb="$(cat ${github_api_kernel_file} | grep "download_url" | grep -o "https.*/dtb-${PLATFORM}-${download_version}.*.tar.gz" | head -n 1)"
+        # Download dtb file from current path: ${server_kernel_url}/
+        if [[ -z "${server_kernel_dtb}" ]]; then
+            server_kernel_dtb="$(cat ${github_api_kernel_library} | grep "download_url" | grep -o "https.*/dtb-${PLATFORM}-${download_version}.*.tar.gz" | head -n 1)"
+        fi
+        dtb_file_name="${server_kernel_dtb##*/}"
+        server_kernel_dtb_name="${dtb_file_name//%2B/+}"
+        wget "${server_kernel_dtb}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" >/dev/null 2>&1 && sync
+        if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" ]]; then
+            tolog "03.05 The dtb file download complete."
+        else
+            tolog "03.06 The dtb file download failed." "1"
+        fi
+        sleep 2
     fi
-    dtb_file_name="${server_kernel_dtb##*/}"
-    server_kernel_dtb_name="${dtb_file_name//%2B/+}"
-    wget "${server_kernel_dtb}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" >/dev/null 2>&1 && sync
-    if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" ]]; then
-        tolog "03.05 The dtb file download complete."
-    else
-        tolog "03.06 The dtb file download failed." "1"
-    fi
-    sleep 2
 
     # 03. Download modules file from the kernel directory under the path: ${server_kernel_url}/${download_version}/
     server_kernel_modules="$(cat ${github_api_kernel_file} | grep "download_url" | grep -o "https.*/modules-${download_version}.*.tar.gz" | head -n 1)"

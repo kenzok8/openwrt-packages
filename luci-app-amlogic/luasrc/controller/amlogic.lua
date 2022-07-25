@@ -9,12 +9,17 @@ function index()
 	page.dependent = true
 	page.acl_depends = { "luci-app-amlogic" }
 
+	local platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)'") or "Unknown"
 	entry({ "admin", "system", "amlogic", "info" }, cbi("amlogic/amlogic_info"), _("Amlogic Service"), 1).leaf = true
+	if (string.find(platfrom, "amlogic")) ~= nil then
 	entry({ "admin", "system", "amlogic", "install" }, cbi("amlogic/amlogic_install"), _("Install OpenWrt"), 2).leaf = true
+	end
 	entry({ "admin", "system", "amlogic", "upload" }, cbi("amlogic/amlogic_upload"), _("Manually Upload Update"), 3).leaf = true
 	entry({ "admin", "system", "amlogic", "check" }, cbi("amlogic/amlogic_check"), _("Online Download Update"), 4).leaf = true
 	entry({ "admin", "system", "amlogic", "backup" }, cbi("amlogic/amlogic_backup"), _("Backup Firmware Config"), 5).leaf = true
+	if (string.find(platfrom, "qemu")) == nil then
 	entry({ "admin", "system", "amlogic", "armcpu" }, cbi("amlogic/amlogic_armcpu"), _("CPU Settings"), 6).leaf = true
+	end
 	entry({ "admin", "system", "amlogic", "config" }, cbi("amlogic/amlogic_config"), _("Plugin Settings"), 7).leaf = true
 	entry({ "admin", "system", "amlogic", "log" }, cbi("amlogic/amlogic_log"), _("Server Logs"), 8).leaf = true
 	entry({ "admin", "system", "amlogic", "poweroff" }, cbi("amlogic/amlogic_poweroff"), _("PowerOff"), 9).leaf = true
@@ -76,15 +81,19 @@ else
 end
 
 --Device identification
-device_platfrom = trim(luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner)'")) or "Unknown PLATFORM"
-if (device_platfrom == "rockchip") then
+device_platfrom = trim(luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)'")) or "Unknown"
+if (string.find(device_platfrom, "rockchip")) ~= nil then
 	device_install_script = ""
 	device_update_script = "openwrt-update-rockchip"
 	device_kernel_script = "openwrt-kernel"
-elseif (device_platfrom == "allwinner") then
+elseif (string.find(device_platfrom, "allwinner")) ~= nil then
 	device_install_script = ""
 	device_update_script = "openwrt-update-allwinner"
 	device_kernel_script = "openwrt-kernel"
+elseif (string.find(device_platfrom, "qemu")) ~= nil then
+	device_install_script = ""
+	device_update_script = "openwrt-update-kvm"
+	device_kernel_script = "openwrt-kernel-kvm"
 else
 	device_install_script = "openwrt-install-amlogic"
 	device_update_script = "openwrt-update-amlogic"
