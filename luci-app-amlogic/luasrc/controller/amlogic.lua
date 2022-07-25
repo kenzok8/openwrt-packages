@@ -44,6 +44,7 @@ function index()
 	entry({ "admin", "system", "amlogic", "start_openwrt_author" }, call("action_openwrt_author")).leaf = true
 	entry({ "admin", "system", "amlogic", "state" }, call("action_state")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_poweroff" }, call("action_poweroff")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_switch" }, call("action_switch")).leaf = true
 end
 
 --Remove the spaces in the string
@@ -450,3 +451,10 @@ end
 function action_poweroff()
 	luci.sys.exec("/sbin/poweroff")
 end
+
+--Switching dual partition
+function action_switch()
+	luci.sys.exec("[ -f /boot/efi/EFI/BOOT/grub.cfg.prev ] && (cd /boot/efi/EFI/BOOT/ && mv -f grub.cfg grub.cfg.bak && mv -f grub.cfg.prev grub.cfg && mv -f grub.cfg.bak grub.cfg.prev)")
+	luci.sys.exec("sync && reboot")
+end
+
