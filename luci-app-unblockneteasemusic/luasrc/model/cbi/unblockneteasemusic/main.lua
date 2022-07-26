@@ -60,6 +60,11 @@ o.placeholder = "wmid=; session_key="
 o.datatype = "string"
 o:depends("use_custom_cookie", 1)
 
+o = s:option(Value, "migu_cookie", translate("Migu Cookie"))
+o.description = translate("通过抓包手机客户端请求获取，需要 aversionid 值")
+o.datatype = "string"
+o:depends("use_custom_cookie", 1)
+
 o = s:option(Value, "qq_cookie", translate("QQ Cookie"))
 o.description = translate("在 y.qq.com 获取，需要 uin 和 qm_keyst值 ")
 o.placeholder = "uin=; qm_keyst="
