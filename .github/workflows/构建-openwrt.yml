@@ -1,0 +1,180 @@
+#
+#版权所有 (c) 2019-2020 P3TERX <https://p3terx.com>
+#
+#这是免费软件，根据 MIT 许可证获得许可。
+#参见 /LICENSE 了解更多信息。
+#
+# https://github.com/P3TERX/Actions-OpenWrt
+#描述：使用 GitHub Actions 构建 OpenWrt
+#
+
+名称：构建 OpenWrt
+
+上：
+  存储库调度：
+  工作流调度：
+    输入：
+      SSH：
+        描述：' SSH 连接到操作'
+        必需：假
+        默认值：'假'
+
+环境：
+  REPO_URL : https://github.com/coolsnowwolf/lede
+  REPO_BRANCH :主
+  FEEDS_CONF：feeds.conf.default
+  配置文件：.config
+  DIY_P1_SH : diy-part1.sh
+  DIY_P2_SH : diy-part2.sh
+  UPLOAD_BIN_DIR：假
+  UPLOAD_FIRMWARE：真
+  UPLOAD_COWTRANSFER：假
+  UPLOAD_WETRANSFER：假
+  上传释放：假
+  TZ :亚洲/上海
+
+工作：
+  构建：
+    运行：ubuntu-20.04
+
+    步骤：
+    -名称：结帐
+      用途：actions/checkout@main
+
+    -名称：初始化环境
+      环境：
+        DEBIAN_FRONTEND :非交互式
+      运行：|
+        sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo -E apt-get -qq 更新
+        sudo -E apt-get -qq install $(curl -fsSL git.io/depends-ubuntu-2004)
+        sudo -E apt-get -qq autoremove --purge
+        sudo -E apt-get -qq clean
+        sudo timedatectl set-timezone "$TZ"
+        须藤 mkdir -p /工作目录
+        sudo chown $USER:$GROUPS /workdir
+    -名称：克隆源代码
+      工作目录：/workdir
+      运行：|
+        df -hT $PWD
+        git clone $REPO_URL -b $REPO_BRANCH openwrt
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+    -名称：加载自定义提要
+      运行：|
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
+        chmod +x $DIY_P1_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P1_SH
+    -名称：更新提要
+      运行：cd openwrt && ./scripts/feeds update -a
+
+    -名称：安装提要
+      运行：cd openwrt && ./scripts/feeds install -a
+
+    -名称：加载自定义配置
+      运行：|
+        [ -e 文件 ] && mv 文件 openwrt/文件
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        chmod +x $DIY_P2_SH
+        cd openwrt
+        $GITHUB_WORKSPACE/$DIY_P2_SH
+    -名称：到 Actions 的 SSH 连接
+      使用：P3TERX/ssh2actions@v1.0.0
+      如果: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh != 'false') || 包含（github.event.action，'ssh'）
+      环境：
+        TELEGRAM_CHAT_ID : ${{ 秘密.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN : ${{ 秘密.TELEGRAM_BOT_TOKEN }}
+
+    -名称：下载包
+      id :包
+      运行：|
+        cd openwrt
+        使定义配置
+        使下载-j8
+        查找 dl -size -1024c -exec ls -l {} \;
+        查找 dl -size -1024c -exec rm -f {} \;
+    -名称：编译固件
+      id :编译
+      运行：|
+        cd openwrt
+        echo -e "$(nproc) 线程编译"
+        使-j$(nproc) || 使-j1 || 使-j1 V=s
+        echo "::set-output name=status::success"
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+    -名称：检查空间使用情况
+      如果：（！取消（））
+      运行：df -hT
+
+    - name :上传 bin 目录
+      使用：动作/上传-artifact@main
+      如果：steps.compile.outputs.status == '成功' && env.UPLOAD_BIN_DIR == 'true'
+      与：
+        名称：OpenWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        路径：openwrt/bin
+
+    -名称：组织文件
+      id :组织
+      如果：env.UPLOAD_FIRMWARE == 'true' && !cancelled()
+      运行：|
+        cd openwrt/bin/targets/*/*
+        rm -rf 软件包
+        回声“FIRMWARE=$PWD”>> $GITHUB_ENV
+        echo "::set-output name=status::success"
+    -名称：上传固件目录
+      使用：动作/上传-artifact@main
+      如果：steps.organize.outputs.status == 'success' && !cancelled()
+      与：
+        名称：OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        路径：${{ env.FIRMWARE }}
+
+    -名称：上传固件到cowtransfer
+      id :牛转移
+      如果：steps.organize.outputs.status == '成功' && env.UPLOAD_COWTRANSFER == 'true' && !cancelled()
+      运行：|
+        curl -fsSL git.io/file-transfer | 嘘
+        ./transfer cow --block 2621440 -s -p 64 --no-progress ${FIRMWARE} 2>&1 | 三通牛转移.log
+        echo "::warning file=cowtransfer.com::$(cat cowtransfer.log | grep https)"
+        echo "::set-output name=url::$(cat cowtransfer.log | grep https | cut -f3 -d" ")"
+    -名称：上传固件到 WeTransfer
+      id : wetransfer
+      如果：steps.organize.outputs.status == '成功' && env.UPLOAD_WETRANSFER == 'true' && !cancelled()
+      运行：|
+        curl -fsSL git.io/file-transfer | 嘘
+        ./transfer wet -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wetransfer.log
+        echo "::warning file=wetransfer.com::$(cat wetransfer.log | grep https)"
+        echo "::set-output name=url::$(cat wetransfer.log | grep https | cut -f3 -d" ")"
+    -名称：生成发布标签
+      id :标签
+      如果：env.UPLOAD_RELEASE == 'true' && !cancelled()
+      运行：|
+        echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M")"
+        触摸释放.txt
+        [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
+        [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
+        echo "::set-output name=status::success"
+    -名称：上传固件以发布
+      用途：softprops/action-gh-release@v1
+      如果：steps.tag.outputs.status == 'success' && !cancelled()
+      环境：
+        GITHUB_TOKEN : ${{ 秘密.GITHUB_TOKEN }}
+      与：
+        tag_name : ${{ steps.tag.outputs.release_tag }}
+        body_path：release.txt
+        文件：${{ env.FIRMWARE }}/*
+
+    -名称：删除工作流运行
+      使用：GitRML/delete-workflow-runs@main
+      与：
+        保留天数：1
+        keep_minimum_runs : 3
+
+    -名称：删除旧版本
+      使用：dev-drprasad/delete-older-releases@v0.1.0
+      如果：env.UPLOAD_RELEASE == 'true' && !cancelled()
+      与：
+        保持最新：3
+        删除标签：真
+      环境：
+        GITHUB_TOKEN : ${{ 秘密.GITHUB_TOKEN }}
