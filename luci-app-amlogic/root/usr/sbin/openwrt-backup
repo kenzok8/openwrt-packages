@@ -5,7 +5,7 @@
 # Copyright (C) 2021-- https://github.com/ophub/luci-app-amlogic
 #======================================================================
 
-VERSION="v1.2"
+VERSION="v1.3"
 ZSTD_LEVEL=6
 SNAPSHOT_PRESTR=".snapshots/"
 BACKUP_DIR="/.reserved"
@@ -81,8 +81,13 @@ elif dmesg | grep 'rockchip' >/dev/null 2>&1; then
 elif dmesg | grep 'sun50i-h6' >/dev/null 2>&1; then
     PLATFORM="allwinner"
 else
-    echo "Unknown platform, only support amlogic or rockchip or allwinner h6!"
-    exit 1
+    source /etc/flippy-openwrt-release
+    case $PLATFORM in 
+        amlogic|rockchip|allwinner|qemu-aarch64) : ;;
+	*) echo "Unknown platform, only support amlogic or rockchip or allwinner h6 or qemu-aarch64!"
+           exit 1
+	   ;;
+    esac
 fi
 
 backup() {

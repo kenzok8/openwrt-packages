@@ -19,7 +19,7 @@ START_LOG="${TMP_CHECK_DIR}/amlogic_check_plugin.log"
 RUNNING_LOG="${TMP_CHECK_DIR}/amlogic_running_script.log"
 LOG_FILE="${TMP_CHECK_DIR}/amlogic.log"
 github_api_plugin="${TMP_CHECK_DIR}/github_api_plugin"
-MYDEVICE_NAME="$(cat /proc/device-tree/model | tr -d '\000')"
+support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
 rm -f ${TMP_CHECK_DIR}/*.ipk 2>/dev/null && sync
@@ -40,8 +40,8 @@ tolog() {
 this_running_log="1@Plugin update in progress, try again later!"
 running_script="$(cat ${RUNNING_LOG} 2>/dev/null | xargs)"
 if [[ -n "${running_script}" ]]; then
-    run_num=$(echo "${running_script}" | awk -F "@" '{print $1}')
-    run_log=$(echo "${running_script}" | awk -F "@" '{print $2}')
+    run_num="$(echo "${running_script}" | awk -F "@" '{print $1}')"
+    run_log="$(echo "${running_script}" | awk -F "@" '{print $2}')"
 fi
 if [[ -n "${run_log}" && "${run_num}" -ne "1" ]]; then
     echo -e "${run_log}" >${START_LOG} 2>/dev/null && sync && exit 1
@@ -80,8 +80,11 @@ if [[ -s "${AMLOGIC_SOC_FILE}" ]]; then
 else
     tolog "${AMLOGIC_SOC_FILE} file is missing!" "1"
 fi
-[[ -n "${PLATFORM}" && -n "${SOC}" ]] || tolog "The custom firmware soc is invalid." "1"
-tolog "Device: ${MYDEVICE_NAME} [ ${PLATFORM} ], Use in [ ${EMMC_NAME} ]"
+if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${SOC}" ]]; then
+    tolog "Missing [ PLATFORM ] value in ${AMLOGIC_SOC_FILE} file." "1"
+fi
+
+tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
 sleep 2
 
 # 01. Query local version information

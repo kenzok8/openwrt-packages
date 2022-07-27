@@ -30,6 +30,7 @@ echo -e "luci-app-unblockneteasmusic info:"
 opkg info "luci-app-unblockneteasemusic"
 ls -lh "/etc/config/$NAME" "/etc/init.d/$NAME" "/usr/share/$NAME"
 cat "/etc/config/$NAME" | sed -e "s,joox_cookie .*,joox_cookie 'set',g" \
+	-e "s,migu_cookie .*,migu_cookie 'set',g" \
 	-e "s,qq_cookie .*,qq_cookie 'set',g" \
 	-e "s,youtube_key .*,youtube_key 'set',g" \
 	-e "s,proxy_server_ip .*,proxy_server_ip 'set',g"
@@ -58,7 +59,11 @@ netstat -tlpen | grep "$unm_ports" || echo -e "No instance found on port $unm_po
 echo -e "\n"
 
 echo -e "PROCD running info:"
-running_stat="$(ubus call service list '{"name": "unblockneteasemusic", "verbose": true}' | sed -e 's,"YOUTUBE_KEY".*","YOUTUBE_KEY": "set",g' -e 's,"QQ_COOKIE".*","QQ_COOKIE": "set",g')"
+running_stat="$(ubus call service list '{"name": "unblockneteasemusic", "verbose": true}' | \
+	sed -e 's,"JOOX_COOKIE".*","JOOX_COOKIE": "set",g' \
+	    -e 's,"MIGU_COOKIE".*","MIGU_COOKIE": "set",g' \
+	    -e 's,"QQ_COOKIE".*","QQ_COOKIE": "set",g' \
+	    -e 's,"YOUTUBE_KEY".*","YOUTUBE_KEY": "set",g')"
 [ "$(echo -e "$running_stat" | jsonfilter -e "@.$NAME.instances.$NAME.running")" == "true" ] || is_stopped=1
 echo -e "$running_stat"
 

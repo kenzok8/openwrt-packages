@@ -21,7 +21,7 @@ START_LOG="${TMP_CHECK_DIR}/amlogic_check_firmware.log"
 RUNNING_LOG="${TMP_CHECK_DIR}/amlogic_running_script.log"
 LOG_FILE="${TMP_CHECK_DIR}/amlogic.log"
 github_api_openwrt="${TMP_CHECK_DIR}/github_api_openwrt"
-MYDEVICE_NAME="$(cat /proc/device-tree/model | tr -d '\000')"
+support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
 
@@ -85,8 +85,11 @@ if [[ -s "${AMLOGIC_SOC_FILE}" ]]; then
 else
     tolog "${AMLOGIC_SOC_FILE} file is missing!" "1"
 fi
-[[ -n "${PLATFORM}" && -n "${SOC}" ]] || tolog "The custom firmware soc is invalid." "1"
-tolog "Device: ${MYDEVICE_NAME} [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
+if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${SOC}" ]]; then
+    tolog "Missing [ PLATFORM ] value in ${AMLOGIC_SOC_FILE} file." "1"
+fi
+
+tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
 sleep 2
 
 # 01. Query local version information
@@ -115,11 +118,11 @@ if [[ "${server_kernel_branch}" != "${main_line_version}" ]]; then
 fi
 
 # 01.03. Download server version documentation
-server_firmware_url=$(uci get amlogic.config.amlogic_firmware_repo 2>/dev/null)
+server_firmware_url="$(uci get amlogic.config.amlogic_firmware_repo 2>/dev/null)"
 [[ ! -z "${server_firmware_url}" ]] || tolog "01.03 The custom firmware download repo is invalid." "1"
-releases_tag_keywords=$(uci get amlogic.config.amlogic_firmware_tag 2>/dev/null)
+releases_tag_keywords="$(uci get amlogic.config.amlogic_firmware_tag 2>/dev/null)"
 [[ ! -z "${releases_tag_keywords}" ]] || tolog "01.04 The custom firmware tag keywords is invalid." "1"
-firmware_suffix=$(uci get amlogic.config.amlogic_firmware_suffix 2>/dev/null)
+firmware_suffix="$(uci get amlogic.config.amlogic_firmware_suffix 2>/dev/null)"
 [[ ! -z "${firmware_suffix}" ]] || tolog "01.05 The custom firmware suffix is invalid." "1"
 
 # Supported format:
@@ -170,7 +173,7 @@ check_updated() {
     if [[ -n "${api_op_down_line}" && -n "$(echo ${api_op_down_line} | sed -n "/^[0-9]\+$/p")" ]]; then
         tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_firmware(this, '"'download_${api_op_down_line}_${latest_updated_at}'"')"/> Latest updated: '${latest_updated_at_format}'' "1"
     else
-        tolog "02.02 Invalid firmware check." "1"
+        tolog "02.02 No firmware available." "1"
     fi
 
     exit 0

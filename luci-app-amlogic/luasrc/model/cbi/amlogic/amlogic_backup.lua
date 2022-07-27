@@ -5,11 +5,18 @@
 local io = require "io"
 local os = require "os"
 local fs = require "nixio.fs"
-local b, c
+local b, c, x
 
 -- Checks wheather the given path exists and points to a directory.
 function isdirectory(dirname)
 	return fs.stat(dirname, "type") == "dir"
+end
+
+-- Check if a file or directory exists
+function file_exists(path)
+	local file = io.open(path, "rb")
+	if file then file:close() end
+	return file ~= nil
 end
 
 --SimpleForm for Backup Config
@@ -90,10 +97,22 @@ w.render = function(self, section, scope)
 end
 
 w.write = function(self, section, scope)
-	local x = luci.sys.exec("btrfs subvolume snapshot -r /etc /.snapshots/etc-" .. os.date("%m.%d.%H%M%S") .. " 2>/dev/null && sync")
+	local x = luci.sys.exec("btrfs subvolume snapshot -r /etc /.snapshots/etc-" ..
+		os.date("%m.%d.%H%M%S") .. " 2>/dev/null && sync")
 	luci.http.redirect(luci.dispatcher.build_url("admin", "system", "amlogic", "backup"))
 end
 w = d:option(TextValue, "snapshot_list", nil)
 w.template = "amlogic/other_snapshot"
 
-return b, c
+--KVM virtual machine switching dual partition
+if file_exists("/boot/efi/EFI/BOOT/grub.cfg.prev") then
+	x             = SimpleForm("kvm", nil)
+	x.title       = translate("KVM dual system switching")
+	x.description = translate("You can freely switch between KVM dual partitions, using OpenWrt systems in different partitions.")
+	x.reset       = false
+	x.submit      = false
+
+	x:section(SimpleSection).template = "amlogic/other_kvm"
+end
+
+return b, c, x

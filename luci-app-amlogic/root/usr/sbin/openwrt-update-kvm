@@ -1,0 +1,619 @@
+#!/bin/bash
+#======================================================================================
+# Function: Update the QEMU AARCH64 KVM vitual machine openwrt firmware
+# Copyright (C) 2022-- https://github.com/unifreq/openwrt_packit
+# Copyright (C) 2022-- https://github.com/ophub
+#======================================================================================
+
+# The script supports directly setting parameters for update, skipping interactive selection
+# openwrt-update-amlogic ${OPENWRT_FILE} ${AUTO_MAINLINE_UBOOT} ${RESTORE_CONFIG} ${WORK_DIR}
+# E.g: openwrt-update-kvm openwrt_qemu-aarch64.img.gz no restore /mnt/vda4
+# E.g: openwrt-update-kvm openwrt_qemu-aarch64.img.gz no no-restore /mnt/data
+
+# You can also execute the script directly, and interactively select related functions
+# E.g: openwrt-update-kvm
+
+# Receive one-key command related parameters
+IMG_NAME="${1}"
+AUTO_MAINLINE_UBOOT="${2}"
+BACKUP_RESTORE_CONFIG="${3}"
+WORK_DIR="${4}"
+
+# Check the necessary dependencies
+DEPENDS="lsblk uuidgen grep awk btrfs mkfs.fat mkfs.btrfs perl md5sum fatlabel jq"
+echo "Check the necessary dependencies..."
+for dep in ${DEPENDS}; do
+    WITCH=$(which ${dep})
+    if [ "${WITCH}" == "" ]; then
+        echo "Dependent command: ${dep} does not exist, upgrade cannot be performed!"
+        exit 1
+    else
+        echo "${dep} path: ${WITCH}"
+    fi
+done
+echo "Check passed"
+
+# Current device model
+source /etc/flippy-openwrt-release
+if [[ -z "${PLATFORM}" ]]; then
+    echo "The platform is empty."
+    exit 1
+elif [[ "${PLATFORM}" != "qemu-aarch64" ]]; then
+    echo "The platform is missing, only support qemu-aarch64."
+    exit 1
+else
+    echo -e "Current platform: [ ${PLATFORM} ]"
+    sleep 3
+fi
+
+# Find the partition where root is located
+# vda2 or vda3
+ROOT_PTNAME=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
+if [ "${ROOT_PTNAME}" == "" ]; then
+    echo "Cannot find the partition corresponding to the root file system!"
+    exit 1
+fi
+
+# Find the disk where the partition is located, only supports sd?? hd?? vd??
+case ${ROOT_PTNAME} in
+[hsv]d[a-z][1-4])
+    DISK_NAME=$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-1)}')
+    PART_PRESTR=""
+    LABEL_PRESTR=""
+    ;;
+*)
+    echo "Unable to recognize the disk type of ${ROOT_PTNAME}!"
+    exit 1
+    ;;
+esac
+
+function get_docker_root {
+    local data_root
+    if [[ -f /etc/config/dockerd ]];then
+	data_root=$(uci get dockerd.globals.data_root)
+    fi
+    if [[ -z "${data_root}" ]] && [[ -f /etc/docker/daemon.json ]]; then
+	data_root=$(jq -r '."data-root"' /etc/docker/daemon.json)
+    fi
+    echo "$data_root"
+}
+DOCKER_ROOT=$(get_docker_root)
+
+if [[ -z "${WORK_DIR}" ]];then
+    WORK_DIR="/mnt/${DISK_NAME}${PART_PRESTR}4/"
+fi
+if [[ ! -d "${WORK_DIR}" ]];then
+    echo "the work directory is not exists. [ ${WORK_DIR} ]"
+    exit 1
+fi
+
+cd "${WORK_DIR}"
+if [[ -d "/tmp/upload" ]] && [[ -f "/tmp/upload/*img*" ]];then
+    mv -f /tmp/upload/*img* . 
+    if [[ $? -ne 0 ]];then
+        echo "move file failed."
+        exit 1
+    fi
+fi
+sync
+
+if [[ "${IMG_NAME}" == *.img ]]; then
+    echo -e "Update using [ ${IMG_NAME} ] file. Please wait a moment ..."
+elif [ $(ls *.img -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
+    IMG_NAME=$(ls *.img | head -n 1)
+    echo -e "Update using [ ${IMG_NAME} ] ] file. Please wait a moment ..."
+elif [ $(ls *.img.xz -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
+    xz_file=$(ls *.img.xz | head -n 1)
+    echo -e "Update using [ ${xz_file} ] file. Please wait a moment ..."
+    xz -d ${xz_file} 2>/dev/null
+    IMG_NAME=$(ls *.img | head -n 1)
+elif [ $(ls *.img.gz -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
+    gz_file=$(ls *.img.gz | head -n 1)
+    echo -e "Update using [ ${gz_file} ] file. Please wait a moment ..."
+    gzip -df ${gz_file} 2>/dev/null
+    IMG_NAME=$(ls *.img | head -n 1)
+elif [ $(ls *.7z -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
+    gz_file=$(ls *.7z | head -n 1)
+    echo -e "Update using [ ${gz_file} ] file. Please wait a moment ..."
+    bsdtar -xmf ${gz_file} 2>/dev/null
+    [ $? -eq 0 ] || 7z x ${gz_file} -aoa -y 2>/dev/null
+    IMG_NAME=$(ls *.img | head -n 1)
+elif [ $(ls *.zip -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
+    zip_file=$(ls *.zip | head -n 1)
+    echo -e "Update using [ ${zip_file} ] file. Please wait a moment ..."
+    unzip -o ${zip_file} 2>/dev/null
+    IMG_NAME=$(ls *.img | head -n 1)
+else
+    echo -e "Please upload or specify the update openwrt firmware file."
+    #echo -e "Upload method: system menu → Amlogic Service → Manually Upload Update"
+    echo -e "Specify method: Place the openwrt firmware file in [ ${WORK_DIR} ]"
+    echo -e "The supported file suffixes are: *.img, *.img.xz, *.img.gz, *.7z, *.zip"
+    echo -e "After upload the openwrt firmware file, run again."
+    exit 1
+fi
+sync
+
+# check file
+if [ ! -f "${IMG_NAME}" ]; then
+    echo "No update file found."
+    exit 1
+else
+    echo "Start update from [ ${IMG_NAME} ]"
+fi
+
+# find efi partition
+EFI_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/boot\/efi$/ {print $0}')
+if [ "${EFI_PART_MSG}" == "" ]; then
+    echo "The EFI partition does not exist, so the update cannot be continued!"
+    exit 1
+fi
+EFI_NAME=$(echo $EFI_PART_MSG | awk '{print $1}')
+EFI_DEV=$(echo $EFI_PART_MSG | awk '{print $2}')
+EFI_UUID=$(echo $EFI_PART_MSG | awk '{print $4}')
+
+BR_FLAG=1
+if [[ ${BACKUP_RESTORE_CONFIG} == "restore" ]]; then
+    BR_FLAG=1
+elif [[ ${BACKUP_RESTORE_CONFIG} == "no-restore" ]]; then
+    BR_FLAG=0
+else
+    echo -ne "Whether to backup and restore the current config files? y/n [y]\b\b"
+    read yn
+    case $yn in
+      n* | N*) BR_FLAG=0;;
+    esac
+fi
+
+# find root partition
+ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/$/ {print $0}')
+ROOT_NAME=$(echo $ROOT_PART_MSG | awk '{print $1}')
+ROOT_DEV=$(echo $ROOT_PART_MSG | awk '{print $2}')
+ROOT_UUID=$(echo $ROOT_PART_MSG | awk '{print $4}')
+
+case $ROOT_NAME in
+${DISK_NAME}${PART_PRESTR}2)
+    NEW_ROOT_NAME="${DISK_NAME}${PART_PRESTR}3"
+    NEW_ROOT_LABEL="${LABEL_PRESTR}ROOTFS2"
+    ;;
+${DISK_NAME}${PART_PRESTR}3)
+    NEW_ROOT_NAME="${DISK_NAME}${PART_PRESTR}2"
+    NEW_ROOT_LABEL="${LABEL_PRESTR}ROOTFS1"
+    ;;
+*)
+    echo "ROOTFS The partition location is incorrect, so the update cannot continue!"
+    exit 1
+    ;;
+esac
+echo "NEW_ROOT_NAME: [ ${NEW_ROOT_NAME} ]"
+
+# find new root partition
+NEW_ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | grep "${NEW_ROOT_NAME}" | awk '$3 ~ /^part$/ && $5 !~ /^\/$/ && $5 !~ /^\/boot$/ {print $0}')
+if [ "${NEW_ROOT_PART_MSG}" == "" ]; then
+    echo "The new ROOTFS partition does not exist, so the update cannot continue!"
+    exit 1
+fi
+NEW_ROOT_NAME=$(echo $NEW_ROOT_PART_MSG | awk '{print $1}')
+NEW_ROOT_DEV=$(echo $NEW_ROOT_PART_MSG | awk '{print $2}')
+NEW_ROOT_UUID=$(echo $NEW_ROOT_PART_MSG | awk '{print $4}')
+NEW_ROOT_MOUNTPOINT=$(echo $NEW_ROOT_PART_MSG | awk '{print $5}')
+echo "NEW_ROOT_MOUNTPOINT: [ ${NEW_ROOT_MOUNTPOINT} ]"
+
+# losetup
+losetup -f -P $IMG_NAME
+if [ $? -eq 0 ]; then
+    LOOP_DEV=$(losetup | grep "$IMG_NAME" | awk '{print $1}')
+    if [ "$LOOP_DEV" == "" ]; then
+        echo "loop device not found!"
+        exit 1
+    fi
+else
+    echo "losetup [ $IMG_FILE ] failed!"
+    exit 1
+fi
+
+WAIT=3
+echo "The loopdev is [ $LOOP_DEV ], wait [ ${WAIT} ] seconds. "
+while [ $WAIT -ge 1 ]; do
+    sleep 1
+    WAIT=$((WAIT - 1))
+done
+
+# umount loop devices (openwrt will auto mount some partition)
+MOUNTED_DEVS=$(lsblk -l -o NAME,PATH,MOUNTPOINT | grep "$LOOP_DEV" | awk '$3 !~ /^$/ {print $2}')
+for dev in $MOUNTED_DEVS; do
+    while :; do
+        echo "umount [ $dev ] ... "
+        umount -f $dev
+        sleep 1
+        mnt=$(lsblk -l -o NAME,PATH,MOUNTPOINT | grep "$dev" | awk '$3 !~ /^$/ {print $2}')
+        if [ "$mnt" == "" ]; then
+            break
+        else
+            echo "Retry ..."
+        fi
+    done
+done
+
+# mount src part
+P1=${WORK_DIR}/efi
+P2=${WORK_DIR}/root
+mkdir -p $P1 $P2
+
+echo "Mount [ ${LOOP_DEV}p1 ] -> [ ${P1} ] ... "
+mount -t vfat -o ro ${LOOP_DEV}p1 ${P1}
+if [ $? -ne 0 ]; then
+    echo "Mount p1 [ ${LOOP_DEV}p1 ] failed!"
+    losetup -D
+    exit 1
+fi
+
+echo "Mount [ ${LOOP_DEV}p2 ] -> [ ${P2} ] ... "
+ZSTD_LEVEL="6"
+mount -t btrfs -o ro,compress=zstd:${ZSTD_LEVEL} ${LOOP_DEV}p2 ${P2}
+if [ $? -ne 0 ]; then
+    echo "Mount p2 [ ${LOOP_DEV}p2 ] failed!"
+    umount -f ${P1}
+    losetup -D
+    exit 1
+fi
+
+# Prepare the dockerman config file
+if [ -f ${P2}/etc/init.d/dockerman ] && [ -f ${P2}/etc/config/dockerd ]; then
+
+    flg=0
+    # get current docker data root
+    data_root=$(uci get dockerd.globals.data_root 2>/dev/null)
+    if [ "$data_root" == "" ]; then
+        flg=1
+        # get current config from /etc/docker/daemon.json
+        if [ -f "/etc/docker/daemon.json" ] && [ -x "/usr/bin/jq" ]; then
+            data_root=$(jq -r '."data-root"' /etc/docker/daemon.json)
+
+            bip=$(jq -r '."bip"' /etc/docker/daemon.json)
+            [ "$bip" == "null" ] && bip="172.31.0.1/24"
+
+            log_level=$(jq -r '."log-level"' /etc/docker/daemon.json)
+            [ "$log_level" == "null" ] && log_level="warn"
+
+            _iptables=$(jq -r '."iptables"' /etc/docker/daemon.json)
+            [ "$_iptables" == "null" ] && _iptables="true"
+
+            registry_mirrors=$(jq -r '."registry-mirrors"[]' /etc/docker/daemon.json 2>/dev/null)
+        fi
+    fi
+
+    if [ "$data_root" == "" ]; then
+        data_root="/opt/docker/" # the default data root
+    fi
+
+    if ! uci get dockerd.globals >/dev/null 2>&1; then
+        uci set dockerd.globals='globals'
+        uci commit
+    fi
+
+    # delete alter config , use inner config
+    if uci get dockerd.globals.alt_config_file >/dev/null 2>&1; then
+        uci delete dockerd.globals.alt_config_file
+        uci commit
+    fi
+
+    if [ $flg -eq 1 ]; then
+        uci set dockerd.globals.data_root=$data_root
+        [ "$bip" != "" ] && uci set dockerd.globals.bip=$bip
+        [ "$log_level" != "" ] && uci set dockerd.globals.log_level=$log_level
+        [ "$_iptables" != "" ] && uci set dockerd.globals.iptables=$_iptables
+        if [ "$registry_mirrors" != "" ]; then
+            for reg in $registry_mirrors; do
+                uci add_list dockerd.globals.registry_mirrors=$reg
+            done
+        fi
+        uci set dockerd.globals.auto_start='1'
+        uci commit
+    fi
+fi
+
+#format NEW_ROOT
+echo "umount [ ${NEW_ROOT_MOUNTPOINT} ]"
+umount -f "${NEW_ROOT_MOUNTPOINT}"
+if [ $? -ne 0 ]; then
+    echo "Umount [ ${NEW_ROOT_MOUNTPOINT} ] failed, Please restart and try again!"
+    umount -f ${P1}
+    umount -f ${P2}
+    losetup -D
+    exit 1
+fi
+
+echo "Format [ ${NEW_ROOT_DEV} ]"
+NEW_ROOT_UUID=$(uuidgen)
+mkfs.btrfs -f -U ${NEW_ROOT_UUID} -L ${NEW_ROOT_LABEL} ${NEW_ROOT_DEV}
+if [ $? -ne 0 ]; then
+    echo "Format [ ${NEW_ROOT_DEV} ] failed!"
+    umount -f ${P1}
+    umount -f ${P2}
+    losetup -D
+    exit 1
+fi
+
+echo "Mount [ ${NEW_ROOT_DEV} ] -> [ ${NEW_ROOT_MOUNTPOINT} ]"
+mount -t btrfs -o compress=zstd:${ZSTD_LEVEL} ${NEW_ROOT_DEV} ${NEW_ROOT_MOUNTPOINT}
+if [ $? -ne 0 ]; then
+    echo "Mount [ ${NEW_ROOT_DEV} ] -> [ ${NEW_ROOT_MOUNTPOINT} ] failed!"
+    umount -f ${P1}
+    umount -f ${P2}
+    losetup -D
+    exit 1
+fi
+
+# begin copy rootfs
+cd ${NEW_ROOT_MOUNTPOINT}
+echo "Start copying data， From [ ${P2} ] TO [ ${NEW_ROOT_MOUNTPOINT} ] ..."
+ENTRYS=$(ls)
+for entry in $ENTRYS; do
+    if [ "$entry" == "lost+found" ]; then
+        continue
+    fi
+    echo "Remove old [ $entry ] ... "
+    rm -rf $entry
+    if [ $? -ne 0 ]; then
+        echo "failed."
+        exit 1
+    fi
+done
+
+echo "Create folder ... "
+btrfs subvolume create etc
+mkdir -p .snapshots .reserved bin boot dev lib opt mnt overlay proc rom root run sbin sys tmp usr www
+ln -sf lib/ lib64
+ln -sf tmp/ var
+sync
+
+COPY_SRC="boot root etc bin sbin lib opt usr www"
+echo "Copy data begin ... "
+for src in $COPY_SRC; do
+    echo "Copy [ $src ] ... "
+    (cd ${P2} && tar cf - $src) | tar xf -
+    sync
+done
+
+# if not backup, then force rewrite the etc/docker/daemon.json
+if [ "${BR_FLAG}" -eq 0 ]; then
+    cat >./etc/docker/daemon.json <<EOF
+{
+  "bip": "172.31.0.1/24",
+  "data-root": "${DOCKER_ROOT}",
+  "log-level": "warn",
+  "log-driver": "json-file",
+  "log-opts": {
+     "max-size": "10m",
+     "max-file": "5"
+   },
+  "registry-mirrors": [
+     "https://mirror.baidubce.com/",
+     "https://hub-mirror.c.163.com"
+   ]
+}
+EOF
+fi
+
+cat >./etc/fstab <<EOF
+UUID=${NEW_ROOT_UUID} / btrfs compress=zstd:${ZSTD_LEVEL} 0 1
+LABEL=EFI /boot/efi vfat defaults 0 2
+#tmpfs /tmp tmpfs defaults,nosuid 0 0
+EOF
+
+cat >./etc/config/fstab <<EOF
+config  global
+        option anon_swap '0'
+        option anon_mount '1'
+        option auto_swap '0'
+        option auto_mount '1'
+        option delay_root '5'
+        option check_fs '0'
+
+config  mount
+        option target '/overlay'
+        option uuid '${NEW_ROOT_UUID}'
+        option enabled '1'
+        option enabled_fsck '1'
+        option fstype 'btrfs'
+        option options 'compress=zstd:${ZSTD_LEVEL}'
+
+config  mount
+        option target '/boot/efi'
+        option label 'EFI'
+        option enabled '1'
+        option enabled_fsck '1'
+        option fstype 'vfat'
+
+EOF
+(
+    cd etc/rc.d
+    rm -f S??shortcut-fe
+    if grep "sfe_flow '1'" ../config/turboacc >/dev/null; then
+        if find ../../lib/modules -name 'shortcut-fe-cm.ko'; then
+            ln -sf ../init.d/shortcut-fe S99shortcut-fe
+        fi
+    fi
+)
+
+# move /etc/config/balance_irq to /etc/balance_irq
+[ -f "./etc/config/balance_irq" ] && mv ./etc/config/balance_irq ./etc/
+sync
+
+echo "Create initial etc snapshot -> .snapshots/etc-000"
+btrfs subvolume snapshot -r etc .snapshots/etc-000
+sync
+
+[ -d /mnt/${DISK_NAME}${PART_PRESTR}4/docker ] || mkdir -p /mnt/${DISK_NAME}${PART_PRESTR}4/docker
+rm -rf opt/docker && ln -sf /mnt/${DISK_NAME}${PART_PRESTR}4/docker/ opt/docker
+
+if [ -f /mnt/${NEW_ROOT_NAME}/etc/config/AdGuardHome ]; then
+    [ -d /mnt/${DISK_NAME}${PART_PRESTR}4/AdGuardHome/data ] || mkdir -p /mnt/${DISK_NAME}${PART_PRESTR}4/AdGuardHome/data
+    if [ ! -L /usr/bin/AdGuardHome ]; then
+        [ -d /usr/bin/AdGuardHome ] &&
+            cp -a /usr/bin/AdGuardHome/* /mnt/${DISK_NAME}${PART_PRESTR}4/AdGuardHome/
+    fi
+    ln -sf /mnt/${DISK_NAME}${PART_PRESTR}4/AdGuardHome /mnt/${NEW_ROOT_NAME}/usr/bin/AdGuardHome
+fi
+sync
+echo "Copy data complete ..."
+
+BACKUP_LIST=$(${P2}/usr/sbin/openwrt-backup -p)
+if [[ "${BR_FLAG}" -eq "1" && -n "${BACKUP_LIST}" ]]; then
+    echo -n "Start restoring configuration files ... "
+    (
+        cd /
+        eval tar czf ${NEW_ROOT_MOUNTPOINT}/.reserved/openwrt_config.tar.gz "${BACKUP_LIST}" 2>/dev/null
+    )
+    tar xzf ${NEW_ROOT_MOUNTPOINT}/.reserved/openwrt_config.tar.gz
+
+    [ -f ./etc/config/dockerman ] && sed -e "s/option wan_mode 'false'/option wan_mode 'true'/" -i ./etc/config/dockerman 2>/dev/null
+    [ -f ./etc/config/dockerd ] && sed -e "s/option wan_mode '0'/option wan_mode '1'/" -i ./etc/config/dockerd 2>/dev/null
+    [ -f ./etc/config/verysync ] && sed -e 's/config setting/config verysync/' -i ./etc/config/verysync 2>/dev/null
+
+    # Restore fstab
+    cp -f .snapshots/etc-000/fstab ./etc/fstab
+    cp -f .snapshots/etc-000/config/fstab ./etc/config/fstab
+    # 还原 luci
+    cp -f .snapshots/etc-000/config/luci ./etc/config/luci
+    # 还原/etc/config/rpcd
+    cp -f .snapshots/etc-000/config/rpcd ./etc/config/rpcd
+
+    sync
+    echo "Restore configuration information complete."
+fi
+
+echo "Modify the configuration file ... "
+rm -f "./etc/rc.local.orig" "./etc/first_run.sh" "./etc/part_size"
+rm -rf "./opt/docker" && ln -sf "/mnt/${DISK_NAME}${PART_PRESTR}4/docker" "./opt/docker"
+rm -f ./etc/bench.log
+cat >>./etc/crontabs/root <<EOF
+37 5 * * * /etc/coremark.sh
+EOF
+
+sss=$(date +%s)
+ddd=$((sss / 86400))
+sed -e "s/:0:0:99999:7:::/:${ddd}:0:99999:7:::/" -i ./etc/shadow
+# Fix the problem of repeatedly adding amule entries after each upgrade
+sed -e "/amule:x:/d" -i ./etc/shadow
+# Fix the problem of repeatedly adding sshd entries after each upgrade of dropbear
+sed -e "/sshd:x:/d" -i ./etc/shadow
+if ! grep "sshd:x:22:sshd" ./etc/group >/dev/null; then
+    echo "sshd:x:22:sshd" >>./etc/group
+fi
+if ! grep "sshd:x:22:22:sshd:" ./etc/passwd >/dev/null; then
+    echo "sshd:x:22:22:sshd:/var/run/sshd:/bin/false" >>./etc/passwd
+fi
+if ! grep "sshd:x:" ./etc/shadow >/dev/null; then
+    echo "sshd:x:${ddd}:0:99999:7:::" >>./etc/shadow
+fi
+
+if [ "${BR_FLAG}" -eq "1" ]; then
+    if [ -x ./bin/bash ] && [ -f ./etc/profile.d/30-sysinfo.sh ]; then
+        sed -e 's/\/bin\/ash/\/bin\/bash/' -i ./etc/passwd
+    fi
+    sync
+fi
+sed -e "s/option hw_flow '1'/option hw_flow '0'/" -i ./etc/config/turboacc
+(
+    cd etc/rc.d
+    rm -f S??shortcut-fe
+    if grep "sfe_flow '1'" ../config/turboacc >/dev/null; then
+        if find ../../lib/modules -name 'shortcut-fe-cm.ko'; then
+            ln -sf ../init.d/shortcut-fe S99shortcut-fe
+        fi
+    fi
+)
+eval tar czf .reserved/openwrt_config.tar.gz "${BACKUP_LIST}" 2>/dev/null
+
+rm -f ./etc/part_size ./etc/first_run.sh
+if [ -x ./usr/sbin/balethirq.pl ]; then
+    if grep "balethirq.pl" "./etc/rc.local"; then
+        echo "balance irq is enabled"
+    else
+        echo "enable balance irq"
+        sed -e "/exit/i\/usr/sbin/balethirq.pl" -i ./etc/rc.local
+    fi
+fi
+
+mv ./etc/rc.local ./etc/rc.local.orig
+cat >"./etc/rc.local" <<EOF
+if ! ls /etc/rc.d/S??dockerd >/dev/null 2>&1;then
+    /etc/init.d/dockerd enable
+    /etc/init.d/dockerd start
+fi
+if ! ls /etc/rc.d/S??dockerman >/dev/null 2>&1 && [ -f /etc/init.d/dockerman ];then
+    /etc/init.d/dockerman enable
+    /etc/init.d/dockerman start
+fi
+mv /etc/rc.local.orig /etc/rc.local
+chmod 755 /etc/rc.local
+exec /etc/rc.local
+exit
+EOF
+chmod 755 ./etc/rc.local*
+
+# move /etc/config/balance_irq to /etc/balance_irq
+[ -f "./etc/config/balance_irq" ] && mv ./etc/config/balance_irq ./etc/
+
+echo "Create etc snapshot -> .snapshots/etc-001"
+btrfs subvolume snapshot -r etc .snapshots/etc-001
+
+cd ${WORK_DIR}
+
+echo "Copy efi files ..."
+fatlabel ${EFI_DEV} "EFI"
+cd /boot/efi
+mv ./EFI/BOOT/grub.cfg /tmp/grub.cfg.prev
+rm -rf *
+cp -a ${P1}/* .
+# 如果想启动上一个版本的openwrt,可以把 /boot/efi/EFI/BOOT/grub.cfg.prev 复制成 /boot/efi/EFI/BOOT/grub.cfg
+mv /tmp/grub.cfg.prev ./EFI/BOOT/
+
+echo "Modify efi configuration ... "
+cd /boot/efi/EFI/BOOT
+cat > grub.cfg <<EOF
+echo "search fs_uuid ${NEW_ROOT_UUID} ..."
+search.fs_uuid ${NEW_ROOT_UUID} root
+echo "root=\$root"
+echo "set prefix ... "
+set prefix=(\$root)'/boot/grub2'
+echo "prefix=\$prefix"
+source \${prefix}/grub.cfg
+EOF
+
+echo "Modify boot configuration ... "
+cd ${NEW_ROOT_MOUNTPOINT}/boot/grub2
+cat > grub.cfg <<EOF
+insmod gzio
+insmod part_gpt
+insmod zstd
+insmod btrfs
+terminal_input console
+terminal_output console
+
+set default="0"
+set timeout=3
+
+menuentry "OpenWrt" {
+        echo    'Loading linux kernel ...'
+        linux /boot/vmlinuz root=UUID=${NEW_ROOT_UUID} rootfstype=btrfs rootflags=compress=zstd:${ZSTD_LEVEL} console=ttyAMA0,115200n8 no_console_suspend consoleblank=0 fsck.fix=yes fsck.repair=yes net.ifnames=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1
+        echo    'Loading initial ramdisk ...'
+        initrd /boot/initrd.img
+}
+EOF
+
+sync
+
+cd $WORK_DIR
+umount -f ${P1} ${P2} 2>/dev/null
+losetup -D 2>/dev/null
+rm -rf ${P1} ${P2} 2>/dev/null
+rm -f ${IMG_NAME} 2>/dev/null
+sync
+wait
+
+echo "Successfully updated, automatic restarting..."
+sleep 3
+reboot
+exit 0

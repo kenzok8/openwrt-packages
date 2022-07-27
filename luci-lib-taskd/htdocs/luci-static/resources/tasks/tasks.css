@@ -15,6 +15,7 @@
 #tasks_dialog {
     position: absolute;
     width: 770px;
+    max-width: 100%;
     max-height: 100%;
     left: 50%;
     top: 50%;
