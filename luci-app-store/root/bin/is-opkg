@@ -10,7 +10,7 @@ ARCH=`jsonfilter -i /etc/.app_store.id -e '$.arch'`
 
 # for istore self upgrade
 ISTORE_PKG=luci-app-store
-ISTORE_DEP_PKGS=luci-lib-taskd luci-lib-xterm taskd
+ISTORE_DEP_PKGS="luci-lib-taskd luci-lib-xterm taskd"
 ISTORE_INDEX=https://istore.linkease.com/repo/all/store/Packages.gz
 
 action=${1}
