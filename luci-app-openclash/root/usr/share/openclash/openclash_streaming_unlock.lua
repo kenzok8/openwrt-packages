@@ -108,6 +108,8 @@ function unlock_auto_select()
 			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_paramount_plus") or "paramount"
 		elseif type == "Discovery Plus" then
 			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_discovery_plus") or "discovery"
+		elseif type == "Bilibili" then
+			key_group = uci:get("openclash", "config", "stream_auto_select_group_key_bilibili") or "bilibili"
 		end
 		if not key_group then key_group = type end
 	else
@@ -543,6 +545,8 @@ end
 function close_connections()
 	local con
 	local group_cons_id = {}
+	local enable = tonumber(uci:get("openclash", "config", "stream_auto_select_close_con")) or 1
+	if enable == 0 then return end
 	con = luci.sys.exec(string.format('curl -sL -m 5 --retry 2 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -XGET http://%s:%s/connections', passwd, ip, port))
 	if con then
 		con = json.parse(con)
@@ -589,6 +593,8 @@ function nodes_filter(t, info)
 		regex = uci:get("openclash", "config", "stream_auto_select_node_key_paramount_plus") or ""
 	elseif type == "Discovery Plus" then
 		regex = uci:get("openclash", "config", "stream_auto_select_node_key_discovery_plus") or ""
+	elseif type == "Bilibili" then
+		regex = uci:get("openclash", "config", "stream_auto_select_node_key_bilibili") or ""
 	end
 
 	if class_type(t) == "table" then
@@ -646,6 +652,8 @@ function proxy_unlock_test()
 		region = paramount_plus_unlock_test()
 	elseif type == "Discovery Plus" then
 		region = discovery_plus_unlock_test()
+	elseif type == "Bilibili" then
+		region = bilibili_unlock_test()
 	end
 	return region
 end
@@ -675,6 +683,8 @@ function auto_get_policy_group(passwd, ip, port)
 		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://www.paramountplus.com/ &')
 	elseif type == "Discovery Plus" then
 		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://www.discoveryplus.com/ &')
+	elseif type == "Bilibili" then
+		luci.sys.call('curl -sL -m 5 --limit-rate 1k -o /dev/null https://www.bilibili.com/ &')
 	end
 	os.execute("sleep 1")
 	con = luci.sys.exec(string.format('curl -sL -m 5 --retry 2 -H "Content-Type: application/json" -H "Authorization: Bearer %s" -XGET http://%s:%s/connections', passwd, ip, port))
@@ -735,6 +745,11 @@ function auto_get_policy_group(passwd, ip, port)
 				end
 			elseif type == "Discovery Plus" then
 				if string.match(con.connections[i].metadata.host, "www%.discoveryplus%.com") then
+					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
+					break
+				end
+			elseif type == "Bilibili" then
+				if string.match(con.connections[i].metadata.host, "www%.bilibili%.com") then
 					auto_get_group = con.connections[i].chains[#(con.connections[i].chains)]
 					break
 				end
@@ -1064,21 +1079,25 @@ function ytb_unlock_test()
 	local httpcode = luci.sys.exec(string.format("curl -sL --connect-timeout 5 -m 15 --speed-time 5 --speed-limit 1 --retry 2 -o /dev/null -w %%{http_code} -H 'Accept-Language: en' -H 'Content-Type: application/json' -H 'User-Agent: %s' %s", UA, url))
 	local region = ""
 	local old_region = ""
+	local data, he_data
 	local regex = uci:get("openclash", "config", "stream_auto_select_region_key_ytb") or ""
 	if tonumber(httpcode) == 200 then
 		status = 1
-		local data = luci.sys.exec(string.format("curl -sL --connect-timeout 5 -m 15 --speed-time 5 --speed-limit 1 --retry 2 -H 'Accept-Language: en' -H 'Content-Type: application/json' -H 'User-Agent: %s' %s", UA, url))
-		if string.find(data, "is not available in your country") then
+		data = luci.sys.exec(string.format("curl -sL --connect-timeout 5 -m 15 --speed-time 5 --speed-limit 1 --retry 2 -H 'Accept-Language: en' -H 'Content-Type: application/json' -H 'User-Agent: %s' -b 'YSC=BiCUU3-5Gdk; CONSENT=YES+cb.20220301-11-p0.en+FX+700; GPS=1; VISITOR_INFO1_LIVE=4VwPMkB7W5A; PREF=tz=Asia.Shanghai; _gcl_au=1.1.1809531354.1646633279' %s", UA, url))
+		if string.find(data,"www%.google%.cn") or string.find(data, "is not available in your country") then
 	  		return
 	  	end
 	  	region = string.sub(string.match(data, "\"GL\":\"%a+\""), 7, -2)
 		if region then
 			status = 2
 		else
-			if not string.find(data,"www%.google%.cn") then
+			he_data = luci.sys.exec(string.format("curl -sIL --connect-timeout 5 -m 15 --speed-time 5 --speed-limit 1 --retry 2 -H 'Accept-Language: en' -H 'Content-Type: application/json' -H 'User-Agent: %s' %s", UA, url))
+			region = string.sub(string.match(he_data, "gl=%a+"), 4, -1)
+			if region then
 				status = 2
+			else
 				region = "US"
-	  		end
+			end
 		end
 		if fs.isfile(string.format("/tmp/openclash_%s_region", type)) then
 			old_region = fs.readfile(string.format("/tmp/openclash_%s_region", type))
@@ -1257,6 +1276,46 @@ function discovery_plus_unlock_test()
 				end
 	  			return region
 	  		end
+		end
+	end
+end
+
+function bilibili_unlock_test()
+	status = 0
+	local randsession = luci.sys.exec("cat /dev/urandom | head -n 32 | md5sum | head -c 32")
+	local region, httpcode, data, url
+	local regex = uci:get("openclash", "config", "stream_auto_select_region_key_bilibili") or ""
+	if regex == "HK/MO/TW" then
+		url = string.format("https://api.bilibili.com/pgc/player/web/playurl?avid=18281381&cid=29892777&qn=0&type=&otype=json&ep_id=183799&fourk=1&fnver=0&fnval=16&session=%s&module=bangumi", randsession)
+		region = "HK/MO/TW"
+	elseif regex == "TW" then
+		url = string.format("https://api.bilibili.com/pgc/player/web/playurl?avid=50762638&cid=100279344&qn=0&type=&otype=json&ep_id=268176&fourk=1&fnver=0&fnval=16&session=%s&module=bangumi", randsession)
+		region = "TW"
+	elseif regex == "CN" then
+		url = string.format("https://api.bilibili.com/pgc/player/web/playurl?avid=82846771&qn=0&type=&otype=json&ep_id=307247&fourk=1&fnver=0&fnval=16&session=%s&module=bangumi", randsession)
+		region = "CN"
+	end
+	httpcode = luci.sys.exec(string.format("curl -sL --connect-timeout 5 -m 15 --speed-time 5 --speed-limit 1 --retry 2 -o /dev/null -w %%{http_code} -H 'Accept-Language: en' -H 'Content-Type: application/json' -H 'User-Agent: %s' '%s'", UA, url))
+	if httpcode and tonumber(httpcode) == 200 then
+		data = luci.sys.exec(string.format("curl -sL --connect-timeout 5 -m 15 --speed-time 5 --speed-limit 1 --retry 2 -H 'Accept-Language: en' -H 'Content-Type: application/json' -H 'User-Agent: %s' '%s'", UA, url))
+		if data then
+			data = json.parse(data)
+			status = 1
+			if data.code then
+				if data.code == 0 then
+					status = 2
+					if fs.isfile(string.format("/tmp/openclash_%s_region", type)) then
+						old_region = fs.readfile(string.format("/tmp/openclash_%s_region", type))
+					end
+					if old_region and region ~= old_region and not all_test then
+						status = 4
+					end
+					if status == 2 and not all_test and region ~= old_region then
+						fs.writefile(string.format("/tmp/openclash_%s_region", type), region)
+					end
+					return region
+				end
+			end
 		end
 	end
 end
