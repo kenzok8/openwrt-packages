@@ -166,6 +166,7 @@ check_kernel() {
     fi
 
     # Check the version on the server
+    rm -f ${github_api_kernel_library} 2>/dev/null && sync
     curl -s "${server_kernel_url}" >${github_api_kernel_library} && sync
     sleep 1
 
@@ -196,8 +197,10 @@ download_kernel() {
     fi
 
     # Delete other residual kernel files
-    rm -f ${KERNEL_DOWNLOAD_PATH}/*.tar.gz ${KERNEL_DOWNLOAD_PATH}/sha256sums 2>/dev/null && sync
+    rm -f ${KERNEL_DOWNLOAD_PATH}/*.tar.gz 2>/dev/null && sync
+    rm -f ${KERNEL_DOWNLOAD_PATH}/sha256sums 2>/dev/null && sync
 
+    rm -f ${github_api_kernel_file} 2>/dev/null && sync
     curl -s "${server_kernel_url}/${download_version}" >${github_api_kernel_file} && sync
     sleep 1
 

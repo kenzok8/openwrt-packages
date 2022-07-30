@@ -110,10 +110,10 @@ o:value('all', translate('Global Mode'))
 o:value('oversea', translate('Oversea Mode'))
 o:value('direct', translate('Direct Mode'))
 o.default = 'router'
-o = s:option(ListValue, 'dports', translate('Proxy Ports'))
-o:value('1', translate('All Ports'))
-o:value('2', translate('Only Common Ports'))
-o.default = 1
+
+o = s:option(Value, 'dports', translate('Proxy Ports'))
+o.default=''
+o.description = translate('If you do not specify all ports, separate multiple ports with commas (,)')
 
 o = s:option(ListValue, 'pdnsd_enable', translate('Resolve Dns Mode'))
 o:value('1', translate('Use Pdnsd tcp query and cache'))

@@ -39,6 +39,11 @@ function index()
 	entry({"admin", "services", "openclash", "write_netflix_domains"}, call("action_write_netflix_domains"))
 	entry({"admin", "services", "openclash", "restore"}, call("action_restore_config"))
 	entry({"admin", "services", "openclash", "backup"}, call("action_backup"))
+	entry({"admin", "services", "openclash", "backup_ex_core"}, call("action_backup_ex_core"))
+	entry({"admin", "services", "openclash", "backup_only_core"}, call("action_backup_only_core"))
+	entry({"admin", "services", "openclash", "backup_only_config"}, call("action_backup_only_config"))
+	entry({"admin", "services", "openclash", "backup_only_rule"}, call("action_backup_only_rule"))
+	entry({"admin", "services", "openclash", "backup_only_proxy"}, call("action_backup_only_proxy"))
 	entry({"admin", "services", "openclash", "remove_all_core"}, call("action_remove_all_core"))
 	entry({"admin", "services", "openclash", "one_key_update"}, call("action_one_key_update"))
 	entry({"admin", "services", "openclash", "one_key_update_check"}, call("action_one_key_update_check"))
@@ -61,6 +66,8 @@ function index()
 	entry({"admin", "services", "openclash", "rule_mode"}, call("action_rule_mode"))
 	entry({"admin", "services", "openclash", "switch_rule_mode"}, call("action_switch_rule_mode"))
 	entry({"admin", "services", "openclash", "switch_run_mode"}, call("action_switch_run_mode"))
+	entry({"admin", "services", "openclash", "dashboard_type"}, call("action_dashboard_type"))
+	entry({"admin", "services", "openclash", "switch_dashboard"}, call("action_switch_dashboard"))
 	entry({"admin", "services", "openclash", "get_run_mode"}, call("action_get_run_mode"))
 	entry({"admin", "services", "openclash", "create_file"}, call("create_file"))
 	entry({"admin", "services", "openclash", "rename_file"}, call("rename_file"))
@@ -166,10 +173,10 @@ end
 local function daip()
 	local daip = luci.sys.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n'")
 	if not daip or daip == "" then
-		local daip = luci.sys.exec("ip address show $(uci -q -p /tmp/state get network.lan.ifname) | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n'")
+		daip = luci.sys.exec("ip address show $(uci -q -p /tmp/state get network.lan.ifname || uci -q -p /tmp/state get network.lan.device) | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n'")
 	end
 	if not daip or daip == "" then
-		local daip = luci.sys.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
+		daip = luci.sys.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
 	end
 	return daip
 end
@@ -202,8 +209,8 @@ local function startlog()
 		info = luci.sys.exec("sed -n '$p' /tmp/openclash_start.log 2>/dev/null")
 		line_trans = info
 		if string.len(info) > 0 then
-			if not string.find (info, "【") and not string.find (info, "】") then
-   				line_trans = luci.i18n.translate(string.sub(info, 0, -1))
+			if not string.find (info, "【") or not string.find (info, "】") then
+				line_trans = trans_line_nolabel(info)
    			else
    				line_trans = trans_line(info)
    			end
@@ -906,6 +913,43 @@ function action_one_key_update_check()
 	})
 end
 
+function action_dashboard_type()
+	local dashboard_type = uci:get("openclash", "config", "dashboard_type") or "Official"
+	local yacd_type = uci:get("openclash", "config", "yacd_type") or "Official"
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+		dashboard_type = dashboard_type,
+		yacd_type = yacd_type;
+	})
+end
+
+function action_switch_dashboard()
+	local switch_name = luci.http.formvalue("name")
+	local switch_type = luci.http.formvalue("type")
+	local state = luci.sys.call(string.format('/usr/share/openclash/openclash_download_dashboard.sh "%s" "%s" >/dev/null 2>&1', switch_name, switch_type))
+	if switch_name == "Dashboard" and tonumber(state) == 1 then
+		if switch_type == "Official" then
+			uci:set("openclash", "config", "dashboard_type", "Official")
+			uci:commit("openclash")
+		else
+			uci:set("openclash", "config", "dashboard_type", "Meta")
+			uci:commit("openclash")
+		end
+	elseif tonumber(state) == 1 then
+		if switch_type == "Official" then
+			uci:set("openclash", "config", "yacd_type", "Official")
+			uci:commit("openclash")
+		else
+			uci:set("openclash", "config", "yacd_type", "Meta")
+			uci:commit("openclash")
+		end
+	end
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+		download_state = state;
+	})
+end
+
 function action_op_mode()
 	local op_mode = uci:get("openclash", "config", "operation_mode")
 	luci.http.prepare_content("application/json")
@@ -1110,13 +1154,13 @@ function action_refresh_log()
     	end
     	if ex_match then break end
     	if not string.find (line, "level=") then
-				if not string.find (line, "【") and not string.find (line, "】") then
-   				line_trans = string.sub(line, 0, 20)..luci.i18n.translate(string.sub(line, 21, -1))
-   			else
-   				line_trans = trans_line(line)
-   			end
+			if not string.find (line, "【") or not string.find (line, "】") then
+				line_trans = trans_line_nolabel(line)
+			else
+				line_trans = trans_line(line)
 			end
-			if data == "" then
+		end
+		if data == "" then
     		data = line_trans
     	elseif log_len == 0 and i == limit then
     		data = data .."\n" .. line_trans .. "\n..."
@@ -1248,6 +1292,71 @@ function action_backup()
 
 	luci.http.header(
 		'Content-Disposition', 'attachment; filename="Backup-OpenClash-%s.tar.gz"' %{
+			os.date("%Y-%m-%d-%H-%M-%S")
+		})
+
+	luci.http.prepare_content("application/x-targz")
+	luci.ltn12.pump.all(reader, luci.http.write)
+end
+
+function action_backup_ex_core()
+	local config = luci.sys.call("cp /etc/config/openclash /etc/openclash/openclash >/dev/null 2>&1")
+	local reader = ltn12_popen("echo 'core' > /tmp/oc_exclude.txt && tar -C '/etc/openclash/' -X '/tmp/oc_exclude.txt' -cz . 2>/dev/null")
+
+	luci.http.header(
+		'Content-Disposition', 'attachment; filename="Backup-OpenClash-Exclude-Cores-%s.tar.gz"' %{
+			os.date("%Y-%m-%d-%H-%M-%S")
+		})
+
+	luci.http.prepare_content("application/x-targz")
+	luci.ltn12.pump.all(reader, luci.http.write)
+end
+
+function action_backup_only_config()
+	local config = luci.sys.call("cp /etc/config/openclash /etc/openclash/openclash >/dev/null 2>&1")
+	local reader = ltn12_popen("tar -C '/etc/openclash' -cz './config' 2>/dev/null")
+
+	luci.http.header(
+		'Content-Disposition', 'attachment; filename="Backup-OpenClash-Config-%s.tar.gz"' %{
+			os.date("%Y-%m-%d-%H-%M-%S")
+		})
+
+	luci.http.prepare_content("application/x-targz")
+	luci.ltn12.pump.all(reader, luci.http.write)
+end
+
+function action_backup_only_core()
+	local config = luci.sys.call("cp /etc/config/openclash /etc/openclash/openclash >/dev/null 2>&1")
+	local reader = ltn12_popen("tar -C '/etc/openclash' -cz './core' 2>/dev/null")
+
+	luci.http.header(
+		'Content-Disposition', 'attachment; filename="Backup-OpenClash-Cores-%s.tar.gz"' %{
+			os.date("%Y-%m-%d-%H-%M-%S")
+		})
+
+	luci.http.prepare_content("application/x-targz")
+	luci.ltn12.pump.all(reader, luci.http.write)
+end
+
+function action_backup_only_rule()
+	local config = luci.sys.call("cp /etc/config/openclash /etc/openclash/openclash >/dev/null 2>&1")
+	local reader = ltn12_popen("tar -C '/etc/openclash' -cz './rule_provider' 2>/dev/null")
+
+	luci.http.header(
+		'Content-Disposition', 'attachment; filename="Backup-OpenClash-Only-Rule-Provider-%s.tar.gz"' %{
+			os.date("%Y-%m-%d-%H-%M-%S")
+		})
+
+	luci.http.prepare_content("application/x-targz")
+	luci.ltn12.pump.all(reader, luci.http.write)
+end
+
+function action_backup_only_proxy()
+	local config = luci.sys.call("cp /etc/config/openclash /etc/openclash/openclash >/dev/null 2>&1")
+	local reader = ltn12_popen("tar -C '/etc/openclash' -cz './proxy_provider' 2>/dev/null")
+
+	luci.http.header(
+		'Content-Disposition', 'attachment; filename="Backup-OpenClash-Proxy-Provider-%s.tar.gz"' %{
 			os.date("%Y-%m-%d-%H-%M-%S")
 		})
 
@@ -1394,11 +1503,11 @@ function manual_stream_unlock_test()
 		while true do
 			local ln = util:read("*l")
 			if ln then
-				if not string.find (ln, "【") and not string.find (ln, "】") then
-   				line_trans = luci.i18n.translate(string.sub(ln, 0, -1))
-   			else
-   				line_trans = trans_line(ln)
-   			end
+				if not string.find (ln, "【") or not string.find (ln, "】") then
+					line_trans = trans_line_nolabel(ln)
+   				else
+   					line_trans = trans_line(ln)
+   				end
 				luci.http.write(line_trans)
 				luci.http.write("\n")
 			end
@@ -1422,11 +1531,11 @@ function all_proxies_stream_test()
 		while true do
 			local ln = util:read("*l")
 			if ln then
-				if not string.find (ln, "【") and not string.find (ln, "】") then
-   				line_trans = luci.i18n.translate(string.sub(ln, 0, -1))
-   			else
-   				line_trans = trans_line(ln)
-   			end
+				if not string.find (ln, "【") or not string.find (ln, "】") then
+					line_trans = trans_line_nolabel(ln)
+   				else
+   					line_trans = trans_line(ln)
+   				end
 				luci.http.write(line_trans)
 				luci.http.write("\n")
 			end
@@ -1438,6 +1547,16 @@ function all_proxies_stream_test()
 		return
 	end
 	luci.http.status(500, "Something Wrong While Testing...")
+end
+
+function trans_line_nolabel(data)
+	local line_trans = "data"
+	if string.match(string.sub(data, 0, 19), "%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d") then
+		line_trans = string.sub(data, 0, 20)..luci.i18n.translate(string.sub(data, 21, -1))
+	else
+		line_trans = luci.i18n.translate(string.sub(data, 0, -1))
+	end
+	return line_trans
 end
 
 function trans_line(data)

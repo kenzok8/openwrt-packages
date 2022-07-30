@@ -23,6 +23,7 @@ support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
 rm -f ${TMP_CHECK_DIR}/*.ipk 2>/dev/null && sync
+rm -f ${TMP_CHECK_DIR}/sha256sums 2>/dev/null && sync
 
 # Clean the running log
 clean_running() {

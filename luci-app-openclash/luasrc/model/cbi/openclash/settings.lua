@@ -16,7 +16,7 @@ bold_off = [[</strong>]]
 
 local op_mode = string.sub(luci.sys.exec('uci get openclash.config.operation_mode 2>/dev/null'),0,-2)
 if not op_mode then op_mode = "redir-host" end
-local lan_ip = SYS.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n' || ip address show $(uci -q -p /tmp/state get network.lan.ifname) | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
+local lan_ip = SYS.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n' || ip address show $(uci -q -p /tmp/state get network.lan.ifname || uci -q -p /tmp/state get network.lan.device) | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
 
 m = Map("openclash", translate("Global Settings(Will Modify The Config File Or Subscribe According To The Settings On This Page)"))
 m.pageaction = false
@@ -246,6 +246,10 @@ end
 
 o = s:taboption("dns", Flag, "append_wan_dns", font_red..bold_on..translate("Append Upstream DNS")..bold_off..font_off)
 o.description = font_red..bold_on..translate("Append The Upstream Assigned DNS And Gateway IP To The Nameserver")..bold_off..font_off
+o.default = 1
+
+o = s:taboption("dns", Flag, "append_default_dns", translate("Append Default DNS"))
+o.description = translate("Automatically Append Compliant DNS to default-nameserver")
 o.default = 1
 
 if op_mode == "fake-ip" then
@@ -480,7 +484,7 @@ o.title = translate("Custom GeoIP Dat URL")
 o.rmempty = true
 o.description = translate("Custom GeoIP Dat URL, Click Button Below To Refresh After Edit")
 o:value("https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat", translate("Loyalsoldier-Version")..translate("(Default)"))
-o:value("https://mirrors.tuna.tsinghua.edu.cn/osdn/storage/g/v/v2/v2raya/dists/v2ray-rules-dat/geoip.dat", translate("Tuna-Version")..translate("(Default)"))
+o:value("https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/v/v2/v2raya/dists/v2ray-rules-dat/geoip.dat", translate("OSDN-Version")..translate("(Default)"))
 o.default = "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
 o:depends("geoip_auto_update", "1")
 
@@ -524,7 +528,7 @@ o.title = translate("Custom GeoSite URL")
 o.rmempty = true
 o.description = translate("Custom GeoSite Data URL, Click Button Below To Refresh After Edit")
 o:value("https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat", translate("Loyalsoldier-Version")..translate("(Default)"))
-o:value("https://mirrors.tuna.tsinghua.edu.cn/osdn/storage/g/v/v2/v2raya/dists/v2ray-rules-dat/geosite.dat", translate("Tuna-Version")..translate("(Default)"))
+o:value("https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/v/v2/v2raya/dists/v2ray-rules-dat/geosite.dat", translate("OSDN-Version")..translate("(Default)"))
 o.default = "https://fastly.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
 o:depends("geosite_auto_update", "1")
 
@@ -723,6 +727,11 @@ o.description = translate("Automatically Expand The Group When Selected")
 o.default = 0
 o:depends("stream_auto_select", "1")
 
+o = s:taboption("stream_enhance", Flag, "stream_auto_select_close_con", translate("Close Old Connections"))
+o.description = translate("Automatically Close Old Connections When New Unlock Node Selected")
+o.default = 1
+o:depends("stream_auto_select", "1")
+
 --Netflix
 o = s:taboption("stream_enhance", Flag, "stream_auto_select_netflix", font_red..translate("Netflix")..font_off)
 o.default = 0
@@ -739,6 +748,12 @@ o.default = ""
 o.placeholder = "HK|SG|TW"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_netflix", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_netflix") then
+		fs.unlink("/tmp/openclash_Netflix_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_netflix", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -767,6 +782,12 @@ o.default = ""
 o.placeholder = "HK|SG|TW"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_disney", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_disney") then
+		fs.unlink("/tmp/openclash_Disney Plus_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_disney", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -795,6 +816,12 @@ o.default = ""
 o.placeholder = "HK|US"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_ytb", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_ytb") then
+		fs.unlink("/tmp/openclash_YouTube Premium_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_ytb", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -823,6 +850,12 @@ o.default = ""
 o.placeholder = "HK|US|SG"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_prime_video", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_prime_video") then
+		fs.unlink("/tmp/openclash_Amazon Prime Video_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_prime_video", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -873,6 +906,12 @@ o.default = ""
 o.placeholder = "US"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_hbo_max", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_hbo_max") then
+		fs.unlink("/tmp/openclash_HBO Max_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_hbo_max", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -901,6 +940,12 @@ o.default = ""
 o.placeholder = "HK|SG|TW"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_hbo_go_asia", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_hbo_go_asia") then
+		fs.unlink("/tmp/openclash_HBO GO Asia_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_hbo_go_asia", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -929,6 +974,12 @@ o.default = ""
 o.placeholder = "HK|SG|TW"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_tvb_anywhere", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_tvb_anywhere") then
+		fs.unlink("/tmp/openclash_TVB Anywhere+_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_tvb_anywhere", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -957,6 +1008,12 @@ o.default = ""
 o.placeholder = "DE"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_dazn", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_dazn") then
+		fs.unlink("/tmp/openclash_DAZN_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_dazn", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -985,6 +1042,12 @@ o.default = ""
 o.placeholder = "US"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_paramount_plus", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_paramount_plus") then
+		fs.unlink("/tmp/openclash_Paramount Plus_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_paramount_plus", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -1013,6 +1076,12 @@ o.default = ""
 o.placeholder = "US"
 o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
 o:depends("stream_auto_select_discovery_plus", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_discovery_plus") then
+		fs.unlink("/tmp/openclash_Discovery Plus_region")
+	end
+	return value
+end
 
 o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_discovery_plus", translate("Unlock Nodes Filter"))
 o.default = ""
@@ -1024,6 +1093,42 @@ o.rawhtml = true
 o.template = "openclash/other_stream_option"
 o.value = "Discovery Plus"
 o:depends("stream_auto_select_discovery_plus", "1")
+
+--Bilibili
+o = s:taboption("stream_enhance", Flag, "stream_auto_select_bilibili", font_red..translate("Bilibili")..font_off)
+o.default = 0
+o:depends("stream_auto_select", "1")
+
+o = s:taboption("stream_enhance", Value, "stream_auto_select_group_key_bilibili", translate("Group Filter"))
+o.default = "Bilibili"
+o.placeholder = "Bilibili"
+o.description = translate("It Will Be Searched According To The Regex When Auto Search Group Fails")
+o:depends("stream_auto_select_bilibili", "1")
+
+o = s:taboption("stream_enhance", ListValue, "stream_auto_select_region_key_bilibili", translate("Unlock Region Filter"))
+o.default = "CN"
+o:value("CN", translate("China Mainland Only"))
+o:value("HK/MO/TW", translate("Hongkong/Macau/Taiwan"))
+o:value("TW", translate("Taiwan Only"))
+o.description = translate("It Will Be Selected Region(Country Shortcode) According To The Regex")
+o:depends("stream_auto_select_bilibili", "1")
+function o.validate(self, value)
+	if value ~= m.uci:get("openclash", "config", "stream_auto_select_region_key_bilibili") then
+		fs.unlink("/tmp/openclash_Bilibili_region")
+	end
+	return value
+end
+
+o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_bilibili", translate("Unlock Nodes Filter"))
+o.default = ""
+o.description = translate("It Will Be Selected Nodes According To The Regex")
+o:depends("stream_auto_select_bilibili", "1")
+
+o = s:taboption("stream_enhance", DummyValue, "Bilibili", translate("Manual Test"))
+o.rawhtml = true
+o.template = "openclash/other_stream_option"
+o.value = "Bilibili"
+o:depends("stream_auto_select_bilibili", "1")
 
 ---- update Settings
 o = s:taboption("rules_update", Flag, "other_rule_auto_update", translate("Auto Update"))
@@ -1207,6 +1312,14 @@ o.title = translate("Public Dashboard SSL enabled")
 o.default = 0
 o.description = translate("Is SSL enabled For Dashboard Login From Public Network")
 
+o = s:taboption("dashboard", DummyValue, "Dashboard", translate("Switch(Update) Dashboard Version"))
+o.template="openclash/switch_dashboard"
+o.rawhtml = true
+
+o = s:taboption("dashboard", DummyValue, "Yacd", translate("Switch(Update) Yacd Version"))
+o.template="openclash/switch_dashboard"
+o.rawhtml = true
+
 ---- version update
 core_update = s:taboption("version_update", DummyValue, "", nil)
 core_update.template = "openclash/update"
@@ -1267,7 +1380,7 @@ end
 ds = m:section(TypedSection, "dns_servers", translate("Add Custom DNS Servers")..translate("(Take Effect After Choose Above)"))
 ds.anonymous = true
 ds.addremove = true
-ds.sortable = false
+ds.sortable = true
 ds.template = "cbi/tblsection"
 ds.extedit = luci.dispatcher.build_url("admin/services/openclash/custom-dns-edit/%s")
 function ds.create(...)
@@ -1284,14 +1397,6 @@ o.rmempty     = false
 o.default     = o.enabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "1"
-end
-
----- Node Domain Resolve
-o = ds:option(Flag, "node_resolve", translate("Node Domain Resolve"))
-o.rmempty     = false
-o.default     = o.disbled
-o.cfgvalue    = function(...)
-    return Flag.cfgvalue(...) or "0"
 end
 
 ---- group

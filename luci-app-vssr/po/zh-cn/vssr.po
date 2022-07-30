@@ -731,3 +731,6 @@ msgstr "【国内IP段】来源地址"
 
 msgid "China ip data url. You are not recommended to change the value"
 msgstr "中国大陆IP数据列表地址，除非明白原理否则不建议修改！"
+
+msgid "If you do not specify all ports, separate multiple ports with commas (,)"
+msgstr "留空则代理全部端口，如果自定义、多个端口请用半角符逗号隔开。"

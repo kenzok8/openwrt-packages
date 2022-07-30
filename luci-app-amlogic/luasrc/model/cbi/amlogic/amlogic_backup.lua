@@ -97,8 +97,7 @@ w.render = function(self, section, scope)
 end
 
 w.write = function(self, section, scope)
-	local x = luci.sys.exec("btrfs subvolume snapshot -r /etc /.snapshots/etc-" ..
-		os.date("%m.%d.%H%M%S") .. " 2>/dev/null && sync")
+	local x = luci.sys.exec("btrfs subvolume snapshot -r /etc /.snapshots/etc-" .. os.date("%m.%d.%H%M%S") .. " 2>/dev/null && sync")
 	luci.http.redirect(luci.dispatcher.build_url("admin", "system", "amlogic", "backup"))
 end
 w = d:option(TextValue, "snapshot_list", nil)

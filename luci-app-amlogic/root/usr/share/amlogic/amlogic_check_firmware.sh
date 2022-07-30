@@ -195,7 +195,7 @@ download_firmware() {
     # Delete other residual firmware files
     rm -f ${FIRMWARE_DOWNLOAD_PATH}/*${firmware_suffix} 2>/dev/null && sync
     rm -f ${FIRMWARE_DOWNLOAD_PATH}/*.img 2>/dev/null && sync
-    rm -f ${FIRMWARE_DOWNLOAD_PATH}/sha256sums && sync
+    rm -f ${FIRMWARE_DOWNLOAD_PATH}/sha256sums 2>/dev/null && sync
 
     firmware_releases_path="$(cat ${github_api_openwrt} | sed -n "${download_firmware_line}p" | grep "browser_download_url" | grep -o "${firmware_download_url}" | head -n 1)"
     # Download to local rename
