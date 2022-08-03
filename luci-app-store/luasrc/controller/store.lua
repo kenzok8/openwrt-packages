@@ -125,6 +125,9 @@ function store_index()
     if fs.access("/usr/libexec/istore/backup") then
         features[#features+1] = "backup"
     end
+    if luci.sys.call("which docker >/dev/null 2>&1") == 0 then
+        features[#features+1] = "docker"
+    end
 
     luci.template.render("store/main", {prefix=luci.dispatcher.build_url(unpack(page_index)),id=user_id(),lang=vue_lang(),features=features})
 end
@@ -238,17 +241,24 @@ function store_action(param)
         ret = data
     else
         local pkg = luci.http.formvalue("package")
-        local metapkg = metapkgpre .. pkg
+        local metapkg = pkg and (metapkgpre .. pkg) or ""
         if action == "update" or pkg then
             if action == "update" or action == "install" then
                 code, out, err = _action(myopkg, action, metapkg)
             else
                 local meta = json_parse(fs.readfile(metadir .. "/" .. pkg .. ".json"))
-                local pkgs = meta.depends
-                table.insert(pkgs, metapkg)
+                local pkgs = {}
                 if action == "upgrade" then
+                    pkgs = meta.depends
+                    table.insert(pkgs, metapkg)
                     code, out, err = _action(myopkg, action, unpack(pkgs))
                 else -- remove
+                    for _, dep in ipairs(meta.depends) do
+                        if dep ~= "docker-deps" then
+                            pkgs[#pkgs+1] = dep
+                        end
+                    end
+                    table.insert(pkgs, metapkg)
                     code, out, err = _action(myopkg, action, unpack(pkgs))
                     fs.unlink("/tmp/luci-indexcache")
                 end
