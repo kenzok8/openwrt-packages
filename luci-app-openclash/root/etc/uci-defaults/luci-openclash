@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+. /lib/functions.sh
 
 uci -q delete ucitrack.@openclash[-1]
 uci -q add ucitrack openclash
@@ -32,6 +33,8 @@ cp -f "/etc/openclash/custom/openclash_sniffing_domain_filter.yaml" "/usr/share/
 cp -f "/etc/openclash/custom/openclash_sniffing_port_filter.yaml" "/usr/share/openclash/backup/openclash_sniffing_port_filter.yaml" >/dev/null 2>&1
 cp -f "/etc/openclash/custom/openclash_custom_localnetwork_ipv4.list" "/usr/share/openclash/backup/openclash_custom_localnetwork_ipv4.list" >/dev/null 2>&1
 cp -f "/etc/openclash/custom/openclash_custom_localnetwork_ipv6.list" "/usr/share/openclash/backup/openclash_custom_localnetwork_ipv6.list" >/dev/null 2>&1
+cp -f "/etc/openclash/custom/openclash_custom_chnroute_pass.list" "/usr/share/openclash/backup/openclash_custom_chnroute_pass.list" >/dev/null 2>&1
+cp -f "/etc/openclash/custom/openclash_custom_chnroute6_pass.list" "/usr/share/openclash/backup/openclash_custom_chnroute6_pass.list" >/dev/null 2>&1
 
 mkdir -p /lib/upgrade/keep.d
 cat > "/lib/upgrade/keep.d/luci-app-openclash" <<-EOF
@@ -160,6 +163,31 @@ end
 
 -------------- OpenClash Append End --------------
 EOF
+fi
+
+#Set authentication
+
+auth_info_get()
+{
+   local section="$1"
+   config_get_bool "enabled" "$section" "enabled" "1"
+   
+   if [ "$enabled" == "1" ]; then
+      auth_cfg=false
+   fi
+   return
+}
+
+auth_cfg=true
+config_load "openclash"
+config_foreach auth_info_get "authentication"
+
+if $auth_cfg; then
+	uci_name_tmp=$(uci add openclash authentication)
+	uci_set="uci -q set openclash.$uci_name_tmp."
+	${uci_set}enabled="1"
+	${uci_set}username="Clash"
+	${uci_set}password="$(tr -cd 'a-zA-Z0-9' </dev/urandom 2>/dev/null| head -c8 || date +%N| md5sum |head -c8)"
 fi
 
 uci -q set openclash.config.enable=0

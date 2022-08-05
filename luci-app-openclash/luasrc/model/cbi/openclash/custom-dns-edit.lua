@@ -27,8 +27,9 @@ s.addremove   = false
 ---- group
 o = s:option(ListValue, "group", translate("DNS Server Group"))
 o.description = font_red..bold_on..translate("NameServer Group Must Be Set")..bold_off..font_off
-o:value("nameserver", translate("NameServer"))
-o:value("fallback", translate("FallBack"))
+o:value("nameserver", translate("NameServer "))
+o:value("fallback", translate("FallBack "))
+o:value("default", translate("Default-NameServer"))
 o.default     = "nameserver"
 o.rempty      = false
 
@@ -81,10 +82,12 @@ o.default     = o.disbled
 ---- Proxy group
 o = s:option(Value, "specific_group", translate("Specific Group"))
 o.description = translate("Group Use For Proxy The DNS")..translate("(Only Meta Core)")
+o:depends("group", "nameserver")
+o:depends("group", "fallback")
 local groupnames,filename
 filename = m.uci:get(openclash, "config", "config_path")
 if filename then
-	groupnames = SYS.exec(string.format('ruby -ryaml -E UTF-8 -e "YAML.load_file(\'%s\')[\'proxy-groups\'].each do |i| puts i[\'name\']+\'##\' end" 2>/dev/null',filename))
+	groupnames = SYS.exec(string.format('ruby -ryaml -rYAML -I "/usr/share/openclash" -E UTF-8 -e "YAML.load_file(\'%s\')[\'proxy-groups\'].each do |i| puts i[\'name\']+\'##\' end" 2>/dev/null',filename))
 	if groupnames then
 		for groupname in string.gmatch(groupnames, "([^'##\n']+)##") do
 			if groupname ~= nil and groupname ~= "" then
