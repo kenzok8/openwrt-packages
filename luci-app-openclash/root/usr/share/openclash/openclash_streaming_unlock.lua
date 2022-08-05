@@ -217,7 +217,7 @@ function unlock_auto_select()
 					--loop proxy test
 					for i = 1, #(value.all) do
 						while true do
-							if value.all[i] == "REJECT" or value.all[i] == "DIRECT" then
+							if value.all[i] == "REJECT" then
 								break
 							else
 								get_proxy(info, value.all[i], value.name)
@@ -251,7 +251,7 @@ function unlock_auto_select()
 												table.insert(tested_proxy, proxy)
 											end
 											while true do
-												if proxy == "REJECT" or proxy == "DIRECT" or get_group_now(info, proxy) == "REJECT" or get_group_now(info, proxy) == "DIRECT" then
+												if proxy == "REJECT" or get_group_now(info, proxy) == "REJECT" then
 													break
 												else
 													luci.sys.exec(string.format("curl -sL -m 3 --retry 2 -w %%{http_code} -o /dev/null -H 'Authorization: Bearer %s' -H 'Content-Type:application/json' -X PUT -d '{\"name\":\"%s\"}' http://%s:%s/proxies/%s", passwd, proxy, ip, port, urlencode(group_name)))
@@ -531,7 +531,7 @@ function get_auth_info()
 	ip = luci.sys.exec("uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n'")
 	
 	if not ip or ip == "" then
-		ip = luci.sys.exec("ip address show $(uci -q -p /tmp/state get network.lan.ifname) | grep -w 'inet'  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n'")
+		ip = luci.sys.exec("ip address show $(uci -q -p /tmp/state get network.lan.ifname || uci -q -p /tmp/state get network.lan.device) | grep -w 'inet' 2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | tr -d '\n'")
 	end
 	
 	if not ip or ip == "" then

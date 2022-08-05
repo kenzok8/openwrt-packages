@@ -135,7 +135,6 @@ start_service() {
 	is_enabled "config" "strict_mode" && append_param "-s"
 
 	procd_set_param env LOG_FILE="/tmp/$NAME.log"
-	procd_append_param env JSON_LOG="true"
 
 	append_param_env "config" "joox_cookie" "JOOX_COOKIE"
 	append_param_env "config" "migu_cookie" "MIGU_COOKIE"
