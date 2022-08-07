@@ -172,7 +172,7 @@ check_kernel() {
 
     latest_version="$(cat ${github_api_kernel_library} | grep "name" | grep -oE "${main_line_version}.[0-9]+" | sed -e "s/${main_line_version}.//g" | sort -n | sed -n '$p')"
     #latest_version="124"
-    [[ -n "${latest_version}" ]] || tolog "02.03 Failed to get the version on the server." "1"
+    [[ -n "${latest_version}" ]] || tolog "02.03 No kernel available, please use another kernel branch." "1"
     tolog "02.03 current version: ${current_kernel_v}, Latest version: ${main_line_version}.${latest_version}"
     sleep 2
 

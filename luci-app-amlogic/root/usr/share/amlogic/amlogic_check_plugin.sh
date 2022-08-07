@@ -101,7 +101,7 @@ curl -s "https://api.github.com/repos/ophub/luci-app-amlogic/releases" >${github
 sleep 1
 
 server_plugin_version="$(cat ${github_api_plugin} | grep "tag_name" | awk -F '"' '{print $4}' | tr " " "\n" | sort -rV | head -n 1)"
-[[ -n "${server_plugin_version}" ]] || tolog "02.01 Failed to get the version on the server." "1"
+[[ -n "${server_plugin_version}" ]] || tolog "02.01 Query failed, please try again." "1"
 tolog "02.01 current version: ${current_plugin_v}, Latest version: ${server_plugin_version}"
 sleep 2
 
