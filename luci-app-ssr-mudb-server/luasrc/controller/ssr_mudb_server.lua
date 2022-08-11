@@ -39,7 +39,7 @@ end
 
 function status()
     local e = {}
-    e.status = luci.sys.call("ps -w | grep -v grep | grep '/usr/share/ssr_mudb_server/server.py' >/dev/null") == 0
+    e.status = luci.sys.call("busybox ps -w | grep -v grep | grep '/usr/share/ssr_mudb_server/server.py' >/dev/null") == 0
     http_write_json(e)
 end
 

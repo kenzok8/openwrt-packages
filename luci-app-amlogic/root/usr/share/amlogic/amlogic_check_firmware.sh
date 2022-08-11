@@ -173,7 +173,7 @@ check_updated() {
     if [[ -n "${api_op_down_line}" && -n "$(echo ${api_op_down_line} | sed -n "/^[0-9]\+$/p")" ]]; then
         tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_firmware(this, '"'download_${api_op_down_line}_${latest_updated_at}'"')"/> Latest updated: '${latest_updated_at_format}'' "1"
     else
-        tolog "02.02 No firmware available." "1"
+        tolog "02.02 No firmware available, please use another kernel branch." "1"
     fi
 
     exit 0
