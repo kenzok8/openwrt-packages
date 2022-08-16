@@ -41,6 +41,13 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "BeikeYun")" != "" ]]; then
         MYDTB_FDTFILE="rk3328-beikeyun-1296mhz.dtb"
     fi
     SOC="beikeyun"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R68S")" != "" ]]; then
+    if [ -n "$CURRENT_FDTFILE" ];then
+        MYDTB_FDTFILE="$CURRENT_FDTFILE"
+    else
+        MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
+    fi
+    SOC="r68s"
 else
     echo "Unknown device: [ ${MYDEVICE_NAME} ], Not supported."
     exit 1
@@ -189,6 +196,27 @@ else
     echo "losetup $IMG_FILE failed!"
     exit 1
 fi
+
+# fix loopdev issue in kernel 5.19
+function fix_loopdev() {
+    local parentdev=${1##*/}
+    if [ ! -d /sys/block/${parentdev} ];then
+        return
+    fi
+    subdevs=$(lsblk -l -o NAME | grep -E "^${parentdev}.+\$")
+    for subdev in $subdevs; do
+        if [ ! -d /sys/block/${parentdev}/${subdev} ];then
+            return
+        elif [ -b /dev/${sub_dev} ];then
+            continue
+        fi
+        source /sys/block/${parentdev}/${subdev}/uevent
+        mknod /dev/${subdev} b ${MAJOR} ${MINOR}
+        unset MAJOR MINOR DEVNAME DEVTYPE DISKSEQ PARTN PARTNAME
+    done
+}
+fix_loopdev ${LOOP_DEV}
+
 WAIT=3
 echo -n "The loopdev is $LOOP_DEV, wait ${WAIT} seconds "
 while [ $WAIT -ge 1 ]; do
@@ -565,6 +593,11 @@ extraargs=usbcore.autosuspend=-1
 extraboardargs=
 fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}
 EOF
+# 对没有 HDMI 的机型关闭 display tty 让 initrd script 输出到 uart
+# 参考 https://github.com/raspberrypi/linux/issues/2863
+if [ "$SOC" == "r68s" ];then
+    echo console=serial >> armbianEnv.txt
+fi
 sync
 echo "done"
 echo
