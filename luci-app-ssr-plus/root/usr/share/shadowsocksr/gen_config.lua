@@ -173,7 +173,8 @@ local Xray = {
 			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host)) and {
 				-- xtls
 				allowInsecure = (server.insecure == "1") and true or nil,
-				serverName = server.tls_host
+				serverName = server.tls_host,
+				minVersion = "1.3"
 			} or nil,
 			tcpSettings = (server.transport == "tcp" and server.tcp_guise == "http") and {
 				-- tcp

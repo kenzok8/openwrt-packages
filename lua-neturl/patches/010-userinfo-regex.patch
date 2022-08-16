@@ -1,0 +1,11 @@
+--- a/lib/net/url.lua
++++ b/lib/net/url.lua
+@@ -340,7 +340,7 @@ function M:setAuthority(authority)
+ 				self.password = v
+ 				return ''
+ 		end)
+-		if string.find(userinfo, "^[%w%+%.]+$") then
++		if string.find(userinfo, "^[%p%w%+%.]+$") then
+ 			self.user = userinfo
+ 		else
+ 			-- incorrect userinfo

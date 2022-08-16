@@ -69,11 +69,11 @@ local function status_container()
     local webdav_url = "未启用"
     local wol_running = "未启用"
    
-    local cmd = "/usr/sbin/ddnsto -x ".. tostring(get_data().index) .." -w | awk '{print $2}'"
+    local cmd = "/usr/sbin/ddnstod -x ".. tostring(get_data().index) .." -w | awk '{print $2}'"
     local device_id = get_command(cmd) 
-    local version = get_command("/usr/sbin/ddnsto -v")   
+    local version = get_command("/usr/sbin/ddnstod -v")   
 
-    if sys.call("pidof ddnsto >/dev/null") == 0 then
+    if sys.call("pidof ddnstod >/dev/null") == 0 then
         running = "<a style=\"color:green;font-weight:bolder\">已启动</a>"
     end
 
@@ -446,7 +446,7 @@ end
 function ddnsto_status()
         local sys  = require "luci.sys"
         local status = {
-                running = (sys.call("pidof ddnsto >/dev/null") == 0)
+                running = (sys.call("pidof ddnstod >/dev/null") == 0)
         }
 
         luci.http.prepare_content("application/json")

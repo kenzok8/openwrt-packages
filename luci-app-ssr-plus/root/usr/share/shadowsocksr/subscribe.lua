@@ -16,6 +16,7 @@ local tinsert = table.insert
 local ssub, slen, schar, sbyte, sformat, sgsub = string.sub, string.len, string.char, string.byte, string.format, string.gsub
 local jsonParse, jsonStringify = luci.jsonc.parse, luci.jsonc.stringify
 local b64decode = nixio.bin.b64decode
+local URL = require "url"
 local cache = {}
 local nodeResult = setmetatable({}, {__index = cache}) -- update result
 local name = 'shadowsocksr'
@@ -349,75 +350,51 @@ local function processData(szType, content)
 		end
 		result.password = password
 	elseif szType == "vless" then
-		local idx_sp = 0
-		local alias = ""
-		if content:find("#") then
-			idx_sp = content:find("#")
-			alias = content:sub(idx_sp + 1, -1)
-		end
-		local info = content:sub(1, idx_sp - 1)
-		local hostInfo = split(info, "@")
-		local host = split(hostInfo[2], ":")
-		local uuid = hostInfo[1]
-		if host[2]:find("?") then
-			local query = split(host[2], "?")
-			local params = {}
-			for _, v in pairs(split(UrlDecode(query[2]), '&')) do
-				local t = split(v, '=')
-				params[t[1]] = t[2]
+		local url = URL.parse("http://" .. content)
+		local params = url.query
+
+		result.alias = url.fragment and UrlDecode(url.fragment) or nil
+		result.type = "v2ray"
+		result.v2ray_protocol = "vless"
+		result.server = url.host
+		result.port = url.port
+		result.vmess_id = url.user
+		result.vless_encryption = params.encryption or "none"
+		result.transport = params.type or "tcp"
+		result.packet_encoding = packet_encoding
+		result.tls = (params.security == "tls") and "1" or "0"
+		result.tls_host = params.sni
+		result.xtls = params.security == "xtls" and "1" or nil
+		result.vless_flow = params.flow
+		if result.transport == "ws" then
+			result.ws_host = (result.tls ~= "1") and (params.host and UrlDecode(params.host)) or nil
+			result.ws_path = params.path and UrlDecode(params.path) or "/"
+		elseif result.transport == "http" then
+			result.transport = "h2"
+			result.h2_host = params.host and UrlDecode(params.host) or nil
+			result.h2_path = params.path and UrlDecode(params.path) or nil
+		elseif result.transport == "kcp" then
+			result.kcp_guise = params.headerType or "none"
+			result.seed = params.seed
+			result.mtu = 1350
+			result.tti = 50
+			result.uplink_capacity = 5
+			result.downlink_capacity = 20
+			result.read_buffer_size = 2
+			result.write_buffer_size = 2
+		elseif result.transport == "quic" then
+			result.quic_guise = params.headerType or "none"
+			result.quic_security = params.quicSecurity or "none"
+			result.quic_key = params.key
+		elseif result.transport == "grpc" then
+			result.serviceName = params.serviceName
+			result.grpc_mode = params.mode or "gun"
+		elseif result.transport == "tcp" then
+			result.tcp_guise = params.headerType or "none"
+			if result.tcp_guise == "http" then
+				result.tcp_host = params.host and UrlDecode(params.host) or nil
+				result.tcp_path = params.path and UrlDecode(params.path) or nil
 			end
-			result.alias = UrlDecode(alias)
-			result.type = 'v2ray'
-			result.v2ray_protocol = 'vless'
-			result.server = host[1]
-			result.server_port = query[1]
-			result.vmess_id = uuid
-			result.vless_encryption = params.encryption or "none"
-			result.transport = params.type and (params.type == 'http' and 'h2' or params.type) or "tcp"
-			result.packet_encoding = packet_encoding
-			if not params.type or params.type == "tcp" then
-				if params.security == "xtls" then
-					result.xtls = "1"
-					result.tls_host = params.sni
-					result.vless_flow = params.flow
-				else
-					result.xtls = "0"
-				end
-			end
-			if params.type == 'ws' then
-				result.ws_host = params.host
-				result.ws_path = params.path or "/"
-			end
-			if params.type == 'http' then
-				result.h2_host = params.host
-				result.h2_path = params.path or "/"
-			end
-			if params.type == 'kcp' then
-				result.kcp_guise = params.headerType or "none"
-				result.mtu = 1350
-				result.tti = 50
-				result.uplink_capacity = 5
-				result.downlink_capacity = 20
-				result.read_buffer_size = 2
-				result.write_buffer_size = 2
-				result.seed = params.seed
-			end
-			if params.type == 'quic' then
-				result.quic_guise = params.headerType or "none"
-				result.quic_key = params.key
-				result.quic_security = params.quicSecurity or "none"
-			end
-			if params.type == 'grpc' then
-				result.serviceName = params.serviceName
-			end
-			if params.security == "tls" then
-				result.tls = "1"
-				result.tls_host = params.sni
-			else
-				result.tls = "0"
-			end
-		else
-			result.server_port = host[2]
 		end
 	end
 	if not result.alias then
