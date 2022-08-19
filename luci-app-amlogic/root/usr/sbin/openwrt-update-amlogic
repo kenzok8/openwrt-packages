@@ -111,7 +111,7 @@ else
 fi
 
 # Check the necessary dependencies
-DEPENDS="lsblk uuidgen grep awk btrfs mkfs.fat mkfs.btrfs perl md5sum fatlabel"
+DEPENDS="lsblk uuidgen grep awk btrfs mkfs.fat mkfs.btrfs md5sum fatlabel"
 echo "Check the necessary dependencies..."
 for dep in ${DEPENDS}; do
     WITCH=$(which ${dep})

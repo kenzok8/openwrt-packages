@@ -20,7 +20,7 @@ BACKUP_RESTORE_CONFIG="${3}"
 WORK_DIR="${4}"
 
 # Check the necessary dependencies
-DEPENDS="lsblk uuidgen grep awk btrfs mkfs.fat mkfs.btrfs perl md5sum fatlabel jq"
+DEPENDS="lsblk uuidgen grep awk btrfs mkfs.fat mkfs.btrfs md5sum fatlabel jq"
 echo "Check the necessary dependencies..."
 for dep in ${DEPENDS}; do
     WITCH=$(which ${dep})
