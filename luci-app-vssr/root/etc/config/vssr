@@ -11,7 +11,7 @@ config global
 	option switch_time '667'
 	option switch_try_count '3'
 	option adblock '0'
-	option dports '1'
+	option dports '80,443,22,53,587,465,995,993,143,9418'
 
 config socks5_proxy
 	option enable_server '0'

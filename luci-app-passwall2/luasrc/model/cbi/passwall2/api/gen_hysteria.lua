@@ -9,8 +9,6 @@ if not node_id then
     return
 end
 local node = uci:get_all("passwall2", node_id)
-local local_tcp_redir_port = var["-local_tcp_redir_port"]
-local local_udp_redir_port = var["-local_udp_redir_port"]
 local local_socks_address = var["-local_socks_address"] or "0.0.0.0"
 local local_socks_port = var["-local_socks_port"]
 local local_socks_username = var["-local_socks_username"]
@@ -56,14 +54,6 @@ local config = {
         disable_udp = false,
         user = (local_http_username and local_http_password) and local_http_username,
         password = (local_http_username and local_http_password) and local_http_password,
-    } or nil,
-    tproxy_tcp = (local_tcp_redir_port) and {
-        listen = "0.0.0.0:" .. local_tcp_redir_port,
-        timeout = 300
-    } or nil,
-    tproxy_udp = (local_udp_redir_port) and {
-        listen = "0.0.0.0:" .. local_udp_redir_port,
-        timeout = 60
     } or nil
 }
 

@@ -174,6 +174,7 @@ yml_dns_get()
    config_get "interface" "$section" "interface" ""
    config_get "specific_group" "$section" "specific_group" ""
    config_get_bool "node_resolve" "$section" "node_resolve" "0"
+   config_get_bool "http3" "$section" "http3" "0"
 
    if [ "$enabled" = "0" ]; then
       return
@@ -212,17 +213,8 @@ yml_dns_get()
       return
    fi
 
-   if [ "$node_resolve" = "1" ] && [ "$enable_meta_core" = "1" ]; then
-      if [ -z "$(grep "^ \{0,\}proxy-server-nameserver:$" /tmp/yaml_config.proxynamedns.yaml 2>/dev/null)" ]; then
-         echo "  proxy-server-nameserver:" >/tmp/yaml_config.proxynamedns.yaml
-      fi
-      echo "    - \"$dns_type$dns_address\"" >>/tmp/yaml_config.proxynamedns.yaml
-   elif [ "$node_resolve" = "1" ]; then
-      LOG_OUT "Warning: Only Meta Core Support proxy-server-nameserver, Skip Setting【$dns_type$dns_address】"
-   fi
-
    if [ "$specific_group" != "Disable" ] && [ -n "$specific_group" ] && [ "$enable_meta_core" = "1" ]; then
-      group_check=$(ruby -ryaml -E UTF-8 -e "
+      group_check=$(ruby -ryaml -rYAML -I "/usr/share/openclash" -E UTF-8 -e "
       begin
          Thread.new{
             Value = YAML.load_file('$2');
@@ -259,7 +251,27 @@ yml_dns_get()
       interface=""
    fi
 
-   dns_address="$dns_address$interface$specific_group"
+   if [ "$http3" = "1" ] && [ "$enable_meta_core" = "1" ] && [ "$interface" != "" ]; then
+      http3="&h3=true"
+   elif [ "$http3" = "1" ] && [ "$enable_meta_core" = "1" ] && [ "$interface" = "" ]; then
+      http3="#h3=true"
+   elif [ "$http3" = "1" ] && [ "$enable_meta_core" != "1" ]; then
+      LOG_OUT "Warning: Only Meta Core Support Force HTTP/3 to connect, Skip Setting【$dns_type$dns_address】"
+      http3=""
+   else
+      http3=""
+   fi
+
+   if [ "$node_resolve" = "1" ] && [ "$enable_meta_core" = "1" ]; then
+      if [ -z "$(grep "^ \{0,\}proxy-server-nameserver:$" /tmp/yaml_config.proxynamedns.yaml 2>/dev/null)" ]; then
+         echo "  proxy-server-nameserver:" >/tmp/yaml_config.proxynamedns.yaml
+      fi
+      echo "    - \"$dns_type$dns_address$specific_group$http3\"" >>/tmp/yaml_config.proxynamedns.yaml
+   elif [ "$node_resolve" = "1" ]; then
+      LOG_OUT "Warning: Only Meta Core Support proxy-server-nameserver, Skip Setting【$dns_type$dns_address$specific_group$http3】"
+   fi
+
+   dns_address="$dns_address$interface$specific_group$http3"
 
    if [ -n "$group" ]; then
       if [ "$group" = "nameserver" ]; then
@@ -267,11 +279,16 @@ yml_dns_get()
             echo "  nameserver:" >/tmp/yaml_config.namedns.yaml
          fi
          echo "    - \"$dns_type$dns_address\"" >>/tmp/yaml_config.namedns.yaml
-      else
+      elif [ "$group" = "fallback" ]; then
          if [ -z "$(grep "^ \{0,\}fallback:$" /tmp/yaml_config.falldns.yaml 2>/dev/null)" ]; then
             echo "  fallback:" >/tmp/yaml_config.falldns.yaml
          fi
          echo "    - \"$dns_type$dns_address\"" >>/tmp/yaml_config.falldns.yaml
+      elif [ "$group" = "default" ]; then
+         if [ -z "$(grep "^ \{0,\}default-nameserver:$" /tmp/yaml_config.defaultdns.yaml 2>/dev/null)" ]; then
+            echo "  default-nameserver:" >/tmp/yaml_config.defaultdns.yaml
+         fi
+         echo "    - \"$dns_type$dns_address\"" >>/tmp/yaml_config.defaultdns.yaml
       fi
    else
       return
@@ -282,7 +299,7 @@ config_load "openclash"
 config_foreach yml_auth_get "authentication"
 yml_dns_custom "$enable_custom_dns" "$5" "$append_wan_dns" "${16}"
 
-ruby -ryaml -E UTF-8 -e "
+ruby -ryaml -rYAML -I "/usr/share/openclash" -E UTF-8 -e "
 begin
    Value = YAML.load_file('$5');
 rescue Exception => e
@@ -340,16 +357,19 @@ Thread.new{
    else
       Value.delete('interface-name');
    end;
-   if ${21} == 1 then
+   if ${20} == 1 then
       Value['geodata-mode']=$enable_geoip_dat;
       Value['geodata-loader']='${23}';
       Value['tcp-concurrent']=$enable_tcp_concurrent;
    else
       if Value.key?('geodata-mode') then
          Value.delete('geodata-mode');
-      end
+      end;
       if Value.key?('geodata-loader') then
          Value.delete('geodata-loader');
+      end;
+      if Value.key?('tcp-concurrent') then
+         Value.delete('tcp-concurrent');
       end
    end;
    if not Value.key?('dns') then
@@ -468,14 +488,20 @@ Thread.new{
    if '$enable_custom_dns' == '1' or '$append_wan_dns' == '1' then
       if File::exist?('/tmp/yaml_config.namedns.yaml') then
          Value_1 = YAML.load_file('/tmp/yaml_config.namedns.yaml');
-         Value_1['nameserver'] = Value_1['nameserver'].uniq;
-         Value['dns']['nameserver'] = Value_1['nameserver'];
-         if File::exist?('/tmp/yaml_config.falldns.yaml') then
-            Value_1 = YAML.load_file('/tmp/yaml_config.falldns.yaml');
-            Value_1['fallback'] = Value_1['fallback'].uniq;
-            Value['dns']['fallback'] = Value_1['fallback'];
+         if '$enable_custom_dns' == '1' then
+            Value['dns']['nameserver'] = Value_1['nameserver'].uniq;
+         elsif '$append_wan_dns' == '1' then
+            if Value['dns'].has_key?('nameserver') then
+               Value['dns']['nameserver'] = Value['dns']['nameserver'] | Value_1['nameserver'];
+            else
+               Value['dns']['nameserver'] = Value_1['nameserver'].uniq;
+            end;
          end;
-      else
+         if File::exist?('/tmp/yaml_config.falldns.yaml') and '$enable_custom_dns' == '1' then
+            Value_2 = YAML.load_file('/tmp/yaml_config.falldns.yaml');
+            Value['dns']['fallback'] = Value_2['fallback'].uniq;
+         end;
+      elsif '$enable_custom_dns' == '1' then
          puts '${LOGTIME} Error: Nameserver Option Must Be Setted, Stop Customing DNS Servers';
       end;
    end;
@@ -498,28 +524,40 @@ end;
 #default-nameserver
 begin
 Thread.new{
-   if ${20} == 1 then
-      reg = /(^https:\/\/|^tls:\/\/|^quic:\/\/)?((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?/;
-      reg6 = /(^https:\/\/|^tls:\/\/|^quic:\/\/)?(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))|\[(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))\](?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?/i;
-   else
-      reg = /^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$/;
-      reg6 = /^(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))|\[(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))\](?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$/i;
-   end;
-   if Value['dns'].has_key?('fallback') then
-      Value_1=Value['dns']['nameserver'] | Value['dns']['fallback'];
-   else
-      Value_1=Value['dns']['nameserver'];
-   end;
-   Value_1.each{|x|
-      if x =~ reg or x =~ reg6 then
+   if '$enable_custom_dns' == '1' then
+      if File::exist?('/tmp/yaml_config.defaultdns.yaml') then
+         Value_1 = YAML.load_file('/tmp/yaml_config.defaultdns.yaml');
          if Value['dns'].has_key?('default-nameserver') then
-            Value['dns']['default-nameserver']=Value['dns']['default-nameserver'].to_a.insert(-1,x).uniq;
+            Value['dns']['default-nameserver'] = Value['dns']['default-nameserver'] | Value_1['default-nameserver'];
          else
-            Value_2={'default-nameserver'=>[x]};
-            Value['dns'].merge!(Value_2);
+            Value['dns']['default-nameserver'] = Value_1['default-nameserver'].uniq;
          end;
       end;
+   end;
+   if ${28} == 1 then
+      if ${20} == 1 then
+         reg = /(^https:\/\/|^tls:\/\/|^quic:\/\/)?((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?/;
+         reg6 = /(^https:\/\/|^tls:\/\/|^quic:\/\/)?(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))|\[(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))\](?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?/i;
+      else
+         reg = /^((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.){3}(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])(?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$/;
+         reg6 = /^(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))|\[(?:(?:(?:[0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}:[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){5}:([0-9A-Fa-f]{1,4}:)?[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){4}:([0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){3}:([0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){2}:([0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){6}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(([0-9A-Fa-f]{1,4}:){0,5}:((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|(::([0-9A-Fa-f]{1,4}:){0,5}((\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b)\.){3}(\b((25[0-5])|(1\d{2})|(2[0-4]\d)|(\d{1,2}))\b))|([0-9A-Fa-f]{1,4}::([0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})|(::([0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})|(([0-9A-Fa-f]{1,4}:){1,7}:))\](?::(?:[0-9]|[1-9][0-9]{1,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?$/i;
+      end;
+      if Value['dns'].has_key?('fallback') then
+         Value_1=Value['dns']['nameserver'] | Value['dns']['fallback'];
+      else
+         Value_1=Value['dns']['nameserver'];
+      end;
+      Value_1.each{|x|
+         if x =~ reg or x =~ reg6 then
+            if Value['dns'].has_key?('default-nameserver') then
+               Value['dns']['default-nameserver']=Value['dns']['default-nameserver'].to_a.insert(-1,x).uniq;
+            else
+               Value_2={'default-nameserver'=>[x]};
+               Value['dns'].merge!(Value_2);
+            end;
+         end;
       };
+   end;
 }.join;
 rescue Exception => e
    puts '${LOGTIME} Error: Set default-nameserver Failed,【' + e.message + '】';
@@ -579,24 +617,13 @@ begin
 Thread.new{
    if '$1' == 'fake-ip' then
       if File::exist?('/etc/openclash/custom/openclash_custom_fake_filter.list') then
-         begin
-            Value_4 = YAML.load_file('/etc/openclash/custom/openclash_custom_fake_filter.list');
-            if Value_4 != false and not Value_4['fake-ip-filter'].to_a.empty? then
-               if Value['dns'].has_key?('fake-ip-filter') and not Value['dns']['fake-ip-filter'].to_a.empty? then
-                  Value['dns']['fake-ip-filter'] = Value['dns']['fake-ip-filter'] | Value_4;
-               else
-                  Value['dns']['fake-ip-filter'] = Value_4['fake-ip-filter'];
-               end;
-            end;
-         rescue
-            Value_4 = IO.readlines('/etc/openclash/custom/openclash_custom_fake_filter.list');
-            if not Value_4.empty? then
-               Value_4 = Value_4.map!{|x| x.gsub(/#.*$/,'').strip} - ['', nil];
-               if Value['dns'].has_key?('fake-ip-filter') and not Value['dns']['fake-ip-filter'].to_a.empty? then
-                  Value['dns']['fake-ip-filter'] = Value['dns']['fake-ip-filter'] | Value_4;
-               else
-                  Value['dns']['fake-ip-filter'] = Value_4;
-               end;
+         Value_4 = IO.readlines('/etc/openclash/custom/openclash_custom_fake_filter.list');
+         if not Value_4.empty? then
+            Value_4 = Value_4.map!{|x| x.gsub(/#.*$/,'').strip} - ['', nil];
+            if Value['dns'].has_key?('fake-ip-filter') and not Value['dns']['fake-ip-filter'].to_a.empty? then
+               Value['dns']['fake-ip-filter'] = Value['dns']['fake-ip-filter'] | Value_4;
+            else
+               Value['dns']['fake-ip-filter'] = Value_4;
             end;
          end;
       end;
@@ -636,6 +663,7 @@ Thread.new{
                Value['hosts']=Value_3;
             end;
             Value['hosts'].uniq;
+            puts '${LOGTIME} Warning: You May Need to Turn off The Rebinding Protection Option of Dnsmasq When Hosts Has Set a Reserved Address';
          end;
       rescue
          Value_3 = IO.readlines('/etc/openclash/custom/openclash_custom_hosts.list');
@@ -648,6 +676,7 @@ Thread.new{
                Value_3.each{|x| Value['hosts'].merge!(x)};
             end;
             Value['hosts'].uniq;
+            puts '${LOGTIME} Warning: You May Need to Turn off The Rebinding Protection Option of Dnsmasq When Hosts Has Set a Reserved Address';
          end;
       end;
    end;

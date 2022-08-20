@@ -244,11 +244,11 @@ start_rules() {
         direct) gfwmode="-d" ;;
     esac
 
-    local dports=$(uci_get_by_type global dports 1)
-    if [ $dports = "1" ]; then
+    local dports=$(uci_get_by_type global dports)
+    if [[ -z $dports ]]; then
         proxyport=" "
     else
-        proxyport="-m multiport --dports 22,53,587,465,995,993,143,80,443,9418"
+        proxyport="-m multiport --dports $dports"
     fi
 
     $VSSR_RULES_BIN \

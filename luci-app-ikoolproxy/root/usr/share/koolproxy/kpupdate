@@ -111,16 +111,16 @@ update_rss_rules() {
 	
 update_rules() {
 	echo $(date "+%F %T"): ------------------- 内置规则更新 ------------------- >>$LOGFILE
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/kp.dat' -q -O $KP_DIR/data/rules/kp.dat
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/daily.txt' -q -O $KP_DIR/data/rules/daily.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/koolproxy.txt' -q -O $KP_DIR/data/rules/koolproxy.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/yhosts.txt' -q -O $KP_DIR/data/rules/yhosts.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/steven.txt' -q -O $KP_DIR/data/rules/steven.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/adg.txt' -q -O $KP_DIR/data/rules/adg.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/antiad.txt' -q -O $KP_DIR/data/rules/antiad.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/adgk.txt' -q -O $KP_DIR/data/rules/adgk.txt
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/koolproxy_ipset.conf' -q -O $KP_DIR/koolproxy_ipset.conf
-	wget 'https://yaof.coding.net/p/ikoolproxy/d/rules/git/raw/master/rules/dnsmasq.adblock' -q -O $KP_DIR/dnsmasq.adblock
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/kp.dat' -q -O $KP_DIR/data/rules/kp.dat
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/daily.txt' -q -O $KP_DIR/data/rules/daily.txt
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/koolproxy.txt' -q -O $KP_DIR/data/rules/koolproxy.txt
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/yhosts.txt' -q -O $KP_DIR/data/rules/yhosts.txt
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/steven.txt' -q -O $KP_DIR/data/rules/steven.txt
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/adg.txt' -q -O $KP_DIR/data/rules/adg.txt
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/antiad.txt' -q -O $KP_DIR/data/rules/antiad.txt
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/adgk.txt' -q -O $KP_DIR/data/rules/adgk.txt
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/koolproxy_ipset.conf' -q -O $KP_DIR/koolproxy_ipset.conf
+	wget 'https://cdn.jsdelivr.net/gh/yaof2/koolproxy@main/rules/dnsmasq.adblock' -q -O $KP_DIR/dnsmasq.adblock
 	adg_rules_local=`cat /usr/share/koolproxy/data/rules/adg.txt  | sed -n '4p'|awk '{print $4}'`
 	steven_rules_local=`cat /usr/share/koolproxy/data/rules/steven.txt  | sed -n '2p'|awk '{print $3,$4,$5,$6}'`
 	yhosts_rules_local=`cat /usr/share/koolproxy/data/rules/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`

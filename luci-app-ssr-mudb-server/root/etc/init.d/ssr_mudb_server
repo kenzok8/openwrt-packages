@@ -77,7 +77,7 @@ start_ssr_python_server() {
 }
 
 stop_ssr_python_server() {
-	ps -w | grep "$ssr_path/server.py" | grep -v "grep" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
+	busybox ps -w | grep "$ssr_path/server.py" | grep -v "grep" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
 	set_ssr_python_crontab 0
 	del_rule
 	rm -rf /var/log/$CONFIG.log /var/etc/$CONFIG.include

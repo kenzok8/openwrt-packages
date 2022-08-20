@@ -40,6 +40,22 @@ read_buffer_size = e:option(Value, "read_buffer_size", translate("Read Buffer Si
 read_buffer_size.default = "10485760"
 read_buffer_size.datatype = "uinteger"
 
+prefer_http_download = e:option(Flag, "prefer_http_download", translate("Prefer HTTP Download"))
+prefer_http_download.description = translate("Prefer downloading files using HTTP instead of HTTPS protocol")
+prefer_http_download.rmempty = false
+
+no_redirect = e:option(Flag, "no_redirect", translate("Disable Redirect"))
+no_redirect.description = translate("Disable 302 redirect when using app refresh token")
+no_redirect.rmempty = false
+
+upload_buffer_size = e:option(Value, "upload_buffer_size", translate("Upload Buffer Size"))
+upload_buffer_size.default = "16777216"
+upload_buffer_size.datatype = "uinteger"
+
+skip_upload_same_size = e:option(Flag, "skip_upload_same_size", translate("Skip uploading same size files"))
+skip_upload_same_size.description = translate("Reduce the upload traffic by skipping uploading files with the same size")
+skip_upload_same_size.rmempty = false
+
 cache_size = e:option(Value, "cache_size", translate("Cache Size"))
 cache_size.default = "1000"
 cache_size.datatype = "uinteger"

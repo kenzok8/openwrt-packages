@@ -1,0 +1,31 @@
+<%+xterm/embed%>
+<link rel="stylesheet" href="<%=resource%>/tasks/tasks.css<%# ?v=PKG_VERSION %>">
+<script src="<%=resource%>/tasks/tasks.js<%# ?v=PKG_VERSION %>"></script>
+<%
+    local i18n = {}
+    local function tr(str)
+        i18n[str]=translate(str)
+    end
+    tr("Stop running task?")
+    tr("Stopped at:")
+    tr("Finished at:")
+    tr("Failed at:")
+-%>
+<script>
+    window.taskd.csrfToken="<%=token%>";
+    window.taskd.i18n=<% luci.http.write_json(i18n) %>;
+    window.taskd.dialog_template=`
+    <div id="tasks_dialog">
+        <div class="dialog-title-bar">
+            <span class="dialog-title" id="tasks_id"></span>
+            <span class="dialog-icons">
+                <span class="dialog-icon dialog-icon-close" title="<%:Stop and Remove%>"></span>
+                <span class="dialog-icon dialog-icon-min" title="<%:Hide%>"></span>
+            </span>
+        </div>
+        <div class="dialog-content">
+            <div id="tasks_xterm_log"></div>
+        </div>
+    </div>
+    `;
+</script>

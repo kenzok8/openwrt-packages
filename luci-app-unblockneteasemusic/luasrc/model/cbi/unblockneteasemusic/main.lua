@@ -3,11 +3,9 @@ local m, s, o
 m = Map("unblockneteasemusic", translate("解除网易云音乐播放限制"))
 m.description = translate("原理：采用 [Bilibili/JOOX/酷狗/酷我/咪咕/pyncmd/QQ/Youtube] 等音源，替换网易云音乐 无版权/收费 歌曲链接<br/>具体使用方法参见：<a href=\"https://github.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic\" target=\"_blank\">GitHub @UnblockNeteaseMusic/luci-app-unblockneteasemusic</a>")
 
-m:section(SimpleSection).template = "unblockneteasemusic/unblockneteasemusic_status"
+m:section(SimpleSection).template = "unblockneteasemusic/status"
 
-s = m:section(TypedSection, "unblockneteasemusic")
-s.anonymous = true
-s.addremove = false
+s = m:section(NamedSection, "config", "unblockneteasemusic")
 
 o = s:option(Flag, "enable", translate("启用本插件"))
 o.description = translate("启用本插件以解除网易云音乐播放限制")
@@ -59,6 +57,11 @@ o.rmempty = false
 o = s:option(Value, "joox_cookie", translate("JOOX Cookie"))
 o.description = translate("在 joox.com 获取，需要 wmid 和 session_key 值")
 o.placeholder = "wmid=; session_key="
+o.datatype = "string"
+o:depends("use_custom_cookie", 1)
+
+o = s:option(Value, "migu_cookie", translate("Migu Cookie"))
+o.description = translate("通过抓包手机客户端请求获取，需要 aversionid 值")
 o.datatype = "string"
 o:depends("use_custom_cookie", 1)
 

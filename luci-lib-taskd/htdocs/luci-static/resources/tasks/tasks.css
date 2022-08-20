@@ -1,0 +1,108 @@
+[hidden] {
+    display: none !important;
+}
+
+#tasks_detail_container {
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #0008;
+}
+#tasks_dialog {
+    position: absolute;
+    width: 770px;
+    max-width: 100%;
+    max-height: 100%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #000;
+
+    border-radius: 10px;
+    box-shadow: 2px 2px 6px #000a;
+    padding: 20px;
+
+    color: white;
+}
+.dialog-title-bar {
+    margin-top: -10px;
+    margin-right: -10px;
+    margin-bottom: 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+.dialog-title-bar .dialog-title {
+    word-break: break-all;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.dialog-content {
+    max-height: 500px;
+    overflow-y: scroll;
+    margin-right: -10px;
+}
+.dialog-icons {
+    align-self: center;
+    display: flex;
+    justify-content: flex-end;
+}
+.dialog-icon {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    color: black;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: bold;
+    user-select: none;
+    margin-left: 10px;
+    line-height: 1;
+    font-family: sans-serif;
+    justify-content: center;
+    cursor: pointer;
+}
+.dialog-icon.dialog-icon-min {
+    background-color: darkorange;
+}
+.dialog-icon.dialog-icon-close {
+    background-color: #ff5f56;
+}
+.dialog-icons:hover .dialog-icon.dialog-icon-min:before {
+    content: "_";
+}
+.dialog-icons:hover .dialog-icon.dialog-icon-close:before {
+    content: "X";
+}
+
+.tasks_stopped .dialog-icon.dialog-icon-close {
+    background-color: #27c840;
+}
+.tasks_stopped #tasks_dialog {
+    padding: 19px;
+    border: 1px #27c840 solid;
+
+    animation: border-blink 1s;
+    animation-iteration-count: infinite;
+}
+
+.tasks_failed #tasks_dialog {
+    border-color: #ff0000;
+}
+
+.tasks_failed .dialog-icon.dialog-icon-close {
+    background-color: #ff0000;
+}
+
+@keyframes border-blink { 50% { border-color:#fff ; }  }
