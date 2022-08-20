@@ -282,7 +282,7 @@ msgid "Rockchip 3328 --- [ BeikeYun, Chainedbox L1 Pro ]"
 msgstr "瑞芯微 3328 -- [ 贝壳云、我家云 ]"
 
 msgid "Used in KVM ----- [ Can be used in KVM virtual machine of Armbian system. ]"
-msgstr "KVM 中使用 --- [ 可以在 Armbia 系统的 KVM 虚拟机中使用。 ]"
+msgstr "KVM 中使用 --- [ 可以在 Armbian 系统的 KVM 虚拟机中使用。 ]"
 
 msgid "KVM dual system switching"
 msgstr "KVM 双系统切换"
