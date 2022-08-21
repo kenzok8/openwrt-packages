@@ -201,7 +201,11 @@ yml_dns_get()
    fi
 
    if [ -n "$port" ] && [ -n "$ip" ]; then
-      dns_address="$ip:$port"
+      if [ ${ip%%/*} != ${ip#*/} ]; then
+         dns_address="${ip%%/*}:$port/${ip#*/}"
+      else
+         dns_address="$ip:$port"
+      fi
    elif [ -z "$port" ] && [ -n "$ip" ]; then
       dns_address="$ip"
    else
@@ -635,6 +639,12 @@ Thread.new{
          else
             Value['dns'].merge!({'fake-ip-filter'=>['+.nflxvideo.net', '+.media.dssott.com']});
          end;
+      end;
+      if Value['dns'].has_key?('fake-ip-filter') and not Value['dns']['fake-ip-filter'].to_a.empty? then
+         Value['dns']['fake-ip-filter'].insert(-1,'+.dns.google');
+         Value['dns']['fake-ip-filter']=Value['dns']['fake-ip-filter'].uniq;
+      else
+         Value['dns'].merge!({'fake-ip-filter'=>['+.dns.google']});
       end;
    elsif ${19} == 1 then
       if Value['dns'].has_key?('fake-ip-filter') and not Value['dns']['fake-ip-filter'].to_a.empty? then
