@@ -111,7 +111,7 @@ else
 fi
 
 # Check the necessary dependencies
-DEPENDS="lsblk uuidgen grep awk btrfs mkfs.fat mkfs.btrfs perl md5sum fatlabel"
+DEPENDS="lsblk uuidgen grep awk btrfs mkfs.fat mkfs.btrfs md5sum fatlabel"
 echo "Check the necessary dependencies..."
 for dep in ${DEPENDS}; do
     WITCH=$(which ${dep})
@@ -203,6 +203,26 @@ else
     echo "losetup [ $IMG_FILE ] failed!"
     exit 1
 fi
+
+# fix loopdev issue in kernel 5.19
+function fix_loopdev() {
+    local parentdev=${1##*/}
+    if [ ! -d /sys/block/${parentdev} ];then
+        return
+    fi
+    subdevs=$(lsblk -l -o NAME | grep -E "^${parentdev}.+\$")
+    for subdev in $subdevs; do
+        if [ ! -d /sys/block/${parentdev}/${subdev} ];then
+            return
+        elif [ -b /dev/${sub_dev} ];then
+            continue
+        fi
+        source /sys/block/${parentdev}/${subdev}/uevent
+        mknod /dev/${subdev} b ${MAJOR} ${MINOR}
+        unset MAJOR MINOR DEVNAME DEVTYPE DISKSEQ PARTN PARTNAME
+    done
+}
+fix_loopdev ${LOOP_DEV}
 
 WAIT=3
 echo "The loopdev is [ $LOOP_DEV ], wait [ ${WAIT} ] seconds. "

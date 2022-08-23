@@ -357,7 +357,7 @@ local function processData(szType, content)
 		result.type = "v2ray"
 		result.v2ray_protocol = "vless"
 		result.server = url.host
-		result.port = url.port
+		result.server_port = url.port
 		result.vmess_id = url.user
 		result.vless_encryption = params.encryption or "none"
 		result.transport = params.type or "tcp"
