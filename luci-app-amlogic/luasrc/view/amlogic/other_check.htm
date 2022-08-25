@@ -27,7 +27,7 @@
 			function(x,status)
 			{
 				if ( x && x.status == 200 ) {
-					if(status.rule_update_status=="1")
+					if(status.rule_update_status!="0")
 					{
 						btn.value = '<%:Update Failed%>';
 					}
@@ -52,7 +52,7 @@
 
 		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_amlogic_kernel")%>', null, function(x, status) {
 				if ( x && x.status == 200 ) {
-					if(status.rule_kernel_status=="1")
+					if(status.rule_kernel_status!="0")
 					{
 						btn.value = '<%:Update Failed%>';
 					}
@@ -77,7 +77,7 @@
 
 		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_amlogic_plugin")%>', null, function(x, status) {
 				if ( x && x.status == 200 ) {
-					if(status.rule_plugin_status=="1")
+					if(status.rule_plugin_status!="0")
 					{
 						btn.value = '<%:Update Failed%>';
 					}
@@ -106,7 +106,7 @@
 			function(x,status)
 			{
 				if ( x && x.status == 200 ) {
-					if(status.check_firmware_status=="1")
+					if(status.check_firmware_status!="0")
 					{
 						btn.value = '<%:Complete system update%>';
 					}
@@ -152,7 +152,7 @@
 			function(x,status)
 			{
 				if ( x && x.status == 200 ) {
-					if(status.check_kernel_status=="1")
+					if(status.check_kernel_status!="0")
 					{
 						btn.value = '<%:Update system kernel only%>';
 					}
