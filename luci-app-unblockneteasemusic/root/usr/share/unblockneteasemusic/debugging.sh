@@ -105,7 +105,6 @@ echo -e "\n"
 	echo -e "Testing source replacing..."
 	lan_ip="$(uci -q get "network.lan.ipaddr" || echo "127.0.0.1")"
 
-	echo -n "" > "/tmp/unblockneteasemusic.log"
 	curl -sSL -X "POST" "https://music.163.com/weapi/song/enhance/player/url/v1?csrf_token=" --data "params=bf3kf%2BOyalbxNS%2FeHAXquH8D2nt2YrhBzww4zy5rj2H%2BeAhdOIaGh4HHHzcoREFcu9Ve35LUgc%2BGE1YJD1HxrJ87ucm5zK%2FFn1lLvHFv1A8ZAuyU1afjG28s2Xja6zpfg00T0EcCeqkK61OpTfAaqw%3D%3D&encSecKey=6bab0dfa7ee3b292f9263a7af466636731cdbbd1d8747c9178c17477e70be899b7788c4a4e315c9fdb8c6e787603db6f9dff62c356f164d35b16b7f2d9ad5ede3cc7336130605521a8f916d308ce86b15c32b81c883ae2ba9c244444d91e1683be93fa0ea3e2a85207c9d693b86b5bb31adb002dd56c0bbcce9c73ec3bf5c105"
 	echo -e ""
 	curl -ksSL -X "POST" -x "http://$lan_ip:$unm_port" "https://music.163.com/weapi/song/enhance/player/url/v1?csrf_token=" --data "params=bf3kf%2BOyalbxNS%2FeHAXquH8D2nt2YrhBzww4zy5rj2H%2BeAhdOIaGh4HHHzcoREFcu9Ve35LUgc%2BGE1YJD1HxrJ87ucm5zK%2FFn1lLvHFv1A8ZAuyU1afjG28s2Xja6zpfg00T0EcCeqkK61OpTfAaqw%3D%3D&encSecKey=6bab0dfa7ee3b292f9263a7af466636731cdbbd1d8747c9178c17477e70be899b7788c4a4e315c9fdb8c6e787603db6f9dff62c356f164d35b16b7f2d9ad5ede3cc7336130605521a8f916d308ce86b15c32b81c883ae2ba9c244444d91e1683be93fa0ea3e2a85207c9d693b86b5bb31adb002dd56c0bbcce9c73ec3bf5c105"

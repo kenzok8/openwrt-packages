@@ -4,32 +4,46 @@
     const $gettext = function(str) {
         return taskd.i18n[str] || str;
     };
-    const request = function(url, method, data) {
+    const retryPromise = function(fn) {
         return new Promise((resolve, reject) => {
+            const retry = function() {
+                fn(resolve, reject, retry);
+            };
+            retry();
+        });
+    };
+    const retry403XHR = function(url, method, responseType) {
+        return retryPromise((resolve, reject, retry) => {
             var oReq = new XMLHttpRequest();
+            oReq.onerror = reject;
             oReq.open(method || 'GET', url, true);
-
+            if (responseType) {
+                oReq.responseType = responseType;
+            }
             oReq.onload = function (oEvent) {
-                resolve(oReq.responseText);
+                if (oReq.status == 403) {
+                    if (confirm($gettext("Lost login status, retry?"))) {
+                        setTimeout(retry, 0);
+                    } else {
+                        reject(oEvent);
+                    }
+                } else if (oReq.status == 404) {
+                    reject(oEvent);
+                } else {
+                    resolve(oReq);
+                }
             };
             if (method=='POST') {
                 oReq.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             }
-            oReq.send(data || method=='POST'?"token="+taskd.csrfToken:null);
+            oReq.send(method=='POST'?("token="+taskd.csrfToken):null);
         });
     };
+    const request = function(url, method) {
+        return retry403XHR(url, method).then(oReq => oReq.responseText);
+    };
     const getBin = function(url) {
-        return new Promise((resolve, reject) => {
-            var oReq = new XMLHttpRequest();
-            oReq.open("GET", url, true);
-            oReq.responseType = "arraybuffer";
-    
-            oReq.onload = function (oEvent) {
-                resolve({status: oReq.status, buffer: new Uint8Array(oReq.response)});
-            };
-            
-            oReq.send(null);
-        });
+        return retry403XHR(url, null, "arraybuffer").then(oReq => {return {status: oReq.status, buffer: new Uint8Array(oReq.response)}});
     };
     const getTaskDetail = function(task_id) {
         return request("/cgi-bin/luci/admin/system/tasks/status?task_id="+task_id).then(data=>JSON.parse(data));
@@ -108,8 +122,17 @@
             });
         };
         let logoffset = 0;
-        const pulllog = function() {
-            getBin("/cgi-bin/luci/admin/system/tasks/log?task_id="+task_id+"&offset="+logoffset).then(function(res){
+        const pulllog = function(check) {
+            let starter = Promise.resolve(showing);
+            if (check) {
+                starter = checkTask();
+            }
+            starter.then(again => {
+                if (again)
+                    return getBin("/cgi-bin/luci/admin/system/tasks/log?task_id="+task_id+"&offset="+logoffset);
+                else
+                    return {status: 204};
+            }).then(function(res){
                 if (!showing) {
                     return false;
                 }
@@ -132,9 +155,22 @@
                 if (again) {
                     setTimeout(pulllog, 0);
                 }
+            }).catch(err => {
+                if (showing) {
+                    if (err.target.status == 0) {
+                        title_view.innerText = task_id + ' (' + $gettext("Fetch log failed, retrying...") + ')';
+                        setTimeout(()=>pulllog(true), 1000);
+                    } else if (err.target.status == 403 || err.target.status == 404) {
+                        title_view.innerText += ' (' + $gettext(err.target.status == 403?"Lost login status":"Task does not exist or has been deleted") + ')';
+                        container.querySelector(".dialog-icon-close").hidden = true;
+                        container.classList.add('tasks_unknown'); 
+                    } else {
+                        console.error(err);
+                    }
+                }
             });
         };
-        checkTask().then(pulllog);
+        pulllog(true);
     };
     const del_task = function(task_id) {
         return request("/cgi-bin/luci/admin/system/tasks/stop?task_id="+task_id, "POST");

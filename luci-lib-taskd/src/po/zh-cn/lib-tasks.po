@@ -10,6 +10,18 @@ msgstr "完成于："
 msgid "Failed at:"
 msgstr "失败于："
 
+msgid "Lost login status, retry?"
+msgstr "丢失登陆状态，是否重试？"
+
+msgid "Lost login status"
+msgstr "丢失登陆状态"
+
+msgid "Fetch log failed, retrying..."
+msgstr "拉取日志失败，正在重试..."
+
+msgid "Task does not exist or has been deleted"
+msgstr "任务不存在或已删除"
+
 msgid "Stop and Remove"
 msgstr "停止并删除"
 
