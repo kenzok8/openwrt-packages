@@ -10,9 +10,6 @@ msgstr "完成于："
 msgid "Failed at:"
 msgstr "失败于："
 
-msgid "Lost login status, retry?"
-msgstr "丢失登陆状态，是否重试？"
-
 msgid "Lost login status"
 msgstr "丢失登陆状态"
 

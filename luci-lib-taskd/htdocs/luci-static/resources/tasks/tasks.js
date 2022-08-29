@@ -22,11 +22,8 @@
             }
             oReq.onload = function (oEvent) {
                 if (oReq.status == 403) {
-                    if (confirm($gettext("Lost login status, retry?"))) {
-                        setTimeout(retry, 0);
-                    } else {
-                        reject(oEvent);
-                    }
+                    alert($gettext("Lost login status"));
+                    location.href = location.href;
                 } else if (oReq.status == 404) {
                     reject(oEvent);
                 } else {
@@ -112,9 +109,9 @@
                 title_view.title = title;
                 title_view.innerText = title;
                 if (!data.running) {
-                    container.classList.add('tasks_stopped')
+                    container.classList.add('tasks_stopped');
                     if (data.exit_code) {
-                        container.classList.add('tasks_failed')
+                        container.classList.add('tasks_failed');
                     }
                 }
                 // last pull
@@ -161,9 +158,9 @@
                         title_view.innerText = task_id + ' (' + $gettext("Fetch log failed, retrying...") + ')';
                         setTimeout(()=>pulllog(true), 1000);
                     } else if (err.target.status == 403 || err.target.status == 404) {
-                        title_view.innerText += ' (' + $gettext(err.target.status == 403?"Lost login status":"Task does not exist or has been deleted") + ')';
+                        title_view.innerText = task_id + ' (' + $gettext(err.target.status == 403?"Lost login status":"Task does not exist or has been deleted") + ')';
                         container.querySelector(".dialog-icon-close").hidden = true;
-                        container.classList.add('tasks_unknown'); 
+                        container.classList.add('tasks_unknown');
                     } else {
                         console.error(err);
                     }
