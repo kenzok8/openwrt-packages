@@ -14,6 +14,10 @@ bing.com
 api.ipify.org
 epicgames.com
 emby.kyarucloud.moe
+ntp.aliyun.com
+ntp.tencent.com
+cn.ntp.org.cn
+ntp.ntsc.ac.cn
 keyword:sglong
 keyword:sgshort
 keyword:sgminorshort

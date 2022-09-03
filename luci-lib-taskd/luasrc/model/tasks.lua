@@ -35,7 +35,7 @@ taskd.status = function (task_id)
     if task_id == "" then
       data = {}
     else
-      data = {running=false, exit_code=255}
+      data = {running=false, exit_code=404}
     end
   end
   if task_id ~= "" then

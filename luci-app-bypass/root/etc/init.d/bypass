@@ -708,8 +708,8 @@ gen_dns(){
 		log-level fatal
 		log-file $LOG
 	EOF
-	echo "bind :5335 -group a" >>$DNS_T
-	echo "bind :5336 -group e -no-rule-soa" >>$DNS_T
+	echo "bind :5335 -group a -no-cache" >>$DNS_T
+	echo "bind :5336 -group e -no-rule-soa -no-cache" >>$DNS_T
 	if [ $dns_mode_o = "doh" ];then
 		if [ "$dns_a" = 1 ];then
 			echo "server-https $doh_o_a -group a -exclude-default-group" >>$DNS_T

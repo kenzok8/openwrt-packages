@@ -14,15 +14,17 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_IPT2Socks \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_NaiveProxy \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2 \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Client \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client \
-	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs \
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server \
-	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Simple_Obfs \
-	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Trojan \
-	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Plugin
+	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
 
 LUCI_TITLE:=SS/SSR/V2Ray/Trojan/NaiveProxy/Socks5/Tun LuCI interface
 LUCI_PKGARCH:=all
@@ -47,15 +49,50 @@ LUCI_DEPENDS:= \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server:shadowsocks-libev-ss-server \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client:shadowsocks-rust-sslocal \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server:shadowsocks-rust-ssserver \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs:simple-obfs \
+	+PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin:v2ray-plugin \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-local \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client:shadowsocksr-libev-ssr-redir \
 	+PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server:shadowsocksr-libev-ssr-server \
-	+PACKAGE_$(PKG_NAME)_INCLUDE_Simple_Obfs:simple-obfs \
-	+PACKAGE_$(PKG_NAME)_INCLUDE_Trojan:trojan \
-	+PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Plugin:v2ray-plugin
+	+PACKAGE_$(PKG_NAME)_INCLUDE_Trojan:trojan
 
 define Package/$(PKG_NAME)/config
 select PACKAGE_luci-lib-ipkg if PACKAGE_$(PKG_NAME)
+
+choice
+	prompt "Shadowsocks Client Selection"
+	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client if aarch64
+	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client
+
+	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Client
+	bool "None"
+
+	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client
+	bool "Shadowsocks-libev"
+
+	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client
+	bool "Shadowsocks-rust"
+	depends on aarch64||arm||i386||mips||mipsel||x86_64
+	depends on !(TARGET_x86_geode||TARGET_x86_legacy)
+endchoice
+
+choice
+	prompt "Shadowsocks Server Selection"
+	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server if aarch64
+	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server if i386||x86_64||arm
+	default PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server
+
+	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_NONE_Server
+	bool "None"
+
+	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server
+	bool "Shadowsocks-libev"
+
+	config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server
+	bool "Shadowsocks-rust"
+	depends on aarch64||arm||i386||mips||mipsel||x86_64
+	depends on !(TARGET_x86_geode||TARGET_x86_legacy)
+endchoice
 
 choice
 	prompt "V2ray-core Selection"
@@ -66,13 +103,13 @@ choice
 	bool "None"
 
 	config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray
-	bool "Include V2ray-core"
+	bool "V2ray-core"
 
 	config PACKAGE_$(PKG_NAME)_INCLUDE_Xray
-	bool "Include Xray-core"
+	bool "Xray-core"
 
 	config PACKAGE_$(PKG_NAME)_INCLUDE_SagerNet_Core
-	bool "Include SagerNet-core (An enhanced edition of v2ray-core)"
+	bool "SagerNet-core (An enhanced edition of v2ray-core)"
 endchoice
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Kcptun
@@ -96,25 +133,13 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_Redsocks2
 	bool "Include Redsocks2"
 	default n
 
-config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Client
-	bool "Include Shadowsocks Libev Client"
-	default y if arm
+config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Simple_Obfs
+	bool "Include Shadowsocks Simple Obfs Plugin"
+	default y
 
-config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Libev_Server
-	bool "Include Shadowsocks Libev Server"
-	default y if i386||x86_64||arm
-
-config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Client
-	bool "Include Shadowsocks Rust Client"
-	depends on aarch64||arm||i386||mips||mipsel||x86_64
-	depends on !(TARGET_x86_geode||TARGET_x86_legacy)
-	default y if aarch64
-
-config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_Rust_Server
-	bool "Include Shadowsocks Rust Server"
-	depends on aarch64||arm||i386||mips||mipsel||x86_64
-	depends on !(TARGET_x86_geode||TARGET_x86_legacy)
-	default y if aarch64
+config PACKAGE_$(PKG_NAME)_INCLUDE_Shadowsocks_V2ray_Plugin
+	bool "Include Shadowsocks V2ray Plugin"
+	default n
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client
 	bool "Include ShadowsocksR Libev Client"
@@ -124,17 +149,9 @@ config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server
 	bool "Include ShadowsocksR Libev Server"
 	default y if i386||x86_64||arm
 
-config PACKAGE_$(PKG_NAME)_INCLUDE_Simple_Obfs
-	bool "Include Shadowsocks Simple Obfs Plugin"
-	default y if i386||x86_64||arm
-
 config PACKAGE_$(PKG_NAME)_INCLUDE_Trojan
 	bool "Include Trojan"
 	select PACKAGE_$(PKG_NAME)_INCLUDE_IPT2Socks
-	default n
-
-config PACKAGE_$(PKG_NAME)_INCLUDE_V2ray_Plugin
-	bool "Include Shadowsocks V2ray Plugin"
 	default n
 endef
 
