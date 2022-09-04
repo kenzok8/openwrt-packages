@@ -49,7 +49,7 @@
 <%
 local taskd = require "luci.model.tasks"
 local status = taskd.status("istore")
-if status.running then
+if status.running or status.exit_code ~= 404 then
 -%>
     window.istore_log(true);
 <%

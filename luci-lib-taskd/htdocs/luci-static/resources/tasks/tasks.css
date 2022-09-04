@@ -89,7 +89,7 @@
 .tasks_stopped .dialog-icon.dialog-icon-close {
     background-color: #27c840;
 }
-.tasks_stopped #tasks_dialog {
+.tasks_stopped #tasks_dialog, .tasks_unknown #tasks_dialog {
     padding: 19px;
     border: 1px #27c840 solid;
 
@@ -103,6 +103,10 @@
 
 .tasks_failed .dialog-icon.dialog-icon-close {
     background-color: #ff0000;
+}
+
+.tasks_unknown #tasks_dialog {
+    border-color: darkorange;
 }
 
 @keyframes border-blink { 50% { border-color:#fff ; }  }
