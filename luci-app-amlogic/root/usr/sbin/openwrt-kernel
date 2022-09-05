@@ -113,6 +113,12 @@ check_kernel() {
     # Determine custom kernel filename
     kernel_boot="$(ls boot-*.tar.gz | head -n 1)"
     kernel_name="${kernel_boot/boot-/}" && kernel_name="${kernel_name/.tar.gz/}"
+
+    # check if kernel is locked
+    if [[ "${LOCK_KERNEL}" != "${kernel_name}" ]];then
+        error_msg "The kernel version is locked to ${LOCK_KERNEL}. "
+    fi
+
     KERNEL_VERSION="$(echo ${kernel_name} | grep -oE '^[1-9].[0-9]{1,3}.[0-9]+')"
     echo -e "Kernel name: ${kernel_name}"
 
@@ -122,6 +128,7 @@ check_kernel() {
     if [[ "${PLATFORM}" == "amlogic" && "${K510}" -eq "1" ]]; then
         [[ -n "${UBOOT_OVERLOAD}" && -f "/boot/${UBOOT_OVERLOAD}" ]] || error_msg "The UBOOT_OVERLOAD file is missing and cannot be update."
     fi
+
 
     # Check the sha256sums file
     sha256sums_file="sha256sums"
