@@ -65,6 +65,8 @@ init_var() {
         UBOOT_OVERLOAD="${UBOOT_OVERLOAD}"
         MAINLINE_UBOOT="${MAINLINE_UBOOT}"
         ANDROID_UBOOT="${ANDROID_UBOOT}"
+        SOC="${SOC}"
+        LOCK_KERNEL="${LOCK_KERNEL}"
     else
         error_msg "${release_file} file is missing!"
     fi
@@ -72,10 +74,10 @@ init_var() {
 
     # Set /boot/vmlinuz-* replication names for different SoCs
     case "${PLATFORM}" in
-        allwinner) MYBOOT_VMLINUZ="zImage" ;;
-        rockchip)  MYBOOT_VMLINUZ="Image" ;;
-        amlogic)   MYBOOT_VMLINUZ="zImage" ;;
-        *)         error_msg "Unknown device: [ ${MYDEVICE_NAME} ], Not supported." ;;
+    allwinner) MYBOOT_VMLINUZ="zImage" ;;
+    rockchip) MYBOOT_VMLINUZ="Image" ;;
+    amlogic) MYBOOT_VMLINUZ="zImage" ;;
+    *) error_msg "Unknown device: [ ${MYDEVICE_NAME} ], Not supported." ;;
     esac
 
     # Find the partition where root is located
@@ -114,13 +116,15 @@ check_kernel() {
     kernel_boot="$(ls boot-*.tar.gz | head -n 1)"
     kernel_name="${kernel_boot/boot-/}" && kernel_name="${kernel_name/.tar.gz/}"
 
-    # check if kernel is locked
-    if [[ "${LOCK_KERNEL}" != "${kernel_name}" ]];then
-        error_msg "The kernel version is locked to ${LOCK_KERNEL}. "
-    fi
-
     KERNEL_VERSION="$(echo ${kernel_name} | grep -oE '^[1-9].[0-9]{1,3}.[0-9]+')"
     echo -e "Kernel name: ${kernel_name}"
+
+    # check if kernel is locked
+    if [[ -n "${LOCK_KERNEL}" ]]; then
+        if ! echo "${kernel_name}" | grep -E "^${LOCK_KERNEL}" >/dev/null; then
+            echo -e "The kernel version is locked to [ ${LOCK_KERNEL} ]"
+        fi
+    fi
 
     # Check if the file is added with TEXT_OFFSET patch
     get_textoffset "${P4_PATH}/${kernel_boot}" "vmlinuz-${kernel_name}"
@@ -128,7 +132,6 @@ check_kernel() {
     if [[ "${PLATFORM}" == "amlogic" && "${K510}" -eq "1" ]]; then
         [[ -n "${UBOOT_OVERLOAD}" && -f "/boot/${UBOOT_OVERLOAD}" ]] || error_msg "The UBOOT_OVERLOAD file is missing and cannot be update."
     fi
-
 
     # Check the sha256sums file
     sha256sums_file="sha256sums"
