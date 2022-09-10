@@ -30,7 +30,7 @@ down(){
 	mkdir -p $G $P
 	for i in $U;do
 		X=1
-		while ! curl --connect-timeout 5 -m 20 -Lfso $F $i;do
+		while ! curl --connect-timeout 6 --retry 2 -m 60 -kLfso $F $i;do
 			[ $X -ge 20 ] && echo "`eval $E` [Download $i Failed]" && continue 2 || let X++
 			sleep 2
 		done
