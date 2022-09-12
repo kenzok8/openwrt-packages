@@ -48,6 +48,13 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R68S")" != "" ]]; then
         MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
     fi
     SOC="r68s"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa ROCK 5B")" != "" ]]; then
+    if [ -n "$CURRENT_FDTFILE" ];then
+        MYDTB_FDTFILE="$CURRENT_FDTFILE"
+    else
+        MYDTB_FDTFILE="rk3588-rock-5b.dtb"
+    fi
+    SOC="rock5b"
 else
     echo "Unknown device: [ ${MYDEVICE_NAME} ], Not supported."
     exit 1
@@ -67,7 +74,12 @@ case ${ROOT_PTNAME} in
 mmcblk?p[1-4])
     EMMC_NAME=$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-2)}')
     PARTITION_NAME="p"
-    LB_PRE="EMMC_"
+    LB_PRE="MMC_"
+    ;;
+   nvme?n?p?)
+    EMMC_NAME=$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-2)}')
+    PARTITION_NAME="p"
+    LB_PRE="NVME_"
     ;;
 [hsv]d[a-z][1-4])
     EMMC_NAME=$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-1)}')
@@ -573,6 +585,8 @@ cd ${WORK_DIR}
 
 echo "Start copy data from ${P2} to /boot ..."
 cd /boot
+echo -n "backup armbianEnv.txt ..."
+cp armbianEnv.txt /tmp/
 echo -n "remove old boot files ..."
 rm -rf *
 echo "done"
@@ -583,19 +597,27 @@ echo "done"
 echo
 
 echo -n "Update boot args ... "
-cat >armbianEnv.txt <<EOF
-verbosity=7
-overlay_prefix=rockchip
+if [ -f /tmp/armbianEnv.txt ];then
+    cp /tmp/armbianEnv.txt .
+fi
+sed -e '/fdtfile=/d' -i armbianEnv.txt
+sed -e '/rootdev=/d' -i armbianEnv.txt
+sed -e '/rootfstype=/d' -i armbianEnv.txt
+sed -e '/rootflags=/d' -i armbianEnv.txt
+if [ "$SOC" == "rock5b" ];then
+    echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >> armbianEnv.txt
+else
+    echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >> armbianEnv.txt
+fi
+cat >> armbianEnv.txt <<EOF
 rootdev=UUID=${NEW_ROOT_UUID}
 rootfstype=btrfs
 rootflags=compress=zstd:${ZSTD_LEVEL}
-extraargs=usbcore.autosuspend=-1 net.ifnames=0
-extraboardargs=
-fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}
 EOF
 # 对没有 HDMI 的机型关闭 display tty 让 initrd script 输出到 uart
 # 参考 https://github.com/raspberrypi/linux/issues/2863
 if [ "$SOC" == "r68s" ];then
+    sed -e '/console=/d' -i armbianEnv.txt
     echo console=serial >> armbianEnv.txt
 fi
 sync

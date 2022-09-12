@@ -45,9 +45,10 @@ o.datatype    = "hostname"
 o.rempty      = false
 
 ---- Port
-o = s:taboption("settings", Value, "port", translate("Local Port"), translate("Smartdns local server port"))
-o.placeholder = 6053
-o.default     = 6053
+o = s:taboption("settings", Value, "port", translate("Local Port"), 
+    translate("Smartdns local server port, smartdns will be automatically set as main dns when the port is 53."))
+o.placeholder = 53
+o.default     = 53
 o.datatype    = "port"
 o.rempty      = false
 
@@ -70,7 +71,7 @@ end
 ---- Support DualStack ip selection
 o = s:taboption("settings", Flag, "dualstack_ip_selection", translate("Dual-stack IP Selection"), translate("Enable IP selection between IPV4 and IPV6"))
 o.rmempty     = false
-o.default     = o.disabled
+o.default     = o.enabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
 end
@@ -87,23 +88,46 @@ end
 o = s:taboption("settings", Flag, "serve_expired", translate("Serve expired"), 
 	translate("Attempts to serve old responses from cache with a TTL of 0 in the response without waiting for the actual resolution to finish."))
 o.rmempty     = false
-o.default     = o.disabled
+o.default     = o.enabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
 end
 
----- Redirect
-o = s:taboption("settings", ListValue, "redirect", translate("Redirect"), translate("SmartDNS redirect mode"))
-o.placeholder = "none"
-o:value("none", translate("none"))
-o:value("dnsmasq-upstream", translate("Run as dnsmasq upstream server"))
-o:value("redirect", translate("Redirect 53 port to SmartDNS"))
-o.default     = "none"
-o.rempty      = false
-
 ---- cache-size
 o = s:taboption("settings", Value, "cache_size", translate("Cache Size"), translate("DNS domain result cache size"))
 o.rempty      = true
+
+-- cache-size
+o = s:taboption("settings", Flag, "resolve_local_hostnames", translate("Resolve Local Hostnames"), translate("Resolve local hostnames by reading Dnsmasq lease file."));
+o.rmempty     = false
+o.default     = o.enabled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "1"
+end
+
+-- Automatically Set Dnsmasq
+o = s:taboption("settings", Flag, "auto_set_dnsmasq", translate("Automatically Set Dnsmasq"), translate("Automatically set as upstream of dnsmasq when port changes."));
+o.rmempty     = false
+o.default     = o.enabled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "0"
+end
+
+-- Force AAAA SOA
+o = s:taboption("settings", Flag, "force_aaaa_soa", translate("Force AAAA SOA"), translate("Force AAAA SOA."));
+o.rmempty     = false
+o.default     = o.enabled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "0"
+end
+
+-- Force HTTPS SOA
+o = s:taboption("settings", Flag, "force_https_soa", translate("Force HTTPS SOA"), translate("Force HTTPS SOA."));
+o.rmempty     = false
+o.default     = o.enabled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "0"
+end
 
 ---- rr-ttl
 o = s:taboption("settings", Value, "rr_ttl", translate("Domain TTL"), translate("TTL for all domain result."))
@@ -112,15 +136,19 @@ o.rempty      = true
 ---- rr-ttl-min
 o = s:taboption("settings", Value, "rr_ttl_min", translate("Domain TTL Min"), translate("Minimum TTL for all domain result."))
 o.rempty      = true
-o.placeholder = "300"
-o.default     = 300
+o.placeholder = "600"
+o.default     = 600
 o.optional    = true
 
----- second dns server
 ---- rr-ttl-max
 o = s:taboption("settings", Value, "rr_ttl_max", translate("Domain TTL Max"), translate("Maximum TTL for all domain result."))
 o.rempty      = true
 
+---- rr-ttl-reply-max
+o = s:taboption("settings", Value, "rr_ttl_reply_max", translate("Reply Domain TTL Max"), translate("Reply maximum TTL for all domain result."))
+o.rempty      = true
+
+---- second dns server
 ---- Eanble
 o = s:taboption("seconddns", Flag, "seconddns_enabled", translate("Enable"), translate("Enable or disable second DNS server."))
 o.default     = o.disabled
@@ -203,7 +231,7 @@ o.cfgvalue    = function(...)
 end
 
 ---- Force AAAA SOA
-o = s:taboption("seconddns", Flag, "force_aaaa_soa", translate("Force AAAA SOA"), translate("Force AAAA SOA."))
+o = s:taboption("seconddns", Flag, "seconddns_force_aaaa_soa", translate("Force AAAA SOA"), translate("Force AAAA SOA."))
 o.rmempty     = false
 o.default     = o.disabled
 o.cfgvalue    = function(...)

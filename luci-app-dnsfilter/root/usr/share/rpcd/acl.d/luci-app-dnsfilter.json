@@ -2,9 +2,22 @@
 	"luci-app-dnsfilter": {
 		"description": "Grant UCI access for luci-app-dnsfilter",
 		"read": {
+			"file": {
+				"/etc/init.d/dnsfilter": [ "exec" ],
+				"/usr/share/dnsfilter/addown": [ "exec" ],
+				"/usr/share/dnsfilter/dnsfilter": [ "exec" ],
+				"/tmp/dnsfilter/rules.conf": [ "read" ]
+            },
 			"uci": [ "dnsfilter" ]
 		},
 		"write": {
+			"file": {
+				"/etc/dnsfilter/black.list": [ "write" ],
+				"/etc/dnsfilter/ip.list": [ "write" ],
+				"/etc/dnsfilter/white.list": [ "write" ],
+				"/etc/dnsfilter/rules/rules.conf": [ "write" ],
+				"/etc/dnsfilter/url": [ "write" ]
+			},
 			"uci": [ "dnsfilter" ]
 		}
 	}

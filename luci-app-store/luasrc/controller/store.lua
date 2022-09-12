@@ -128,7 +128,9 @@ function store_index()
     if luci.sys.call("which docker >/dev/null 2>&1") == 0 then
         features[#features+1] = "docker"
     end
-
+    if luci.sys.call("[ -d /ext_overlay ] >/dev/null 2>&1") == 0 then
+        features[#features+1] = "sandbox"
+    end
     luci.template.render("store/main", {prefix=luci.dispatcher.build_url(unpack(page_index)),id=user_id(),lang=vue_lang(),features=features})
 end
 
