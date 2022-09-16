@@ -121,7 +121,7 @@ do_restore() {
 
 echo -e "${STEPS} Welcome to use the EMMC system backup/restore service."
 # Check script permission
-[[ "$(id -u)" == "0" ]] || error_msg "please run this script as root: [ sudo $0 ]"
+[[ -x "/usr/sbin/openwrt-ddbr" ]] || error_msg "Please grant execution permission: [ chmod +x /usr/sbin/openwrt-ddbr ]"
 # Check emmc
 do_checkemmc
 # Prompt the user to select backup/restore

@@ -40,6 +40,15 @@ fcurl() {
     curl --fail --show-error "$@"
 }
 
+check_space() {
+    local free="$((`stat -c '%a * %S'  -f /` >> 20 ))"
+    if [ "$free" -lt 1 ]; then
+        echo "Root disk full!" >&2
+        exit 1
+    fi
+    return 0
+}
+
 update() {
     if [ -z "${ARCH}" ]; then
         echo "Get architecture failed" >&2
@@ -148,6 +157,7 @@ case $action in
         update
     ;;
     "install")
+        check_space
         wrapped_in_update install "$@"
     ;;
     "upgrade")
@@ -166,6 +176,7 @@ case $action in
         check_self_upgrade
     ;;
     "do_self_upgrade")
+        check_space
         do_self_upgrade
     ;;
     "opkg")
