@@ -77,6 +77,10 @@ init_var() {
     allwinner) MYBOOT_VMLINUZ="zImage" ;;
     rockchip) MYBOOT_VMLINUZ="Image" ;;
     amlogic) MYBOOT_VMLINUZ="zImage" ;;
+    qemu-aarch64)
+        MYBOOT_VMLINUZ="vmlinuz"
+        MYDEVICE_NAME="KVM Virtual Machine"
+        ;;
     *) error_msg "Unknown device: [ ${MYDEVICE_NAME} ], Not supported." ;;
     esac
 
@@ -120,9 +124,11 @@ check_kernel() {
     echo -e "Kernel name: ${kernel_name}"
 
     # check if kernel is locked
-    if [[ -n "${LOCK_KERNEL}" ]]; then
-        if ! echo "${kernel_name}" | grep -E "^${LOCK_KERNEL}" >/dev/null; then
-            echo -e "The kernel version is locked to [ ${LOCK_KERNEL} ]"
+    if [ -n "${LOCK_KERNEL}" ]; then
+        if [ "${LOCK_KERNEL}" != "${kernel_name}" ]; then
+            if ! echo "${kernel_name}" | grep -E '^5.10.\d+-.*?rk3588.*?$' >/dev/null; then
+                error_msg "The kernel version is locked to [ ${LOCK_KERNEL} ], but your kernel is [ ${kernel_name} ]. "
+            fi
         fi
     fi
 
@@ -142,7 +148,11 @@ check_kernel() {
 
     # Loop check file
     i="1"
-    kernel_list=("boot" "dtb-${PLATFORM}" "modules")
+    if [[ "${PLATFORM}" == "qemu-aarch64" ]]; then
+        kernel_list=("boot" "modules")
+    else
+        kernel_list=("boot" "dtb-${PLATFORM}" "modules")
+    fi
     for kernel_file in ${kernel_list[*]}; do
         # Set check filename
         tmp_file="${kernel_file}-${kernel_name}.tar.gz"
@@ -163,30 +173,110 @@ check_kernel() {
 
 # Update the kernel
 update_kernel() {
+    local cur_kernel_name=$(uname -r)
+    local boot_fstype=$(df -T /boot | tail -n1 | awk '{print $2}')
     echo -e "Start unpacking the kernel..."
 
     # 01. for /boot five files
-    rm -f /boot/config-* /boot/initrd.img-* /boot/System.map-* /boot/uInitrd-* /boot/vmlinuz-* 2>/dev/null && sync
-    rm -f /boot/uInitrd /boot/zImage /boot/Image 2>/dev/null && sync
-    #
-    tar -xf ${P4_PATH}/boot-${kernel_name}.tar.gz -C /boot && sync
-    [[ "$(ls /boot/*${kernel_name}* -l 2>/dev/null | grep "^-" | wc -l)" -ge "4" ]] || error_msg "The /boot files is missing."
+    # backup the current_kernel
     (
-        cd /boot && cp -f uInitrd-${kernel_name} uInitrd && cp -f vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ} && sync
-        [[ "$(sha256sum uInitrd-${kernel_name} | awk '{print $1}')" == "$(sha256sum uInitrd | awk '{print $1}')" ]] || cp -f uInitrd-${kernel_name} uInitrd
-        [[ "$(sha256sum vmlinuz-${kernel_name} | awk '{print $1}')" == "$(sha256sum ${MYBOOT_VMLINUZ} | awk '{print $1}')" ]] || cp -f vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
+        cd /boot
+        tar -czf /tmp/boot-backup.tar.gz \
+            config-${cur_kernel_name} \
+            System.map-${cur_kernel_name} \
+            initrd.img-${cur_kernel_name} \
+            uInitrd-${cur_kernel_name} \
+            vmlinuz-${cur_kernel_name} \
+            initrd.img \
+            uInitrd \
+            zImage \
+            Image \
+            vmlinuz \
+            dtb* 2>/dev/null
+        rm -rf \
+            config-${cur_kernel_name} \
+            System.map-${cur_kernel_name} \
+            initrd.img-${cur_kernel_name} \
+            uInitrd-${cur_kernel_name} \
+            vmlinuz-${cur_kernel_name} \
+            initrd.img \
+            uInitrd \
+            zImage \
+            Image \
+            vmlinuz \
+            dtb* 2>/dev/null
+    )
+    # extract the new kernel
+    tar -xf ${P4_PATH}/boot-${kernel_name}.tar.gz -C /boot && sync
+
+    local f
+    local valid_files
+    if [[ "${PLATFORM}" == "qemu-aarch64" ]]; then
+        valid_files="vmlinuz-${kernel_name} initrd.img-${kernel_name} config-${kernel_name} System.map-${kernel_name}"
+        rm -f /boot/uInitrd*
+    else
+        valid_files="vmlinuz-${kernel_name} uInitrd-${kernel_name} config-${kernel_name} System.map-${kernel_name}"
+        rm -f /boot/initrd.img*
+    fi
+
+    for f in $valid_files; do
+        if [[ ! -f "/boot/${f}" ]]; then
+            (
+                cd /boot
+                rm -rf \
+                    config-${kernel_name} \
+                    System.map-${kernel_name} \
+                    initrd.img-${kernel_name} \
+                    uInitrd-${kernel_name} \
+                    vmlinuz-${kernel_name} \
+                    initrd.img \
+                    uInitrd \
+                    zImage \
+                    Image \
+                    vmlinuz \
+                    dtb* 2>/dev/null
+                tar -xzf /tmp/boot-backup.tar.gz 2>/dev/null
+            )
+            error_msg "The file: ${f} is not exists."
+        fi
+    done
+
+    (
+        cd /boot
+        if [[ "${PLATFORM}" == "qemu-aarch64" ]]; then
+            ln -sf initrd.img-${kernel_name} initrd.img &&
+                ln -sf vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
+        elif [[ "$boot_fstype" == "vfat" ]]; then
+            cp -f uInitrd-${kernel_name} uInitrd &&
+                cp -f vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ} &&
+                sync
+        else
+            ln -sf uInitrd-${kernel_name} uInitrd &&
+                ln -sf vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
+        fi
     )
     echo -e "(1/3) Unpacking [ boot-${kernel_name}.tar.gz ] done."
 
-    # 02. for /boot/dtb/${PLATFORM}/*
-    [[ -d "/boot/dtb/${PLATFORM}" ]] || mkdir -p /boot/dtb/${PLATFORM}
-    if [[ "${PLATFORM}" == "rockchip" ]]; then
-        mkdir -p /boot/dtb-${kernel_name}/${PLATFORM}
-        ln -sf /boot/dtb-${kernel_name} /boot/dtb
+    if [[ "${PLATFORM}" == "qemu-aarch64" ]]; then
+        echo -e "(2/3) skip unpack dtb files."
+    else
+        # 02. for /boot/dtb/${PLATFORM}/*
+        if [[ "${boot_fstype}" == "vfat" ]]; then
+            (
+                cd /boot &&
+                    mkdir -p dtb/${PLATFORM}
+            )
+        else
+            (
+                cd /boot &&
+                    mkdir -p dtb-${kernel_name}/${PLATFORM} &&
+                    ln -sf dtb-${kernel_name} dtb
+            )
+        fi
+        tar -xf ${P4_PATH}/dtb-${PLATFORM}-${kernel_name}.tar.gz -C /boot/dtb/${PLATFORM} && sync
+        [ "$(ls /boot/dtb/${PLATFORM} -l 2>/dev/null | grep "^-" | wc -l)" -ge "1" ] || error_msg "/boot/dtb/${PLATFORM} file is missing."
+        echo -e "(2/3) Unpacking [ dtb-${PLATFORM}-${kernel_name}.tar.gz ] done."
     fi
-    tar -xf ${P4_PATH}/dtb-${PLATFORM}-${kernel_name}.tar.gz -C /boot/dtb/${PLATFORM} && sync
-    [ "$(ls /boot/dtb/${PLATFORM} -l 2>/dev/null | grep "^-" | wc -l)" -ge "1" ] || error_msg "/boot/dtb/${PLATFORM} file is missing."
-    echo -e "(2/3) Unpacking [ dtb-${PLATFORM}-${kernel_name}.tar.gz ] done."
 
     # 03. for /lib/modules/*
     rm -rf /lib/modules/* 2>/dev/null && sync
@@ -204,7 +294,7 @@ update_kernel() {
     echo -e "(3/3) Unpacking [ modules-${kernel_name}.tar.gz ] done."
 
     # Delete kernel tmpfiles
-    rm -f ${P4_PATH}/*.tar.gz ${P4_PATH}/sha256sums 2>/dev/null
+    rm -f ${P4_PATH}/*-${kernel_name}.tar.gz ${P4_PATH}/sha256sums 2>/dev/null
 
     sync && echo ""
 }
