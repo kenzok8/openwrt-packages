@@ -41,6 +41,13 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "BeikeYun")" != "" ]]; then
         MYDTB_FDTFILE="rk3328-beikeyun-1296mhz.dtb"
     fi
     SOC="beikeyun"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R66S")" != "" ]]; then
+    if [ -n "$CURRENT_FDTFILE" ];then
+        MYDTB_FDTFILE="$CURRENT_FDTFILE"
+    else
+        MYDTB_FDTFILE="rk3568-fastrhino-r66s.dtb"
+    fi
+    SOC="r66s"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R68S")" != "" ]]; then
     if [ -n "$CURRENT_FDTFILE" ];then
         MYDTB_FDTFILE="$CURRENT_FDTFILE"
