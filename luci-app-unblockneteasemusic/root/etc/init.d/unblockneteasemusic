@@ -145,6 +145,7 @@ start_service() {
 
 	is_enabled "config" "enable_flac" && procd_append_param env ENABLE_FLAC="true"
 	is_enabled "config" "local_vip" && procd_append_param env ENABLE_LOCAL_VIP="true"
+	is_enabled "config" "disable_upgrade_check" && procd_append_param env DISABLE_UPGRADE_CHECK="true"
 	case "$(config_get "config" "replace_music_source")" in
 		"lower_than_192kbps") procd_append_param env MIN_BR="192000" ;;
 		"lower_than_320kbps") procd_append_param env MIN_BR="320000" ;;

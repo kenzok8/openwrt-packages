@@ -39,6 +39,11 @@ o.description = translate("目前仅支持酷狗、酷我、咪咕、pyncmd、QQ
 o.default = 0
 o.rmempty = false
 
+o = s:option(Flag, "disable_upgrade_check", translate("禁用更新检查"))
+o.description = translate("禁止客户端检查更新，全平台支持")
+o.default = 1
+o.rmempty = false
+
 o = s:option(ListValue, "replace_music_source", translate("强制音乐音源替换"))
 o:value("dont_replace", translate("不强制替换音乐音源"))
 o:value("lower_than_192kbps", translate("当音质低于 192 Kbps（中）时"))

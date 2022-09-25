@@ -30,5 +30,5 @@ start() {
 
 stop() {
 	echo "${db_dir}/${db_name}" > "/lib/upgrade/keep.d/filebrowser"
-	killall -9 filebrowser >/dev/null 2>&1
+	killall -3 filebrowser >/dev/null 2>&1
 }
