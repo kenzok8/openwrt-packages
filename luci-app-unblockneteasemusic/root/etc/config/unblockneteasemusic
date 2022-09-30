@@ -2,6 +2,7 @@
 config unblockneteasemusic 'config'
 	option enable '0'
 	option music_source 'default'
+	option follow_source_order '0'
 	option local_vip '0'
 	option enable_flac '0'
 	option disable_upgrade_check '1'

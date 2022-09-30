@@ -320,10 +320,16 @@ elif [[ "${AMLOGIC_SOC}" == "s905x" ]]; then
     BLANK2=0
     BLANK3=0
     BLANK4=0
-elif [[ "${AMLOGIC_SOC}" == "s905x3" ]] && [[ "${FDTFILE}" == "meson-sm1-skyworth-lb2004-a4091.dtb" ]];then
+elif [[ "${AMLOGIC_SOC}" == "s905x3" ]] && [[ "${FDTFILE}" == "meson-sm1-skyworth-lb2004-a4091.dtb" ]]; then
     BOOT=768
     BLANK1=68
     BLANK2=202
+    BLANK3=0
+    BLANK4=0
+elif [[ "${AMLOGIC_SOC}" == "s905l3a" ]]; then
+    BOOT=512
+    BLANK1=108
+    BLANK2=778
     BLANK3=0
     BLANK4=0
 else

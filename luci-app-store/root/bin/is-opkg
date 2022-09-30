@@ -88,6 +88,10 @@ check_self_upgrade() {
     return 0
 }
 
+do_self_upgrade_0() {
+    opkg_wrap upgrade ${ISTORE_DEP_PKGS} && opkg_wrap upgrade ${ISTORE_PKG}
+}
+
 do_self_upgrade() {
     check_mtime || return 1
     local newest=`curl --connect-timeout 2 --max-time 5 -s ${ISTORE_INDEX} | gunzip | grep -FA10 "Package: ${ISTORE_PKG}" | grep -Fm1 'Version: ' | sed 's/^Version: //'`
@@ -101,12 +105,12 @@ do_self_upgrade() {
         return 1
     fi
     if opkg_wrap info ${ISTORE_PKG} | grep -qFm1 "Version: $newest"; then
-        opkg_wrap upgrade ${ISTORE_PKG} ${ISTORE_DEP_PKGS} && return 0
+        do_self_upgrade_0 && return 0
         update_if_outdate || return 1
-        opkg_wrap upgrade ${ISTORE_PKG} ${ISTORE_DEP_PKGS}
+        do_self_upgrade_0
     else
         update_if_outdate || return 1
-        opkg_wrap upgrade ${ISTORE_PKG} ${ISTORE_DEP_PKGS}
+        do_self_upgrade_0
     fi
 }
 
@@ -116,9 +120,29 @@ check_mtime() {
 
 wrapped_in_update() {
     check_mtime || return 1
-    opkg_wrap "$@" && return 0
+    eval "$@" && return 0
     update_if_outdate || return 1
-    opkg_wrap "$@"
+    eval "$@"
+}
+
+step_upgrade() {
+    local pkg
+    local pkgs=""
+    local metapkg=""
+    for pkg in $@; do
+        if [[ $pkg == app-meta-* ]]; then
+            metapkg="$metapkg $pkg"
+        else
+            pkgs="$pkgs $pkg"
+        fi
+    done
+    if [ -n "$pkgs" ]; then
+        opkg_wrap upgrade $pkgs || return 1
+    fi
+    if [ -n "$metapkg" ]; then
+        opkg_wrap upgrade $metapkg || return 1
+    fi
+    return 0
 }
 
 new_upgrade() {
@@ -129,7 +153,7 @@ new_upgrade() {
     else
         update_if_outdate
     fi
-    wrapped_in_update upgrade "$@"
+    wrapped_in_update step_upgrade "$@"
 }
 
 remove() {
@@ -158,7 +182,7 @@ case $action in
     ;;
     "install")
         check_space
-        wrapped_in_update install "$@"
+        wrapped_in_update opkg_wrap install "$@"
     ;;
     "upgrade")
         new_upgrade "$@"

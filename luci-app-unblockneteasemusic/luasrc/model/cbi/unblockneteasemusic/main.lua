@@ -29,6 +29,11 @@ o.description = translate("自定义模式下，多个音源请用空格隔开")
 o.default = "default"
 o.rmempty = false
 
+o = s:option(Flag, "follow_source_order", translate("顺序查询"))
+o.description = translate("默认为并行查询并返回第一个结果，开启后将严格按照配置音源的顺序进行查询")
+o.default = 0
+o.rmempty = false
+
 o = s:option(Flag, "local_vip", translate("启用本地 VIP"))
 o.description = translate("启用后，可以使用去广告、个性换肤、鲸云音效等本地功能")
 o.default = 0
@@ -123,6 +128,13 @@ o = s:option(Flag, "advanced_mode", translate("启用进阶设置"))
 o.description = translate("非必要不推荐使用")
 o.default = 0
 o.rmempty = false
+
+o = s:option(ListValue, "log_level", translate("日志等级"))
+o:value("debug", translate("'调试"));
+o:value("info", translate("信息（默认）"))
+o:value("silent", translate("静默"))
+o.default = "info";
+o:depends("advanced_mode", 1)
 
 o = s:option(Value, "http_port", translate("HTTP 监听端口"))
 o.description = translate("程序监听的 HTTP 端口，不可与 其他程序/HTTPS 共用一个端口")
