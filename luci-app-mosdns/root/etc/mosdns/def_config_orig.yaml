@@ -28,11 +28,7 @@ data_providers:
   - tag:                   blocklist
     file:                  "./rule/blocklist.txt"
     auto_reload:           true
-
-  - tag:                   local_ptr
-    file:                  "./rule/local-ptr.txt"
-    auto_reload:           true
-    
+ 
   - tag:                   redirect
     file:                  "./rule/redirect.txt"
     auto_reload:           true
@@ -68,13 +64,6 @@ plugins:
     args:
       qtype:               [65]
 
-  - tag:                   "query_is_local_ptr"
-    type:                  query_matcher
-    args:
-      qtype:               [12]
-      domain:
-        - "provider:local_ptr"
-
   - tag:                   "query_is_ad_domain"
     type:                  query_matcher
     args:
@@ -98,6 +87,13 @@ plugins:
     args:
       rule:
           - "provider:redirect"
+
+  - tag:                   "reverse"
+    type:                  "reverse_lookup"
+    args:
+      size:                65535
+      ttl:                 1800
+      handle_ptr:          true 
 
   - tag:                   "lazy_cache"
     type:                  cache
@@ -126,6 +122,7 @@ plugins:
     args:
       exec:
         - _misc_optm
+        - reverse
         - lazy_cache
         - query_is_hosts_domain
         - query_is_redirect_domain
@@ -134,7 +131,7 @@ plugins:
           exec:
             - forward_local
             - _return
-        - if:              "query_is_blocklist_domain || query_is_ad_domain || query_is_qtype65 || query_is_local_ptr"
+        - if:              "query_is_blocklist_domain || query_is_ad_domain || query_is_qtype65"
           exec:
             - _new_nxdomain_response
             - _return
@@ -163,6 +160,6 @@ servers:
   - exec:                  main_sequence
     listeners:
       - protocol:          udp
-        addr:              :listenport
+        addr:              127.0.0.1:listenport
       - protocol:          tcp
-        addr:              :listenport
+        addr:              127.0.0.1:listenport

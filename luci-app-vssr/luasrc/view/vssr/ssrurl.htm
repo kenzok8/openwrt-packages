@@ -208,10 +208,9 @@
                     } else {
                         url0 = ssu[1]
                     }
-                    var sstr = b64decsafe(url0);
                     el('.type').value = "trojan";
                     el('.type').dispatchEvent(event);
-                    var team = sstr.split('@');
+                    var team = url0.split('@');
                     var part1 = team[0].split(':');
                     var part2 = team[1].split(':');
                     var others = part2[1].split('?');
@@ -226,10 +225,12 @@
                     }
                     el('.server').value = part2[0];
                     el('.server_port').value = others[0];
-                    el('.password').value = part1[0];
+                    el('.password').value = decodeURI(part1[0]);
                     if (queryParam.peer || queryParam.sni) {
-                        el('.tls').checked = true;
                         el('.peer').value = queryParam.peer || queryParam.sni;
+                    }
+                    if (url0.indexOf('allowInsecure=1') != -1) {
+                        el('.insecure').value = 1;
                     }
 
                     if (param != undefined) {
