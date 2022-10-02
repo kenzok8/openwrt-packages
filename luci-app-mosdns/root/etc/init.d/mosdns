@@ -106,7 +106,7 @@ start_service() {
 	delcron
 	setcron
 	adblock
-	cat /dev/null > $(uci -q get mosdns.mosdns.logfile)
+	cat /dev/null > $(/etc/mosdns/library.sh logfile)
 	sysctl -w net.core.rmem_max=2500000
 	v4config
 	procd_open_instance mosdns

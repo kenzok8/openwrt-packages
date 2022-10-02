@@ -100,6 +100,9 @@ msgstr "内置预设"
 msgid "Cus Config"
 msgstr "自定义配置"
 
+msgid "Log Level"
+msgstr "日志级别"
+
 msgid "MosDNS Log File"
 msgstr "日志文件"
 

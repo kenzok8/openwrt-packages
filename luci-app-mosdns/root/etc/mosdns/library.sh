@@ -1,4 +1,15 @@
 #!/bin/bash
+
+logfile_path() (
+	configfile=$(uci -q get mosdns.mosdns.configfile)
+	if [ "$configfile" = "./def_config.yaml" ]; then
+		uci -q get mosdns.mosdns.logfile
+	else
+		[ ! -f /etc/mosdns/cus_config.yaml ] && exit 1
+		cat /etc/mosdns/cus_config.yaml | grep -A 4 log | grep file | awk -F ":" '{print $2}' | sed 's/\"//g;s/ //g'
+	fi
+)
+
 bakdns() {
 	if [ "$1" == "0" ]; then
 		echo "119.29.29.29"
@@ -43,3 +54,7 @@ L_exist() {
 		uci get vssr.@global[0].global_server &>/dev/null
 	fi
 }
+
+if [ "$1" == "logfile" ]; then
+	logfile_path
+fi
