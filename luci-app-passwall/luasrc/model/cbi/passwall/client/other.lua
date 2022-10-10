@@ -3,6 +3,8 @@ local appname = api.appname
 local fs = api.fs
 local has_v2ray = api.is_finded("v2ray")
 local has_xray = api.is_finded("xray")
+local has_fw3 = api.is_finded("fw3")
+local has_fw4 = api.is_finded("fw4")
 
 m = Map(appname)
 
@@ -95,7 +97,17 @@ o.default = "1:65535"
 o:value("1:65535", translate("All"))
 o:value("53", "DNS")
 
-if os.execute("lsmod | grep -i REDIRECT >/dev/null") == 0 and os.execute("lsmod | grep -i TPROXY >/dev/null") == 0 then
+---- Use nftables
+o = s:option(ListValue, "use_nft", translate("Firewall tools"))
+o.default = "0"
+if has_fw3 then
+    o:value("0", "IPtables")
+end
+if has_fw4 then
+    o:value("1", "NFtables")
+end
+
+if (os.execute("lsmod | grep -i REDIRECT >/dev/null") == 0 and os.execute("lsmod | grep -i TPROXY >/dev/null") == 0) or (os.execute("lsmod | grep -i nft_redir >/dev/null") == 0 and os.execute("lsmod | grep -i nft_tproxy >/dev/null") == 0) then
     o = s:option(ListValue, "tcp_proxy_way", translate("TCP Proxy Way"))
     o.default = "redirect"
     o:value("redirect", "REDIRECT")
@@ -110,7 +122,7 @@ if os.execute("lsmod | grep -i REDIRECT >/dev/null") == 0 and os.execute("lsmod 
         return self.map:set(section, "tcp_proxy_way", value)
     end
 
-    if os.execute("lsmod | grep -i ip6table_mangle >/dev/null") == 0 then
+    if os.execute("lsmod | grep -i ip6table_mangle >/dev/null") == 0 or os.execute("lsmod | grep -i nft_tproxy >/dev/null") == 0 then
         ---- IPv6 TProxy
         o = s:option(Flag, "ipv6_tproxy", translate("IPv6 TProxy"),
                     "<font color='red'>" .. translate(
