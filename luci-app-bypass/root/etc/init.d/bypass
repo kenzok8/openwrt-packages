@@ -1008,8 +1008,11 @@ stop(){
 		if [[ -f /etc/init.d/AdGuardHome && "$(uci -q get AdGuardHome.AdGuardHome.redirect)" == "exchange"  ]]; then
 			/etc/init.d/AdGuardHome stop >/dev/null 2>&1 &
 		fi
-		rm -rf $SDNS $PID $LOC $LOG
+		rm -rf $SDNS $PID $LOC
 		/etc/init.d/dnsmasq restart >/dev/null 2>&1
+		if [ $STATUS = Y -a -z "$GLOBAL_SERVER" ];then
+			rm -rf $LOG
+		fi
 	elif [ -s $DNS_T ];then
 		cat > $DNS_T <<-EOF
 			speed-check-mode none

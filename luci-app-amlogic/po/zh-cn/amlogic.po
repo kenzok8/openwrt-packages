@@ -278,8 +278,8 @@ msgstr "晶晨其他 ----- [ 自定义 DTB 文件 ]"
 msgid "Allwinner H6 ---- [ V-Plus Cloud ]"
 msgstr "全志 H6 ------ [ 微加云 ]"
 
-msgid "Rockchip 3328 --- [ BeikeYun, Chainedbox L1 Pro ]"
-msgstr "瑞芯微 3328 -- [ 贝壳云、我家云 ]"
+msgid "Rockchip -------- [ BeikeYun, Chainedbox L1 Pro, FastRhino R66S, FastRhino R68S, Radxa ROCK 5B ]"
+msgstr "瑞芯微 ------- [ 贝壳云, 我家云, 电犀牛R66S, 电犀牛R68S, 瑞莎5B ]"
 
 msgid "Used in KVM ----- [ Can be used in KVM virtual machine of Armbian system. ]"
 msgstr "KVM 中使用 --- [ 可以在 Armbian 系统的 KVM 虚拟机中使用。 ]"
