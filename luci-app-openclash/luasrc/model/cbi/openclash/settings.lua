@@ -66,7 +66,7 @@ o.default = "fake-ip"
 end
 
 o = s:taboption("op_mode", Flag, "enable_udp_proxy", font_red..bold_on..translate("Proxy UDP Traffics")..bold_off..font_off)
-o.description = translate("The Servers Must Support UDP forwarding")..", "..font_red..bold_on..translate("If Docker is Installed, UDP May Not Forward Normally")..bold_off..font_off
+o.description = translate("The Servers Must Support UDP forwarding").."<br>"..font_red..bold_on.."1."..translate("If Docker is Installed, UDP May Not Forward Normally").."<br>2."..translate("In Fake-ip Mode, Even If This Option is Turned Off, Domain Type Connections Still Pass Through The Core For The Availability")..bold_off..font_off
 o:depends("en_mode", "redir-host")
 o:depends("en_mode", "fake-ip")
 o.default = 1
@@ -597,7 +597,7 @@ o.description = translate("In The Fake-IP Mode, Only Pure IP Requests Are Suppor
 o = s:taboption("lan_ac", DynamicList, "lan_ac_black_ports", translate("Lan Bypassed Port List"))
 o.datatype = "port"
 o:value("5000", translate("5000(NAS)"))
-o.description = translate("The Traffic From The Local Specified Port Will Not Pass The Core, Try To Set When The Bypass Gateway Forwarding Fails")
+o.description = "1."..translate("The Traffic From The Local Specified Port Will Not Pass The Core, Try To Set When The Bypass Gateway Forwarding Fails").."<br>".."2."..translate("In The Fake-IP Mode, Only Pure IP Requests Are Supported")
 
 o = s:taboption("lan_ac", Value, "local_network_pass", translate("Local IPv4 Network Bypassed List"))
 o.template = "cbi/tvalue"
@@ -1206,6 +1206,28 @@ o.rawhtml = true
 o.template = "openclash/other_stream_option"
 o.value = "Bilibili"
 o:depends("stream_auto_select_bilibili", "1")
+
+--Google not cn
+o = s:taboption("stream_enhance", Flag, "stream_auto_select_google_not_cn", font_red..translate("Google Not CN")..font_off)
+o.default = 0
+o:depends("stream_auto_select", "1")
+
+o = s:taboption("stream_enhance", Value, "stream_auto_select_group_key_google_not_cn", translate("Group Filter"))
+o.default = "Google"
+o.placeholder = "Google"
+o.description = translate("It Will Be Searched According To The Regex When Auto Search Group Fails")
+o:depends("stream_auto_select_google_not_cn", "1")
+
+o = s:taboption("stream_enhance", Value, "stream_auto_select_node_key_google_not_cn", translate("Unlock Nodes Filter"))
+o.default = ""
+o.description = translate("It Will Be Selected Nodes According To The Regex")
+o:depends("stream_auto_select_google_not_cn", "1")
+
+o = s:taboption("stream_enhance", DummyValue, "Google", translate("Manual Test"))
+o.rawhtml = true
+o.template = "openclash/other_stream_option"
+o.value = "Google"
+o:depends("stream_auto_select_google_not_cn", "1")
 
 ---- update Settings
 o = s:taboption("rules_update", Flag, "other_rule_auto_update", translate("Auto Update"))

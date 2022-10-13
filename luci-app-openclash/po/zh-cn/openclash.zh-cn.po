@@ -1945,6 +1945,9 @@ msgstr "提示: 检测到内核文件不存在，准备开始下载..."
 msgid "Tip: Detected that the Chnroute Cidr List is not Installed, Ready to Download..."
 msgstr "提示: 检测到大陆白名单列表不存在，准备开始下载..."
 
+msgid "Tip: Detected that the Chnroute Cidr List Format is wrong, Ready to Reformat..."
+msgstr "提示: 检测到大陆白名单列表格式错误，准备重新格式化..."
+
 msgid "Error: Could Not Load The Capsh Library, Please Verify The Capsh Shell Library Work Well..."
 msgstr "错误：Capsh 异常，请尝试重新安装依赖【libcap】和相应的Capsh库，终止启动..."
 
@@ -2572,6 +2575,9 @@ msgstr "提示：开始自动选择（检测）Discovery Plus 解锁节点..."
 msgid "Tip: Start Auto Select Proxy For Bilibili Unlock..."
 msgstr "提示：开始自动选择（检测）Bilibili 解锁节点..."
 
+msgid "Tip: Start Auto Select Proxy For Google Not CN Unlock..."
+msgstr "提示：开始自动选择（检测）Google 非送中节点..."
+
 msgid "Netflix Group:"
 msgstr "Netflix 策略组："
 
@@ -2607,6 +2613,9 @@ msgstr "Discovery Plus 策略组："
 
 msgid "Bilibili Group:"
 msgstr "Bilibili 策略组："
+
+msgid "Google Group:"
+msgstr "Google 策略组："
 
 msgid "full support."
 msgstr "完整解锁。"
@@ -3123,3 +3132,12 @@ msgstr "低延迟优先"
 
 msgid "Random"
 msgstr "随机选择"
+
+msgid "Tip: You have seted the authentication of SOCKS5/HTTP(S) proxy with"
+msgstr "提示：您为 SOCKS5/HTTP(S) 代理设置的账户密码为"
+
+msgid "Google Not CN"
+msgstr "Google 非送中"
+
+msgid "In Fake-ip Mode, Even If This Option is Turned Off, Domain Type Connections Still Pass Through The Core For The Availability"
+msgstr "在 Fake-IP 模式时，即使关闭此选项，域名类型的连接仍将通过核心以保证可用性"

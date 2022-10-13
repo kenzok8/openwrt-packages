@@ -727,6 +727,9 @@ msgstr "WebSocket 主机名"
 msgid "WebSocket Path"
 msgstr "WebSocket 路径"
 
+msgid "Enable early data"
+msgstr "启用前置数据"
+
 msgid "Max Early Data"
 msgstr "最大前置数据"
 

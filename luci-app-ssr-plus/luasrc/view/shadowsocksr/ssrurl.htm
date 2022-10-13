@@ -107,7 +107,7 @@ function import_ssr_url(btn, urlname, sid) {
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.server')[0].value = url.hostname;
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.server_port')[0].value = url.port || "80";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.hysteria_protocol')[0].value = params.get("protocol") || "udp";
-			document.getElementsByName('cbid.shadowsocksr.' + sid + '.auth_type')[0].value = params.get("auth") ? "1" : "0";
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.auth_type')[0].value = params.get("auth") ? "2" : "0";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.auth_type')[0].dispatchEvent(event);
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.auth_payload')[0].value = params.get("auth") || "";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.uplink_capacity')[0].value = params.get("upmbps") || "";
@@ -115,7 +115,7 @@ function import_ssr_url(btn, urlname, sid) {
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.seed')[0].value = params.get("obfsParam") || "";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls_host')[0].value = params.get("peer") || "";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.quic_tls_alpn')[0].value = params.get("alpn") || "";
-			document.getElementsByName('cbid.shadowsocksr.' + sid + '.insecure')[0].checked = (params.get("insecure") === "1");
+			document.getElementsByName('cbid.shadowsocksr.' + sid + '.insecure')[0].checked = params.get("insecure") ? true : false;
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.alias')[0].value = url.hash ? decodeURIComponent(url.hash.slice(1)) : "";
 
 			s.innerHTML = "<font color='green'><%:Import configuration information successfully.%></font>";

@@ -8,7 +8,7 @@ touch $LOCK
 B=/tmp/dnsfilter
 C=/tmp/adupdate.log
 D="date +'%Y-%m-%d %H:%M:%S'"
-E="curl -Lfso"
+E="curl -kLfso"
 G="Download Subscribe Rules"
 
 if [ "$2" = 1 ];then

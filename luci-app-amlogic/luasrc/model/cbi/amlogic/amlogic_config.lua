@@ -62,8 +62,8 @@ kernel_branch.description = translate("Set the version branch of the openwrt fir
 kernel_branch:value("5.4", translate("5.4"))
 kernel_branch:value("5.10", translate("5.10"))
 kernel_branch:value("5.15", translate("5.15"))
-kernel_branch:value("5.18", translate("5.18"))
 kernel_branch:value("5.19", translate("5.19"))
+kernel_branch:value("6.0", translate("6.0"))
 local default_kernel_branch = luci.sys.exec("ls /lib/modules/ 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}'")
 kernel_branch.default = trim(default_kernel_branch)
 kernel_branch.rmempty = false

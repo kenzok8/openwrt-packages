@@ -423,7 +423,6 @@ o = s:option(Flag, 'tls', translate('TLS'))
 o.rmempty = true
 o.default = '0'
 o:depends('type', 'v2ray')
-o:depends('type', 'trojan')
 o:depends('type', 'vless')
 o:depends('type', 'xray')
 

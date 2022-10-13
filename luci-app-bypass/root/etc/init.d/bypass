@@ -702,13 +702,12 @@ gen_dns(){
 	cat >$DNS_T <<-EOF
 		force-AAAA-SOA yes
 		speed-check-mode none
-		dualstack-ip-selection yes
 		cache-size 0
 		cache-persist no
 		log-level fatal
 		log-file $LOG
 	EOF
-	echo "bind :5335 -group a -no-cache" >>$DNS_T
+	echo "bind :5335 -group a -no-cache -no-dualstack-selection" >>$DNS_T
 	echo "bind :5336 -group e -no-rule-soa -no-cache" >>$DNS_T
 	if [ $dns_mode_o = "doh" ];then
 		if [ "$dns_a" = 1 ];then
@@ -1009,8 +1008,11 @@ stop(){
 		if [[ -f /etc/init.d/AdGuardHome && "$(uci -q get AdGuardHome.AdGuardHome.redirect)" == "exchange"  ]]; then
 			/etc/init.d/AdGuardHome stop >/dev/null 2>&1 &
 		fi
-		rm -rf $SDNS $PID $LOC $LOG
+		rm -rf $SDNS $PID $LOC
 		/etc/init.d/dnsmasq restart >/dev/null 2>&1
+		if [ $STATUS = Y -a -z "$GLOBAL_SERVER" ];then
+			rm -rf $LOG
+		fi
 	elif [ -s $DNS_T ];then
 		cat > $DNS_T <<-EOF
 			speed-check-mode none

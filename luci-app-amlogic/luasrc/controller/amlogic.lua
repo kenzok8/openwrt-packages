@@ -94,7 +94,7 @@ elseif (string.find(device_platfrom, "allwinner")) ~= nil then
 elseif (string.find(device_platfrom, "qemu")) ~= nil then
 	device_install_script = ""
 	device_update_script = "openwrt-update-kvm"
-	device_kernel_script = "openwrt-kernel-kvm"
+	device_kernel_script = "openwrt-kernel"
 else
 	device_install_script = "openwrt-install-amlogic"
 	device_update_script = "openwrt-update-amlogic"
