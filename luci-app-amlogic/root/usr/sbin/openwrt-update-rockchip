@@ -19,7 +19,7 @@ AUTO_MAINLINE_UBOOT=${2}
 BACKUP_RESTORE_CONFIG=${3}
 
 # Current device model
-if [ -f /boot/armbianEnv.txt ];then
+if [ -f /boot/armbianEnv.txt ]; then
     source /boot/armbianEnv.txt 2>/dev/null
     CURRENT_FDTFILE=$(basename $fdtfile)
 fi
@@ -28,42 +28,42 @@ if [[ -z "${MYDEVICE_NAME}" ]]; then
     echo "The device name is empty and cannot be recognized."
     exit 1
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "Chainedbox L1 Pro")" != "" ]]; then
-    if [ -n "$CURRENT_FDTFILE" ];then
+    if [ -n "$CURRENT_FDTFILE" ]; then
         MYDTB_FDTFILE="$CURRENT_FDTFILE"
     else
         MYDTB_FDTFILE="rk3328-l1pro-1296mhz.dtb"
     fi
     SOC="l1pro"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "BeikeYun")" != "" ]]; then
-    if [ -n "$CURRENT_FDTFILE" ];then
+    if [ -n "$CURRENT_FDTFILE" ]; then
         MYDTB_FDTFILE="$CURRENT_FDTFILE"
     else
         MYDTB_FDTFILE="rk3328-beikeyun-1296mhz.dtb"
     fi
     SOC="beikeyun"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R66S")" != "" ]]; then
-    if [ -n "$CURRENT_FDTFILE" ];then
+    if [ -n "$CURRENT_FDTFILE" ]; then
         MYDTB_FDTFILE="$CURRENT_FDTFILE"
     else
         MYDTB_FDTFILE="rk3568-fastrhino-r66s.dtb"
     fi
     SOC="r66s"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R68S")" != "" ]]; then
-    if [ -n "$CURRENT_FDTFILE" ];then
+    if [ -n "$CURRENT_FDTFILE" ]; then
         MYDTB_FDTFILE="$CURRENT_FDTFILE"
     else
         MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
     fi
     SOC="r68s"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H68K Board")" != "" ]]; then
-    if [ -n "$CURRENT_FDTFILE" ];then
+    if [ -n "$CURRENT_FDTFILE" ]; then
         MYDTB_FDTFILE="$CURRENT_FDTFILE"
     else
         MYDTB_FDTFILE="rk3568-opc-h68k.dtb"
     fi
     SOC="h68k"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa ROCK 5B")" != "" ]]; then
-    if [ -n "$CURRENT_FDTFILE" ];then
+    if [ -n "$CURRENT_FDTFILE" ]; then
         MYDTB_FDTFILE="$CURRENT_FDTFILE"
     else
         MYDTB_FDTFILE="rk3588-rock-5b.dtb"
@@ -90,7 +90,7 @@ mmcblk?p[1-4])
     PARTITION_NAME="p"
     LB_PRE="MMC_"
     ;;
-   nvme?n?p?)
+nvme?n?p?)
     EMMC_NAME=$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-2)}')
     PARTITION_NAME="p"
     LB_PRE="NVME_"
@@ -226,14 +226,14 @@ fi
 # fix loopdev issue in kernel 5.19
 function fix_loopdev() {
     local parentdev=${1##*/}
-    if [ ! -d /sys/block/${parentdev} ];then
+    if [ ! -d /sys/block/${parentdev} ]; then
         return
     fi
     subdevs=$(lsblk -l -o NAME | grep -E "^${parentdev}.+\$")
     for subdev in $subdevs; do
-        if [ ! -d /sys/block/${parentdev}/${subdev} ];then
+        if [ ! -d /sys/block/${parentdev}/${subdev} ]; then
             return
-        elif [ -b /dev/${sub_dev} ];then
+        elif [ -b /dev/${sub_dev} ]; then
             continue
         fi
         source /sys/block/${parentdev}/${subdev}/uevent
@@ -297,54 +297,54 @@ else
 fi
 
 # Prepare the dockerman config file
-if [ -f ${P2}/etc/init.d/dockerman ] && [ -f ${P2}/etc/config/dockerd ];then
+if [ -f ${P2}/etc/init.d/dockerman ] && [ -f ${P2}/etc/config/dockerd ]; then
 
     flg=0
     # get current docker data root
     data_root=$(uci get dockerd.globals.data_root 2>/dev/null)
-    if [ "$data_root" == "" ];then
-         flg=1
-	 # get current config from /etc/docker/daemon.json
-         if [ -f "/etc/docker/daemon.json" ] && [ -x "/usr/bin/jq" ];then
-	     data_root=$(jq -r '."data-root"' /etc/docker/daemon.json)
+    if [ "$data_root" == "" ]; then
+        flg=1
+        # get current config from /etc/docker/daemon.json
+        if [ -f "/etc/docker/daemon.json" ] && [ -x "/usr/bin/jq" ]; then
+            data_root=$(jq -r '."data-root"' /etc/docker/daemon.json)
 
-	     bip=$(jq -r '."bip"' /etc/docker/daemon.json)
-	     [ "$bip" == "null" ] && bip="172.31.0.1/24"
+            bip=$(jq -r '."bip"' /etc/docker/daemon.json)
+            [ "$bip" == "null" ] && bip="172.31.0.1/24"
 
-	     log_level=$(jq -r '."log-level"' /etc/docker/daemon.json)
-	     [ "$log_level" == "null" ] && log_level="warn"
+            log_level=$(jq -r '."log-level"' /etc/docker/daemon.json)
+            [ "$log_level" == "null" ] && log_level="warn"
 
-	     _iptables=$(jq -r '."iptables"' /etc/docker/daemon.json)
-	     [ "$_iptables" == "null" ] && _iptables="true"
+            _iptables=$(jq -r '."iptables"' /etc/docker/daemon.json)
+            [ "$_iptables" == "null" ] && _iptables="true"
 
-	     registry_mirrors=$(jq -r '."registry-mirrors"[]' /etc/docker/daemon.json 2>/dev/null)
-         fi
+            registry_mirrors=$(jq -r '."registry-mirrors"[]' /etc/docker/daemon.json 2>/dev/null)
+        fi
     fi
 
-    if [ "$data_root" == "" ];then
-         data_root="/opt/docker/" # the default data root
+    if [ "$data_root" == "" ]; then
+        data_root="/opt/docker/" # the default data root
     fi
 
-    if ! uci get dockerd.globals >/dev/null 2>&1;then
+    if ! uci get dockerd.globals >/dev/null 2>&1; then
         uci set dockerd.globals='globals'
         uci commit
     fi
 
     # delete alter config , use inner config
-    if uci get dockerd.globals.alt_config_file >/dev/null 2>&1;then
+    if uci get dockerd.globals.alt_config_file >/dev/null 2>&1; then
         uci delete dockerd.globals.alt_config_file
         uci commit
     fi
 
-    if [ $flg -eq 1 ];then
-	uci set dockerd.globals.data_root=$data_root
-	[ "$bip" != "" ] && uci set dockerd.globals.bip=$bip
-	[ "$log_level" != "" ] && uci set dockerd.globals.log_level=$log_level
-	[ "$_iptables" != "" ] && uci set dockerd.globals.iptables=$_iptables
-	if [ "$registry_mirrors" != "" ];then
-            for reg in $registry_mirrors;do
+    if [ $flg -eq 1 ]; then
+        uci set dockerd.globals.data_root=$data_root
+        [ "$bip" != "" ] && uci set dockerd.globals.bip=$bip
+        [ "$log_level" != "" ] && uci set dockerd.globals.log_level=$log_level
+        [ "$_iptables" != "" ] && uci set dockerd.globals.iptables=$_iptables
+        if [ "$registry_mirrors" != "" ]; then
+            for reg in $registry_mirrors; do
                 uci add_list dockerd.globals.registry_mirrors=$reg
-	    done
+            done
         fi
         uci set dockerd.globals.auto_start='1'
         uci commit
@@ -533,14 +533,14 @@ sed -e "s/:0:0:99999:7:::/:${ddd}:0:99999:7:::/" -i ./etc/shadow
 sed -e "/amule:x:/d" -i ./etc/shadow
 # 修复dropbear每次升级后重复添加sshd条目的问题
 sed -e "/sshd:x:/d" -i ./etc/shadow
-if ! grep "sshd:x:22:sshd" ./etc/group >/dev/null;then
-     echo "sshd:x:22:sshd" >> ./etc/group
+if ! grep "sshd:x:22:sshd" ./etc/group >/dev/null; then
+    echo "sshd:x:22:sshd" >>./etc/group
 fi
-if ! grep "sshd:x:22:22:sshd:" ./etc/passwd >/dev/null;then
-     echo "sshd:x:22:22:sshd:/var/run/sshd:/bin/false" >> ./etc/passwd
+if ! grep "sshd:x:22:22:sshd:" ./etc/passwd >/dev/null; then
+    echo "sshd:x:22:22:sshd:/var/run/sshd:/bin/false" >>./etc/passwd
 fi
-if ! grep "sshd:x:" ./etc/shadow >/dev/null;then
-     echo "sshd:x:${ddd}:0:99999:7:::" >> ./etc/shadow
+if ! grep "sshd:x:" ./etc/shadow >/dev/null; then
+    echo "sshd:x:${ddd}:0:99999:7:::" >>./etc/shadow
 fi
 
 if [ $BR_FLAG -eq 1 ]; then
@@ -571,7 +571,7 @@ eval tar czf .reserved/openwrt_config.tar.gz "${BACKUP_LIST}" 2>/dev/null
 sync
 
 mv ./etc/rc.local ./etc/rc.local.orig
-cat > "./etc/rc.local" <<EOF
+cat >"./etc/rc.local" <<EOF
 if ! ls /etc/rc.d/S??dockerd >/dev/null 2>&1;then
     /etc/init.d/dockerd enable
     /etc/init.d/dockerd start
@@ -611,28 +611,28 @@ echo "done"
 echo
 
 echo -n "Update boot args ... "
-if [ -f /tmp/armbianEnv.txt ];then
+if [ -f /tmp/armbianEnv.txt ]; then
     cp /tmp/armbianEnv.txt .
 fi
 sed -e '/fdtfile=/d' -i armbianEnv.txt
 sed -e '/rootdev=/d' -i armbianEnv.txt
 sed -e '/rootfstype=/d' -i armbianEnv.txt
 sed -e '/rootflags=/d' -i armbianEnv.txt
-if [ "$SOC" == "rock5b" ];then
-    echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >> armbianEnv.txt
+if [ "$SOC" == "rock5b" ]; then
+    echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
 else
-    echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >> armbianEnv.txt
+    echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
 fi
-cat >> armbianEnv.txt <<EOF
+cat >>armbianEnv.txt <<EOF
 rootdev=UUID=${NEW_ROOT_UUID}
 rootfstype=btrfs
 rootflags=compress=zstd:${ZSTD_LEVEL}
 EOF
 # 对没有 HDMI 的机型关闭 display tty 让 initrd script 输出到 uart
 # 参考 https://github.com/raspberrypi/linux/issues/2863
-if [ "$SOC" == "r68s" ];then
+if [ "$SOC" == "r68s" ]; then
     sed -e '/console=/d' -i armbianEnv.txt
-    echo console=serial >> armbianEnv.txt
+    echo console=serial >>armbianEnv.txt
 fi
 sync
 echo "done"

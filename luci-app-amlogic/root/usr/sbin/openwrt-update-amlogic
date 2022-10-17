@@ -207,14 +207,14 @@ fi
 # fix loopdev issue in kernel 5.19
 function fix_loopdev() {
     local parentdev=${1##*/}
-    if [ ! -d /sys/block/${parentdev} ];then
+    if [ ! -d /sys/block/${parentdev} ]; then
         return
     fi
     subdevs=$(lsblk -l -o NAME | grep -E "^${parentdev}.+\$")
     for subdev in $subdevs; do
-        if [ ! -d /sys/block/${parentdev}/${subdev} ];then
+        if [ ! -d /sys/block/${parentdev}/${subdev} ]; then
             return
-        elif [ -b /dev/${sub_dev} ];then
+        elif [ -b /dev/${sub_dev} ]; then
             continue
         fi
         source /sys/block/${parentdev}/${subdev}/uevent

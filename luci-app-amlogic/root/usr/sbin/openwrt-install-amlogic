@@ -160,7 +160,7 @@ else
 5c:TX3 QZ (OverClock):s905x3:meson-sm1-tx3-qz-oc.dtb:u-boot-tx3-qz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2208Mhz,4GB Mem,1Gb Nic,bcm4330 wifi
 5d:X96 Max+ (IP1001M phy):s905x3:meson-sm1-x96-max-plus-ip1001m.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic (IP1001M phy),bcm4354 wifi
 5e:X96 Max+ Q2 & X96 Air Q1000:s905x3:meson-sm1-x96-max-plus-q2.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic,qca9377 wifi
-5f:skyworthbox:s905x3:meson-sm1-skyworth-lb2004-a4091.dtb:u-boot-skyworth-lb2004.bin:NA:NA:4C@2016Mhz,4GB Mem,1Gb Nic,mtk7661rsn
+5f:Tencent Aurora 3Pro:s905x3:meson-sm1-skyworth-lb2004-a4091.dtb:u-boot-skyworth-lb2004.bin:/lib/u-boot/skyworth-lb2004-u-boot.bin.sd.bin:NA:4C@2016Mhz,4GB Mem,32G Rom,JL2121 1Gb Nic,MT7661RSN
 
 # Other
 0:Other::NA:NA:NA:NA:Enter the dtb file name of your box
@@ -321,10 +321,10 @@ elif [[ "${AMLOGIC_SOC}" == "s905x" ]]; then
     BLANK2=0
     BLANK3=0
     BLANK4=0
-elif [[ "${AMLOGIC_SOC}" == "s905x3" ]] && [[ "${FDTFILE}" == "meson-sm1-skyworth-lb2004-a4091.dtb" ]]; then
-    BOOT=768
-    BLANK1=68
-    BLANK2=202
+elif [[ "${FDTFILE}" == "meson-sm1-skyworth-lb2004-a4091.dtb" ]]; then
+    BOOT=512
+    BLANK1=108
+    BLANK2=562
     BLANK3=0
     BLANK4=0
 elif [[ "${AMLOGIC_SOC}" == "s905l3a" ]]; then
