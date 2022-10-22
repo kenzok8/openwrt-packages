@@ -13,10 +13,11 @@ start()
 	stop
 
 	[ "${enable}" -ne "1" ] && exit 0
-	/usr/bin/gost ${run_command} &
+	/usr/bin/gost ${run_command} >/root/gost.log 2>&1 &
+        echo "start $?"
 }
 
 stop()
 {
-	killall -9 "gost" > "/dev/null" 2>&1
+	killall -9 "/usr/bin/gost" > "/dev/null" 2>&1
 }
