@@ -130,9 +130,9 @@ if [ "${BOOT_PART_MSG}" == "" ]; then
     echo "Boot The partition does not exist, so the update cannot be continued!"
     exit 1
 fi
-BOOT_NAME=$(echo $BOOT_PART_MSG | awk '{print $1}')
-BOOT_PATH=$(echo $BOOT_PART_MSG | awk '{print $2}')
-BOOT_UUID=$(echo $BOOT_PART_MSG | awk '{print $4}')
+BOOT_NAME=$(echo ${BOOT_PART_MSG} | awk '{print $1}')
+BOOT_PATH=$(echo ${BOOT_PART_MSG} | awk '{print $2}')
+BOOT_UUID=$(echo ${BOOT_PART_MSG} | awk '{print $4}')
 
 BR_FLAG=1
 echo -ne "Whether to backup and restore the current config files? y/n [y]\b\b"
@@ -151,9 +151,9 @@ esac
 
 # find root partition
 ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/$/ {print $0}')
-ROOT_NAME=$(echo $ROOT_PART_MSG | awk '{print $1}')
-ROOT_PATH=$(echo $ROOT_PART_MSG | awk '{print $2}')
-ROOT_UUID=$(echo $ROOT_PART_MSG | awk '{print $4}')
+ROOT_NAME=$(echo ${ROOT_PART_MSG} | awk '{print $1}')
+ROOT_PATH=$(echo ${ROOT_PART_MSG} | awk '{print $2}')
+ROOT_UUID=$(echo ${ROOT_PART_MSG} | awk '{print $4}')
 
 case $ROOT_NAME in
 ${EMMC_NAME}${PARTITION_NAME}2)
@@ -177,10 +177,10 @@ if [ "${NEW_ROOT_PART_MSG}" == "" ]; then
     echo "The new ROOTFS partition does not exist, so the update cannot continue!"
     exit 1
 fi
-NEW_ROOT_NAME=$(echo $NEW_ROOT_PART_MSG | awk '{print $1}')
-NEW_ROOT_PATH=$(echo $NEW_ROOT_PART_MSG | awk '{print $2}')
-NEW_ROOT_UUID=$(echo $NEW_ROOT_PART_MSG | awk '{print $4}')
-NEW_ROOT_MP=$(echo $NEW_ROOT_PART_MSG | awk '{print $5}')
+NEW_ROOT_NAME=$(echo ${NEW_ROOT_PART_MSG} | awk '{print $1}')
+NEW_ROOT_PATH=$(echo ${NEW_ROOT_PART_MSG} | awk '{print $2}')
+NEW_ROOT_UUID=$(echo ${NEW_ROOT_PART_MSG} | awk '{print $4}')
+NEW_ROOT_MP=$(echo ${NEW_ROOT_PART_MSG} | awk '{print $5}')
 echo "NEW_ROOT_MP: [ ${NEW_ROOT_MP} ]"
 
 # backup old bootloader
@@ -192,15 +192,15 @@ if [ ! -f /root/BackupOldBootloader.img ]; then
 fi
 
 # losetup
-losetup -f -P $IMG_NAME
-if [ $? -eq 0 ]; then
-    LOOP_DEV=$(losetup | grep "$IMG_NAME" | awk '{print $1}')
-    if [ "$LOOP_DEV" == "" ]; then
+losetup -f -P ${IMG_NAME}
+if [ ${?} -eq 0 ]; then
+    LOOP_DEV=$(losetup | grep "${IMG_NAME}" | awk '{print $1}')
+    if [ "${LOOP_DEV}" == "" ]; then
         echo "loop device not found!"
         exit 1
     fi
 else
-    echo "losetup [ $IMG_FILE ] failed!"
+    echo "losetup [ ${IMG_FILE} ] failed!"
     exit 1
 fi
 
@@ -211,7 +211,7 @@ function fix_loopdev() {
         return
     fi
     subdevs=$(lsblk -l -o NAME | grep -E "^${parentdev}.+\$")
-    for subdev in $subdevs; do
+    for subdev in ${subdevs}; do
         if [ ! -d /sys/block/${parentdev}/${subdev} ]; then
             return
         elif [ -b /dev/${sub_dev} ]; then
@@ -226,20 +226,20 @@ fix_loopdev ${LOOP_DEV}
 
 WAIT=3
 echo "The loopdev is [ $LOOP_DEV ], wait [ ${WAIT} ] seconds. "
-while [ $WAIT -ge 1 ]; do
+while [[ "${WAIT}" -ge "1" ]]; do
     sleep 1
     WAIT=$((WAIT - 1))
 done
 
 # umount loop devices (openwrt will auto mount some partition)
-MOUNTED_DEVS=$(lsblk -l -o NAME,PATH,MOUNTPOINT | grep "$LOOP_DEV" | awk '$3 !~ /^$/ {print $2}')
-for dev in $MOUNTED_DEVS; do
+MOUNTED_DEVS=$(lsblk -l -o NAME,PATH,MOUNTPOINT | grep "${LOOP_DEV}" | awk '$3 !~ /^$/ {print $2}')
+for dev in ${MOUNTED_DEVS}; do
     while :; do
-        echo "umount [ $dev ] ... "
-        umount -f $dev
+        echo "umount [ ${dev} ] ... "
+        umount -f ${dev}
         sleep 1
-        mnt=$(lsblk -l -o NAME,PATH,MOUNTPOINT | grep "$dev" | awk '$3 !~ /^$/ {print $2}')
-        if [ "$mnt" == "" ]; then
+        mnt=$(lsblk -l -o NAME,PATH,MOUNTPOINT | grep "${dev}" | awk '$3 !~ /^$/ {print $2}')
+        if [ "${mnt}" == "" ]; then
             break
         else
             echo "Retry ..."
@@ -248,7 +248,7 @@ for dev in $MOUNTED_DEVS; do
 done
 
 # mount src part
-WORK_DIR=$PWD
+WORK_DIR=${PWD}
 P1=${WORK_DIR}/boot
 P2=${WORK_DIR}/root
 mkdir -p $P1 $P2
@@ -277,26 +277,26 @@ if [ -f ${P2}/etc/init.d/dockerman ] && [ -f ${P2}/etc/config/dockerd ]; then
     flg=0
     # get current docker data root
     data_root=$(uci get dockerd.globals.data_root 2>/dev/null)
-    if [ "$data_root" == "" ]; then
+    if [ "${data_root}" == "" ]; then
         flg=1
         # get current config from /etc/docker/daemon.json
         if [ -f "/etc/docker/daemon.json" ] && [ -x "/usr/bin/jq" ]; then
             data_root=$(jq -r '."data-root"' /etc/docker/daemon.json)
 
             bip=$(jq -r '."bip"' /etc/docker/daemon.json)
-            [ "$bip" == "null" ] && bip="172.31.0.1/24"
+            [ "${bip}" == "null" ] && bip="172.31.0.1/24"
 
             log_level=$(jq -r '."log-level"' /etc/docker/daemon.json)
-            [ "$log_level" == "null" ] && log_level="warn"
+            [ "${log_level}" == "null" ] && log_level="warn"
 
             _iptables=$(jq -r '."iptables"' /etc/docker/daemon.json)
-            [ "$_iptables" == "null" ] && _iptables="true"
+            [ "${_iptables}" == "null" ] && _iptables="true"
 
             registry_mirrors=$(jq -r '."registry-mirrors"[]' /etc/docker/daemon.json 2>/dev/null)
         fi
     fi
 
-    if [ "$data_root" == "" ]; then
+    if [ "${data_root}" == "" ]; then
         data_root="/opt/docker/" # the default data root
     fi
 
@@ -311,14 +311,14 @@ if [ -f ${P2}/etc/init.d/dockerman ] && [ -f ${P2}/etc/config/dockerd ]; then
         uci commit
     fi
 
-    if [ $flg -eq 1 ]; then
-        uci set dockerd.globals.data_root=$data_root
-        [ "$bip" != "" ] && uci set dockerd.globals.bip=$bip
-        [ "$log_level" != "" ] && uci set dockerd.globals.log_level=$log_level
-        [ "$_iptables" != "" ] && uci set dockerd.globals.iptables=$_iptables
-        if [ "$registry_mirrors" != "" ]; then
-            for reg in $registry_mirrors; do
-                uci add_list dockerd.globals.registry_mirrors=$reg
+    if [ ${flg} -eq 1 ]; then
+        uci set dockerd.globals.data_root=${data_root}
+        [ "${bip}" != "" ] && uci set dockerd.globals.bip=${bip}
+        [ "${log_level}" != "" ] && uci set dockerd.globals.log_level=${log_level}
+        [ "${_iptables}" != "" ] && uci set dockerd.globals.iptables=${_iptables}
+        if [ "${registry_mirrors}" != "" ]; then
+            for reg in ${registry_mirrors}; do
+                uci add_list dockerd.globals.registry_mirrors=${reg}
             done
         fi
         uci set dockerd.globals.auto_start='1'
@@ -367,7 +367,7 @@ fi
 #format NEW_ROOT
 echo "umount [ ${NEW_ROOT_MP} ]"
 umount -f "${NEW_ROOT_MP}"
-if [ $? -ne 0 ]; then
+if [[ "${?}" -ne "0" ]]; then
     echo "Umount [ ${NEW_ROOT_MP} ] failed, Please restart and try again!"
     umount -f ${P1}
     umount -f ${P2}
@@ -377,22 +377,22 @@ fi
 
 # check and fix partition
 function check_and_fix_partition() {
-    local target_dev_name=$1  # mmcblk2
-    local target_pt_name=$2   # p2
-    local target_pt_idx=$3    # 2
-    local safe_pt_begin_mb=$4 # 800
-    local safe_pt_begin_byte=$(($safe_pt_begin_mb * 1024 * 1024))
+    local target_dev_name=${1}  # mmcblk2
+    local target_pt_name=${2}   # p2
+    local target_pt_idx=${3}    # 2
+    local safe_pt_begin_mb=${4} # 800
+    local safe_pt_begin_byte=$((${safe_pt_begin_mb} * 1024 * 1024))
 
     local cur_pt_begin_sector=$(fdisk -l /dev/${target_dev_name} | grep ${target_dev_name}${target_pt_name} | awk '{printf $2}')
-    local cur_pt_begin_mb=$(($cur_pt_begin_sector * 512 / 1024 / 1024))
+    local cur_pt_begin_mb=$((${cur_pt_begin_sector} * 512 / 1024 / 1024))
 
-    if [ $cur_pt_begin_mb -ge $safe_pt_begin_mb ]; then
+    if [ ${cur_pt_begin_mb} -ge ${safe_pt_begin_mb} ]; then
         # check pass
         return
     fi
 
     local cur_pt_end_sector=$(fdisk -l /dev/${target_dev_name} | grep ${target_dev_name}${target_pt_name} | awk '{printf $3}')
-    local cur_pt_end_byte=$((($cur_pt_end_sector + 1) * 512 - 1))
+    local cur_pt_end_byte=$(((${cur_pt_end_sector} + 1) * 512 - 1))
 
     echo "Unsafe partition found, repairing ... "
     parted /dev/${target_dev_name} rm ${target_pt_idx} ||
@@ -420,7 +420,7 @@ if [ "${NEW_ROOT_NAME}" == "mmcblk2p2" ]; then
         #     the 12 bytes starting from 796MB will be overwritten by bootloader after each reboot,
         #     so the safe location is set after 800MB
         SAFE_PT_BEGIN_MB=800
-        check_and_fix_partition "${EMMC_NAME}" "p2" 2 $SAFE_PT_BEGIN_MB
+        check_and_fix_partition "${EMMC_NAME}" "p2" 2 ${SAFE_PT_BEGIN_MB}
     fi
 fi
 
@@ -449,13 +449,13 @@ fi
 cd ${NEW_ROOT_MP}
 echo "Start copying data， From [ ${P2} ] TO [ ${NEW_ROOT_MP} ] ..."
 ENTRYS=$(ls)
-for entry in $ENTRYS; do
-    if [ "$entry" == "lost+found" ]; then
+for entry in ${ENTRYS}; do
+    if [[ "${entry}" == "lost+found" ]]; then
         continue
     fi
-    echo "Remove old [ $entry ] ... "
-    rm -rf $entry
-    if [ $? -ne 0 ]; then
+    echo "Remove old [ ${entry} ] ... "
+    rm -rf ${entry}
+    if [[ "${?}" -ne "0" ]]; then
         echo "failed."
         exit 1
     fi
@@ -470,9 +470,9 @@ sync
 
 COPY_SRC="root etc bin sbin lib opt usr www"
 echo "Copy data begin ... "
-for src in $COPY_SRC; do
-    echo "Copy [ $src ] ... "
-    (cd ${P2} && tar cf - $src) | tar xf -
+for src in ${COPY_SRC}; do
+    echo "Copy [ ${src} ] ... "
+    (cd ${P2} && tar cf - ${src}) | tar xf -
     sync
 done
 
@@ -680,7 +680,7 @@ EOF
             read -p "Please choose whether to write the mainline bootloader to EMMC?  y/n " yn
         fi
 
-        case $yn in
+        case ${yn} in
         y | Y)
             FLASH_MAINLINE_UBOOT=1
             break

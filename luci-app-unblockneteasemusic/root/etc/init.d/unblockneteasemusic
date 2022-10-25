@@ -80,7 +80,7 @@ append_filter_client() {
 
 start_service() {
 	config_load "$NAME"
-	is_enabled "config" "enable" || exit 1
+	is_enabled "config" "enable" || return 1
 
 	local update_time
 	config_get update_time "config" "update_time" "3"

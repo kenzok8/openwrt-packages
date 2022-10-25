@@ -1,22 +1,41 @@
 #!/bin/sh /etc/rc.common
 # Created By ImmortalWrt
-# https://github.com/project-openwrt
+# https://github.com/immortalwrt
 
-START=90
-STOP=10
+USE_PROCD=1
 
-enable="$(uci get gost.@gost[0].enable)"
-run_command="$(uci get gost.@gost[0].run_command)"
+START=99
+GOST=/usr/bin/gost
 
-start()
-{
-	stop
-
-	[ "${enable}" -ne "1" ] && exit 0
-	/usr/bin/gost ${run_command} &
+start_service() {
+    config_load "gost"
+    config_foreach start_instance
 }
 
-stop()
-{
-	killall -9 "gost" > "/dev/null" 2>&1
+service_enabled() {
+    config_get_bool enabled "$1" 'enable' 0
+    [ $enabled -gt 0 ]
+}
+
+start_instance() {
+    if ! service_enabled "$1"; then
+        return 1
+    fi
+
+    config_get run_command "$1" 'run_command'
+
+    procd_open_instance
+    procd_set_param command $GOST
+    procd_append_param command $run_command
+    procd_set_param file /etc/config/gost
+    procd_close_instance
+}
+
+reload_service() {
+    stop
+    start
+}
+
+service_triggers() {
+    procd_add_reload_trigger gost
 }
