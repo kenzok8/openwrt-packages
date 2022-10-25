@@ -5,6 +5,11 @@
 local m, s, sec, o
 local uci = luci.model.uci.cursor()
 
+local validation = require "luci.cbi.datatypes"
+local function is_finded(e)
+	return luci.sys.exec('type -t -p "%s"' % e) ~= "" and true or false
+end
+
 m = Map("shadowsocksr", translate("ShadowSocksR Plus+ Settings"), translate("<h3>Support SS/SSR/V2RAY/XRAY/TROJAN/NAIVEPROXY/SOCKS5/TUN etc.</h3>"))
 m:section(SimpleSection).template = "shadowsocksr/status"
 
@@ -107,7 +112,34 @@ o:value("114.114.115.115:53", translate("Oversea Mode DNS-2 (114.114.115.115)"))
 o:depends("pdnsd_enable", "1")
 o:depends("pdnsd_enable", "2")
 o.description = translate("Custom DNS Server format as IP:PORT (default: 8.8.4.4:53)")
-o.datatype = "hostport"
+o.datatype = "ip4addrport"
+
+if is_finded("chinadns-ng") then
+	o = s:option(Value, "chinadns_forward", translate("Domestic DNS Server"))
+	o:value("wan", translate("Use DNS from WAN"))
+	o:value("wan_114", translate("Use DNS from WAN and 114DNS"))
+	o:value("114.114.114.114:53", translate("Nanjing Xinfeng 114DNS (114.114.114.114)"))
+	o:value("119.29.29.29:53", translate("DNSPod Public DNS (119.29.29.29)"))
+	o:value("1.2.4.8:53", translate("CNNIC SDNS (1.2.4.8)"))
+	o:depends({pdnsd_enable = "1", run_mode = "router"})
+	o:depends({pdnsd_enable = "2", run_mode = "router"})
+	o.description = translate("Custom DNS Server format as IP:PORT (default: disabled)")
+	o.validate = function(self, value, section)
+		if (section and value) then
+			if value == "wan" or value == "wan_114" then
+				return value
+			end
+
+			if validation.ip4addrport(value) then
+				return value
+			end
+
+			return nil, translate("Expecting: %s"):format(translate("valid address:port"))
+		end
+
+		return value
+	end
+end
 
 return m
 

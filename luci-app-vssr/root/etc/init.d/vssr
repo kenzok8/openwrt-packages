@@ -621,26 +621,26 @@ start() {
     fi
     if rules; then
         if start_redir; then
-            if [ -f "/tmp/dnsmasq.ssr" ]; then
-                rm -rf /tmp/dnsmasq.ssr
+            if [ -f "/tmp/dnsmasq.d/dnsmasq.ssr.d" ]; then
+                rm -rf /tmp/dnsmasq.d/dnsmasq.ssr.d
             fi
             if [ -f "/tmp/dnsmasq.oversea" ]; then
                 rm -rf /tmp/dnsmasq.oversea
             fi
             mkdir -p /tmp/dnsmasq.d
             if [ "$run_mode" = "direct" ]; then
-                mkdir -p /tmp/dnsmasq.ssr
-                cp -rf /etc/vssr/ad.conf /tmp/dnsmasq.ssr/
+                mkdir -p /tmp/dnsmasq.d/dnsmasq.ssr.d
+                cp -rf /etc/vssr/ad.conf /tmp/dnsmasq.d/dnsmasq.ssr.d/
                 cat >/tmp/dnsmasq.d/dnsmasq-ssr.conf <<EOF
-conf-dir=/tmp/dnsmasq.ssr
+conf-dir=/tmp/dnsmasq.d/dnsmasq.ssr.d
 EOF
             elif ! [ "$run_mode" = "oversea" ]; then
-                mkdir -p /tmp/dnsmasq.ssr
-                cp -rf /etc/vssr/gfw_list.conf /tmp/dnsmasq.ssr/
-                cp -rf /etc/vssr/gfw_base.conf /tmp/dnsmasq.ssr/
-                cp -rf /etc/vssr/ad.conf /tmp/dnsmasq.ssr/
+                mkdir -p /tmp/dnsmasq.d/dnsmasq.ssr.d
+                cp -rf /etc/vssr/gfw_list.conf /tmp/dnsmasq.d/dnsmasq.ssr.d/
+                cp -rf /etc/vssr/gfw_base.conf /tmp/dnsmasq.d/dnsmasq.ssr.d/
+                cp -rf /etc/vssr/ad.conf /tmp/dnsmasq.d/dnsmasq.ssr.d/
                 cat >/tmp/dnsmasq.d/dnsmasq-ssr.conf <<EOF
-conf-dir=/tmp/dnsmasq.ssr
+conf-dir=/tmp/dnsmasq.d/dnsmasq.ssr.d
 EOF
             else
                 mkdir -p /tmp/dnsmasq.oversea
@@ -650,7 +650,7 @@ conf-dir=/tmp/dnsmasq.oversea
 EOF
             fi
             if [ $(uci_get_by_type global adblock) = 0 ]; then
-                rm -f /tmp/dnsmasq.ssr/ad.conf
+                rm -f /tmp/dnsmasq.d/dnsmasq.ssr.d/ad.conf
             fi
             /usr/share/vssr/gfw2ipset.sh
         else
@@ -703,7 +703,7 @@ stop() {
     killall -q -9 ss-redir ss-local obfs-local ssr-redir ssr-local ssr-server xray-plugin xray hysteria trojan microsocks ipt2socks dns2socks pdnsd
 
     if [ -f "/tmp/dnsmasq.d/dnsmasq-ssr.conf" ]; then
-        rm -rf /tmp/dnsmasq.d/dnsmasq-ssr.conf /tmp/dnsmasq.ssr /tmp/dnsmasq.oversea
+        rm -rf /tmp/dnsmasq.d/dnsmasq-ssr.conf /tmp/dnsmasq.d/dnsmasq.ssr.d /tmp/dnsmasq.oversea
         /etc/init.d/dnsmasq restart >/dev/null 2>&1
     fi
     del_cron
