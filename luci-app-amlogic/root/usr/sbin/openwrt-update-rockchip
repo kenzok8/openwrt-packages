@@ -69,11 +69,11 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa ROCK 5B")" != "" ]]; then
         MYDTB_FDTFILE="rk3588-rock-5b.dtb"
     fi
     SOC="rock5b"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OWL H88K V1 Board")" != "" ]]; then
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OWL H88K")" != "" ]]; then
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
     else
-        MYDTB_FDTFILE="rk3588-h88k.dtb"
+        MYDTB_FDTFILE="rk3588-hinlink-h88k.dtb"
     fi
     SOC="h88k"
 else
