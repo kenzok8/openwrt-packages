@@ -632,22 +632,19 @@ sed -e '/fdtfile=/d' -i armbianEnv.txt
 sed -e '/rootdev=/d' -i armbianEnv.txt
 sed -e '/rootfstype=/d' -i armbianEnv.txt
 sed -e '/rootflags=/d' -i armbianEnv.txt
-if [ "$SOC" == "rock5b" ]; then
-    echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-else
-    echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-fi
+case $SOC in
+    l1pro|beikeyun)
+        echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+	;;
+    *)
+        echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+	;;
+esac
 cat >>armbianEnv.txt <<EOF
 rootdev=UUID=${NEW_ROOT_UUID}
 rootfstype=btrfs
 rootflags=compress=zstd:${ZSTD_LEVEL}
 EOF
-# 对没有 HDMI 的机型关闭 display tty 让 initrd script 输出到 uart
-# 参考 https://github.com/raspberrypi/linux/issues/2863
-if [ "$SOC" == "r68s" ]; then
-    sed -e '/console=/d' -i armbianEnv.txt
-    echo console=serial >>armbianEnv.txt
-fi
 sync
 echo "done"
 echo
