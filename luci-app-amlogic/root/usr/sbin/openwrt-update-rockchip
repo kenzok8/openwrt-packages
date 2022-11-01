@@ -62,6 +62,13 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H68K Board")" != "" ]]; the
         MYDTB_FDTFILE="rk3568-opc-h68k.dtb"
     fi
     SOC="h68k"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa E25")" != "" ]]; then
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-radxa-e25.dtb"
+    fi
+    SOC="e25"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa ROCK 5B")" != "" ]]; then
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
@@ -69,11 +76,11 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa ROCK 5B")" != "" ]]; then
         MYDTB_FDTFILE="rk3588-rock-5b.dtb"
     fi
     SOC="rock5b"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OWL H88K V1 Board")" != "" ]]; then
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OWL H88K")" != "" ]]; then
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
     else
-        MYDTB_FDTFILE="rk3588-h88k.dtb"
+        MYDTB_FDTFILE="rk3588-hinlink-h88k.dtb"
     fi
     SOC="h88k"
 else
@@ -625,22 +632,19 @@ sed -e '/fdtfile=/d' -i armbianEnv.txt
 sed -e '/rootdev=/d' -i armbianEnv.txt
 sed -e '/rootfstype=/d' -i armbianEnv.txt
 sed -e '/rootflags=/d' -i armbianEnv.txt
-if [ "$SOC" == "rock5b" ]; then
-    echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-else
-    echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-fi
+case $SOC in
+    l1pro|beikeyun)
+        echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+	;;
+    *)
+        echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+	;;
+esac
 cat >>armbianEnv.txt <<EOF
 rootdev=UUID=${NEW_ROOT_UUID}
 rootfstype=btrfs
 rootflags=compress=zstd:${ZSTD_LEVEL}
 EOF
-# 对没有 HDMI 的机型关闭 display tty 让 initrd script 输出到 uart
-# 参考 https://github.com/raspberrypi/linux/issues/2863
-if [ "$SOC" == "r68s" ]; then
-    sed -e '/console=/d' -i armbianEnv.txt
-    echo console=serial >>armbianEnv.txt
-fi
 sync
 echo "done"
 echo
