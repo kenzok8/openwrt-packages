@@ -24,7 +24,7 @@ end
 
 function act_status()
 	local stat = luci.util.ubus("service", "list", { name = "unblockneteasemusic" })
-	local running = next(stat) and stat.unblockneteasemusic.instances.unblockneteasemusic.running or false
+	local running = next(stat) and next(stat.unblockneteasemusic) and stat.unblockneteasemusic.instances.unblockneteasemusic.running or false
 
 	local e = { running = running }
 	luci.http.prepare_content("application/json")

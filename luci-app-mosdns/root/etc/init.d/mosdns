@@ -25,6 +25,7 @@ restore_setting() {
 	uci set dhcp.@dnsmasq[0].noresolv='0'
 	uci del dhcp.@dnsmasq[0].cachesize
 	uci set dhcp.@dnsmasq[0].filter_aaaa='1'
+	uci del dhcp.@dnsmasq[0].setbymosdns
 	uci commit dhcp
 }
 
@@ -37,6 +38,7 @@ prepare_setting() {
 		uci set dhcp.@dnsmasq[0].noresolv="1"
 		uci set dhcp.@dnsmasq[0].cachesize='0'
 		uci set dhcp.@dnsmasq[0].filter_aaaa='0'
+		uci set dhcp.@dnsmasq[0].setbymosdns='1'
 		uci commit dhcp
 	fi
 }
@@ -146,7 +148,7 @@ stop_service() {
 	if [ "${configfile}" = "./def_config.yaml" ]; then
 		config_load "mosdns"
 		enabled=$(uci -q get mosdns.mosdns.enabled)
-		[ "${enabled}" = "0" ] && restore_setting
+		[ "${enabled}" = "0" ] && [ "$(uci -q get dhcp.@dnsmasq[0].setbymosdns)" -eq 1 ] &&  restore_setting
 		restart_others
 	fi
 	delcron
