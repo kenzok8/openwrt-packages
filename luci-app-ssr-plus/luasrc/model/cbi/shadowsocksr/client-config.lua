@@ -124,6 +124,12 @@ local flows = {
 	"xtls-rprx-splice-udp443"
 }
 
+local tls_flows = {
+	-- tls
+	"xtls-rprx-vision",
+	"xtls-rprx-vision-udp443"
+}
+
 m = Map("shadowsocksr", translate("Edit ShadowSocksR Server"))
 m.redirect = luci.dispatcher.build_url("admin/services/shadowsocksr/servers")
 if m.uci:get("shadowsocksr", sid) ~= "servers" then
@@ -636,16 +642,23 @@ if is_finded("xray") then
 	o:depends({type = "v2ray", v2ray_protocol = "vless", transport = "kcp", tls = false})
 	o:depends({type = "v2ray", v2ray_protocol = "trojan", transport = "tcp", tls = false})
 	o:depends({type = "v2ray", v2ray_protocol = "trojan", transport = "kcp", tls = false})
-end
 
--- Flow
-o = s:option(Value, "vless_flow", translate("Flow"))
-for _, v in ipairs(flows) do
-	o:value(v, translate(v))
+	-- Flow
+	o = s:option(Value, "vless_flow", translate("Flow"))
+	for _, v in ipairs(flows) do
+		o:value(v, translate(v))
+	end
+	o.rmempty = true
+	o.default = "xtls-rprx-splice"
+	o:depends("xtls", true)
+
+	o = s:option(Value, "tls_flow", translate("Flow"))
+	for _, v in ipairs(tls_flows) do
+		o:value(v, translate(v))
+	end
+	o.rmempty = true
+	o:depends({type = "v2ray", v2ray_protocol = "vless", tls = true})
 end
-o.rmempty = true
-o.default = "xtls-rprx-splice"
-o:depends("xtls", true)
 
 -- [[ TLS部分 ]] --
 o = s:option(Flag, "tls_sessionTicket", translate("Session Ticket"))
@@ -661,6 +674,7 @@ if is_finded("xray") then
 	o:value("safari", translate("safari"))
 	o:value("randomized", translate("randomized"))
 	o:depends({type = "v2ray", tls = true})
+	o:depends({type = "v2ray", xtls = true})
 	o.default = "disable"
 end
 
