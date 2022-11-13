@@ -48,8 +48,8 @@ update_core() {
 	for file in $(uclient-fetch -qO- "https://api.github.com/repos/UnblockNeteaseMusic/server/contents/precompiled" | jsonfilter -e '@[*].path')
 	do
 		uclient-fetch "https://fastly.jsdelivr.net/gh/UnblockNeteaseMusic/server@$core_latest_ver/$file" -qO "/usr/share/$NAME/core/${file##*/}"
-		[ -s "/usr/share/$NAME/core/${url##*/}" ] || {
-			echo -e "Failed to download ${url##*/}." >> "/tmp/$NAME.log"
+		[ -s "/usr/share/$NAME/core/${file##*/}" ] || {
+			echo -e "Failed to download ${file##*/}." >> "/tmp/$NAME.log"
 			rm -f "$LOCK"
 			exit 1
 		}
