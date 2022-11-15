@@ -165,7 +165,7 @@ start_service() {
 	local tmp="/tmp/$NAME"
 	if [ "${hijack_ways}" = "use_ipset" ]; then
 		local settype nftflag
-		if [ -n "$FW4"] && dnsmasq --version | grep -q 'Compile time options:.* nftset'; then
+		if [ -n "$FW4"]; then
 			settype="nftset"
 			nftflag="inet#fw4#"
 		else
