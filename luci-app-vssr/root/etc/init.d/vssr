@@ -192,6 +192,8 @@ start_rules() {
         server=$(ping ${server} -s 1 -c 1 | grep PING | cut -d'(' -f 2 | cut -d')' -f1)
         if echo $server | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" >/dev/null; then
             echo $server >/etc/ssr_ip
+        elif [ "$server" != "${server#*:[0-9a-fA-F]}" ]; then
+            echo $server >/etc/ssr_ip
         else
             server=$(cat /etc/ssr_ip)
         fi
@@ -220,6 +222,8 @@ start_rules() {
         else
             udp_server=$(ping ${udp_server} -s 1 -c 1 | grep PING | cut -d'(' -f 2 | cut -d')' -f1)
             if echo $udp_server | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" >/dev/null; then
+                echo $udp_server >/etc/ssr_ip
+            elif [ "$udp_server" != "${udp_server#*:[0-9a-fA-F]}" ]; then
                 echo $udp_server >/etc/ssr_ip
             else
                 udp_server=$(cat /etc/ssr_ip)
