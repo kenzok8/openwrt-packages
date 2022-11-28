@@ -1,4 +1,0 @@
-
-config global
-	option time '10'
-	option enabled '0'

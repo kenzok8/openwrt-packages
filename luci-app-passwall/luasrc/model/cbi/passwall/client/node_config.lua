@@ -284,6 +284,9 @@ port:depends({ type = "Xray", protocol = "socks" })
 port:depends({ type = "Xray", protocol = "shadowsocks" })
 port:depends({ type = "Xray", protocol = "trojan" })
 
+hysteria_hop = s:option(Value, "hysteria_hop", translate("Additional ports for hysteria hop"))
+hysteria_hop:depends("type", "Hysteria")
+
 username = s:option(Value, "username", translate("Username"))
 username:depends("type", "Socks")
 username:depends("type", "Naiveproxy")
@@ -508,6 +511,13 @@ xtls.default = 0
 xtls:depends({ type = "Xray", protocol = "vless", tls = true })
 xtls:depends({ type = "Xray", protocol = "trojan", tls = true })
 
+tlsflow = s:option(Value, "tlsflow", translate("flow"))
+tlsflow.default = ""
+tlsflow:value("", translate("Disable"))
+tlsflow:value("xtls-rprx-vision")
+tlsflow:value("xtls-rprx-vision-udp443")
+tlsflow:depends({ type = "Xray", protocol = "vless", tls = true , xtls = false })
+
 flow = s:option(Value, "flow", translate("flow"))
 flow.default = "xtls-rprx-direct"
 flow:value("xtls-rprx-origin")
@@ -526,6 +536,11 @@ alpn:value("h2")
 alpn:value("http/1.1")
 alpn:depends({ type = "V2ray", tls = true })
 alpn:depends({ type = "Xray", tls = true })
+
+-- minversion = s:option(Value, "minversion", translate("minversion"))
+-- minversion.default = "1.3"
+-- minversion:value("1.3")
+-- minversion:depends("tls", true)
 
 -- [[ TLS部分 ]] --
 tls_sessionTicket = s:option(Flag, "tls_sessionTicket", translate("Session Ticket"))
@@ -565,6 +580,7 @@ xray_fingerprint:value("safari")
 xray_fingerprint:value("randomized")
 xray_fingerprint.default = "disable"
 xray_fingerprint:depends({ type = "Xray", tls = true, xtls = false })
+xray_fingerprint:depends({ type = "Xray", tls = true, xtls = true })
 function xray_fingerprint.cfgvalue(self, section)
 	return m:get(section, "fingerprint")
 end
@@ -823,6 +839,15 @@ hysteria_recv_window_conn:depends("type", "Hysteria")
 
 hysteria_recv_window = s:option(Value, "hysteria_recv_window", translate("QUIC connection receive window"))
 hysteria_recv_window:depends("type", "Hysteria")
+
+hysteria_handshake_timeout = s:option(Value, "hysteria_handshake_timeout", translate("Handshake Timeout"))
+hysteria_handshake_timeout:depends("type", "Hysteria")
+
+hysteria_idle_timeout = s:option(Value, "hysteria_idle_timeout", translate("Idle Timeout"))
+hysteria_idle_timeout:depends("type", "Hysteria")
+
+hysteria_hop_interval = s:option(Value, "hysteria_hop_interval", translate("Hop Interval"))
+hysteria_hop_interval:depends("type", "Hysteria")
 
 hysteria_disable_mtu_discovery = s:option(Flag, "hysteria_disable_mtu_discovery", translate("Disable MTU detection"))
 hysteria_disable_mtu_discovery:depends("type", "Hysteria")

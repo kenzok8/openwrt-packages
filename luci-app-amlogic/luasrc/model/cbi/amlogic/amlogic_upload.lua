@@ -76,7 +76,9 @@ luci.sys.exec("echo '' > /tmp/amlogic/amlogic_check_kernel.log && sync >/dev/nul
 --SimpleForm for Update OpenWrt firmware/kernel
 b = SimpleForm("upload", nil)
 b.title = translate("Upload")
-b.description = translate("After uploading [Firmware], [Kernel], [IPK] or [Backup Config], the operation buttons will be displayed.")
+local des_content = translate("Update plugins first, then update the kernel or firmware.")
+local des_content = des_content .. "<br />" .. translate("After uploading [Firmware], [Kernel], [IPK] or [Backup Config], the operation buttons will be displayed.")
+b.description = des_content
 b.reset = false
 b.submit = false
 
