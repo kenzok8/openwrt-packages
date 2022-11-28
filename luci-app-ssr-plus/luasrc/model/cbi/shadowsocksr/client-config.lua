@@ -772,6 +772,7 @@ o.default = "0"
 o:depends("type", "ssr")
 o:depends("type", "ss")
 o:depends("type", "trojan")
+o:depends("type", "hysteria")
 
 if is_installed("sagernet-core") then
 	o = s:option(ListValue, "packet_encoding", translate("Packet Encoding"))
