@@ -311,7 +311,8 @@ local hysteria = {
 	ca = (server.certificate) and server.certpath or nil,
 	recv_window_conn = tonumber(server.recv_window_conn),
 	recv_window = tonumber(server.recv_window),
-	disable_mtu_discovery = (server.disable_mtu_discovery == "1") and true or false
+	disable_mtu_discovery = (server.disable_mtu_discovery == "1") and true or false,
+	fast_open = (server.fast_open == "1") and true or false
 }
 local config = {}
 function config:new(o)
