@@ -26,6 +26,7 @@ shunt_dns_config_file=
 tmp_local_port=
 ARG_UDP=
 dns_port="5335"            #dns port
+china_dns_port="5333"      #china_dns_port
 tmp_dns_port="300"         #dns2socks temporary port
 tmp_udp_port="301"         #udp temporary port
 tmp_udp_local_port="302"   #udp socks temporary port
@@ -80,7 +81,15 @@ get_host_ip() {
 		fi
 	fi
 	[ -z "$ip" ] || uci_set_by_name $1 ip $ip
-	echo ${ip:="$(uci_get_by_name $1 ip "ERROR")"}
+	[ -n "$ip" ] || ip="$(uci_get_by_name $1 ip "ERROR")"
+
+	local chinadns="$(uci_get_by_type global chinadns_forward)"
+	if [ -n "$chinadns" ] && [ "$ip" != "$host" ]; then
+		grep -q "$host" "$TMP_DNSMASQ_PATH/chinadns_fixed_server.conf" 2>"/dev/null" || \
+			echo -e "address=/$host/$ip" >> "$TMP_DNSMASQ_PATH/chinadns_fixed_server.conf"
+	fi
+
+	echo $ip
 }
 
 clean_log() {
@@ -165,27 +174,46 @@ ln_start_bin() {
 
 start_dns() {
 	local ssrplus_dns="$(uci_get_by_type global pdnsd_enable 0)"
-	local dnsstr="$(uci_get_by_type global tunnel_forward 8.8.4.4:53)"
-	local dnsserver=$(echo "$dnsstr" | awk -F ':' '{print $1}')
-	local dnsport=$(echo "$dnsstr" | awk -F ':' '{print $2}')
+	local dnsserver="$(uci_get_by_type global tunnel_forward 8.8.4.4:53)"
+	local run_mode="$(uci_get_by_type global run_mode)"
 
 	if [ "$ssrplus_dns" != "0" ]; then
-		case "$(uci_get_by_type global run_mode)" in
-		gfw) ipset add gfwlist $dnsserver 2>/dev/null ;;
-		oversea) ipset add oversea $dnsserver 2>/dev/null ;;
-		*) ipset add ss_spec_wan_ac $dnsserver nomatch 2>/dev/null ;;
+		case "$run_mode" in
+		gfw) ipset add gfwlist ${dnsserver%:*} 2>/dev/null ;;
+		oversea) ipset add oversea ${dnsserver%:*} 2>/dev/null ;;
+		*) ipset add ss_spec_wan_ac ${dnsserver%:*} nomatch 2>/dev/null ;;
 		esac
 		case "$ssrplus_dns" in
 		1)
-			ln_start_bin $(first_type dns2tcp) dns2tcp -L "127.0.0.1#$dns_port" -R "$dnsserver#$dnsport"
+			ln_start_bin $(first_type dns2tcp) dns2tcp -L 127.0.0.1#$dns_port -R ${dnsserver/:/#}
 			pdnsd_enable_flag=1
 			;;
 		2)
 			ln_start_bin $(first_type microsocks) microsocks -i 127.0.0.1 -p $tmp_dns_port ssrplus-dns
-			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver:$dnsport 127.0.0.1:$dns_port -q
+			ln_start_bin $(first_type dns2socks) dns2socks 127.0.0.1:$tmp_dns_port $dnsserver 127.0.0.1:$dns_port -q
 			pdnsd_enable_flag=2
 			;;
 		esac
+
+		if [ "$run_mode" = "router" ]; then
+			local chinadns="$(uci_get_by_type global chinadns_forward)"
+			if [ -n "$chinadns" ]; then
+				local wandns="$(ifstatus wan | jsonfilter -e '@["dns-server"][0]' || echo "119.29.29.29")"
+				case "$chinadns" in
+				"wan") chinadns="$wandns" ;;
+				"wan_114") chinadns="$wandns,114.114.114.114" ;;
+				esac
+
+				ln_start_bin $(first_type chinadns-ng) chinadns-ng -l $china_dns_port -4 china -p 3 -c ${chinadns/:/#} -t 127.0.0.1#$dns_port -N -f -r
+
+				uci -q rename "dhcp.@dnsmasq[0].noresolv"="_orig_noresolv"
+				uci -q rename "dhcp.@dnsmasq[0].server"="_orig_server"
+				uci -q set "dhcp.@dnsmasq[0].noresolv"="1"
+				uci -q add_list "dhcp.@dnsmasq[0].server"="127.0.0.1#$china_dns_port"
+				uci -q set "dhcp.@dnsmasq[0]._unused_ssrp_changed"=1
+				uci -q commit "dhcp"
+			fi
+		fi
 	fi
 }
 
@@ -877,6 +905,14 @@ stop() {
 	)
 	killall -q -9 v2ray-plugin obfs-local xray-plugin
 	rm -f /var/lock/ssr-monitor.lock
+	if [ "$(uci -q get "dhcp.@dnsmasq[0]._unused_ssrp_changed")" = "1" ]; then
+		uci -q del "dhcp.@dnsmasq[0].noresolv"
+		uci -q del_list "dhcp.@dnsmasq[0].server"="127.0.0.1#$china_dns_port"
+		uci -q rename "dhcp.@dnsmasq[0]._orig_noresolv"="noresolv"
+		uci -q rename "dhcp.@dnsmasq[0]._orig_server"="server"
+		uci -q del "dhcp.@dnsmasq[0]._unused_ssrp_changed"
+		uci -q commit "dhcp"
+	fi
 	if [ -f "/tmp/dnsmasq.d/dnsmasq-ssrplus.conf" ]; then
 		rm -rf /tmp/dnsmasq.d/dnsmasq-ssrplus.conf $TMP_DNSMASQ_PATH $TMP_PATH/*-ssr-*.json $TMP_PATH/ssr-server*.json
 		/etc/init.d/dnsmasq restart >/dev/null 2>&1
