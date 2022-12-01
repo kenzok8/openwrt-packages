@@ -76,13 +76,16 @@ function socks_http()
 end
 function wireguard()
 	outbound_settings = {
-		address = server.server,
-		port = tonumber(server.server_port),
-		localAddresses = server.local_addresses,
-		privateKey = server.private_key,
-		peerPublicKey = server.peer_pubkey,
-		preSharedKey = server.preshared_key or nil,
-		mtu = tonumber(server.mtu) or 1500
+		secretKey = server.private_key,
+		address = server.local_addresses,
+		peers = {
+			{
+				publicKey = server.peer_pubkey,
+				preSharedKey = server.preshared_key,
+				endpoint = server.server .. ":" .. server.server_port
+			}
+		},
+		mtu = tonumber(server.mtu)
 	}
 end
 local outbound = {}

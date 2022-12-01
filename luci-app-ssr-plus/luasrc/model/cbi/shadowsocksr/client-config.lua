@@ -193,6 +193,8 @@ o:value("trojan", translate("Trojan"))
 o:value("shadowsocks", translate("Shadowsocks"))
 if is_installed("sagernet-core") then
 	o:value("shadowsocksr", translate("ShadowsocksR"))
+end
+if is_finded("xray") then
 	o:value("wireguard", translate("WireGuard"))
 end
 o:value("socks", translate("Socks"))
@@ -604,6 +606,7 @@ o.rmempty = true
 
 -- [[ WireGuard 部分 ]]--
 o = s:option(DynamicList, "local_addresses", translate("Local addresses"))
+o.datatype = "cidr"
 o:depends({type = "v2ray", v2ray_protocol = "wireguard"})
 o.rmempty = true
 
@@ -657,7 +660,7 @@ if is_finded("xray") then
 		o:value(v, translate(v))
 	end
 	o.rmempty = true
-	o:depends({type = "v2ray", v2ray_protocol = "vless", tls = true})
+	o:depends({type = "v2ray", v2ray_protocol = "vless", transport = "tcp", tls = true})
 end
 
 -- [[ TLS部分 ]] --
