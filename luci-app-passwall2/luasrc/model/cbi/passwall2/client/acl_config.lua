@@ -28,7 +28,27 @@ local dynamicList_write = function(self, section, value)
     t = table.concat(t, " ")
 	return DynamicList.write(self, section, t)
 end
-
+local doh_validate = function(self, value, t)
+    if value ~= "" then
+        local flag = 0
+        local util = require "luci.util"
+        local val = util.split(value, ",")
+        local url = val[1]
+        val[1] = nil
+        for i = 1, #val do
+            local v = val[i]
+            if v then
+                if not datatypes.ipmask4(v) then
+                    flag = 1
+                end
+            end
+        end
+        if flag == 0 then
+            return value
+        end
+    end
+    return nil, translate("DoH request address") .. " " .. translate("Format must be:") .. " URL,IP"
+end
 -- [[ ACLs Settings ]]--
 s = m:section(NamedSection, arg[1], translate("ACLs"), translate("ACLs"))
 s.addremove = false
@@ -173,7 +193,7 @@ o:value("udp", "UDP")
 o:value("tcp", "TCP")
 o:value("doh", "DoH")
 o:depends({ node = "default",  ['!reverse'] = true })
-
+---- DNS Forward
 o = s:option(Value, "direct_dns", translate("Direct DNS"))
 o.datatype = "or(ipaddr,ipaddrport)"
 o.default = "119.29.29.29"
@@ -183,6 +203,7 @@ o:value("223.5.5.5", "223.5.5.5 (AliDNS)")
 o:depends("direct_dns_protocol", "udp")
 o:depends("direct_dns_protocol", "tcp")
 
+---- DoH
 o = s:option(Value, "direct_dns_doh", translate("Direct DNS DoH"))
 o.default = "https://223.5.5.5/dns-query"
 o:value("https://1.12.12.12/dns-query", "DNSPod 1")
@@ -194,8 +215,11 @@ o:depends("direct_dns_protocol", "doh")
 o = s:option(ListValue, "remote_dns_protocol", translate("Remote DNS Protocol"))
 o:value("tcp", "TCP")
 o:value("doh", "DoH")
+o:value("udp", "UDP")
+o:value("fakedns", "FakeDNS")
 o:depends({ node = "default",  ['!reverse'] = true })
 
+---- DNS Forward
 o = s:option(Value, "remote_dns", translate("Remote DNS"))
 o.datatype = "or(ipaddr,ipaddrport)"
 o.default = "1.1.1.1"
@@ -207,7 +231,9 @@ o:value("9.9.9.9", "9.9.9.9 (Quad9-Recommended)")
 o:value("208.67.220.220", "208.67.220.220 (OpenDNS)")
 o:value("208.67.222.222", "208.67.222.222 (OpenDNS)")
 o:depends("remote_dns_protocol", "tcp")
+o:depends("remote_dns_protocol", "udp")
 
+---- DoH
 o = s:option(Value, "remote_dns_doh", translate("Remote DNS DoH"))
 o:value("https://1.1.1.1/dns-query", "CloudFlare")
 o:value("https://1.1.1.2/dns-query", "CloudFlare-Security")
@@ -219,30 +245,12 @@ o:value("https://dns.adguard.com/dns-query,176.103.130.130", "AdGuard")
 o:value("https://doh.libredns.gr/dns-query,116.202.176.26", "LibreDNS")
 o:value("https://doh.libredns.gr/ads,116.202.176.26", "LibreDNS (No Ads)")
 o.default = "https://1.1.1.1/dns-query"
-o.validate = function(self, value, t)
-    if value ~= "" then
-        local flag = 0
-        local util = require "luci.util"
-        local val = util.split(value, ",")
-        local url = val[1]
-        val[1] = nil
-        for i = 1, #val do
-            local v = val[i]
-            if v then
-                if not api.datatypes.ipmask4(v) then
-                    flag = 1
-                end
-            end
-        end
-        if flag == 0 then
-            return value
-        end
-    end
-    return nil, translate("DoH request address") .. " " .. translate("Format must be:") .. " URL,IP"
-end
+o.validate = doh_validate
 o:depends("remote_dns_protocol", "doh")
 
 o = s:option(Value, "remote_dns_client_ip", translate("Remote DNS EDNS Client Subnet"))
+o.description = translate("Notify the DNS server when the DNS query is notified, the location of the client (cannot be a private IP address).") .. "<br />" ..
+                translate("This feature requires the DNS server to support the Edns Client Subnet (RFC7871).")
 o.datatype = "ipaddr"
 o:depends("remote_dns_protocol", "tcp")
 o:depends("remote_dns_protocol", "doh")
@@ -252,20 +260,9 @@ o.default = "UseIPv4"
 o:value("UseIP")
 o:value("UseIPv4")
 --o:value("UseIPv6")
-o:depends("remote_dns_protocol", "tcp")
-o:depends("remote_dns_protocol", "doh")
-
-o = s:option(ListValue, "dns_hosts_mode", translate("Domain Override"))
-o.default = "default"
-o:value("default", translate("Default"))
-o:value("disable", translate("Disable"))
-o:value("custom", translate("Custom"))
-o:depends("remote_dns_protocol", "tcp")
-o:depends("remote_dns_protocol", "doh")
 
 hosts = s:option(TextValue, "dns_hosts", translate("Domain Override"))
 hosts.rows = 5
 hosts.wrap = "off"
-hosts:depends("dns_hosts_mode", "custom")
 
 return m
