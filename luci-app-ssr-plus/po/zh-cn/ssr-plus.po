@@ -458,16 +458,16 @@ msgid "DNS Server IP:Port"
 msgstr "DNS 服务器 IP:Port"
 
 msgid "Domestic DNS Server"
-msgstr "国内DNS服务器"
+msgstr "国内 DNS 服务器"
 
 msgid "Use DNS from WAN"
-msgstr "使用WAN下发的DNS"
+msgstr "使用 WAN 下发的 DNS"
 
 msgid "Use DNS from WAN and 114DNS"
-msgstr "使用WAN下发的DNS和114DNS"
+msgstr "使用 WAN 下发的 DNS 和 114DNS"
 
 msgid "Custom DNS Server format as IP:PORT (default: disabled)"
-msgstr "格式为 IP:PORT (默认: 禁用)"
+msgstr "格式为 IP:PORT（默认：禁用）"
 
 msgid "Update time (every day)"
 msgstr "更新时间（每天）"

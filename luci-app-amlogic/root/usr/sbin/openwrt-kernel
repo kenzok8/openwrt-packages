@@ -9,7 +9,7 @@
 # It is recommended to install MAINLINE_UBOOT for kernel versions above 5.10.y
 # openwrt-kernel ${AUTO_MAINLINE_UBOOT}
 # E.g: openwrt-kernel yes
-# E.g: openwrt-kernel no
+#      openwrt-kernel no
 #
 #================================== Functions list ==================================
 #
@@ -17,6 +17,8 @@
 # get_textoffset     : Get kernel TEXT_OFFSET
 # init_var           : Initialize all variables
 # check_kernel       : Check kernel files list
+# chech_files_same   : Check file consistency
+# restore_kernel     : Restore current kernel
 # update_kernel      : Update the kernel
 # update_uboot       : Update the uboot
 #
@@ -60,7 +62,7 @@ init_var() {
 
     # Check release file
     if [[ -s "${release_file}" ]]; then
-        source "${release_file}" 2>/dev/null
+        source "${release_file}"
         PLATFORM="${PLATFORM}"
         UBOOT_OVERLOAD="${UBOOT_OVERLOAD}"
         MAINLINE_UBOOT="${MAINLINE_UBOOT}"
@@ -108,7 +110,7 @@ init_var() {
     esac
     P4_PATH="/mnt/${EMMC_NAME}${PARTITION_NAME}4"
     # Move kernel related files to the ${P4_PATH} directory
-    mv -f /tmp/upload/* ${P4_PATH} 2>/dev/null && sync
+    mv -f /tmp/upload/* ${P4_PATH} 2>/dev/null
 
     echo -e "Current device: ${MYDEVICE_NAME} [ ${PLATFORM} ], Use in [ ${EMMC_NAME} ]"
     sync && echo ""
@@ -173,6 +175,42 @@ check_kernel() {
     sync && echo ""
 }
 
+# Check the consistency of amlogic device files
+chech_files_same() {
+    i="0"
+    max_try="5"
+    while [[ "${i}" -le "${max_try}" ]]; do
+        if [[ "$(sha256sum "${1}" | awk '{print $1}')" == "$(sha256sum "${2}" | awk '{print $1}')" ]]; then
+            echo "" && break
+        else
+            cp -f ${1} ${2}
+            i="$((i + 1))"
+        fi
+    done
+    [[ "${i}" -gt "${max_try}" ]] && echo "God, it's different after ${max_try} copies: [ ${1} ]"
+}
+
+# Restore the kernel when the update fails
+restore_kernel() {
+    (
+        cd /boot
+        rm -rf \
+            config-${kernel_name} \
+            System.map-${kernel_name} \
+            initrd.img-${kernel_name} \
+            uInitrd-${kernel_name} \
+            vmlinuz-${kernel_name} \
+            initrd.img \
+            uInitrd \
+            zImage \
+            Image \
+            vmlinuz \
+            dtb* 2>/dev/null
+        tar -xzf /tmp/boot-backup.tar.gz 2>/dev/null
+    )
+    error_msg "Kernel update failed and has been reverted."
+}
+
 # Update the kernel
 update_kernel() {
     local cur_kernel_name=$(uname -r)
@@ -180,7 +218,7 @@ update_kernel() {
     echo -e "Start unpacking the kernel..."
 
     # 01. for /boot five files
-    # backup the current_kernel
+    # Backup the current_kernel
     (
         cd /boot
         tar -czf /tmp/boot-backup.tar.gz \
@@ -208,10 +246,10 @@ update_kernel() {
             vmlinuz \
             dtb* 2>/dev/null
     )
-    # extract the new kernel
-    tar -xf ${P4_PATH}/boot-${kernel_name}.tar.gz -C /boot && sync
+    # Extract the new kernel
+    tar -xf ${P4_PATH}/boot-${kernel_name}.tar.gz -C /boot
 
-    local f
+    # Check if the file exists
     local valid_files
     if [[ "${PLATFORM}" == "qemu-aarch64" ]]; then
         valid_files="vmlinuz-${kernel_name} initrd.img-${kernel_name} config-${kernel_name} System.map-${kernel_name}"
@@ -220,43 +258,25 @@ update_kernel() {
         valid_files="vmlinuz-${kernel_name} uInitrd-${kernel_name} config-${kernel_name} System.map-${kernel_name}"
         rm -f /boot/initrd.img*
     fi
+    for f in ${valid_files}; do [[ -f "/boot/${f}" ]] || restore_kernel; done
 
-    for f in $valid_files; do
-        if [[ ! -f "/boot/${f}" ]]; then
-            (
-                cd /boot
-                rm -rf \
-                    config-${kernel_name} \
-                    System.map-${kernel_name} \
-                    initrd.img-${kernel_name} \
-                    uInitrd-${kernel_name} \
-                    vmlinuz-${kernel_name} \
-                    initrd.img \
-                    uInitrd \
-                    zImage \
-                    Image \
-                    vmlinuz \
-                    dtb* 2>/dev/null
-                tar -xzf /tmp/boot-backup.tar.gz 2>/dev/null
-            )
-            error_msg "The file: ${f} is not exists."
-        fi
-    done
-
+    # Check if the files are the same
     (
         cd /boot
         if [[ "${PLATFORM}" == "qemu-aarch64" ]]; then
-            ln -sf initrd.img-${kernel_name} initrd.img &&
-                ln -sf vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
+            ln -sf initrd.img-${kernel_name} initrd.img
+            ln -sf vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
         elif [[ "$boot_fstype" == "vfat" ]]; then
-            cp -f uInitrd-${kernel_name} uInitrd &&
-                cp -f vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ} &&
-                sync
+            cp -f uInitrd-${kernel_name} uInitrd
+            [[ -z "$(chech_files_same uInitrd-${kernel_name} uInitrd)" ]] || restore_kernel
+            cp -f vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
+            [[ -z "$(chech_files_same vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ})" ]] || restore_kernel
         else
-            ln -sf uInitrd-${kernel_name} uInitrd &&
-                ln -sf vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
+            ln -sf uInitrd-${kernel_name} uInitrd
+            ln -sf vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
         fi
     )
+
     echo -e "(1/3) Unpacking [ boot-${kernel_name}.tar.gz ] done."
 
     if [[ "${PLATFORM}" == "qemu-aarch64" ]]; then
@@ -264,39 +284,30 @@ update_kernel() {
     else
         # 02. for /boot/dtb/${PLATFORM}/*
         if [[ "${boot_fstype}" == "vfat" ]]; then
-            (
-                cd /boot &&
-                    mkdir -p dtb/${PLATFORM}
-            )
+            (cd /boot && mkdir -p dtb/${PLATFORM})
         else
-            (
-                cd /boot &&
-                    mkdir -p dtb-${kernel_name}/${PLATFORM} &&
-                    ln -sf dtb-${kernel_name} dtb
-            )
+            (cd /boot && mkdir -p dtb-${kernel_name}/${PLATFORM} && ln -sf dtb-${kernel_name} dtb)
         fi
-        tar -xf ${P4_PATH}/dtb-${PLATFORM}-${kernel_name}.tar.gz -C /boot/dtb/${PLATFORM} && sync
-        [ "$(ls /boot/dtb/${PLATFORM} -l 2>/dev/null | grep "^-" | wc -l)" -ge "1" ] || error_msg "/boot/dtb/${PLATFORM} file is missing."
+        tar -xf ${P4_PATH}/dtb-${PLATFORM}-${kernel_name}.tar.gz -C /boot/dtb/${PLATFORM}
+        [[ "$(ls /boot/dtb/${PLATFORM} -l 2>/dev/null | grep "^-" | wc -l)" -ge "1" ]] || error_msg "/boot/dtb/${PLATFORM} file is missing."
         echo -e "(2/3) Unpacking [ dtb-${PLATFORM}-${kernel_name}.tar.gz ] done."
     fi
 
     # 03. for /lib/modules/*
-    rm -rf /lib/modules/* 2>/dev/null && sync
-    tar -xf ${P4_PATH}/modules-${kernel_name}.tar.gz -C /lib/modules && sync
+    rm -rf /lib/modules/*
+    tar -xf ${P4_PATH}/modules-${kernel_name}.tar.gz -C /lib/modules
     (
         cd /lib/modules/${kernel_name}
-        rm -f *.ko 2>/dev/null
+        rm -f *.ko
         find ./ -type f -name '*.ko' -exec ln -s {} ./ \;
         sync && sleep 3
         x=$(ls *.ko -l 2>/dev/null | grep "^l" | wc -l)
-        if [ "${x}" -eq "0" ]; then
-            error_msg "Error *.ko Files not found."
-        fi
+        [[ "${x}" -eq "0" ]] && error_msg "Error *.ko Files not found."
     )
     echo -e "(3/3) Unpacking [ modules-${kernel_name}.tar.gz ] done."
 
     # Delete kernel tmpfiles
-    rm -f ${P4_PATH}/*-${kernel_name}.tar.gz ${P4_PATH}/sha256sums 2>/dev/null
+    rm -f ${P4_PATH}/*-${kernel_name}.tar.gz ${P4_PATH}/sha256sums
 
     sync && echo ""
 }
@@ -307,11 +318,11 @@ update_uboot() {
     if [[ "${PLATFORM}" == "amlogic" ]]; then
         # Copy u-boot.ext and u-boot.emmc
         if [[ "${K510}" -eq "1" && -n "${UBOOT_OVERLOAD}" && -f "/boot/${UBOOT_OVERLOAD}" ]]; then
-            [[ ! -f "/boot/u-boot.ext" ]] && cp -f "/boot/${UBOOT_OVERLOAD}" /boot/u-boot.ext && sync && chmod +x /boot/u-boot.ext
-            [[ ! -f "/boot/u-boot.emmc" ]] && cp -f "/boot/u-boot.ext" /boot/u-boot.emmc && sync && chmod +x /boot/u-boot.emmc
+            [[ ! -f "/boot/u-boot.ext" ]] && cp -f "/boot/${UBOOT_OVERLOAD}" /boot/u-boot.ext && chmod +x /boot/u-boot.ext
+            [[ ! -f "/boot/u-boot.emmc" ]] && cp -f "/boot/u-boot.ext" /boot/u-boot.emmc && chmod +x /boot/u-boot.emmc
             echo -e "The ${UBOOT_OVERLOAD} file copy is complete."
         elif [[ "${K510}" -eq "0" ]]; then
-            rm -f "/boot/u-boot.ext" "/boot/u-boot.emmc" 2>/dev/null
+            rm -f "/boot/u-boot.ext" "/boot/u-boot.emmc"
         fi
 
         # Write Mainline bootloader
@@ -324,13 +335,10 @@ update_uboot() {
     fi
 
     # Update release file
-    sed -i '/KERNEL_VERSION/d' /etc/flippy-openwrt-release 2>/dev/null
-    echo "KERNEL_VERSION='${kernel_name}'" >>/etc/flippy-openwrt-release 2>/dev/null
-    #
-    sed -i '/K510/d' /etc/flippy-openwrt-release 2>/dev/null
-    echo "K510='${K510}'" >>/etc/flippy-openwrt-release 2>/dev/null
-    #
-    sed -i "s/ Kernel.*/ Kernel: ${kernel_name}/g" /etc/banner 2>/dev/null
+    sed -i "s|^KERNEL_VERSION=.*|KERNEL_VERSION='${kernel_name}'|g" ${release_file} 2>/dev/null
+    sed -i "s|^K510=.*|K510='${K510}'|g" ${release_file} 2>/dev/null
+    # Update banner file
+    sed -i "s| Kernel.*| Kernel: ${kernel_name}|g" /etc/banner 2>/dev/null
 
     sync && echo ""
 }
