@@ -74,6 +74,9 @@ msgstr "上传文件列表中有内核文件，你可以升级内核。"
 msgid "There are openwrt firmware file in the upload directory, and you can update the openwrt."
 msgstr "上传文件列表中有 OpenWrt 固件文件，你可以升级 OpenWrt。"
 
+msgid "Update plugins first, then update the kernel or firmware."
+msgstr "首先更新插件，再更新内核或固件。"
+
 msgid "After uploading [Firmware], [Kernel], [IPK] or [Backup Config], the operation buttons will be displayed."
 msgstr "当上传 [固件文件]，[内核文件]，[IPK文件]，[配置文件] 后，将自动显示相关操作按钮。"
 
@@ -500,8 +503,8 @@ msgstr "当前设备："
 msgid "If the current device shows (Unknown device), please report to github."
 msgstr "如果当前设备显示无法识别（Unknown device），请到 github 反馈。"
 
-msgid "The OpenWrt and kernel will be downloaded and updated according to the options filled in [Plugin Settings]."
-msgstr "将根据在 [插件设置] 里面填写的选项进行 OpenWrt 固件和内核的下载与更新。"
+msgid "Update plugins first, then update the kernel or firmware. More options can be configured in [Plugin Settings]."
+msgstr "首先更新插件，再更新内核或固件。更多选项可以在插件设置中配置。"
 
 msgid "Collecting data..."
 msgstr "正在收集数据…"
