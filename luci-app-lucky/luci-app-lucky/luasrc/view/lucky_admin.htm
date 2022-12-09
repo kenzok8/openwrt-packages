@@ -1,0 +1,26 @@
+<%+cbi/valueheader%>
+<script type="text/javascript">//<![CDATA[
+	function admin_info(btn)
+	{
+		btn.disabled = true;
+		btn.value = '<%:Reading...%>';
+		XHR.get('<%=luci.dispatcher.build_url("admin", "services", "lucky", "lucky_admin")%>',
+			null,
+			function(x,d)
+			{
+			var tb = document.getElementById('<%=self.option%>-status');
+			if (tb)
+			{
+				tb.innerHTML = "<%:Username:%>" + "<font color='green'>" + d.username + "</font>";
+				tb.innerHTML += "<%:Password:%>" + "<font color='green'>" + d.password + "</font>";
+			}
+				btn.disabled = false;
+				btn.value = '<%:Read%>';
+			}
+		);
+		return false;
+	}
+//]]></script>
+<input type="button" class="btn cbi-button cbi-button-apply" value="<%:Read%>" onclick="return admin_info(this)" />
+<span id="<%=self.option%>-status"><em><%=self.value%></em></span>
+<%+cbi/valuefooter%>

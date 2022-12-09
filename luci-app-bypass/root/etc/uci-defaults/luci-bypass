@@ -1,0 +1,32 @@
+uci batch <<EOF
+	delete ucitrack.@bypass[-1]
+	add ucitrack bypass
+	set ucitrack.@bypass[-1].init=bypass
+	commit ucitrack
+	delete firewall.bypass
+	set firewall.bypass=include
+	set firewall.bypass.type=script
+	set firewall.bypass.path=/var/etc/bypass.include
+	set firewall.bypass.reload=1
+	commit firewall
+EOF
+
+chmod +x /etc/init.d/bypass /usr/share/bypass/* >/dev/null 2>&1
+rm -rf /tmp/luci-*
+
+if [[ "$(grep "option uuid" /etc/config/bypass)" ]]; then
+sed -i "s/option uuid/option vmess_id/" /etc/config/bypass
+for i in {0..100}
+do
+	if [ "$(uci -q get bypass.@servers[$i].type)" == 'vless' ];then
+		uci -q set bypass.@servers[$i].type='v2ray'
+		uci -q set bypass.@servers[$i].v2ray_protocol='vless'
+	elif [ "$(uci -q get bypass.@servers[$i].type)" == 'vmess' ];then
+		uci -q set bypass.@servers[$i].type='v2ray'
+		uci -q set bypass.@servers[$i].v2ray_protocol='vmess'
+	fi
+done
+uci commit bypass
+fi
+
+exit 0

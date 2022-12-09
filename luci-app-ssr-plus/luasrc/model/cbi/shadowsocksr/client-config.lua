@@ -688,6 +688,11 @@ o:depends("xtls", true)
 o:depends("type", "hysteria")
 o.rmempty = true
 
+o = s:option(DynamicList, "tls_alpn", translate("TLS ALPN"))
+o:depends("tls", true)
+o:depends("xtls", true)
+o.rmempty = true
+
 o = s:option(Value, "quic_tls_alpn", translate("QUIC TLS ALPN"))
 o:depends("type", "hysteria")
 o.rmempty = true

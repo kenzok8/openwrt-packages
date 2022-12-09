@@ -1,0 +1,11 @@
+#!/bin/sh
+
+uci -q batch <<-EOF >/dev/null
+        delete ucitrack.@lucky[-1]
+        add ucitrack lucky
+        set ucitrack.@lucky[-1].init=lucky
+        commit ucitrack
+EOF
+
+rm -rf /tmp/luci*
+exit 0

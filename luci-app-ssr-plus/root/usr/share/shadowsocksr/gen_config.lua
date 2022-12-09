@@ -160,16 +160,26 @@ local Xray = {
 			security = (server.xtls == '1') and "xtls" or (server.tls == '1') and "tls" or nil,
 			tlsSettings = (server.tls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
 				-- tls
-				fingerprint = server.fingerprint,
-				allowInsecure = (server.insecure == "1") and true or nil,
-				serverName = server.tls_host
-			} or nil,
-			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
-				-- xtls
+				alpn = server.tls_alpn,
 				fingerprint = server.fingerprint,
 				allowInsecure = (server.insecure == "1") and true or nil,
 				serverName = server.tls_host,
-				minVersion = "1.3"
+				certificates = server.certificate and {
+					usage = "verify",
+					certificateFile = server.certpath
+				} or nil
+			} or nil,
+			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
+				-- xtls
+				alpn = server.tls_alpn,
+				fingerprint = server.fingerprint,
+				allowInsecure = (server.insecure == "1") and true or nil,
+				serverName = server.tls_host,
+				minVersion = "1.3",
+				certificates = server.certificate and {
+					usage = "verify",
+					certificateFile = server.certpath
+				} or nil
 			} or nil,
 			tcpSettings = (server.transport == "tcp" and server.tcp_guise == "http") and {
 				-- tcp
@@ -255,7 +265,7 @@ local trojan = {
 		cipher = cipher,
 		cipher_tls13 = cipher13,
 		sni = server.tls_host,
-		alpn = {"h2", "http/1.1"},
+		alpn = server.tls_alpn or {"h2", "http/1.1"},
 		curve = "",
 		reuse_session = true,
 		session_ticket = (server.tls_sessionTicket == "1") and true or false
