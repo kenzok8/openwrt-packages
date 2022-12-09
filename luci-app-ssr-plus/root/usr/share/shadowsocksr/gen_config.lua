@@ -327,6 +327,26 @@ local hysteria = {
 	disable_mtu_discovery = (server.disable_mtu_discovery == "1") and true or false,
 	fast_open = (server.fast_open == "1") and true or false
 }
+local tuic = {
+	relay = {
+		server = server.server,
+		port = tonumber(server.server_port),
+		token = server.password,
+
+		certificates = server.certificate and { server.certpath } or nil,
+		udp_relay_mode = server.udp_relay_mode,
+		congestion_controller = server.congestion_controller,
+		heartbeat_interval = tonumber(server.heartbeat_interval),
+		alpn = server.tls_alpn,
+		disable_sni = (server.disable_sni == "1"),
+		reduce_rtt = (server.reduce_rtt == "1"),
+		max_udp_relay_packet_size = tonumber(server.max_udp_relay_packet_size)
+	},
+	["local"] = {
+		port = tonumber(local_port),
+		ip = "0.0.0.0"
+	}
+}
 local config = {}
 function config:new(o)
 	o = o or {}
@@ -363,6 +383,9 @@ function config:handleIndex(index)
 		end,
 		hysteria = function()
 			print(json.stringify(hysteria, 1))
+		end,
+		tuic = function()
+			print(json.stringify(tuic, 1))
 		end
 	}
 	if switch[index] then
