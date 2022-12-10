@@ -24,11 +24,11 @@ ZSTD_LEVEL="6"
 # When there is no input parameter, select manually
 SPECIFY_SOC=""
 SPECIFY_DTB=""
-if [[ -n "$(echo ${2} | sed -n "/^[0-9]\+$/p")" ]]; then
-    SPECIFY_SOC=${2}
+[[ -n "${2}" ]] && {
+    SPECIFY_SOC="${2}"
     if [[ "${2}" -eq "99" ]]; then
         if [[ -n "${3}" ]]; then
-            SPECIFY_DTB=${3}
+            SPECIFY_DTB="${3}"
         else
             echo "Please enter the DTB file name!"
             exit 1
@@ -36,7 +36,7 @@ if [[ -n "$(echo ${2} | sed -n "/^[0-9]\+$/p")" ]]; then
     else
         SPECIFY_DTB="auto_dtb"
     fi
-fi
+}
 
 # shared partition can be ext4, xfs, btrfs, f2fs
 SHARED_FSTYPE="${4}"
