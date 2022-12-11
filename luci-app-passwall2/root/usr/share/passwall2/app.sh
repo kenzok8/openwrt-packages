@@ -741,10 +741,10 @@ boot() {
 }
 
 start() {
-	if [ "$(ps | grep /tmp/etc/passwall2 | grep -v grep)" != "" ]; then
+	pgrep -f /tmp/etc/passwall2 > /dev/null 2>&1 && {
 		echolog "程序已启动，无需重复启动!"
 		return 0
-	fi
+	}
 
 	ulimit -n 65535
 	start_socks
