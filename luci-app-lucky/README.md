@@ -78,24 +78,7 @@ luci-app-lucky 动态域名ddns-go服务,替代socat主要用于公网IPv6 tcp/u
 
 - 将luci-app-lucky添加至 LEDE/OpenWRT 源码的方法。
 
-### 下载源码方法一：
-- 编辑源码文件夹根目录feeds.conf.default并加入如下内容:
-
-```Brach
-
-    # feeds获取源码：
-	
-    src-git luci-app-lucky https://github.com/sirpdboy/luci-app-lucky
- ``` 
-  ```Brach
-  
-   # 更新feeds，并安装主题：
-   
-    scripts/feeds update luci-app-lucky
-	scripts/feeds install luci-app-lucky
- ``` 	
-
-### 下载源码方法二：
+### 下载源码方法:
 
  ```Brach
  
