@@ -1,0 +1,5 @@
+config lucky 'lucky'
+	option enabled '0'
+	option logger '1'
+	option port '16601'
+	option AllowInternetaccess '0'

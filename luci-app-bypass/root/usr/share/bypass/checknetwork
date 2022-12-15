@@ -1,0 +1,13 @@
+#!/bin/sh
+[ "$1" = check ] || exit 1
+NAME=bypass
+
+log(){
+	 echo "$(date +'%Y-%m-%d %H:%M:%S') : $*" >> /var/log/$NAME.log
+}
+
+while ! curl -so /dev/null -m 3 www.baidu.com;do
+	log "请检查网络..."
+	sleep 2
+done
+/etc/init.d/$NAME start &
