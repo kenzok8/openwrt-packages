@@ -14,7 +14,7 @@ logfile_path() (
     uci -q get mosdns.mosdns.logfile
   else
     [ ! -f /etc/mosdns/cus_config.yaml ] && exit 1
-    grep -A 4 log /etc/mosdns/cus_config.yaml | grep file | awk -F ":" '{print $2}' | sed 's/\"//g;s/ //g'
+    awk '/^log:/{f=1;next}f==1{if($0~/file:/){print;exit}if($0~/^[^ ]/)exit}' /etc/mosdns/cus_config.yaml | grep -Eo "/[^'\"]+"
   fi
 )
 
