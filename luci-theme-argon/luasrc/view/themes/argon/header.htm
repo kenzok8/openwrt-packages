@@ -88,7 +88,7 @@
     <meta name="theme-color" content="<%=bar_color%>">
     <link rel="stylesheet" href="<%=media%>/css/cascade.css<%# ?v=PKG_VERSION %>">
     <style title="text/css">
-        <% if mode == 'normal' then %>
+        <% if mode ~= 'dark' then %>
             @media (prefers-color-scheme: dark) {
                 <%=dark_css%>
             }
