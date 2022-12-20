@@ -178,6 +178,15 @@ o:value("https://raw.fastgit.org/")
 o:value("https://cdn.jsdelivr.net/")
 o.default = "0"
 
+o = s:taboption("settings", Value, "urltest_address_mod", translate("Url-Test Address Modify"))
+o.description = translate("Modify The Url-Test Address In The Config")
+o:value("0", translate("Disable"))
+o:value("http://www.gstatic.com/generate_204")
+o:value("http://cp.cloudflare.com/generate_204")
+o:value("https://cp.cloudflare.com/generate_204")
+o:value("http://captive.apple.com/generate_204")
+o.default = "0"
+
 o = s:taboption("settings", Value, "delay_start", translate("Delay Start (s)"))
 o.description = translate("Delay Start On Boot")
 o.default = "0"
@@ -254,8 +263,8 @@ o.default = 1
 o:depends("enable_meta_core", 0)
 end
 
-o = s:taboption("dns", Flag, "append_wan_dns", font_red..bold_on..translate("Append Upstream DNS")..bold_off..font_off)
-o.description = font_red..bold_on..translate("Append The Upstream Assigned DNS And Gateway IP To The Nameserver")..bold_off..font_off
+o = s:taboption("dns", Flag, "append_wan_dns", translate("Append Upstream DNS"))
+o.description = translate("Append The Upstream Assigned DNS And Gateway IP To The Nameserver")
 o.default = 1
 
 o = s:taboption("dns", Flag, "append_default_dns", translate("Append Default DNS"))
