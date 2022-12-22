@@ -182,8 +182,14 @@ msgstr "[s905x3] TX3 千兆"
 msgid "[s905x3] TX3 QZ (OverClock@2208Mhz)"
 msgstr "[s905x3] TX3 千兆 (超频@2208Mhz)"
 
-msgid "Or enter the dtb file name:"
-msgstr "或者输入自定义 dtb 文件名："
+msgid "enter the dtb file name:"
+msgstr "输入自定义 dtb 文件名："
+
+msgid "enter the soc name:"
+msgstr "输入自定义 soc 名称："
+
+msgid "enter the uboot_overload name:"
+msgstr "输入自定义 uboot_overload 名称："
 
 msgid "Enter the dtb file name"
 msgstr "输入自定义 dtb 文件名"
