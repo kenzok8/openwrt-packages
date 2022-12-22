@@ -1928,79 +1928,79 @@ msgid "Detected That The nameserver DNS Option Has No Server Set, Starting To Co
 msgstr "检测到DNS选项下的 Nameserver 未设置服务器，开始补全..."
 
 msgid "Error: Failed To Download Proxy-providers, Please Check The Log Page For Detailed error information!"
-msgstr "错误: 代理集文件下载失败，请到日志页面查看详细错误信息！"
+msgstr "错误：代理集文件下载失败，请到日志页面查看详细错误信息！"
 
 msgid "Error: Failed To Download Rule-providers, Please Check The Log Page For Detailed error information!"
-msgstr "错误: 规则集文件下载失败，请到日志页面查看详细错误信息！"
+msgstr "错误：规则集文件下载失败，请到日志页面查看详细错误信息！"
 
 msgid "Error: Nameserver Option Must Be Setted, Stop Customing DNS Servers"
-msgstr "错误: 配置文件DNS选项下的 Nameserver 必须设置服务器，已停止设置自定义DNS服务器！"
+msgstr "错误：配置文件DNS选项下的 Nameserver 必须设置服务器，已停止设置自定义DNS服务器！"
 
 msgid "Config File Does Not Exist, You Have Set Subscription Information, Ready To Download..."
 msgstr "配置文件不存在，您已设置订阅信息，准备开始下载..."
 
 msgid "Error: Config Not Found"
-msgstr "错误: 缺少配置文件，请上传或更新配置文件！"
+msgstr "错误：缺少配置文件，请上传或更新配置文件！"
 
 msgid "Error: Config File Format Validation Failed..."
 msgstr "错误：配置文件格式校验失败..."
 
 msgid "Tip: Detected The Exclusive Function of The TUN Core, Use TUN Core to Start..."
-msgstr "提示: 检测到配置了 TUN 内核专属功能，调用 TUN 内核启动..."
+msgstr "提示：检测到配置了 TUN 内核专属功能，调用 TUN 内核启动..."
 
 msgid "Tip: Detected The Exclusive Function of The Meta Core, Use Meta Core to Start..."
-msgstr "提示: 检测到配置了 Meta 内核专属功能，调用 Meta 内核启动..."
+msgstr "提示：检测到配置了 Meta 内核专属功能，调用 Meta 内核启动..."
 
 msgid "Tip: No Special Configuration Detected, Use Dev Core to Start..."
-msgstr "提示: 未检测到特殊配置，调用 Dev 内核启动..."
+msgstr "提示：未检测到特殊配置，调用 Dev 内核启动..."
 
 msgid "Tip: Detected that the Dev Core is not Installed, Use TUN Core to Start..."
-msgstr "提示: 检测到 Dev 内核未安装，调用 TUN 内核启动..."
+msgstr "提示：检测到 Dev 内核未安装，调用 TUN 内核启动..."
 
 msgid "Tip: Detected that the Dev Core is not Installed, Use Meta Core to Start..."
-msgstr "提示: 检测到 Dev 内核未安装，调用 Meta 内核启动..."
+msgstr "提示：检测到 Dev 内核未安装，调用 Meta 内核启动..."
 
 msgid "Tip: Detected that the GEOIP Database is not Installed, Ready to Download..."
-msgstr "提示: 检测到 GEOIP 数据库文件不存在，准备开始下载..."
+msgstr "提示：检测到 GEOIP 数据库文件不存在，准备开始下载..."
 
 msgid "Tip: Detected that the GEOSITE Database is not Installed, Ready to Download..."
-msgstr "提示: 检测到 GEOSITE 数据库文件不存在，准备开始下载..."
+msgstr "提示：检测到 GEOSITE 数据库文件不存在，准备开始下载..."
 
 msgid "Tip: Detected that the GEOIP Dat is not Installed, Ready to Download..."
-msgstr "提示: 检测到 GEOIP Dat 数据库文件不存在，准备开始下载..."
+msgstr "提示：检测到 GEOIP Dat 数据库文件不存在，准备开始下载..."
 
 msgid "Tip: Detected that the Core is not Installed, Ready to Download..."
-msgstr "提示: 检测到内核文件不存在，准备开始下载..."
+msgstr "提示：检测到内核文件不存在，准备开始下载..."
 
 msgid "Tip: Detected that the Chnroute Cidr or CN Domains List is not Installed, Ready to Download..."
-msgstr "提示: 检测到大陆白名单列表不存在，准备开始下载..."
+msgstr "提示：检测到大陆白名单列表不存在，准备开始下载..."
 
 msgid "Tip: Detected that the Chnroute Cidr List Format is wrong, Ready to Reformat..."
-msgstr "提示: 检测到大陆白名单列表格式错误，准备重新格式化..."
+msgstr "提示：检测到大陆白名单列表格式错误，准备重新格式化..."
 
 msgid "Error: Could Not Load The Capsh Library, Please Verify The Capsh Shell Library Work Well..."
 msgstr "错误：Capsh 异常，请尝试重新安装依赖【libcap】和相应的Capsh库，终止启动..."
 
 msgid "Tip: You Could Download And Re-Install The libcap & libcap-bin Library From The Address Give"
-msgstr "提示: 你可以尝试从给出的地址中查找、下载并重新安装架构对应的 libcap 和 libcap-bin 依赖"
+msgstr "提示：你可以尝试从给出的地址中查找、下载并重新安装架构对应的 libcap 和 libcap-bin 依赖"
 
 msgid "Error: Get DNS 'listen' Option Error, OpenClash Can Not Start With Raw Config File"
-msgstr "错误: 无法获取 DNS 部分的监听端口设置, OpenClash 使用原始配置文件启动失败"
+msgstr "错误：无法获取 DNS 部分的监听端口设置, OpenClash 使用原始配置文件启动失败"
 
 msgid "Error: Get DNS 'enhanced-mode' Option Error, OpenClash Can Not Start With Raw Config File"
-msgstr "错误: 无法获取 DNS 部分的运行模式设置, OpenClash 使用原始配置文件启动失败"
+msgstr "错误：无法获取 DNS 部分的运行模式设置, OpenClash 使用原始配置文件启动失败"
 
 msgid "Error: Get General 'redir-port' Option Error, OpenClash Can Not Start With Raw Config File"
-msgstr "错误: 无法获取 General 部分的转发端口设置, OpenClash 使用原始配置文件启动失败"
+msgstr "错误：无法获取 General 部分的转发端口设置, OpenClash 使用原始配置文件启动失败"
 
 msgid "Error: OpenClash Can Not Start, Please Check The Error Info And Try Again!"
-msgstr "错误: OpenClash 启动失败，请到日志页面查看详细错误信息！"
+msgstr "错误：OpenClash 启动失败，请到日志页面查看详细错误信息！"
 
 msgid "Error: OpenClash Can Not Start, Try Use Raw Config Restart Again..."
-msgstr "错误: OpenClash 启动失败，尝试使用原始配置文件启动..."
+msgstr "错误：OpenClash 启动失败，尝试使用原始配置文件启动..."
 
 msgid "Error: OpenClash Can Not Start, Try Use Backup Rules Start Again..."
-msgstr "错误: OpenClash 启动失败，尝试还原第三方规则并重新启动 Clash 主程序..."
+msgstr "错误：OpenClash 启动失败，尝试还原第三方规则并重新启动 Clash 主程序..."
 
 msgid "Found 53 Port Hijacked, Clean Up Firewall Rules..."
 msgstr "发现 53 端口被劫持，清理防火墙规则..."
@@ -2128,14 +2128,17 @@ msgstr "2、点击《管理第三方游戏规则》或者《管理第三方规�
 msgid "3. On this page, set the corresponding configuration file and policy group of the rule you have downloaded, and save the settings"
 msgstr "3、在此页面设置您已下载的规则的对应配置文件、策略组并保存设置"
 
-msgid "4. Install the TUN core"
-msgstr "4、安装 TUN 内核"
+msgid "4. Install the TUN or Meta core"
+msgstr "4、安装 TUN 或者 Meta 内核"
 
 msgid "When setting this page, if the groups is empty, please go to the <server and group management> page to add"
 msgstr "本页设置时如策略组为空，请先到《服务器与策略组管理》页面进行添加"
 
 msgid "Introduction to rule set usage: https://lancellc.gitbook.io/clash/clash-config-file/rule-provider"
 msgstr "规则集使用介绍：https://lancellc.gitbook.io/clash/clash-config-file/rule-provider"
+
+msgid "Introduction to proxy usage: https://lancellc.gitbook.io/clash/clash-config-file/proxies"
+msgstr "代理使用介绍：https://lancellc.gitbook.io/clash/clash-config-file/rule-provider"
 
 msgid "Subconverter external configuration (subscription conversion template) Description: https://github.com/tindy2013/subconverter#external-configuration-file"
 msgstr "subconverter 外部配置(订阅转换模板)说明：https://github.com/tindy2013/subconverter#external-configuration-file"
@@ -2465,7 +2468,7 @@ msgid "Are you sure want to switch the running mode?"
 msgstr "确认要切换运行模式吗?"
 
 msgid "Tip: Because of the file"
-msgstr "提示: 由于文件"
+msgstr "提示：由于文件"
 
 msgid "modificated, Pause quick start..."
 msgstr "被修改，暂停快速启动..."
@@ -2725,7 +2728,7 @@ msgstr "，但不匹配先前解锁区域："
 msgid "the type of group is not select, auto select could not work!"
 msgstr "当前策略组类型非 Select，无法进行自动选择！"
 
-msgid "，but not match the regex! the type of group is not select, auto select could not work!"
+msgid ", but not match the regex! the type of group is not select, auto select could not work!"
 msgstr "完整解锁但区域与设置不匹配！当前策略组类型非 Select，无法进行自动选择！"
 
 msgid "but not match the old region! the type of group is not select, auto select could not work!"
@@ -3216,3 +3219,27 @@ msgstr "提示：检测到 Dnsmasq 正常工作，还原防火墙 DNS 劫持规�
 
 msgid "Tip: Bypass the China IP May Cause the Dnsmasq Load For a Long Time After Restart in FAKE-IP Mode, Hijack the DNS to Core Untill the Dnsmasq Works Well..."
 msgstr "提示：在 FAKE-IP 模式下绕过中国 IP 可能会导致 Dnsmasq 加载时间过长，暂时劫持 DNS 至内核直到 Dnsmasq 正常工作..."
+
+msgid "Seconds..."
+msgstr "秒后开始启动..."
+
+msgid "1. Before modifying the configuration file, please click the button below to read the configuration file"
+msgstr "1. 修改配置文件前，请先点击下方按钮读取配置文件"
+
+msgid "2. Proxy-providers address can be directly filled in the subscription link"
+msgstr "2. 代理集地址可以直接填写订阅链接"
+
+msgid "Custom Tag"
+msgstr "自定义标记"
+
+msgid "Mark as Custom Node to Prevent Retention config from being Deleted When Enabled"
+msgstr "标记为自定义节点，防止保留配置启用时被删除"
+
+msgid "Error: Edit Speedtest URL Failed,"
+msgstr "错误：修改测速地址失败，"
+
+msgid "Url-Test Address Modify"
+msgstr "测速（连通性）地址修改"
+
+msgid "Modify The Url-Test Address In The Config"
+msgstr "修改配置文件中的测速（连通性）地址"

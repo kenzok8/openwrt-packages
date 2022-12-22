@@ -741,7 +741,7 @@ boot() {
 }
 
 start() {
-	pgrep -f /tmp/etc/passwall2 > /dev/null 2>&1 && {
+	pgrep -f /tmp/etc/passwall2/bin > /dev/null 2>&1 && {
 		echolog "程序已启动，无需重复启动!"
 		return 0
 	}

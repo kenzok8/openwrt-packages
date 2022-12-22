@@ -347,6 +347,9 @@ EOF
    for nft in "input" "forward" "dstnat" "srcnat" "nat_output" "mangle_prerouting" "mangle_output"; do
       nft list chain inet fw4 "$nft" >> "$DEBUG_LOG" 2>/dev/null
    done >/dev/null 2>&1
+   for nft in "openclash" "openclash_mangle" "openclash_mangle_output" "openclash_output" "openclash_post" "openclash_wan_input" "openclash_dns_hijack" "openclash_mangle_v6" "openclash_mangle_output_v6" "openclash_post_v6" "openclash_wan6_input"; do
+      nft list chain inet fw4 "$nft" >> "$DEBUG_LOG" 2>/dev/null
+   done >/dev/null 2>&1
 fi
 
 cat >> "$DEBUG_LOG" <<-EOF
@@ -452,13 +455,15 @@ wan_ip6=$(/usr/share/openclash/openclash_get_network.lua "wanip6")
 
 if [ -n "$wan_ip" ]; then
 	for i in $wan_ip; do
-     sed -i "s/${wan_ip}/*WAN IP*/g" "$DEBUG_LOG" 2>/dev/null
+      wanip=$(echo "$i" |awk -F '.' '{print $1"."$2"."$3}')
+      sed -i "s/${wanip}/*WAN IP*/g" "$DEBUG_LOG" 2>/dev/null
   done
 fi
 
 if [ -n "$wan_ip6" ]; then
 	for i in $wan_ip6; do
-     sed -i "s/${wan_ip6}/*WAN IP*/g" "$DEBUG_LOG" 2>/dev/null
+      wanip=$(echo "$i" |awk -F: 'OFS=":",NF-=1')
+      sed -i "s/${wanip}/*WAN IP*/g" "$DEBUG_LOG" 2>/dev/null
   done
 fi
 
