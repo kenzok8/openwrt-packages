@@ -38,7 +38,9 @@
 				</select>
 			</td>
 		</tr>
-		<tr id="tr_sel_dtb" style="display:none;"><td width="30%" align="right"><%:Or enter the dtb file name:%></td><td  width="70%" align="left"><input class="cbi-input-file" style="width: 235px" type="text" id="amlogic_dtb" name="amlogic_dtb" /></td></tr>
+		<tr id="tr_sel_dtb" style="display:none;"><td width="30%" align="right"><%:enter the dtb file name:%></td><td  width="70%" align="left"><input class="cbi-input-file" style="width: 235px" type="text" id="amlogic_dtb" name="amlogic_dtb" /></td></tr>
+		<tr id="tr_sel_soc" style="display:none;"><td width="30%" align="right"><%:enter the soc name:%></td><td  width="70%" align="left"><input class="cbi-input-file" style="width: 235px" type="text" id="amlogic_socname" name="amlogic_socname" /></td></tr>
+		<tr id="tr_sel_uboot" style="display:none;"><td width="30%" align="right"><%:enter the uboot_overload name:%></td><td  width="70%" align="left"><input class="cbi-input-file" style="width: 235px" type="text" id="amlogic_uboot" name="amlogic_uboot" /></td></tr>
 		<tr>
 			<td width="30%" align="right"><%:Install OpenWrt:%></td>
 			<td  width="70%" align="left">
@@ -54,10 +56,14 @@
 		if ( soc_value == "99" )
 		{
 			document.getElementById('tr_sel_dtb').style = '';
+			document.getElementById('tr_sel_soc').style = '';
+			document.getElementById('tr_sel_uboot').style = '';
 		}
 		else
 		{
 			document.getElementById('tr_sel_dtb').style = 'display:none;';
+			document.getElementById('tr_sel_soc').style = 'display:none;';
+			document.getElementById('tr_sel_uboot').style = 'display:none;';
 		}
 	}
 
@@ -68,11 +74,17 @@
 		var amlogic_soc_index = amlogic_soc_id.selectedIndex;
 		var amlogic_soc_value = amlogic_soc_id.options[amlogic_soc_index].value;
 		var amlogic_soc_text = amlogic_soc_id.options[amlogic_soc_index].text;
-		var amlogic_confirm_info = amlogic_soc_text + "@" + amlogic_soc_value;
 
 		var amlogic_dtb_id = document.getElementById('amlogic_dtb');
 		var amlogic_dtb_value = amlogic_dtb_id.value;
 
+		var amlogic_soc_name = document.getElementById('amlogic_socname');
+		var amlogic_socname_value = amlogic_socname.value;
+
+		var amlogic_ubootname = document.getElementById('amlogic_uboot');
+		var amlogic_ubootname_value = amlogic_ubootname.value;
+
+		var amlogic_confirm_info = amlogic_soc_text + "@" + amlogic_soc_value;
 		if (confirm('<%:You have chosen:%> [ ' + amlogic_confirm_info + ' ] , <%:Start install?%>') != true) { return false; }
 
 		btn.disabled = true;
@@ -80,7 +92,7 @@
 
 		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_amlogic_install")%>',
 			{
-				amlogic_install_sel: amlogic_soc_value + '@' + amlogic_dtb_value
+				amlogic_install_sel: amlogic_soc_value + '@' + amlogic_dtb_value + ':' + amlogic_socname_value + ':' + amlogic_ubootname_value
 			},
 			function(x,status)
 			{

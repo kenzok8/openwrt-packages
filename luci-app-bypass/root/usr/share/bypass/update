@@ -17,11 +17,11 @@ C=$(uci -q get bypass.@global[0].run_mode)
 mkdir -p $T_FILE 2>/dev/null
 if [ "$C" = router ];then
 	if [ ! -f $T_FILE/china.txt ];then
-		while ! (curl -kLfsm 3 -o /tmp/china.txt http://static.supes.top/bypass/all_cn.txt || curl -kLfsm 5 -o /tmp/china.txt https://cdn.jsdelivr.net/gh/kiddin9/china_ip_list@main/china_ip_list.txt);do
+		while ! (curl -kLfsm 3 -o /tmp/china.txt http://static.supes.top/bypass/all_cn.txt || curl -kLfsm 5 -o /tmp/china.txt https://fastly.jsdelivr.net/gh/kiddin9/china_ip_list@main/china_ip_list.txt);do
 			sleep 1
 		done
 	else
-		curl -kLfsm 3 -o /tmp/china.txt http://static.supes.top/bypass/all_cn.txt || curl -kLfsm 5 -o /tmp/china.txt https://cdn.jsdelivr.net/gh/kiddin9/china_ip_list@main/china_ip_list.txt
+		curl -kLfsm 3 -o /tmp/china.txt http://static.supes.top/bypass/all_cn.txt || curl -kLfsm 5 -o /tmp/china.txt https://fastly.jsdelivr.net/gh/kiddin9/china_ip_list@main/china_ip_list.txt
 	fi
 	[[ -f /tmp/china.txt && $? == 0 ]] && {
 	if ! cmp -s /tmp/china.txt $T_FILE/china.txt;then

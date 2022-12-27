@@ -556,10 +556,10 @@ msgstr "服务器节点故障自动切换/广告屏蔽/中国大陆 IP 段数据
 msgid "Support AdGuardHome and DNSMASQ format list"
 msgstr "同时支持 AdGuard Home 和 DNSMASQ 格式的过滤列表"
 
-msgid "Delete All Subscribe Severs"
+msgid "Delete All Subscribe Servers"
 msgstr "删除所有订阅服务器节点"
 
-msgid "Severs Nodes"
+msgid "Servers Nodes"
 msgstr "服务器节点"
 
 msgid "Use Local DNS Service listen port 5335"
@@ -631,7 +631,7 @@ msgstr "更新订阅 URL 列表"
 msgid "Update subscribe url list first"
 msgstr "修改订阅 URL 和节点关键字后，请先点击更新"
 
-msgid "Update All Subscribe Severs"
+msgid "Update All Subscribe Servers"
 msgstr "更新所有订阅服务器节点"
 
 msgid "Plugin"

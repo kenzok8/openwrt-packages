@@ -54,11 +54,11 @@ o = s:option(Flag, "proxy", translate("Through proxy update"))
 o.rmempty = false
 o.description = translate("Through proxy update list, Not Recommended ")
 
-o = s:option(Button, "subscribe", translate("Update All Subscribe Severs"))
+o = s:option(Button, "subscribe", translate("Update All Subscribe Servers"))
 o.rawhtml = true
 o.template = "shadowsocksr/subscribe"
 
-o = s:option(Button, "delete", translate("Delete All Subscribe Severs"))
+o = s:option(Button, "delete", translate("Delete All Subscribe Servers"))
 o.inputstyle = "reset"
 o.description = string.format(translate("Server Count") .. ": %d", server_count)
 o.write = function()
