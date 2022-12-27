@@ -147,6 +147,7 @@ start_service() {
 	append_param_env "config" "self_issue_cert_key" "SIGN_KEY" "/usr/share/$NAME/core/server.key"
 
 	is_enabled "config" "follow_source_order" && procd_append_param env FOLLOW_SOURCE_ORDER="true"
+	is_enabled "config" "search_album" && procd_append_param env SEARCH_ALBUM="true"
 	is_enabled "config" "enable_flac" && procd_append_param env ENABLE_FLAC="true"
 	is_enabled "config" "local_vip" && procd_append_param env ENABLE_LOCAL_VIP="true"
 	is_enabled "config" "disable_upgrade_check" && procd_append_param env DISABLE_UPGRADE_CHECK="true"

@@ -34,6 +34,11 @@ o.description = translate("默认为并行查询并返回第一个结果，开�
 o.default = 0
 o.rmempty = false
 
+o = s:option(Flag, "search_album", translate("附加专辑名"))
+o.description = translate("在其他音源搜索歌曲时携带专辑名称（默认搜索条件 歌曲名 - 歌手，启用后搜索条件 歌曲名 - 歌手 专辑名）")
+o.default = 0
+o.rmempty = false
+
 o = s:option(Flag, "local_vip", translate("启用本地 VIP"))
 o.description = translate("启用后，可以使用去广告、个性换肤、鲸云音效等本地功能")
 o.default = 0
