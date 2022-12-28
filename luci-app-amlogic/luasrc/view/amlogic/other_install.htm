@@ -84,8 +84,8 @@
 		var amlogic_ubootname = document.getElementById('amlogic_uboot');
 		var amlogic_ubootname_value = amlogic_ubootname.value;
 
-		var amlogic_confirm_info = amlogic_soc_text + "@" + amlogic_soc_value;
-		if (confirm('<%:You have chosen:%> [ ' + amlogic_confirm_info + ' ] , <%:Start install?%>') != true) { return false; }
+		var amlogic_confirm_info = amlogic_soc_text;
+		if (confirm('<%:You have chosen:%>' + amlogic_confirm_info + ', <%:Start install?%>') != true) { return false; }
 
 		btn.disabled = true;
 		btn.value    = '<%:Installing...%> ';
@@ -144,7 +144,7 @@
 					my_box_mode_id = my_box_mode[0];
 					my_box_mode_name = my_box_mode[1];
 					if ( parseFloat(my_box_mode_id).toString() != "NaN" && my_box_mode_name != "" ) {
-						_option_codes = _option_codes + '<option value="' + my_box_mode_id + '">' + my_box_mode_name.replace(/~/g, " ") + '</option>';
+						_option_codes = _option_codes + '<option value="' + my_box_mode_id + '">[' + my_box_mode_id + '] ' + my_box_mode_name.replace(/~/g, " ") + '</option>';
 					}
 				}
 				_option_codes = _option_codes + '<option value="99"><%:Enter the dtb file name%></option>';
