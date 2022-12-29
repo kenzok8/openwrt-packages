@@ -144,7 +144,7 @@
 					my_box_mode_id = my_box_mode[0];
 					my_box_mode_name = my_box_mode[1];
 					if ( parseFloat(my_box_mode_id).toString() != "NaN" && my_box_mode_name != "" ) {
-						_option_codes = _option_codes + '<option value="' + my_box_mode_id + '">[' + my_box_mode_id + '] ' + my_box_mode_name.replace(/~/g, " ") + '</option>';
+						_option_codes = _option_codes + '<option value="' + my_box_mode_id + '">[ ' + my_box_mode_id + ' ] ' + my_box_mode_name.replace(/~/g, " ") + '</option>';
 					}
 				}
 				_option_codes = _option_codes + '<option value="99"><%:Enter the dtb file name%></option>';

@@ -15,8 +15,8 @@
 				if (d.running)
 				{
 				var luckyAdminURL = ""+ window.location.protocol + "//" + window.location.hostname +":"+ d.port+d.safeurl+"";
-					tb.innerHTML = '<em><b style=\"color:green\"><%:The Lucky service is running.%></b></em>'
-					+ '<em> <br/><br/>' + ' <b > <%:Click the new page to open Lucky%>  <a href="' +luckyAdminURL+'"'+' target="_blank">' + luckyAdminURL + ' </a>  </b> <br/> </em>'
+					tb.innerHTML = '<em><b style=\"color:green\"><%:The Lucky service is running.%></b></em>';
+					tb.innerHTML +='<em> <br/><br/>' + ' <b > <%:Click the new page to open Lucky%>  <a href="' +luckyAdminURL+'"'+' target="_blank">' + luckyAdminURL + ' </a><br/> </em>';
 				}
 				else
 				{
