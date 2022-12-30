@@ -369,7 +369,8 @@ local function processData(szType, content)
 		if result.transport == "ws" then
 			result.ws_host = (result.tls ~= "1") and (params.host and UrlDecode(params.host)) or nil
 			result.ws_path = params.path and UrlDecode(params.path) or "/"
-		elseif result.transport == "http" then
+		-- make it compatible with bullshit, "h2" transport is non-existent at all
+		elseif result.transport == "http" or result.transport == "h2" then
 			result.transport = "h2"
 			result.h2_host = params.host and UrlDecode(params.host) or nil
 			result.h2_path = params.path and UrlDecode(params.path) or nil
@@ -525,7 +526,7 @@ local execute = function()
 						-- log(result)
 						if result then
 							-- 中文做地址的 也没有人拿中文域名搞，就算中文域也有Puny Code SB 机场
-							if not result.server or not result.server_port or result.alias == "NULL" or check_filer(result) or result.server:match("[^0-9a-zA-Z%-%.%s]") or cache[groupHash][result.hashkey] then
+							if not result.server or not result.server_port or result.alias == "NULL" or check_filer(result) or result.server:match("[^0-9a-zA-Z%-_%.%s]") or cache[groupHash][result.hashkey] then
 								log('丢弃无效节点: ' .. result.type .. ' 节点, ' .. result.alias)
 							else
 								-- log('成功解析: ' .. result.type ..' 节点, ' .. result.alias)
