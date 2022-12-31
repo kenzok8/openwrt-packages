@@ -7,11 +7,11 @@
 # This is free software, licensed under the Apache License, Version 2.0 .
 #
 
-
-USE_PROCD=1
-
 START=99
 STOP=15
+
+
+USE_PROCD=1
 
 CONF=lucky
 PROG=/usr/bin/lucky
@@ -26,7 +26,7 @@ get_config() {
 }
 
 set_firewall() {
-	if [ "x$AllowInternetaccess" == "x1" ]; then
+	if [ "x$AllowInternetaccess" = "x1" ]; then
 		uci -q delete firewall.lucky
 		uci set firewall.lucky=rule
 		uci set firewall.lucky.name="lucky"
@@ -62,7 +62,7 @@ EOF
 	else
 		sed -i 's/"AllowInternetaccess": true,/"AllowInternetaccess": false,/g' "$LUCKYCONF"
 	fi
-	# set_firewall
+	set_firewall
 	procd_open_instance
 	procd_set_param command "$PROG"
 	procd_append_param command -c "$LUCKYCONF" -p $port
