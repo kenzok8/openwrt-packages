@@ -74,8 +74,6 @@ define Build/Prepare
 endef
 
 define Build/Configure
-/etc/lucky/lucky.conf
-/etc/config/lucky.conf
 endef
 
 define Build/Compile
