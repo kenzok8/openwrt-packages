@@ -1,20 +1,23 @@
 #!/bin/sh
 
-uci -q batch <<-EOF >/dev/null
+if [ "$(uci -q get unblockneteasemusic.config.music_source)" = "default" ]; then
+	uci -q delete unblockneteasemusic.config.music_source
+	uci -q commit unblockneteasemusic
+fi
+
+uci -q batch <<-EOF >"/dev/null"
 	delete ucitrack.@unblockneteasemusic[-1]
-	add ucitrack unblockneteasemusic
-	set ucitrack.@unblockneteasemusic[-1].init=unblockneteasemusic
 	commit ucitrack
 EOF
 [ -e "$(command -v fw4)" ] || {
-uci -q batch <<-EOF >/dev/null
-	delete firewall.unblockneteasemusic
-	set firewall.unblockneteasemusic=include
-	set firewall.unblockneteasemusic.type=script
-	set firewall.unblockneteasemusic.path=/var/etc/unblockneteasemusic.include
-	set firewall.unblockneteasemusic.reload=1
-	commit firewall
-EOF
+	uci -q batch <<-EOF >"/dev/null"
+		delete firewall.unblockneteasemusic
+		set firewall.unblockneteasemusic=include
+		set firewall.unblockneteasemusic.type=script
+		set firewall.unblockneteasemusic.path=/var/etc/unblockneteasemusic.include
+		set firewall.unblockneteasemusic.reload=1
+		commit firewall
+	EOF
 }
 
 rm -f /tmp/luci-indexcache

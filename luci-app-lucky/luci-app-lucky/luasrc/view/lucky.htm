@@ -1,11 +1,11 @@
 <%#
- Copyright 2021-2022 sirpdboy Wich <sirpdboy@qq.com>
+ Copyright 2021-2022 sirpdboy Wich <herboy2008@gmail.com>
  https://github.com/sirpdboy/luci-app-lucky
  Licensed to the public under the Apache License 2.0.
 -%>
 
 <%
-  local safeURL = luci.sys.exec("cat /etc/lucky/lucky.conf | grep SafeURL |  sed 's/\"//g' | sed 's/: /\\n/g'|sed '1d' ");
+  local safeURL = luci.sys.exec("cat /etc/lucky/lucky.conf | grep SafeURL | sed -e 's/,//g' -e 's/\"//g'  -e 's/\ //g' | awk -F ':' '{print $2}'  ")
   local luckyHttpPort = luci.model.uci.cursor():get("lucky", "lucky", "port");
 -%>
 
