@@ -1,7 +1,7 @@
 #!/bin/sh /etc/rc.common
 # SPDX-License-Identifier: GPL-3.0-only
 #
-# Copyright (C) 2019-2022 Tianling Shen <cnsztl@immortalwrt.org>
+# Copyright (C) 2019-2023 Tianling Shen <cnsztl@immortalwrt.org>
 
 USE_PROCD=1
 
@@ -41,6 +41,10 @@ append_param_env() {
 	local value
 	config_get value "$1" "$2" $4
 	[ -n "$value" ] && procd_append_param env "$3"="$value"
+}
+
+append_param_boolenv() {
+	is_enabled "$1" "$2" "$4" && procd_append_param env "$3"="true"
 }
 
 append_filter_client() {
@@ -102,7 +106,6 @@ start_service() {
 	config_get http_port "config" "http_port" "5200"
 	config_get https_port "config" "https_port" "5201"
 	config_get hijack_ways "config" "hijack_ways" "use_ipset"
-	[ "${hijack_ways}" = "use_hosts" ] && { http_port="80"; https_port="443"; }
 	append_param "-p" "${http_port}":"${https_port}"
 
 	if [ -n "$FW4" ]; then
@@ -145,11 +148,11 @@ start_service() {
 	append_param_env "config" "self_issue_cert_crt" "SIGN_CERT" "/usr/share/$NAME/core/server.crt"
 	append_param_env "config" "self_issue_cert_key" "SIGN_KEY" "/usr/share/$NAME/core/server.key"
 
-	is_enabled "config" "follow_source_order" && procd_append_param env FOLLOW_SOURCE_ORDER="true"
-	is_enabled "config" "search_album" && procd_append_param env SEARCH_ALBUM="true"
-	is_enabled "config" "enable_flac" && procd_append_param env ENABLE_FLAC="true"
-	is_enabled "config" "local_vip" && procd_append_param env ENABLE_LOCAL_VIP="true"
-	is_enabled "config" "disable_upgrade_check" && procd_append_param env DISABLE_UPGRADE_CHECK="true"
+	append_param_boolenv "config" "follow_source_order" "FOLLOW_SOURCE_ORDER"
+	append_param_boolenv "config" "search_album" "SEARCH_ALBUM"
+	append_param_boolenv "config" "enable_flac" "ENABLE_FLAC"
+	append_param_boolenv "config" "local_vip" "ENABLE_LOCAL_VIP"
+	append_param_boolenv "config" "disable_upgrade_check" "DISABLE_UPGRADE_CHECK"
 	case "$(config_get "config" "replace_music_source")" in
 		"lower_than_192kbps") procd_append_param env MIN_BR="192000" ;;
 		"lower_than_320kbps") procd_append_param env MIN_BR="320000" ;;
@@ -162,7 +165,6 @@ start_service() {
 	procd_set_param respawn
 
 	local lan_addr="$(uci -q get network.lan.ipaddr)"
-	local tmp="/tmp/$NAME"
 	if [ "${hijack_ways}" = "use_ipset" ]; then
 		local settype nftflag
 		if [ -n "$FW4" ]; then
@@ -235,16 +237,17 @@ start_service() {
 	fi
 
 	if [ -n "$FW4" ]; then
-		json_dump -i >"$tmp.json"
-		if utpl -F "$tmp.json" -S "$RULES_UC" > "$tmp.nft" && ! cmp -s "$tmp.nft" "$RULES_NFT"; then
-			echo "table inet chk {include \"$tmp.nft\";}" > "$tmp.nft.chk"
-			! nft -f "$tmp.nft.chk" -c || { mv -f "$tmp.nft" "$RULES_NFT"; fw4 reload; }
+		local nft_tmp="/tmp/$NAME"
+		json_dump -i > "$nft_tmp.json"
+		if utpl -F "$nft_tmp.json" -S "$RULES_UC" > "$nft_tmp.nft" && ! cmp -s "$nft_tmp.nft" "$RULES_NFT"; then
+			echo "table inet chk {include \"$nft_tmp.nft\";}" > "$nft_tmp.nft.chk"
+			! nft -f "$nft_tmp.nft.chk" -c || { mv -f "$nft_tmp.nft" "$RULES_NFT"; fw4 reload; }
 		fi
-		rm -f "$tmp.json" "$tmp.nft" "$tmp.nft.chk"
+		rm -f "$nft_tmp.json" "$nft_tmp.nft" "$nft_tmp.nft.chk"
 	fi
 
 	procd_close_instance
-} >"/dev/null" 2>&1
+}
 
 stop_service() {
 	config_load "$NAME"
@@ -269,10 +272,10 @@ stop_service() {
 	local chain settable
 	if [ -n "$FW4" ]; then
 		for chain in "netease_cloud_music_redir" "netease_cloud_music"; do
-			nft flush chain inet fw4 "$chain"
+			nft flush chain inet fw4 "$chain" 2>"/dev/null"
 		done
 		for settable in "acl_neteasemusic_http" "acl_neteasemusic_https" "local_addr" "neteasemusic"; do
-			nft flush set inet fw4 "$set"
+			nft flush set inet fw4 "$settable" 2>"/dev/null"
 		done
 
 		rm -f "$RULES_NFT"
@@ -281,15 +284,14 @@ stop_service() {
 		[ ! -e "/tmp/$NAME.ports" ] || {
 			iptables -D "INPUT" -p "tcp" --dport "$(awk -F ':' '{print $1}' "/tmp/$NAME.ports")" -j "ACCEPT"
 			iptables -D "INPUT" -p "tcp" --dport "$(awk -F ':' '{print $2}' "/tmp/$NAME.ports")" -j "ACCEPT"
+			rm -f "/tmp/$NAME.ports"
 		}
-		rm -f "/tmp/$NAME.ports"
-
 		$IPT_N -D "PREROUTING" -p "tcp" -m set --match-set "neteasemusic" "dst" -j "netease_cloud_music"
 		$IPT_N -F "netease_cloud_music"
 		$IPT_N -X "netease_cloud_music"
 
 		for settable in "acl_neteasemusic_http" "acl_neteasemusic_https" "local_addr" "neteasemusic"; do
-			ipset destroy "$settable"
+			ipset destroy "$settable" 2>"/dev/null"
 		done
 
 		echo "" > "/var/etc/$NAME.include"
@@ -298,10 +300,10 @@ stop_service() {
 	rm -f "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
 	/etc/init.d/dnsmasq reload
 
-	ip route del "223.252.199.10"
+	ip route del "223.252.199.10" 2>"/dev/null"
 
 	rm -f "/tmp/$NAME.log"
-} >"/dev/null" 2>&1
+}
 
 reload_service() {
 	stop

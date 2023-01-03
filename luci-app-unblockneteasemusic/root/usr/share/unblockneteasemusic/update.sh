@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-3.0-only
-# Copyright (C) 2019-2022 Tianling Shen <cnsztl@immortalwrt.org>
+# Copyright (C) 2019-2023 Tianling Shen <cnsztl@immortalwrt.org>
 
 NAME="unblockneteasemusic"
 LOCK="/tmp/$NAME.update_core.lock"
@@ -96,7 +96,7 @@ case "$1" in
 		;;
 	"remove_core")
 		/etc/init.d/"$NAME" stop
-		rm -rf "/usr/share/$NAME/core" "/usr/share/$NAME/core_local_ver"
+		rm -rf "/usr/share/$NAME/core" "/usr/share/$NAME/core_local_ver" "$LOCK"
 		;;
 	*)
 		echo -e "Usage: $0/update.sh check_version | update_core | remove_core"

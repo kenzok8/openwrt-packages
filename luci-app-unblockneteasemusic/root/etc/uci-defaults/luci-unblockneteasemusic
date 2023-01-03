@@ -1,8 +1,16 @@
 #!/bin/sh
 
 if [ "$(uci -q get unblockneteasemusic.config.music_source)" = "default" ]; then
-	uci -q delete unblockneteasemusic.config.music_source
-	uci -q commit unblockneteasemusic
+	uci -q delete "unblockneteasemusic.config.music_source"
+	uci -q commit "unblockneteasemusic"
+fi
+
+if [ "$(uci -q get unblockneteasemusic.config.hijack_ways)" = "use_hosts" ]; then
+	[ "$(uci -q get "unblockneteasemusic.config.http_port")" = "80" ] || {
+		uci -q set "unblockneteasemusic.config.http_port"="80"
+		uci -q set "unblockneteasemusic.config.https_port"="443"
+		uci -q commit "unblockneteasemusic"
+	}
 fi
 
 uci -q batch <<-EOF >"/dev/null"

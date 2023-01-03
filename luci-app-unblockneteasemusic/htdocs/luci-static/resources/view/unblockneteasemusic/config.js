@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  *
- * Copyright (C) 2022 ImmortalWrt.org
+ * Copyright (C) 2022-2023 ImmortalWrt.org
  */
 
 'use strict';
@@ -144,7 +144,7 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.option(form.Flag, 'search_album', _('附加专辑名'),
-			_('在其他音源搜索歌曲时携带专辑名称（默认搜索条件 <code>歌曲名 - 歌手</code>，启用后搜索条件 <code>歌曲名 - 歌手 专辑名</code>）。')
+			_('在其他音源搜索歌曲时携带专辑名称（默认搜索条件 <code>歌曲名 - 歌手</code>，启用后搜索条件 <code>歌曲名 - 歌手 专辑名</code>）。'));
 		o.default = o.disabled;
 		o.rmempty = false;
 
@@ -220,15 +220,13 @@ return view.extend({
 		o.datatype = 'port';
 		o.default = '5200';
 		o.rmempty = false;
-		o.depends({'advanced_mode': '1', 'hijack_ways': 'dont_hijack'});
-		o.depends({'advanced_mode': '1', 'hijack_ways': 'use_ipset'});
+		o.depends('advanced_mode', '1');
 
 		o = s.option(form.Value, 'https_port', _('HTTPS 监听端口'));
 		o.datatype = 'port';
 		o.default = '5201';
 		o.rmempty = false;
-		o.depends({'advanced_mode': '1', 'hijack_ways': 'dont_hijack'});
-		o.depends({'advanced_mode': '1', 'hijack_ways': 'use_ipset'});
+		o.depends('advanced_mode', '1');
 
 		o = s.option(form.Value, 'endpoint_url', _('EndPoint'),
 			_('音源地址反代（包装）。'));
@@ -241,14 +239,36 @@ return view.extend({
 		o.placeholder = 'http(s)://host:port'
 		o.depends('advanced_mode', '1');
 
-		o = s.option(form.ListValue, 'hijack_ways', _('劫持方法'),
-			_('如果使用 Hosts 劫持，程序监听的 HTTP/HTTPS 端口将被锁定为 80/443。'));
+		o = s.option(form.ListValue, 'hijack_ways', _('劫持方法'));
 		o.value('dont_hijack', _('不开启劫持'));
 		o.value('use_ipset', _('使用 IPSet 劫持'));
 		o.value('use_hosts', _('使用 Hosts 劫持'));
 		o.default = 'dont_hijack';
 		o.rmempty = false;
 		o.depends('advanced_mode', '1');
+		o.onchange = function(ev, section_id, value) {
+			if (!section_id || !value)
+				return null;
+
+			var ele_http_port = this.map.findElement('id', 'widget.cbid.unblockneteasemusic.%s.http_port'.format(section_id));
+			var ele_https_port = this.map.findElement('id', 'widget.cbid.unblockneteasemusic.%s.https_port'.format(section_id));
+
+			if (value === 'use_hosts') {
+				ele_http_port.value = '80';
+				ele_http_port.disabled = true;
+
+				ele_https_port.value = '443';
+				ele_https_port.disabled = true;
+			} else if (ele_http_port.disabled || ele_https_port.disabled) {
+				L.resolveDefault(this.map.data.loaded.unblockneteasemusic).then((res) => {
+					ele_http_port.disabled = null;
+					ele_http_port.value = res.config.http_port || '5200';
+
+					ele_https_port.disabled = null;
+					ele_https_port.value = res.config.https_port || '5201';
+				});
+			}
+		}
 
 		o = s.option(form.Flag, 'keep_core_when_upgrade', _('升级时保留核心程序'));
 		o.default = o.disabled;
