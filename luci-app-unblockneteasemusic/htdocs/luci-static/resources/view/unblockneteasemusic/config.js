@@ -128,7 +128,6 @@ return view.extend({
 
 		o = s.option(form.Value, 'migu_cookie', _('Migu Cookie'),
 			_('通过抓包手机客户端请求获取，需要 aversionid 值。'));
-		o.rmempty = false;
 		o.depends({'music_source': 'migu', '!contains': true});
 
 		o = s.option(form.Value, 'qq_cookie', _('QQ Cookie'),
