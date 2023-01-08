@@ -52,20 +52,13 @@ include $(INCLUDE_DIR)/package.mk
 define Package/$(PKG_NAME)
 	SECTION:=net
 	CATEGORY:=Network
-	TITLE:=Lucky gdy
+	TITLE:=Lucky dynamic domain name ddns-go service, socat,frp 
 	DEPENDS:=@(i386||x86_64||arm||aarch64||mipsel||mips)
 	URL:=https://github.com/gdy666/lucky
 endef
 
 define Package/$(PKG_NAME)/description
-  Main functions of Lucky: ipv4/ipv6 portforward,ddns,IOT wake on lan ,reverse proxy and more...
-endef
-
-define Package/$(PKG_NAME)/postinst
-#!/bin/sh
-if [ -z "$${IPKG_INSTROOT}" ]; then
-	[ -f /etc/uci-defaults/luci-lucky ] && /etc/uci-defaults/luci-lucky && rm -f /etc/uci-defaults/luci-lucky
-fi
+  Main functions of Lucky: dynamic domain name ddns-go service, socat,reverse proxy ,wake on lan
 endef
 
 define Build/Prepare
@@ -73,20 +66,12 @@ define Build/Prepare
 	tar -xzvf $(PKG_BUILD_DIR)/$(PKG_NAME)_$(PKG_VERSION)_Linux_$(LUCKY_ARCH).tar.gz -C $(PKG_BUILD_DIR)
 endef
 
-define Build/Configure
-/etc/lucky/lucky.conf
-/etc/config/lucky.conf
-endef
-
 define Build/Compile
 endef
 
 define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/init.d $(1)/etc/uci-defaults $(1)/etc/lucky/
+	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lucky $(1)/usr/bin/lucky
-	$(INSTALL_BIN) ./files/lucky.init $(1)/etc/init.d/lucky
-	$(INSTALL_BIN) ./files/luci-lucky.uci-default $(1)/etc/uci-defaults/luci-lucky
-	$(INSTALL_DATA) ./files/default.conf $(1)/etc/lucky/lucky.conf
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

@@ -4,9 +4,6 @@
 module("luci.controller.lucky", package.seeall)
 
 function index()
-	if not nixio.fs.access("/etc/config/lucky") then
-		return
-	end
 
 	entry({"admin", "services", "lucky"}, alias("admin", "services", "lucky", "setting"),_("Lucky"), 57).dependent = true
 	entry({"admin", "services", "lucky", "setting"}, cbi("lucky"), _("Base Setting"), 20).leaf=true

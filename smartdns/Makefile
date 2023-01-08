@@ -5,12 +5,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=smartdns
-PKG_VERSION:=39
+PKG_VERSION:=40
 PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/pymumu/smartdns/tar.gz/Release$(PKG_VERSION)?
-PKG_HASH:=9110efd9c191be5a2a89380191d4073f7a7c1c878e3ece7b3ed19c62fe4b88df
+PKG_HASH:=780626e709174e38fbd7e5e1b6cd867ae680cb55a38d2c6c24bdae4265beb5bf
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-Release$(PKG_VERSION)
 
 PKG_MAINTAINER:=Nick Peng <pymumu@gmail.com>

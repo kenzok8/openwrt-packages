@@ -42,11 +42,10 @@
 
 ### 效果图
 #### LuCI 界面
-  ![Image text](https://raw.githubusercontent.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic/master/views/view1.jpg)
-  ![Image text](https://raw.githubusercontent.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic/master/views/view2.jpg)
-  ![Image text](https://raw.githubusercontent.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic/master/views/view3.jpg)
+  ![Image text](https://raw.githubusercontent.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic/js/views/view1.jpg)
+  ![Image text](https://raw.githubusercontent.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic/js/views/view2.jpg)
 #### UWP 网易云音乐客户端
-  ![Image text](https://raw.githubusercontent.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic/master/views/view4.jpg)
+  ![Image text](https://raw.githubusercontent.com/UnblockNeteaseMusic/luci-app-unblockneteasemusic/js/views/view3.jpg)
 
 ### 鸣谢
 [UnblockNeteaseMusic](https://github.com/UnblockNeteaseMusic/server)的开发者：[nondanee](https://github.com/nondanee)、[pan93412](https://github.com/pan93412)、[1715173329](https://github.com/1715173329)<br/>
