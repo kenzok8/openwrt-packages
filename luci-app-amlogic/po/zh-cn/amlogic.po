@@ -101,101 +101,14 @@ msgstr "选择设备型号："
 msgid "Select List"
 msgstr "选择列表"
 
-msgid "[s905d] Phicomm N1"
-msgstr "[s905d] 斐讯-N1"
-
-msgid "[s905d] Phicomm N1 (DMA thresh)"
-msgstr "[s905d] 斐讯-N1 (流控)"
-
-msgid "[s905x] HG680P"
-msgstr "[s905x] 烽火HG680"
-
-msgid "[s905x] B860H"
-msgstr "[s905x] 中兴B860H"
-
-msgid "[s905w] X96-Mini & TX3-Mini"
-msgstr "[s905w] X96-Mini & TX3-Mini"
-
-msgid "[s912] Octopus Planet"
-msgstr "[s912] 章鱼星球"
-
-msgid "[s905x2] X96 Max 4G"
-msgstr "[s905x2] X96 Max 4G"
-
-msgid "[s905x2] X96 Max 2G"
-msgstr "[s905x2] X96 Max 2G"
-
-msgid "[s922x] Belink GT-King"
-msgstr "[s922x] Belink GT-King"
-
-msgid "[s922x] Belink GT-King Pro"
-msgstr "[s922x] Belink GT-King Pro"
-
-msgid "[s922x] Belink GT-King Pro H"
-msgstr "[s922x] Belink GT-King Pro H"
-
-msgid "[s922x] Belink GT-King Pro Rev_A"
-msgstr "[s922x] Belink GT-King Pro Rev_A"
-
-msgid "[s922x] Hardkernel ODROID N2"
-msgstr "[s922x] Hardkernel ODROID N2"
-
-msgid "[s922x] UGOOS AM6 Plus"
-msgstr "[s922x] UGOOS AM6 Plus"
-
-msgid "[a311d] Khadas VIM3"
-msgstr "[a311d] Khadas VIM3"
-
-msgid "[s905x3] X96 Max+"
-msgstr "[s905x3] X96 Max+"
-
-msgid "[s905x3] X96 Max+ (OverClock@2208Mhz)"
-msgstr "[s905x3] X96 Max+ (超频@2208Mhz)"
-
-msgid "[s905x3] HK1 Box"
-msgstr "[s905x3] HK1 Box"
-
-msgid "[s905x3] HK1 Box (OverClock@2208Mhz)"
-msgstr "[s905x3] HK1 Box (超频@2208Mhz)"
-
-msgid "[s905x3] H96 Max X3"
-msgstr "[s905x3] H96 Max X3"
-
-msgid "[s905x3] H96 Max X3 (OverClock@2208Mhz)"
-msgstr "[s905x3] H96 Max X3 (超频@2208Mhz)"
-
-msgid "[s905x3] Ugoos X3"
-msgstr "[s905x3] Ugoos X3"
-
-msgid "[s905x3] Ugoos X3 (OverClock@2208Mhz)"
-msgstr "[s905x3] Ugoos X3 (超频@2208Mhz)"
-
-msgid "[s905x3] TX3 BZ"
-msgstr "[s905x3] TX3 百兆"
-
-msgid "[s905x3] TX3 BZ (OverClock@2208Mhz)"
-msgstr "[s905x3] TX3 百兆 (超频@2208Mhz)"
-
-msgid "[s905x3] TX3 QZ"
-msgstr "[s905x3] TX3 千兆"
-
-msgid "[s905x3] TX3 QZ (OverClock@2208Mhz)"
-msgstr "[s905x3] TX3 千兆 (超频@2208Mhz)"
-
-msgid "enter the dtb file name:"
-msgstr "输入自定义 dtb 文件名："
-
-msgid "enter the soc name:"
-msgstr "输入自定义 soc 名称："
-
-msgid "enter the uboot_overload name:"
-msgstr "输入自定义 uboot_overload 名称："
-
 msgid "Enter the dtb file name"
 msgstr "输入自定义 dtb 文件名"
 
-msgid "Use custom dtb file:"
-msgstr "使用自定义 dtb 文件："
+msgid "Enter the soc name:"
+msgstr "输入自定义 soc 名称："
+
+msgid "Enter the uboot_overload name:"
+msgstr "输入自定义 uboot_overload 名称："
 
 msgid "Invalid value."
 msgstr "无效值"
