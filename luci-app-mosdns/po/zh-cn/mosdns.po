@@ -1,9 +1,6 @@
 msgid "Basic Setting"
 msgstr "基本设置"
 
-msgid "Manual Configuration"
-msgstr "手动配置"
-
 msgid "MosDNS is a 'programmable' DNS forwarder."
 msgstr "MosDNS 是一个插件化的 DNS 转发/分流器。"
 
@@ -19,20 +16,41 @@ msgstr "获取数据中..."
 msgid "Enable"
 msgstr "启用"
 
-msgid "Enable DNS Redirect"
-msgstr "启用 DNS 重定向"
+msgid "Listen port"
+msgstr "监听端口"
+
+msgid "Log Level"
+msgstr "日志等级"
+
+msgid "DNS Forward"
+msgstr "DNS 转发"
+
+msgid "Forward Dnsmasq Domain Name resolution requests to MosDNS"
+msgstr "将 Dnsmasq 域名解析请求转发到 MosDNS 服务器"
 
 msgid "Enable DNS ADblock"
 msgstr "启用 DNS 广告过滤"
 
-msgid "View the Custom YAML Configuration file used by this MosDNS. You can edit it as you own need."
-msgstr "注意！此页的更改仅当 'MosDNS 配置文件选择' 为 '自定义配置' 时才会生效"
+msgid "ADblock Source"
+msgstr "广告过滤来源"
+
+msgid "Reload Service"
+msgstr "重载服务"
+
+msgid "Reload service to take effect of new configuration"
+msgstr "重载 MosDNS 服务生效配置文件"
+
+msgid "<font color=\"ff0000\"><strong>View the Custom YAML Configuration file used by this MosDNS. You can edit it as you own need.</strong></font>"
+msgstr "<font color=\"ff0000\"><strong>注意！此页的更改仅当配置文件为 “自定义” 时才会生效</strong></font>"
 
 msgid "Geodata Update"
-msgstr "数据库更新"
+msgstr "更新数据库"
 
-msgid "Update Time (Every Day)"
-msgstr "更新时间（每天）"
+msgid "Update GeoIP & GeoSite dat"
+msgstr "更新 GeoIP & GeoSite 数据库"
+
+msgid "Update Time"
+msgstr "更新时间"
 
 msgid "Update Cycle"
 msgstr "更新周期"
@@ -68,58 +86,76 @@ msgid "Check And Update"
 msgstr "检查并更新"
 
 msgid "Enable Auto Database Update"
-msgstr "启用数据库自动更新"
+msgstr "启用自动更新"
 
-msgid "Enable Config Update"
-msgstr "启用配置文件同步"
+msgid "Updating..."
+msgstr "正在更新..."
 
-msgid "Enable AutoConfiguration"
-msgstr "启用自动化配置"
+msgid "Update success"
+msgstr "更新成功"
 
-msgid "This will make the necessary adjustments to other plug-in settings."
-msgstr "对其他插件的设置进行必要的设置，目前仅支持 SSRP VSSR PASSWALL。"
+msgid "Update failed, Please check the network status"
+msgstr "更新失败，请检查网络状态"
 
-msgid "This will revert the adjustments."
-msgstr "还原设置助手对其他插件进行的配置设定。"
+msgid "Config File"
+msgstr "配置文件"
 
-msgid "DNS Helper"
-msgstr "DNS 设置助手"
-
-msgid "Revert Settings"
-msgstr "DNS 设置还原"
-
-msgid "Apply"
-msgstr "应用"
-
-msgid "MosDNS Config File"
-msgstr "MosDNS 配置文件选择"
-
-msgid "Def Config"
+msgid "Default Config"
 msgstr "内置预设"
 
-msgid "Cus Config"
-msgstr "自定义配置"
+msgid "Custom Config"
+msgstr "自定义"
 
-msgid "Log Level"
-msgstr "日志级别"
-
-msgid "MosDNS Log File"
+msgid "Log File"
 msgstr "日志文件"
+
+msgid "Local DNS"
+msgstr "本地 DNS"
+
+msgid "Follow WAN interface DNS if not enabled"
+msgstr "不启用则遵循 WAN 接口 DNS"
+
+msgid "Upstream DNS servers"
+msgstr "上游 DNS 服务器"
+
+msgid "Bootstrap DNS servers"
+msgstr "Bootstrap DNS 服务器"
+
+msgid "Bootstrap DNS servers are used to resolve IP addresses of the DoH/DoT resolvers you specify as upstreams"
+msgstr "Bootstrap DNS 服务器用于解析所指定为上游的 DoH / DoT 解析器的 IP 地址"
 
 msgid "Remote DNS"
 msgstr "远程 DNS"
 
-msgid "Listen port"
-msgstr "监听端口"
+msgid "Remote DNS Connection Multiplexing"
+msgstr "远程 DNS 连接复用"
+
+msgid "Enable TCP/DoT RFC 7766 new Query Pipelining connection multiplexing mode"
+msgstr "启用 TCP/DoT RFC 7766 新型 Query Pipelining 连接复用模式"
+
+msgid "DNS Cache Size"
+msgstr "DNS 缓存大小（条）"
+
+msgid "Cache Survival Time"
+msgstr "缓存生存时间（秒）"
+
+msgid "Minimum TTL"
+msgstr "覆盖最小 TTL 值（默认 0）"
+
+msgid "Maximum TTL"
+msgstr "覆盖最大 TTL 值（默认 0）"
+
+msgid "Logs"
+msgstr "日志"
+
+msgid "Clear logs"
+msgstr "清空日志"
 
 msgid "Rule List"
 msgstr "规则列表"
 
 msgid "Rule Settings"
 msgstr "自定义规则列表"
-
-msgid "<br>The list of rules only apply to 'Custom Config' profiles."
-msgstr "<br>规则列表仅适用于 “自定义配置” 配置文件"
 
 msgid "<br>The list of rules only apply to 'Default Config' profiles."
 msgstr "<br>规则列表仅适用于 “内置预设” 配置文件"
@@ -128,13 +164,19 @@ msgid "White Lists"
 msgstr "白名单"
 
 msgid "These domain names allow DNS resolution with the highest priority. Please input the domain names of websites, every line can input only one website domain. For example: hm.baidu.com."
-msgstr "加入的域名始终允许 DNS 解析，且优先级最高（每个域名一行，允许使用规则匹配）"
+msgstr "加入的域名始终允许使用 “本地 DNS” 进行解析，且优先级最高（每个域名一行，支持域名匹配规则）"
 
 msgid "Block Lists"
 msgstr "黑名单"
 
 msgid "These domains are blocked from DNS resolution. Please input the domain names of websites, every line can input only one website domain. For example: baidu.com."
-msgstr "加入的域名将屏蔽 DNS 解析（每个域名一行，允许使用规则匹配）"
+msgstr "加入的域名将屏蔽 DNS 解析（每个域名一行，支持域名匹配规则）"
+
+msgid "Grey Lists"
+msgstr "灰名单"
+
+msgid "These domains are always resolved using remote DNS. Please input the domain names of websites, every line can input only one website domain. For example: google.com."
+msgstr "加入的域名始终使用 “远程 DNS” 进行解析（每个域名一行，支持域名匹配规则）"
 
 msgid "Hosts For example: baidu.com 10.0.0.1"
 msgstr "自定义 Hosts 重写，如：baidu.com 10.0.0.1（每个规则一行）"
@@ -145,8 +187,8 @@ msgstr "重定向"
 msgid "The domain name to redirect the request to. Requests domain A, but returns records for domain B. example: a.com b.com"
 msgstr "重定向请求的域名。请求域名 A，但返回域名 B 的记录，如：baidu.com qq.com（每个规则一行）"
 
-msgid "Logs"
-msgstr "日志"
+msgid "Block PTR"
+msgstr "PTR 黑名单"
 
-msgid "Clear logs"
-msgstr "清空日志"
+msgid "These domains are blocked from PTR requests"
+msgstr "加入的域名将阻止 PTR 请求（每个域名一行，支持域名匹配规则）"

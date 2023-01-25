@@ -283,7 +283,7 @@ o.default = nil
 o.optional = true
 
 o = s:option(Value, "update_url", translate("Core Update URL"))
-o.dafault = "https://github.com/AdguardTeam/AdGuardHome/releases/download/${Cloud_Version}/AdGuardHome_linux_${Arch}.tar.gz"
+o.default = "https://github.com/AdguardTeam/AdGuardHome/releases/download/${Cloud_Version}/AdGuardHome_linux_${Arch}.tar.gz"
 o.placeholder = "https://github.com/AdguardTeam/AdGuardHome/releases/download/${Cloud_Version}/AdGuardHome_linux_${Arch}.tar.gz"
 o.rmempty = false
 o.optional = false

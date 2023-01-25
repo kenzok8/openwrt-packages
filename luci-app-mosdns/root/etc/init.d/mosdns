@@ -1,153 +1,157 @@
 #!/bin/sh /etc/rc.common
-# Copyright (C) 2020 IrineSistiana
-# shellcheck disable=SC2034
+#
+# Copyright (C) 2020-2022, IrineSistiana
+#
+# This file is part of mosdns.
+#
+# mosdns is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# mosdns is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
 
 START=99
 USE_PROCD=1
 
-#####  ONLY CHANGE THIS BLOCK  ######
-PROG=/usr/bin/mosdns                        # where is mosdns
-RES_DIR=/etc/mosdns/                        # resource dir / working dir / the dir where you store ip/domain lists
-CONF=$(uci -q get mosdns.mosdns.configfile) # where is the config file, it can be a relative path to $RES_DIR
+PROG=/usr/bin/mosdns
+CONF=$(uci -q get mosdns.config.configfile)
 CRON_FILE=/etc/crontabs/root
-#####  ONLY CHANGE THIS BLOCK  ######
 
-inital_conf() {
-  config_load "mosdns"
-  config_get "enabled" "mosdns" "enabled" "0"
+get_config() {
+	config_get enabled $1 enabled 0
+	config_get adblock $1 adblock 0
+	config_get ad_source $1 ad_source ""
+	config_get cache_size $1 cache_size 200000
+	config_get cache_survival_time $1 cache_survival_time 259200
+	config_get enable_pipeline $1 enable_pipeline 0
+	config_get geo_auto_update $1 geo_auto_update 0
+	config_get geo_update_day_time $1 geo_update_day_time 2
+	config_get geo_update_week_time $1 geo_update_week_time "*"
+	config_get listen_port $1 listen_port 5335
+	config_get log_file $1 logfile "/tmp/mosdns.log"
+	config_get log_level $1 log_level "info"
+	config_get maximum_ttl_custom $1 maximum_ttl 0
+	config_get minimal_ttl_custom $1 minimal_ttl 0
+	config_get redirect $1 redirect 0
+	config_get remote_dns $1 remote_dns "tls://8.8.8.8 tls://1.1.1.1"
+	config_get custom_local_dns $1 custom_local_dns 0
+	config_get bootstrap_dns $1 bootstrap_dns "119.29.29.29"
 }
+
+init_yaml() {
+	tmpdir=$(mktemp -d) || exit 1
+	adlist=$(/usr/share/mosdns/mosdns.sh ad)
+	[ $enable_pipeline = 1 ] && enable_pipeline=true || enable_pipeline=false
+	local_dns=$(/usr/share/mosdns/mosdns.sh dns | xargs -n1 echo "        - addr:")
+	remote_dns=$(echo $remote_dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: %s\n%s  enable_pipeline: '${enable_pipeline}'\n",s,$i,s}' s='        ')
+	sed "s,log_level,$log_level,g;s,log_file,$log_file,g; \
+	s,listen_port,$listen_port,g;s,cache_size,$cache_size,g; \
+	s,cache_survival_time,$cache_survival_time,g; \
+	s,minimal_ttl_custom,$minimal_ttl_custom,g; \
+	s,maximum_ttl_custom,$maximum_ttl_custom,g; \
+	s,adblock,$adlist,g;s,remote_dns_pipeline,$enable_pipeline,g" \
+	/usr/share/mosdns/default.yaml > $CONF
+	[ "$custom_local_dns" -eq 0 ] && sed -i "/bootstrap/d" $CONF || \
+	sed -i "s,bootstrap_dns,$bootstrap_dns,g" $CONF
+	echo "${local_dns}" > $tmpdir/local_dns.txt
+	echo "${remote_dns}" > $tmpdir/remote_dns.txt
+	sed -i -e '/- addr: local_dns/{r '$tmpdir/local_dns.txt -e';d};/- addr: remote_dns/{r '$tmpdir/remote_dns.txt -e';d}' \
+	$CONF
+	rm -rf $tmpdir
+}
+
 service_triggers() {
-  procd_add_reload_trigger "mosdns"
+	procd_add_reload_trigger "mosdns"
 }
 
 restore_setting() {
-  sed -i "/list server/d" /etc/config/dhcp
-  uci set dhcp.@dnsmasq[0].noresolv='0'
-  uci del dhcp.@dnsmasq[0].cachesize
-  uci set dhcp.@dnsmasq[0].filter_aaaa='1'
-  uci del dhcp.@dnsmasq[0].setbymosdns
-  uci commit dhcp
+	rm -f /etc/mosdns/redirect.lock
+	sed -i "/list server/d" /etc/config/dhcp
+	uci set dhcp.@dnsmasq[0].noresolv='0'
+	uci del dhcp.@dnsmasq[0].cachesize
+	uci commit dhcp
 }
 
-prepare_setting() {
-  redirect=$(uci -q get mosdns.mosdns.redirect)
-  if [ "$redirect" -eq 1 ]; then
-    sed -i "/list server/d" /etc/config/dhcp
-    uci add_list dhcp.@dnsmasq[0].server="127.0.0.1#$(uci -q get mosdns.mosdns.listen_port)"
-    uci set dhcp.@dnsmasq[0].rebind_protection='0'
-    uci set dhcp.@dnsmasq[0].noresolv="1"
-    uci set dhcp.@dnsmasq[0].cachesize='0'
-    uci set dhcp.@dnsmasq[0].filter_aaaa='0'
-    uci set dhcp.@dnsmasq[0].setbymosdns='1'
-    uci commit dhcp
-  fi
+redirect_setting() {
+	if [ "${CONF}" = "/etc/mosdns/config.yaml" ]; then
+		sed -i "/list server/d" /etc/config/dhcp
+		uci add_list dhcp.@dnsmasq[0].server="127.0.0.1#$listen_port"
+		uci set dhcp.@dnsmasq[0].rebind_protection='0'
+		uci set dhcp.@dnsmasq[0].noresolv="1"
+		uci set dhcp.@dnsmasq[0].cachesize='0'
+		uci commit dhcp
+	else
+		sed -i "/list server/d" /etc/config/dhcp
+		uci add_list dhcp.@dnsmasq[0].server="127.0.0.1#$(cat /etc/mosdns/config_custom.yaml | awk -F'[:" ]+' '/^\s+addr:/{for(i=1;i<=NF;i++){if($i~/^[0-9]+$/){print $i;exit}}}')"
+		uci set dhcp.@dnsmasq[0].rebind_protection='0'
+		uci set dhcp.@dnsmasq[0].noresolv="1"
+		uci set dhcp.@dnsmasq[0].cachesize='0'
+		uci commit dhcp
+	fi
+	touch /etc/mosdns/redirect.lock
 }
 
-restart_others() {
-  /etc/init.d/network reload
-  /etc/init.d/dnsmasq reload
+reload_others() {
+	/etc/init.d/network reload
+	/etc/init.d/dnsmasq reload
 }
 
 reload_service() {
-  stop
-  sleep 2s
-  echo "MosDNS is restarted!"
-  start
+	stop
+	sleep 1
+	start
 }
 
 setcron() {
-  touch $CRON_FILE
-  sed -i '/mosupdater.sh/d' $CRON_FILE 2> /dev/null
-  [ "$(uci -q get mosdns.mosdns.geo_auto_update)" -eq 1 ] && echo "0 $(uci -q get mosdns.mosdns.geo_update_day_time) * * $(uci -q get mosdns.mosdns.geo_update_week_time) /etc/mosdns/mosupdater.sh" >> $CRON_FILE
-  crontab $CRON_FILE
+	sed -i '/mosdns.sh/d' $CRON_FILE 2>/dev/null
+	[ "$geo_auto_update" -eq 1 ] && echo "0 $geo_update_day_time * * $geo_update_week_time /usr/share/mosdns/mosdns.sh geodata" >>$CRON_FILE
+	crontab $CRON_FILE
 }
 
 delcron() {
-  sed -i '/mosupdater.sh/d' $CRON_FILE 2> /dev/null
-  crontab $CRON_FILE
-}
-
-adblock() {
-  cp -f /etc/mosdns/rule/serverlist.txt /etc/mosdns/rule/serverlist.bak
-  modns_adblock=$(uci -q get mosdns.mosdns.adblock)
-  if [ "$modns_adblock" = 0 ]; then
-    : > /etc/mosdns/rule/serverlist.txt
-  else
-    cat /etc/mosdns/rule/serverlist.bak > /etc/mosdns/rule/serverlist.txt
-  fi
-}
-
-v4config() {
-  rm -rf /etc/mosdns/def_config.yaml
-  cp -rf /etc/mosdns/def_config_orig.yaml /etc/mosdns/def_config.yaml
-  sed -i "s,listenport,$(uci -q get mosdns.mosdns.listen_port),g" /etc/mosdns/def_config.yaml
-  sed -i "s,loglvl,$(uci -q get mosdns.mosdns.loglv),g" /etc/mosdns/def_config.yaml
-  sed -i "s,logfile,$(uci -q get mosdns.mosdns.logfile),g" /etc/mosdns/def_config.yaml
-  sed -i "s,remotedns1,$(uci -q get mosdns.mosdns.remote_dns1),g" /etc/mosdns/def_config.yaml
-  sed -i "s,remotedns2,$(uci -q get mosdns.mosdns.remote_dns2),g" /etc/mosdns/def_config.yaml
-  sed -i "s,localdns1,$(/etc/mosdns/lib.sh dns 0),g" /etc/mosdns/def_config.yaml
-  sed -i "s,localdns2,$(/etc/mosdns/lib.sh dns 1),g" /etc/mosdns/def_config.yaml
+	sed -i '/mosdns.sh/d' $CRON_FILE 2>/dev/null
+	crontab $CRON_FILE
 }
 
 start_service() {
-
-  # Reading config
-  inital_conf
-  if [ "$enabled" -eq 0 ]; then
-    firstblood=$(uci -q get mosdns.mosdns.not_first_start)
-    [ "${firstblood}" = "0" ] && restore_setting
-    [ "${firstblood}" = "0" ] && restart_others
-    uci set mosdns.mosdns.not_first_start='1'
-    uci commit mosdns
-    echo "MosDNS has turned off"
-    return 1
-  fi
-  delcron
-  setcron
-  adblock
-  true > "$(/etc/mosdns/lib.sh logfile)"
-  sysctl -w net.core.rmem_max=2500000
-  v4config
-  procd_open_instance mosdns
-  procd_set_param command $PROG start -d $RES_DIR -c "$CONF"
-  procd_set_param user root
-  procd_set_param stdout 1
-  procd_set_param stderr 1
-  procd_set_param respawn "${respawn_threshold:-3600}" "${respawn_timeout:-5}" "${respawn_retry:-5}"
-  procd_close_instance mosdns
-
-  configfile=$(uci -q get mosdns.mosdns.configfile)
-  if [ "${configfile}" = "./def_config.yaml" ]; then
-    restore_setting
-    prepare_setting
-    if [ "$(uci -q get mosdns.mosdns.redirect)" -eq 1 ] && [ "$(uci -q get shadowsocksr.@global[0].run_mode)" != gfw ]; then
-      true > /etc/ssrplus/gfw_list.conf
-      sed -i '/update.lua/d' /usr/share/shadowsocksr/ssrplusupdate.sh
-      sed -i '/bin\/sh/a\/usr/bin/lua /usr/share/shadowsocksr/update.lua ad_data' /usr/share/shadowsocksr/ssrplusupdate.sh
-      sed -i '/bin\/sh/a\/usr/bin/lua /usr/share/shadowsocksr/update.lua nfip_data' /usr/share/shadowsocksr/ssrplusupdate.sh
-      sed -i '/bin\/sh/a\/usr/bin/lua /usr/share/shadowsocksr/update.lua ip_data' /usr/share/shadowsocksr/ssrplusupdate.sh
-    fi
-    restart_others
-  fi
-
-  echo "MosDNS turn on"
-  echo "enabled=$enabled"
-
+	config_load "mosdns"
+	config_foreach get_config "mosdns"
+	[ $enabled != 1 ] && return 1
+	delcron
+	setcron
+	[ "${CONF}" = "/etc/mosdns/config.yaml" ] && init_yaml
+	:> $(/usr/share/mosdns/mosdns.sh logfile)
+	procd_open_instance mosdns
+	procd_set_param command $PROG start -c "$CONF"
+	procd_set_param user root
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_set_param respawn "${respawn_threshold:-3600}" "${respawn_timeout:-5}" "${respawn_retry:-5}"
+	procd_close_instance mosdns
+	[ "$redirect" -ne 1 ] && [ -f "/etc/mosdns/redirect.lock" ] && restore_setting
+	[ "$redirect" -eq 1 ] && redirect_setting
+	reload_others
+	update_list=0
+	[ "$adblock" -eq 1 ] && [ "$ad_source" != "geosite.dat" ] && {
+		[ -s "/etc/mosdns/rule/adlist.txt" ] && [ -f "/etc/mosdns/rule/.ad_source" ] && url_adlist=$(cat /etc/mosdns/rule/.ad_source) || update_list=1
+		[ "$ad_source" != "$url_adlist" ] && update_list=1
+	}
+	[ "$update_list" -eq 1 ] && /usr/share/mosdns/mosdns.sh adlist_update &> /dev/null &
 }
 
 stop_service() {
-
-  pgrep -f /usr/bin/mosdns | xargs kill -9
-  echo "MosDNS turn off"
-  echo "enabled=$enabled"
-
-  configfile=$(uci -q get mosdns.mosdns.configfile)
-  if [ "${configfile}" = "./def_config.yaml" ]; then
-    config_load "mosdns"
-    enabled=$(uci -q get mosdns.mosdns.enabled)
-    [ "${enabled}" = "0" ] && [ "$(uci -q get dhcp.@dnsmasq[0].setbymosdns)" -eq 1 ] && restore_setting
-    restart_others
-  fi
-  delcron
-
+	pgrep -f /usr/bin/mosdns | xargs kill -9 >/dev/null 2>&1
+	config_load "mosdns"
+	config_foreach get_config "mosdns"
+	[ "$enabled" = "0" ] && [ -f "/etc/mosdns/redirect.lock" ] && restore_setting
+	reload_others
+	delcron
 }
