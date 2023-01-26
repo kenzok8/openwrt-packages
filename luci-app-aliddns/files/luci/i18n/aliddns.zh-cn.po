@@ -10,6 +10,9 @@ msgstr "启用"
 msgid "Clean Before Update"
 msgstr "清除所有同名记录"
 
+msgid "Enabled IPv6"
+msgstr "启用 IPv6"
+
 msgid "Base"
 msgstr "基本设置"
 
@@ -21,6 +24,15 @@ msgstr "选择WAN-IP来源"
 
 msgid "Select the WAN-IP Source for AliDDNS, like wan/internet"
 msgstr "动态域名的IP来源，如wan/internet"
+
+msgid "WAN6-IP Source"
+msgstr "WAN6-IP来源"
+
+msgid "Select WAN6-IP Source"
+msgstr "选择WAN6-IP来源"
+
+msgid "Select the WAN6-IP Source for AliDDNS, like wan6/internet"
+msgstr "动态域名的IPv6来源，如wan6/internet"
 
 msgid "Main Domain"
 msgstr "主域名"
