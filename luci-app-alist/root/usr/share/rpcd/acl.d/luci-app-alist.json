@@ -1,0 +1,11 @@
+{
+	"luci-app-alist": {
+		"description": "Grant UCI access for luci-app-alist",
+		"read": {
+			"uci": [ "alist" ]
+		},
+		"write": {
+			"uci": [ "alist" ]
+		}
+	}
+}

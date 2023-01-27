@@ -1,0 +1,77 @@
+msgid "Alist"
+msgstr "Alist 文件列表"
+
+msgid "Running state"
+msgstr "运行状态"
+
+msgid "Open Web Interface"
+msgstr "打开 Web 界面"
+
+msgid "A file list program that supports multiple storage."
+msgstr "一款支持多种存储的目录文件列表程序。"
+
+msgid "Basic Setting"
+msgstr "基本设置"
+
+msgid "Port"
+msgstr "端口"
+
+msgid "Enable SSL"
+msgstr "启用 SSL"
+
+msgid "SSL cert"
+msgstr "SSL 证书"
+
+msgid "SSL certificate file path"
+msgstr "SSL 证书文件路径"
+
+msgid "SSL key"
+msgstr "SSL 密钥"
+
+msgid "SSL key file path"
+msgstr "SSL 密钥文件路径"
+
+msgid "Cache directory"
+msgstr "缓存目录"
+
+msgid "RUNNING"
+msgstr "运行中"
+
+msgid "NOT RUNNING"
+msgstr "未运行"
+
+msgid "Collecting data..."
+msgstr "收集数据..."
+
+msgid "NAS"
+msgstr "网络存储"
+
+msgid "User Manual"
+msgstr "用户手册"
+
+msgid "Allow Access From Internet"
+msgstr "允许从外网访问"
+
+msgid "Enable Logs"
+msgstr "启用日志"
+
+msgid "Clear logs"
+msgstr "清空日志"
+
+msgid "View Password"
+msgstr "查看密码"
+
+msgid "Username:"
+msgstr "用户名："
+
+msgid "Password:"
+msgstr "密码："
+
+msgid "Reading..."
+msgstr "读取中..."
+
+msgid "Read"
+msgstr "读取"
+
+msgid "Login Validity Period (hours)"
+msgstr "登录有效期（小时）"
