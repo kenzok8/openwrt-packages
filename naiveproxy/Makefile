@@ -5,12 +5,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=naiveproxy
-PKG_VERSION:=109.0.5414.74-2
-PKG_RELEASE:=1
+PKG_VERSION:=109.0.5414.74-1
+PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/klzgrad/naiveproxy/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=3c1e9e276e4ae79c8192c25a15df2f564741602ae403712565c48aa6db9d78e7
+PKG_HASH:=eb0b7d4ee7e34aff5bd9f7ff662a707c059e3739da47cd52e6d5edfff988123a
 
 PKG_LICENSE:=BSD 3-Clause
 PKG_LICENSE_FILES:=LICENSE
@@ -19,6 +19,7 @@ PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 ifneq ($(wildcard $(TOPDIR)/feeds/packages/devel/ninja/ninja.mk),)
 PKG_BUILD_DEPENDS+= ninja/host
 endif
+NINJA ?= ninja
 PKG_USE_MIPS16:=0
 PKG_BUILD_PARALLEL:=1
 
@@ -106,13 +107,13 @@ define Build/Configure
 		. ../init_env.sh "$(ARCH)" $(CPU_TYPE) $(CPU_SUBTYPE) "$(TOOLCHAIN_DIR)" ; \
 		export naive_flags+=" $$$${naive_ccache_flags}" ; \
 		mkdir -p "out" ; \
-		./gn/out/gn gen "out/Release" --args="$$$${naive_flags}" --script-executable="python3" ; \
+		./gn/out/gn gen "out/Release" --args="$$$${naive_flags}" --script-executable="$(PYTHON)" ; \
 		popd ; \
 	)
 endef
 
 define Build/Compile
-	ninja -C "$(PKG_BUILD_DIR)/src/out/Release" naive
+	+$(NINJA) -C "$(PKG_BUILD_DIR)/src/out/Release" naive
 endef
 
 define Package/naiveproxy/install

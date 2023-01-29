@@ -16,7 +16,7 @@ local update_image = function(self, image_name)
 	_docker:append_status("Images: " .. "pulling" .. " " .. image_name .. "...\n")
 	local res = self.images:create({query = {fromImage=image_name}}, _docker.pull_image_show_status_cb)
 
-	if res and res.code and res.code == 200 and (#res.body > 0 and not res.body[#res.body].error and res.body[#res.body].status and (res.body[#res.body].status == "Status: Downloaded newer image for ".. image_name)) then
+	if res and res.code == 200 and (#res.body > 0 and not res.body[#res.body].error and res.body[#res.body].status and (res.body[#res.body].status == "Status: Downloaded newer image for ".. image_name)) then
 		_docker:append_status("done\n")
 	else
 		res.body.message = res.body[#res.body] and res.body[#res.body].error or (res.body.message or res.message)
@@ -110,9 +110,6 @@ _docker.clear_empty_tables = function ( t )
 		for k, v in pairs(t) do
 			if type(v) == 'table' then
 				t[k] = _docker.clear_empty_tables(v)
-				if t[k] and next(t[k]) == nil then
-					t[k] = nil
-				end
 			end
 		end
 	end
@@ -210,7 +207,7 @@ local upgrade = function(self, request)
 	local container_name = container_info.body.Name:sub(2)
 
 	local image_id, res = update_image(self, image_name)
-	if res and res.code and res.code ~= 200 then
+	if res and res.code ~= 200 then
 		return res
 	end
 
@@ -218,10 +215,17 @@ local upgrade = function(self, request)
 		return {code = 305, body = {message = "Already up to date"}}
 	end
 
-	local t = os.date("%Y%m%d%H%M%S")
-	_docker:append_status("Container: rename" .. " " .. container_name .. " to ".. container_name .. "_old_".. t .. "...")
-	res = self.containers:rename({name = container_name, query = { name = container_name .. "_old_" ..t }})
-	if res and res.code and res.code < 300 then
+	_docker:append_status("Container: " .. "Stop" .. " " .. container_name .. "...")
+	res = self.containers:stop({name = container_name})
+	if res and res.code < 305 then
+		_docker:append_status("done\n")
+	else
+		return res
+	end
+
+	_docker:append_status("Container: rename" .. " " .. container_name .. " to ".. container_name .. "_old ...")
+	res = self.containers:rename({name = container_name, query = { name = container_name .. "_old" }})
+	if res and res.code < 300 then
 		_docker:append_status("done\n")
 	else
 		return res
@@ -234,7 +238,7 @@ local upgrade = function(self, request)
 	_docker:append_status("Container: Create" .. " " .. container_name .. "...")
 	create_body = _docker.clear_empty_tables(create_body)
 	res = self.containers:create({name = container_name, body = create_body})
-	if res and res.code and res.code > 300 then
+	if res and res.code > 300 then
 		return res
 	end
 	_docker:append_status("done\n")
@@ -243,26 +247,10 @@ local upgrade = function(self, request)
 	for k, v in pairs(extra_network) do
 		_docker:append_status("Networks: Connect" .. " " .. container_name .. "...")
 		res = self.networks:connect({id = k, body = {Container = container_name, EndpointConfig = v}})
-		if res and res.code and res.code > 300 then
+		if res.code > 300 then
 			return res
 		end
 		_docker:append_status("done\n")
-	end
-
-	_docker:append_status("Container: " .. "Stop" .. " " .. container_name .. "_old_".. t .. "...")
-	res = self.containers:stop({name = container_name .. "_old_" ..t })
-	if res and res.code and res.code < 305 then
-		_docker:append_status("done\n")
-	else
-		return res
-	end
-
-	_docker:append_status("Container: " .. "Start" .. " " .. container_name .. "...")
-	res = self.containers:start({name = container_name})
-	if res and res.code and res.code < 305 then
-		_docker:append_status("done\n")
-	else
-		return res
 	end
 
 	_docker:clear_status()
@@ -287,19 +275,20 @@ _docker.new = function()
 	local socket_path = nil
 	local debug_path = nil
 
-	if uci:get_bool("dockerd", "dockerman", "remote_endpoint") then
-		host = uci:get("dockerd", "dockerman", "remote_host") or nil
-		port = uci:get("dockerd", "dockerman", "remote_port") or nil
+	local remote = uci:get_bool("dockerd", "globals", "remote_endpoint")
+	if remote then
+		host = uci:get("dockerd", "globals", "remote_host") or nil
+		port = uci:get("dockerd", "globals", "remote_port") or nil
 	else
-		socket_path = uci:get("dockerd", "dockerman", "socket_path") or "/var/run/docker.sock"
+		socket_path = uci:get("dockerd", "globals", "socket_path") or "/var/run/docker.sock"
 	end
 
-	local debug = uci:get_bool("dockerd", "dockerman", "debug")
+	local debug = uci:get_bool("dockerd", "globals", "debug")
 	if debug then
-		debug_path = uci:get("dockerd", "dockerman", "debug_path") or "/tmp/.docker_debug"
+		debug_path = uci:get("dockerd", "globals", "debug_path") or "/tmp/.docker_debug"
 	end
 
-	local status_path = uci:get("dockerd", "dockerman", "status_path") or "/tmp/.docker_action_status"
+	local status_path = uci:get("dockerd", "globals", "status_path") or "/tmp/.docker_status"
 
 	_docker.options = {
 		host = host,
@@ -316,8 +305,6 @@ _docker.new = function()
 
 	return _new
 end
-
-_docker.options.status_path = uci:get("dockerd", "dockerman", "status_path") or "/tmp/.docker_action_status"
 
 _docker.append_status=function(self,val)
 	if not val then
@@ -413,7 +400,7 @@ _docker.create_macvlan_interface = function(name, device, gateway, subnet)
 		return
 	end
 
-	if uci:get_bool("dockerd", "dockerman", "remote_endpoint") then
+	if uci:get("dockerd", "globals", "remote_endpoint") == "true" then
 		return
 	end
 
@@ -464,7 +451,7 @@ _docker.remove_macvlan_interface = function(name)
 		return
 	end
 
-	if uci:get_bool("dockerd", "dockerman", "remote_endpoint") then
+	if uci:get("dockerd", "globals", "remote_endpoint") == "true" then
 		return
 	end
 
@@ -490,18 +477,6 @@ _docker.remove_macvlan_interface = function(name)
 	uci:commit("firewall")
 
 	os.execute("ip link del " .. if_name)
-end
-
-_docker.byte_format = function (byte)
-	if not byte then return 'NaN' end
-	local suff = {"B", "KB", "MB", "GB", "TB"}
-	for i=1, 5 do
-		if byte > 1024 and i < 5 then
-			byte = byte / 1024
-		else
-			return string.format("%.2f %s", byte, suff[i])
-		end
-	end
 end
 
 return _docker
