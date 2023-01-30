@@ -160,16 +160,26 @@ local Xray = {
 			security = (server.xtls == '1') and "xtls" or (server.tls == '1') and "tls" or nil,
 			tlsSettings = (server.tls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
 				-- tls
-				fingerprint = server.fingerprint,
-				allowInsecure = (server.insecure == "1") and true or nil,
-				serverName = server.tls_host
-			} or nil,
-			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
-				-- xtls
+				alpn = server.tls_alpn,
 				fingerprint = server.fingerprint,
 				allowInsecure = (server.insecure == "1") and true or nil,
 				serverName = server.tls_host,
-				minVersion = "1.3"
+				certificates = server.certificate and {
+					usage = "verify",
+					certificateFile = server.certpath
+				} or nil
+			} or nil,
+			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
+				-- xtls
+				alpn = server.tls_alpn,
+				fingerprint = server.fingerprint,
+				allowInsecure = (server.insecure == "1") and true or nil,
+				serverName = server.tls_host,
+				minVersion = "1.3",
+				certificates = server.certificate and {
+					usage = "verify",
+					certificateFile = server.certpath
+				} or nil
 			} or nil,
 			tcpSettings = (server.transport == "tcp" and server.tcp_guise == "http") and {
 				-- tcp
@@ -255,7 +265,7 @@ local trojan = {
 		cipher = cipher,
 		cipher_tls13 = cipher13,
 		sni = server.tls_host,
-		alpn = {"h2", "http/1.1"},
+		alpn = server.tls_alpn or {"h2", "http/1.1"},
 		curve = "",
 		reuse_session = true,
 		session_ticket = (server.tls_sessionTicket == "1") and true or false
@@ -317,6 +327,26 @@ local hysteria = {
 	disable_mtu_discovery = (server.disable_mtu_discovery == "1") and true or false,
 	fast_open = (server.fast_open == "1") and true or false
 }
+local tuic = {
+	relay = {
+		server = server.server,
+		port = tonumber(server.server_port),
+		token = server.password,
+
+		certificates = server.certificate and { server.certpath } or nil,
+		udp_relay_mode = server.udp_relay_mode,
+		congestion_controller = server.congestion_controller,
+		heartbeat_interval = tonumber(server.heartbeat_interval),
+		alpn = server.tls_alpn,
+		disable_sni = (server.disable_sni == "1"),
+		reduce_rtt = (server.reduce_rtt == "1"),
+		max_udp_relay_packet_size = tonumber(server.max_udp_relay_packet_size)
+	},
+	["local"] = {
+		port = tonumber(local_port),
+		ip = "0.0.0.0"
+	}
+}
 local config = {}
 function config:new(o)
 	o = o or {}
@@ -353,6 +383,9 @@ function config:handleIndex(index)
 		end,
 		hysteria = function()
 			print(json.stringify(hysteria, 1))
+		end,
+		tuic = function()
+			print(json.stringify(tuic, 1))
 		end
 	}
 	if switch[index] then

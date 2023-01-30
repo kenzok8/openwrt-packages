@@ -1,0 +1,81 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+USE_PROCD=1
+PROG=/usr/bin/alist
+CONFIG_DIR=/etc/alist
+
+get_config() {
+	config_get_bool enabled $1 enabled 1
+	config_get port $1 port 5244
+	config_get log $1 log 1
+	config_get temp_dir $1 temp_dir "/tmp/alist"
+	config_get ssl $1 ssl 0
+	config_get ssl_cert $1 ssl_cert ""
+	config_get ssl_key $1 ssl_key ""
+	config_get token_expires_in $1 token_expires_in 48
+	config_get allow_wan $1 allow_wan 0
+	config_load network
+	config_get lan_addr lan ipaddr "0.0.0.0"
+}
+
+set_firewall() {
+	if [ "$external_access" = "allow" ]; then
+		uci -q delete firewall.alist
+		uci set firewall.alist=rule
+		uci set firewall.alist.name="alist"
+		uci set firewall.alist.target="ACCEPT"
+		uci set firewall.alist.src="wan"
+		uci set firewall.alist.proto="tcp"
+		uci set firewall.alist.dest_port="$port"
+		uci set firewall.alist.enabled="1"
+		uci commit firewall
+		/etc/init.d/firewall reload >/dev/null 2>&1
+	elif [ "$external_access" = "deny" ]; then
+		uci -q delete firewall.alist
+		uci commit firewall
+		/etc/init.d/firewall reload >/dev/null 2>&1
+	fi
+}
+
+start_service() {
+	config_load alist
+	config_foreach get_config alist
+	[ $enabled != 1 ] && return 1
+	mkdir -p $temp_dir
+	[ "$ssl" -eq 1 ] && SSL=true || SSL=false
+	[ "$log" -eq 1 ] && LOG=true || LOG=false
+	if [ "$allow_wan" -eq "1" ]; then
+		listen_addr="0.0.0.0"
+		external_access="allow"
+	else
+		listen_addr=$lan_addr
+		external_access="deny"
+	fi
+	set_firewall
+	cat /dev/null > $temp_dir/alist.log
+	cat > $CONFIG_DIR/config.json <<EOF
+{"force":false,"address":"$listen_addr","port":$port,"cdn":"","jwt_secret":"","token_expires_in":$token_expires_in,"database":{"type":"sqlite3","host":"","port":0,"user":"","password":"","name":"","db_file":"/etc/alist/data.db","table_prefix":"x_","ssl_mode":""},"scheme":{"https":$SSL,"cert_file":"$ssl_cert","key_file":"$ssl_key"},"temp_dir":"$temp_dir","log":{"enable":$LOG,"name":"$temp_dir/alist.log","max_size":10,"max_backups":5,"max_age":28,"compress":false}}
+EOF
+	procd_open_instance alist
+	procd_set_param command $PROG
+	procd_append_param command server --data $CONFIG_DIR
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_set_param respawn
+	procd_close_instance alist
+}
+
+service_triggers() {
+	procd_add_reload_trigger "alist"
+}
+
+stop_service() {
+	external_access="deny"
+	set_firewall
+}
+
+reload_service() {
+	stop
+	start
+}

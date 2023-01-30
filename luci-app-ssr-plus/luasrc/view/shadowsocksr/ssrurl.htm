@@ -328,8 +328,10 @@ function import_ssr_url(btn, urlname, sid) {
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.seed')[0].value = params.get("seed") || "";
 				break;
 			case "http":
-				document.getElementsByName('cbid.shadowsocksr.' + sid + '.h2_host')[0].value = queryParam.host || serverPart[0];
-				document.getElementsByName('cbid.shadowsocksr.' + sid + '.h2_path')[0].value = queryParam.path || "/";
+			/* this is non-standard, bullshit */
+			case "h2":
+				document.getElementsByName('cbid.shadowsocksr.' + sid + '.h2_host')[0].value = params.get("host") ? decodeURIComponent(params.get("host")) : "";
+				document.getElementsByName('cbid.shadowsocksr.' + sid + '.h2_path')[0].value = params.get("path") ? decodeURIComponent(params.get("path")) : "";
 				break;
 			case "quic":
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.quic_guise')[0].value = params.get("headerType") || "none";

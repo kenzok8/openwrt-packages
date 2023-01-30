@@ -51,14 +51,18 @@ do_checkemmc() {
 	mydevice_name="$(cat /proc/device-tree/model | tr -d '\000')"
 	echo -e "${INFO} The device name: [ ${mydevice_name} ]"
 
-	# Find the EMMC drive
-	emmc="$(lsblk -l -o NAME | grep -oE "mmcblk[0-9]boot0" | sort | uniq | sed "s/boot0//g")"
-	[[ -z "${emmc}" ]] && error_msg "Cannot find your EMMC drive!"
-	echo -e "${INFO} The device EMMC name: [ /dev/${emmc} ]"
-
 	# Find the partition where root is located
 	root_ptname="$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
 	[[ -z "${root_ptname}" ]] && error_msg "Cannot find the partition corresponding to the root file system!"
+
+	# Find the EMMC drive
+	emmc="$(lsblk -l -o NAME | grep -oE "mmcblk[0-9]boot0" | sort | uniq | sed "s/boot0//g")"
+	# Find emmc disk, find emmc that does not contain the boot0 partition
+	[[ -z "${emmc}" ]] && emmc="$(lsblk -l -o NAME | grep -oE '(mmcblk[0-9]?)' | grep -vE ^${root_ptname:0:-2} | uniq)"
+	# Check if emmc exists
+	[[ -z "${emmc}" ]] && error_msg "The eMMC storage not found in this device!"
+	# Show the emmc name
+	echo -e "${INFO} The device eMMC name: [ /dev/${emmc} ]"
 
 	# Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
 	case "${root_ptname}" in
@@ -72,6 +76,10 @@ do_checkemmc() {
 	[hsv]d[a-z][1-4])
 		disk_name="$(echo ${root_ptname} | awk '{print substr($1, 1, length($1)-1)}')"
 		link_ptname=""
+		;;
+	nvme?n?p[1-4])
+		disk_name="$(echo ${root_ptname} | awk '{print substr($1, 1, length($1)-2)}')"
+		link_ptname="p"
 		;;
 	*)
 		error_msg "Unable to recognize the disk type of ${root_ptname}!"
@@ -91,7 +99,7 @@ do_checkemmc() {
 
 # Check the remaining space
 do_checkspace() {
-	remaining_space="$(df -hT ${out_path} | grep '/dev/' | awk '{print $5}' | sed 's/.$//' | awk -F "." '{print $1}')"
+	remaining_space="$(df -Tk ${out_path} | grep '/dev/' | awk '{print $5}' | echo $(($(xargs) / 1024 / 1024)))"
 	if [[ -z "$(echo "${remaining_space}" | sed -n "/^[0-9]\+$/p")" ]]; then
 		error_msg "The path is not available, the remaining space cannot be obtained."
 	fi

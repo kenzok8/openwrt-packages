@@ -1,0 +1,31 @@
+
+
+<script type="text/javascript">//<![CDATA[
+
+
+	XHR.poll(3, '<%=url([[admin]], [[services]], [[lucky_status]])%>', null,
+		function(x, d) {
+			var tb = document.getElementById('lucky_status');
+			if (d && tb)
+			{
+				if (d.running)
+				{
+				var luckyAdminURL = ""+ window.location.protocol + "//" + window.location.hostname +":"+ d.port+d.safeurl+"";
+					tb.innerHTML = '<em><b style=\"color:green\"><%:The Lucky service is running.%></b></em>';
+					tb.innerHTML +='<em> <br/><br/>' + ' <b > <%:Click the new page to open Lucky%>  <a href="' +luckyAdminURL+'"'+' target="_blank">' + luckyAdminURL + ' </a><br/> </em>';
+				}
+				else
+				{
+					tb.innerHTML = '<em><b style=\"color:red\"><%:The Lucky service is not running.%></b></em>';
+				}
+			}
+		}
+	);
+//]]></script>
+<style>.mar-10 {margin-left: 50px; margin-right: 10px;}</style>
+<fieldset class="cbi-section">
+	<legend><%:Lucky Status%></legend>
+	<p id="lucky_status">
+		<em><%:Collecting data...%></em>
+	</p>
+</fieldset>

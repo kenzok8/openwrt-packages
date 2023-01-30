@@ -88,22 +88,34 @@
     <meta name="theme-color" content="<%=bar_color%>">
     <link rel="stylesheet" href="<%=media%>/css/cascade.css<%# ?v=PKG_VERSION %>">
     <style title="text/css">
-        <% if mode == 'normal' then %>
+        <% if mode ~= 'dark' then %>
             @media (prefers-color-scheme: dark) {
                 <%=dark_css%>
             }
+	    <% if fs.access('/etc/config/argon') then %>
+	    :root {
+	        --primary: <%=primary%>;
+	        --dark-primary: <%=dark_primary%>;
+                --bar-bg: <%=primary%>;
+	        --blur-radius:<%=blur_radius%>px;
+	        --blur-opacity:<%=blur_opacity%>;
+	        --blur-radius-dark:<%=blur_radius_dark%>px;
+	        --blur-opacity-dark:<%=blur_opacity_dark%>;
+	    }
+	    <% end -%>
         <% elseif mode == 'dark' then %>
             <%=dark_css%>
-        <% end -%>
-        <% if fs.access('/etc/config/argon') then %>
-        :root {
-            --primary: <%=primary%>;
-            --dark-primary: <%=dark_primary%>;
-            --blur-radius:<%=blur_radius%>px;
-            --blur-opacity:<%=blur_opacity%>;
-            --blur-radius-dark:<%=blur_radius_dark%>px;
-            --blur-opacity-dark:<%=blur_opacity_dark%>;
-        }
+	    <% if fs.access('/etc/config/argon') then %>
+	    :root {
+	        --primary: <%=primary%>;
+	        --dark-primary: <%=dark_primary%>;
+                --bar-bg: <%=dark_primary%>;
+	        --blur-radius:<%=blur_radius%>px;
+	        --blur-opacity:<%=blur_opacity%>;
+	        --blur-radius-dark:<%=blur_radius_dark%>px;
+	        --blur-opacity-dark:<%=blur_opacity_dark%>;
+	    }
+	    <% end -%>	    
         <% end -%>
     </style>
 	<link rel="shortcut icon" href="<%=media%>/favicon.ico">

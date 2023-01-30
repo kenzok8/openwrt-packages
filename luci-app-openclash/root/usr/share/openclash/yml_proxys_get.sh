@@ -12,18 +12,6 @@ del_lock() {
    rm -rf "/tmp/lock/openclash_proxies_get.lock"
 }
 
-sub_info_get()
-{
-   local section="$1" name
-   config_get "name" "$section" "name" ""
-   
-   if [ -z "$name" ] || [ "$name" != "${CONFIG_NAME%%.*}" ]; then
-      return
-   else
-      sub_cfg=true
-   fi
-}
-
 ruby_read_hash()
 {
    RUBY_YAML_PARSE="Thread.new{Value = $1; puts Value$2}.join"
@@ -67,10 +55,6 @@ if [ ! -s "$CONFIG_FILE" ] && [ ! -s "$BACKUP_FILE" ]; then
 elif [ ! -s "$CONFIG_FILE" ] && [ -s "$BACKUP_FILE" ]; then
    mv "$BACKUP_FILE" "$CONFIG_FILE"
 fi
-
-#判断订阅配置
-config_load "openclash"
-config_foreach sub_info_get "config_subscribe"
 
 #提取节点部分
 proxy_hash=$(ruby_read "$CONFIG_FILE" ".select {|x| 'proxies' == x or 'proxy-providers' == x}")
@@ -223,11 +207,7 @@ do
       else
          ${uci_set}enabled="1"
       fi
-      if [ "$servers_if_update" = "1" ] || "$sub_cfg"; then
-         ${uci_set}manual="0"
-      else
-         ${uci_set}manual="1"
-      fi
+      ${uci_set}manual="0"
       ${uci_set}config="$CONFIG_NAME"
       ${uci_set}name="$provider_name"
       ${uci_set}type="$provider_type"
@@ -342,17 +322,17 @@ done 2>/dev/null
 
 #删除订阅中已不存在的代理集
 if [ "$servers_if_update" = "1" ]; then
-     LOG_OUT "Deleting【$CONFIG_NAME】Proxy-providers That no Longer Exists in Subscription"
-     sed -i '/#match#/d' "$match_provider" 2>/dev/null
-     cat $match_provider 2>/dev/null|awk -F '.' '{print $1}' |sort -rn |while read line
-     do
-        if [ -z "$line" ]; then
-           continue
-        fi
-        if [ "$(uci get openclash.@proxy-provider["$line"].manual)" = "0" ] && [ "$(uci get openclash.@proxy-provider["$line"].config)" = "$CONFIG_NAME" ]; then
-           uci delete openclash.@proxy-provider["$line"] 2>/dev/null
-        fi
-     done
+   LOG_OUT "Deleting【$CONFIG_NAME】Proxy-providers That no Longer Exists in Subscription"
+   sed -i '/#match#/d' "$match_provider" 2>/dev/null
+   cat $match_provider 2>/dev/null|awk -F '.' '{print $1}' |sort -rn |while read line
+   do
+   if [ -z "$line" ]; then
+         continue
+      fi
+      if [ "$(uci get openclash.@proxy-provider["$line"].manual)" = "0" ] && [ "$(uci get openclash.@proxy-provider["$line"].config)" = "$CONFIG_NAME" ]; then
+         uci delete openclash.@proxy-provider["$line"] 2>/dev/null
+      fi
+   done
 fi
 
 
@@ -425,11 +405,7 @@ do
       else
          ${uci_set}enabled="1"
       fi
-      if [ "$servers_if_update" = "1" ] || "$sub_cfg"; then
-         ${uci_set}manual="0"
-      else
-         ${uci_set}manual="1"
-      fi
+      ${uci_set}manual="0"
       ${uci_set}config="$CONFIG_NAME"
       ${uci_set}name="$server_name"
       ${uci_set}type="$server_type"
@@ -760,28 +736,178 @@ do
       }.join
    end;
 
+   #Tuic
+   if '$server_type' == 'tuic' then
+      Thread.new{
+      #tc_ip
+      if Value['proxies'][$count].key?('ip') then
+         tc_ip = '${uci_set}tc_ip=' + Value['proxies'][$count]['ip'].to_s
+         system(tc_ip)
+      end
+      }.join
+
+      Thread.new{
+      #tc_token
+      if Value['proxies'][$count].key?('token') then
+         tc_token = '${uci_set}tc_token=' + Value['proxies'][$count]['token'].to_s
+         system(tc_token)
+      end
+      }.join
+
+      Thread.new{
+      #heartbeat_interval
+      if Value['proxies'][$count].key?('heartbeat-interval') then
+         heartbeat_interval = '${uci_set}heartbeat_interval=' + Value['proxies'][$count]['heartbeat-interval'].to_s
+         system(heartbeat_interval)
+      end
+      }.join
+
+      Thread.new{
+      #tc_alpn
+      if Value['proxies'][$count].key?('alpn') then
+         system '${uci_del}tc_alpn >/dev/null 2>&1'
+         Value['proxies'][$count]['alpn'].each{
+         |x|
+            tc_alpn = '${uci_add}tc_alpn=\"' + x.to_s + '\"'
+            system(tc_alpn)
+         }
+      end;
+      }.join
+
+      Thread.new{
+      #disable_sni
+      if Value['proxies'][$count].key?('disable-sni') then
+         disable_sni = '${uci_set}disable_sni=' + Value['proxies'][$count]['disable-sni'].to_s
+         system(disable_sni)
+      end
+      }.join
+
+      Thread.new{
+      #reduce_rtt
+      if Value['proxies'][$count].key?('reduce-rtt') then
+         reduce_rtt = '${uci_set}reduce_rtt=' + Value['proxies'][$count]['reduce-rtt'].to_s
+         system(reduce_rtt)
+      end
+      }.join
+
+      Thread.new{
+      #fast_open
+      if Value['proxies'][$count].key?('fast-open') then
+         fast_open = '${uci_set}fast_open=' + Value['proxies'][$count]['fast-open'].to_s
+         system(fast_open)
+      end
+      }.join
+
+      Thread.new{
+      #request_timeout
+      if Value['proxies'][$count].key?('request-timeout') then
+         request_timeout = '${uci_set}request_timeout=' + Value['proxies'][$count]['request-timeout'].to_s
+         system(request_timeout)
+      end
+      }.join
+
+      Thread.new{
+      #udp_relay_mode
+      if Value['proxies'][$count].key?('udp-relay-mode') then
+         udp_relay_mode = '${uci_set}udp_relay_mode=' + Value['proxies'][$count]['udp-relay-mode'].to_s
+         system(udp_relay_mode)
+      end
+      }.join
+
+      Thread.new{
+      #congestion_controller
+      if Value['proxies'][$count].key?('congestion-controller') then
+         congestion_controller = '${uci_set}congestion_controller=' + Value['proxies'][$count]['congestion-controller'].to_s
+         system(congestion_controller)
+      end
+      }.join
+
+      Thread.new{
+      #max_udp_relay_packet_size
+      if Value['proxies'][$count].key?('max-udp-relay-packet-size') then
+         max_udp_relay_packet_size = '${uci_set}max_udp_relay_packet_size=' + Value['proxies'][$count]['max-udp-relay-packet-size'].to_s
+         system(max_udp_relay_packet_size)
+      end
+      }.join
+
+      Thread.new{
+      #max-open-streams
+      if Value['proxies'][$count].key?('max-open-streams') then
+         max_open_streams = '${uci_set}max_open_streams=' + Value['proxies'][$count]['max-open-streams'].to_s
+         system(max_open_streams)
+      end
+      }.join
+   end;
+
+   #WireGuard
+   if '$server_type' == 'wireguard' then
+      Thread.new{
+      #wg_ip
+      if Value['proxies'][$count].key?('ip') then
+         wg_ip = '${uci_set}wg_ip=' + Value['proxies'][$count]['ip'].to_s
+         system(wg_ip)
+      end
+      }.join
+
+      Thread.new{
+      #wg_ipv6
+      if Value['proxies'][$count].key?('ipv6') then
+         wg_ipv6 = '${uci_set}wg_ipv6=' + Value['proxies'][$count]['ipv6'].to_s
+         system(wg_ipv6)
+      end
+      }.join
+
+      Thread.new{
+      #private_key
+      if Value['proxies'][$count].key?('private-key') then
+         private_key = '${uci_set}private_key=' + Value['proxies'][$count]['private-key'].to_s
+         system(private_key)
+      end
+      }.join
+
+      Thread.new{
+      #public_key
+      if Value['proxies'][$count].key?('public-key') then
+         public_key = '${uci_set}public_key=' + Value['proxies'][$count]['public-key'].to_s
+         system(public_key)
+      end
+      }.join
+
+      Thread.new{
+      #preshared_key
+      if Value['proxies'][$count].key?('preshared-key') then
+         preshared_key = '${uci_set}preshared_key=' + Value['proxies'][$count]['preshared-key'].to_s
+         system(preshared_key)
+      end
+      }.join
+
+      Thread.new{
+      #wg_mtu
+      if Value['proxies'][$count].key?('mtu') then
+         wg_mtu = '${uci_set}wg_mtu=' + Value['proxies'][$count]['mtu'].to_s
+         system(wg_mtu)
+      end
+      }.join
+
+      Thread.new{
+      #wg_dns
+      if Value['proxies'][$count].key?('dns') then
+         system '${uci_del}wg_dns >/dev/null 2>&1'
+         Value['proxies'][$count]['dns'].each{
+         |x|
+            wg_dns = '${uci_add}wg_dns=\"' + x.to_s + '\"'
+            system(wg_dns)
+         }
+      end;
+      }.join
+   end;
+
    if '$server_type' == 'hysteria' then
       Thread.new{
       #hysteria_protocol
       if Value['proxies'][$count].key?('protocol') then
          hysteria_protocol = '${uci_set}hysteria_protocol=' + Value['proxies'][$count]['protocol'].to_s
          system(hysteria_protocol)
-      end
-      }.join
-
-      Thread.new{
-      #up_mbps
-      if Value['proxies'][$count].key?('up_mbps') then
-         up_mbps = '${uci_set}up_mbps=' + Value['proxies'][$count]['up_mbps'].to_s
-         system(up_mbps)
-      end
-      }.join
-
-      Thread.new{
-      #down_mbps
-      if Value['proxies'][$count].key?('down_mbps') then
-         down_mbps = '${uci_set}down_mbps=' + Value['proxies'][$count]['down_mbps'].to_s
-         system(down_mbps)
       end
       }.join
 
@@ -821,7 +947,7 @@ do
       #alpn
       if Value['proxies'][$count].key?('alpn') then
          system '${uci_del}hysteria_alpn >/dev/null 2>&1'
-         if Value['proxies'][$count].key?('alpn').class.to_s != 'Array' then
+         if Value['proxies'][$count]['alpn'].class.to_s != 'Array' then
             alpn = '${uci_add}hysteria_alpn=\"' + Value['proxies'][$count]['alpn'].to_s + '\"'
             system(alpn)
          else
@@ -836,16 +962,16 @@ do
 
       Thread.new{
       #recv_window_conn
-      if Value['proxies'][$count].key?('recv_window_conn') then
-         recv_window_conn = '${uci_set}recv_window_conn=' + Value['proxies'][$count]['recv_window_conn'].to_s
+      if Value['proxies'][$count].key?('recv-window-conn') then
+         recv_window_conn = '${uci_set}recv_window_conn=' + Value['proxies'][$count]['recv-window-conn'].to_s
          system(recv_window_conn)
       end
       }.join
 
       Thread.new{
       #recv_window
-      if Value['proxies'][$count].key?('recv_window') then
-         recv_window = '${uci_set}recv_window=' + Value['proxies'][$count]['recv_window'].to_s
+      if Value['proxies'][$count].key?('recv-window') then
+         recv_window = '${uci_set}recv_window=' + Value['proxies'][$count]['recv-window'].to_s
          system(recv_window)
       end
       }.join
@@ -868,8 +994,8 @@ do
 
       Thread.new{
       #hysteria_auth_str
-      if Value['proxies'][$count].key?('auth_str') then
-         hysteria_auth_str = '${uci_set}hysteria_auth_str=' + Value['proxies'][$count]['auth_str'].to_s
+      if Value['proxies'][$count].key?('auth-str') then
+         hysteria_auth_str = '${uci_set}hysteria_auth_str=' + Value['proxies'][$count]['auth-str'].to_s
          system(hysteria_auth_str)
       end
       }.join
@@ -884,20 +1010,51 @@ do
 
       Thread.new{
       #hysteria_ca_str
-      if Value['proxies'][$count].key?('ca_str') then
-         hysteria_ca_str = '${uci_set}hysteria_ca_str=' + Value['proxies'][$count]['ca_str'].to_s
+      if Value['proxies'][$count].key?('ca-str') then
+         hysteria_ca_str = '${uci_set}hysteria_ca_str=' + Value['proxies'][$count]['ca-str'].to_s
          system(hysteria_ca_str)
       end
       }.join
 
       Thread.new{
       #disable_mtu_discovery
-      if Value['proxies'][$count].key?('disable_mtu_discovery') then
-         disable_mtu_discovery = '${uci_set}disable_mtu_discovery=' + Value['proxies'][$count]['disable_mtu_discovery'].to_s
+      if Value['proxies'][$count].key?('disable-mtu-discovery') then
+         disable_mtu_discovery = '${uci_set}disable_mtu_discovery=' + Value['proxies'][$count]['disable-mtu-discovery'].to_s
          system(disable_mtu_discovery)
       end
       }.join
 
+      Thread.new{
+      #fast_open
+      if Value['proxies'][$count].key?('fast-open') then
+         fast_open = '${uci_set}fast_open=' + Value['proxies'][$count]['fast-open'].to_s
+         system(fast_open)
+      end
+      }.join
+
+      Thread.new{
+      #fingerprint
+      if Value['proxies'][$count].key?('fingerprint') then
+         fingerprint = '${uci_set}fingerprint=' + Value['proxies'][$count]['fingerprint'].to_s
+         system(fingerprint)
+      end
+      }.join
+
+      Thread.new{
+      #ports
+      if Value['proxies'][$count].key?('ports') then
+         ports = '${uci_set}ports=' + Value['proxies'][$count]['ports'].to_s
+         system(ports)
+      end
+      }.join
+
+      Thread.new{
+      #hop-interval
+      if Value['proxies'][$count].key?('hop-interval') then
+         hop_interval = '${uci_set}hop_interval=' + Value['proxies'][$count]['hop-interval'].to_s
+         system(hop_interval)
+      end
+      }.join
    end;
 
    if '$server_type' == 'vless' then

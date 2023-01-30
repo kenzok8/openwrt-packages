@@ -9,3 +9,12 @@
  			self.user = userinfo
  		else
  			-- incorrect userinfo
+@@ -369,7 +369,7 @@ function M.parse(url)
+ 		comp.fragment = v
+ 		return ''
+ 	end)
+-	url =url:gsub('^([%w][%w%+%-%.]*)%:', function(v)
++	url =url:gsub('^([%w][%w%+%-%_%.]*)%:', function(v)
+ 		comp.scheme = v:lower()
+ 		return ''
+ 	end)

@@ -289,6 +289,9 @@ msgstr "没有分流规则？点我前往去添加。"
 msgid "When using, localhost will connect this node first and then use this node to connect the default node."
 msgstr "当使用时，本机将首先连接到此节点，然后再使用此节点连接到默认节点落地。"
 
+msgid "dialerProxy"
+msgstr "底层传输方式的链式转发"
+
 msgid "Domain Strategy"
 msgstr "域名解析策略"
 
@@ -903,6 +906,18 @@ msgstr "用户等级(level)"
 
 msgid "Transport"
 msgstr "传输方式"
+
+msgid "Public Key"
+msgstr "公钥"
+
+msgid "Private Key"
+msgstr "私钥"
+
+msgid "Pre shared key"
+msgstr "额外的对称加密密钥"
+
+msgid "Local Address"
+msgstr "本地地址"
 
 msgid "Camouflage Type"
 msgstr "伪装类型"

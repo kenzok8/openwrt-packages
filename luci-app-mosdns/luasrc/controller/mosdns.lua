@@ -26,9 +26,9 @@ function act_status()
 end
 
 function get_log()
-	luci.http.write(luci.sys.exec("cat $(/etc/mosdns/library.sh logfile)"))
+	luci.http.write(luci.sys.exec("cat $(/etc/mosdns/lib.sh logfile)"))
 end
 
 function clear_log()
-	luci.sys.call("cat /dev/null > $(/etc/mosdns/library.sh logfile)")
+	luci.sys.call("true > $(/etc/mosdns/lib.sh logfile)")
 end

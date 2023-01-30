@@ -1,10 +1,24 @@
 {
 	"luci-app-unblockneteasemusic": {
-		"description": "Grant UCI access for luci-app-unblockneteasemusic",
+		"description": "Grant access to UnblockNeteaseMusic configuration",
 		"read": {
+			"file": {
+				"/etc/init.d/unblockneteasemusic": [ "exec" ],
+				"/tmp/unblockneteasemusic.log": [ "read" ],
+				"/usr/bin/unm-debug": [ "exec" ],
+				"/usr/share/unblockneteasemusic/update.sh": [ "exec" ],
+				"/usr/share/unblockneteasemusic/core/ca.crt": [ "read" ]
+			},
+			"ubus": {
+				"service": [ "list" ]
+			},
 			"uci": [ "unblockneteasemusic" ]
 		},
 		"write": {
+			"file": {
+				"/usr/share/unblockneteasemusic/server.crt": [ "write" ],
+				"/usr/share/unblockneteasemusic/server.key": [ "write" ]
+			},
 			"uci": [ "unblockneteasemusic" ]
 		}
 	}

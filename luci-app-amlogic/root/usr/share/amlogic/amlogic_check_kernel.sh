@@ -60,12 +60,14 @@ case "${ROOT_PTNAME}" in
 mmcblk?p[1-4])
     EMMC_NAME="$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-2)}')"
     PARTITION_NAME="p"
-    LB_PRE="EMMC_"
     ;;
 [hsv]d[a-z][1-4])
     EMMC_NAME="$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-1)}')"
     PARTITION_NAME=""
-    LB_PRE=""
+    ;;
+nvme?n?p[1-4])
+    EMMC_NAME="$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-2)}')"
+    PARTITION_NAME="p"
     ;;
 *)
     tolog "Unable to recognize the disk type of ${ROOT_PTNAME}!" "1"

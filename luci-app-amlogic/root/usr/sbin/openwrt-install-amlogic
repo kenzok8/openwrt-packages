@@ -6,12 +6,11 @@
 #======================================================================================
 
 # The script supports directly setting parameters for installation, skipping interactive selection
-# openwrt-install-amlogic ${AUTO_MAINLINE_UBOOT} ${SOC_ID} ${DTB_FILENAME} ${SHARED_FSTYPE}
-# E.g: openwrt-install-amlogic yes 1 auto_dtb ext4
-# E.g: openwrt-install-amlogic no 99 meson-gxl-s905x-p212.dtb ext4
-# Tip: When custom dtb file, set ${SOC_ID} to 99, and parameter ${DTB_FILENAME} must be set
+# openwrt-install-amlogic ${AUTO_MAINLINE_UBOOT} ${ID} ${FDTFILE}:${SOC}:${UBOOT_OVERLOAD} ${SHARED_FSTYPE}
+# E.g: openwrt-install-amlogic yes 11 auto ext4
+# E.g: openwrt-install-amlogic no 99 meson-gxl-s905d-phicomm-n1.dtb:s905d:u-boot-n1.bin ext4
+# Tip: When custom dtb file, set ${SOC_ID} to 99, and parameter ${FDTFILE}:${SOC}:${UBOOT_OVERLOAD} must be set
 # Tip: ${SHARED_FSTYPE}: Shared partition can be ext4, xfs, btrfs, f2fs
-# return 0
 
 # You can also execute the script directly, and interactively select related functions
 # E.g: openwrt-install-amlogic
@@ -19,31 +18,36 @@
 # Receive one-key command related parameters
 AUTO_MAINLINE_UBOOT="${1}"
 ZSTD_LEVEL="6"
+op_release="/etc/flippy-openwrt-release"
 
-# For [luci-app-amlogic] input parameter: SOC & DTB
+# For [luci-app-amlogic] input parameter: DTB, SOC & UBOOT_OVERLOAD
 # When there is no input parameter, select manually
+SPECIFY_ID=""
 SPECIFY_SOC=""
 SPECIFY_DTB=""
-if [[ -n "$(echo ${2} | sed -n "/^[0-9]\+$/p")" ]]; then
-    SPECIFY_SOC=${2}
+SPECIFY_UBOOT=""
+[[ -n "${2}" ]] && {
+    SPECIFY_ID="${2}"
     if [[ "${2}" -eq "99" ]]; then
         if [[ -n "${3}" ]]; then
-            SPECIFY_DTB=${3}
+            # E.g: meson-gxl-s905d-phicomm-n1.dtb:s905d:u-boot-n1.bin
+            SPECIFY_DTB="$(echo "${3}" | awk -F ':' '{print $1}')"
+            SPECIFY_SOC="$(echo "${3}" | awk -F ':' '{print $2}')"
+            SPECIFY_UBOOT="$(echo "${3}" | awk -F ':' '{print $3}')"
         else
             echo "Please enter the DTB file name!"
             exit 1
         fi
-    else
-        SPECIFY_DTB="auto_dtb"
     fi
-fi
+}
 
 # shared partition can be ext4, xfs, btrfs, f2fs
 SHARED_FSTYPE="${4}"
 
 echo "AUTO_MAINLINE_UBOOT: ${AUTO_MAINLINE_UBOOT}"
-echo "SPECIFY_SOC: ${SPECIFY_SOC}"
 echo "SPECIFY_DTB: ${SPECIFY_DTB}"
+echo "SPECIFY_SOC: ${SPECIFY_SOC}"
+echo "SPECIFY_UBOOT: ${SPECIFY_UBOOT}"
 echo "SHARED_FSTYPE: ${SHARED_FSTYPE}"
 
 # Current device model
@@ -51,8 +55,8 @@ MYDEVICE_NAME=$(cat /proc/device-tree/model | tr -d '\000')
 if [[ -z "${MYDEVICE_NAME}" ]]; then
     echo "The device name is empty and cannot be recognized."
     exit 1
-elif [[ ! -f "/etc/flippy-openwrt-release" ]]; then
-    echo "The [ /etc/flippy-openwrt-release ] file is missing."
+elif [[ ! -f "${op_release}" ]]; then
+    echo "The [ ${op_release} ] file is missing."
     exit 1
 else
     echo -e "Current device: ${MYDEVICE_NAME} [ amlogic ]"
@@ -85,10 +89,6 @@ echo "ROOTFS: ${ROOT_NAME}"
 BOOT_NAME=$(lsblk -l -o NAME,MAJ:MIN,MOUNTPOINT | grep -e '/boot$' | awk '{print $1}')
 echo "BOOT: ${BOOT_NAME}"
 
-#Choose the type of installation box
-DEFAULT_FDTFILE="meson-sm1-x96-max-plus.dtb"
-U_BOOT_EXT=0
-
 # box model database
 # The field separator is :
 # " " or "" or NA or NULL means this field is null
@@ -104,67 +104,11 @@ U_BOOT_EXT=0
 #
 
 # allow use external modal database
-if [ -f "/etc/model_database.txt" ]; then
-    model_database=$(cat /etc/model_database.txt)
+if [[ -f "/etc/model_database.txt" ]]; then
+    model_database="$(cat /etc/model_database.txt)"
 else
-    model_database="
-# Amlogic GXL Family
-11:Phicomm N1:s905d:meson-gxl-s905d-phicomm-n1.dtb:u-boot-n1.bin:NA:/lib/u-boot/u-boot-2015-phicomm-n1.bin:4C@1512Mhz,2GB Mem,1Gb Nic,brcm43455 wifi
-12:Phicomm N1 (DMA thresh):s905d:meson-gxl-s905d-phicomm-n1-thresh.dtb:u-boot-n1.bin:NA:/lib/u-boot/u-boot-2015-phicomm-n1.bin:Same as above, when ethmac flow control is off 
-13:hg680p:s905x:meson-gxl-s905x-p212.dtb:u-boot-p212.bin:NA:NA:4C@1512Mhz,1Gb Nic
-14:X96-Mini & TX3-Mini:s905w:meson-gxl-s905w-tx3-mini.dtb:u-boot-s905x-s912.bin:NA:NA:4C@1512Mhz,100M Nic
-15:b860h:s905x:meson-gxl-s905x-b860h.dtb:u-boot-p212.bin:NA:NA:4C@1512Mhz,1Gb Nic
-16:MECOOL KI Pro:s905d:meson-gxl-s905d-mecool-ki-pro.dtb:u-boot-p201.bin:NA:NA:2G/16G,1Gb Nic
-17:TBee:s905x:meson-gxl-s905x-tbee.dtb:u-boot-p212.bin:NA:NA:4C@1512Mhz,100M Nic
-
-# Amlogic GXM Family
-21:Octopus Planet:s912:meson-gxm-octopus-planet.dtb:u-boot-zyxq.bin:NA:NA:4C@1512Mhz+4C@1000Mhz,2GB Mem,1Gb Nic
-22:*FAKE* Octopus Planet *FAKE*:s912:meson-gxm-fake-octopus-planet.dtb:u-boot-zyxq.bin:NA:/lib/u-boot/bl-fake-octopus-planet.bin:4C@1512Mhz+4C@1000Mhz,2GB Mem,1Gb Nic
-23:Tanix TX9 Pro:s912:meson-gxm-tx9-pro.dtb:u-boot-zyxq.bin:NA:NA:4C@1512Mhz+4C@1000Mhz,2GB Mem,1Gb Nic,brcm43455 wifi
-24:H96 Pro Plus:s912:meson-gxm-octopus-planet.dtb:u-boot-zyxq.bin:NA:NA:2G/32G,1Gb Nic
-25:Tanix TX92:s912:meson-gxm-octopus-planet.dtb:u-boot-zyxq.bin:NA:NA:3GB DDR4 32GB eMMC,1.5GHz,5G WIFI,1Gb Nic
-26:VORKE Z6 Plus:s912:meson-gxm-octopus-planet.dtb:u-boot-zyxq.bin:NA:NA:3GB DDR3 32GB eMMC5.0,1.5Ghz,TF CARD Support 1~32GB,1Gb Nic
-27:MECOOL M8S Pro L:s912:meson-gxm-q201.dtb:u-boot-s905x-s912.bin:NA:NA:2G RAM,3G RAM,16G ROM,32G ROM,100M Nic
-28:Vontar X92:s912:meson-gxm-x92.dtb:u-boot-p212.bin:NA:NA:3GB RAM,16GB/32GB eMMC,2.4G/5.0G WiFi,AP6255 WLAN/Bluetooth 4.0,1Gb Nic
-29:TX9 Pro:s912:meson-gxm-tx9-pro.dtb:u-boot-zyxq.bin:NA:NA:4C@1512Mhz+4C@1000Mhz,3G RAM,32G ROM,Bluetooth 4.1,1Gb Nic,brcm43455 wifi
-2a:Nexbox A1 & A95X:s912:meson-gxm-nexbox-a1.dtb:u-boot-p212.bin:NA:NA:2G DDR3 RAM 16G eMMC,1Gb Nic,qca9377 wifi(no work)
-2b:Nexbox A95X A2:s912:meson-gxm-nexbox-a2.dtb:u-boot-p212.bin:NA:NA:2GB RAM,16GB ROM,2.4G/5.0G WiFi,qca9377 WLAN/Bluetooth 4.0,1Gb Nic
-2c:Tanix TX8 MAX:s912:meson-gxm-tx8-max.dtb:u-boot-p212.bin:NA:NA:3GB RAM,16GB/32GB eMMC,2.4G/5.0G WiFi,qca9377 WLAN/Bluetooth 4.1,1Gb Nic
-
-# Amlogic G12A Family
-31:X96 Max 4GB:s905x2:meson-g12a-x96-max.dtb:u-boot-x96max.bin:/lib/u-boot/x96max-u-boot.bin.sd.bin:NA:4C@1908Mhz,4GB Mem,1Gb Nic
-32:X96 Max 2GB:s905x2:meson-g12a-x96-max-rmii.dtb:u-boot-x96max.bin:/lib/u-boot/x96max-u-boot.bin.sd.bin:NA:4C@1908Mhz,2GB Mem,100M Nic
-33:CM311-1a-YST:s905l3a:meson-g12a-s905l3a-cm311.dtb:u-boot-e900v22c.bin:NA:NA:4C@1908Mhz,2+16G,Bluetooth rtl8761b,100Mb Nic
-
-# Amlogic G12B Family
-41:Beelink GT-King:s922x:meson-g12b-gtking.dtb:u-boot-gtking.bin:/lib/u-boot/gtking-u-boot.bin.sd.bin:NA:2C@1800Mhz(A53)+4C@1908Mhz(A73),4GB Mem,1Gb Nic,brcm4356 wifi
-42:Beelink GT-King Pro:s922x:meson-g12b-gtking-pro.dtb:u-boot-gtkingpro.bin:/lib/u-boot/gtkingpro-u-boot.bin.sd.bin:NA:2C@1800Mhz(A53)+4C@1908Mhz(A73),4GB Mem,1Gb Nic,brcm4356 wifi
-43:Beelink GT-King Pro H:s922x:meson-g12b-gtking-pro-h.dtb:u-boot-gtkingpro.bin:/lib/u-boot/gtkingpro-u-boot.bin.sd.bin:NA:S922X-H,2C@1800Mhz(A53)+4C@2208Mhz(A73),4GB Mem,1Gb Nic,brcm4356 wifi
-44:Beelink GT-King Pro Rev_A:s922x:meson-g12b-gtking-pro-rev_a.dtb:u-boot-gtkingpro-rev-a.bin::NA:2C@1800Mhz(A53)+4C@1908Mhz(A73),4GB Mem,1Gb Nic,brcm4356 wifi
-45:Hardkernel ODroid N2:s922x:meson-g12b-odroid-n2.dtb:u-boot-gtkingpro.bin:/lib/u-boot/odroid-n2-u-boot.bin.sd.bin:NA:2C@1800Mhz(A53)+4C@1908Mhz(A73),4GB Mem,1Gb Nic
-46:UGOOS AM6 Plus:s922x:meson-g12b-ugoos-am6.dtb:u-boot-gtkingpro.bin:/lib/u-boot/gtkingpro-u-boot.bin.sd.bin:NA:2C@1800Mhz(A53)+4C@1908Mhz(A73),4GB Mem,1Gb Nic,brcm4398 wifi
-47:Khadas VIM3:a311d:meson-g12b-a311d-khadas-vim3.dtb:u-boot-gtkingpro.bin:/lib/u-boot/khadas-vim3-u-boot.sd.bin:NA:4C@2.2Ghz+2C@1.8Ghz,PCIe+USB 3.0,1Gb Nic,brcm4398 wifi
-
-# Amlogic SM1 Family
-51:X96 Max+:s905x3:meson-sm1-x96-max-plus.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:/lib/u-boot/hk1box-bootloader.img:4C@2100Mhz,4GB Mem,1Gb Nic,rtl8822cs wifi(no work)
-52:X96 Max+ (OverClock):s905x3:meson-sm1-x96-max-plus-oc.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:/lib/u-boot/hk1box-bootloader.img:4C@2208Mhz,4GB Mem,1Gb Nic,rtl8822cs wifi(no work)
-53:HK1 Box:s905x3:meson-sm1-hk1box-vontar-x3.dtb:u-boot-x96maxplus.bin:/lib/u-boot/hk1box-u-boot.bin.sd.bin:NA:4C@2100Mhz,4GB Mem,1Gb Nic,brcm4339 wifi
-54:HK1 Box (OverClock):s905x3:meson-sm1-hk1box-vontar-x3-oc.dtb:u-boot-x96maxplus.bin:/lib/u-boot/hk1box-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic,brcm4339 wifi
-55:H96 Max X3:s905x3:meson-sm1-h96-max-x3.dtb:u-boot-x96maxplus.bin:/lib/u-boot/h96maxx3-u-boot.bin.sd.bin:NA:4C@2100Mhz,4GB Mem,1Gb Nic,brcm4339 wifi
-56:H96 Max X3 (OverClock):s905x3:meson-sm1-h96-max-x3-oc.dtb:u-boot-x96maxplus.bin:/lib/u-boot/h96maxx3-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic,brcm4339 wifi
-57:Ugoos X3:s905x3:meson-sm1-ugoos-x3.dtb:u-boot-ugoos-x3.bin:NA:NA:4C@2100Mhz,2(Cube)/4(Pro,Plus)GB Mem,1Gb Nic,brcm43455/43456 wifi
-58:Ugoos X3 (OverClock):s905x3:meson-sm1-ugoos-x3-oc.dtb:u-boot-ugoos-x3.bin:NA:NA:4C@2208Mhz,2(Cube)/4(Pro,Plus)GB Mem,1Gb Nic,brcm43455/43456 wifi
-59:TX3 BZ:s905x3:meson-sm1-tx3-bz.dtb:u-boot-tx3-bz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2100Mhz,4GB Mem,100Mb Nic,bcm4330 wifi
-5a:TX3 BZ (OverClock):s905x3:meson-sm1-tx3-bz-oc.dtb:u-boot-tx3-bz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2208Mhz,4GB Mem,100Mb Nic,bcm4330 wifi
-5b:TX3 QZ:s905x3:meson-sm1-tx3-qz.dtb:u-boot-tx3-qz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2100Mhz,4GB Mem,1Gb Nic,bcm4330 wifi
-5c:TX3 QZ (OverClock):s905x3:meson-sm1-tx3-qz-oc.dtb:u-boot-tx3-qz.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin::4C@2208Mhz,4GB Mem,1Gb Nic,bcm4330 wifi
-5d:X96 Max+ (IP1001M phy):s905x3:meson-sm1-x96-max-plus-ip1001m.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic (IP1001M phy),bcm4354 wifi
-5e:X96 Max+ Q2 & X96 Air Q1000:s905x3:meson-sm1-x96-max-plus-q2.dtb:u-boot-x96maxplus.bin:/lib/u-boot/x96maxplus-u-boot.bin.sd.bin:NA:4C@2208Mhz,4GB Mem,1Gb Nic,qca9377 wifi
-5f:Tencent Aurora 3Pro:s905x3:meson-sm1-skyworth-lb2004-a4091.dtb:u-boot-skyworth-lb2004.bin:/lib/u-boot/skyworth-lb2004-u-boot.bin.sd.bin:/lib/u-boot/skyworth-lb2004-bootloader.img:4C@2016Mhz,4GB Mem,32G Rom,JL2121 1Gb Nic,MT7661RSN
-
-# Other
-0:Other::NA:NA:NA:NA:Enter the dtb file name of your box
-"
+    echo "[ /etc/model_database.txt ] file is missing."
+    exit 1
 fi
 
 function display_database() {
@@ -172,9 +116,9 @@ function display_database() {
 }
 
 function search_model() {
-    local id=$1
-    local ret_count=$(echo "${model_database}" | awk -F ':' "\$1~/^$id\$/ {print \$0}" | wc -l)
-    if [ $ret_count -eq 1 ]; then
+    local id="${1}"
+    local ret_count="$(echo "${model_database}" | awk -F ':' "\$1~/^$id\$/ {print \$0}" | wc -l)"
+    if [[ "${ret_count}" -eq "1" ]]; then
         echo "${model_database}" | awk -F ':' "\$1~/^$id\$/ {print \$0}"
     fi
 }
@@ -186,22 +130,37 @@ echo "--------------------------------------------------------------------------
 
 # For [luci-app-amlogic] input parameter: SOC & DTB
 # When there is no input parameter, select manually
-if [[ -n "${SPECIFY_SOC}" ]]; then
-    boxtype=${SPECIFY_SOC}
+if [[ -n "${SPECIFY_ID}" ]]; then
+    boxtype="${SPECIFY_ID}"
 else
     echo -n "Please choose: "
     read boxtype
 fi
 
-if [ "$boxtype" == "99" ]; then
-    FDTFILE=${SPECIFY_DTB}
-    UBOOT_OVERLOAD=""
+if [[ "${boxtype}" -eq "99" ]]; then
+    FDTFILE="${SPECIFY_DTB}"
+    AMLOGIC_SOC="${SPECIFY_SOC}"
+    UBOOT_OVERLOAD="${SPECIFY_UBOOT}"
     MAINLINE_UBOOT=""
     ANDROID_UBOOT=""
-    AMLOGIC_SOC=""
+elif [[ "${boxtype}" -eq "0" ]]; then
+    read -p "Please Input SoC Name(such as s9xxx): " AMLOGIC_SOC
+    AMLOGIC_SOC="${AMLOGIC_SOC}"
+
+    read -p "Please Input DTB Name(such as meson-xxx.dtb): " FDTFILE
+    FDTFILE="${FDTFILE}"
+
+    read -p "Please Input UBOOT_OVERLOAD Name(such as u-boot-xxx.bin): " UBOOT_OVERLOAD
+    UBOOT_OVERLOAD="${UBOOT_OVERLOAD}"
+
+    read -p "Please Input MAINLINE_UBOOT Name(such as /lib/u-boot/xxx-u-boot.bin.sd.bin): " MAINLINE_UBOOT
+    MAINLINE_UBOOT="${MAINLINE_UBOOT}"
+
+    read -p "Please Input ANDROID_UBOOT Name(such as /lib/u-boot/xxx-bootloader.img): " ANDROID_UBOOT
+    ANDROID_UBOOT="${ANDROID_UBOOT}"
 else
-    ret=$(search_model $boxtype)
-    if [ "$ret" == "" ]; then
+    ret="$(search_model ${boxtype})"
+    if [[ -z "${ret}" ]]; then
         echo "Input error, exit!"
         exit 1
     fi
@@ -210,43 +169,36 @@ else
     # 5.  UBOOT_OVERLOAD
     # 6.  MAINLINE_UBOOT
     # 7.  ANDROID_UBOOT
-    AMLOGIC_SOC=$(echo "$ret" | awk -F ':' '{print $3}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')
-    FDTFILE=$(echo "$ret" | awk -F ':' '{print $4}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')
-    UBOOT_OVERLOAD=$(echo "$ret" | awk -F ':' '{print $5}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')
-    MAINLINE_UBOOT=$(echo "$ret" | awk -F ':' '{print $6}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')
-    ANDROID_UBOOT=$(echo "$ret" | awk -F ':' '{print $7}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')
+    AMLOGIC_SOC="$(echo "${ret}" | awk -F ':' '{print $3}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')"
+    FDTFILE="$(echo "${ret}" | awk -F ':' '{print $4}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')"
+    UBOOT_OVERLOAD="$(echo "${ret}" | awk -F ':' '{print $5}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')"
+    MAINLINE_UBOOT="$(echo "${ret}" | awk -F ':' '{print $6}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')"
+    ANDROID_UBOOT="$(echo "${ret}" | awk -F ':' '{print $7}' | perl -pe 's/NA//;s/NULL//;s/\s+//g;')"
 fi
 
-if [ "$FDTFILE" == "" ]; then
-    cat <<EOF
-Please enter the .dtb file name of your box, do not include the path.
-For example: $DEFAULT_FDTFILE
-EOF
-    echo "Enter the .dtb File name:"
-    read CUST_FDTFILE
-    FDTFILE=$CUST_FDTFILE
-    UBOOT_OVERLOAD=""
-    MAINLINE_UBOOT=""
-    ANDROID_UBOOT=""
-    AMLOGIC_SOC=""
-fi
-
-echo -e "FDT Value [ ${FDTFILE} ]"
-
-if [ ! -f "/boot/dtb/amlogic/${FDTFILE}" ]; then
+if [[ -z "${FDTFILE}" || ! -f "/boot/dtb/amlogic/${FDTFILE}" ]]; then
     echo "/boot/dtb/amlogic/${FDTFILE} does not exist!"
-    echo "You can download the .dtb file from [ https://github.com/ophub/amlogic-s9xxx-openwrt/tree/main/amlogic-s9xxx/amlogic-dtb ]"
-    echo "Copy it to [ /boot/dtb/amlogic/ ]."
-    echo "Then execute this Install command."
     exit 1
 fi
+
+echo "AMLOGIC_SOC Value [ ${AMLOGIC_SOC} ]"
+echo "FDTFILE Value [ ${FDTFILE} ]"
+echo "UBOOT_OVERLOAD Value [ ${UBOOT_OVERLOAD} ]"
+echo "MAINLINE_UBOOT Value [ ${MAINLINE_UBOOT} ]"
+echo "ANDROID_UBOOT Value [ ${ANDROID_UBOOT} ]"
+
+sed -i "s|^SOC=.*|SOC='${AMLOGIC_SOC}'|g" ${op_release} 2>/dev/null
+sed -i "s|^FDTFILE=.*|FDTFILE='${FDTFILE}'|g" ${op_release} 2>/dev/null
+sed -i "s|^UBOOT_OVERLOAD=.*|UBOOT_OVERLOAD='${UBOOT_OVERLOAD}'|g" ${op_release} 2>/dev/null
+sed -i "s|^MAINLINE_UBOOT=.*|MAINLINE_UBOOT='${MAINLINE_UBOOT}'|g" ${op_release} 2>/dev/null
+sed -i "s|^ANDROID_UBOOT=.*|ANDROID_UBOOT='${ANDROID_UBOOT}'|g" ${op_release} 2>/dev/null
 
 K510="1"
 [[ "$(hexdump -n 15 -x "/boot/zImage" 2>/dev/null | head -n 1 | awk '{print $7}')" == "0108" ]] && K510="0"
 echo -e "K510 [ ${K510} ]"
 
 # backup old bootloader
-if [ ! -f "/root/BackupOldBootloader.img" ]; then
+if [[ ! -f "/root/BackupOldBootloader.img" ]]; then
     echo "Backup bootloader -> [ BackupOldBootloader.img ] ... "
     dd if=/dev/$EMMC_NAME of=/root/BackupOldBootloader.img bs=1M count=4 conv=fsync
     echo "Backup bootloader complete."
@@ -577,24 +529,6 @@ while [ $i -le $max_try ]; do
             sync
         done
         echo "Copy complete."
-        sync
-
-        echo "Update the relevant parameters of flippy-openwrt-release"
-        sed -i '/FDTFILE/d' etc/flippy-openwrt-release 2>/dev/null
-        echo "FDTFILE='${FDTFILE}'" >>etc/flippy-openwrt-release 2>/dev/null
-
-        sed -i '/UBOOT_OVERLOAD/d' etc/flippy-openwrt-release 2>/dev/null
-        echo "UBOOT_OVERLOAD='${UBOOT_OVERLOAD}'" >>etc/flippy-openwrt-release 2>/dev/null
-
-        sed -i '/MAINLINE_UBOOT/d' etc/flippy-openwrt-release 2>/dev/null
-        echo "MAINLINE_UBOOT='${MAINLINE_UBOOT}'" >>etc/flippy-openwrt-release 2>/dev/null
-
-        sed -i '/ANDROID_UBOOT/d' etc/flippy-openwrt-release 2>/dev/null
-        echo "ANDROID_UBOOT='${ANDROID_UBOOT}'" >>etc/flippy-openwrt-release 2>/dev/null
-
-        sed -i '/SOC/d' etc/flippy-openwrt-release 2>/dev/null
-        echo "SOC='${AMLOGIC_SOC}'" >>etc/flippy-openwrt-release 2>/dev/null
-        echo "Update complete."
         sync
 
         cat >etc/docker/daemon.json <<EOF

@@ -7,38 +7,13 @@
 			<td  width="65%" align="left">
 				<select name="amlogic_soc" id="amlogic_soc" style="width:auto" onchange="sel_dtb_input(this.options[this.selectedIndex].value)">
 				<option value="0"><%:Select List%></option>
-				<option value="11"><%:[s905d] Phicomm N1%></option>
-				<option value="12"><%:[s905d] Phicomm N1 (DMA thresh)%></option>
-				<option value="13"><%:[s905x] HG680P%></option>
-				<option value="13"><%:[s905x] B860H%></option>
-				<option value="14"><%:[s905w] X96-Mini & TX3-Mini%></option>
-				<option value="21"><%:[s912] Octopus Planet%></option>
-				<option value="31"><%:[s905x2] X96 Max 4G%></option>
-				<option value="32"><%:[s905x2] X96 Max 2G%></option>
-				<option value="41"><%:[s922x] Belink GT-King%></option>
-				<option value="42"><%:[s922x] Belink GT-King Pro%></option>
-				<option value="43"><%:[s922x] Belink GT-King Pro H%></option>
-				<option value="44"><%:[s922x] Belink GT-King Pro Rev_A%></option>
-				<option value="45"><%:[s922x] Hardkernel ODROID N2%></option>
-				<option value="46"><%:[s922x] UGOOS AM6 Plus%></option>
-				<option value="47"><%:[a311d] Khadas VIM3%></option>
-				<option value="51"><%:[s905x3] X96 Max+%></option>
-				<option value="52"><%:[s905x3] X96 Max+ (OverClock@2208Mhz)%></option>
-				<option value="53"><%:[s905x3] HK1 Box%></option>
-				<option value="54"><%:[s905x3] HK1 Box (OverClock@2208Mhz)%></option>
-				<option value="55"><%:[s905x3] H96 Max X3%></option>
-				<option value="56"><%:[s905x3] H96 Max X3 (OverClock@2208Mhz)%></option>
-				<option value="57"><%:[s905x3] Ugoos X3%></option>
-				<option value="58"><%:[s905x3] Ugoos X3 (OverClock@2208Mhz)%></option>
-				<option value="59"><%:[s905x3] TX3 BZ%></option>
-				<option value="5a"><%:[s905x3] TX3 BZ (OverClock@2208Mhz)%></option>
-				<option value="5b"><%:[s905x3] TX3 QZ%></option>
-				<option value="5c"><%:[s905x3] TX3 QZ (OverClock@2208Mhz)%></option>
 				<option value="99"><%:Enter the dtb file name%></option>
 				</select>
 			</td>
 		</tr>
-		<tr id="tr_sel_dtb" style="display:none;"><td width="30%" align="right"><%:Or enter the dtb file name:%></td><td  width="70%" align="left"><input class="cbi-input-file" style="width: 235px" type="text" id="amlogic_dtb" name="amlogic_dtb" /></td></tr>
+		<tr id="tr_sel_dtb" style="display:none;"><td width="30%" align="right"><%:Enter the dtb file name:%></td><td  width="70%" align="left"><input class="cbi-input-file" style="width: 235px" type="text" id="amlogic_dtb" name="amlogic_dtb" /></td></tr>
+		<tr id="tr_sel_soc" style="display:none;"><td width="30%" align="right"><%:Enter the soc name:%></td><td  width="70%" align="left"><input class="cbi-input-file" style="width: 235px" type="text" id="amlogic_socname" name="amlogic_socname" /></td></tr>
+		<tr id="tr_sel_uboot" style="display:none;"><td width="30%" align="right"><%:Enter the uboot_overload name:%></td><td  width="70%" align="left"><input class="cbi-input-file" style="width: 235px" type="text" id="amlogic_uboot" name="amlogic_uboot" /></td></tr>
 		<tr>
 			<td width="30%" align="right"><%:Install OpenWrt:%></td>
 			<td  width="70%" align="left">
@@ -54,10 +29,14 @@
 		if ( soc_value == "99" )
 		{
 			document.getElementById('tr_sel_dtb').style = '';
+			document.getElementById('tr_sel_soc').style = '';
+			document.getElementById('tr_sel_uboot').style = '';
 		}
 		else
 		{
 			document.getElementById('tr_sel_dtb').style = 'display:none;';
+			document.getElementById('tr_sel_soc').style = 'display:none;';
+			document.getElementById('tr_sel_uboot').style = 'display:none;';
 		}
 	}
 
@@ -68,19 +47,25 @@
 		var amlogic_soc_index = amlogic_soc_id.selectedIndex;
 		var amlogic_soc_value = amlogic_soc_id.options[amlogic_soc_index].value;
 		var amlogic_soc_text = amlogic_soc_id.options[amlogic_soc_index].text;
-		var amlogic_confirm_info = amlogic_soc_text + "@" + amlogic_soc_value;
 
 		var amlogic_dtb_id = document.getElementById('amlogic_dtb');
 		var amlogic_dtb_value = amlogic_dtb_id.value;
 
-		if (confirm('<%:You have chosen:%> [ ' + amlogic_confirm_info + ' ] , <%:Start install?%>') != true) { return false; }
+		var amlogic_soc_name = document.getElementById('amlogic_socname');
+		var amlogic_socname_value = amlogic_socname.value;
+
+		var amlogic_ubootname = document.getElementById('amlogic_uboot');
+		var amlogic_ubootname_value = amlogic_ubootname.value;
+
+		var amlogic_confirm_info = amlogic_soc_text;
+		if (confirm('<%:You have chosen:%>' + amlogic_confirm_info + ', <%:Start install?%>') != true) { return false; }
 
 		btn.disabled = true;
 		btn.value    = '<%:Installing...%> ';
 
 		XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_amlogic_install")%>',
 			{
-				amlogic_install_sel: amlogic_soc_value + '@' + amlogic_dtb_value
+				amlogic_install_sel: amlogic_soc_value + '@' + amlogic_dtb_value + ':' + amlogic_socname_value + ':' + amlogic_ubootname_value
 			},
 			function(x,status)
 			{
@@ -117,13 +102,12 @@
 	});
 
 	// Show external modal database: /etc/model_database.txt
-	mymodel_arrlen = 0;
-	_option_codes = "";
+	var mymodel_arrlen = 0;
+	var _option_codes = '<option value="0"><%:Select List%></option>';
 	var _check_my_amlogic_soc = document.getElementById('amlogic_soc');
 	XHR.get('<%=luci.dispatcher.build_url("admin", "system", "amlogic", "start_model_database")%>', null, function(x, status) {
 		if ( x && x.status == 200 ) {
 			if ( status.my_model_database != "" ) {
-				_option_codes = _option_codes + '<option value="0"><%:Select List%></option>';
 				let userModelList = status.my_model_database;
 				var user_arry = userModelList.split('@@@');
 				var mymodel_arrlen = user_arry.length - 1;
@@ -132,13 +116,13 @@
 					my_box_mode_id = my_box_mode[0];
 					my_box_mode_name = my_box_mode[1];
 					if ( parseFloat(my_box_mode_id).toString() != "NaN" && my_box_mode_name != "" ) {
-						_option_codes = _option_codes + '<option value="' + my_box_mode_id + '">' + my_box_mode_name.replace(/~/g, " ") + '</option>';
+						_option_codes = _option_codes + '<option value="' + my_box_mode_id + '">[ ' + my_box_mode_id + ' ] ' + my_box_mode_name.replace(/~/g, " ") + '</option>';
 					}
 				}
-				_option_codes = _option_codes + '<option value="99"><%:Enter the dtb file name%></option>';
-				_check_my_amlogic_soc.innerHTML = _option_codes;
 			}
 		}
+		_option_codes = _option_codes + '<option value="99"><%:Enter the dtb file name%></option>';
+		_check_my_amlogic_soc.innerHTML = _option_codes;
 	});
 
 //]]></script>

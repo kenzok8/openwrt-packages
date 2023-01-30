@@ -3,12 +3,8 @@
 . /lib/functions.sh
 
 urlencode() {
-   local data
    if [ "$#" -eq 1 ]; then
-      data=$(curl -s -o /dev/null -w %{url_effective} --get --data-urlencode "key=$1" "")
-      if [ ! -z "$data" ]; then
-         echo -n "$(echo ${data##/?key=} |sed 's/\//%2f/g' |sed 's/:/%3a/g' |sed 's/?/%3f/g' |sed 's/(/%28/g' |sed 's/)/%29/g' |sed 's/\^/%5e/g' |sed 's/=/%3d/g' |sed 's/|/%7c/g' |sed 's/+/%20/g')"
-      fi
+      echo "$(/usr/share/openclash/openclash_urlencode.lua "$1")"
    fi
 }
 
@@ -67,32 +63,32 @@ urlencode() {
    [ "$RULE_TYPE" != "netflix" ] && [ "$RULE_TYPE" != "disney" ] && DOWNLOAD_PATH=$(urlencode "$DOWNLOAD_PATH")
    
    if [ "$RULE_TYPE" = "netflix" ]; then
-      curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+      curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
    elif [ "$RULE_TYPE" = "disney" ]; then
-      curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+      curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
    elif [ "$RULE_TYPE" = "game" ]; then
       if [ "$github_address_mod" != "0" ]; then
          if [ "$github_address_mod" == "https://cdn.jsdelivr.net/" ] || [ "$github_address_mod" == "https://fastly.jsdelivr.net/" ] || [ "$github_address_mod" == "https://testingcf.jsdelivr.net/" ]; then
-            curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"gh/FQrabbit/SSTap-Rule@master/rules/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+            curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"gh/FQrabbit/SSTap-Rule@master/rules/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
          elif [ "$github_address_mod" == "https://raw.fastgit.org/" ]; then
-            curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"FQrabbit/SSTap-Rule/master/rules/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+            curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"FQrabbit/SSTap-Rule/master/rules/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
          else
-            curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"https://raw.githubusercontent.com/FQrabbit/SSTap-Rule/master/rules/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+            curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"https://raw.githubusercontent.com/FQrabbit/SSTap-Rule/master/rules/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
          fi
       else
-         curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 https://raw.githubusercontent.com/FQrabbit/SSTap-Rule/master/rules/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+         curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 https://raw.githubusercontent.com/FQrabbit/SSTap-Rule/master/rules/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
       fi
    elif [ "$RULE_TYPE" = "provider" ]; then
       if [ "$github_address_mod" != "0" ]; then
          if [ "$github_address_mod" == "https://cdn.jsdelivr.net/" ] || [ "$github_address_mod" == "https://fastly.jsdelivr.net/" ] || [ "$github_address_mod" == "https://testingcf.jsdelivr.net/" ]; then
-            curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"gh/"$(echo "$DOWNLOAD_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"@master"$(echo "$DOWNLOAD_PATH" |awk -F 'master' '{print $2}')" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+            curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"gh/"$(echo "$DOWNLOAD_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"@master"$(echo "$DOWNLOAD_PATH" |awk -F 'master' '{print $2}')" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
          elif [ "$github_address_mod" == "https://raw.fastgit.org/" ]; then
-            curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod""$(echo "$DOWNLOAD_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"/master"$(echo "$DOWNLOAD_PATH" |awk -F 'master' '{print $2}')" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+            curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod""$(echo "$DOWNLOAD_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"/master"$(echo "$DOWNLOAD_PATH" |awk -F 'master' '{print $2}')" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
          else
-            curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"https://raw.githubusercontent.com/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+            curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 "$github_address_mod"https://raw.githubusercontent.com/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
          fi
       else
-         curl -SsL --connect-timeout 5 -m 30 --speed-time 15 --speed-limit 1 --retry 2 https://raw.githubusercontent.com/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+         curl -SsL --connect-timeout 10 -m 30 --speed-time 15 --speed-limit 1 --retry 2 https://raw.githubusercontent.com/"$DOWNLOAD_PATH" -o "$TMP_RULE_DIR" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$TMP_RULE_DIR" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
       fi
    fi
 

@@ -1,0 +1,37 @@
+<%#
+ Copyright 2021-2022 sirpdboy Wich <herboy2008@gmail.com>
+ https://github.com/sirpdboy/luci-app-lucky
+ Licensed to the public under the Apache License 2.0.
+-%>
+
+<%
+  local safeURL = luci.sys.exec("cat /etc/lucky/lucky.conf | grep SafeURL | sed -e 's/,//g' -e 's/\"//g'  -e 's/\ //g' | awk -F ':' '{print $2}'  ")
+  local luckyHttpPort = luci.model.uci.cursor():get("lucky", "lucky", "port");
+-%>
+
+<%+header%>
+<div class="cbi-map">
+
+<iframe  id="lucky" style="width: 100%; min-height: 780px; border: none; border-radius: .375rem;box-shadow: rgba(0, 0, 0, 0.75) 0px 0px 15px -5px;"><br/><em style=\"color:red\">
+<p ><em><%:The Lucky service is not running.%></em></p>
+</iframe>
+
+</div>
+
+<script type="text/javascript">
+
+
+       var luckyAdminURL = ""+ window.location.protocol + "//" + window.location.hostname +":"+ `<%=luckyHttpPort%>`+`<%=safeURL%>`;
+
+         document.getElementById("lucky").src = luckyAdminURL
+          		document.getElementById("lucky").height = document.documentElement.clientHeight;
+        window.onresize = function(){
+            document.getElementById("lucky").height = document.documentElement.clientHeight;
+        }
+    
+
+  
+    
+
+</script>
+<%+footer%>

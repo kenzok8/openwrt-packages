@@ -102,7 +102,6 @@ html {
 body {
     font-size: 0.875rem;
     background-color: #f4f5f7;
-    
     background-color: var(--background-color);
     color: #32325d;
     color: var(--gray-dark);
@@ -120,6 +119,10 @@ body {
     background-color: var(--primary);
     color: #ffffff;
     color: var(--white);
+}
+
+::placeholder {
+    color: var(--lighter);
 }
 
 a:link,
@@ -782,7 +785,7 @@ header {
         }
 
         .status {
-            span{
+            span {
                 display: inline-block;
                 font-size: 0.8rem;
                 font-weight: bold;
@@ -796,7 +799,8 @@ header {
                 transition: all 0.3s;
                 box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
                 margin: 0 0.25rem;
-                &:last-child{
+
+                &:last-child {
                     margin-right: 0;
                 }
             }
@@ -1001,7 +1005,7 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#fff"] {
                         padding: 0rem 0.5rem;
 
                         &.active {
-                             display: block;
+                            display: block;
 
                         }
 
@@ -1321,8 +1325,8 @@ h4 {
     font-size: 0.7rem;
     font-weight: 600;
     color: #525f7f;
-    background-color: #e9ecef;
-    background-color: var(--lighter);
+    // background-color: #e9ecef;
+    // background-color: var(--lighter);
     font-weight: bold;
 
     em {
@@ -1541,10 +1545,10 @@ tr>th,
     display: inline-flex;
     width: 100%;
     flex-wrap: wrap;
-    gap: 2px;
+    gap: 0px;
 }
 
-.control-group > * {
+.control-group>* {
     vertical-align: middle;
 }
 
@@ -2194,6 +2198,8 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
     align-items: center;
     width: 100%;
     min-width: 16rem;
+    gap: 0;
+    flex-wrap: nowrap;
 }
 
 .cbi-dynlist>.add-item input {
@@ -2224,8 +2230,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 
 .cbi-dynlist>.add-item:not([ondrop])>input {
     overflow: hidden;
-    width: 100%;
-    min-width: 15rem;
+    min-width: 15.5rem;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
@@ -2455,39 +2460,34 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 /* progressbar */
 .cbi-progressbar {
     position: relative;
-    min-width: 11rem;
-    height: 1.5rem !important;
-    margin: 0 0;
-    border: thin solid #999;
-    background: #eee;
-    border-radius: 4px;
+    display: flex;
+    width: 100%;
+    font-size: 0.75rem;
+    background-color: #e9ecef;
+    border-radius: 0.5rem;
+    height: 1rem;
     overflow: hidden;
 }
 
 .cbi-progressbar>div {
-    width: 0;
+    display: block;
+    position: absolute;
     height: 100%;
-    transition: width .25s ease-in;
-    background: #5bc0de;
-    background: var(--bar-bg);
+    background-color: var(--bar-bg);
+    border-radius: 0.5rem;
+    transition: width 0.3s;
 }
 
 .cbi-progressbar::after {
-    font-family: var(--font-family-monospace);
-    font-size: 0.75rem;
-    font-weight: bold;
-    font-size-adjust: .38;
-    line-height: 1.5rem;
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    overflow: hidden;
     content: attr(title);
+    position: absolute;
+    font-size: 0.75rem;
+    color: var(--bs-heading-color);
+    width: 100%;
+    height: 100%;
     text-align: center;
-    white-space: pre;
-    text-overflow: ellipsis;
+    line-height: 1rem;
+    z-index: 2;
 }
 
 #modal_overlay {
