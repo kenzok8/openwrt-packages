@@ -74,9 +74,10 @@
 		}
 		else {
 			document.body.classList.remove('apply-overlay-active');
+
 			if (was_xhr_poll_running)
 				XHR.run();
-		}
+			}
 	}
 
 	var loading_msg="Loading.."
@@ -86,8 +87,7 @@
 		var call = function(r, resjson, duration) {
 			if (r && r.status === 200 ) {
 				var indicator = document.querySelector('.uci_change_indicator');
-				if (indicator)
-					indicator.style.display = 'none';
+				if (indicator) indicator.style.display = 'none';
 				docker_status_message('notice', '<%:Docker actions done.%>');
 				document.body.classList.remove('apply-overlay-active');
 				window.clearTimeout(tt);
@@ -98,16 +98,15 @@
 			var delay =1000
 			window.setTimeout(function() {
 				xhr.get('<%=url("admin/docker/confirm")%>', null, call, uci_apply_timeout * 1000);
-			},delay);
+			}, delay);
 		};
 
 		var tick = function() {
 			var now = Date.now();
 
-			docker_status_message(
-				'notice',
-				'<img src="<%=resource%>/icons/loading.gif" alt="" style="vertical-align:middle" /> <span style="white-space:pre-line; word-break:break-all; font-family: \'Courier New\', Courier, monospace;">' + loading_msg + '</span>'
-			);
+			docker_status_message('notice',
+				'<img src="<%=resource%>/icons/loading.gif" alt="" style="vertical-align:middle" /> <span style="white-space:pre-line; word-break:break-all; font-family: \'Courier New\', Courier, monospace;">' +
+				loading_msg + '</span>');
 
 			tt = window.setTimeout(tick, 200);
 			ts = now;
@@ -118,7 +117,7 @@
 		window.setTimeout(call, Math.max(uci_apply_holdoff * 1000 , 1));
 	}
 	// document.getElementsByTagName("form")[0].addEventListener("submit", (e)=>{
-	// uci_confirm_docker()
+	//   uci_confirm_docker()
 	// })
 
 	function fnSubmitForm(el){
@@ -129,12 +128,9 @@
 
 	<% if self.err then -%>
 		docker_status_message('warning', '<span style="white-space:pre-line; word-break:break-all; font-family: \'Courier New\', Courier, monospace;">'+`<%=self.err%>`+'</span>');
-		document.getElementById('docker_apply_overlay').addEventListener(
-			"click",
-			(e)=>{
-				docker_status_message()
-			}
-		)
+		document.getElementById('docker_apply_overlay').addEventListener("click", (e)=>{
+			docker_status_message()
+		})
 	<%- end %>
 
 	window.onload= function (){
@@ -142,6 +138,10 @@
 		[].slice.call(buttons).forEach(function (el) {
 			el.onclick = fnSubmitForm.bind(this, el);
 		});
+
+		if(typeof(fnWindowLoad) == "function"){
+			fnWindowLoad()
+		}
 	}
 
 //]]></script>

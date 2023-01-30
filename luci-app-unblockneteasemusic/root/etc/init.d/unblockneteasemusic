@@ -106,6 +106,7 @@ start_service() {
 	config_get http_port "config" "http_port" "5200"
 	config_get https_port "config" "https_port" "5201"
 	config_get hijack_ways "config" "hijack_ways" "use_ipset"
+	[ "$hijack_ways" != "use_hosts" ] || { http_port="80"; https_port="443"; }
 	append_param "-p" "${http_port}":"${https_port}"
 
 	if [ -n "$FW4" ]; then
@@ -151,8 +152,10 @@ start_service() {
 	append_param_boolenv "config" "follow_source_order" "FOLLOW_SOURCE_ORDER"
 	append_param_boolenv "config" "search_album" "SEARCH_ALBUM"
 	append_param_boolenv "config" "enable_flac" "ENABLE_FLAC"
-	append_param_boolenv "config" "local_vip" "ENABLE_LOCAL_VIP"
+	append_param_boolenv "config" "select_max_br" "SELECT_MAX_BR"
 	append_param_boolenv "config" "disable_upgrade_check" "DISABLE_UPGRADE_CHECK"
+	append_param_boolenv "config" "block_ads" "BLOCK_ADS"
+	append_param_boolenv "config" "local_vip" "ENABLE_LOCAL_VIP"
 	case "$(config_get "config" "replace_music_source")" in
 		"lower_than_192kbps") procd_append_param env MIN_BR="192000" ;;
 		"lower_than_320kbps") procd_append_param env MIN_BR="320000" ;;

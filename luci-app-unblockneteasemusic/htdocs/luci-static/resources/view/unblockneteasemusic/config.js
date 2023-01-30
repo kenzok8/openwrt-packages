@@ -143,42 +143,43 @@ return view.extend({
 		o = s.option(form.Flag, 'follow_source_order', _('顺序查询'),
 			_('默认为并行查询并返回第一个结果，开启后将严格按照配置音源的顺序进行查询。'))
 		o.default = o.disabled;
-		o.rmempty = false;
 
 		o = s.option(form.Flag, 'search_album', _('附加专辑名'),
 			_('在其他音源搜索歌曲时携带专辑名称（默认搜索条件 <code>歌曲名 - 歌手</code>，启用后搜索条件 <code>歌曲名 - 歌手 专辑名</code>）。'));
 		o.default = o.disabled;
-		o.rmempty = false;
-
-		o = s.option(form.Flag, 'local_vip', _('启用本地 VIP'),
-			_('启用后，可以使用去广告、个性换肤、鲸云音效等本地功能。'));
-		o.default = o.disabled;
-		o.rmempty = false;
 
 		o = s.option(form.Flag, 'enable_flac', _('启用无损音质'),
 			_('目前仅支持酷狗、酷我、咪咕、pyncmd、QQ 音源。'));
 		o.default = o.disabled;
-		o.rmempty = false;
 
-		o = s.option(form.Flag, 'disable_upgrade_check', _('禁用更新检查'),
-			_('禁止客户端检查更新，全平台支持。'));
-		o.default = o.enabled;
-		o.rmempty = false;
+		o = s.option(form.Flag, 'select_max_br', _('选取最高音质'),
+			_('选择所有音源中的最高码率替换音频。'));
+		o.default = o.disabled;
 
 		o = s.option(form.ListValue, 'replace_music_source', _('音源替换'),
-			_('当音乐音质低于指定数值时，尝试强制使用其他平台的高音质版本进行替换。'));
+			_('当源音乐音质低于指定数值时，尝试强制使用其他平台的高音质版本进行替换。'));
 		o.value('dont_replace', _('不强制替换音乐音源'));
 		o.value('lower_than_192kbps', _('当音质低于 192 Kbps（中）时'));
 		o.value('lower_than_320kbps', _('当音质低于 320 Kbps（高）时'));
 		o.value('lower_than_999kbps', _('当音质低于 999 Kbps（无损）时'));
 		o.value('replace_all', _('替换所有音乐音源'));
 		o.default = 'dont_replace';
-		o.rmempty = false;
+
+		o = s.option(form.Flag, 'disable_upgrade_check', _('禁用更新检查'),
+			_('拦截网易云音乐客户端更新请求，全平台支持。'));
+		o.default = o.disabled;
+
+		o = s.option(form.Flag, 'block_ads', _('屏蔽广告'),
+			('启用后，可屏蔽应用内<strong>部分</strong>广告。'));
+		o.default = o.disabled;
+
+		o = s.option(form.Flag, 'local_vip', _('启用本地 VIP'),
+			_('启用后，可以使用去广告、个性换肤、鲸云音效等本地功能。'));
+		o.default = o.disabled;
 
 		o = s.option(form.Flag, 'auto_update', _('启用自动更新'),
-			_('启用后，每天将定时自动检查最新版本并更新。'));
+			_('启用后，每天将定时自动检查最新核心版本并更新。'));
 		o.default = o.disabled;
-		o.rmempty = false;
 
 		o = s.option(form.ListValue, 'update_time', '检查更新时间',
 			_('设定每天自动检查更新时间。'));
@@ -206,29 +207,29 @@ return view.extend({
 		}
 
 		o = s.option(form.Flag, 'advanced_mode', _('启用进阶设置'),
-			_('非必要不推荐使用。'));
+			_('非必要不推荐启用。'));
 		o.default = o.disabled,
-		o.rmempty = false;
 
 		o = s.option(form.ListValue, 'log_level', _('日志等级'));
 		o.value('debug', _('调试'));
 		o.value('info', _('信息（默认）'));
 		o.value('silent', _('静默'));
 		o.default = 'info';
-		o.rmempty = false;
 		o.depends('advanced_mode', '1');
 
 		o = s.option(form.Value, 'http_port', _('HTTP 监听端口'));
 		o.datatype = 'port';
 		o.default = '5200';
 		o.rmempty = false;
-		o.depends('advanced_mode', '1');
+		o.depends('hijack_ways', 'dont_hijack');
+		o.depends('hijack_ways', 'use_ipset');
 
 		o = s.option(form.Value, 'https_port', _('HTTPS 监听端口'));
 		o.datatype = 'port';
 		o.default = '5201';
 		o.rmempty = false;
-		o.depends('advanced_mode', '1');
+		o.depends('hijack_ways', 'dont_hijack');
+		o.depends('hijack_ways', 'use_ipset');
 
 		o = s.option(form.Value, 'endpoint_url', _('EndPoint'),
 			_('音源地址反代（包装）。'));
@@ -241,52 +242,27 @@ return view.extend({
 		o.placeholder = 'http(s)://host:port'
 		o.depends('advanced_mode', '1');
 
-		o = s.option(form.ListValue, 'hijack_ways', _('劫持方法'));
+		o = s.option(form.ListValue, 'hijack_ways', _('劫持方法'),
+			 _('如果使用 Hosts 劫持，监听端口将固定为 80/443，请注意更改您的 webUI 端口。'));
 		o.value('dont_hijack', _('不开启劫持'));
 		o.value('use_ipset', _('使用 IPSet 劫持'));
 		o.value('use_hosts', _('使用 Hosts 劫持'));
 		o.default = 'dont_hijack';
 		o.rmempty = false;
 		o.depends('advanced_mode', '1');
-		o.onchange = function(ev, section_id, value) {
-			if (!section_id || !value)
-				return null;
-
-			var ele_http_port = this.map.findElement('id', 'widget.cbid.unblockneteasemusic.%s.http_port'.format(section_id));
-			var ele_https_port = this.map.findElement('id', 'widget.cbid.unblockneteasemusic.%s.https_port'.format(section_id));
-
-			if (value === 'use_hosts') {
-				ele_http_port.value = '80';
-				ele_http_port.disabled = true;
-
-				ele_https_port.value = '443';
-				ele_https_port.disabled = true;
-			} else if (ele_http_port.disabled || ele_https_port.disabled) {
-				L.resolveDefault(this.map.data.loaded.unblockneteasemusic).then((res) => {
-					ele_http_port.disabled = null;
-					ele_http_port.value = res.config.http_port || '5200';
-
-					ele_https_port.disabled = null;
-					ele_https_port.value = res.config.https_port || '5201';
-				});
-			}
-		}
 
 		o = s.option(form.Flag, 'keep_core_when_upgrade', _('升级时保留核心程序'));
 		o.default = o.disabled;
-		o.rmempty = false;
 		o.depends('advanced_mode', '1');
 
 		o = s.option(form.Flag, 'pub_access', _('部署到公网'),
 			_('默认仅放行局域网请求，如需提供公开访问请勾选此选项。'));
 		o.default = o.disabled;
-		o.rmempty = false;
 		o.depends('advanced_mode', '1');
 
 		o = s.option(form.Flag, 'strict_mode', _('启用严格模式'),
 			_('若将服务部署到公网，则强烈建议使用严格模式，此模式下仅放行网易云音乐所属域名的请求。<br/>注意：该模式下不能使用全局代理。'));
 		o.default = o.disabled;
-		o.rmempty = false;
 		o.depends('advanced_mode', '1');
 
 		o = s.option(form.Value, 'netease_server_ip', _('网易云服务器 IP'));

@@ -1,80 +1,92 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:604
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:619
 msgid "A list of kernel capabilities to add to the container"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:183
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:69
+msgid "Access Control"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:223
 msgid "Add"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:580
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:595
 msgid "Add host device to the container"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:556
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:571
 msgid "Advance"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:571
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:586
 msgid "Allocates an ephemeral host port for all of a container's exposed ports"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:483
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:118
+msgid "Allowed access interfaces"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:498
 msgid "Always pull image first"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:23
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:29
 msgid ""
 "An overview with the relevant data is displayed here with which the LuCI "
 "docker client is connected."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:27
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:43
 msgid "Api Version"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:84
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:94
 msgid "Auto create macvlan interface in Openwrt"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:64
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:18
+msgid "Auto start"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:134
 msgid "Available"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:39
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:47
 msgid "Base device"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:538
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:553
 msgid "Bind Mount(-v)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:539
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:554
 msgid "Bind mount a volume"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:588
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:637
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:596
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:652
 msgid "Block IO Weight"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:638
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:653
 msgid ""
 "Block IO weight (relative weight) accepts a weight value between 10 and 1000"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:589
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:597
 msgid ""
 "Block IO weight (relative weight) accepts a weight value between 10 and 1000."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:51
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:61
 msgid "Bridge (Support direct communication between MAC VLANs)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:34
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:42
 msgid "Bridge device"
 msgstr ""
 
@@ -84,48 +96,52 @@ msgid ""
 "image can be downloaded from the configured registry."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:603
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:618
 msgid "CAP-ADD(--cap-add)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:573
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:620
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:581
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:635
 msgid "CPU Shares Weight"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:770
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:779
 msgid "CPU Useage"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:621
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:636
 msgid ""
 "CPU shares relative weight, if 0 is set, the system will ignore the value "
 "and use the default of 1024"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:574
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:582
 msgid ""
 "CPU shares relative weight, if 0 is set, the system will ignore the value "
 "and use the default of 1024."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:565
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:611
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:28
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:573
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:626
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:44
 msgid "CPUs"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:159
+msgid "Can NOT connect to docker daemon, please check!!"
 msgstr ""
 
 #: applications/luci-app-dockerman/luasrc/view/dockerman/newcontainer_resolve.htm:91
 msgid "Cancel"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:65
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:60
 msgid "Client connection"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:339
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:678
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:142
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:347
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:687
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:182
 msgid "Command"
 msgstr ""
 
@@ -137,136 +153,143 @@ msgstr ""
 msgid "Command line Error"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:16
+#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:17
 msgid "Configuration"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:42
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:36
 msgid "Configure the default bridge network"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:397
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:698
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:405
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:707
 msgid "Connect"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:395
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:429
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:465
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:403
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:437
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:473
 msgid "Connect Network"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:14
-msgid "Connect to remote endpoint"
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:74
+msgid "Connect to remote docker endpoint"
 msgstr ""
 
 #: applications/luci-app-dockerman/luasrc/view/dockerman/container.htm:7
 msgid "Console"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:641
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:161
+msgid "Container Info"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:650
 msgid "Container Inspect"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:662
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:671
 msgid "Container Logs"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:125
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:458
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:473
 msgid "Container Name"
 msgstr ""
 
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:92
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:58
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/volumes.lua:29
 msgid "Container detail"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:37
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:109
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:143
+#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:38
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:142
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:148
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/volumes.lua:87
 #: applications/luci-app-dockerman/luasrc/view/dockerman/overview.htm:133
 msgid "Containers"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:107
-msgid "Containers overview"
-msgstr ""
-
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:84
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:94
 msgid "Create macvlan interface"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:450
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:465
 msgid "Create new docker container"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:23
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:31
 msgid "Create new docker network"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:304
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:148
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:312
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:153
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/volumes.lua:92
 msgid "Created"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:363
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:33
+msgid "DELETING"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:371
 msgid "DNS"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:56
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:51
 msgid "Debug"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:41
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:35
 msgid "Default bridge"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:355
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:363
 msgid "Device"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:579
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:594
 msgid "Device(--device)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:388
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:396
 msgid "Disconnect"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:13
-#: applications/luci-app-dockerman/luasrc/view/dockerman/logs.htm:3
+#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:14
 msgid "Docker"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:7
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:12
 msgid "Docker - Configuration"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:199
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:192
 msgid "Docker - Container (%s)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:94
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:439
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:128
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:450
 msgid "Docker - Containers"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/view/dockerman/logs.htm:3
+msgid "Docker - Events"
 msgstr ""
 
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:72
 msgid "Docker - Images"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:12
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:15
 msgid "Docker - Network"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:51
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:54
 msgid "Docker - Networks"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:22
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:28
 msgid "Docker - Overview"
 msgstr ""
 
@@ -274,16 +297,24 @@ msgstr ""
 msgid "Docker - Volumes"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:474
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:16
+msgid "Docker Daemon settings"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:489
 msgid "Docker Image"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:36
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:30
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:30
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:46
 msgid "Docker Root Dir"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:26
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:93
+msgid "Docker Socket Path"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:42
 msgid "Docker Version"
 msgstr ""
 
@@ -291,66 +322,70 @@ msgstr ""
 msgid "Docker actions done."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:8
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:70
+msgid "DockerMan"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:13
 msgid "DockerMan is a simple docker manager client for LuCI"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file.htm:14
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:68
+msgid "DockerMan settings"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:172
 msgid "Download"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:79
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:32
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:82
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:40
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/volumes.lua:85
 msgid "Driver"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:263
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:265
 msgid "Duplicate/Edit"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:110
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:120
 msgid "Enable IPv6"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:343
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:351
 msgid "Env"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:531
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:546
 msgid "Environmental Variable(-e)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:59
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:54
 msgid "Error"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:41
+#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:42
 #: applications/luci-app-dockerman/luasrc/view/dockerman/logs.htm:5
 msgid "Events"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:50
-msgid "Example: https://hub-mirror.c.163.com"
-msgstr ""
-
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:67
-msgid "Example: tcp://0.0.0.0:2375"
-msgstr ""
-
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:106
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:116
 msgid "Exclude IPs"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:570
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:247
+msgid "Export"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:585
 msgid "Exposed All Ports(-P)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:545
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:560
 msgid "Exposed Ports(-p)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:60
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:55
 msgid "Fatal"
 msgstr ""
 
@@ -358,21 +393,21 @@ msgstr ""
 msgid "File"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:316
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:324
 msgid "Finish Time"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:217
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:220
 msgid "Force Remove"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:85
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:96
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:88
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:106
 msgid "Gateway"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:10
-msgid "Global settings"
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:33
+msgid "Github"
 msgstr ""
 
 #: applications/luci-app-dockerman/luasrc/view/dockerman/cbi/inlinevalue.htm:4
@@ -383,57 +418,55 @@ msgstr ""
 msgid "Grant UCI access for luci-app-dockerman"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:322
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:330
 msgid "Healthy"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:563
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:578
 msgid "Host Name"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:19
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:100
 msgid "Host or IP Address for the connection to a remote docker instance"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:292
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:122
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:150
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:75
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:300
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:142
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:78
 msgid "ID"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:36
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:44
 msgid "IP VLAN"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:101
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:111
 msgid "IP range"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:507
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:522
 msgid "IPv4 Address"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:122
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:132
 msgid "IPv6 Gateway"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:116
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:126
 msgid "IPv6 Subnet"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:296
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:139
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:304
 #: applications/luci-app-dockerman/luasrc/view/dockerman/images_import.htm:54
 msgid "Image"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:38
+#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:39
 #: applications/luci-app-dockerman/luasrc/view/dockerman/overview.htm:151
 msgid "Images"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:130
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:132
 msgid "Images overview"
 msgstr ""
 
@@ -441,26 +474,26 @@ msgstr ""
 msgid "Import"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:124
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:125
 msgid "Import Image"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:31
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:47
 msgid "Index Server Address"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:57
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:406
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:35
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:52
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:414
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:102
 #: applications/luci-app-dockerman/luasrc/view/dockerman/container.htm:3
 msgid "Info"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:64
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:74
 msgid "Ingress"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:65
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:75
 msgid ""
 "Ingress network is the network which provides the routing-mesh in swarm mode"
 msgstr ""
@@ -469,54 +502,54 @@ msgstr ""
 msgid "Inspect"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:462
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:477
 msgid "Interactive (-i)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:76
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:86
 msgid "Internal"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:56
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:66
 msgid "Ipvlan Mode"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:49
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:43
 msgid ""
 "It replaces the daemon registry mirrors with a new set of registry mirrors"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:245
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:220
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:238
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:264
 msgid "Kill"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:60
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:70
 msgid "L2 bridge"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:61
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:71
 msgid "L3 bridge"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:351
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:359
 msgid "Links"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:512
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:527
 msgid "Links with other containers"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:276
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:283
 #: applications/luci-app-dockerman/luasrc/view/dockerman/images_load.htm:2
 msgid "Load"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:54
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:49
 msgid "Log Level"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:646
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:661
 msgid "Log driver options"
 msgstr ""
 
@@ -524,32 +557,32 @@ msgstr ""
 msgid "Logs"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:35
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:43
 msgid "MAC VLAN"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:581
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:629
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:589
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:644
 msgid "Memory"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:774
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:783
 msgid "Memory Useage"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:630
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:645
 msgid ""
 "Memory limit (format: <number>[<unit>]). Number is a positive integer. Unit "
 "can be one of b, k, m, or g. Minimum is 4M"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:582
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:590
 msgid ""
 "Memory limit (format: <number>[<unit>]). Number is a positive integer. Unit "
 "can be one of b, k, m, or g. Minimum is 4M."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:47
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:57
 msgid "Mode"
 msgstr ""
 
@@ -557,46 +590,50 @@ msgstr ""
 msgid "Mount Point"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:588
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:603
 msgid "Mount tmpfs directory"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:335
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:343
 msgid "Mount/Volume"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:287
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:411
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:175
+msgid "Mounts"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:295
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:419
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/volumes.lua:83
 msgid "Name"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:29
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:37
 msgid "Name of the network that can be selected during container creation"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:386
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:520
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:132
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:394
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:528
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:169
 msgid "Network"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:77
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:28
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:80
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:36
 msgid "Network Name"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:39
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:503
+#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:40
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:518
 #: applications/luci-app-dockerman/luasrc/view/dockerman/overview.htm:169
 msgid "Networks"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:56
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:59
 msgid "Networks overview"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:101
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:104
 msgid "New"
 msgstr ""
 
@@ -605,11 +642,11 @@ msgstr ""
 msgid "New tag"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:612
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:627
 msgid "Number of CPUs. Number is a fractional number. 0.000 means no limit"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:566
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:574
 msgid "Number of CPUs. Number is a fractional number. 0.000 means no limit."
 msgstr ""
 
@@ -619,64 +656,72 @@ msgid ""
 "with which a container can be created."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:200
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:193
 msgid "On this page, the selected container can be managed."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:72
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:82
 msgid "Options"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:37
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:45
 msgid "Overlay network"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:36
+#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:37
 msgid "Overview"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:81
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:33
+msgid "PLEASE CONFIRM"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:84
 msgid "Parent Interface"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:54
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:64
 msgid "Pass-through (Mirror physical device to single MAC VLAN)"
-msgstr ""
-
-#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file.htm:7
-msgid "Path"
 msgstr ""
 
 #: applications/luci-app-dockerman/luasrc/view/dockerman/images_import.htm:54
 msgid "Please input new tag"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file.htm:62
-msgid "Please input the PATH !"
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:270
+msgid "Please input the PATH and select the file !"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file.htm:24
-msgid "Please input the PATH and select the file !"
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:82
+msgid "Please input the PORT or HOST IP of remote docker instance!"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:86
+msgid "Please input the SOCKET PATH of docker daemon!"
 msgstr ""
 
 #: applications/luci-app-dockerman/luasrc/view/dockerman/newcontainer_resolve.htm:91
 msgid "Plese input <docker create/run> command line:"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:347
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:135
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:355
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:172
 msgid "Ports"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:52
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:124
+msgid "Ports allowed to be accessed"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:62
 msgid "Private (Prevent communication between MAC VLANs)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:489
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:504
 msgid "Privileged"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:546
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:561
 msgid "Publish container's port(s) to the host"
 msgstr ""
 
@@ -688,28 +733,29 @@ msgstr ""
 msgid "Pull Image"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:48
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:32
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:42
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:48
 msgid "Registry Mirrors"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:13
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:73
 msgid "Remote Endpoint"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:18
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:99
 msgid "Remote Host"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:27
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:106
 msgid "Remote Port"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:272
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:229
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:208
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:111
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:274
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:274
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:210
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:115
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/volumes.lua:108
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:173
 msgid "Remove"
 msgstr ""
 
@@ -718,11 +764,15 @@ msgstr ""
 msgid "Remove tag"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:140
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:171
+msgid "Rename"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:145
 msgid "RepoTags"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:454
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:469
 msgid "Resolve CLI"
 msgstr ""
 
@@ -730,18 +780,19 @@ msgstr ""
 msgid "Resources"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:227
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:202
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:220
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:244
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:87
 msgid "Restart"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:326
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:419
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:495
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:334
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:427
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:510
 msgid "Restart Policy"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:76
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:86
 msgid "Restrict external access to the network"
 msgstr ""
 
@@ -749,58 +800,60 @@ msgstr ""
 msgid "Reveal/hide password"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:551
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:566
 msgid "Run command"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:226
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:230
 msgid "Save"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:518
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:533
 msgid "Set custom DNS servers"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:532
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:547
 msgid "Set environment variables to inside the container"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:55
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:50
 msgid "Set the logging level"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:146
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:151
 msgid "Size"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:66
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:61
 msgid ""
 "Specifies where the Docker daemon will listen for client connections "
 "(default: unix:///var/run/docker.sock)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:218
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:193
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:211
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:234
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:65
 msgid "Start"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:311
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:319
 msgid "Start Time"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:780
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:781
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:789
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:790
 #: applications/luci-app-dockerman/luasrc/view/dockerman/container.htm:5
 msgid "Stats"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:300
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:128
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:308
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:165
 msgid "Status"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:236
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:211
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:229
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:254
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:65
 msgid "Stop"
 msgstr ""
 
@@ -808,28 +861,28 @@ msgstr ""
 msgid "Submit"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:83
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:91
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:86
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:101
 msgid "Subnet"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:367
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:375
 msgid "Sysctl"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:595
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:610
 msgid "Sysctl(--sysctl)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:596
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:611
 msgid "Sysctls (kernel parameters) options"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:783
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:792
 msgid "TOP"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:468
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:483
 msgid "TTY (-t)"
 msgstr ""
 
@@ -837,67 +890,67 @@ msgstr ""
 msgid "TX/RX"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:564
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:579
 msgid "The hostname to use for the container"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:647
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:662
 msgid "The logging configuration for this container"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:525
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:540
 msgid ""
 "The user that commands are run as inside the container.(format: name|uid[:"
 "group|gid])"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:95
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/containers.lua:129
 msgid ""
 "This page displays all containers that have been created on the connected "
 "docker host."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:52
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/networks.lua:55
 msgid ""
 "This page displays all docker networks that have been created on the "
 "connected docker host."
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:359
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:367
 msgid "Tmpfs"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:587
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:602
 msgid "Tmpfs(--tmpfs)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:29
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/overview.lua:45
 msgid "Total Memory"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:688
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:697
 msgid "UID"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:289
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:328
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:297
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:336
 msgid "Update"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:254
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:256
 msgid "Upgrade"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file.htm:2
-#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file.htm:13
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:7
 msgid "Upload"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file.htm:46
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:303
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:304
 msgid "Upload Error"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file.htm:43
+#: applications/luci-app-dockerman/luasrc/view/dockerman/container_file_manager.htm:294
 msgid "Upload Success"
 msgstr ""
 
@@ -905,19 +958,19 @@ msgstr ""
 msgid "Upload/Download"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:331
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/container.lua:339
 msgid "User"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:524
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:539
 msgid "User(-u)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:53
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newnetwork.lua:63
 msgid "VEPA (Virtual Ethernet Port Aggregator)"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:40
+#: applications/luci-app-dockerman/luasrc/controller/dockerman.lua:41
 #: applications/luci-app-dockerman/luasrc/view/dockerman/overview.htm:187
 msgid "Volumes"
 msgstr ""
@@ -926,12 +979,24 @@ msgstr ""
 msgid "Volumes overview"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:58
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:53
 msgid "Warning"
 msgstr ""
 
-#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:125
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/images.lua:126
 msgid ""
 "When pressing the Import button, both a local image can be loaded onto the "
 "system and a valid image tar can be downloaded from remote."
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:124
+msgid ""
+"Which Port(s) can be accessed, it's not restricted by the Allowed Access "
+"interfaces configuration. Use this configuration with caution!"
+msgstr ""
+
+#: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/configuration.lua:118
+msgid ""
+"Which interface(s) can access containers under the bridge network, fill-in "
+"Interface Name"
 msgstr ""

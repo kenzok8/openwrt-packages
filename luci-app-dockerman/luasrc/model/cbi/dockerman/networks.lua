@@ -6,14 +6,17 @@ Copyright 2019 lisaac <https://github.com/lisaac/luci-app-dockerman>
 local docker = require "luci.model.docker"
 
 local m, s, o
-local networks, dk, res
+local networks, dk, res, lost_state
 
 dk = docker.new()
-res = dk.networks:list()
-if res.code < 300 then
-	networks = res.body
+
+if dk:_ping().code ~= 200 then
+	lost_state = true
 else
-	return
+	res = dk.networks:list()
+	if res and res.code and res.code < 300 then
+		networks = res.body
+	end
 end
 
 local get_networks = function ()
@@ -45,7 +48,7 @@ local get_networks = function ()
 	return data
 end
 
-local network_list = get_networks()
+local network_list = not lost_state and get_networks() or {}
 
 m = SimpleForm("docker",
 	translate("Docker - Networks"),
@@ -87,7 +90,7 @@ o = s:option(DummyValue, "_gateway", translate("Gateway"))
 s = m:section(SimpleSection)
 s.template = "dockerman/apply_widget"
 s.err = docker:read_status()
-s.err = s.err and s.err:gsub("\n","<br />"):gsub(" ","&#160;")
+s.err = s.err and s.err:gsub("\n","<br>"):gsub(" ","&nbsp;")
 if s.err then
 	docker:clear_status()
 end
@@ -103,6 +106,7 @@ o.template = "dockerman/cbi/inlinebutton"
 o.notitle=true
 o.inputstyle = "add"
 o.forcewrite = true
+o.disable = lost_state
 o.write = function(self, section)
 	luci.http.redirect(luci.dispatcher.build_url("admin/docker/newnetwork"))
 end
@@ -112,6 +116,7 @@ o.inputtitle= translate("Remove")
 o.template = "dockerman/cbi/inlinebutton"
 o.inputstyle = "remove"
 o.forcewrite = true
+o.disable = lost_state
 o.write = function(self, section)
 	local network_selected = {}
 	local network_name_selected = {}
@@ -133,7 +138,7 @@ o.write = function(self, section)
 			docker:append_status("Networks: " .. "remove" .. " " .. net .. "...")
 			local res = dk.networks["remove"](dk, {id = net})
 
-			if res and res.code >= 300 then
+			if res and res.code and res.code >= 300 then
 				docker:append_status("code:" .. res.code.." ".. (res.body.message and res.body.message or res.message).. "\n")
 				success = false
 			else
