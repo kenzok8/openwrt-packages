@@ -115,6 +115,12 @@ msgstr "直连 DNS DoH"
 msgid "Remote DNS Protocol"
 msgstr "远程 DNS 协议"
 
+msgid "Only Proxy FakeDNS"
+msgstr "仅代理 FakeDNS"
+
+msgid "When selected, only FakeDNS domain to proxy."
+msgstr "当勾选时，只会代理 FakeDNS 域名。"
+
 msgid "Remote DNS"
 msgstr "远程 DNS"
 

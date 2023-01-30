@@ -182,6 +182,10 @@ o:value("doh", "DoH")
 o:value("udp", "UDP")
 o:value("fakedns", "FakeDNS")
 
+o = s:taboption("DNS", Flag, "only_proxy_fakedns", translate("Only Proxy FakeDNS"), translate("When selected, only FakeDNS domain to proxy."))
+o.default = "0"
+o:depends("remote_dns_protocol", "fakedns")
+
 ---- DNS Forward
 o = s:taboption("DNS", Value, "remote_dns", translate("Remote DNS"))
 o.datatype = "or(ipaddr,ipaddrport)"
