@@ -50,8 +50,6 @@ append_param_boolenv() {
 append_filter_client() {
 	local cfg="$1"
 
-	is_enabled "$cfg" "enable" || return 1
-
 	local ip_addr filter_mode
 	config_get ip_addr "$cfg" "ip_addr"
 	config_get filter_mode "$cfg" "filter_mode"
@@ -106,7 +104,7 @@ start_service() {
 	config_get http_port "config" "http_port" "5200"
 	config_get https_port "config" "https_port" "5201"
 	config_get hijack_ways "config" "hijack_ways" "use_ipset"
-	[ "$hijack_ways" != "use_hosts" ] || { http_port="80"; https_port="443"; }
+	[ "${hijack_ways}" = "use_hosts" ] && { http_port="80"; https_port="443"; }
 	append_param "-p" "${http_port}":"${https_port}"
 
 	if [ -n "$FW4" ]; then
@@ -130,7 +128,10 @@ start_service() {
 		fi
 	fi
 
-	append_param_arg "config" "music_source" "-o"
+	local music_source
+	config_get music_source "config" "music_source" "default"
+	[ "${music_source}" != "default" ] && append_param -o "${music_source}"
+
 	append_param_arg "config" "cnrelay" "-c"
 	append_param_arg "config" "endpoint_url" "-e" "https://music.163.com"
 	append_param_arg "config" "netease_server_ip" "-f"
@@ -152,10 +153,8 @@ start_service() {
 	append_param_boolenv "config" "follow_source_order" "FOLLOW_SOURCE_ORDER"
 	append_param_boolenv "config" "search_album" "SEARCH_ALBUM"
 	append_param_boolenv "config" "enable_flac" "ENABLE_FLAC"
-	append_param_boolenv "config" "select_max_br" "SELECT_MAX_BR"
-	append_param_boolenv "config" "disable_upgrade_check" "DISABLE_UPGRADE_CHECK"
-	append_param_boolenv "config" "block_ads" "BLOCK_ADS"
 	append_param_boolenv "config" "local_vip" "ENABLE_LOCAL_VIP"
+	append_param_boolenv "config" "disable_upgrade_check" "DISABLE_UPGRADE_CHECK"
 	case "$(config_get "config" "replace_music_source")" in
 		"lower_than_192kbps") procd_append_param env MIN_BR="192000" ;;
 		"lower_than_320kbps") procd_append_param env MIN_BR="320000" ;;
