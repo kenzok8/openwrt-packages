@@ -114,6 +114,9 @@ body {
     box-sizing: border-box;
 }
 
+textarea {
+    padding: 0.2rem;
+}
 ::selection {
     background-color: #5e72e4;
     background-color: var(--primary);
@@ -2137,6 +2140,8 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 }
 
 .cbi-dynlist>.item {
+    display: inline-flex;
+    flex-wrap: nowrap;
     position: relative;
     max-width: 25rem;
     pointer-events: none;
@@ -2149,11 +2154,6 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 }
 
 .cbi-dynlist>.item::after {
-    position: absolute;
-    width: 2.2rem !important;
-    height: calc(100% - 0.5rem - 2px);
-    right: 0;
-    bottom: 0;
     content: "\00D7";
     pointer-events: auto;
     background-color: var(--red);
@@ -2163,16 +2163,13 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
     align-items: center;
     justify-content: center;
     line-height: 1.5rem;
-    padding: 0;
     margin: 0.25rem 0.1rem 0.25rem 0;
     color: #fff;
     border: 1px solid #f5365c;
-    border-radius: 0.25rem;
+    border-radius: 0 0.25rem 0.25rem 0;
     outline: 0;
     background-image: none;
     box-shadow: none;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
 }
 
 .cbi-dynlist>.item>span {
@@ -2180,17 +2177,17 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
     word-break: break-word;
     line-height: 1.5rem;
     padding: 0.5rem 0.5rem;
-    margin: 0.25rem 0.1rem;
+    margin: 0.25rem 0 0.25rem 0.1rem;
     color: #8898aa;
     border: 1px solid #dee2e6;
-    border-radius: 0.25rem;
+    border-radius: .25rem 0 0 .25rem;
     outline: 0;
     background-image: none;
     box-shadow: none;
     display: block;
     transition: box-shadow 0.15s ease;
     box-sizing: border-box;
-    min-width: 15rem;
+    min-width: 15.5rem;
 }
 
 .cbi-dynlist>.add-item {

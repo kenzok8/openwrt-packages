@@ -756,8 +756,14 @@ start() {
 			run_global
 			source $APP_PATH/iptables.sh start
 			source $APP_PATH/helper_dnsmasq.sh logic_restart
+			bridge_nf_ipt=$(sysctl -e -n net.bridge.bridge-nf-call-iptables)
+			echo -n $bridge_nf_ipt > $TMP_PATH/bridge_nf_ipt
 			sysctl -w net.bridge.bridge-nf-call-iptables=0 >/dev/null 2>&1
-			[ "$PROXY_IPV6" == "1" ] && sysctl -w net.bridge.bridge-nf-call-ip6tables=0 >/dev/null 2>&1
+			[ "$PROXY_IPV6" == "1" ] && {
+				bridge_nf_ip6t=$(sysctl -e -n net.bridge.bridge-nf-call-ip6tables)
+				echo -n $bridge_nf_ip6t > $TMP_PATH/bridge_nf_ip6t
+				sysctl -w net.bridge.bridge-nf-call-ip6tables=0 >/dev/null 2>&1
+			}
 		fi
 	}
 	start_crontab
@@ -775,10 +781,11 @@ stop() {
 	stop_crontab
 	source $APP_PATH/helper_dnsmasq.sh del
 	source $APP_PATH/helper_dnsmasq.sh restart no_log=1
+	[ -s "$TMP_PATH/bridge_nf_ipt" ] && sysctl -w net.bridge.bridge-nf-call-iptables=$(cat $TMP_PATH/bridge_nf_ipt) >/dev/null 2>&1
+	[ -s "$TMP_PATH/bridge_nf_ip6t" ] && sysctl -w net.bridge.bridge-nf-call-ip6tables=$(cat $TMP_PATH/bridge_nf_ip6t) >/dev/null 2>&1
 	rm -rf ${TMP_PATH}
 	rm -rf /tmp/lock/${CONFIG}_script.lock
 	echolog "清空并关闭相关程序和缓存完成。"
-	/etc/init.d/sysctl restart
 	exit 0
 }
 
