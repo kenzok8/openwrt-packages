@@ -6352,6 +6352,7 @@ boundhub.com
 boundless-sky.com
 bountyhunterporn.com
 bowenpress.com
+bowlroll.net
 bowsersinsidestory.com
 box.hyds360.com
 boxcn.net
@@ -8157,6 +8158,7 @@ collegetransferstudent.com
 colombianas.webcam
 colorado-photo.com
 coloradosprings.com
+colorfulstage.com
 colorprotechnology.com
 comcast
 comdns.xyz
@@ -10231,6 +10233,7 @@ edengay.net
 edenriegel.com
 edenrules.com
 edge-skype-com.s-0001.s-msedge.net
+edge.steam-dns.top.comcast.net
 edgecastcdn.net
 edgedatg.com
 edgefonts.net
@@ -18148,6 +18151,7 @@ maggiebears.com
 magic-net.info
 magic346cn.weebly.com
 magicalaska-form.weebly.com
+magicalmirai.com
 magiccloak.net
 magiccloud.i234.me
 magicmovies.com
@@ -18786,6 +18790,7 @@ mikandi.com
 mike.cz.cc
 mikesoltys.com
 miktex.org
+mikuexpo.com
 mil
 milehighmedia.com
 milfbundle.com
@@ -21824,6 +21829,7 @@ physiology.org
 piaget
 pianku.me
 pianopiano.pt
+piapro.net
 piavpn.com
 pic5.pixclub.net
 picacg2022.com
@@ -24918,6 +24924,7 @@ sneakerskick.com
 sneakme.net
 snipurl.com
 snowlionpub.com
+snowmiku.com
 snowpear.com
 soasta-dswb.com
 sobees.com
@@ -25419,6 +25426,11 @@ stealthy.co
 stealthygeek.com
 steam-api.com
 steam-chat.com
+steam.apac.qtlglb.com
+steam.cdn.on.net
+steam.eca.qtlglb.com
+steam.naeu.qtlglb.com
+steam.ru.qtlglb.com
 steamcommunity.com
 steamcontent.com
 steamdb.info
@@ -34800,7 +34812,6 @@ full:beck-online.beck.de
 full:bingsettingssearch.trafficmanager.net
 full:blizzard.nefficient.co.kr
 full:blizzcon-a.akamaihd.net
-full:blog.youngmoe.com
 full:blzddist1-a.akamaihd.net
 full:blzddistkr1-a.akamaihd.net
 full:blzmedia-a.akamaihd.net
@@ -34850,6 +34861,7 @@ full:elib.maruzen.co.jp
 full:espn.api.edge.bamgrid.com
 full:espn.hb.omtrdc.net
 full:espndotcom.tt.omtrdc.net
+full:f3b7q2p3.ssl.hwcdn.net
 full:fandom.zendesk.com
 full:faronics.kayako.com
 full:fbcdn-a.akamaihd.net
@@ -35004,6 +35016,9 @@ full:statics-marketingsites-wcus-ms-com.akamaized.net
 full:steambroadcast.akamaized.net
 full:steamcdn-a.akamaihd.net
 full:steamcommunity-a.akamaihd.net
+full:steampipe-kr.akamaized.net
+full:steampipe-partner.akamaized.net
+full:steampipe.akamaized.net
 full:steamstore-a.akamaihd.net
 full:steamusercontent-a.akamaihd.net
 full:steamuserimages-a.akamaihd.net
