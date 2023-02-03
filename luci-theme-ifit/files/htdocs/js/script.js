@@ -1,7 +1,8 @@
 /**
-*	InfinityFreedom is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
+*	ifit is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
 *
 *	luci-theme-ifit
+*	
 *
 *	Have a bug? Please create an issue here on GitHub!
 *	https://github.com/kenzok8/luci-theme-ifit/issues

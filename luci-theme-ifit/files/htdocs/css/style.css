@@ -1,7 +1,8 @@
 /**	
-*	InfinityFreedom is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
+*	ifit is a clean HTML5 theme for LuCI. It is based on luci-theme-material.
 *
 *	luci-theme-ifit
+*	Copyright 2020-2023 Richard Yu <xiaoqingfengatgm@gmail.com>
 *
 *	Have a bug? Please create an issue here on GitHub!
 *	https://github.com/kenzok8/luci-theme-ifit/issues
@@ -1763,6 +1764,15 @@ small {
 	background-color: #9876AA;
 }
 
+.cbi-button-selectAll,
+.cbi-button-test {
+    display: inline-block;
+    min-width: 0;
+    padding: 0.2rem 0.3rem;
+    font-size: 10pt;
+	background-color: #9876AA;
+}
+
 .cbi-optionals {
     padding: 1rem 1rem 0 1rem;
     border-top: 1px solid #CCC;
@@ -2209,6 +2219,7 @@ div#cbi-passwall.cbi-map fieldset > fieldset > div#add_link_div
 	position: fixed;
 	width: 55rem;
 	height: 20rem;
+    background-color: rgba(7,34,62,.95);
 }
 
 #add_link_div > div:nth-child(1) > label
