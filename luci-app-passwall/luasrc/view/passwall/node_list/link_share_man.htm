@@ -287,27 +287,18 @@ local has_xray = api.is_finded("xray")
 			params += opt.query("encryption", "encryption");
 
 			if (opt.get("tls").checked) {
-					var v_security = "tls";
-					var v_flow = null;
-					params += "&security=" + v_security;
-					if (opt.get("tlsflow").value) {
-						v_flow = opt.get("tlsflow").value;
-						params += "&flow=" + v_flow;
-					}
-					params += opt.query("sni", "tls_serverName");
-			}
-
-			if (opt.get("xtls").checked) {
-					var v_security = "xtls";
-					var v_flow = "xtls-rprx-direct";
-					if (opt.get("flow").value) {
-						v_flow = opt.get("flow").value;
-					}
+				var v_security = "tls";
+				params += "&security=" + v_security;
+				if (opt.get("tlsflow").value) {
+					let v_flow = opt.get("tlsflow").value;
 					params += "&flow=" + v_flow;
-					params += "&security=" + v_security;
-					params += opt.query("sni", "tls_serverName");
+				}
+				if (opt.get("xray_fingerprint").value && opt.get("xray_fingerprint").value != "") {
+					let v_fp = opt.get("xray_fingerprint").value
+					params += "&fp=" + v_fp;
+				}
+				params += opt.query("sni", "tls_serverName");
 			}
-
 
 			params += "#" + encodeURI(v_alias.value);
 			if (params[0] == "&") {
@@ -863,23 +854,14 @@ local has_xray = api.is_finded("xray")
 			if (queryParam.security) {
 				if (queryParam.security == "tls") {
 					opt.set('tls', true);
-					opt.set('xtls',false);
 					opt.set('tlsflow', queryParam.flow || '');
 					opt.set('tls_serverName', queryParam.sni || '');
 					opt.set('tls_allowInsecure', true);
 					if (queryParam.allowinsecure === '0') {
 						opt.set('tls_allowInsecure', false);
 					}
-				}
-
-				if (queryParam.security == "xtls") {
-					opt.set('tls', true);
-					opt.set('xtls',true);
-					opt.set('flow', queryParam.flow || "xtls-rprx-direct");
-					opt.set('tls_serverName', queryParam.sni || '');
-					opt.set('tls_allowInsecure', true);
-					if (queryParam.allowinsecure === '0') {
-						opt.set('tls_allowInsecure', false);
+					if (queryParam.fp && queryParam.fp.trim() != "") {
+						opt.set('xray_fingerprint', queryParam.fp);
 					}
 				}
 			}
@@ -1001,6 +983,10 @@ local has_xray = api.is_finded("xray")
 		} else {
 			s.innerHTML = "<font color='red'><%:Invalid Share URL Format%></font>: " + ssu[0];
 			return false;
+		}
+		if (opt.get('port').value) {
+			opt.get('port').focus();
+			opt.get('port').blur();
 		}
 		s.innerHTML = "<font color='green'><%:Import Finished %></font>";
 		return false;

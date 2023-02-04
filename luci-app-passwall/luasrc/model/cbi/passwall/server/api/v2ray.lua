@@ -14,7 +14,7 @@ function gen_config(user)
             for i = 1, #user.uuid do
                 clients[i] = {
                     id = user.uuid[i],
-                    flow = ("1" == user.xtls) and user.flow or ("1" == user.tls and "1" ~= user.xtls and user.tlsflow) and user.tlsflow or nil
+                    flow = ("vless" == user.protocol and "1" == user.tls and user.tlsflow) and user.tlsflow or nil
                 }
             end
             settings = {
@@ -57,7 +57,6 @@ function gen_config(user)
             local clients = {}
             for i = 1, #user.uuid do
                 clients[i] = {
-                    flow = ("1" == user.xtls) and user.flow or ("1" == user.tls and "1" ~= user.xtls and user.tlsflow) and user.tlsflow or nil,
                     password = user.uuid[i],
                 }
             end
@@ -117,20 +116,20 @@ function gen_config(user)
         }
     }
 
-    if user.transit_node and user.transit_node ~= "nil" then
-        local transit_node_t = uci:get_all("passwall", user.transit_node)
-        if user.transit_node == "_socks" or user.transit_node == "_http" then
-            transit_node_t = {
+    if user.outbound_node and user.outbound_node ~= "nil" then
+        local outbound_node_t = uci:get_all("passwall", user.outbound_node)
+        if user.outbound_node == "_socks" or user.outbound_node == "_http" then
+            outbound_node_t = {
                 type = user.type,
-                protocol = user.transit_node:gsub("_", ""),
+                protocol = user.outbound_node:gsub("_", ""),
                 transport = "tcp",
-                address = user.transit_node_address,
-                port = user.transit_node_port,
-                username = (user.transit_node_username and user.transit_node_username ~= "") and user.transit_node_username or nil,
-                password = (user.transit_node_password and user.transit_node_password ~= "") and user.transit_node_password or nil,
+                address = user.outbound_node_address,
+                port = user.outbound_node_port,
+                username = (user.outbound_node_username and user.outbound_node_username ~= "") and user.outbound_node_username or nil,
+                password = (user.outbound_node_password and user.outbound_node_password ~= "") and user.outbound_node_password or nil,
             }
         end
-        local outbound = require("luci.model.cbi.passwall.api.gen_v2ray").gen_outbound(transit_node_t, "transit")
+        local outbound = require("luci.model.cbi.passwall.api.gen_v2ray").gen_outbound(outbound_node_t, "outbound")
         if outbound then
             table.insert(outbounds, 1, outbound)
         end
@@ -151,15 +150,6 @@ function gen_config(user)
                 streamSettings = {
                     network = user.transport,
                     security = "none",
-                    xtlsSettings = ("1" == user.tls and "1" == user.xtls) and {
-                        disableSystemRoot = false,
-                        certificates = {
-                            {
-                                certificateFile = user.tls_certificateFile,
-                                keyFile = user.tls_keyFile
-                            }
-                        }
-                    } or nil,
                     tlsSettings = ("1" == user.tls) and {
                         disableSystemRoot = false,
                         certificates = {
@@ -229,17 +219,10 @@ function gen_config(user)
         if config.inbounds[1].streamSettings.tlsSettings then
             config.inbounds[1].streamSettings.tlsSettings.alpn = alpn
         end
-        if config.inbounds[1].streamSettings.xtlsSettings then
-            config.inbounds[1].streamSettings.xtlsSettings.alpn = alpn
-        end
     end
 
     if "1" == user.tls then
         config.inbounds[1].streamSettings.security = "tls"
-        if user.type == "Xray" and user.xtls and user.xtls == "1" then
-            config.inbounds[1].streamSettings.security = "xtls"
-            config.inbounds[1].streamSettings.tlsSettings = nil
-        end
     end
 
     return config

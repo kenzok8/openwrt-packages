@@ -1,4 +1,4 @@
--- Copyright (C) 2022 xiaorouji
+-- Copyright (C) 2022-2023 xiaorouji
 
 module("luci.controller.passwall2", package.seeall)
 local api = require "luci.model.cbi.passwall2.api.api"
