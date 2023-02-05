@@ -28,7 +28,7 @@
 
 + [xiaorouji仓库](https://github.com/xiaorouji/openwrt-passwall)
 
-+ 谢谢 **kiddin9珠玉在前**[openwrt固件与插件下载](https://op.dllkids.xyz/op/firmware/)
++ [openwrt固件与插件下载](https://op.dllkids.xyz/op/firmware/)
 
 #### 使用
 一键命令
