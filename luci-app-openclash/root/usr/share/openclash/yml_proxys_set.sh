@@ -277,6 +277,11 @@ yml_servers_set()
    config_get "ports" "$section" "ports" ""
    config_get "hop_interval" "$section" "hop_interval" ""
    config_get "max_open_streams" "$section" "max_open_streams" ""
+   config_get "obfs_password" "$section" "obfs_password" ""
+   config_get "packet_addr" "$section" "packet_addr" ""
+   config_get "client_fingerprint" "$section" "client_fingerprint" ""
+   config_get "ip_version" "$section" "ip_version" ""
+
    
    if [ "$enabled" = "0" ]; then
       return
@@ -336,6 +341,8 @@ yml_servers_set()
    if [ "$obfs" != "none" ] && [ -n "$obfs" ]; then
       if [ "$obfs" = "websocket" ]; then
          obfss="plugin: v2ray-plugin"
+      elif [ "$obfs" = "shadow-tls" ]; then
+        obfss="plugin: shadow-tls"
       else
          obfss="plugin: obfs"
       fi
@@ -398,12 +405,28 @@ EOF
 cat >> "$SERVER_FILE" <<-EOF
     $obfss
     plugin-opts:
+EOF
+    if [ "$obfs" != "shadow-tls" ]; then
+cat >> "$SERVER_FILE" <<-EOF
       mode: $obfs
 EOF
+    fi
         if [ ! -z "$host" ]; then
 cat >> "$SERVER_FILE" <<-EOF
       host: "$host"
 EOF
+        fi
+        if [  "$obfss" = "plugin: shadow-tls" ]; then
+           if [ ! -z "$obfs_password" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+      password: $obfs_password
+EOF
+           fi
+           if [ ! -z "$fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+      fingerprint: "$fingerprint"
+EOF
+           fi
         fi
         if [  "$obfss" = "plugin: v2ray-plugin" ]; then
            if [ ! -z "$tls" ]; then
@@ -430,6 +453,11 @@ EOF
 cat >> "$SERVER_FILE" <<-EOF
       headers:
         custom: $custom
+EOF
+           fi
+           if [ ! -z "$fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+      fingerprint: "$fingerprint"
 EOF
            fi
         fi
@@ -509,6 +537,16 @@ EOF
       if [ ! -z "$tls" ]; then
 cat >> "$SERVER_FILE" <<-EOF
     tls: $tls
+EOF
+      fi
+      if [ ! -z "$fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    fingerprint: "$fingerprint"
+EOF
+      fi
+      if [ ! -z "$client_fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    client-fingerprint: "$client_fingerprint"
 EOF
       fi
       if [ ! -z "$servername" ] && [ "$tls" = "true" ]; then
@@ -636,7 +674,7 @@ EOF
       fi
       if [ -n "$disable_sni" ]; then
 cat >> "$SERVER_FILE" <<-EOF
-    disable-sni: "$disable_sni"
+    disable-sni: $disable_sni
 EOF
       fi
       if [ -n "$reduce_rtt" ]; then
@@ -811,7 +849,7 @@ EOF
       fi
       if [ -n "$fingerprint" ]; then
 cat >> "$SERVER_FILE" <<-EOF
-    fingerprint: $fingerprint
+    fingerprint: "$fingerprint"
 EOF
       fi
       if [ -n "$ports" ]; then
@@ -840,6 +878,21 @@ cat >> "$SERVER_FILE" <<-EOF
     udp: $udp
 EOF
       fi
+      if [ ! -z "$xudp" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    xudp: $xudp
+EOF
+      fi
+      if [ ! -z "$packet_addr" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    packet-addr: $packet_addr
+EOF
+      fi
+      if [ ! -z "$packet_encoding" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    packet-encoding: "$packet_encoding"
+EOF
+      fi
       if [ ! -z "$skip_cert_verify" ]; then
 cat >> "$SERVER_FILE" <<-EOF
     skip-cert-verify: $skip_cert_verify
@@ -848,6 +901,16 @@ EOF
       if [ ! -z "$tls" ]; then
 cat >> "$SERVER_FILE" <<-EOF
     tls: $tls
+EOF
+      fi
+      if [ ! -z "$fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    fingerprint: "$fingerprint"
+EOF
+      fi
+      if [ ! -z "$client_fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    client-fingerprint: "$client_fingerprint"
 EOF
       fi
       if [ ! -z "$servername" ]; then
@@ -925,6 +988,11 @@ cat >> "$SERVER_FILE" <<-EOF
     tls: $tls
 EOF
       fi
+      if [ ! -z "$fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    fingerprint: "$fingerprint"
+EOF
+      fi
    fi
 
 #http
@@ -998,6 +1066,16 @@ cat >> "$SERVER_FILE" <<-EOF
     skip-cert-verify: $skip_cert_verify
 EOF
    fi
+   if [ ! -z "$fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  fingerprint: "$fingerprint"
+EOF
+   fi
+   if [ ! -z "$client_fingerprint" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+  client-fingerprint: "$client_fingerprint"
+EOF
+   fi
    if [ ! -z "$grpc_service_name" ]; then
 cat >> "$SERVER_FILE" <<-EOF
     network: grpc
@@ -1047,6 +1125,13 @@ cat >> "$SERVER_FILE" <<-EOF
       host: "$host"
 EOF
    fi
+   fi
+
+#ip_version
+   if [ ! -z "$ip_version" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    ip-version: "$ip_version"
+EOF
    fi
    
 #interface-name

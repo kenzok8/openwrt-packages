@@ -61,6 +61,7 @@ local encrypt_methods_ssr = {
 local securitys = {
 	"auto",
 	"none",
+	"zero",
 	"aes-128-gcm",
 	"chacha20-poly1305"
 }
@@ -362,28 +363,11 @@ o:depends("type", "wireguard")
 
 o = s:option(ListValue, "xudp", translate("XUDP Enable")..translate("(Only Meta Core)"))
 o.rmempty = true
-o.default = "false"
+o.default = "true"
 o:value("true")
 o:value("false")
 o:depends({type = "vmess", udp = "true"})
-
-o = s:option(Value, "packet_encoding", translate("Packet-Encoding")..translate("(Only Meta Core)"))
-o.rmempty = true
-o:depends("type", "vmess")
-
-o = s:option(ListValue, "global_padding", translate("Global-Padding")..translate("(Only Meta Core)"))
-o.rmempty = true
-o.default = "false"
-o:value("true")
-o:value("false")
-o:depends("type", "vmess")
-
-o = s:option(ListValue, "authenticated_length", translate("Authenticated-Length")..translate("(Only Meta Core)"))
-o.rmempty = true
-o.default = "false"
-o:value("true")
-o:value("false")
-o:depends("type", "vmess")
+o:depends({type = "vless", udp = "true"})
 
 o = s:option(ListValue, "obfs", translate("obfs-mode"))
 o.rmempty = true
@@ -392,6 +376,7 @@ o:value("none")
 o:value("tls")
 o:value("http")
 o:value("websocket", translate("websocket (ws)"))
+o:value("shadow-tls", translate("shadow-tls")..translate("(Only Meta Core)"))
 o:depends("type", "ss")
 
 o = s:option(ListValue, "obfs_snell", translate("obfs-mode"))
@@ -435,8 +420,13 @@ o.rmempty = true
 o:depends("obfs", "tls")
 o:depends("obfs", "http")
 o:depends("obfs", "websocket")
+o:depends("obfs", "shadow-tls")
 o:depends("obfs_snell", "tls")
 o:depends("obfs_snell", "http")
+
+o = s:option(Value, "obfs_password", translate("obfs-password"))
+o.rmempty = true
+o:depends("obfs", "shadow-tls")
 
 -- vmess路径
 o = s:option(Value, "path", translate("path"))
@@ -514,7 +504,7 @@ o:depends("type", "hysteria")
 o:depends("type", "tuic")
 
 -- [[ TLS ]]--
-o = s:option(ListValue, "tls", translate("tls"))
+o = s:option(ListValue, "tls", translate("TLS"))
 o.rmempty = true
 o.default = "false"
 o:value("true")
@@ -671,15 +661,75 @@ o:value("false")
 o.default = "false"
 o:depends("type", "hysteria")
 
--- [[ fingerprint ]]--
-o = s:option(Value, "fingerprint", translate("Fingerprint"))
-o.rmempty = true
-o:depends("type", "hysteria")
-
+-- [[ hop_interval ]]--
 o = s:option(Value, "hop_interval", translate("Hop Interval"))
 o.rmempty = true
 o.default = "10"
 o:depends("type", "hysteria")
+
+o = s:option(ListValue, "packet-addr", translate("Packet-Addr")..translate("(Only Meta Core)"))
+o.rmempty = true
+o.default = "true"
+o:value("true")
+o:value("false")
+o:depends({type = "vless", xudp = "false"})
+
+o = s:option(Value, "packet_encoding", translate("Packet-Encoding")..translate("(Only Meta Core)"))
+o.rmempty = true
+o:depends("type", "vmess")
+o:depends("type", "vless")
+
+o = s:option(ListValue, "global_padding", translate("Global-Padding")..translate("(Only Meta Core)"))
+o.rmempty = true
+o.default = "false"
+o:value("true")
+o:value("false")
+o:depends("type", "vmess")
+
+o = s:option(ListValue, "authenticated_length", translate("Authenticated-Length")..translate("(Only Meta Core)"))
+o.rmempty = true
+o.default = "false"
+o:value("true")
+o:value("false")
+o:depends("type", "vmess")
+
+-- [[ fingerprint ]]--
+o = s:option(Value, "fingerprint", translate("Fingerprint")..translate("(Only Meta Core)"))
+o.rmempty = true
+o:depends("type", "hysteria")
+o:depends("type", "socks5")
+o:depends("type", "trojan")
+o:depends("type", "vless")
+o:depends({type = "ss", obfs = "websocket"})
+o:depends({type = "ss", obfs = "shadow-tls"})
+o:depends({type = "vmess", obfs_vmess = "websocket"})
+o:depends({type = "vmess", obfs_vmess = "h2"})
+o:depends({type = "vmess", obfs_vmess = "grpc"})
+
+-- [[ client-fingerprint ]]--
+o = s:option(ListValue, "client_fingerprint", translate("Client Fingerprint")..translate("(Only Meta Core)"))
+o.rmempty = true
+o:value("random")
+o:value("chrome")
+o:value("firefox")
+o:value("safari")
+o.default = "random"
+o:depends("type", "vless")
+o:depends({type = "trojan", obfs_vmess = "grpc"})
+o:depends({type = "vmess", obfs_vmess = "websocket"})
+o:depends({type = "vmess", obfs_vmess = "http"})
+o:depends({type = "vmess", obfs_vmess = "h2"})
+o:depends({type = "vmess", obfs_vmess = "grpc"})
+
+-- [[ client-fingerprint ]]--
+o = s:option(ListValue, "ip_version", translate("IP Version")..translate("(Only Meta Core)"))
+o.rmempty = true
+o:value("dual")
+o:value("ipv4")
+o:value("ipv4-prefer")
+o:value("ipv6")
+o:value("ipv6-prefer")
+o.default = "dual"
 
 -- [[ interface-name ]]--
 o = s:option(Value, "interface_name", translate("interface-name"))
@@ -712,7 +762,6 @@ o.inputtitle = translate("Commit Settings")
 o.inputstyle = "apply"
 o.write = function()
    m.uci:commit(openclash)
-   sys.call("/usr/share/openclash/cfg_servers_address_fake_filter.sh &")
    luci.http.redirect(m.redirect)
 end
 
