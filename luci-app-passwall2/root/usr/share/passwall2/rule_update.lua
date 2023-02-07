@@ -6,6 +6,7 @@ local luci = luci
 local ucic = luci.model.uci.cursor()
 local jsonc = require "luci.jsonc"
 local name = 'passwall2'
+local api = require "luci.model.cbi.passwall2.api.api"
 local arg1 = arg[1]
 
 local reboot = 0
@@ -41,16 +42,18 @@ end
 
 -- curl
 local function curl(url, file)
-	local cmd = "curl -skL -w %{http_code} --retry 3 --connect-timeout 3 '" .. url .. "'"
+	local args = {
+		"-sKL", "-w %{http_code}", "--retry 3", "--connect-timeout 3"
+	}
 	if file then
-		cmd = cmd .. " -o " .. file
+		args[#args + 1] = "-o " .. file
 	end
-	local stdout = luci.sys.exec(cmd)
+	local result = api.curl_logic(url, nil, args)
 
 	if file then
-		return tonumber(trim(stdout))
+		return tonumber(trim(result))
 	else
-		return trim(stdout)
+		return trim(result)
 	end
 end
 

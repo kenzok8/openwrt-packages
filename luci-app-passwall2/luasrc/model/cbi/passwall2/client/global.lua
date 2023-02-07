@@ -12,23 +12,6 @@ for k, e in ipairs(api.get_valid_nodes()) do
     nodes_table[#nodes_table + 1] = e
 end
 
-local socks_table = {}
-uci:foreach(appname, "socks", function(s)
-    if s.enabled == "1" and s.node then
-        local id, remarks
-        for k, n in pairs(nodes_table) do
-            if (s.node == n.id) then
-                remarks = n["remark"]; break
-            end
-        end
-        id = "127.0.0.1" .. ":" .. s.port
-        socks_table[#socks_table + 1] = {
-            id = id,
-            remarks = id .. " - " .. (remarks or translate("Misconfigured"))
-        }
-    end
-end)
-
 local doh_validate = function(self, value, t)
     if value ~= "" then
         local flag = 0
@@ -147,6 +130,18 @@ end
 o = s:taboption("Main", Flag, "localhost_proxy", translate("Localhost Proxy"), translate("When selected, localhost can transparent proxy."))
 o.default = "1"
 o.rmempty = false
+
+node_socks_port = s:taboption("Main", Value, "node_socks_port", translate("Node") .. " Socks " .. translate("Listen Port"))
+node_socks_port.default = 1070
+node_socks_port.datatype = "port"
+
+--[[
+if has_v2ray or has_xray then
+    node_http_port = s:taboption("Main", Value, "node_http_port", translate("Node") .. " HTTP " .. translate("Listen Port") .. " " .. translate("0 is not use"))
+    node_http_port.default = 0
+    node_http_port.datatype = "port"
+end
+]]--
 
 s:tab("DNS", translate("DNS"))
 
@@ -273,7 +268,7 @@ o.rmempty = false
 
 socks_node = s:option(ListValue, "node", translate("Socks Node"))
 
-local n = 0
+local n = 1
 uci:foreach(appname, "socks", function(s)
     if s[".name"] == section then
         return false
