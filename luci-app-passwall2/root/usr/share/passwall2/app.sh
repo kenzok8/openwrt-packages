@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (C) 2022 xiaorouji
+# Copyright (C) 2022-2023 xiaorouji
 
 . $IPKG_INSTROOT/lib/functions.sh
 . $IPKG_INSTROOT/lib/functions/service.sh

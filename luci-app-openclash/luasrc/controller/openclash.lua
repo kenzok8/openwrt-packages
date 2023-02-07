@@ -30,7 +30,6 @@ function index()
 	entry({"admin", "services", "openclash", "update_ma"},call("action_update_ma"))
 	entry({"admin", "services", "openclash", "opupdate"},call("action_opupdate"))
 	entry({"admin", "services", "openclash", "coreupdate"},call("action_coreupdate"))
-	entry({"admin", "services", "openclash", "ping"}, call("act_ping"))
 	entry({"admin", "services", "openclash", "flush_fakeip_cache"}, call("action_flush_fakeip_cache"))
 	entry({"admin", "services", "openclash", "download_rule"}, call("action_download_rule"))
 	entry({"admin", "services", "openclash", "download_netflix_domains"}, call("action_download_netflix_domains"))
@@ -60,6 +59,7 @@ function index()
 	entry({"admin", "services", "openclash", "toolbar_show"}, call("action_toolbar_show"))
 	entry({"admin", "services", "openclash", "toolbar_show_sys"}, call("action_toolbar_show_sys"))
 	entry({"admin", "services", "openclash", "diag_connection"}, call("action_diag_connection"))
+	entry({"admin", "services", "openclash", "diag_dns"}, call("action_diag_dns"))
 	entry({"admin", "services", "openclash", "gen_debug_logs"}, call("action_gen_debug_logs"))
 	entry({"admin", "services", "openclash", "log_level"}, call("action_log_level"))
 	entry({"admin", "services", "openclash", "switch_log"}, call("action_switch_log"))
@@ -369,6 +369,9 @@ function action_restore_config()
 	luci.sys.call("/etc/init.d/openclash stop >/dev/null 2>&1")
 	luci.sys.call("cp '/usr/share/openclash/backup/openclash' '/etc/config/openclash' >/dev/null 2>&1 &")
 	luci.sys.call("cp /usr/share/openclash/backup/openclash_custom* /etc/openclash/custom/ >/dev/null 2>&1 &")
+	luci.sys.call("cp /usr/share/openclash/backup/openclash_force_sniffing* /etc/openclash/custom/ >/dev/null 2>&1 &")
+	luci.sys.call("cp /usr/share/openclash/backup/openclash_sniffing* /etc/openclash/custom/ >/dev/null 2>&1 &")
+	luci.sys.call("cp /usr/share/openclash/backup/yml_change.sh /usr/share/openclash/yml_change.sh >/dev/null 2>&1 &")
 	luci.sys.call("rm -rf /etc/openclash/history/* >/dev/null 2>&1 &")
 	luci.http.redirect(luci.dispatcher.build_url('admin/services/openclash/settings'))
 end
@@ -1088,14 +1091,6 @@ function action_update_geosite()
 	return luci.sys.call("/usr/share/openclash/openclash_geosite.sh >/dev/null 2>&1")
 end
 
-function act_ping()
-	local e={}
-	e.index=luci.http.formvalue("index")
-	e.ping=luci.sys.exec("ping -c 1 -W 1 %q 2>&1 | grep -o 'time=[0-9]*.[0-9]' | awk -F '=' '{print$2}'"%luci.http.formvalue("domain"))
-	luci.http.prepare_content("application/json")
-	luci.http.write_json(e)
-end
-
 function action_download_rule()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
@@ -1267,6 +1262,26 @@ function action_diag_connection()
 	local addr = luci.http.formvalue("addr")
 	if addr and (datatype.hostname(addr) or datatype.ipaddr(addr)) then
 		local cmd = string.format("/usr/share/openclash/openclash_debug_getcon.lua %s", addr)
+		luci.http.prepare_content("text/plain")
+		local util = io.popen(cmd)
+		if util and util ~= "" then
+			while true do
+				local ln = util:read("*l")
+				if not ln then break end
+				luci.http.write(ln)
+				luci.http.write("\n")
+			end
+			util:close()
+		end
+		return
+	end
+	luci.http.status(500, "Bad address")
+end
+
+function action_diag_dns()
+	local addr = luci.http.formvalue("addr")
+	if addr and datatype.hostname(addr)then
+		local cmd = string.format("/usr/share/openclash/openclash_debug_dns.lua %s", addr)
 		luci.http.prepare_content("text/plain")
 		local util = io.popen(cmd)
 		if util and util ~= "" then
