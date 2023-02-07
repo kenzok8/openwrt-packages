@@ -668,18 +668,8 @@ bind_local:depends("type", "Xray")
 
 accept_lan = s:option(Flag, "accept_lan", translate("Accept LAN Access"), translate("When selected, it can accessed lan , this will not be safe!"))
 accept_lan.default = "0"
-accept_lan:depends({ type = "V2ray", protocol = "vmess" })
-accept_lan:depends({ type = "V2ray", protocol = "vless" })
-accept_lan:depends({ type = "V2ray", protocol = "http" })
-accept_lan:depends({ type = "V2ray", protocol = "socks" })
-accept_lan:depends({ type = "V2ray", protocol = "shadowsocks" })
-accept_lan:depends({ type = "V2ray", protocol = "trojan" })
-accept_lan:depends({ type = "Xray", protocol = "vmess" })
-accept_lan:depends({ type = "Xray", protocol = "vless" })
-accept_lan:depends({ type = "Xray", protocol = "http" })
-accept_lan:depends({ type = "Xray", protocol = "socks" })
-accept_lan:depends({ type = "Xray", protocol = "shadowsocks" })
-accept_lan:depends({ type = "Xray", protocol = "trojan" })
+accept_lan:depends("type", "V2ray")
+accept_lan:depends("type", "Xray")
 
 local nodes_table = {}
 for k, e in ipairs(api.get_valid_nodes()) do
@@ -695,6 +685,7 @@ outbound_node = s:option(ListValue, "outbound_node", translate("outbound node"))
 outbound_node:value("nil", translate("Close"))
 outbound_node:value("_socks", translate("Custom Socks"))
 outbound_node:value("_http", translate("Custom HTTP"))
+outbound_node:value("_iface", translate("Custom Interface") .. " (Only Support Xray)")
 for k, v in pairs(nodes_table) do outbound_node:value(v.id, v.remarks) end
 outbound_node.default = "nil"
 outbound_node:depends("type", "V2ray")
@@ -717,6 +708,10 @@ outbound_node_password = s:option(Value, "outbound_node_password", translate("Pa
 outbound_node_password.password = true
 outbound_node_password:depends("outbound_node", "_socks")
 outbound_node_password:depends("outbound_node", "_http")
+
+outbound_node_iface = s:option(Value, "outbound_node_iface", translate("Interface"))
+outbound_node_iface.default = "eth1"
+outbound_node_iface:depends("outbound_node", "_iface")
 
 log = s:option(Flag, "log", translate("Log"))
 log.default = "1"

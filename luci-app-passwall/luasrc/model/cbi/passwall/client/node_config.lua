@@ -123,8 +123,13 @@ protocol:value("trojan", translate("Trojan"))
 protocol:value("wireguard", translate("WireGuard"))
 protocol:value("_balancing", translate("Balancing"))
 protocol:value("_shunt", translate("Shunt"))
+protocol:value("_iface", translate("Custom Interface") .. " (Only Support Xray)")
 protocol:depends("type", "V2ray")
 protocol:depends("type", "Xray")
+
+iface = s:option(Value, "iface", translate("Interface"))
+iface.default = "eth1"
+iface:depends("protocol", "_iface")
 
 local nodes_table = {}
 for k, e in ipairs(api.get_valid_nodes()) do
@@ -445,7 +450,7 @@ timeout:depends("type", "SS")
 timeout:depends("type", "SS-Rust")
 timeout:depends("type", "SSR")
 
-tcp_fast_open = s:option(ListValue, "tcp_fast_open", translate("TCP Fast Open"), translate("Need node support required"))
+tcp_fast_open = s:option(ListValue, "tcp_fast_open", "TCP " .. translate("Fast Open"), translate("Need node support required"))
 tcp_fast_open:value("false")
 tcp_fast_open:value("true")
 tcp_fast_open:depends("type", "SS")
@@ -454,6 +459,10 @@ tcp_fast_open:depends("type", "SSR")
 tcp_fast_open:depends("type", "Trojan")
 tcp_fast_open:depends("type", "Trojan-Plus")
 tcp_fast_open:depends("type", "Trojan-Go")
+
+fast_open = s:option(Flag, "fast_open", translate("Fast Open"))
+fast_open.default = "0"
+fast_open:depends("type", "Hysteria")
 
 ss_plugin = s:option(ListValue, "ss_plugin", translate("plugin"))
 ss_plugin:value("none", translate("none"))
