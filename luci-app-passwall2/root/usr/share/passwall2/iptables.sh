@@ -766,6 +766,11 @@ add_firewall_rule() {
 			$ip6t_m -A PSW2 $(comment "本机") -p tcp -i lo -j RETURN
 			$ip6t_m -A OUTPUT -p tcp -j PSW2_OUTPUT
 		fi
+		
+		for iface in $IFACES; do
+			$ipt_n -I PSW2_OUTPUT -o $iface -p tcp -j RETURN
+			$ipt_m -I PSW2_OUTPUT -o $iface -p tcp -j RETURN
+		done
 	fi
 
 	# 过滤Socks节点
@@ -816,6 +821,11 @@ add_firewall_rule() {
 			$ip6t_m -A PSW2 $(comment "本机") -p udp -i lo -j RETURN
 			$ip6t_m -A OUTPUT -p udp -j PSW2_OUTPUT
 		fi
+		
+		for iface in $IFACES; do
+			$ipt_n -I PSW2_OUTPUT -o $iface -p udp -j RETURN
+			$ipt_m -I PSW2_OUTPUT -o $iface -p udp -j RETURN
+		done
 	fi
 
 	$ipt_m -A PSW2 -p udp --dport 53 -j RETURN

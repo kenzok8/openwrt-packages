@@ -8,7 +8,6 @@ jsonc = require "luci.jsonc"
 i18n = require "luci.i18n"
 
 appname = "passwall2"
-curl = "/usr/bin/curl"
 curl_args = {"-skfL", "--connect-timeout 3", "--retry 3", "-m 60"}
 command_timeout = 300
 LEDE_BOARD = nil
@@ -29,6 +28,39 @@ function base64Decode(text)
 	else
 		return raw
 	end
+end
+
+function curl_base(url, file, args)
+    if not args then args = {} end
+    if file then
+        args[#args + 1] = "-o " .. file
+    end
+	local cmd = string.format('curl %s "%s"', table_join(args), url)
+    if file then
+        return luci.sys.call(cmd .. " > /dev/null")
+    else
+        return trim(luci.sys.exec(cmd))
+    end
+end
+
+function curl_proxy(url, file, args)
+    --使用代理
+    local socks_server = luci.sys.exec("[ -f /tmp/etc/passwall2/global_SOCKS_server ] && echo -n $(cat /tmp/etc/passwall2/global_SOCKS_server) || echo -n ''")
+    if socks_server ~= "" then
+        if not args then args = {} end
+        local tmp_args = clone(args)
+        tmp_args[#tmp_args + 1] = "-x socks5h://" .. socks_server
+        return curl_base(url, file, tmp_args)
+    end
+    return nil
+end
+
+function curl_logic(url, file, args)
+    local result = curl_proxy(url, file, args)
+    if not result then
+        result = curl_base(url, file, args)
+    end
+    return result
 end
 
 function url(...)
@@ -92,7 +124,7 @@ function strToTable(str)
 end
 
 function is_normal_node(e)
-    if e and e.type and e.protocol and (e.protocol == "_balancing" or e.protocol == "_shunt") then
+    if e and e.type and e.protocol and (e.protocol == "_balancing" or e.protocol == "_shunt" or e.protocol == "_iface") then
         return false
     end
     return true
@@ -202,7 +234,7 @@ function get_valid_nodes()
     uci:foreach(appname, "nodes", function(e)
         e.id = e[".name"]
         if e.type and e.remarks then
-            if e.protocol and (e.protocol == "_balancing" or e.protocol == "_shunt") then
+            if e.protocol and (e.protocol == "_balancing" or e.protocol == "_shunt" or e.protocol == "_iface") then
                 e["remark"] = "%s：[%s] " % {i18n.translatef(e.type .. e.protocol), e.remarks}
                 e["node_type"] = "special"
                 nodes[#nodes + 1] = e
@@ -239,7 +271,7 @@ end
 function get_full_node_remarks(n)
     local remarks = ""
     if n then
-        if n.protocol and (n.protocol == "_balancing" or n.protocol == "_shunt") then
+        if n.protocol and (n.protocol == "_balancing" or n.protocol == "_shunt" or n.protocol == "_iface") then
             remarks = "%s：[%s] " % {i18n.translatef(n.type .. n.protocol), n.remarks}
         else
             local type2 = n.type
@@ -427,6 +459,17 @@ function _unpack(t, i)
     if t[i] ~= nil then return t[i], _unpack(t, i + 1) end
 end
 
+function table_join(t, s)
+    if not s then
+        s = " "
+    end
+    local str = ""
+    for index, value in ipairs(t) do
+        str = str .. t[index] .. (index == #t and "" or s)
+    end
+    return str
+end
+
 function exec(cmd, args, writer, timeout)
     local os = require "os"
     local nixio = require "nixio"
@@ -557,7 +600,7 @@ end
 
 function get_api_json(url)
     local jsonc = require "luci.jsonc"
-    local json_content = luci.sys.exec(curl .. " " .. _unpack(curl_args) .. " " .. url)
+    local json_content = curl_logic(url, nil, curl_args)
     if json_content == "" then return {} end
     return jsonc.parse(json_content) or {}
 end

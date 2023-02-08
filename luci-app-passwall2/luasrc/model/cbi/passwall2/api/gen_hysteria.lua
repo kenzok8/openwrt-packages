@@ -41,6 +41,7 @@ local config = {
     recv_window_conn = (node.hysteria_recv_window_conn) and tonumber(node.hysteria_recv_window_conn) or nil,
     recv_window = (node.hysteria_recv_window) and tonumber(node.hysteria_recv_window) or nil,
     disable_mtu_discovery = (node.hysteria_disable_mtu_discovery) and true or false,
+    fast_open = (node.fast_open == "1") and true or false,
     socks5 = (local_socks_address and local_socks_port) and {
         listen = local_socks_address .. ":" .. local_socks_port,
         timeout = 300,
