@@ -230,12 +230,15 @@ function store_action(param)
             local pkg
             for pkg in itr do
                 if pkg:match("^.*%.json$") then
-                    local meta = json_parse(fs.readfile(metadir .. "/" .. pkg))
-                    local metapkg = metapkgpre .. meta.name
-                    local status = ipkg.status(metapkg)
-                    if next(status) ~= nil then
-                        meta.time = tonumber(status[metapkg]["Installed-Time"])
-                        data[#data+1] = meta
+                    local metadata = fs.readfile(metadir .. "/" .. pkg)
+                    if metadata ~= nil then
+                        local meta = json_parse(metadata)
+                        local metapkg = metapkgpre .. meta.name
+                        local status = ipkg.status(metapkg)
+                        if next(status) ~= nil then
+                            meta.time = tonumber(status[metapkg]["Installed-Time"])
+                            data[#data+1] = meta
+                        end
                     end
                 end
             end

@@ -924,7 +924,7 @@ start_redir() {
 
 start_socks() {
 	tcp_node_socks=1
-	tcp_node_socks_port=$(config_t_get global tcp_node_socks_port 1070)
+	tcp_node_socks_port=$(get_new_port $(config_t_get global tcp_node_socks_port 1070))
 	tcp_node_http_port=$(config_t_get global tcp_node_http_port 0)
 	[ "$tcp_node_http_port" != "0" ] && tcp_node_http=1
 	[ "$SOCKS_ENABLED" = "1" ] && {
@@ -1079,7 +1079,7 @@ start_dns() {
 			local config_file=$TMP_PATH/DNS.json
 			local log_file=$TMP_PATH/DNS.log
 			local log_file=/dev/null
-			local _v2ray_args="config_file=$config_file log_file=$log_file"
+			local _v2ray_args="type=$DNS_MODE config_file=$config_file log_file=$log_file"
 			[ "${DNS_CACHE}" == "0" ] && _v2ray_args="${_v2ray_args} dns_cache=0"
 			_v2ray_args="${_v2ray_args} dns_query_strategy=${DNS_QUERY_STRATEGY}"
 			local _dns_client_ip=$(config_t_get global dns_client_ip)
