@@ -171,6 +171,19 @@ o:value("https://223.5.5.5/dns-query", "AliDNS")
 o.validate = doh_validate
 o:depends("direct_dns_protocol", "doh")
 
+o = s:taboption("DNS", Value, "direct_dns_client_ip", translate("Direct DNS EDNS Client Subnet"))
+o.description = translate("Notify the DNS server when the DNS query is notified, the location of the client (cannot be a private IP address).") .. "<br />" ..
+                translate("This feature requires the DNS server to support the Edns Client Subnet (RFC7871).")
+o.datatype = "ipaddr"
+o:depends("direct_dns_protocol", "tcp")
+o:depends("direct_dns_protocol", "doh")
+
+o = s:taboption("DNS", ListValue, "direct_dns_query_strategy", translate("Direct Query Strategy"))
+o.default = "UseIP"
+o:value("UseIP")
+o:value("UseIPv4")
+o:value("UseIPv6")
+
 o = s:taboption("DNS", ListValue, "remote_dns_protocol", translate("Remote DNS Protocol"))
 o:value("tcp", "TCP")
 o:value("doh", "DoH")
@@ -217,11 +230,11 @@ o.datatype = "ipaddr"
 o:depends("remote_dns_protocol", "tcp")
 o:depends("remote_dns_protocol", "doh")
 
-o = s:taboption("DNS", ListValue, "dns_query_strategy", translate("Query Strategy"))
+o = s:taboption("DNS", ListValue, "remote_dns_query_strategy", translate("Remote Query Strategy"))
 o.default = "UseIPv4"
 o:value("UseIP")
 o:value("UseIPv4")
---o:value("UseIPv6")
+o:value("UseIPv6")
 
 hosts = s:taboption("DNS", TextValue, "dns_hosts", translate("Domain Override"))
 hosts.rows = 5

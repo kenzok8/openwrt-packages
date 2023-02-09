@@ -19,19 +19,10 @@ local local_http_username = var["-local_http_username"]
 local local_http_password = var["-local_http_password"]
 local dns_listen_port = var["-dns_listen_port"]
 local dns_query_strategy = var["-dns_query_strategy"]
-local direct_dns_server = var["-direct_dns_server"]
 local direct_dns_port = var["-direct_dns_port"]
 local direct_dns_udp_server = var["-direct_dns_udp_server"]
-local direct_dns_tcp_server = var["-direct_dns_tcp_server"]
-local direct_dns_doh_url = var["-direct_dns_doh_url"]
-local direct_dns_doh_host = var["-direct_dns_doh_host"]
-local remote_dns_server = var["-remote_dns_server"]
 local remote_dns_port = var["-remote_dns_port"]
 local remote_dns_udp_server = var["-remote_dns_udp_server"]
-local remote_dns_tcp_server = var["-remote_dns_tcp_server"]
-local remote_dns_doh_url = var["-remote_dns_doh_url"]
-local remote_dns_doh_host = var["-remote_dns_doh_host"]
-local remote_dns_client_ip = var["-remote_dns_client_ip"]
 local remote_dns_fake = var["-remote_dns_fake"]
 local dns_cache = var["-dns_cache"]
 local dns_direct_domains = {}
@@ -595,7 +586,7 @@ if true then
     end
 end
 
-if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
+if remote_dns_udp_server or remote_dns_fake then
     local rules = {}
     local _remote_dns_proto
 
@@ -613,7 +604,6 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
         disableFallback = true,
         disableFallbackIfMatch = true,
         servers = {},
-        clientIp = (remote_dns_client_ip and remote_dns_client_ip ~= "") and remote_dns_client_ip or nil,
         queryStrategy = (dns_query_strategy and dns_query_strategy ~= "") and dns_query_strategy or "UseIPv4"
     }
 
@@ -652,25 +642,19 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
             _remote_dns.address = remote_dns_udp_server
             _remote_dns.port = tonumber(remote_dns_port) or 53
             _remote_dns_proto = "udp"
-        end
 
-        if remote_dns_tcp_server then
-            _remote_dns.address = remote_dns_tcp_server
-            _remote_dns.port = tonumber(remote_dns_port) or 53
-            _remote_dns_proto = "tcp"
-        end
-
-        if remote_dns_doh_url and remote_dns_doh_host then
-            if remote_dns_server and remote_dns_doh_host ~= remote_dns_server and not api.is_ip(remote_dns_doh_host) then
-                dns.hosts[remote_dns_doh_host] = remote_dns_server
-            end
-            _remote_dns.address = remote_dns_doh_url
-            _remote_dns.port = tonumber(remote_dns_port) or 443
-            _remote_dns_proto = "tcp"
+            table.insert(routing.rules, 1, {
+                type = "field",
+                ip = {
+                    remote_dns_udp_server
+                },
+                port = tonumber(remote_dns_port) or 53,
+                network = "udp",
+                outboundTag = "direct"
+            })
         end
 
         if remote_dns_fake then
-            remote_dns_server = "1.1.1.1"
             fakedns = {}
             fakedns[#fakedns + 1] = {
                 ipPool = "198.18.0.0/16",
@@ -714,19 +698,6 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
             })
         end
 
-        if direct_dns_tcp_server then
-            _direct_dns.address = direct_dns_tcp_server:gsub("tcp://", "tcp+local://")
-            _direct_dns.port = tonumber(direct_dns_port) or 53
-        end
-
-        if direct_dns_doh_url and direct_dns_doh_host then
-            if direct_dns_server and direct_dns_doh_host ~= direct_dns_server and not api.is_ip(direct_dns_doh_host) then
-                dns.hosts[direct_dns_doh_host] = direct_dns_server
-            end
-            _direct_dns.address = direct_dns_doh_url:gsub("https://", "https+local://")
-            _direct_dns.port = tonumber(direct_dns_port) or 443
-        end
-
         table.insert(dns.servers, _direct_dns)
     end
 
@@ -737,7 +708,7 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
             protocol = "dokodemo-door",
             tag = "dns-in",
             settings = {
-                address = remote_dns_server or "1.1.1.1",
+                address = "1.1.1.1",
                 port = 53,
                 network = "tcp,udp"
             }
@@ -747,7 +718,7 @@ if remote_dns_server or remote_dns_doh_url or remote_dns_fake then
             tag = "dns-out",
             protocol = "dns",
             settings = {
-                address = remote_dns_server or "1.1.1.1",
+                address = "1.1.1.1",
                 port = tonumber(remote_dns_port) or 53,
                 network = _remote_dns_proto or "tcp",
             }

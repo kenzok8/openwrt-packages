@@ -67,8 +67,10 @@ plugins:
   - tag: cache
     type: cache
     args:
-      size: 200000
+      size: 204800
       lazy_cache_ttl: 259200
+      dump_file: "/etc/mosdns/rule/cache.dump"
+      dump_interval: 43200
 
   # 转发至本地服务器
   - tag: forward_local

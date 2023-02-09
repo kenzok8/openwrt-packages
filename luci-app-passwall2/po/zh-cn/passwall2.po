@@ -112,6 +112,9 @@ msgstr "直连 DNS"
 msgid "Direct DNS DoH"
 msgstr "直连 DNS DoH"
 
+msgid "Direct DNS EDNS Client Subnet"
+msgstr "直连 DNS EDNS Client Subnet"
+
 msgid "Remote DNS Protocol"
 msgstr "远程 DNS 协议"
 
@@ -136,8 +139,11 @@ msgstr "用于 DNS 查询时通知 DNS 服务器，客户端所在的地理位�
 msgid "This feature requires the DNS server to support the Edns Client Subnet (RFC7871)."
 msgstr "此功能需要 DNS 服务器支持 EDNS Client Subnet（RFC7871）。"
 
-msgid "Query Strategy"
-msgstr "查询策略"
+msgid "Direct Query Strategy"
+msgstr "直连查询策略"
+
+msgid "Remote Query Strategy"
+msgstr "远程查询策略"
 
 msgid "Domain Override"
 msgstr "域名重写"
