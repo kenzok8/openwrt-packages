@@ -84,14 +84,15 @@ if [[ -s "${AMLOGIC_SOC_FILE}" ]]; then
     source "${AMLOGIC_SOC_FILE}" 2>/dev/null
     PLATFORM="${PLATFORM}"
     SOC="${SOC}"
+    BOARD="${BOARD}"
 else
     tolog "${AMLOGIC_SOC_FILE} file is missing!" "1"
 fi
-if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${SOC}" ]]; then
-    tolog "Missing [ PLATFORM ] value in ${AMLOGIC_SOC_FILE} file." "1"
+if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${SOC}" || -z "${BOARD}" ]]; then
+    tolog "Missing [ PLATFORM / SOC / BOARD ] value in ${AMLOGIC_SOC_FILE} file." "1"
 fi
 
-tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
+tolog "PLATFORM: [ ${PLATFORM} ], Box: [ ${SOC}_${BOARD} ], Use in [ ${EMMC_NAME} ]"
 sleep 2
 
 # 01. Query local version information
@@ -134,7 +135,7 @@ if [[ "${server_firmware_url}" == http* ]]; then
     server_firmware_url="${server_firmware_url#*com\/}"
 fi
 
-firmware_download_url="https:.*${releases_tag_keywords}.*_${SOC}_.*${main_line_version}.*${firmware_suffix}"
+firmware_download_url="https:.*${releases_tag_keywords}.*_${BOARD}_.*${main_line_version}.*${firmware_suffix}"
 firmware_sha256sums_download_url="https:.*${releases_tag_keywords}.*sha256sums"
 
 # 02. Check Updated
@@ -201,7 +202,7 @@ download_firmware() {
 
     firmware_releases_path="$(cat ${github_api_openwrt} | sed -n "${download_firmware_line}p" | grep "browser_download_url" | grep -o "${firmware_download_url}" | head -n 1)"
     # Download to local rename
-    firmware_download_name="openwrt_${SOC}_k${main_line_version}_github${firmware_suffix}"
+    firmware_download_name="openwrt_${SOC}_${BOARD}_k${main_line_version}_github${firmware_suffix}"
     # The name in the github.com releases
     firmware_download_oldname="${firmware_releases_path##*/}"
     firmware_download_oldname="${firmware_download_oldname//%2B/+}"

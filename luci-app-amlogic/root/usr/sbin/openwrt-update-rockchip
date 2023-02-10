@@ -55,6 +55,13 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R68S")" != "" ]]; then
         MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
     fi
     SOC="r68s"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H66K Board")" != "" ]]; then
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-opc-h66k.dtb"
+    fi
+    SOC="h66k"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H68K Board")" != "" ]]; then
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
@@ -475,7 +482,7 @@ config mount
         option enabled '1'
         option enabled_fsck '0'
         option fstype 'ext4'
-                
+
 EOF
 (
     cd etc/rc.d
@@ -633,12 +640,12 @@ sed -e '/rootdev=/d' -i armbianEnv.txt
 sed -e '/rootfstype=/d' -i armbianEnv.txt
 sed -e '/rootflags=/d' -i armbianEnv.txt
 case $SOC in
-    l1pro|beikeyun)
-        echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-	;;
-    *)
-        echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-	;;
+l1pro | beikeyun)
+    echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+    ;;
+*)
+    echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+    ;;
 esac
 cat >>armbianEnv.txt <<EOF
 rootdev=UUID=${NEW_ROOT_UUID}
@@ -654,6 +661,7 @@ umount -f ${P1} ${P2} 2>/dev/null
 losetup -D 2>/dev/null
 rmdir ${P1} ${P2} 2>/dev/null
 rm -f ${IMG_NAME} 2>/dev/null
+rm -f sha256sums 2>/dev/null
 sync
 
 echo "Successfully updated, automatic restarting..."

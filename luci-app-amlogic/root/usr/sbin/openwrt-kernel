@@ -307,7 +307,8 @@ update_kernel() {
     echo -e "(3/3) Unpacking [ modules-${kernel_name}.tar.gz ] done."
 
     # Delete kernel tmpfiles
-    rm -f ${P4_PATH}/*-${kernel_name}.tar.gz ${P4_PATH}/sha256sums
+    rm -f ${P4_PATH}/*-${kernel_name}.tar.gz
+    rm -f ${P4_PATH}/sha256sums
 
     sync && echo ""
 }
@@ -336,7 +337,6 @@ update_uboot() {
 
     # Update release file
     sed -i "s|^KERNEL_VERSION=.*|KERNEL_VERSION='${kernel_name}'|g" ${release_file} 2>/dev/null
-    sed -i "s|^K510=.*|K510='${K510}'|g" ${release_file} 2>/dev/null
     # Update banner file
     sed -i "s| Kernel.*| Kernel: ${kernel_name}|g" /etc/banner 2>/dev/null
 
