@@ -20432,6 +20432,7 @@ nitter.tedomum.net
 niu.moe
 niu95992.com
 niubowang.com
+niuc2.com
 niusnews.com
 niuxuewang.com
 nivod.tv
@@ -21468,6 +21469,8 @@ patelbrothersusa.com
 patentgold.net
 patenttruth.org
 patreon.com
+patreoncommunity.com
+patreonusercontent.com
 patriademarti.com
 patrickemaher.com
 paulsimon-music.com
@@ -25201,6 +25204,7 @@ springboardplatform.com
 springer.com
 springerlink.com
 springernature.com
+springwood.me
 sprinklesapp.com
 sprint.com
 sprint0.net
@@ -34194,6 +34198,7 @@ yong9191.com
 yoplay.com
 yoshisnewisland.com
 you-get.org
+you.com
 you2be.wzfou.me
 youassporn.com
 youav.com
@@ -34893,6 +34898,7 @@ full:licdn.cn.cdn20.com
 full:linear-abematv.akamaized.net
 full:link.theplatform.com
 full:linkedin.sc.omtrdc.net
+full:live-patreon-marketing.pantheonsite.io
 full:lolstatic-a.akamaihd.net
 full:mdn.mozillademos.org
 full:media-rockstargames-com.akamaized.net

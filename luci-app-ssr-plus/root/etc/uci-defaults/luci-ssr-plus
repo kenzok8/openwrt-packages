@@ -32,6 +32,7 @@ sed -i "s/option pdnsd_enable '3'/option pdnsd_enable '1'/g" /etc/config/shadows
 sed -i "s/option type 'vmess'/option type 'v2ray'\n\toption v2ray_protocol 'vmess'/g" /etc/config/shadowsocksr
 sed -i "s/option type 'vless'/option type 'v2ray'\n\toption v2ray_protocol 'vless'/g" /etc/config/shadowsocksr
 sed -i "s/option encrypt_method_v2ray_ss/option encrypt_method_ss/g" /etc/config/shadowsocksr
+sed -i "/option fingerprint 'disable'/d" /etc/config/shadowsocksr
 
 if [ -s "/etc/uwsgi/vassals/luci-webui.ini" ];then
 	limit=$(cat /etc/uwsgi/vassals/luci-webui.ini  | grep -Eo "limit-as.*"|grep -Eo "[0-9]+")
