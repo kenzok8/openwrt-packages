@@ -1196,4 +1196,7 @@ msgid "Buffer size for every connection (kB)"
 msgstr "每一个连接的缓冲区大小（kB）"
 
 msgid "Custom geoip URL"
-msgstr "自定义geo文件更新链接"
+msgstr "自定义geoip文件更新链接"
+
+msgid "Custom geosite URL"
+msgstr "自定义geosite文件更新链接"
