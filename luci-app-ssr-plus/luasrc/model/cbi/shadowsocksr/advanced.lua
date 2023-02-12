@@ -54,6 +54,7 @@ o.default = "https://fastly.jsdelivr.net/gh/YW5vbnltb3Vz/domain-list-community@r
 o = s:option(Value, "chnroute_url", translate("Chnroute Update url"))
 o:value("https://ispip.clang.cn/all_cn.txt", translate("Clang.CN"))
 o:value("https://ispip.clang.cn/all_cn_cidr.txt", translate("Clang.CN.CIDR"))
+o:value("https://fastly.jsdelivr.net/gh/gaoyifan/china-operator-ip@ip-lists/china.txt", translate("china-operator-ip"))
 o.default = "https://ispip.clang.cn/all_cn.txt"
 
 o = s:option(ListValue, "default_packet_encoding", translate("Default Packet Encoding"))
