@@ -1200,3 +1200,15 @@ msgstr "自定义geoip文件更新链接"
 
 msgid "Custom geosite URL"
 msgstr "自定义geosite文件更新链接"
+
+msgid "Handshake Timeout"
+msgstr "握手超时 "
+
+msgid "Idle Timeout"
+msgstr "空闲超时 "
+
+msgid "Hop Interval"
+msgstr "端口跳跃时间 "
+
+msgid "Additional ports for hysteria hop"
+msgstr "端口跳跃额外端口"
