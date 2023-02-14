@@ -236,7 +236,7 @@ load_acl() {
 							eval node_${node}_redir_port=$redir_port
 
 							local type=$(echo $(config_n_get $node type) | tr 'A-Z' 'a-z')
-							if [ -n "${type}" ] && ([ "${type}" = "v2ray" ] || [ "${type}" = "xray" ]); then
+							if [ -n "${type}" ]; then
 								config_file=$TMP_ACL_PATH/${node}_TCP_UDP_DNS_${redir_port}.json
 								dns_port=$(get_new_port $(expr $dns_port + 1))
 								local acl_socks_port=$(get_new_port $(expr $redir_port + $index))

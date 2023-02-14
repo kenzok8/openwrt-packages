@@ -273,12 +273,12 @@ run_v2ray() {
 	eval_set_val $@
 	local type=$(echo $(config_n_get $node type) | tr 'A-Z' 'a-z')
 	if [ "$type" != "v2ray" ] && [ "$type" != "xray" ]; then
-		local bin=$(first_type $(config_t_get global_app v2ray_file) v2ray)
+		local bin=$(first_type $(config_t_get global_app xray_file) xray)
 		if [ -n "$bin" ]; then
-			type="v2ray"
+			type="xray"
 		else
-			bin=$(first_type $(config_t_get global_app xray_file) xray)
-			[ -n "$bin" ] && type="xray"
+			bin=$(first_type $(config_t_get global_app v2ray_file) v2ray)
+			[ -n "$bin" ] && type="v2ray"
 		fi
 	fi
 	[ -z "$type" ] && return 1
