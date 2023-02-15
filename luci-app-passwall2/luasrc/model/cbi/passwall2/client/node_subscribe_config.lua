@@ -1,4 +1,4 @@
-local api = require "luci.model.cbi.passwall2.api.api"
+local api = require "luci.passwall2.api"
 local appname = api.appname
 local sys = api.sys
 local has_ss = api.is_finded("ss-redir")

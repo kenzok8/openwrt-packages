@@ -1,5 +1,5 @@
-module("luci.model.cbi.passwall.api.hysteria", package.seeall)
-local api = require "luci.model.cbi.passwall.api.api"
+module("luci.passwall2.hysteria", package.seeall)
+local api = require "luci.passwall2.api"
 local fs = api.fs
 local sys = api.sys
 local util = api.util
@@ -97,9 +97,9 @@ function to_move(file)
         }
     end
 
-    local flag = sys.call('pgrep -af "passwall/.*hysteria" >/dev/null')
+    local flag = sys.call('pgrep -af "passwall2/.*hysteria" >/dev/null')
     if flag == 0 then
-        sys.call("/etc/init.d/passwall stop")
+        sys.call("/etc/init.d/passwall2 stop")
     end
 
     local old_app_size = 0
@@ -121,7 +121,7 @@ function to_move(file)
 
     sys.call("/bin/rm -rf /tmp/hysteria_download.*")
     if flag == 0 then
-        sys.call("/etc/init.d/passwall restart >/dev/null 2>&1 &")
+        sys.call("/etc/init.d/passwall2 restart >/dev/null 2>&1 &")
     end
 
     if not result or not fs.access(app_path) then

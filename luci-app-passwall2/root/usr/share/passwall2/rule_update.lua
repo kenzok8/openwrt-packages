@@ -6,7 +6,7 @@ local luci = luci
 local ucic = luci.model.uci.cursor()
 local jsonc = require "luci.jsonc"
 local name = 'passwall2'
-local api = require "luci.model.cbi.passwall2.api.api"
+local api = require "luci.passwall2.api"
 local arg1 = arg[1]
 
 local reboot = 0
