@@ -3,9 +3,8 @@
 <h1 align="center"openwrt-packages</h1>
 <img src="https://img.shields.io/github/issues/kenzok8/openwrt-packages?color=green">
 <img src="https://img.shields.io/github/stars/kenzok8/openwrt-packages?color=yellow">
-<img src="https://img.shields.io/github/forks/kenzok8/openwrt-packages?color=orange">
-<img src="https://img.shields.io/github/license/kenzok8/openwrt-packages?color=ff69b4">
-<img src="https://img.shields.io/github/languages/code-size/kenzok8/openwrt-packages?color=blueviolet">
+<img src="https://img.shields.io/badge/github-forks-red">
+<img src="https://img.shields.io/badge/code-size-blueviolet">
 </div>
 
 <img src="https://v2.jinrishici.com/one.svg?font-size=24&spacing=2&color=Black">
