@@ -1,20 +1,20 @@
-module("luci.model.cbi.passwall.api.xray", package.seeall)
-local api = require "luci.model.cbi.passwall.api.api"
+module("luci.passwall.v2ray", package.seeall)
+local api = require "luci.passwall.api"
 local fs = api.fs
 local sys = api.sys
 local util = api.util
 local i18n = api.i18n
 
-local pre_release_url = "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=1"
-local release_url = "https://api.github.com/repos/XTLS/Xray-core/releases/latest"
+local pre_release_url = "https://api.github.com/repos/v2fly/v2ray-core/releases?per_page=1"
+local release_url = "https://api.github.com/repos/v2fly/v2ray-core/releases/latest"
 local api_url = pre_release_url
-local app_path = api.get_xray_path() or ""
+local app_path = api.get_v2ray_path() or ""
 
 function check_path()
     if app_path == "" then
         return {
             code = 1,
-            error = i18n.translatef("You did not fill in the %s path. Please save and apply then update manually.", "Xray")
+            error = i18n.translatef("You did not fill in the %s path. Please save and apply then update manually.", "V2ray")
         }
     end
     return {
@@ -45,7 +45,7 @@ function to_check(arch)
     if file_tree == "mips" then file_tree = "mips32" end
     if file_tree == "arm" then file_tree = "arm32" end
 
-    return api.common_to_check(api_url, api.get_xray_version(), "linux%-" .. file_tree .. (sub_version ~= "" and ".+" .. sub_version or ""))
+    return api.common_to_check(api_url, api.get_v2ray_version(), "linux%-" .. file_tree .. (sub_version ~= "" and ".+" .. sub_version or ""))
 end
 
 function to_download(url, size)
@@ -58,9 +58,9 @@ function to_download(url, size)
         return {code = 1, error = i18n.translate("Download url is required.")}
     end
 
-    sys.call("/bin/rm -f /tmp/xray_download.*")
+    sys.call("/bin/rm -f /tmp/v2ray_download.*")
 
-    local tmp_file = util.trim(util.exec("mktemp -u -t xray_download.XXXXXX"))
+    local tmp_file = util.trim(util.exec("mktemp -u -t v2ray_download.XXXXXX"))
 
     if size then
         local kb1 = api.get_free_space("/tmp")
@@ -69,7 +69,8 @@ function to_download(url, size)
         end
     end
 
-    result = api.exec(api.curl, {api._unpack(api.curl_args), "-o", tmp_file, url}, nil, api.command_timeout) == 0
+    local return_code, result = api.curl_logic(url, tmp_file, api.curl_args)
+    result = return_code == 0
 
     if not result then
         api.exec("/bin/rm", {"-f", tmp_file})
@@ -100,7 +101,7 @@ function to_extract(file, subfix)
         }
     end
 
-    sys.call("/bin/rm -rf /tmp/xray_extract.*")
+    sys.call("/bin/rm -rf /tmp/v2ray_extract.*")
 
     local new_file_size = api.get_file_space(file)
     local tmp_free_size = api.get_free_space("/tmp")
@@ -108,10 +109,10 @@ function to_extract(file, subfix)
         return {code = 1, error = i18n.translatef("%s not enough space.", "/tmp")}
     end
 
-    local tmp_dir = util.trim(util.exec("mktemp -d -t xray_extract.XXXXXX"))
+    local tmp_dir = util.trim(util.exec("mktemp -d -t v2ray_extract.XXXXXX"))
 
     local output = {}
-    api.exec("/usr/bin/unzip", {"-o", file, "xray", "-d", tmp_dir},
+    api.exec("/usr/bin/unzip", {"-o", file, "v2ray", "-d", tmp_dir},
              function(chunk) output[#output + 1] = chunk end)
 
     local files = util.split(table.concat(output))
@@ -128,22 +129,22 @@ function to_move(file)
     end
 
     if not file or file == "" then
-        sys.call("/bin/rm -rf /tmp/xray_extract.*")
+        sys.call("/bin/rm -rf /tmp/v2ray_extract.*")
         return {code = 1, error = i18n.translate("Client file is required.")}
     end
 
-    local bin_path = file .. "/xray"
+    local bin_path = file .. "/v2ray"
 
-    local new_version = api.get_xray_version(bin_path)
+    local new_version = api.get_v2ray_version(bin_path)
     if new_version == "" then
-        sys.call("/bin/rm -rf /tmp/xray_extract.*")
+        sys.call("/bin/rm -rf /tmp/v2ray_extract.*")
         return {
             code = 1,
             error = i18n.translate("The client file is not suitable for current device.")
         }
     end
 
-    local flag = sys.call('pgrep -af "passwall/.*xray" >/dev/null')
+    local flag = sys.call('pgrep -af "passwall/.*v2ray" >/dev/null')
     if flag == 0 then
         sys.call("/etc/init.d/passwall stop")
     end
@@ -158,14 +159,14 @@ function to_move(file)
     if final_dir_free_size > 0 then
         final_dir_free_size = final_dir_free_size + old_app_size
         if new_app_size > final_dir_free_size then
-            sys.call("/bin/rm -rf /tmp/xray_extract.*")
+            sys.call("/bin/rm -rf /tmp/v2ray_extract.*")
             return {code = 1, error = i18n.translatef("%s not enough space.", final_dir)}
         end
     end
 
     result = api.exec("/bin/mv", { "-f", bin_path, app_path }, nil, api.command_timeout) == 0
 
-    sys.call("/bin/rm -rf /tmp/xray_extract.*")
+    sys.call("/bin/rm -rf /tmp/v2ray_extract.*")
     if flag == 0 then
         sys.call("/etc/init.d/passwall restart >/dev/null 2>&1 &")
     end

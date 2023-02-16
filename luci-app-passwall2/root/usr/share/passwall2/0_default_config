@@ -6,9 +6,10 @@ config global
 	option socks_enabled '0'
 	option node 'myshunt'
 	option direct_dns_protocol 'auto'
+	option direct_dns_query_strategy 'UseIP'
 	option remote_dns_protocol 'tcp'
 	option remote_dns '1.1.1.1'
-	option dns_query_strategy 'UseIPv4'
+	option remote_dns_query_strategy 'UseIPv4'
 	option dns_hosts 'cloudflare-dns.com 1.1.1.1
 dns.google.com 8.8.8.8'
 	option close_log '0'

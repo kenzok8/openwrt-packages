@@ -1,5 +1,5 @@
-module("luci.model.cbi.passwall2.api.v2ray", package.seeall)
-local api = require "luci.model.cbi.passwall2.api.api"
+module("luci.passwall2.v2ray", package.seeall)
+local api = require "luci.passwall2.api"
 local fs = api.fs
 local sys = api.sys
 local util = api.util
@@ -69,7 +69,8 @@ function to_download(url, size)
         end
     end
 
-    result = api.curl_logic(url, tmp_file, api.curl_args) == 0
+    local return_code, result = api.curl_logic(url, tmp_file, api.curl_args)
+    result = return_code == 0
 
     if not result then
         api.exec("/bin/rm", {"-f", tmp_file})

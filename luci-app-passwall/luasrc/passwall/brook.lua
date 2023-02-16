@@ -1,5 +1,5 @@
-module("luci.model.cbi.passwall2.api.brook", package.seeall)
-local api = require "luci.model.cbi.passwall2.api.api"
+module("luci.passwall.brook", package.seeall)
+local api = require "luci.passwall.api"
 local fs = api.fs
 local sys = api.sys
 local util = api.util
@@ -63,7 +63,8 @@ function to_download(url, size)
         end
     end
 
-    result = api.curl_logic(url, tmp_file, api.curl_args) == 0
+    local return_code, result = api.curl_logic(url, tmp_file, api.curl_args)
+    result = return_code == 0
 
     if not result then
         api.exec("/bin/rm", {"-f", tmp_file})
@@ -96,9 +97,9 @@ function to_move(file)
         }
     end
 
-    local flag = sys.call('pgrep -af "passwall2/.*brook" >/dev/null')
+    local flag = sys.call('pgrep -af "passwall/.*brook" >/dev/null')
     if flag == 0 then
-        sys.call("/etc/init.d/passwall2 stop")
+        sys.call("/etc/init.d/passwall stop")
     end
 
     local old_app_size = 0
@@ -120,7 +121,7 @@ function to_move(file)
 
     sys.call("/bin/rm -rf /tmp/brook_download.*")
     if flag == 0 then
-        sys.call("/etc/init.d/passwall2 restart >/dev/null 2>&1 &")
+        sys.call("/etc/init.d/passwall restart >/dev/null 2>&1 &")
     end
 
     if not result or not fs.access(app_path) then

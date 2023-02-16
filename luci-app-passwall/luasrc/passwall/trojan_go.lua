@@ -1,5 +1,5 @@
-module("luci.model.cbi.passwall.api.trojan_go", package.seeall)
-local api = require "luci.model.cbi.passwall.api.api"
+module("luci.passwall.trojan_go", package.seeall)
+local api = require "luci.passwall.api"
 local fs = api.fs
 local sys = api.sys
 local util = api.util
@@ -71,7 +71,8 @@ function to_download(url, size)
         end
     end
 
-    result = api.exec(api.curl, {api._unpack(api.curl_args), "-o", tmp_file, url}, nil, api.command_timeout) == 0
+    local return_code, result = api.curl_logic(url, tmp_file, api.curl_args)
+    result = return_code == 0
 
     if not result then
         api.exec("/bin/rm", {"-f", tmp_file})

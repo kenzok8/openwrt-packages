@@ -1,4 +1,4 @@
-local api = require "luci.model.cbi.passwall2.api.api"
+local api = require "luci.passwall2.api"
 local appname = api.appname
 local fs = api.fs
 local has_v2ray = api.is_finded("v2ray")

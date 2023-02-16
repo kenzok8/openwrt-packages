@@ -1,4 +1,4 @@
-module("luci.model.cbi.passwall.api.api", package.seeall)
+module("luci.passwall2.api", package.seeall)
 fs = require "nixio.fs"
 sys = require "luci.sys"
 uci = require"luci.model.uci".cursor()
@@ -7,15 +7,29 @@ datatypes = require "luci.cbi.datatypes"
 jsonc = require "luci.jsonc"
 i18n = require "luci.i18n"
 
-appname = "passwall"
-curl = "/usr/bin/curl"
+appname = "passwall2"
 curl_args = {"-skfL", "--connect-timeout 3", "--retry 3", "-m 60"}
 command_timeout = 300
 LEDE_BOARD = nil
 DISTRIB_TARGET = nil
 
-LOG_FILE = "/tmp/log/" .. appname .. ".log"
-CACHE_PATH = "/tmp/etc/" .. appname .. "_tmp"
+function exec_call(cmd)
+    local process = io.popen(cmd .. '; echo -e "\n$?"')
+    local lines = {}
+    local result = ""
+    local return_code
+    for line in process:lines() do
+        lines[#lines + 1] = line
+    end
+    process:close()
+    if #lines > 0 then
+        return_code = lines[#lines]
+        for i = 1, #lines - 1 do
+            result = result .. lines[i] .. ((i == #lines - 1) and "" or "\n")
+        end
+    end
+    return tonumber(return_code), trim(result)
+end
 
 function base64Decode(text)
 	local raw = text
@@ -32,6 +46,35 @@ function base64Decode(text)
 	else
 		return raw
 	end
+end
+
+function curl_base(url, file, args)
+    if not args then args = {} end
+    if file then
+        args[#args + 1] = "-o " .. file
+    end
+	local cmd = string.format('curl %s "%s"', table_join(args), url)
+    return exec_call(cmd)
+end
+
+function curl_proxy(url, file, args)
+    --使用代理
+    local socks_server = luci.sys.exec("[ -f /tmp/etc/passwall2/global_SOCKS_server ] && echo -n $(cat /tmp/etc/passwall2/global_SOCKS_server) || echo -n ''")
+    if socks_server ~= "" then
+        if not args then args = {} end
+        local tmp_args = clone(args)
+        tmp_args[#tmp_args + 1] = "-x socks5h://" .. socks_server
+        return curl_base(url, file, tmp_args)
+    end
+    return nil, nil
+end
+
+function curl_logic(url, file, args)
+    local return_code, result = curl_proxy(url, file, args)
+    if not return_code or return_code ~= 0 then
+        return_code, result = curl_base(url, file, args)
+    end
+    return return_code, result
 end
 
 function url(...)
@@ -71,21 +114,6 @@ function repeat_exist(table, value)
     return false
 end
 
-function remove(...)
-    for index, value in ipairs({...}) do
-        if value and #value > 0 and value ~= "/" then
-            sys.call(string.format("rm -rf %s", value))
-        end
-    end
-end
-
-function is_install(package)
-    if package and #package > 0 then
-        return sys.call(string.format('opkg list-installed | grep "%s" > /dev/null 2>&1', package)) == 0
-    end
-    return false
-end
-
 function get_args(arg)
     local var = {}
     for i, arg_k in pairs(arg) do
@@ -97,6 +125,18 @@ function get_args(arg)
                 end
             end
         end
+    end
+    return var
+end
+
+function get_function_args(arg)
+    local var = nil
+    if arg and #arg > 1 then
+        local param = {}
+        for i = 2, #arg do
+            param[#param + 1] = arg[i]
+        end
+        var = get_args(param)
     end
     return var
 end
@@ -318,6 +358,7 @@ function is_finded(e)
     return luci.sys.exec('type -t -p "/bin/%s" -p "%s" "%s"' % {e, get_customed_path(e), e}) ~= "" and true or false
 end
 
+
 function clone(org)
     local function copy(org, res)
         for k,v in pairs(org) do
@@ -336,16 +377,16 @@ function clone(org)
 end
 
 function get_bin_version_cache(file, cmd)
-    sys.call("mkdir -p /tmp/etc/passwall_tmp")
+    sys.call("mkdir -p /tmp/etc/passwall2_tmp")
     if fs.access(file) then
         chmod_755(file)
         local md5 = sys.exec("echo -n $(md5sum " .. file .. " | awk '{print $1}')")
-        if fs.access("/tmp/etc/passwall_tmp/" .. md5) then
-            return sys.exec("echo -n $(cat /tmp/etc/passwall_tmp/%s)" % md5)
+        if fs.access("/tmp/etc/passwall2_tmp/" .. md5) then
+            return sys.exec("echo -n $(cat /tmp/etc/passwall2_tmp/%s)" % md5)
         else
             local version = sys.exec(string.format("echo -n $(%s %s)", file, cmd))
             if version and version ~= "" then
-                sys.call("echo '" .. version .. "' > " .. "/tmp/etc/passwall_tmp/" .. md5)
+                sys.call("echo '" .. version .. "' > " .. "/tmp/etc/passwall2_tmp/" .. md5)
                 return version
             end
         end
@@ -371,17 +412,6 @@ end
 
 function get_xray_version(file)
     if file == nil then file = get_xray_path() end
-    local cmd = "-version | awk '{print $2}' | sed -n 1P"
-    return get_bin_version_cache(file, cmd)
-end
-
-function get_trojan_go_path()
-    local path = uci_get_type("global_app", "trojan_go_file")
-    return path
-end
-
-function get_trojan_go_version(file)
-    if file == nil then file = get_trojan_go_path() end
     local cmd = "-version | awk '{print $2}' | sed -n 1P"
     return get_bin_version_cache(file, cmd)
 end
@@ -453,6 +483,17 @@ end
 function _unpack(t, i)
     i = i or 1
     if t[i] ~= nil then return t[i], _unpack(t, i + 1) end
+end
+
+function table_join(t, s)
+    if not s then
+        s = " "
+    end
+    local str = ""
+    for index, value in ipairs(t) do
+        str = str .. t[index] .. (index == #t and "" or s)
+    end
+    return str
 end
 
 function exec(cmd, args, writer, timeout)
@@ -585,9 +626,9 @@ end
 
 function get_api_json(url)
     local jsonc = require "luci.jsonc"
-    local json_content = luci.sys.exec(curl .. " " .. _unpack(curl_args) .. " " .. url)
-    if json_content == "" then return {} end
-    return jsonc.parse(json_content) or {}
+    local return_code, content = curl_logic(url, nil, curl_args)
+    if return_code ~= 0 or content == "" then return {} end
+    return jsonc.parse(content) or {}
 end
 
 function common_to_check(api_url, local_version, match_file_name)

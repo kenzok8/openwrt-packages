@@ -1,5 +1,5 @@
-module("luci.model.cbi.passwall2.api.xray", package.seeall)
-local api = require "luci.model.cbi.passwall2.api.api"
+module("luci.passwall.xray", package.seeall)
+local api = require "luci.passwall.api"
 local fs = api.fs
 local sys = api.sys
 local util = api.util
@@ -7,7 +7,7 @@ local i18n = api.i18n
 
 local pre_release_url = "https://api.github.com/repos/XTLS/Xray-core/releases?per_page=1"
 local release_url = "https://api.github.com/repos/XTLS/Xray-core/releases/latest"
-local api_url = release_url
+local api_url = pre_release_url
 local app_path = api.get_xray_path() or ""
 
 function check_path()
@@ -69,7 +69,8 @@ function to_download(url, size)
         end
     end
 
-    result = api.curl_logic(url, tmp_file, api.curl_args) == 0
+    local return_code, result = api.curl_logic(url, tmp_file, api.curl_args)
+    result = return_code == 0
 
     if not result then
         api.exec("/bin/rm", {"-f", tmp_file})
@@ -143,9 +144,9 @@ function to_move(file)
         }
     end
 
-    local flag = sys.call('pgrep -af "passwall2/.*xray" >/dev/null')
+    local flag = sys.call('pgrep -af "passwall/.*xray" >/dev/null')
     if flag == 0 then
-        sys.call("/etc/init.d/passwall2 stop")
+        sys.call("/etc/init.d/passwall stop")
     end
 
     local old_app_size = 0
@@ -167,7 +168,7 @@ function to_move(file)
 
     sys.call("/bin/rm -rf /tmp/xray_extract.*")
     if flag == 0 then
-        sys.call("/etc/init.d/passwall2 restart >/dev/null 2>&1 &")
+        sys.call("/etc/init.d/passwall restart >/dev/null 2>&1 &")
     end
 
     if not result or not fs.access(app_path) then

@@ -1,9 +1,7 @@
 #!/bin/sh
-[ -f /www/luci-static/opentopd/icons/ethernet.png ] && mv -f /www/luci-static/opentopd/icons/ethernet.png /www/luci-static/resources/icons/ethernet.png
-[ -f /www/luci-static/opentopd/icons/ethernet_disabled.png ] && mv -f /www/luci-static/opentopd/icons/ethernet_disabled.png /www/luci-static/resources/icons/ethernet_disabled.png
-[ -f /www/luci-static/opentopd/icons/port_down.png ] && mv -f /www/luci-static/opentopd/icons/port_down.png /www/luci-static/resources/icons/port_down.png
-[ -f /www/luci-static/opentopd/icons/port_up.png ] && mv -f /www/luci-static/opentopd/icons/port_up.png /www/luci-static/resources/icons/port_up.png
 
+rm -Rf /var/luci-modulecache
+rm -Rf /var/luci-indexcache
 uci batch <<-EOF
 	set luci.themes.Opentopd=/luci-static/opentopd
 	set luci.main.mediaurlbase=/luci-static/opentopd

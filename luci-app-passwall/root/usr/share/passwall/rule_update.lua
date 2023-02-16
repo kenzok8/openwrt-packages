@@ -6,7 +6,7 @@ local luci = luci
 local ucic = luci.model.uci.cursor()
 local jsonc = require "luci.jsonc"
 local name = 'passwall'
-local api = require ("luci.model.cbi." .. name .. ".api.api")
+local api = require ("luci.passwall.api")
 local arg1 = arg[1]
 
 local rule_path = "/usr/share/" .. name .. "/rules"
@@ -49,28 +49,19 @@ local log = function(...)
     end
 end
 
--- trim
-local function trim(text)
-    if not text or text == "" then return "" end
-    return (string.gsub(text, "^%s*(.-)%s*$", "%1"))
-end
-
 -- curl
 local function curl(url, file, valifile)
-	local cmd = "curl -skL -w %{http_code} --retry 3 --connect-timeout 3 '" .. url .. "'"
+	local args = {
+		"-skL", "-w %{http_code}", "--retry 3", "--connect-timeout 3"
+	}
 	if file then
-		cmd = cmd .. " -o " .. file
+		args[#args + 1] = "-o " .. file
 	end
 	if valifile then
-		cmd = cmd .. " --dump-header " .. valifile
+		args[#args + 1] = "--dump-header " .. valifile
 	end
-	local stdout = luci.sys.exec(cmd)
-
-	if file then
-		return tonumber(trim(stdout))
-	else
-		return trim(stdout)
-	end
+	local return_code, result = api.curl_logic(url, nil, args)
+	return tonumber(result)
 end
 
 --check excluded domain
@@ -244,8 +235,8 @@ end
 local function fetch_geoip()
 	--请求geoip
 	xpcall(function()
-		local json_str = curl(geoip_api)
-		local json = jsonc.parse(json_str)
+		local return_code, content = api.curl_logic(geoip_api)
+		local json = jsonc.parse(content)
 		if json.tag_name and json.assets then
 			for _, v in ipairs(json.assets) do
 				if v.name and v.name == "geoip.dat.sha256sum" then
@@ -295,8 +286,8 @@ end
 local function fetch_geosite()
 	--请求geosite
 	xpcall(function()
-		local json_str = curl(geosite_api)
-		local json = jsonc.parse(json_str)
+		local return_code, content = api.curl_logic(geosite_api)
+		local json = jsonc.parse(content)
 		if json.tag_name and json.assets then
 			for _, v in ipairs(json.assets) do
 				if v.name and v.name == "geosite.dat.sha256sum" then
@@ -343,24 +334,26 @@ local function fetch_geosite()
 end
 
 if arg[2] then
-	if arg[2]:find("gfwlist") then
-		gfwlist_update = 1
-    end
-	if arg[2]:find("chnroute") then
-		chnroute_update = 1
-    end
-	if arg[2]:find("chnroute6") then
-		chnroute6_update = 1
-    end
-	if arg[2]:find("chnlist") then
-		chnlist_update = 1
-	end
-	if arg[2]:find("geoip") then
-		geoip_update = 1
-	end
-	if arg[2]:find("geosite") then
-		geosite_update = 1
-	end
+	string.gsub(arg[2], '[^' .. "," .. ']+', function(w)
+		if w == "gfwlist" then
+			gfwlist_update = 1
+		end
+		if w == "chnroute" then
+			chnroute_update = 1
+		end
+		if w == "chnroute6" then
+			chnroute6_update = 1
+		end
+		if w == "chnlist" then
+			chnlist_update = 1
+		end
+		if w == "geoip" then
+			geoip_update = 1
+		end
+		if w == "geosite" then
+			geosite_update = 1
+		end
+	end)
 else
 	gfwlist_update = ucic:get_first(name, 'global_rules', "gfwlist_update", 1)
 	chnroute_update = ucic:get_first(name, 'global_rules', "chnroute_update", 1)

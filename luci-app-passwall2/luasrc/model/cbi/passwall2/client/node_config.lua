@@ -1,4 +1,4 @@
-local api = require "luci.model.cbi.passwall2.api.api"
+local api = require "luci.passwall2.api"
 local appname = api.appname
 local uci = api.uci
 
@@ -295,6 +295,9 @@ port:depends({ type = "Xray", protocol = "socks" })
 port:depends({ type = "Xray", protocol = "shadowsocks" })
 port:depends({ type = "Xray", protocol = "trojan" })
 port:depends({ type = "Xray", protocol = "wireguard" })
+
+hysteria_hop = s:option(Value, "hysteria_hop", translate("Additional ports for hysteria hop"))
+hysteria_hop:depends("type", "Hysteria")
 
 username = s:option(Value, "username", translate("Username"))
 username:depends("type", "Naiveproxy")
@@ -771,6 +774,15 @@ hysteria_recv_window_conn:depends("type", "Hysteria")
 
 hysteria_recv_window = s:option(Value, "hysteria_recv_window", translate("QUIC connection receive window"))
 hysteria_recv_window:depends("type", "Hysteria")
+
+hysteria_handshake_timeout = s:option(Value, "hysteria_handshake_timeout", translate("Handshake Timeout"))
+hysteria_handshake_timeout:depends("type", "Hysteria")
+
+hysteria_idle_timeout = s:option(Value, "hysteria_idle_timeout", translate("Idle Timeout"))
+hysteria_idle_timeout:depends("type", "Hysteria")
+
+hysteria_hop_interval = s:option(Value, "hysteria_hop_interval", translate("Hop Interval"))
+hysteria_hop_interval:depends("type", "Hysteria")
 
 hysteria_disable_mtu_discovery = s:option(Flag, "hysteria_disable_mtu_discovery", translate("Disable MTU detection"))
 hysteria_disable_mtu_discovery:depends("type", "Hysteria")

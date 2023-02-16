@@ -6,7 +6,7 @@ local luci = luci
 local ucic = luci.model.uci.cursor()
 local jsonc = require "luci.jsonc"
 local name = 'passwall2'
-local api = require "luci.model.cbi.passwall2.api.api"
+local api = require "luci.passwall2.api"
 local arg1 = arg[1]
 
 local reboot = 0
@@ -34,35 +34,24 @@ local log = function(...)
     end
 end
 
--- trim
-local function trim(text)
-    if not text or text == "" then return "" end
-    return (string.gsub(text, "^%s*(.-)%s*$", "%1"))
-end
-
 -- curl
 local function curl(url, file)
 	local args = {
-		"-sKL", "-w %{http_code}", "--retry 3", "--connect-timeout 3"
+		"-skL", "-w %{http_code}", "--retry 3", "--connect-timeout 3"
 	}
 	if file then
 		args[#args + 1] = "-o " .. file
 	end
-	local result = api.curl_logic(url, nil, args)
-
-	if file then
-		return tonumber(trim(result))
-	else
-		return trim(result)
-	end
+	local return_code, result = api.curl_logic(url, nil, args)
+	return tonumber(result)
 end
 
 --获取geoip
 local function fetch_geoip()
 	--请求geoip
 	xpcall(function()
-		local json_str = curl(geoip_api)
-		local json = jsonc.parse(json_str)
+		local return_code, content = api.curl_logic(geoip_api)
+		local json = jsonc.parse(content)
 		if json.tag_name and json.assets then
 			for _, v in ipairs(json.assets) do
 				if v.name and v.name == "geoip.dat.sha256sum" then
@@ -112,8 +101,8 @@ end
 local function fetch_geosite()
 	--请求geosite
 	xpcall(function()
-		local json_str = curl(geosite_api)
-		local json = jsonc.parse(json_str)
+		local return_code, content = api.curl_logic(geosite_api)
+		local json = jsonc.parse(content)
 		if json.tag_name and json.assets then
 			for _, v in ipairs(json.assets) do
 				if v.name and v.name == "geosite.dat.sha256sum" then
@@ -160,12 +149,14 @@ local function fetch_geosite()
 end
 
 if arg[2] then
-	if arg[2]:find("geoip") then
-		geoip_update = 1
-	end
-	if arg[2]:find("geosite") then
-		geosite_update = 1
-	end
+	string.gsub(arg[2], '[^' .. "," .. ']+', function(w)
+		if w == "geoip" then
+			geoip_update = 1
+		end
+		if w == "geosite" then
+			geosite_update = 1
+		end
+	end)
 else
 	geoip_update = ucic:get_first(name, 'global_rules', "geoip_update", 1)
 	geosite_update = ucic:get_first(name, 'global_rules', "geosite_update", 1)
