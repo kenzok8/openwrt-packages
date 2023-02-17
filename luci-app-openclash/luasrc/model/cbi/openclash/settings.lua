@@ -262,8 +262,8 @@ o.description = translate("Automatically Append Compliant DNS to default-nameser
 o.default = 1
 
 if op_mode == "fake-ip" then
-o = s:taboption("dns", Value, "fakeip_range", translate("Fake-ip Range (IPv4 Cidr)"))
-o.description = translate("Set Fake-ip Range (IPv4 Cidr)")
+o = s:taboption("dns", Value, "fakeip_range", translate("Fake-IP Range (IPv4 Cidr)"))
+o.description = translate("Set Fake-IP Range (IPv4 Cidr)")
 o.datatype = "cidr4"
 o.default = "198.18.0.1/16"
 o.placeholder = "198.18.0.1/16"
@@ -395,15 +395,15 @@ o:value("off", translate("off　"))
 o.default = "off"
 o:depends("enable_meta_core", "1")
 
-o = s:taboption("meta", ListValue, "client_fingerprint", translate("Client Fingerprint"))
+o = s:taboption("meta", ListValue, "global_client_fingerprint", translate("Client Fingerprint"))
 o.description = translate("Change The Client Fingerprint, Only Support TLS Transport in TCP/GRPC/WS/HTTP For Vless/Vmess and Trojan")
-o:value("0", translate("Disable"))
+o:value("none", translate("None"))
 o:value("random", translate("Random"))
 o:value("chrome", translate("Chrome"))
 o:value("firefox", translate("Firefox"))
 o:value("safari", translate("Safari"))
 o:value("ios", translate("IOS"))
-o.default = "0"
+o.default = "none"
 o:depends("enable_meta_core", "1")
 
 o = s:taboption("meta", Flag, "enable_meta_sniffer", font_red..bold_on..translate("Enable Sniffer")..bold_off..font_off)
@@ -588,16 +588,16 @@ o:value("0", translate("Black List Mode"))
 o:value("1", translate("White List Mode"))
 o.default = "0"
 o:depends("enable_redirect_dns", "2")
-o:depends({en_mode = "redir-host", enable_redirect_dns = "1"})
-o:depends({en_mode = "redir-host-tun", enable_redirect_dns = "1"})
-o:depends({en_mode = "redir-host-mix", enable_redirect_dns = "1"})
+o:depends("en_mode", "redir-host")
+o:depends("en_mode", "redir-host-tun")
+o:depends("en_mode", "redir-host-mix")
 
 ip_b = s:taboption("lan_ac", DynamicList, "lan_ac_black_ips", translate("LAN Bypassed Host List"))
 ip_b.datatype = "ipaddr"
 ip_b:depends({lan_ac_mode = "0", enable_redirect_dns = "2"})
-ip_b:depends({lan_ac_mode = "0", en_mode = "redir-host", enable_redirect_dns = "1"})
-ip_b:depends({lan_ac_mode = "0", en_mode = "redir-host-tun", enable_redirect_dns = "1"})
-ip_b:depends({lan_ac_mode = "0", en_mode = "redir-host-mix", enable_redirect_dns = "1"})
+ip_b:depends({lan_ac_mode = "0", en_mode = "redir-host"})
+ip_b:depends({lan_ac_mode = "0", en_mode = "redir-host-tun"})
+ip_b:depends({lan_ac_mode = "0", en_mode = "redir-host-mix"})
 
 mac_b = s:taboption("lan_ac", DynamicList, "lan_ac_black_macs", translate("LAN Bypassed Mac List"))
 mac_b.datatype = "list(macaddr)"
@@ -607,9 +607,9 @@ mac_b:depends("lan_ac_mode", "0")
 ip_w = s:taboption("lan_ac", DynamicList, "lan_ac_white_ips", translate("LAN Proxied Host List"))
 ip_w.datatype = "ipaddr"
 ip_w:depends({lan_ac_mode = "1", enable_redirect_dns = "2"})
-ip_w:depends({lan_ac_mode = "1", en_mode = "redir-host", enable_redirect_dns = "1"})
-ip_w:depends({lan_ac_mode = "1", en_mode = "redir-host-tun", enable_redirect_dns = "1"})
-ip_w:depends({lan_ac_mode = "1", en_mode = "redir-host-mix", enable_redirect_dns = "1"})
+ip_w:depends({lan_ac_mode = "1", en_mode = "redir-host"})
+ip_w:depends({lan_ac_mode = "1", en_mode = "redir-host-tun"})
+ip_w:depends({lan_ac_mode = "1", en_mode = "redir-host-mix"})
 
 mac_w = s:taboption("lan_ac", DynamicList, "lan_ac_white_macs", translate("LAN Proxied Mac List"))
 mac_w.datatype = "list(macaddr)"
@@ -1445,7 +1445,7 @@ o.description = font_red..bold_on..translate("The Gateway and DNS of The Connect
 o.default = 0
 
 o = s:taboption("ipv6", Flag, "ipv6_dns", translate("IPv6 DNS Resolve"))
-o.description = font_red..bold_on..translate("Enable to Resolve IPv6 DNS Requests, When Using The Meta Core, Enabling This Alone is Not Valid")..bold_off..font_off
+o.description = translate("Enable to Resolve IPv6 DNS Requests")
 o.default = 0
 
 o = s:taboption("ipv6", Flag, "china_ip6_route", translate("China IPv6 Route"))
