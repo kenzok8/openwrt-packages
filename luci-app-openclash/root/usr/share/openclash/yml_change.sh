@@ -9,7 +9,6 @@ dns_advanced_setting=$(uci -q get openclash.config.dns_advanced_setting)
 core_type=$(uci -q get openclash.config.core_type)
 enable_custom_dns=$(uci -q get openclash.config.enable_custom_dns)
 append_wan_dns=$(uci -q get openclash.config.append_wan_dns || echo 1)
-ipv6_dns=$(uci -q get openclash.config.ipv6_dns || echo 0)
 tolerance=$(uci -q get openclash.config.tolerance || echo 0)
 custom_fallback_filter=$(uci -q get openclash.config.custom_fallback_filter || echo 0)
 enable_meta_core=$(uci -q get openclash.config.enable_meta_core || echo 0)
@@ -380,6 +379,7 @@ Thread.new{
       Value['geodata-loader']='${22}';
       Value['tcp-concurrent']=$enable_tcp_concurrent;
       Value['find-process-mode']='${29}';
+      Value['global-client-fingerprint']='${31}';
    else
       if Value.key?('geodata-mode') then
          Value.delete('geodata-mode');
@@ -393,6 +393,9 @@ Thread.new{
       if Value.key?('find-process-mode') then
          Value.delete('find-process-mode');
       end
+      if Value.key?('global-client-fingerprint') then
+         Value.delete('global-client-fingerprint');
+      end
    end;
    if not Value.key?('dns') then
       Value_1={'dns'=>{'enable'=>true}};
@@ -402,6 +405,10 @@ Thread.new{
    end;
    if ${16} == 1 then
       Value['dns']['ipv6']=true;
+      #meta core v6 DNS
+      if ${19} != 1 then
+         Value['ipv6']=true;
+      end;
    else
       Value['dns']['ipv6']=false;
    end;
@@ -422,14 +429,14 @@ Thread.new{
       Value_sniffer={'sniffer'=>{'enable'=>true}};
       Value['sniffer']=Value_sniffer['sniffer'];
       if '$1' == 'redir-host' then
-         Value['sniffer']['ForceDnsMapping']=true;
+         Value['sniffer']['force-dns-mapping']=true;
       else
-         Value['sniffer']['ForceDnsMapping']=false;
+         Value['sniffer']['force-dns-mapping']=false;
       end;
       if ${28} == 1 then
-         Value['sniffer']['ParsePureIp']=true;
+         Value['sniffer']['parse-pure-ip']=true;
       else
-         Value['sniffer']['ParsePureIp']=false;
+         Value['sniffer']['parse-pure-ip']=false;
       end;
       if File::exist?('/etc/openclash/custom/openclash_force_sniffing_domain.yaml') then
          if ${23} == 1 then
@@ -839,48 +846,6 @@ Thread.new{
 }.join;
 rescue Exception => e
    puts '${LOGTIME} Error: Edit Vmess Compatible Failed,【' + e.message + '】';
-end;
-
-#client-fingerprint
-begin
-Thread.new{
-   if '${31}' != '0' and ${19} == 1 then
-      if Value.key?('proxies') and not Value['proxies'].nil? then
-         Value['proxies'].each{
-         |x|
-            if x['type'] == 'vmess' or x['type'] == 'vless' or x['type'] == 'trojan' then
-               if x['client-fingerprint'] != '${31}' then
-                  x['client-fingerprint'] = '${31}';
-               end;
-            end;
-         };
-      end;
-      if Value.key?('proxy-providers') and not Value['proxy-providers'].nil? then
-         Value['proxy-providers'].values.each{
-         |x,p,v|
-            if x.key?('path') and not x['path'].empty? then
-               p = '/etc/openclash/proxy_provider/'+File.basename(x['path']);
-               if File::exist?(p) then
-                  v = YAML.load_file(p);
-                  if v.key?('proxies') and not v['proxies'].nil? then
-                     v['proxies'].each{
-                     |z|
-                        if z['type'] == 'vmess' or z['type'] == 'vless' or z['type'] == 'trojan' then
-                           if z['client-fingerprint'] != '${31}' then
-                              z['client-fingerprint'] = '${31}';
-                           end;
-                        end;
-                     };
-                  end;
-                  File.open(p,'w') {|f| YAML.dump(v, f)};
-               end;
-            end;
-         };
-      end;
-   end;
-}.join;
-rescue Exception => e
-   puts '${LOGTIME} Error: Edit Client-fingerprint Failed,【' + e.message + '】';
 ensure
    File.open('$5','w') {|f| YAML.dump(Value, f)};
 end" 2>/dev/null >> $LOG_FILE
