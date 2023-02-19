@@ -1,5 +1,4 @@
 #!/bin/sh
-
 checkmd5(){
 local nowmd5=$(md5sum /etc/hosts)
 nowmd5=${nowmd5%% *}
@@ -10,7 +9,6 @@ if [ "$nowmd5" != "$lastmd5" ]; then
 	[ "$1" == "noreload" ] || /etc/init.d/AdGuardHome reload
 fi
 }
-
 [ "$1" == "del" ] && sed -i '/programaddstart/,/programaddend/d' /etc/hosts && checkmd5 "$2" && exit 0
 /usr/bin/awk 'BEGIN{
 while ((getline < "/tmp/dhcp.leases") > 0)
