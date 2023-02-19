@@ -6,7 +6,10 @@ uci -q batch <<-EOF >/dev/null 2>&1
 	set ucitrack.@AdGuardHome[-1].init=AdGuardHome
 	commit ucitrack
 	delete AdGuardHome.AdGuardHome.ucitracktest
+	/etc/init.d/AdGuardHome restart
 EOF
 
 rm -f /tmp/luci-indexcache
+
+chmod +x /etc/init.d/AdGuardHome /usr/share/AdGuardHome/*
 exit 0
