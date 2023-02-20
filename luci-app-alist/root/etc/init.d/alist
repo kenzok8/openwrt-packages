@@ -17,6 +17,11 @@ get_config() {
 	config_get allow_wan $1 allow_wan 0
 	config_load network
 	config_get lan_addr lan ipaddr "0.0.0.0"
+	if echo "${lan_addr}" | grep -Fq ' '; then
+		lan_addr="0.0.0.0"
+	else
+		lan_addr=${lan_addr%%/*}
+	fi
 }
 
 set_firewall() {
