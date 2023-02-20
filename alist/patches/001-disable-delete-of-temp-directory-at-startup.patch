@@ -1,6 +1,6 @@
 --- a/internal/bootstrap/config.go
 +++ b/internal/bootstrap/config.go
-@@ -65,11 +65,7 @@ func InitConfig() {
+@@ -67,11 +67,7 @@ func InitConfig() {
  		}
  		conf.Conf.TempDir = absPath
  	}
@@ -8,8 +8,8 @@
 -	if err != nil {
 -		log.Errorln("failed delete temp file:", err)
 -	}
--	err = os.MkdirAll(conf.Conf.TempDir, 0777)
-+	err := os.MkdirAll(conf.Conf.TempDir, 0777)
+-	err = os.MkdirAll(conf.Conf.TempDir, 0o777)
++	err := os.MkdirAll(conf.Conf.TempDir, 0o777)
  	if err != nil {
  		log.Fatalf("create temp dir error: %+v", err)
  	}
