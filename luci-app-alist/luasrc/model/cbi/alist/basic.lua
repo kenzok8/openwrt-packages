@@ -33,6 +33,11 @@ o:depends("ssl", "1")
 o = s:option(Flag, "allow_wan", translate("Allow Access From Internet"))
 o.rmempty = false
 
+o = s:option(Value, "max_connections", translate("Max Connections"), translate("0 is unlimited, It is recommend to set a low number of concurrency (10-20) for poor performance device"))
+o.datatype = "and(uinteger,min(0))"
+o.default = "0"
+o.rmempty = false
+
 o = s:option(Value, "token_expires_in", translate("Login Validity Period (hours)"))
 o.datatype = "and(uinteger,min(0))"
 o.default = "48"

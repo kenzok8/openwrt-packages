@@ -15,6 +15,7 @@ get_config() {
 	config_get ssl_key $1 ssl_key ""
 	config_get token_expires_in $1 token_expires_in 48
 	config_get allow_wan $1 allow_wan 0
+	config_get max_connections $1 max_connections 0
 	config_load network
 	config_get lan_addr lan ipaddr "0.0.0.0"
 	if echo "${lan_addr}" | grep -Fq ' '; then
@@ -60,7 +61,7 @@ start_service() {
 	set_firewall
 	cat /dev/null > $temp_dir/alist.log
 	cat > $CONFIG_DIR/config.json <<EOF
-{"force":false,"address":"$listen_addr","port":$port,"cdn":"","jwt_secret":"","token_expires_in":$token_expires_in,"database":{"type":"sqlite3","host":"","port":0,"user":"","password":"","name":"","db_file":"/etc/alist/data.db","table_prefix":"x_","ssl_mode":""},"scheme":{"https":$SSL,"cert_file":"$ssl_cert","key_file":"$ssl_key"},"temp_dir":"$temp_dir","log":{"enable":$LOG,"name":"$temp_dir/alist.log","max_size":10,"max_backups":5,"max_age":28,"compress":false}}
+{"force":false,"address":"$listen_addr","port":$port,"cdn":"","jwt_secret":"","token_expires_in":$token_expires_in,"database":{"type":"sqlite3","host":"","port":0,"user":"","password":"","name":"","db_file":"/etc/alist/data.db","table_prefix":"x_","ssl_mode":""},"scheme":{"https":$SSL,"cert_file":"$ssl_cert","key_file":"$ssl_key"},"temp_dir":"$temp_dir","log":{"enable":$LOG,"name":"$temp_dir/alist.log","max_size":10,"max_backups":5,"max_age":28,"compress":false},"max_connections":$max_connections}
 EOF
 	procd_open_instance alist
 	procd_set_param command $PROG
