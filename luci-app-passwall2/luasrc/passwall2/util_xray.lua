@@ -847,7 +847,7 @@ function gen_config(var)
             disableFallback = true,
             disableFallbackIfMatch = true,
             servers = {},
-            queryStrategy = (dns_query_strategy and dns_query_strategy ~= "") and dns_query_strategy or "UseIPv4"
+            queryStrategy = (dns_query_strategy and dns_query_strategy ~= "") and dns_query_strategy or "UseIP"
         }
     
         local dns_host = ""
@@ -956,17 +956,22 @@ function gen_config(var)
                     network = "tcp,udp"
                 }
             })
-    
+            local direct_type_dns = {
+                address = direct_dns_udp_server,
+                port = tonumber(direct_dns_port) or 53,
+                network = "udp",
+            }
+            local remote_type_dns = {
+                address = remote_dns_udp_server,
+                port = tonumber(remote_dns_port) or 53,
+                network = _remote_dns_proto or "tcp",
+            }
+            local type_dns = remote_type_dns
             table.insert(outbounds, {
                 tag = "dns-out",
                 protocol = "dns",
-                settings = {
-                    address = "1.1.1.1",
-                    port = tonumber(remote_dns_port) or 53,
-                    network = _remote_dns_proto or "tcp",
-                }
+                settings = type_dns
             })
-    
             table.insert(routing.rules, 1, {
                 type = "field",
                 inboundTag = {
@@ -1232,34 +1237,13 @@ function gen_dns_config(var)
             queryStrategy = (dns_query_strategy and dns_query_strategy ~= "") and dns_query_strategy or "UseIPv4"
         }
     
-        local tmp_dns_server, tmp_dns_port, tmp_dns_proto
+        local other_type_dns_proto, other_type_dns_server, other_type_dns_port
     
         if dns_out_tag == "remote" then
             local _remote_dns = {
                 _flag = "remote"
             }
-    
-            if remote_dns_udp_server then
-                _remote_dns.address = remote_dns_udp_server
-                _remote_dns.port = tonumber(remote_dns_port) or 53
-                tmp_dns_proto = "udp"
-            end
-    
-            if remote_dns_tcp_server then
-                _remote_dns.address = remote_dns_tcp_server
-                _remote_dns.port = tonumber(remote_dns_port) or 53
-                tmp_dns_proto = "tcp"
-            end
-    
-            if remote_dns_doh_url and remote_dns_doh_host then
-                if remote_dns_server and remote_dns_doh_host ~= remote_dns_server and not api.is_ip(remote_dns_doh_host) then
-                    dns.hosts[remote_dns_doh_host] = remote_dns_server
-                end
-                _remote_dns.address = remote_dns_doh_url
-                _remote_dns.port = tonumber(remote_dns_port) or 443
-                tmp_dns_proto = "tcp"
-            end
-    
+
             if remote_dns_fake then
                 remote_dns_server = "1.1.1.1"
                 fakedns = {}
@@ -1275,10 +1259,31 @@ function gen_dns_config(var)
                 end
                 _remote_dns.address = "fakedns"
             end
+
+            other_type_dns_port = tonumber(remote_dns_port) or 53
+            other_type_dns_server = remote_dns_server
     
-            tmp_dns_server = remote_dns_server
+            if remote_dns_udp_server then
+                _remote_dns.address = remote_dns_udp_server
+                _remote_dns.port = tonumber(remote_dns_port) or 53
+                other_type_dns_proto = "udp"
+            end
     
-            tmp_dns_port = remote_dns_port
+            if remote_dns_tcp_server then
+                _remote_dns.address = remote_dns_tcp_server
+                _remote_dns.port = tonumber(remote_dns_port) or 53
+                other_type_dns_proto = "tcp"
+            end
+    
+            if remote_dns_doh_url and remote_dns_doh_host then
+                if remote_dns_server and remote_dns_doh_host ~= remote_dns_server and not api.is_ip(remote_dns_doh_host) then
+                    dns.hosts[remote_dns_doh_host] = remote_dns_server
+                end
+                _remote_dns.address = remote_dns_doh_url
+                _remote_dns.port = tonumber(remote_dns_port) or 443
+                other_type_dns_proto = "tcp"
+                other_type_dns_port = 53
+            end
     
             table.insert(dns.servers, _remote_dns)
             table.insert(outbounds, 1, {
@@ -1301,6 +1306,9 @@ function gen_dns_config(var)
             local _direct_dns = {
                 _flag = "direct"
             }
+
+            other_type_dns_proto = tonumber(direct_dns_port) or 53
+            other_type_dns_server = direct_dns_server
     
             if direct_dns_udp_server then
                 _direct_dns.address = direct_dns_udp_server
@@ -1315,10 +1323,17 @@ function gen_dns_config(var)
                     outboundTag = "direct"
                 })
             end
+
+            if direct_dns_udp_server then
+                _direct_dns.address = direct_dns_udp_server
+                _direct_dns.port = tonumber(direct_dns_port) or 53
+                other_type_dns_proto = "udp"
+            end
     
             if direct_dns_tcp_server then
                 _direct_dns.address = direct_dns_tcp_server:gsub("tcp://", "tcp+local://")
                 _direct_dns.port = tonumber(direct_dns_port) or 53
+                other_type_dns_proto = "tcp"
             end
     
             if direct_dns_doh_url and direct_dns_doh_host then
@@ -1327,11 +1342,9 @@ function gen_dns_config(var)
                 end
                 _direct_dns.address = direct_dns_doh_url:gsub("https://", "https+local://")
                 _direct_dns.port = tonumber(direct_dns_port) or 443
+                other_type_dns_proto = "tcp"
+                other_type_dns_port = 53
             end
-    
-            tmp_dns_server = direct_dns_server
-    
-            tmp_dns_port = direct_dns_port
     
             table.insert(dns.servers, _direct_dns)
     
@@ -1364,7 +1377,7 @@ function gen_dns_config(var)
             protocol = "dokodemo-door",
             tag = "dns-in",
             settings = {
-                address = tmp_dns_server or "1.1.1.1",
+                address = other_type_dns_server or "1.1.1.1",
                 port = 53,
                 network = "tcp,udp"
             }
@@ -1374,9 +1387,9 @@ function gen_dns_config(var)
             tag = "dns-out",
             protocol = "dns",
             settings = {
-                address = tmp_dns_server or "1.1.1.1",
-                port = tonumber(tmp_dns_port) or 53,
-                network = tmp_dns_proto or "tcp",
+                address = other_type_dns_server or "1.1.1.1",
+                port = other_type_dns_port or 53,
+                network = other_type_dns_proto or "tcp",
             }
         })
     
