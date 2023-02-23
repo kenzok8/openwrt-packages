@@ -3122,6 +3122,7 @@ ahxxx.club
 ai-kan.net
 ai-wen.net
 ai.binwang.me
+ai.com
 ai780.com
 aiaa.org
 aibaobei.me
@@ -20223,6 +20224,7 @@ nexpart.com
 nexpart.tv
 next
 next.com
+nextapple.com
 nextbigfuture.com
 nextdirect
 nextdoor.com
@@ -35026,6 +35028,7 @@ full:nvidia.tt.omtrdc.net
 full:ocsp.microsoft.com
 full:officecdn-microsoft-com.akamaized.net
 full:oneocsp.microsoft.com
+full:openaiapi-site.azureedge.net
 full:opgg-static.akamaized.net
 full:origin-a.akamaihd.net
 full:p-events-delivery.akamaized.net
