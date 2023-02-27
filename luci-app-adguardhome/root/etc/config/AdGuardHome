@@ -6,6 +6,6 @@ config AdGuardHome 'AdGuardHome'
 	option workdir '/usr/bin/AdGuardHome'
 	option logfile '/tmp/AdGuardHome.log'
 	option verbose '0'
-	option binpath '/tmp/AdGuardHome/AdGuardHome'
+	option binpath '/usr/bin/AdGuardHome'
 	option upxflag ''
 
