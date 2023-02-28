@@ -4,3 +4,4 @@ config alist
 	option 'temp_dir' '/tmp/alist'
 	option 'ssl' '0'
 	option 'token_expires_in' '48'
+	option 'max_connections' '0'
