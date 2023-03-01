@@ -2063,6 +2063,16 @@ width:50px !important;
     font-family: monospace;
 }
 
+.uci-change-list *:first-child {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+  
+.uci-change-list *:nth-last-child(2) {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
 .uci-change-list ins,
 .uci-change-legend-label ins {
     text-decoration: none;
@@ -3262,7 +3272,7 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-system-commands .commandbox {
     width: auto;
     display: inline-block;
-    float: unset;
+    float: none;
 }
 .node-system-commands .commandbox p {
     word-break:keep-all;
