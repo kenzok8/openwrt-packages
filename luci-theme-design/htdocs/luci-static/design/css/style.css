@@ -3278,10 +3278,9 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
     word-break:keep-all;
     white-space:nowrap;
 }
-.node-system-commands fieldset.cbi-section {
+.node-system-commands div.cbi-map fieldset.cbi-section {
     align-items: center;
     text-align: center;
-    margin:auto;
 }
 
 .node-network-network .ifacebox strong{
