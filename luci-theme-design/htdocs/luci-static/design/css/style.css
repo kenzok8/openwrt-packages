@@ -2071,10 +2071,13 @@ width:50px !important;
     display: block;
     padding: 2px;
     color: black;
-    /* border-radius: 5px; */
     overflow-x: auto;
 }
-
+.uci-change-legend .uci-change-legend-label ins {
+    overflow-x: unset;
+    border-radius: 5px;
+}
+    
 .uci-change-list del,
 .uci-change-legend-label del {
     text-decoration: none;
@@ -2084,8 +2087,11 @@ width:50px !important;
     font-style: normal;
     padding: 2px;
     color:black;
-    /* border-radius: 5px; */
     overflow-x: auto;
+}
+.uci-change-legend .uci-change-legend-label del {
+    overflow-x: unset;
+    border-radius: 5px;
 }
 
 .uci-change-list var,
@@ -2097,9 +2103,13 @@ width:50px !important;
     font-style: normal;
     padding: 2px;
     color:black;
-    /* border-radius: 5px; */
+
     overflow-x: auto;
 }
+.uci-change-legend .uci-change-legend-label var {
+    overflow-x: unset;
+    border-radius: 5px;
+}    
 
 .uci-change-list var ins,
 .uci-change-list var del {
