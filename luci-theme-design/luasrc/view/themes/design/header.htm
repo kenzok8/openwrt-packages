@@ -33,6 +33,8 @@
 	local util = require "luci.util"
 	local http = require "luci.http"
 	local disp = require "luci.dispatcher"
+	local uci = require 'luci.model.uci'.cursor()
+	local fs  = require "nixio.fs"
 
 	local boardinfo = util.ubus("system", "board")
 	local boardinfo={}
@@ -114,7 +116,16 @@
 				subtree(prefix .. selected_name .. "/", selected_node, level + 1)
 			end
 		end
+		
 	end
+
+	-- Custom settings
+	local mode = 'normal'
+	local navbar_proxy = 'openclash'
+	if fs.access('/etc/config/design') then
+		mode = uci:get_first('design', 'global', 'mode')
+		navbar_proxy = uci:get_first('design', 'global', 'navbar_proxy')
+	end 
 -%>
 <!DOCTYPE html>
 <html lang="<%=luci.i18n.context.lang%>">
@@ -130,8 +141,6 @@
     <meta name="browsermode" content="application">
     <meta name="msapplication-tap-highlight" content="no">
 	<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-	<meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
-	<meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
     <meta name="application-name" content="<%=striptags( (boardinfo.hostname or "?") ) %>">
     <meta name="apple-mobile-web-app-title" content="<%=striptags( (boardinfo.hostname or "?") ) %>">
     <meta name="msapplication-TileImage" content="<%=media%>/images/android-chrome-512x512.png"/>
@@ -140,8 +149,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-touch-fullscreen" content="yes" /> 
-
     <link rel="stylesheet" href="<%=media%>/css/style.css?v=<%= ver.luciversion %>">
+	<meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
+	<meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
+
     <link rel="shortcut icon" href="<%=media%>/favicon.ico">
     <% if node and node.css then %>
         <link rel="stylesheet" href="<%=resource%>/<%=node.css%>">
@@ -166,14 +177,29 @@
 <body class="lang_<%=luci.i18n.context.lang%> <%- if node then %><%= striptags( node.title ) %><%- end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %>">
 
 <header>
-
+	
 <div class="navbar">
   <a href="/cgi-bin/luci/admin/status/overview"><img src="<%=media%>/images/home.png" /></a>
-  <a href="/cgi-bin/luci/admin/services/openclash"><img src="<%=media%>/images/openclash.png" /></a>
+  <% if navbar_proxy == 'openclash' then %>
+  <a href="/cgi-bin/luci/admin/services/<%=navbar_proxy%>"><img src="<%=media%>/images/<%=navbar_proxy%>.png" /></a>
+  <% else  %>
+  <a href="/cgi-bin/luci/admin/services/<%=navbar_proxy%>"><img src="<%=media%>/images/ssr.png" /></a>
+  <% end -%>	
   <a href="/cgi-bin/luci/admin/network/network"><img src="<%=media%>/images/link.png" /></a>
   <a href="/cgi-bin/luci/admin/status/realtime"><img src="<%=media%>/images/rank.png" /></a>
   <a href="/cgi-bin/luci/admin/system/admin"><img src="<%=media%>/images/user.png" /></a>
 </div>
+
+<script>
+	<% if mode == 'normal' then %>
+	document.body.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches? 'dark' : 'light');
+	window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+		document.body.setAttribute('data-theme', event.matches? 'dark' : 'light');
+	})
+	<% else  %>
+	document.body.setAttribute('data-theme', '<%= mode %>' === 'dark' ? 'dark' : 'light');
+	<% end -%>	
+</script>
 
 <div class="container">
 	<span class="showSide"></span>

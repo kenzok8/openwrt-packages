@@ -9,8 +9,7 @@
  *
  *  Licensed to the public under the Apache License 2.0
  */
-
- :root {
+ [data-theme='light'] {
     --bg: #f1f4f5;
     --mainbg: #fff;
     --bgwhite: #fff;
@@ -52,8 +51,7 @@
     --ifaceboxFontColor: #1a1a1a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+[data-theme='dark'] {
     --bg: #000;
     --bgwhite: #000;
     --textColor: #fefefe;
@@ -92,7 +90,6 @@
     --scrollbarColor:#222;
     --ifaceboxBorderColor: #636363bd;
     --ifaceboxFontColor: #1a1a1a;
-  }
 }
 
 @font-face {
@@ -3281,10 +3278,6 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-system-commands div.cbi-map fieldset.cbi-section {
     align-items: center;
     text-align: center;
-}
-.node-system-commands #cbi-luci.cbi-map fieldset.cbi-section {
-    align-items: unset;
-    text-align: unset;
 }
 
 .node-network-network .ifacebox strong{
