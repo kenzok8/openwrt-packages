@@ -39,6 +39,11 @@ luci-theme-design is an OpenWrt LuCI theme for immersive WebApp experience and o
 - Adapt to dark mode, adapt to automatic switching of the system;
 - Adapt to openwrt 21/22, lede
 
+### Plugins
+link: https://github.com/gngpp/luci-app-design-config
+- Support changing theme dark/light mode
+- Support for replacing commonly used proxy icons
+
 ### Experience WebApp method
 
 - Open the settings management in the mobile browser (iOS/iPadOS, Android Google) and add it to the home screen.

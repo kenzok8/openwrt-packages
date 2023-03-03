@@ -192,8 +192,9 @@
 
 <script>
 	<% if mode == 'normal' then %>
-	document.body.setAttribute('data-theme', window.matchMedia('(prefers-color-scheme: dark)').matches? 'dark' : 'light');
-	window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+	let color_scheme = window.matchMedia('(prefers-color-scheme: dark)');
+	document.body.setAttribute('data-theme', color_scheme.matches? 'dark' : 'light');
+	window.matchMedia && color_scheme.addEventListener('change', (event) => {
 		document.body.setAttribute('data-theme', event.matches? 'dark' : 'light');
 	})
 	<% else  %>

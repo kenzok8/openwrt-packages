@@ -39,6 +39,11 @@ luci-theme-design 是一个针对移动端和PC端的沉浸式WebApp体验和优
 - 适配深色模式，适配系统自动切换；
 - 适配openwrt 21/22、lede
 
+### 插件
+link：https://github.com/gngpp/luci-app-design-config
+- 支持更改主题深色/浅色模式
+- 支持更换常用的代理图标
+
 ### 体验WebApp方法
 
 - 在移动端(iOS/iPadOS、Android谷歌)浏览器打开设置管理，添加到主屏幕即可。
