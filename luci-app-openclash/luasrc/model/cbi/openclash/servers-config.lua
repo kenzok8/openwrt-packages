@@ -361,6 +361,13 @@ o:depends("type", "trojan")
 o:depends({type = "snell", snell_version = "3"})
 o:depends("type", "wireguard")
 
+o = s:option(ListValue, "udp_over_tcp", translate("udp-over-tcp"))
+o.rmempty = true
+o.default = "false"
+o:value("true")
+o:value("false")
+o:depends("type", "ss")
+
 o = s:option(ListValue, "xudp", translate("XUDP Enable")..translate("(Only Meta Core)"))
 o.rmempty = true
 o.default = "true"
@@ -495,14 +502,6 @@ o:depends("type", "vless")
 o:depends("type", "hysteria")
 o:depends("type", "tuic")
 
-o = s:option(ListValue, "fast_open", translate("Fast Open"))
-o.rmempty = true
-o.default = "false"
-o:value("true")
-o:value("false")
-o:depends("type", "hysteria")
-o:depends("type", "tuic")
-
 -- [[ TLS ]]--
 o = s:option(ListValue, "tls", translate("TLS"))
 o.rmempty = true
@@ -529,6 +528,7 @@ o.rmempty = true
 o.default = "xtls-rprx-direct"
 o:value("xtls-rprx-direct")
 o:value("xtls-rprx-origin")
+o:value("xtls-rprx-vision")
 o:depends("obfs_vless", "none")
 
 o = s:option(Value, "keep_alive", translate("keep-alive"))
@@ -692,6 +692,30 @@ o.default = "false"
 o:value("true")
 o:value("false")
 o:depends("type", "vmess")
+
+-- [[ TFO ]]--
+o = s:option(ListValue, "fast_open", translate("Fast Open"))
+o.rmempty = true
+o.default = "true"
+o:value("true")
+o:value("false")
+o:depends("type", "hysteria")
+o:depends("type", "tuic")
+
+-- [[ TFO ]]--
+o = s:option(ListValue, "tfo", translate("TFO")..translate("(Only Meta Core)"))
+o.rmempty = true
+o.default = "true"
+o:value("true")
+o:value("false")
+o:depends("type", "http")
+o:depends("type", "socks5")
+o:depends("type", "trojan")
+o:depends("type", "vless")
+o:depends("type", "vmess")
+o:depends("type", "ss")
+o:depends("type", "ssr")
+o:depends("type", "snell")
 
 -- [[ fingerprint ]]--
 o = s:option(Value, "fingerprint", translate("Fingerprint")..translate("(Only Meta Core)"))

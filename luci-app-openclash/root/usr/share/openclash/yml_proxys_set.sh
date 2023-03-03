@@ -281,7 +281,8 @@ yml_servers_set()
    config_get "packet_addr" "$section" "packet_addr" ""
    config_get "client_fingerprint" "$section" "client_fingerprint" ""
    config_get "ip_version" "$section" "ip_version" ""
-
+   config_get "tfo" "$section" "tfo" ""
+   config_get "udp_over_tcp" "$section" "udp_over_tcp" ""
    
    if [ "$enabled" = "0" ]; then
       return
@@ -399,6 +400,11 @@ EOF
       if [ ! -z "$udp" ]; then
 cat >> "$SERVER_FILE" <<-EOF
     udp: $udp
+EOF
+     fi
+     if [ ! -z "$udp_over_tcp" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    udp-over-tcp: $udp_over_tcp
 EOF
      fi
      if [ ! -z "$obfss" ]; then
@@ -1133,18 +1139,25 @@ cat >> "$SERVER_FILE" <<-EOF
     ip-version: "$ip_version"
 EOF
    fi
-   
+
+#TFO
+   if [ ! -z "$tfo" ]; then
+cat >> "$SERVER_FILE" <<-EOF
+    tfo: $tfo
+EOF
+   fi
+
 #interface-name
    if [ -n "$interface_name" ]; then
 cat >> "$SERVER_FILE" <<-EOF
-    interface-name: $interface_name
+    interface-name: "$interface_name"
 EOF
    fi
 
 #routing_mark
    if [ -n "$routing_mark" ]; then
 cat >> "$SERVER_FILE" <<-EOF
-    routing-mark: $routing_mark
+    routing-mark: "$routing_mark"
 EOF
    fi
 }
@@ -1735,7 +1748,7 @@ ${uci_set}HBOMax="HBO Max"
 ${uci_set}HBOGo="HBO Go"
 ${uci_set}Pornhub="Pornhub"
 ${uci_set}Apple="Apple"
-${uci_set}Apple_TV="Apple_TV"
+${uci_set}AppleTV="Apple TV"
 ${uci_set}GoogleFCM="Google FCM"
 ${uci_set}Scholar="Scholar"
 ${uci_set}Microsoft="Microsoft"
@@ -1772,7 +1785,7 @@ ${uci_set}Others="Others"
 	${UCI_DEL_LIST}="Discovery Plus" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Discovery Plus" >/dev/null 2>&1
 	${UCI_DEL_LIST}="DAZN" >/dev/null 2>&1 && ${UCI_ADD_LIST}="DAZN" >/dev/null 2>&1
   ${UCI_DEL_LIST}="ChatGPT" >/dev/null 2>&1 && ${UCI_ADD_LIST}="ChatGPT" >/dev/null 2>&1
-  ${UCI_DEL_LIST}="Apple_TV" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Apple_TV" >/dev/null 2>&1
+  ${UCI_DEL_LIST}="Apple TV" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Apple TV" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Google FCM" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Google FCM" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Scholar" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Scholar" >/dev/null 2>&1
 	${UCI_DEL_LIST}="Disney" >/dev/null 2>&1 && ${UCI_ADD_LIST}="Disney" >/dev/null 2>&1
