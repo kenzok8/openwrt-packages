@@ -1,0 +1,11 @@
+{
+    "luci-app-design-config": {
+        "description": "Grant UCI access for luci-app-design-config",
+        "read": {
+            "uci": [ "design" ]
+        },
+        "write": {
+            "uci": [ "design" ]
+        }
+    }
+}

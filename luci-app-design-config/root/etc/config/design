@@ -1,0 +1,3 @@
+config global
+	option mode 'dark'
+	option navbar_proxy 'openclash'
