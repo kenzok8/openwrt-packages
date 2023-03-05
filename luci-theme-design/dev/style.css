@@ -2294,11 +2294,12 @@ header > .container > .pull-right > * {
 .notice {
     background-color: var(--activeColor);
     color: #fff;
-    font-size: 0.8rem;
-    padding: 3px 10px;
+    font-size: .8rem;
+    padding: 2.5px 10px;
     border-radius: 20px;
     z-index: 10;
     top: 22px;
+    margin-right: 30px;
 }
 
 #refresh_on, #refresh_off {
@@ -3298,4 +3299,9 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-services-openclash .cbi-button-reset, 
 .node-services-openclash .cbi-input-remove {
     max-width: unset !important;
+}
+
+/* fix qBittorrent status style*/
+.node-nas-qbittorrent p#qBittorrent_status input {
+    line-height: unset;
 }

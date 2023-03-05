@@ -199,7 +199,7 @@ end
 function store_action(param)
     local metadir = "/usr/lib/opkg/meta"
     local metapkgpre = "app-meta-"
-    local code, out, err, ret, out0, err0
+    local code, out, err, ret
     local fs = require "nixio.fs"
     local ipkg = require "luci.model.ipkg"
     local jsonc = require "luci.jsonc"

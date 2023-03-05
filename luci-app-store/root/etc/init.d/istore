@@ -6,12 +6,7 @@ START=45
 boot() {
     [ -s /etc/.app_store.id ] && return 0
 
-    mkdir -p /tmp/is-inst/var/lock
-    mkdir -p /tmp/is-inst/etc
-    cp -a /etc/opkg.conf /tmp/is-inst/etc/
-    cp -a /etc/opkg /tmp/is-inst/etc/
-    ARCH=`opkg -f /tmp/is-inst/etc/opkg.conf --offline-root /tmp/is-inst print-architecture | grep '^arch ' | grep -v 'arch all' | grep -v 'arch noarch' | sed -E 's/^arch ([^ ]+) (\d+)$/\2 \1/g' | sort -n -r | head -1 | cut -d ' ' -f2`
-    rm -rf /tmp/is-inst
+    ARCH=`/bin/is-opkg arch`
 
     for iface in eth0 br-lan; do
         if [ -e /sys/class/net/$iface/address ]; then
