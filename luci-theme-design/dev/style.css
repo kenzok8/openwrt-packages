@@ -2295,7 +2295,7 @@ header > .container > .pull-right > * {
     background-color: var(--activeColor);
     color: #fff;
     font-size: .8rem;
-    padding: 2.5px 10px;
+    padding: 2.8px 10px;
     border-radius: 20px;
     z-index: 10;
     top: 22px;

@@ -19,7 +19,7 @@
  */
 (function ($) {
 
-    // 修复某些插件导致在https下env(safe-area-inset-bottom)为0的情况
+    // Fixed openclash plugin causing env(safe-area-inset-bottom) to be 0 under https
     var url = self.location.href; 
     if ((/(iPhone|iPad|iPod|iOS|Mac|Macintosh)/i.test(navigator.userAgent)) && url.indexOf("openclash") != -1 ) {
         var oMeta = document.createElement('meta');
@@ -31,41 +31,36 @@
     // .node-status-realtime embed[src="/luci-static/resources/bandwidth.svg"] + div + br + table
     // .node-status-realtime embed[src="/luci-static/resources/wifirate.svg"] + div + br + table
     // .node-status-realtime embed[src="/luci-static/resources/wireless.svg"] + div + br + table
-    $(document).ready(function(){
-        ["bandwidth", "wifirate", "wireless"].forEach(function (value) {
-            let target = $(".node-status-realtime embed[src=\"\/luci-static\/resources\/" + value + ".svg\"] + div + br + table");
-            if (target.length != 0) {
-                let div =  document.createElement("div");
-                div.style = "overflow-x: auto;"
-                target.before(div);
-                newTarget = target.clone();
-                target.remove();
-                div.append(newTarget.get(0))
-            }
-        })
-   });
+    $(document).ready(() => {
+        const elements = ["bandwidth", "wifirate", "wireless"];
+        elements.forEach(value => {
+        const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
+        const div = document.createElement("div");
+        div.style.overflowX = "auto";
+        target.length !== 0 ? div.before(target.clone().get(0)) && target.remove() : null;
+      });
+    });
 
     // Fixed scrollbar styles for browsers on different platforms
-    settingGlobalScroll();
-
-    $(document).ready(function() {
+    $(document).ready(() => {
         settingGlobalScroll();
-    })
+    });
 
-    $(window).resize(function () {
+    $(window).resize(() => {
         settingGlobalScroll();
     });
 
     function settingGlobalScroll() {
-        let global = $('head #global-scroll')
-        if ((/(phone|pad|pod|iPhone|iPod|ios|iOS|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i.test(navigator.userAgent))) {
+        let global = $('head #global-scroll');
+        let isMobile = /phone|pad|pod|iPhone|iPod|ios|iOS|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone/i.test(navigator.userAgent);
+        if (isMobile) {
             if (global.length > 0) {
                 global.remove();
             }
-        } else  if (global.length == 0 ) {
+        } else if (global.length == 0 ) {
             var style = document.createElement('style');
             style.type = 'text/css';
-            style.id = "global-scroll"
+            style.id = "global-scroll";
             style.innerHTML="::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px;}"
             $("head").append(style)
         }
