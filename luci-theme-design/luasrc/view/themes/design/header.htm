@@ -121,9 +121,11 @@
 
 	-- Custom settings
 	local mode = 'normal'
+	local navbar = 'display'
 	local navbar_proxy = 'openclash'
 	if fs.access('/etc/config/design') then
 		mode = uci:get_first('design', 'global', 'mode')
+		navbar = uci:get_first('design', 'global', 'navbar')
 		navbar_proxy = uci:get_first('design', 'global', 'navbar_proxy')
 	end 
 -%>
@@ -177,8 +179,34 @@
 <body class="lang_<%=luci.i18n.context.lang%> <%- if node then %><%= striptags( node.title ) %><%- end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %>">
 
 <header>
+
+<script>
+	<% if mode == 'normal' then %>
+	let color_scheme = window.matchMedia('(prefers-color-scheme: dark)');
+	document.body.setAttribute('data-theme', color_scheme.matches? 'dark' : 'light');
+	window.matchMedia && color_scheme.addEventListener('change', (event) => {
+	document.body.setAttribute('data-theme', event.matches? 'dark' : 'light');
+	})
+	<% else  %>
+	document.body.setAttribute('data-theme', '<%= mode %>' === 'dark' ? 'dark' : 'light');
+	<% end -%>	
+</script>	
 	
+<% if navbar == 'display' then %>
+<style>
+	:root {
+		--vssrBottom: 50px;
+	}
+</style>
 <div class="navbar">
+<% else  %>
+<style>
+	:root {
+		--vssrBottom: 0px;
+	}
+</style>
+<div class="navbar" style="display: none;">
+<% end -%>
   <a href="/cgi-bin/luci/admin/status/overview"><img src="<%=media%>/images/home.png" /></a>
   <% if navbar_proxy == 'openclash' then %>
   <a href="/cgi-bin/luci/admin/services/<%=navbar_proxy%>"><img src="<%=media%>/images/<%=navbar_proxy%>.png" /></a>
@@ -190,17 +218,6 @@
   <a href="/cgi-bin/luci/admin/system/admin"><img src="<%=media%>/images/user.png" /></a>
 </div>
 
-<script>
-	<% if mode == 'normal' then %>
-	let color_scheme = window.matchMedia('(prefers-color-scheme: dark)');
-	document.body.setAttribute('data-theme', color_scheme.matches? 'dark' : 'light');
-	window.matchMedia && color_scheme.addEventListener('change', (event) => {
-		document.body.setAttribute('data-theme', event.matches? 'dark' : 'light');
-	})
-	<% else  %>
-	document.body.setAttribute('data-theme', '<%= mode %>' === 'dark' ? 'dark' : 'light');
-	<% end -%>	
-</script>
 
 <div class="container">
 	<span class="showSide"></span>

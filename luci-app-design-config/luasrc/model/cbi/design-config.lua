@@ -3,9 +3,10 @@ local nutil = require 'nixio.util'
 local name = 'design'
 local uci = require 'luci.model.uci'.cursor()
 
-local mode, navbar_proxy
+local mode, navbar, navbar_proxy
 if nxfs.access('/etc/config/design') then
     mode = uci:get_first('design', 'global', 'mode')
+    navbar = uci:get_first('design', 'global', 'navbar')
 	navbar_proxy = uci:get_first('design', 'global', 'navbar_proxy')
 end
 
@@ -23,6 +24,13 @@ o.default = mode
 o.rmempty = false
 o.description = translate('You can choose Theme color mode here')
 
+o = s:option(ListValue, 'navbar', translate('Navigation bar setting'))
+o:value('display', translate('Display navigation bar'))
+o:value('close', translate('Close navigation bar'))
+o.default = navbar
+o.rmempty = false
+o.description = translate('The navigation bar is display by default')
+
 o = s:option(ListValue, 'navbar_proxy', translate('Navigation bar proxy'))
 o:value('openclash', 'openclash')
 o:value('shadowsocksr', 'shadowsocksr')
@@ -37,7 +45,7 @@ o = s:option(Button, 'save', translate('Save Changes'))
 o.inputstyle = 'reload'
 
 function br.handle(self, state, data)
-    if (state == FORM_VALID and data.mode ~= nil  and data.navbar_proxy ~= nil) then
+    if (state == FORM_VALID and data.mode ~= nil and data.navbar ~= nil and data.navbar_proxy ~= nil) then
         nxfs.writefile('/tmp/aaa', data)
         for key, value in pairs(data) do
             uci:set('design','@global[0]',key,value)

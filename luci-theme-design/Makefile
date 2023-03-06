@@ -7,7 +7,7 @@ include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=Design Theme
 LUCI_DEPENDS:=
-PKG_VERSION:=5.3.8
+PKG_VERSION:=5.4.0
 PKG_RELEASE:=20230306
 
 include $(TOPDIR)/feeds/luci/luci.mk
