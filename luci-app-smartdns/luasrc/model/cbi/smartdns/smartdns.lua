@@ -1,5 +1,5 @@
 --
--- Copyright (C) 2018-2020 Ruilin Peng (Nick) <pymumu@gmail.com>.
+-- Copyright (C) 2018-2023 Ruilin Peng (Nick) <pymumu@gmail.com>.
 --
 -- smartdns is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -34,6 +34,8 @@ s.anonymous = true
 s:tab("settings", translate("General Settings"))
 s:tab("advanced", translate('Advanced Settings'))
 s:tab("seconddns", translate("Second Server Settings"))
+s:tab("dns64", translate("DNS64 Server Settings"))
+s:tab("proxy", translate("Proxy Server Settings"))
 s:tab("custom", translate("Custom Settings"))
 
 ---- Eanble
@@ -54,6 +56,14 @@ o.placeholder = 53
 o.default     = 53
 o.datatype    = "port"
 o.rempty      = false
+
+-- Automatically Set Dnsmasq
+o = s:taboption("settings", Flag, "auto_set_dnsmasq", translate("Automatically Set Dnsmasq"), translate("Automatically set as upstream of dnsmasq when port changes."))
+o.rmempty     = false
+o.default     = o.enabled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "0"
+end
 
 ---- Speed check mode;
 o = s:taboption("advanced", Value, "speed_check_mode", translate("Speed Check Mode"), translate("Smartdns speed check mode."));
@@ -101,6 +111,16 @@ function o.validate (section_id, value)
     return value
 end
 
+---- response mode;
+o = s:taboption("advanced", ListValue, "response_mode", translate("Response Mode"), 
+    translate("Smartdns response mode, First Ping: return the first ping IP, Fastest IP: return the fastest IP, Fastest Response: return the fastest DNS response."))
+o.rmempty     = true
+o.placeholder = "default"
+o:value("", translate("default"))
+o:value("first-ping", translate("First Ping"))
+o:value("fastest-ip", translate("Fastest IP"))
+o:value("fastest-response", translate("Fastest Response"))
+
 ---- Enable TCP server
 o = s:taboption("advanced", Flag, "tcp_server", translate("TCP Server"), translate("Enable TCP DNS Server"))
 o.rmempty     = false
@@ -116,6 +136,20 @@ o.default     = o.enabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "1"
 end
+
+---- bind to device;
+o = s:taboption("advanced", Flag, "bind_device", translate("Bind Device"), translate("Listen only on the specified interfaces."))
+o.rmempty     = false
+o.default     = o.enabled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "1"
+end
+
+---- bind device name;
+o = s:taboption("advanced", Value, "bind_device_name", translate("Bind Device Name"), translate("Name of device name listen on."))
+o.placeholder = "default"
+o.rempty      = true
+o.datatype    = "string"
 
 ---- Support DualStack ip selection
 o = s:taboption("advanced", Flag, "dualstack_ip_selection", translate("Dual-stack IP Selection"), translate("Enable IP selection between IPV4 and IPV6"))
@@ -146,20 +180,20 @@ end
 o = s:taboption("advanced", Value, "cache_size", translate("Cache Size"), translate("DNS domain result cache size"))
 o.rempty      = true
 
+---- cache-persist;
+o = s:taboption("advanced", Flag, "cache_persist", translate("Cache Persist"), translate("Write cache to disk on exit and load on startup."))
+o.rmempty      = false;
+o.default     = o.enabled;
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "1"
+end
+
 -- cache-size
 o = s:taboption("advanced", Flag, "resolve_local_hostnames", translate("Resolve Local Hostnames"), translate("Resolve local hostnames by reading Dnsmasq lease file."))
 o.rmempty     = false
 o.default     = o.enabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "1"
-end
-
--- Automatically Set Dnsmasq
-o = s:taboption("advanced", Flag, "auto_set_dnsmasq", translate("Automatically Set Dnsmasq"), translate("Automatically set as upstream of dnsmasq when port changes."))
-o.rmempty     = false
-o.default     = o.enabled
-o.cfgvalue    = function(...)
-    return Flag.cfgvalue(...) or "0"
 end
 
 -- Force AAAA SOA
@@ -176,6 +210,31 @@ o.rmempty     = false
 o.default     = o.enabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "1"
+end
+
+---- Ipset no speed.
+o = s:taboption("advanced", Value, "ipset_no_speed", translate("No Speed IPset Name"), 
+    translate("Ipset name, Add domain result to ipset when speed check fails."));
+o.rmempty = true;
+o.datatype = "hostname";
+o.rempty = true;
+
+---- NFTset no speed.
+o = s:taboption("advanced", Value, "nftset_no_speed", translate("No Speed NFTset Name"), 
+    translate("Nftset name, Add domain result to nftset when speed check fails, format: [#[4|6]:[family#table#set]]"));
+o.rmempty    = true;
+o.datatype   = "string";
+o.rempty     = true;
+function o.validate(self, value) 
+    if (value == "") then
+        return value
+    end
+
+    if (value:match("#[4|6]:[a-zA-Z0-9%-_]+#[a-zA-Z0-9%-_]+#[a-zA-Z0-9%-_]+$")) then
+        return value
+    end
+
+    return nil, translate("NFTset name format error, format: [#[4|6]:[family#table#set]]")
 end
 
 ---- rr-ttl
@@ -297,6 +356,27 @@ o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
 end
+
+----- Proxy server settings
+o = s:taboption("proxy", Value, "proxy_server", translate("Proxy Server"), translate("Proxy Server URL, format: [socks5|http]://user:pass@ip:port."));
+o.datatype = 'string';
+function o.validate(self, value)
+    if (value == "") then
+        return true
+    end
+
+    if (not value:match("^http://") and not value:match("^socks5://")) then
+        return nil, translate("Proxy server URL format error, format: [socks5|http]://user:pass@ip:port.")
+    end
+
+    return value
+end
+
+----- dns64 server settings
+o = s:taboption("dns64", Value, "dns64", translate("DNS64"));
+o.placeholder = "64:ff9b::/96"
+o.datatype = 'ip6addr'
+o.rmempty = true
 
 ----- custom settings
 custom = s:taboption("custom", Value, "Custom Settings",

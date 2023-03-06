@@ -1,7 +1,0 @@
-#!/bin/sh
-uci batch <<-EOF
-	set luci.themes.mcat=/luci-static/mcat
-	set luci.main.mediaurlbase=/luci-static/mcat
-	commit luci
-EOF
-exit 0

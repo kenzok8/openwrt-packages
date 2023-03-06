@@ -1,27 +1,28 @@
 <script type="text/javascript">//<![CDATA[
-XHR.poll(3, '<%=luci.dispatcher.build_url("admin", "services", "smartdns", "status")%>', null,
-	function(x, data) {
-		var tb = document.getElementById('smartdns_status');
-		if (data && tb) {
-			var links = "";
-			if (data.running) {
-				links = '<b><font color=green>SmartDNS - <%:RUNNING%></font></b></em>';
-				if (data.dnsmasq_redirect_failure == 1) {
-					links += "<br></br><b><font color=red><%:Dnsmasq Forwared To Smartdns Failure%></font></b>"
+	XHR.poll(3, '<%=luci.dispatcher.build_url("admin", "services", "smartdns", "status")%>', null,
+		function(x, data) {
+			var tb = document.getElementById('smartdns_status');
+			if (data && tb) {
+				var links = "";
+				if (data.running) {
+					links = '<b><font color=green>SmartDNS - <%:RUNNING%></font></b></em>';
+					if (data.dnsmasq_redirect_failure == 1) {
+						links += "<br></br><b><font color=red><%:Dnsmasq Forwarded To Smartdns Failure%></font></b>"
+					}
+				} else {
+					links = '<b><font color=red>SmartDNS - <%:NOT RUNNING%></font></b>';
 				}
-			} else {
-				links = '<b><font color=red>SmartDNS - <%:NOT RUNNING%></font></b>';
+	
+				tb.innerHTML = links;
 			}
-
-			tb.innerHTML = links;
 		}
-	}
-);
-//]]>
-</script>
-<style>.mar-10 {margin-left: 50px; margin-right: 10px;}</style>
-<fieldset class="cbi-section">
-	<p id="smartdns_status">
-		<em><%:Collecting data...%></em>
-	</p>
-</fieldset>
+	);
+	//]]>
+	</script>
+	<style>.mar-10 {margin-left: 50px; margin-right: 10px;}</style>
+	<fieldset class="cbi-section">
+		<p id="smartdns_status">
+			<em><%:Collecting data...%></em>
+		</p>
+	</fieldset>
+	

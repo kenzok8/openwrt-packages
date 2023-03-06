@@ -110,23 +110,19 @@ plugins:
       - matches: has_resp
         exec: accept
 
-
   # fallback 用本地服务器 sequence
-  # 返回不包含本地 ip 则 reject
   - tag: query_is_local_ip
     type: sequence
     args:
       - exec: $local_sequence
-      - matches: resp_ip $geoip_cn
-        exec: accept
-      - exec: reject
+      - matches: "!resp_ip $geoip_cn"
+        exec: drop_resp
 
   # fallback 用远程服务器 sequence
   - tag: query_is_remote
     type: sequence
     args:
       - exec: $remote_sequence
-      - exec: accept
 
   # fallback 用远程服务器 sequence
   - tag: fallback

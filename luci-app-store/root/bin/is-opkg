@@ -1,4 +1,6 @@
 #!/bin/sh
+# this script MUST supports executting without luci-app-store installed,
+# so we can use this script to install luci-app-store itself
 
 IS_ROOT=/tmp/is-root
 DL_DIR=${IS_ROOT}/tmp/dl
@@ -6,7 +8,7 @@ LISTS_DIR_O=/tmp/opkg-lists
 LISTS_DIR=${IS_ROOT}${LISTS_DIR_O}
 OPKG_CONF_DIR=${IS_ROOT}/etc/opkg
 FEEDS_SERVER=https://istore.linkease.com/repo
-ARCH=`jsonfilter -i /etc/.app_store.id -e '$.arch'`
+ARCH=`sed -n -e 's/^Architecture: *\([^ ]\+\) *$/\1/p' /rom/usr/lib/opkg/info/libc.control /usr/lib/opkg/info/libc.control 2>/dev/null | head -1`
 
 # for istore self upgrade
 ISTORE_PKG=luci-app-store
@@ -19,12 +21,13 @@ shift
 is_init() {
     mkdir -p ${DL_DIR} ${LISTS_DIR} ${IS_ROOT}/etc ${IS_ROOT}/var
 
-    cat /etc/opkg.conf | grep -v lists_dir | grep -v check_signature > ${IS_ROOT}/etc/opkg.conf
+    cat /etc/opkg.conf | grep -Fv lists_dir | grep -Fv check_signature > ${IS_ROOT}/etc/opkg.conf
 
     cp ${IS_ROOT}/etc/opkg.conf ${IS_ROOT}/etc/opkg_o.conf
 
     echo >> ${IS_ROOT}/etc/opkg.conf
     echo "lists_dir ext ${LISTS_DIR}" >> ${IS_ROOT}/etc/opkg.conf
+    # create opkg_o.conf for executting 'opkg update' with offline-root, so we don't overwrite system opkg list
     echo >> ${IS_ROOT}/etc/opkg_o.conf
     echo "lists_dir ext ${LISTS_DIR_O}" >> ${IS_ROOT}/etc/opkg_o.conf
 
@@ -52,8 +55,6 @@ check_space() {
 update() {
     if [ -z "${ARCH}" ]; then
         echo "Get architecture failed" >&2
-        echo "/etc/.app_store.id:" >&2
-        cat /etc/.app_store.id >&2
         return 1
     fi
 
@@ -171,6 +172,7 @@ usage() {
     echo "      list-upgradable                 List installed and upgradable packages"
     echo "      check_self_upgrade              Check iStore upgrade"
     echo "      do_self_upgrade                 Upgrade iStore"
+    echo "      arch                            Show libc architecture"
     echo "      opkg                            sys opkg wrap"
 }
 
@@ -202,6 +204,9 @@ case $action in
     "do_self_upgrade")
         check_space
         do_self_upgrade
+    ;;
+    "arch")
+        echo "$ARCH"
     ;;
     "opkg")
         opkg_wrap "$@"

@@ -9,7 +9,7 @@ local UTIL = require "luci.util"
 local fs = require "luci.openclash"
 local uci = require "luci.model.uci".cursor()
 
-m = Map(openclash,  translate("Rule Providers and Groups"))
+m = Map(openclash,  translate("Rule Providers Append"))
 m.pageaction = false
 m.description=translate("Attention:")..
 "<br/>"..translate("The game proxy is a test function and does not guarantee the availability of rules")..
@@ -42,11 +42,11 @@ function IsYmlFile(e)
 end
 
 -- [[ Edit Game Rule ]] --
-s = m:section(TypedSection, "game_config", translate("Game Rules and Groups (Only TUN & Meta Core Support)"))
+s = m:section(TypedSection, "game_config", translate("Game Rules Append (Only TUN & Meta Core Support)"))
 s.anonymous = true
 s.addremove = true
 s.sortable = true
-s.template = "cbi/tblsection"
+s.template = "openclash/tblsection"
 s.rmempty = false
 
 ---- enable flag
@@ -118,11 +118,11 @@ o:value("REJECT")
 o.rmempty = true
 
 -- [[ Edit Other Rule Provider ]] --
-s = m:section(TypedSection, "rule_provider_config", translate("Other Rule Providers and Groups (Only TUN & Meta Core Support)"))
+s = m:section(TypedSection, "rule_provider_config", translate("Other Rule Providers Append (Only TUN & Meta Core Support)"))
 s.anonymous = true
 s.addremove = true
 s.sortable = true
-s.template = "cbi/tblsection"
+s.template = "openclash/tblsection"
 s.rmempty = false
 
 ---- enable flag
@@ -204,11 +204,11 @@ o:value("0", translate("Priority Match"))
 o:value("1", translate("Extended Match"))
 
 -- [[ Edit Custom Rule Provider ]] --
-s = m:section(TypedSection, "rule_providers", translate("Custom Rule Providers and Groups (Only TUN & Meta Core Support)"))
+s = m:section(TypedSection, "rule_providers", translate("Custom Rule Providers Append (Only TUN & Meta Core Support)"))
 s.anonymous = true
 s.addremove = true
 s.sortable = true
-s.template = "cbi/tblsection"
+s.template = "openclash/tblsection"
 s.extedit = luci.dispatcher.build_url("admin/services/openclash/rule-providers-config/%s")
 function s.create(...)
 	local sid = TypedSection.create(...)

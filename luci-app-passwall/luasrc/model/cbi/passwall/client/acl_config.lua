@@ -222,14 +222,15 @@ for k, v in pairs(nodes_table) do
     udp_node:value(v.id, v["remark"])
 end
 
+o = s:option(Flag, "filter_proxy_ipv6", translate("Filter Proxy Host IPv6"), translate("Experimental feature."))
+o.default = "0"
+o:depends({ tcp_node = "default",  ['!reverse'] = true })
+
 ---- DNS Forward Mode
 o = s:option(ListValue, "dns_mode", translate("Filter Mode"))
 o:depends({ tcp_node = "default",  ['!reverse'] = true })
 if api.is_finded("dns2socks") then
     o:value("dns2socks", "dns2socks")
-end
-if has_v2ray then
-    o:value("v2ray", "V2ray")
 end
 if has_xray then
     o:value("xray", "Xray")
@@ -238,7 +239,6 @@ end
 o = s:option(ListValue, "v2ray_dns_mode", " ")
 o:value("tcp", "TCP")
 o:value("doh", "DoH")
-o:depends("dns_mode", "v2ray")
 o:depends("dns_mode", "xray")
 
 ---- DNS Forward
@@ -294,5 +294,12 @@ end
 o = s:option(Value, "dns_client_ip", translate("EDNS Client Subnet"))
 o.datatype = "ipaddr"
 o:depends("v2ray_dns_mode", "doh")
+
+if has_chnlist and api.is_finded("chinadns-ng") then
+    o = s:option(Flag, "chinadns_ng", translate("ChinaDNS-NG"), translate("The effect is better, but will increase the memory."))
+    o.default = "0"
+    o:depends({ tcp_proxy_mode = "chnroute", dns_mode = "dns2socks"})
+    o:depends({ tcp_proxy_mode = "chnroute", dns_mode = "xray"})
+end
 
 return m

@@ -39,11 +39,11 @@
 				<%
 					if uci:get("openclash", "config", "enable_meta_core") ~= '1' then
 				%>
-	      				<img id="_logo" src="/luci-static/resources/openclash/img/logo.png?<%=random%>" loading="lazy" onload="return logo_check(this,this.src,'https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/logo.png')" onerror="return imgerrorfuns(this,'https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/logo.png')" title="Hello, World!" alt="OpenClash" onclick="return homepage()" />
+	      				<img id="_logo" src="/luci-static/resources/openclash/img/logo.png?<%=random%>" loading="lazy" onload="return logo_check(this,this.src,'https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/logo.png')" onerror="return logo_error(this,'/luci-static/resources/openclash/img/logo.png?<%=random%>')" title="Hello, World!" alt="OpenClash" onclick="return homepage()" />
 				<%
 					else
 				%>
-						<img id="_logo" src="/luci-static/resources/openclash/img/meta.png?<%=random%>" loading="lazy" onload="return logo_check(this,this.src,'https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/meta.png')" onerror="return imgerrorfuns(this,'https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/meta.png')" title="Hello, World!" alt="OpenClash" onclick="return homepage()" />
+						<img id="_logo" src="/luci-static/resources/openclash/img/meta.png?<%=random%>" loading="lazy" onload="return logo_check(this,this.src,'https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/meta.png')" onerror="return logo_error(this,'/luci-static/resources/openclash/img/meta.png?<%=random%>')" title="Hello, World!" alt="OpenClash" onclick="return homepage()" />
 				<%
 					end
 				%>
@@ -485,12 +485,12 @@
 			if (x && x.status == 200 && status.mode) {
 				if (status.mode == "fake-ip" || status.mode == "fake-ip-tun" || status.mode == "fake-ip-mix")
 				{
-					mode.innerHTML = status.clash && status.watchdog ? "<b style=color:green><%:Fake-IP%></b>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;" : '<b style=color:red><%:Not Running%></b>';
+					mode.innerHTML = status.clash && status.watchdog ? "<b style=color:green><%:Fake-IP%></b>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;" : '<b style=color:red><%:Not Running%></b>&nbsp;&nbsp;&nbsp;';
 					radio_run_normal.innerHTML = "<%:Enhance%>"
 				}
 				else if (status.mode == "redir-host" || status.mode == "redir-host-tun" ||  status.mode == "redir-host-mix")
 				{
-					mode.innerHTML = status.clash && status.watchdog ? "<b style=color:green><%:Redir-Host%></b>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;" : '<b style=color:red><%:Not Running%></b>';
+					mode.innerHTML = status.clash && status.watchdog ? "<b style=color:green><%:Redir-Host%></b>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;" : '<b style=color:red><%:Not Running%></b>&nbsp;&nbsp;&nbsp;';
 					radio_run_normal.innerHTML = "<%:Compatible%>"
 				};
 				for (i=0; i<radio_ru.length; i++) {
@@ -906,6 +906,11 @@
     function clashversion_error()
     {
         clashversion.innerHTML = '<img id="clashversion" src="/luci-static/resources/openclash/img/version.svg?<%=random%>" alt="currentversion" height="21px" onerror="return imgerrorfuns(this,\'https://ftp.jaist.ac.jp/pub/sourceforge.jp/storage/g/o/op/openclash/<%=RELEASE_BRANCH%>/img/version.png\')" onclick="return go_update()">';
+    };
+
+	function logo_error(imgobj,imgSrc)
+    {
+		imgobj.src=imgSrc;
     };
     
     function imgerrorfuns(imgobj,imgSrc){
