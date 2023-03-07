@@ -110,11 +110,19 @@ end
 function autoswitch_add_node()
 	local key = luci.http.formvalue("key")
 	if key and key ~= "" then
-		for k, e in ipairs(api.get_valid_nodes()) do
-			if e.node_type == "normal" and e["remark"]:find(key) then
-				luci.sys.call(string.format("uci -q del_list passwall2.@auto_switch[0].node='%s' && uci -q add_list passwall2.@auto_switch[0].node='%s'", e.id, e.id))
+		local new_list = ucic:get(appname, "@auto_switch[0]", "node") or {}
+		for i = #new_list, 1, -1 do
+			if (ucic:get(appname, new_list[i], "remarks") or ""):find(key) then
+				table.remove(new_list, i)
 			end
 		end
+		for k, e in ipairs(api.get_valid_nodes()) do
+			if e.node_type == "normal" and e["remark"]:find(key) then
+				table.insert(new_list, e.id)
+			end
+		end
+		ucic:set_list(appname, "@auto_switch[0]", "node", new_list)
+		ucic:commit(appname)
 	end
 	luci.http.redirect(api.url("auto_switch"))
 end
@@ -122,11 +130,14 @@ end
 function autoswitch_remove_node()
 	local key = luci.http.formvalue("key")
 	if key and key ~= "" then
-		for k, e in ipairs(ucic:get(appname, "@auto_switch[0]", "node") or {}) do
-			if e and (ucic:get(appname, e, "remarks") or ""):find(key) then
-				luci.sys.call(string.format("uci -q del_list passwall2.@auto_switch[0].node='%s'", e))
+		local new_list = ucic:get(appname, "@auto_switch[0]", "node") or {}
+		for i = #new_list, 1, -1 do
+			if (ucic:get(appname, new_list[i], "remarks") or ""):find(key) then
+				table.remove(new_list, i)
 			end
 		end
+		ucic:set_list(appname, "@auto_switch[0]", "node", new_list)
+		ucic:commit(appname)
 	end
 	luci.http.redirect(api.url("auto_switch"))
 end
@@ -188,7 +199,7 @@ function connect_status()
 	local e = {}
 	e.use_time = ""
 	local url = luci.http.formvalue("url")
-	local result = luci.sys.exec('curl --connect-timeout 3 -o /dev/null -I -skL -w "%{http_code}:%{time_starttransfer}" ' .. url)
+	local result = luci.sys.exec('curl --connect-timeout 3 -o /dev/null -I -sk -w "%{http_code}:%{time_starttransfer}" ' .. url)
 	local code = tonumber(luci.sys.exec("echo -n '" .. result .. "' | awk -F ':' '{print $1}'") or "0")
 	if code ~= 0 then
 		local use_time = luci.sys.exec("echo -n '" .. result .. "' | awk -F ':' '{print $2}'")
@@ -294,11 +305,12 @@ function delete_select_nodes()
 	local ids = luci.http.formvalue("ids")
 	local auto_switch_node_list = ucic:get(appname, "@auto_switch[0]", "node") or {}
 	string.gsub(ids, '[^' .. "," .. ']+', function(w)
-		for k, v in ipairs(auto_switch_node_list) do
-			if v == w then
-				luci.sys.call(string.format("uci -q del_list passwall2.@auto_switch[0].node='%s'", w))
+		for i = #auto_switch_node_list, 1, -1 do
+			if w == auto_switch_node_list[i] then
+				table.remove(auto_switch_node_list, i)
 			end
 		end
+		ucic:set_list(appname, "@auto_switch[0]", "node", auto_switch_node_list)
 		if (ucic:get(appname, "@global[0]", "node") or "nil") == w then
 			ucic:set(appname, '@global[0]', "node", "nil")
 		end

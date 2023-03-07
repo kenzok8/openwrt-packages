@@ -966,7 +966,7 @@ function gen_config(var)
                 port = tonumber(remote_dns_port) or 53,
                 network = _remote_dns_proto or "tcp",
             }
-            local type_dns = remote_type_dns
+            local type_dns = direct_type_dns
             table.insert(outbounds, {
                 tag = "dns-out",
                 protocol = "dns",

@@ -28,28 +28,6 @@
         document.getElementsByTagName('head')[0].appendChild(oMeta);
     }
 
-    // .node-status-realtime embed[src="/luci-static/resources/bandwidth.svg"] + div + br + table
-    // .node-status-realtime embed[src="/luci-static/resources/wifirate.svg"] + div + br + table
-    // .node-status-realtime embed[src="/luci-static/resources/wireless.svg"] + div + br + table
-    $(document).ready(() => {
-        const elements = ["bandwidth", "wifirate", "wireless"];
-        elements.forEach(value => {
-        const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
-        const div = document.createElement("div");
-        div.style.overflowX = "auto";
-        target.length !== 0 ? div.before(target.clone().get(0)) && target.remove() : null;
-      });
-    });
-
-    // Fixed scrollbar styles for browsers on different platforms
-    $(document).ready(() => {
-        settingGlobalScroll();
-    });
-
-    $(window).resize(() => {
-        settingGlobalScroll();
-    });
-
     function settingGlobalScroll() {
         let global = $('head #global-scroll');
         let isMobile = /phone|pad|pod|iPhone|iPod|ios|iOS|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone/i.test(navigator.userAgent);
@@ -65,6 +43,21 @@
             $("head").append(style)
         }
     }
+
+    $(document).ready(() => {
+        // Fixed scrollbar styles for browsers on different platforms
+        settingGlobalScroll();
+        // .node-status-realtime embed[src="/luci-static/resources/bandwidth.svg"] + div + br + table
+        // .node-status-realtime embed[src="/luci-static/resources/wifirate.svg"] + div + br + table
+        // .node-status-realtime embed[src="/luci-static/resources/wireless.svg"] + div + br + table
+        const elements = ["bandwidth", "wifirate", "wireless"];
+        elements.forEach(value => {
+        const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
+        const div = document.createElement("div");
+        div.style.overflowX = "auto";
+        target.length !== 0 ? div.before(target.clone().get(0)) && target.remove() : null;
+      });
+    });
 
     /**
      * trim text, Remove spaces, wrap
@@ -238,6 +231,9 @@
     });
 
     $(window).resize(function () {
+        // Fixed scrollbar styles for browsers on different platforms
+        settingGlobalScroll();
+
         if ($(window).width() > 992) {
             $(".showSide").css("display", "");
             $(".main-left").css("width", "");

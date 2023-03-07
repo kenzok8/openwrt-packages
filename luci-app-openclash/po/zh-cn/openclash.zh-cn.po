@@ -1923,8 +1923,8 @@ msgstr "警告：由于第三方规则设置中的策略组名称与配置文件
 msgid "Error: Missing Porxy-Group's Name, Stop Setting The Other Rules!"
 msgstr "错误：丢失或未指定第三方规则中的部分策略组，停止继续设置第三方规则！"
 
-msgid "Detected That The nameserver DNS Option Has No Server Set, Starting To Complete..."
-msgstr "检测到DNS选项下的 Nameserver 未设置服务器，开始补全..."
+msgid "Tip: Detected That The nameserver DNS Option Has No Server Set, Starting To Complete..."
+msgstr "提示：检测到DNS选项下的 Nameserver 未设置服务器，开始补全..."
 
 msgid "Error: Failed To Download Proxy-providers, Please Check The Log Page For Detailed error information!"
 msgstr "错误：代理集文件下载失败，请到日志页面查看详细错误信息！"
@@ -2109,8 +2109,8 @@ msgstr "下载成功！"
 msgid "Switch To The New Proxy When The Delay Difference Between Old and The Fastest Currently is Greater Than This Value"
 msgstr "仅当旧代理和当前最快代理之间的延迟差大于此值时，才会切换到新代理"
 
-msgid "Url-Test Group Tolerance (ms)"
-msgstr "Url-Test 策略组切换灵敏度（ms）"
+msgid "URL-Test Group Tolerance"
+msgstr "URL-Test 策略组切换灵敏度"
 
 msgid "Attention:"
 msgstr "注意事项："
@@ -2355,8 +2355,8 @@ msgstr "错误：更新的规则文件解析失败，"
 msgid "Error: Edit Provider Path Failed,"
 msgstr "错误：修改集路径失败，"
 
-msgid "Error: Set Url-Test Group Tolerance Failed,"
-msgstr "错误：修改 Url-Test 策略组容忍值失败，"
+msgid "Error: Edit URL-Test Group Tolerance Option Failed,"
+msgstr "错误：修改 URL-Test 策略组容忍值失败，"
 
 msgid "Error: Game Proxy Merge Failed,"
 msgstr "错误：游戏规则策略组合并失败，"
@@ -3231,14 +3231,23 @@ msgstr "自定义标记"
 msgid "Mark as Custom Node to Prevent Retention config from being Deleted When Enabled"
 msgstr "标记为自定义节点，防止保留配置启用时被删除"
 
-msgid "Error: Edit Speedtest URL Failed,"
+msgid "Error: Edit URL-Test URL Failed,"
 msgstr "错误：修改测速地址失败，"
 
-msgid "Url-Test Address Modify"
+msgid "Error: Edit URL-Test Interval Failed,"
+msgstr "错误：修改测速间隔失败，"
+
+msgid "URL-Test Address Modify"
 msgstr "测速（连通性）地址修改"
 
-msgid "Modify The Url-Test Address In The Config"
+msgid "Modify The URL-Test Address In The Config"
 msgstr "修改配置文件中的测速（连通性）地址"
+
+msgid "URL-Test Interval Modify"
+msgstr "测速（连通性）间隔修改"
+
+msgid "Modify The URL-Test Interval In The Config"
+msgstr "修改配置文件中的测速（连通性）间隔"
 
 msgid "Whether to Enable Process Rules, If You Are Not Sure, Please Choose off Which Useful in Router Environment"
 msgstr "是否启用进程规则，在路由环境下保持关闭可以提升性能"
@@ -3283,7 +3292,7 @@ msgid "Custom Config Overwrite Scripts Which Will Run After Plugin Own Completel
 msgstr "自定义配置文件的覆写脚本，此脚本将在插件覆写完成后执行，请谨慎修改，错误的修改可能会导致异常"
 
 msgid "Custom Firewall Rules, Support IPv4 and IPv6, All Rules Will Be Added After Plugin Own Completely"
-msgstr "自定义防火墙规则，支持 IPv4 和 IPv6，此脚本规则将在 OpenClash 的内置规则完成后执行"
+msgstr "自定义防火墙规则，支持 IPv4 和 IPv6，此脚本将在插件内置规则完成后执行"
 
 msgid "Tip: Start Add Custom Firewall Rules..."
 msgstr "提示：开始添加自定义防火墙规则..."

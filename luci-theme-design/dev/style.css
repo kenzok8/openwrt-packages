@@ -27,7 +27,7 @@
     --tabmenuBorderLR: none;
     --tabmenubgColor: none;
     --tabmenuBottom: #e4eaec 1px solid;
-    --tabmenuRadius: 0;
+    --tabmenuRadius: 6px 6px 0 0;
     --sectionnodeBorder: #f7f7f7 1px solid;
     --cbilineColor: #f7f7f7 1px solid;
     --tabbgColor: #fff;
@@ -49,6 +49,9 @@
     --scrollbarColor:#d0d0d0;
     --ifaceboxBorderColor: #b8b8b8bd;
     --ifaceboxFontColor: #1a1a1a;
+    --liSelectedColor: #c5c5c5;
+    --vssrStatusColor: #525f7f;
+    --vssrBoxShadow: 0 0 2rem 0 rgb(136 152 170 / 30%);
 }
 
 [data-theme='dark'] {
@@ -90,6 +93,9 @@
     --scrollbarColor:#222;
     --ifaceboxBorderColor: #636363bd;
     --ifaceboxFontColor: #1a1a1a;
+    --liSelectedColor: #2f2f2f;
+    --vssrStatusColor: rgb(204, 204, 204);
+    --vssrBoxShadow: 0 0 1rem 0 rgb(0 0 0 / 30%);
 }
 
 @font-face {
@@ -380,14 +386,15 @@ svg {
 
 /* fix node-services-vssr */
 .node-services-vssr .status-bar {
-    bottom:calc(50px + constant(safe-area-inset-bottom));
-    bottom:calc(50px + env(safe-area-inset-bottom));
-    /* display: none; */
+    bottom:calc(var(--vssrBottom) + constant(safe-area-inset-bottom));
+    bottom:calc(var(--vssrBottom) + env(safe-area-inset-bottom));
     background-color: var(--navbgColor);
+    box-shadow: var(--vssrBoxShadow) !important;
+    color: var(--vssrStatusColor) !important;
 }
 .node-services-vssr .container {
-    padding-bottom:calc(50px + constant(safe-area-inset-bottom));
-    padding-bottom:calc(50px + env(safe-area-inset-bottom));
+    padding-bottom:calc(var(--vssrBottom) + constant(safe-area-inset-bottom));
+    padding-bottom:calc(var(--vssrBottom) + env(safe-area-inset-bottom));
 }
 
 .node-services-vssr .ssr-button {
@@ -3293,7 +3300,7 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 
 /* fix new version luci-app-openclash style */
 .node-services-openclash  ul li.selected {
-    background-color: var(--activeColor) !important;
+    background-color: var(--liSelectedColor) !important;
 }
 
 .node-services-openclash .cbi-button-reset, 
@@ -3301,7 +3308,19 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
     max-width: unset !important;
 }
 
+.node-services-openclash #tab-header ul li.selected,
+.node-services-openclash #tab-header ul li {
+    color: black !important;
+    background-color: unset !important
+}
+
 /* fix qBittorrent status style*/
 .node-nas-qbittorrent p#qBittorrent_status input {
     line-height: unset;
+}
+
+/* fix node-system-diskman dialog-format-active */
+.node-system-diskman.dialog-format-active #dialog_format .dialog_box {
+    background: var(--alertBackground);
+    border-radius: 5px;
 }

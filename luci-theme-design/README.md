@@ -26,6 +26,9 @@ luci-theme-design is an OpenWrt LuCI theme for immersive WebApp experience and o
 > **luci-theme-design** based on luci-theme-neobird, suitable for [lede](https://github.com/coolsnowwolf/lede) / [OpenWrt](https://github.com/openwrt/openwrt ).
 > The default branch only supports the lua version of the lede source code. If you use openwrt 21/22, please pull the [js](https://github.com/gngpp/luci-theme-design/tree/js) version(Development stage).
 
+- Thanks for non-commercial open source development authorization by [JetBrains](https://www.jetbrains.com/)!
+<a href="https://www.jetbrains.com/?from=gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" width="250" align="middle"/></a>
+
 ### Release version
 
 - Lua version select 5.x version

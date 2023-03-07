@@ -22,6 +22,18 @@ msgstr "强制暗色"
 msgid "You can choose Theme color mode here"
 msgstr "你可以选择喜欢的主题模式"
 
+msgid "Navigation bar setting"
+msgstr "导航栏设置"
+
+msgid "Display navigation bar"
+msgstr "显示导航栏"
+
+msgid "Close navigation bar"
+msgstr "关闭导航栏"
+
+msgid "The navigation bar is display by default"
+msgstr "默认显示导航栏"
+
 msgid "Navigation bar proxy"
 msgstr "导航栏代理"
 
