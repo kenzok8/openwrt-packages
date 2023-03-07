@@ -185,7 +185,7 @@
 	let color_scheme = window.matchMedia('(prefers-color-scheme: dark)');
 	document.body.setAttribute('data-theme', color_scheme.matches? 'dark' : 'light');
 	window.matchMedia && color_scheme.addEventListener('change', (event) => {
-	document.body.setAttribute('data-theme', event.matches? 'dark' : 'light');
+		document.body.setAttribute('data-theme', event.matches? 'dark' : 'light');
 	})
 	<% else  %>
 	document.body.setAttribute('data-theme', '<%= mode %>' === 'dark' ? 'dark' : 'light');

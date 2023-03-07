@@ -4,6 +4,7 @@ config global
 	option node_socks_port '1070'
 	option localhost_proxy '1'
 	option socks_enabled '0'
+	option acl_enable '0'
 	option node 'myshunt'
 	option direct_dns_protocol 'auto'
 	option direct_dns_query_strategy 'UseIP'
