@@ -26,10 +26,6 @@ define Download/$(PKG_NAME)-web
   HASH:=985049400120547e5db81d228d2492febd16d0cbb158dfb2a4149af3d6cbd253
 endef
 
-PKG_CONFIG_DEPENDS:= \
-	CONFIG_ALIST_COMPRESS_GOPROXY \
-	CONFIG_ALIST_COMPRESS_UPX
-
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
@@ -44,37 +40,18 @@ GO_PKG_LDFLAGS_X:= \
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
-define Package/$(PKG_NAME)/Default
-	SECTION:=net
-	CATEGORY:=Network
-	SUBMENU:=Web Servers/Proxies
-	TITLE:=Alist - Main program
-	URL:=https://alist-doc.nn.ci/
+define Package/$(PKG_NAME)
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=Web Servers/Proxies
+  TITLE:=A file list program that supports multiple storage
+  URL:=https://alist-doc.nn.ci/
+  DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
 define Package/$(PKG_NAME)/description
-  A file list program that supports multiple storage
+  A file list program that supports multiple storage, powered by Gin and Solidjs.
 endef
-
-define Package/$(PKG_NAME)
-	$(call Package/alist/Default)
-	DEPENDS:=$(GO_ARCH_DEPENDS)
-endef
-
-define Package/$(PKG_NAME)/config
-config ALIST_COMPRESS_UPX
-	bool "Compress executable files with UPX"
-	default n
-
-config ALIST_COMPRESS_GOPROXY
-	bool "Compiling with GOPROXY proxy"
-	default n
-endef
-
-ifeq ($(CONFIG_ALIST_COMPRESS_GOPROXY),y)
-	export GO111MODULE=on
-	export GOPROXY=https://mirrors.aliyun.com/goproxy/
-endif
 
 define Build/Prepare
 	$(call Build/Prepare/Default)
@@ -83,17 +60,10 @@ define Build/Prepare
 	$(CP) ./files/assets/. $(PKG_BUILD_DIR)/public/dist/assets/
 endef
 
-define Build/Compile
-	$(call GoPackage/Build/Compile)
-ifneq ($(CONFIG_ALIST_COMPRESS_UPX),)
-	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(GO_PKG_BUILD_BIN_DIR)/alist
-endif
-endef
-
 define Package/$(PKG_NAME)/install
+	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_BIN) $(GO_PKG_BUILD_BIN_DIR)/alist $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/alist $(1)/usr/bin
 endef
 
-$(eval $(call GoBinPackage,$(PKG_NAME)))
 $(eval $(call BuildPackage,$(PKG_NAME)))
