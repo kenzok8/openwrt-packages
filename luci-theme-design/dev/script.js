@@ -20,27 +20,28 @@
 (function ($) {
 
     // Fixed openclash plugin causing env(safe-area-inset-bottom) to be 0 under https
+    const appleUserAgentRegex = /(iPhone|iPad|iPod|iOS|Mac|Macintosh)/i;
     var url = self.location.href; 
-    if ((/(iPhone|iPad|iPod|iOS|Mac|Macintosh)/i.test(navigator.userAgent)) && url.indexOf("openclash") != -1 ) {
+    if (navigator.userAgent.match(appleUserAgentRegex) && url.indexOf("openclash") != -1 ) {
         var oMeta = document.createElement('meta');
         oMeta.content = 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover';
         oMeta.name = 'viewport';
-        document.getElementsByTagName('head')[0].appendChild(oMeta);
+        document.querySelector('head').appendChild(oMeta);
     }
+    
 
     function settingGlobalScroll() {
-        let global = $('head #global-scroll');
-        let isMobile = /phone|pad|pod|iPhone|iPod|ios|iOS|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone/i.test(navigator.userAgent);
-        if (isMobile) {
-            if (global.length > 0) {
-                global.remove();
-            }
-        } else if (global.length == 0 ) {
-            var style = document.createElement('style');
-            style.type = 'text/css';
-            style.id = "global-scroll";
-            style.innerHTML="::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px;}"
-            $("head").append(style)
+        const global = $('head #global-scroll');
+        const isMobile = /phone|pad|pod|iPhone|iPod|ios|iOS|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone/i.test(navigator.userAgent);
+        
+        if (!isMobile && global.length === 0) {
+          const style = document.createElement('style');
+          style.type = 'text/css';
+          style.id = 'global-scroll';
+          style.textContent = '::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px; }';
+          $('head').append(style);
+        } else if (isMobile && global.length > 0) {
+          global.remove();
         }
     }
 
@@ -50,13 +51,20 @@
         // .node-status-realtime embed[src="/luci-static/resources/bandwidth.svg"] + div + br + table
         // .node-status-realtime embed[src="/luci-static/resources/wifirate.svg"] + div + br + table
         // .node-status-realtime embed[src="/luci-static/resources/wireless.svg"] + div + br + table
-        const elements = ["bandwidth", "wifirate", "wireless"];
-        elements.forEach(value => {
-        const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
-        const div = document.createElement("div");
-        div.style.overflowX = "auto";
-        target.length !== 0 ? div.before(target.clone().get(0)) && target.remove() : null;
-      });
+        if ($('.node-status-realtime').length != 0) {
+            const selectorValues = ["bandwidth", "wifirate", "wireless"];
+            selectorValues.forEach(value => {
+              const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
+              if (target.length) {
+                const div = document.createElement("div");
+                div.style.overflowX = "auto";
+                target.before(div);
+                const newTarget = target.clone();
+                target.remove();
+                div.appendChild(newTarget.get(0));
+              }
+            });
+        }
     });
 
     /**
