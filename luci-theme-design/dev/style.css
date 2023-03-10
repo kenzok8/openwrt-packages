@@ -120,8 +120,8 @@
 }
 
 @font-face{
-    font-family: 'Cocon-Regular-Font';
-    src : url('../fonts/Cocon-Regular-Font.otf') format('opentype');
+    font-family: 'GenJyuuGothic-Medium';
+    src : url('../fonts/GenJyuuGothic-Medium.otf') format('opentype');
 }
 
 ::-webkit-scrollbar {
@@ -1013,7 +1013,7 @@ padding:0;
 
 header > .container > .brand {
     font-size: 25px;
-    font-family: "Cocon-Regular-Font";
+    font-family: "GenJyuuGothic-Medium";
     /*font-weight:bold;*/
     line-height:60px;
     /*color: white;*/
