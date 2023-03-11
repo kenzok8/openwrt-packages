@@ -3324,3 +3324,7 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
     background: var(--alertBackground);
     border-radius: 5px;
 }
+/* adaption plug-in luci-app-watchcat-plus */
+.node-services-watchcat-plus select[id*="cbi.opt.watchcat"] {
+    width: auto;
+}
