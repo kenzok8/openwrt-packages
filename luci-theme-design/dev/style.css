@@ -48,7 +48,7 @@
     --alertBackground: rgb(230 230 230);
     --scrollbarColor:#d0d0d0;
     --ifaceboxBorderColor: #b8b8b8bd;
-    --ifaceboxFontColor: #1a1a1a;
+    --ifaceboxFontColor: #404040;
     --liSelectedColor: #c5c5c5;
     --vssrStatusColor: #525f7f;
     --vssrBoxShadow: 0 0 2rem 0 rgb(136 152 170 / 30%);
@@ -92,7 +92,7 @@
     --alertBackground: rgb(30 30 30);
     --scrollbarColor:#222;
     --ifaceboxBorderColor: #636363bd;
-    --ifaceboxFontColor: #1a1a1a;
+    --ifaceboxFontColor: #404040;
     --liSelectedColor: #2f2f2f;
     --vssrStatusColor: rgb(204, 204, 204);
     --vssrBoxShadow: 0 0 1rem 0 rgb(0 0 0 / 30%);
@@ -356,7 +356,7 @@ label.zonebadge{
     /* background-color: #5bdeae !important; */
     display: inline-block;
     cursor: pointer;
-    color: #fefefe;
+    color: #666666;
 }
 .zonebadge {
     /* background-color: var(--tabmenubgColor) !important; */
@@ -2001,7 +2001,7 @@ div > .cbi-value:nth-of-type(2n) {
     align-items: center;
     border-radius: 5px;
     border: var(--badgeBorder);
-    color: rgb(132,119,116);
+    color: #666666
 }
 
 #content_syslog {
@@ -2418,9 +2418,21 @@ header > .container > .pull-right > * {
 
 .node-main-login > .main .cbi-input-user,
 .node-main-login > .main .cbi-input-password {
+    appearance: none;
+    outline: 0;
+    padding: 0 0 0 35px;
+    background-repeat: no-repeat;
+    background-position: 10px 10px;
+    background-size: 18px 18px;
     min-width: 15rem;
 }
 
+.node-main-login > .main .cbi-input-user {
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="%23627386" d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4Z"%2F%3E%3C%2Fsvg%3E');
+}
+.node-main-login > .main .cbi-input-password {
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="%23627386" d="M12 17a2 2 0 0 0 2-2a2 2 0 0 0-2-2a2 2 0 0 0-2 2a2 2 0 0 0 2 2m6-9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2h1m-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3Z"%2F%3E%3C%2Fsvg%3E');
+}
 .node-main-login footer {
     bottom: 0;
     position: absolute;
@@ -3297,7 +3309,10 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
     color: var(--ifaceboxFontColor);
     padding: 5px;
 }
-
+.node-network-firewall .zonebadge strong,
+.node-network-firewall label strong {
+    color: var(--ifaceboxFontColor);
+}
 /* fix new version luci-app-openclash style */
 .node-services-openclash  ul li.selected {
     background-color: var(--liSelectedColor) !important;
@@ -3328,3 +3343,4 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-services-watchcat-plus select[id*="cbi.opt.watchcat"] {
     width: auto;
 }
+
