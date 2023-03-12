@@ -26,6 +26,11 @@ luci-theme-design is an OpenWrt LuCI theme for immersive WebApp experience and o
 > **luci-theme-design** based on luci-theme-neobird, suitable for [lede](https://github.com/coolsnowwolf/lede) / [OpenWrt](https://github.com/openwrt/openwrt ).
 > The default branch only supports the lua version of the lede source code. If you use openwrt 21/22, please pull the [js](https://github.com/gngpp/luci-theme-design/tree/js) version(Development stage).
 
+- You can use [plugins](https://github.com/gngpp/luci-app-design-config) to define Settings.
+  - Support changing theme dark/light mode
+  - Support display/hide navbar
+  - Support for replacing commonly used proxy icons
+  
 - Thanks for non-commercial open source development authorization by [JetBrains](https://www.jetbrains.com/)!
 <a href="https://www.jetbrains.com/?from=gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" width="250" align="middle"/></a>
 
@@ -41,11 +46,6 @@ luci-theme-design is an OpenWrt LuCI theme for immersive WebApp experience and o
 - Simple login interface, bottom navigation bar, immersive app-like experience;
 - Adapt to dark mode, adapt to automatic switching of the system;
 - Adapt to openwrt 21/22, lede
-
-### Plugins
-link: https://github.com/gngpp/luci-app-design-config
-- Support changing theme dark/light mode
-- Support for replacing commonly used proxy icons
 
 ### Experience WebApp method
 
