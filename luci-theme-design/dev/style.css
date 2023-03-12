@@ -922,6 +922,114 @@ img[src*="/luci-static/resources/icons/signal-none.png"]
     display: inline-block;
 }
 
+/* fix Main Login*/
+
+.node-main-login {
+    text-align: center;
+    background-color: var(--bgwhite) !important;
+}
+.node-main-login .cbi-section-node > .cbi-value:nth-of-type(2n) {
+    background: none;
+}
+.node-main-login h2 {
+    font-size: 1.5rem;
+}
+
+.node-main-login header {
+    display: none;
+}
+.node-main-login > .main > .main-left {
+    display: none;
+}
+
+.node-main-login > .main > .main-right {
+    width: 100%;
+}
+
+.node-main-login > .main fieldset {
+    padding: 0px !important;
+    margin-bottom: 1rem;
+    display: inline;
+    background: none;
+    border: none;
+    box-shadow: none;
+    overflow: hidden;
+}
+
+.node-main-login > .main fieldset .cbi-value-title {
+    display: none !important;
+}
+
+.node-main-login > .main .cbi-section {
+    margin-top: 10px !important;
+}
+
+.node-main-login > .main .cbi-map {
+}
+
+.node-main-login > .main fieldset .cbi-value {
+}
+
+.node-main-login > .main fieldset .cbi-value-title {
+    padding: 10px 0 10px 5px !important;
+}
+
+.node-main-login > .main .cbi-value {
+    border: none;
+}
+
+.node-main-login > .main .cbi-value-title {
+    width: 7rem;
+}
+
+.node-main-login > .main #maincontent {
+    display: flex;
+    height: 100%;
+    text-align: center;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+}
+
+/* .node-main-login > .main .container {
+    background-image: var(--logo);
+    background-repeat: no-repeat;
+    background-size: 300px auto;
+    width: 300px;
+    padding: 80px 0 0 0;
+} */
+
+.node-main-login > .main form > div:nth-last-child(1) {
+}
+
+
+.node-main-login > .main .cbi-value > * {
+    display: inline-block !important;
+}
+
+.node-main-login > .main .cbi-input-user,
+.node-main-login > .main .cbi-input-password {
+    appearance: none;
+    outline: 0;
+    padding: 0 0 0 35px;
+    background-repeat: no-repeat;
+    background-position: 10px 10px;
+    background-size: 18px 18px;
+    min-width: 15rem;
+}
+
+.node-main-login > .main .cbi-input-user {
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="%23627386" d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4Z"%2F%3E%3C%2Fsvg%3E');
+}
+.node-main-login > .main .cbi-input-password {
+    background-image: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="%23627386" d="M12 17a2 2 0 0 0 2-2a2 2 0 0 0-2-2a2 2 0 0 0-2 2a2 2 0 0 0 2 2m6-9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2h1m-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3Z"%2F%3E%3C%2Fsvg%3E');
+}
+.node-main-login footer {
+    bottom: 0;
+    position: absolute;
+    width: 100%;
+}
+
 .navbar {
   overflow: hidden;
   position: fixed;
@@ -2331,114 +2439,6 @@ header > .container > .pull-right > * {
     display: none;
 }
 
-/* fix Main Login*/
-
-.node-main-login {
-    text-align: center;
-    background-color: var(--bgwhite) !important;
-}
-.node-main-login .cbi-section-node > .cbi-value:nth-of-type(2n) {
-    background: none;
-}
-.node-main-login h2 {
-    font-size: 1.5rem;
-}
-
-.node-main-login header {
-    display: none;
-}
-.node-main-login > .main > .main-left {
-    display: none;
-}
-
-.node-main-login > .main > .main-right {
-    width: 100%;
-}
-
-.node-main-login > .main fieldset {
-    padding: 0px !important;
-    margin-bottom: 1rem;
-    display: inline;
-    background: none;
-    border: none;
-    box-shadow: none;
-    overflow: hidden;
-}
-
-.node-main-login > .main fieldset .cbi-value-title {
-    display: none !important;
-}
-
-.node-main-login > .main .cbi-section {
-    margin-top: 10px !important;
-}
-
-.node-main-login > .main .cbi-map {
-}
-
-.node-main-login > .main fieldset .cbi-value {
-}
-
-.node-main-login > .main fieldset .cbi-value-title {
-    padding: 10px 0 10px 5px !important;
-}
-
-.node-main-login > .main .cbi-value {
-    border: none;
-}
-
-.node-main-login > .main .cbi-value-title {
-    width: 7rem;
-}
-
-.node-main-login > .main #maincontent {
-    display: flex;
-    height: 100%;
-    text-align: center;
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-}
-
-/* .node-main-login > .main .container {
-    background-image: var(--logo);
-    background-repeat: no-repeat;
-    background-size: 300px auto;
-    width: 300px;
-    padding: 80px 0 0 0;
-} */
-
-.node-main-login > .main form > div:nth-last-child(1) {
-}
-
-
-.node-main-login > .main .cbi-value > * {
-    display: inline-block !important;
-}
-
-.node-main-login > .main .cbi-input-user,
-.node-main-login > .main .cbi-input-password {
-    appearance: none;
-    outline: 0;
-    padding: 0 0 0 35px;
-    background-repeat: no-repeat;
-    background-position: 10px 10px;
-    background-size: 18px 18px;
-    min-width: 15rem;
-}
-
-.node-main-login > .main .cbi-input-user {
-    background-image: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="%23627386" d="M12 4a4 4 0 0 1 4 4a4 4 0 0 1-4 4a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 10c4.42 0 8 1.79 8 4v2H4v-2c0-2.21 3.58-4 8-4Z"%2F%3E%3C%2Fsvg%3E');
-}
-.node-main-login > .main .cbi-input-password {
-    background-image: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="%23627386" d="M12 17a2 2 0 0 0 2-2a2 2 0 0 0-2-2a2 2 0 0 0-2 2a2 2 0 0 0 2 2m6-9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2h1V6a5 5 0 0 1 5-5a5 5 0 0 1 5 5v2h1m-6-5a3 3 0 0 0-3 3v2h6V6a3 3 0 0 0-3-3Z"%2F%3E%3C%2Fsvg%3E');
-}
-.node-main-login footer {
-    bottom: 0;
-    position: absolute;
-    width: 100%;
-}
-
 /* fix node-services-shadowsocksr */
 
 .node-services-shadowsocksr .cbi-input-textarea,
@@ -2454,7 +2454,6 @@ header > .container > .pull-right > * {
 .node-network-diagnostics .cbi-section {
     border-radius: 10px;
 }
-
 
 /* fix status overview */
 
