@@ -1,5 +1,22 @@
 <%
 local api = require "luci.passwall2.api"
+local uci = api.uci
+
+local default_node_type = ""
+local shunt_rule_list = {}
+local node = api.uci_get_type("global", "node", "nil")
+if node ~= "nil" then
+	local node_type = api.uci_get_type_id(node, "type")
+	local node_protocol = api.uci_get_type_id(node, "protocol")
+	if (node_type == "V2ray" or node_type == "Xray") and node_protocol == "_shunt" then
+		default_node_type = node_protocol
+		uci:foreach("passwall2", "shunt_rules", function(e)
+			if e[".name"] and e.remarks then
+				shunt_rule_list[#shunt_rule_list + 1] = e
+			end
+		end)
+	end
+end
 -%>
 
 <style>
@@ -180,9 +197,9 @@ table td, .table .td {
 		}
 	}
 	
-	function set_node(protocol) {
-		if (confirm('<%:Are you sure set to%> ' + protocol.toUpperCase() + '<%:the server?%>')==true){
-			window.location.href = '<%=api.url("set_node")%>?protocol=' + protocol + '&section=' + section;
+	function set_node(type, config) {
+		if (confirm('<%:Are you sure set this server?%>')==true){
+			window.location.href = '<%=api.url("set_node")%>?type=' + type + '&config=' + config + '&section=' + section;
 		}
 	}
 	
@@ -459,7 +476,6 @@ table td, .table .td {
 		}
 		document.getElementById("div_node_count").innerHTML = "<div style='margin-top:5px'>" + str + "</div>";
 	}
-	
 	//]]>
 </script>
 
@@ -467,8 +483,16 @@ table td, .table .td {
 	<div id="set_node_div">
 		<div class="cbi-value"><%:You choose node is:%><a style="color: red" id="set_node_name"></a></div>
 		<div class="cbi-value">
-			<input class="btn cbi-button cbi-button-edit" type="button" onclick="set_node('tcp')" value="TCP" />
-			<input class="btn cbi-button cbi-button-edit" type="button" onclick="set_node('udp')" value="UDP" />
+			<%- if default_node_type == "_shunt" then
+				for i, v in ipairs(shunt_rule_list) do
+			-%>
+				<input class="btn cbi-button cbi-button-edit" type="button" onclick="set_node('<%=node%>', '<%=v[".name"]%>')" value="<%=v.remarks%>" />
+			<%-
+				end
+			-%>
+			<% else %>
+				<input class="btn cbi-button cbi-button-edit" type="button" onclick="set_node('@global[0]', 'node')" value="<%:Node%>" />
+			<% end %>
 			<input class="btn cbi-button cbi-button-remove" type="button" onclick="close_set_node_div()" value="<%:Close%>" />
 		</div>
 	</div>
