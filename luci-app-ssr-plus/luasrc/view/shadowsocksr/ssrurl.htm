@@ -282,7 +282,7 @@ function import_ssr_url(btn, urlname, sid) {
 			if (ssm.tls == "tls") {
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls')[0].checked = true;
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls')[0].dispatchEvent(event);
-				document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls_host')[0].value = ssm.host;
+				document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls_host')[0].value = ssm.sni || ssm.host;
 			}
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].checked = true;
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.mux')[0].dispatchEvent(event);
