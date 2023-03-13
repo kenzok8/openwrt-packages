@@ -114,16 +114,6 @@ local securitys = {
 	"chacha20-poly1305"
 }
 
-local flows = {
-	-- xtls
-	"xtls-rprx-origin",
-	"xtls-rprx-origin-udp443",
-	"xtls-rprx-direct",
-	"xtls-rprx-direct-udp443",
-	"xtls-rprx-splice",
-	"xtls-rprx-splice-udp443"
-}
-
 local tls_flows = {
 	-- tls
 	"xtls-rprx-vision",
@@ -672,40 +662,13 @@ o.rmempty = true
 o = s:option(Flag, "tls", translate("TLS"))
 o.rmempty = true
 o.default = "0"
-o:depends({type = "v2ray", v2ray_protocol = "vless", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "vmess", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "trojan", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "shadowsocks", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "socks", socks_ver = "5", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "http", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "vless", reality = false})
+o:depends({type = "v2ray", v2ray_protocol = "vmess", reality = false})
+o:depends({type = "v2ray", v2ray_protocol = "trojan", reality = false})
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocks", reality = false})
+o:depends({type = "v2ray", v2ray_protocol = "socks", socks_ver = "5", reality = false})
+o:depends({type = "v2ray", v2ray_protocol = "http", reality = false})
 o:depends("type", "trojan")
-
--- XTLS
-if is_finded("xray") then
-	o = s:option(Flag, "xtls", translate("XTLS"))
-	o.rmempty = true
-	o.default = "0"
-	o:depends({type = "v2ray", v2ray_protocol = "vless", transport = "tcp", tls = false})
-	o:depends({type = "v2ray", v2ray_protocol = "vless", transport = "kcp", tls = false})
-	o:depends({type = "v2ray", v2ray_protocol = "trojan", transport = "tcp", tls = false})
-	o:depends({type = "v2ray", v2ray_protocol = "trojan", transport = "kcp", tls = false})
-
-	-- Flow
-	o = s:option(Value, "vless_flow", translate("Flow"))
-	for _, v in ipairs(flows) do
-		o:value(v, translate(v))
-	end
-	o.rmempty = true
-	o.default = "xtls-rprx-splice"
-	o:depends("xtls", true)
-
-	o = s:option(Value, "tls_flow", translate("Flow"))
-	for _, v in ipairs(tls_flows) do
-		o:value(v, translate(v))
-	end
-	o.rmempty = true
-	o:depends({type = "v2ray", v2ray_protocol = "vless", transport = "tcp", tls = true})
-end
 
 -- [[ TLS部分 ]] --
 o = s:option(Flag, "tls_sessionTicket", translate("Session Ticket"))
@@ -713,6 +676,33 @@ o:depends({type = "trojan", tls = true})
 o.default = "0"
 
 if is_finded("xray") then
+	-- [[ REALITY ]]
+	o = s:option(Flag, "reality", translate("REALITY"))
+	o.rmempty = true
+	o.default = "0"
+	o:depends({type = "v2ray", v2ray_protocol = "vless", tls = false})
+
+	o = s:option(Value, "reality_publickey", translate("Public key"))
+	o.rmempty = true
+	o:depends({type = "v2ray", v2ray_protocol = "vless", reality = true})
+
+	o = s:option(Value, "reality_shortid", translate("Short ID"))
+	o.rmempty = true
+	o:depends({type = "v2ray", v2ray_protocol = "vless", reality = true})
+
+	o = s:option(Value, "reality_spiderx", translate("spiderX"))
+	o.rmempty = true
+	o:depends({type = "v2ray", v2ray_protocol = "vless", reality = true})
+
+	-- [[ XTLS ]]--
+	o = s:option(Value, "tls_flow", translate("Flow"))
+	for _, v in ipairs(tls_flows) do
+		o:value(v, translate(v))
+	end
+	o.rmempty = true
+	o:depends({type = "v2ray", v2ray_protocol = "vless", transport = "tcp", tls = true})
+	o:depends({type = "v2ray", v2ray_protocol = "vless", transport = "tcp", reality = true})
+
 	-- [[ uTLS ]]--
 	o = s:option(Value, "fingerprint", translate("Finger Print"))
 	o:value("", translate("disable"))
@@ -727,20 +717,18 @@ if is_finded("xray") then
 	o:value("random", translate("random"))
 	o:value("randomized", translate("randomized"))
 	o:depends({type = "v2ray", tls = true})
-	o:depends({type = "v2ray", xtls = true})
-	o.default = ""
+	o:depends({type = "v2ray", reality = true})
 end
 
 o = s:option(Value, "tls_host", translate("TLS Host"))
 o.datatype = "hostname"
 o:depends("tls", true)
-o:depends("xtls", true)
+o:depends("reality", true)
 o:depends("type", "hysteria")
 o.rmempty = true
 
 o = s:option(DynamicList, "tls_alpn", translate("TLS ALPN"))
 o:depends("tls", true)
-o:depends("xtls", true)
 o:depends("type", "tuic")
 o.rmempty = true
 
@@ -752,19 +740,18 @@ o.rmempty = true
 o = s:option(Flag, "insecure", translate("allowInsecure"))
 o.rmempty = false
 o:depends("tls", true)
-o:depends("xtls", true)
 o:depends("type", "hysteria")
 o.description = translate("If true, allowss insecure connection at TLS client, e.g., TLS server uses unverifiable certificates.")
 
 -- [[ Mux ]]--
 o = s:option(Flag, "mux", translate("Mux"))
 o.rmempty = false
-o:depends({type = "v2ray", v2ray_protocol = "vless", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "vmess", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "trojan", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "shadowsocks", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "socks", xtls = false})
-o:depends({type = "v2ray", v2ray_protocol = "http", xtls = false})
+o:depends({type = "v2ray", v2ray_protocol = "vless"})
+o:depends({type = "v2ray", v2ray_protocol = "vmess"})
+o:depends({type = "v2ray", v2ray_protocol = "trojan"})
+o:depends({type = "v2ray", v2ray_protocol = "shadowsocks"})
+o:depends({type = "v2ray", v2ray_protocol = "socks"})
+o:depends({type = "v2ray", v2ray_protocol = "http"})
 
 o = s:option(Value, "concurrency", translate("Concurrency"))
 o.datatype = "uinteger"
@@ -782,8 +769,6 @@ o:depends({type = "hysteria", insecure = false})
 o:depends({type = "trojan", tls = true, insecure = false})
 o:depends({type = "v2ray", v2ray_protocol = "vmess", tls = true, insecure = false})
 o:depends({type = "v2ray", v2ray_protocol = "vless", tls = true, insecure = false})
-o:depends({type = "v2ray", v2ray_protocol = "vmess", xtls = true, insecure = false})
-o:depends({type = "v2ray", v2ray_protocol = "vless", xtls = true, insecure = false})
 o.description = translate("If you have a self-signed certificate,please check the box")
 
 o = s:option(DummyValue, "upload", translate("Upload"))

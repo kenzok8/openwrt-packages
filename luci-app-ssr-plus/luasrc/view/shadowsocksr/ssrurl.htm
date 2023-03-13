@@ -308,13 +308,10 @@ function import_ssr_url(btn, urlname, sid) {
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.transport')[0].value = params.get("type") == "http" ? "h2" : params.get("type") || "tcp";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.transport')[0].dispatchEvent(event);
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.vless_encryption')[0].value = params.get("encryption") || "none";
-			if ([ "tls", "xtls" ].includes(params.get("security"))) {
+			if ([ "tls" ].includes(params.get("security"))) {
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.' + params.get("security"))[0].checked = true;
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.' + params.get("security"))[0].dispatchEvent(event);
-				if (params.get("security") === "xtls") {
-					document.getElementsByName('cbid.shadowsocksr.' + sid + '.vless_flow')[0].value = params.get("flow") || "xtls-rprx-splice";
-					document.getElementsByName('cbid.shadowsocksr.' + sid + '.vless_flow')[0].dispatchEvent(event);
-				}
+
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.fingerprint')[0].value = params.get("fp") || "";
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls_host')[0].value = params.get("sni") || "";
 			}
