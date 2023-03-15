@@ -28,8 +28,6 @@
 AUTO_MAINLINE_UBOOT="no"
 # Set the release check file
 release_file="/etc/flippy-openwrt-release"
-# Current device model
-MYDEVICE_NAME="$(cat /proc/device-tree/model | tr -d '\000')"
 #
 #====================================================================================
 
@@ -74,17 +72,14 @@ init_var() {
     fi
     [[ -n "${PLATFORM}" ]] || error_msg "Missing ${PLATFORM} value in ${release_file} file."
 
+    # Define supported platforms
+    support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
+    [[ -n "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" ]] || error_msg "[ ${PLATFORM} ] is not supported."
+
     # Set /boot/vmlinuz-* replication names for different SoCs
-    case "${PLATFORM}" in
-    allwinner) MYBOOT_VMLINUZ="zImage" ;;
-    rockchip) MYBOOT_VMLINUZ="Image" ;;
-    amlogic) MYBOOT_VMLINUZ="zImage" ;;
-    qemu-aarch64)
-        MYBOOT_VMLINUZ="vmlinuz"
-        MYDEVICE_NAME="KVM Virtual Machine"
-        ;;
-    *) error_msg "Unknown device: [ ${MYDEVICE_NAME} ], Not supported." ;;
-    esac
+    MYBOOT_VMLINUZ="$(ls -l /boot/*Image 2>/dev/null | awk '{print $9}' | head -n 1)"
+    MYBOOT_VMLINUZ="${MYBOOT_VMLINUZ##*/}"
+    [[ -n "${MYBOOT_VMLINUZ}" ]] || error_msg "Failed to get Image name: [ ${MYBOOT_VMLINUZ} ]"
 
     # Find the partition where root is located
     ROOT_PTNAME="$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
@@ -112,6 +107,9 @@ init_var() {
     # Move kernel related files to the ${P4_PATH} directory
     mv -f /tmp/upload/* ${P4_PATH} 2>/dev/null
 
+    # Current device model
+    MYDEVICE_NAME="$(cat /proc/device-tree/model | tr -d '\000')"
+    [[ "${PLATFORM}" == "qemu-aarch64" ]] && MYDEVICE_NAME="KVM Virtual Machine"
     echo -e "Current device: ${MYDEVICE_NAME} [ ${PLATFORM} ], Use in [ ${EMMC_NAME} ]"
     sync && echo ""
 }
@@ -121,8 +119,8 @@ check_kernel() {
     cd ${P4_PATH}
 
     # Determine custom kernel filename
-    kernel_boot="$(ls boot-*.tar.gz | head -n 1)"
-    kernel_name="${kernel_boot/boot-/}" && kernel_name="${kernel_name/.tar.gz/}"
+    kernel_boot="$(ls boot-*.tar.gz 2>/dev/null | head -n 1)"
+    kernel_name="${kernel_boot:5:-7}"
 
     KERNEL_VERSION="$(echo ${kernel_name} | grep -oE '^[1-9].[0-9]{1,3}.[0-9]+')"
     echo -e "Kernel name: ${kernel_name}"
