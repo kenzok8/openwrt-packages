@@ -21,38 +21,31 @@
 
     // Fixed openclash plugin causing env(safe-area-inset-bottom) to be 0 under https
     const appleUserAgentRegex = /(iPhone|iPad|iPod|iOS|Mac|Macintosh)/i;
-    var url = self.location.href; 
-    if (navigator.userAgent.match(appleUserAgentRegex) && url.indexOf("openclash") != -1 ) {
+    var url = self.location.href;
+    if (navigator.userAgent.match(appleUserAgentRegex) && url.indexOf("openclash") != -1) {
         var oMeta = document.createElement('meta');
         oMeta.content = 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover';
         oMeta.name = 'viewport';
         document.querySelector('head').appendChild(oMeta);
     }
-    
+
 
     function settingGlobalScroll() {
         const global = $('head #global-scroll');
         const isMobile = /phone|pad|pod|iPhone|iPod|ios|iOS|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone/i.test(navigator.userAgent);
-        
+
         if (!isMobile && global.length === 0) {
-          const style = document.createElement('style');
-          style.type = 'text/css';
-          style.id = 'global-scroll';
-          style.textContent = '::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px; }';
-          $('head').append(style);
+            const style = document.createElement('style');
+            style.type = 'text/css';
+            style.id = 'global-scroll';
+            style.textContent = '::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px; }';
+            $('head').append(style);
         } else if (isMobile && global.length > 0) {
-          global.remove();
+            global.remove();
         }
     }
 
     $(document).ready(() => {
-        // Fixed notice dynamic margin-right
-        var poll_status = $('#xhr_poll_status')
-        if (poll_status.length == 1) {
-            if(poll_status.css('display') == "none" ) {
-                $(".notice").css("margin-right", "0")
-            }
-        }
         // Fixed scrollbar styles for browsers on different platforms
         settingGlobalScroll();
         // .node-status-realtime embed[src="/luci-static/resources/bandwidth.svg"] + div + br + table
@@ -61,17 +54,39 @@
         if ($('.node-status-realtime').length != 0) {
             const selectorValues = ["bandwidth", "wifirate", "wireless"];
             selectorValues.forEach(value => {
-              const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
-              if (target.length) {
-                const div = document.createElement("div");
-                div.style.overflowX = "auto";
-                target.before(div);
-                const newTarget = target.clone();
-                target.remove();
-                div.appendChild(newTarget.get(0));
-              }
+                const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
+                if (target.length) {
+                    const div = document.createElement("div");
+                    div.style.overflowX = "auto";
+                    target.before(div);
+                    const newTarget = target.clone();
+                    target.remove();
+                    div.appendChild(newTarget.get(0));
+                }
             });
         }
+
+        // Fixed luci-app-passwall menu expand
+        if ($(".node-services-passwall").length === 1 && self.location.pathname === "/cgi-bin/luci/admin/services/passwall") {
+            var slide = $(".main > .main-left > .nav > .slide");
+            slide.each(function () {
+                var ul = $(this).children("ul");
+                ul.each(function () {
+                    var liActive = $(this).children("li.active");
+                    liActive.each(function () {
+                        var aTags = $(this).children("a");
+                        aTags.each(function () {
+                            var href = $(this).attr("href");
+                            if (href === "/cgi-bin/luci/admin/services/passwall2") {
+                                $(this).parent("li").removeClass("active");
+                                $(this).closest(".slide").find(".menu").first().click();
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
     });
 
     /**
@@ -88,16 +103,16 @@
     var mainNodeName = undefined;
 
     var nodeUrl = "";
-    (function(node){
-        if (node[0] == "admin"){
+    (function (node) {
+        if (node[0] == "admin") {
             luciLocation = [node[1], node[2]];
-        }else{
+        } else {
             luciLocation = node;
         }
 
-        for(var i in luciLocation){
+        for (var i in luciLocation) {
             nodeUrl += luciLocation[i];
-            if (i != luciLocation.length - 1){
+            if (i != luciLocation.length - 1) {
                 nodeUrl += "/";
             }
         }
@@ -226,7 +241,7 @@
             }, "fast");
             $(".main-right").css("overflow-y", "hidden");
             $(".showSide").css("display", "none");
-            $("header").css("box-shadow",   "17rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header").css("box-shadow", "17rem 2px 4px rgb(0 0 0 / 8%)")
             showSide = true;
         }
     });
@@ -241,7 +256,7 @@
             }, "fast");
             $(".main-right").css("overflow-y", "auto");
             $(".showSide").css("display", "");
-            $("header").css("box-shadow",   "0 2px 4px rgb(0 0 0 / 8%)")
+            $("header").css("box-shadow", "0 2px 4px rgb(0 0 0 / 8%)")
         }
     });
 
@@ -255,9 +270,9 @@
             $(".darkMask").stop(true);
             $(".darkMask").css("display", "none");
             showSide = false;
-            $("header").css("box-shadow",   "17rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header").css("box-shadow", "17rem 2px 4px rgb(0 0 0 / 8%)")
         } else {
-            $("header").css("box-shadow",   "0 2px 4px rgb(0 0 0 / 8%)")
+            $("header").css("box-shadow", "0 2px 4px rgb(0 0 0 / 8%)")
         }
     });
 

@@ -9,16 +9,18 @@ function index()
 	page.dependent = true
 	page.acl_depends = { "luci-app-amlogic" }
 
-	local platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)'") or "Unknown"
+	local platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)' | xargs") or "Unknown"
+	local install_menu = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep SHOW_INSTALL_MENU | awk -F'=' '{print $2}' | grep -oE '(yes|no)' | xargs") or "Unknown"
+
 	entry({ "admin", "system", "amlogic", "info" }, cbi("amlogic/amlogic_info"), _("Amlogic Service"), 1).leaf = true
-	if (string.find(platfrom, "amlogic")) ~= nil then
-	entry({ "admin", "system", "amlogic", "install" }, cbi("amlogic/amlogic_install"), _("Install OpenWrt"), 2).leaf = true
+	if (string.find(platfrom, "amlogic")) ~= nil or (string.find(install_menu, "yes")) ~= nil then
+		entry({ "admin", "system", "amlogic", "install" }, cbi("amlogic/amlogic_install"), _("Install OpenWrt"), 2).leaf = true
 	end
 	entry({ "admin", "system", "amlogic", "upload" }, cbi("amlogic/amlogic_upload"), _("Manually Upload Update"), 3).leaf = true
 	entry({ "admin", "system", "amlogic", "check" }, cbi("amlogic/amlogic_check"), _("Online Download Update"), 4).leaf = true
 	entry({ "admin", "system", "amlogic", "backup" }, cbi("amlogic/amlogic_backup"), _("Backup Firmware Config"), 5).leaf = true
 	if (string.find(platfrom, "qemu")) == nil then
-	entry({ "admin", "system", "amlogic", "armcpu" }, cbi("amlogic/amlogic_armcpu"), _("CPU Settings"), 6).leaf = true
+		entry({ "admin", "system", "amlogic", "armcpu" }, cbi("amlogic/amlogic_armcpu"), _("CPU Settings"), 6).leaf = true
 	end
 	entry({ "admin", "system", "amlogic", "config" }, cbi("amlogic/amlogic_config"), _("Plugin Settings"), 7).leaf = true
 	entry({ "admin", "system", "amlogic", "log" }, cbi("amlogic/amlogic_log"), _("Server Logs"), 8).leaf = true
@@ -82,13 +84,13 @@ else
 end
 
 --Device identification
-device_platfrom = trim(luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)'")) or "Unknown"
+device_platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)' | xargs") or "Unknown"
 if (string.find(device_platfrom, "rockchip")) ~= nil then
 	device_install_script = ""
 	device_update_script = "openwrt-update-rockchip"
 	device_kernel_script = "openwrt-kernel"
 elseif (string.find(device_platfrom, "allwinner")) ~= nil then
-	device_install_script = ""
+	device_install_script = "openwrt-install-allwinner"
 	device_update_script = "openwrt-update-allwinner"
 	device_kernel_script = "openwrt-kernel"
 elseif (string.find(device_platfrom, "qemu")) ~= nil then
@@ -409,8 +411,11 @@ end
 
 --Read external model database
 local function my_model_database()
-	local state = luci.sys.exec("cat /etc/model_database.txt | grep -E '^[0-9]{1,9}.*:' | awk -F ':' '{print $1,$2}' OFS='###' ORS='@@@' | tr ' ' '~' 2>&1")
-	return state
+	if (string.find(device_platfrom, "allwinner")) ~= nil then
+		return luci.sys.exec("cat /etc/model_database.txt 2>/dev/null | grep -E '^w[0-9]{1,9}.*:' | awk -F ':' '{print $1,$2}' OFS='###' ORS='@@@' | tr ' ' '~' 2>&1")
+	else
+		return luci.sys.exec("cat /etc/model_database.txt 2>/dev/null | grep -E '^[0-9]{1,9}.*:' | awk -F ':' '{print $1,$2}' OFS='###' ORS='@@@' | tr ' ' '~' 2>&1")
+	end
 end
 
 --Return external model database

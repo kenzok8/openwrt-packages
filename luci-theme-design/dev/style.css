@@ -46,7 +46,7 @@
     --logo_color: #222b36;
     --alertColor: #000000;
     --alertBackground: rgb(230 230 230);
-    --scrollbarColor:#d0d0d0;
+    --scrollbarColor:#c5c5c5;
     --ifaceboxBorderColor: #b8b8b8bd;
     --ifaceboxFontColor: #404040;
     --liSelectedColor: #c5c5c5;
@@ -90,7 +90,7 @@
     --logo_color: #fefefe;
     --alertColor: #ffffff;
     --alertBackground: rgb(30 30 30);
-    --scrollbarColor:#222;
+    --scrollbarColor:#2f2f2f;
     --ifaceboxBorderColor: #636363bd;
     --ifaceboxFontColor: #404040;
     --liSelectedColor: #2f2f2f;
