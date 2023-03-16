@@ -46,6 +46,13 @@
     }
 
     $(document).ready(() => {
+        // Fixed notice dynamic margin-right
+        var poll_status = $('#xhr_poll_status')
+        if (poll_status.length == 1) {
+            if(poll_status.css('display') == "none" ) {
+                $(".notice").css("margin-right", "0")
+            }
+        }
         // Fixed scrollbar styles for browsers on different platforms
         settingGlobalScroll();
         // .node-status-realtime embed[src="/luci-static/resources/bandwidth.svg"] + div + br + table

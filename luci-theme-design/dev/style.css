@@ -335,7 +335,10 @@ text, line {
 .node-services-passwall2 input.cbi-button.cbi-button {
     max-width: unset;
 }
-
+/* fix luci-app-passwall node_div style */
+.node-services-passwall #set_node_div {
+    background: var(--sectionbgColor);
+}
 
 .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
     font-family: -apple-system, 'Microsoft Yahei';
@@ -1001,7 +1004,6 @@ img[src*="/luci-static/resources/icons/signal-none.png"]
 
 .node-main-login > .main form > div:nth-last-child(1) {
 }
-
 
 .node-main-login > .main .cbi-value > * {
     display: inline-block !important;
