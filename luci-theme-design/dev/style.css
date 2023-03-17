@@ -194,8 +194,8 @@ input {
     font-family: -apple-system, 'Microsoft Yahei', sans-serif, Helvetica, Arial, sans-serif;
     border: var(--inputBorder);
     background-color: var(--inputbgColor);
-    transition: color 150ms ease, border-color 150ms ease, opacity 150ms ease;
-    -webkit-transition: color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+    transition: color 100ms ease, border-color 100ms ease, opacity 100ms ease;
+    -webkit-transition: color 100ms ease, border-color 100ms ease, opacity 100ms ease;
     outline-style: none;
     vertical-align: middle;
     border-radius: 8px;
@@ -284,7 +284,7 @@ header, .main {
 header {
     background-color: var(--bgwhite);
     box-shadow: 17rem 2px 4px rgba(0, 0, 0, 0.08);
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.1s;
     height: 55px;
     float: left;
     position: fixed;
@@ -1090,7 +1090,7 @@ img[src*="/luci-static/resources/icons/signal-none.png"]
     position: fixed;
     padding-top: 15px;
     box-shadow: 0 0px 4px rgb(0 0 0 / 8%);
-    transition: visibility 150ms, width 150ms;
+    transition: visibility 100ms, width 100ms;
 }
 
 .main-right {
@@ -1239,7 +1239,7 @@ p#shadowsocksr_status {
     cursor: pointer;
     font-weight: bold;
     font-size: 1.1rem;
-    transition: all 0.2s;
+    transition: all 0.1s;
 }
 
 /*
@@ -1287,10 +1287,10 @@ p#shadowsocksr_status {
     line-height: 1.6;
     /* Better Font Rendering =========== */
     -moz-osx-font-smoothing: grayscale;
-    transition: all 0.15s ease;
+    transition: all 0.1s ease;
     text-rendering: auto;
     -webkit-font-smoothing: antialiased;
-    transition: all 0.3s;
+    transition: all 0.1s;
 }
 
 .main .main-left .nav li.slide .menu.active::after {
@@ -1440,7 +1440,7 @@ p#shadowsocksr_status {
 .main > .main-left > .nav > .slide > .slide-menu > li:hover {
     background: var(--activeColor);
     color:white !important;
-    transition: all 0.2s;
+    transition: all 0.1s;
 }
 
 .main > .main-left > .nav > .slide > .slide-menu > .active:hover {
@@ -1751,7 +1751,7 @@ td#__status-ifc-signal {
     text-transform: uppercase;
     color: #fff;
     background-color: #337ab7;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.1s ease-in-out;
     display: inline-block;
     border: none;
     cursor: pointer;

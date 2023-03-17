@@ -235,7 +235,7 @@
 			end
 			%>
 			<% if ucichanges > 0 then %>
-			<a class="label notice" href="<%=url(category, 'uci/changes')%>?redir=<%=http.urlencode(http.formvalue('redir') or table.concat(disp.context.request, "/"))%>"><%=translate('Unsaved Changes')%>: <%=ucichanges%></a>
+			<a class="label notice" style="margin-right: 30px;" href="<%=url(category, 'uci/changes')%>?redir=<%=http.urlencode(http.formvalue('redir') or table.concat(disp.context.request, "/"))%>"><%=translate('Unsaved Changes')%>: <%=ucichanges%></a>
 			<% end %>
 			<span id="xhr_poll_status" style="display:none" onclick="XHR.running() ? XHR.halt() : XHR.run()">
 				<span class="label success" id="xhr_poll_status_on"><span id="refresh_on" class="mobile-hide"></span></span>
@@ -244,15 +244,14 @@
 		<script>
 			const pollStatus = document.querySelector('#xhr_poll_status');
 			const notice = document.querySelector('.notice');
-			function updateMarginRight() {
+			function updateMarginRight() {	
+				const style = notice.style; // 缓存样式对象
   				if (pollStatus.style.display === '') {
-    				notice.style.marginRight = '30px';
-				}
-  				if (pollStatus.style.display === 'none') {
-    				notice.style.marginRight = '0';
-  				}
+					notice.style.setProperty('margin-right', '30px', 'important');
+				} else if (pollStatus.style.display === 'none') {
+					notice.style.setProperty('margin-right', '0', 'important');
+  				}			
 			}
-			updateMarginRight();
 			const observer = new MutationObserver(function(mutationsList) {
   				for (let mutation of mutationsList) {
     				if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
@@ -262,6 +261,7 @@
 			});
 			const config = { attributes: true, attributeFilter: ['style'] };
 			observer.observe(pollStatus, config);
+			updateMarginRight();
 		</script>
 		<% end %>
 		</div>
