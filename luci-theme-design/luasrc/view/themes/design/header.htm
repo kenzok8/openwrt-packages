@@ -247,9 +247,9 @@
 			function updateMarginRight() {	
 				const style = notice.style; // 缓存样式对象
   				if (pollStatus.style.display === '') {
-					notice.style.setProperty('margin-right', '30px', 'important');
+					style.setProperty('margin-right', '30px', 'important');
 				} else if (pollStatus.style.display === 'none') {
-					notice.style.setProperty('margin-right', '0', 'important');
+					style.setProperty('margin-right', '0', 'important');
   				}			
 			}
 			const observer = new MutationObserver(function(mutationsList) {
