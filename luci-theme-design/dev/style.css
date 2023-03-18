@@ -3346,4 +3346,7 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-services-watchcat-plus select[id*="cbi.opt.watchcat"] {
     width: auto;
 }
-
+/* fix node-nas-fileassistant table overflow style */
+.node-nas-fileassistant #list-content {
+    overflow: auto;
+}
