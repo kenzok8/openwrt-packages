@@ -2416,7 +2416,6 @@ header > .container > .pull-right > * {
     border-radius: 10px;
     z-index: 10;
     top: 22px;
-    margin-right: 30px;
 }
 
 #refresh_on, #refresh_off {
