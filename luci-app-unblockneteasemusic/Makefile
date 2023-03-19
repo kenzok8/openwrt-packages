@@ -10,8 +10,8 @@ LUCI_DEPENDS:=+dnsmasq-full +ipset +node \
 LUCI_PKGARCH:=all
 
 PKG_NAME:=luci-app-unblockneteasemusic
-PKG_VERSION:=2.13
-PKG_RELEASE:=6
+PKG_VERSION:=2.14
+PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 
