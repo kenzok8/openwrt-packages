@@ -335,8 +335,9 @@ text, line {
 .node-services-passwall2 input.cbi-button.cbi-button {
     max-width: unset;
 }
-/* fix luci-app-passwall node_div style */
-.node-services-passwall #set_node_div {
+/* fix luci-app-passwall/luci-app-passwall2 node_div style */
+.node-services-passwall #set_node_div,
+.node-services-passwall2 #set_node_div {
     background: var(--sectionbgColor);
 }
 
@@ -2697,6 +2698,11 @@ header > .container > .pull-right > * {
 .node-status-realtime fieldset[id="cbi-table-table"] table[id="connections"] tr.cbi-section-table-row.cbi-rowstyle-2 {
     background-color: unset;
 }
+/* fix luci-app-appfilter table overflow style */
+/* fix node-nas-fileassistant table overflow style */
+/* fix node-status-realtime table style */
+.node-services-appfilter .cbi-section.cbi-tblsection,
+.node-nas-fileassistant #list-content,
 .node-status-realtime fieldset[id="cbi-table-table"] .cbi-section-node {
     overflow: auto;
 }
@@ -3250,21 +3256,15 @@ body.lang_pl.node-main-login .cbi-value-title {
 }
 
 /* fix wireless_join list button */
-form[action="/cgi-bin/luci/admin/network/wireless"] input[class="cbi-button cbi-button-reset"] {
+form[action="/cgi-bin/luci/admin/network/wireless"] input[class="cbi-button cbi-button-reset"],
+form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button cbi-input-find"] {
     height: 25px;
     min-width: 80px;
 }
-    
-form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button cbi-input-find"]  {
-    height: 25px;
-    min-width: 70px;
-}
-
 /* fix node-services-aliyundrive-webdav mask-box background style */
 .node-services-aliyundrive-webdav #mask-box {
     background: rgb(64 64 64 / 0%);
 }
-
 /* fix node-servces-ddns input style */
 .node-services-ddns #cbi-ddns-service input {
     width: unset;
@@ -3273,19 +3273,12 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-services-ddns .cbi-value input[type="text"] {
     width: 100% !important;
 }
-
 /* fix luci-app-fileassistant botton style */
 .fb-container .cbi-button {
     border-radius: 8px;
     margin: 3px 3px 3px 0;
     height: unset !important;
 }
-
-/* fix luci-app-appfilter table overflow style */
-.node-services-appfilter .cbi-section.cbi-tblsection {
-    overflow: auto;
-}
-
 /* update node-system-commands style */
 .node-system-commands h3 {
     text-transform: unset;
@@ -3346,7 +3339,8 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-services-watchcat-plus select[id*="cbi.opt.watchcat"] {
     width: auto;
 }
-/* fix node-nas-fileassistant table overflow style */
-.node-nas-fileassistant #list-content {
-    overflow: auto;
+/* fix node-nas-fileassistant table cell style */
+.node-nas-fileassistant .fb-container .cbi-value-owner,
+.node-nas-fileassistant .fb-container .cbi-value-perm {
+    display: table-cell;
 }

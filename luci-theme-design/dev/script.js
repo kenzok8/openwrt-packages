@@ -19,76 +19,6 @@
  */
 (function ($) {
 
-    // Fixed openclash plugin causing env(safe-area-inset-bottom) to be 0 under https
-    const appleUserAgentRegex = /(iPhone|iPad|iPod|iOS|Mac|Macintosh)/i;
-    var url = self.location.href;
-    if (navigator.userAgent.match(appleUserAgentRegex) && url.indexOf("openclash") != -1) {
-        var oMeta = document.createElement('meta');
-        oMeta.content = 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover';
-        oMeta.name = 'viewport';
-        document.querySelector('head').appendChild(oMeta);
-    }
-
-
-    function settingGlobalScroll() {
-        const global = $('head #global-scroll');
-        const isMobile = /phone|pad|pod|iPhone|iPod|ios|iOS|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone/i.test(navigator.userAgent);
-
-        if (!isMobile && global.length === 0) {
-            const style = document.createElement('style');
-            style.type = 'text/css';
-            style.id = 'global-scroll';
-            style.textContent = '::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px; }';
-            $('head').append(style);
-        } else if (isMobile && global.length > 0) {
-            global.remove();
-        }
-    }
-
-    $(document).ready(() => {
-        // Fixed scrollbar styles for browsers on different platforms
-        settingGlobalScroll();
-        // .node-status-realtime embed[src="/luci-static/resources/bandwidth.svg"] + div + br + table
-        // .node-status-realtime embed[src="/luci-static/resources/wifirate.svg"] + div + br + table
-        // .node-status-realtime embed[src="/luci-static/resources/wireless.svg"] + div + br + table
-        if ($('.node-status-realtime').length != 0) {
-            const selectorValues = ["bandwidth", "wifirate", "wireless"];
-            selectorValues.forEach(value => {
-                const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
-                if (target.length) {
-                    const div = document.createElement("div");
-                    div.style.overflowX = "auto";
-                    target.before(div);
-                    const newTarget = target.clone();
-                    target.remove();
-                    div.appendChild(newTarget.get(0));
-                }
-            });
-        }
-
-        // Fixed luci-app-passwall menu expand
-        if ($(".node-services-passwall").length === 1 && self.location.pathname === "/cgi-bin/luci/admin/services/passwall") {
-            var slide = $(".main > .main-left > .nav > .slide");
-            slide.each(function () {
-                var ul = $(this).children("ul");
-                ul.each(function () {
-                    var liActive = $(this).children("li.active");
-                    liActive.each(function () {
-                        var aTags = $(this).children("a");
-                        aTags.each(function () {
-                            var href = $(this).attr("href");
-                            if (href === "/cgi-bin/luci/admin/services/passwall2") {
-                                $(this).parent("li").removeClass("active");
-                                $(this).closest(".slide").find(".menu").first().click();
-                            }
-                        });
-                    });
-                });
-            });
-        }
-
-    });
-
     /**
      * trim text, Remove spaces, wrap
      * @param text
@@ -97,7 +27,6 @@
     function trimText(text) {
         return text.replace(/[ \t\n\r]+/g, " ");
     }
-
 
     var lastNode = undefined;
     var mainNodeName = undefined;
@@ -204,7 +133,6 @@
     $(".cbi-button-up").val("");
     $(".cbi-button-down").val("");
 
-
     /**
      * hook other "A Label" and add hash to it.
      */
@@ -246,7 +174,6 @@
         }
     });
 
-
     $(".darkMask").click(function () {
         if (showSide) {
             showSide = false;
@@ -261,9 +188,6 @@
     });
 
     $(window).resize(function () {
-        // Fixed scrollbar styles for browsers on different platforms
-        settingGlobalScroll();
-
         if ($(window).width() > 992) {
             $(".showSide").css("display", "");
             $(".main-left").css("width", "");
@@ -289,7 +213,6 @@
     $("input").attr("size", "0");
 
     if (mainNodeName != undefined) {
-        console.log(mainNodeName);
         switch (mainNodeName) {
             case "node-status-system_log":
             case "node-status-kernel_log":
