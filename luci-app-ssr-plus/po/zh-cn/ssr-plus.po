@@ -115,6 +115,9 @@ msgstr "QUIC 连接接收窗口"
 msgid "QUIC stream receive window"
 msgstr "QUIC 流接收窗口"
 
+msgid "Lazy Start"
+msgstr "延迟启动"
+
 msgid "Disable Path MTU discovery"
 msgstr "禁用 MTU 探测"
 

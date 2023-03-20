@@ -358,6 +358,11 @@ o = s:option(Flag, "disable_mtu_discovery", translate("Disable Path MTU discover
 o:depends("type", "hysteria")
 o.rmempty = true
 
+o = s:option(Flag, "lazy_start", translate("Lazy Start"))
+o:depends("type", "hysteria")
+o.rmempty = true
+o.default = "0"
+
 -- [[ TUIC ]]
 o = s:option(ListValue, "udp_relay_mode", translate("UDP relay mode"))
 o:depends("type", "tuic")
