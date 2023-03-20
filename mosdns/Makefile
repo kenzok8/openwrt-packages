@@ -20,7 +20,7 @@ PKG_CONFIG_DEPENDS:= \
 	CONFIG_MOSDNS_COMPRESS_GOPROXY \
 	CONFIG_MOSDNS_COMPRESS_UPX
 
-PKG_BUILD_DEPENDS:=golang/host upx/host
+PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 
@@ -56,7 +56,7 @@ config MOSDNS_COMPRESS_GOPROXY
 
 config MOSDNS_COMPRESS_UPX
 	bool "Compress executable files with UPX"
-	default y
+	default n
 endef
 
 ifeq ($(CONFIG_MOSDNS_COMPRESS_GOPROXY),y)
