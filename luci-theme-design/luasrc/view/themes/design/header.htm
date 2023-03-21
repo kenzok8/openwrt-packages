@@ -186,7 +186,7 @@
 	<script>
 		function setTheme() {
 			let color_scheme = window.matchMedia('(prefers-color-scheme: dark)');
-			document.body.setAttribute('data-theme', color_scheme.matches && 'dark');
+			document.body.setAttribute('data-theme', color_scheme.matches? 'dark': 'light');
 		}
 		setTheme();
 		window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setTheme);

@@ -14,6 +14,11 @@ LUCI_TITLE:=LuCI Support for Dynamic lucky Client
 LUCI_DEPENDS:=+lucky
 LUCI_PKGARCH:=all
 
+define Package/$(PKG_NAME)/conffiles
+/etc/config/lucky
+/etc/lucky/lucky.conf
+endef
+
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
