@@ -467,13 +467,13 @@ if is_finded("v2ray") then
 	o = s:option(Value, "ws_ed", translate("Max Early Data"))
 	o:depends("ws_ed_enable", true)
 	o.datatype = "uinteger"
-	o.value("2048")
+	o:value("2048")
 	o.rmempty = true
 
 	-- WS前置数据标头
 	o = s:option(Value, "ws_ed_header", translate("Early Data Header Name"))
 	o:depends("ws_ed_enable", true)
-	o.value("Sec-WebSocket-Protocol")
+	o:value("Sec-WebSocket-Protocol")
 	o.rmempty = true
 end
 
