@@ -742,9 +742,6 @@ msgstr "WebSocket 主机名"
 msgid "WebSocket Path"
 msgstr "WebSocket 路径"
 
-msgid "Enable early data"
-msgstr "启用前置数据"
-
 msgid "Max Early Data"
 msgstr "最大前置数据"
 
@@ -829,9 +826,6 @@ msgstr "节点公钥"
 msgid "Pre-shared key"
 msgstr "预共享密钥"
 
-msgid "Packet Encoding"
-msgstr "数据包编码"
-
 msgid "Network interface to use"
 msgstr "使用的网络接口"
 
@@ -855,9 +849,6 @@ msgstr "重新应用"
 
 msgid "Apply"
 msgstr "应用"
-
-msgid "Default Packet Encoding"
-msgstr "默认数据包编码"
 
 msgid "Enable Netflix Mode"
 msgstr "启用 Netflix 分流模式"

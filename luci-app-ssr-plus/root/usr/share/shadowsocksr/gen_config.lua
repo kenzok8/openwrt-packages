@@ -26,35 +26,22 @@ function vmess_vless()
 					}
 				}
 			}
-		},
-		packetEncoding = server.packet_encoding or nil
+		}
 	}
 end
 function trojan_shadowsocks()
 	outbound_settings = {
-		plugin = ((server.v2ray_protocol == "shadowsocks") and server.plugin ~= "none" and server.plugin) or (server.v2ray_protocol == "shadowsocksr" and "shadowsocksr") or nil,
-		pluginOpts = (server.v2ray_protocol == "shadowsocks") and server.plugin_opts or nil,
-		pluginArgs = (server.v2ray_protocol == "shadowsocksr") and {
-			"--protocol=" .. server.protocol,
-			"--protocol-param=" .. (server.protocol_param or ""),
-			"--obfs=" .. server.obfs,
-			"--obfs-param=" .. (server.obfs_param or "")
-		} or nil,
 		servers = {
 			{
 				address = server.server,
 				port = tonumber(server.server_port),
 				password = server.password,
-				method = ((server.v2ray_protocol == "shadowsocks") and server.encrypt_method_ss) or ((server.v2ray_protocol == "shadowsocksr") and server.encrypt_method) or nil,
+				method = ((server.v2ray_protocol == "shadowsocks") and server.encrypt_method_ss) or nil,
 				uot = (server.v2ray_protocol == "shadowsocks") and (server.uot == '1') or nil,
 				ivCheck = (server.v2ray_protocol == "shadowsocks") and (server.ivCheck == '1') or nil,
 			}
 		}
 	}
-
-	if server.v2ray_protocol == "shadowsocksr" then
-		server.v2ray_protocol = "shadowsocks"
-	end
 end
 function socks_http()
 	outbound_settings = {
@@ -106,9 +93,6 @@ function outbound:handleIndex(index)
 			trojan_shadowsocks()
 		end,
 		shadowsocks = function()
-			trojan_shadowsocks()
-		end,
-		shadowsocksr = function()
 			trojan_shadowsocks()
 		end,
 		socks = function()
@@ -224,7 +208,6 @@ local Xray = {
 			grpcSettings = (server.transport == "grpc") and {
 				-- grpc
 				serviceName = server.serviceName or "",
-				mode = (server.grpc_mode ~= "gun") and server.grpc_mode or nil,
 				multiMode = (server.grpc_mode == "multi") and true or false,
 				idle_timeout = tonumber(server.idle_timeout) or nil,
 				health_check_timeout = tonumber(server.health_check_timeout) or nil,
@@ -235,8 +218,7 @@ local Xray = {
 		mux = (server.mux == "1" and server.transport ~= "grpc") and {
 			-- mux
 			enabled = true,
-			concurrency = tonumber(server.concurrency),
-			packetEncoding = (server.v2ray_protocol == "vmess" or server.v2ray_protocol == "vless") and server.packet_encoding or nil
+			concurrency = tonumber(server.concurrency)
 		} or nil
 	} or nil
 }
