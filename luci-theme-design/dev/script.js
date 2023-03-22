@@ -216,6 +216,9 @@
         } else {
             $("header").css("box-shadow", "0 2px 4px rgb(0 0 0 / 8%)")
         }
+        if (showSide) {
+            $("header").css("box-shadow", "17rem 2px 4px rgb(0 0 0 / 8%)")
+        }
     });
 
     /**

@@ -89,7 +89,7 @@ make V=s
 - If there is a bug, please raise an issue
 - The theme's personal color matching may not meet the public's appetite, welcome to provide color matching suggestions
 
-### preview
+### Preview
 
 <details> <summary>iOS</summary>
 <img src="./preview/webapp_home.PNG"/>
