@@ -283,7 +283,7 @@ header, .main {
 
 header {
     background-color: var(--bgwhite);
-    box-shadow: 17rem 2px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 18rem 2px 4px rgba(0, 0, 0, 0.08);
     transition: box-shadow 0.1s;
     height: 55px;
     float: left;
@@ -1077,7 +1077,7 @@ img[src*="/luci-static/resources/icons/signal-none.png"]
 
 .main-left {
     float: left;
-    width: 17rem;
+    width: 18rem;
     background-color: var(--mainleftbgColor);
     overflow-x: auto;
     height: calc(100% - 3.5rem);
@@ -1089,7 +1089,7 @@ img[src*="/luci-static/resources/icons/signal-none.png"]
 
 .main-right {
     width: 85%;
-    width: calc(100% - 17rem);
+    width: calc(100% - 18rem);
     float: right;
     height: 100%;
     border-left: var(--sectionBorder);
@@ -1125,14 +1125,14 @@ header > .container > .brand {
     cursor: default;
     /*background: #51c291;*/
     display:block;
-    width:17rem;
+    width:18rem;
     /* padding-left: 30px; */
     height:60px;
     text-align:center;
     float:left;
     font-weight:900;
     letter-spacing:1px;
-    padding: 0 67px;
+    padding: 0 4.5rem;
     transition: 0.1s ease-in-out;
 }
 header > .container > a[class="brand"]:after {
@@ -1150,7 +1150,7 @@ header > .container > .brand-hostname {
     color: #555555;
     cursor: default;
     display:block;
-    width:17rem;
+    width:18rem;
     padding-right: 10px;
     height:60px;
     text-align:left;
@@ -1419,7 +1419,7 @@ p#shadowsocksr_status {
     text-transform: capitalize;
     font-size: 1rem;
     margin: 0.1rem 0.5rem 0.1rem 0.5rem;
-    padding: 0.675rem 0 0.675rem 2.5rem;
+    padding: 0.675rem 0 0.675rem 3.2rem;
 }
 .main .main-left .nav li.slide .slide-menu .active a {
     color: #000;
@@ -1930,8 +1930,8 @@ form.inline + form.inline,
 }
 
 .cbi-tabmenu > li[class~="cbi-tab"] a {
-    color: var(--activeColor) ;
-    border-bottom: 2px solid var(--activeColor);
+    color: var(--activeColor) !important;
+    border-bottom: 2px solid var(--activeColor) !important;
 }
 
 .cbi-section-node-tabbed {
@@ -2746,12 +2746,12 @@ body.lang_pl.node-main-login .cbi-value-title {
     }
 
     .main-left {
-        width: calc(0% + 17rem);
+        width: calc(0% + 18rem);
         top: 50px;
     }
 
     .main-right {
-        width: calc(100% - 17rem);
+        width: calc(100% - 18rem);
     }
 
 
@@ -2846,7 +2846,7 @@ body.lang_pl.node-main-login .cbi-value-title {
         position: absolute;
         width: 300px;
         height: 50px;
-        padding: 17px 27px;
+        padding: 1.15rem 2rem;
     }
 
     .showSide:before {

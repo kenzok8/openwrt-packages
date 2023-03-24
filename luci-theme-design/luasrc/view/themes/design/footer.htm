@@ -7,6 +7,9 @@
     luci-theme-neobird
     Copyright 2021 2smile <thinktip@gmail.com>
 
+    luci-theme-design
+    Copyright 2023 gngpp <gngppz@gmail.com>
+
     Have a bug? Please create an issue here on GitHub!
         https://github.com/LuttyYang/luci-theme-material/issues
 
@@ -38,7 +41,7 @@
                     <% if #categories > 1 then %>
                     <ul class="breadcrumb pull-right" id="modemenu">
                         <% for i, r in ipairs(categories) do %>
-                        <li<% if request[1] == r then %> class="active"<%end%>><a href="<%=controller%>/<%=r%>/"><%=striptags(translate(tree.nodes[r].title))%></a> <span class="divider">|</span></li>
+                        <li<% if category == r then %> class="active"<%end%>><a href="<%=controller%>/<%=r%>/"><%=striptags(translate(tree.nodes[r].title))%></a> <span class="divider">|</span></li>
                         <% end %>
                     </ul>
                     <% end %>
