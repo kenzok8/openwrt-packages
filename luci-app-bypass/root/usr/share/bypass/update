@@ -49,11 +49,11 @@ fi
 
 if [ "$C" = gfw -o "$(uci -q get bypass.@global[0].gfw_mode)" = 1 ];then
 	if [ ! -f $T_FILE/gfw.list ];then
-		while ! (curl -kLfsm 3 -o /tmp/gfw.b64 https://supes.top/bypass/gfwlist.txt || curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt);do
+		while ! (curl -kLfsm 3 -o /tmp/gfw.b64 http://static.supes.top/bypass/gfwlist.txt || curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt);do
 			sleep 1
 		done
 	elif [ "$C" = gfw -o $A = N ];then
-		curl -kLfsm 3 -o /tmp/gfw.b64 https://supes.top/bypass/gfwlist.txt || curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt
+		curl -kLfsm 3 -o /tmp/gfw.b64 http://static.supes.top/bypass/gfwlist.txt || curl -kLfsm 5 -o /tmp/gfw.b64 https://cdn.jsdelivr.net/gh/gfwlist/gfwlist/gfwlist.txt
 	fi
 	if [[ -f /tmp/gfw.b64 && $? == 0 ]];then
 	$DIR/by-gfw
