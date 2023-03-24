@@ -172,6 +172,7 @@
      * Sidebar expand
      */
     var showSide = false;
+
     $(".showSide").click(function () {
         if (showSide) {
             $(".darkMask").stop(true).fadeOut("fast");
@@ -179,6 +180,7 @@
                 width: "0"
             }, "fast");
             $(".main-right").css("overflow-y", "auto");
+            $("header>.container>.brand").css("padding", "0 67px")
             showSide = false;
         } else {
             $(".darkMask").stop(true).fadeIn("fast");
@@ -188,13 +190,13 @@
             $(".main-right").css("overflow-y", "hidden");
             $(".showSide").css("display", "none");
             $("header").css("box-shadow", "17rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", "0 0")
             showSide = true;
         }
     });
 
     $(".darkMask").click(function () {
         if (showSide) {
-            showSide = false;
             $(".darkMask").stop(true).fadeOut("fast");
             $(".main-left").stop(true).animate({
                 width: "0"
@@ -202,25 +204,30 @@
             $(".main-right").css("overflow-y", "auto");
             $(".showSide").css("display", "");
             $("header").css("box-shadow", "0 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", "0 67px")
+            showSide = false;
         }
     });
 
     $(window).resize(function () {
         if ($(window).width() > 992) {
+            showSide = false;
             $(".showSide").css("display", "");
             $(".main-left").css("width", "");
             $(".darkMask").stop(true);
             $(".darkMask").css("display", "none");
-            showSide = false;
             $("header").css("box-shadow", "17rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", "0 0")
         } else {
             $("header").css("box-shadow", "0 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", "0 67px")
         }
         if (showSide) {
             $("header").css("box-shadow", "17rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", "0 0")
         }
     });
-
+   
     /**
      * fix legend position
      */

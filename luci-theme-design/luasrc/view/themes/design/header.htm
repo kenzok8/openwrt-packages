@@ -224,6 +224,11 @@
 	<span class="showSide"></span>
 	<a class="brand" href="#"><%=boardinfo.hostname or "OpenWrt"%></a>
 		<div class="pull-right">
+		<script>
+			if ($(window).width() > 992) {
+        		$("header>.container>.brand").css("padding", "0 0px")
+	    	}
+		</script>
 		<%
 		-- calculate the number of unsaved changes
 		if tree.nodes[category] and tree.nodes[category].ucidata then
@@ -310,4 +315,3 @@
 					 </div>
 				 <%- end -%>
 				 <% if category then subtree("/" .. category .. "/", cattree) end %>
-
