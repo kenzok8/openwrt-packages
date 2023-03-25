@@ -2385,12 +2385,12 @@ header > .container > .pull-right > * {
 }
 
 #xhr_poll_status > .label.success {
-    padding: 10px 0;
+    padding: 0.7rem 0;
     border-radius: 20px;
 }
 
 #xhr_poll_status_off {
-    padding: 10px 0;
+    padding: 0.7rem 0;
     border-radius: 20px;
 }
 
@@ -2405,13 +2405,15 @@ header > .container > .pull-right > * {
 }
 
 .notice {
-    background-color: var(--activeColor);
-    color: #fff;
+    color: var(--activeColor);
     font-size: .8rem;
-    padding: 2.8px 10px;
+    /* padding: 0.15rem; */
+    padding-right: 0.5rem;
     border-radius: 10px;
     z-index: 10;
-    top: 22px;
+    /* top: 1.45rem; */
+    font-size: 1.8rem;
+    font-family: design;
 }
 
 #refresh_on, #refresh_off {
@@ -3023,11 +3025,6 @@ body.lang_pl.node-main-login .cbi-value-title {
     select {
         width: 100%;
     }
-    .label {
-        position: absolute;
-        right: 5px;
-        top: -70px;
-    }
 
     header {
         height: 55px;
@@ -3154,7 +3151,6 @@ body.lang_pl.node-main-login .cbi-value-title {
         width: 65%;
     }
 
-
     h2 {
         font-size: 1.2rem;
         text-transform: capitalize;
@@ -3188,7 +3184,6 @@ body.lang_pl.node-main-login .cbi-value-title {
     #memcache div div,
     #memtotal div div{
     }
-   
 
     .node-status-iptables > .main div > .cbi-map > form input[type="submit"]{
         margin: 0;
@@ -3223,6 +3218,13 @@ body.lang_pl.node-main-login .cbi-value-title {
     }
 }
 
+@media screen and (max-width: 315px) {
+    .label {
+        position: absolute;
+        right: 5px;
+        top: -70px;
+    }
+}
 
 /* fix http://192.168.2.1/cgi-bin/luci/admin/nlbw/usage */
 #intervalSelect {

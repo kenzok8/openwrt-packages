@@ -308,12 +308,19 @@ function import_ssr_url(btn, urlname, sid) {
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.transport')[0].value = params.get("type") == "http" ? "h2" : params.get("type") || "tcp";
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.transport')[0].dispatchEvent(event);
 			document.getElementsByName('cbid.shadowsocksr.' + sid + '.vless_encryption')[0].value = params.get("encryption") || "none";
-			if ([ "tls" ].includes(params.get("security"))) {
+			if ([ "tls", "reality" ].includes(params.get("security"))) {
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.' + params.get("security"))[0].checked = true;
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.' + params.get("security"))[0].dispatchEvent(event);
 
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.fingerprint')[0].value = params.get("fp") || "";
+				document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls_flow')[0].value = params.get("flow") || "";
 				document.getElementsByName('cbid.shadowsocksr.' + sid + '.tls_host')[0].value = params.get("sni") || "";
+
+				if (params.get("security") === "reality") {
+					document.getElementsByName('cbid.shadowsocksr.' + sid + '.reality_publickey')[0].value = params.get("pbk") ? decodeURIComponent(params.get("pbk")) : "";
+					document.getElementsByName('cbid.shadowsocksr.' + sid + '.reality_shortid')[0].value = params.get("sid") || "";
+					document.getElementsByName('cbid.shadowsocksr.' + sid + '.reality_spiderx')[0].value = params.get("spx") ? decodeURIComponent(params.get("spx")) : "";
+				}
 			}
 			switch (params.get("type")) {
 			case "ws":

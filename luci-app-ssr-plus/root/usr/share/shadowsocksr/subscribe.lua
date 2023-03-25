@@ -359,8 +359,12 @@ local function processData(szType, content)
 		result.transport = params.type or "tcp"
 		result.tls = (params.security == "tls" or params.security == "xtls") and "1" or "0"
 		result.tls_host = params.sni
-		result.tls_flow = (params.security == "tls") and params.flow or nil
+		result.tls_flow = (params.security == "tls" or params.security == "reality") and params.flow or nil
 		result.fingerprint = params.fp
+		result.reality = (params.security == "reality") and "1" or "0"
+		result.reality_publickey = params.pbk and UrlDecode(params.pbk) or nil
+		result.reality_shortid = params.sid
+		result.reality_spiderx = params.spx and UrlDecode(params.spx) or nil
 		if result.transport == "ws" then
 			result.ws_host = (result.tls ~= "1") and (params.host and UrlDecode(params.host)) or nil
 			result.ws_path = params.path and UrlDecode(params.path) or "/"

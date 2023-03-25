@@ -9179,6 +9179,7 @@ dev-guardianapis.com
 dev-theguardian.com
 devcon.org
 developer-advisor.com
+developer.allizom.org
 developerlibrary.com
 developers.box.net
 developria.com
@@ -35201,6 +35202,7 @@ full:cbsplaylistserver.aws.syncbak.com
 full:cbsservice.aws.syncbak.com
 full:cdn.jsdelivr.net
 full:cdngarenanow-a.akamaihd.net
+full:chat.openai.com.cdn.cloudflare.net
 full:chinapower.csis.org
 full:cisco.evergage.com
 full:ciscolivehls-i.akamaihd.net
@@ -35218,7 +35220,6 @@ full:database.asahi.com
 full:default.exp-tas.com
 full:deutschewelle.h-cdn.com
 full:developer.microsoft.com
-full:developer.mozilla.org
 full:developers.facebook.com
 full:dfp6rglgjqszk.cloudfront.net
 full:dl.begellhouse.com
