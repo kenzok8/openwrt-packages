@@ -1763,7 +1763,7 @@ td#__status-ifc-signal {
     width: auto !important;
     min-width: 80px;
     padding: 0px 8px 0px 8px;
-    max-width: 160px;
+    /* max-width: 160px; */
     border-radius: 8px;
     height: 35px;
     line-height: 35px;
