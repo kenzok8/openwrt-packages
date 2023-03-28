@@ -139,28 +139,30 @@ check_updated() {
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/${server_firmware_url}/releases |
             jq -r --arg RTK "${releases_tag_keywords}" '.[] | select(.tag_name | contains($RTK))' |
-            jq -s '.[] | {tag_name:.tag_name, data:.published_at, url:.assets[].browser_download_url }' |
+            jq -s '.[] | {data:.published_at, url:.assets[].browser_download_url }' |
             jq -s --arg BOARD "_${BOARD}_" --arg MLV "${main_line_version}." '.[] | select((.url | contains($BOARD)) and (.url | contains($MLV)))' |
             jq -s 'sort_by(.data)|reverse[]' |
-            jq -s '.[0]'
+            jq -s '.[0]' -c
     )"
     latest_updated_at="$(echo ${latest_version} | jq -r '.data')"
     latest_url="$(echo ${latest_version} | jq -r '.url')"
 
-    latest_updated_at_format="$(echo ${latest_updated_at} | tr 'T' '(' | tr 'Z' ')')"
+    # Convert to readable date format
+    date_display_format="$(echo ${latest_updated_at} | tr 'T' '(' | tr 'Z' ')')"
 
     # Check the firmware update code
+    down_check_code="${latest_updated_at}.${main_line_version}"
     op_release_code="${FIRMWARE_DOWNLOAD_PATH}/.luci-app-amlogic/op_release_code"
     if [[ -f "${op_release_code}" ]]; then
         update_check_code="$(cat ${op_release_code} | xargs)"
-        if [[ -n "${update_check_code}" && "${update_check_code}" == "${latest_updated_at}" ]]; then
+        if [[ -n "${update_check_code}" && "${update_check_code}" == "${down_check_code}" ]]; then
             tolog "02.01 Already the latest version, no need to update." "1"
         fi
     fi
 
     # Prompt to update
     if [[ "${latest_url}" == "http"* ]]; then
-        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_firmware(this, '"'download_${latest_updated_at}@${latest_url##*download/}'"')"/> Latest updated: '${latest_updated_at_format}'' "1"
+        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_firmware(this, '"'download_${latest_updated_at}@${latest_url##*download/}'"')"/> Latest updated: '${date_display_format}'' "1"
     else
         tolog "02.02 [${latest_url}] No firmware available, please use another kernel branch." "1"
     fi
@@ -186,18 +188,14 @@ download_firmware() {
 
     # OpenWrt make data
     latest_updated_at="$(echo ${download_version} | awk -F'@' '{print $1}' | sed -e s'|download_||'g)"
+    down_check_code="${latest_updated_at}.${main_line_version}"
 
     # Download firmware
     opfile_path="$(echo ${download_version} | awk -F'@' '{print $2}')"
     latest_url="https://github.com/ophub/amlogic-s9xxx-openwrt/releases/download/${opfile_path}"
 
-    # Download sha256sums file
-    shafile_path="$(echo ${opfile_path} | awk -F'/' '{print $1}')"
-    shafile_file="https://github.com/ophub/amlogic-s9xxx-openwrt/releases/download/${shafile_path}/sha256sums"
-
-    # Download to local rename
+    # Download to OpenWrt file
     firmware_download_name="openwrt_${BOARD}_k${main_line_version}_github${firmware_suffix}"
-
     wget "${latest_url}" -q -O "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}"
     if [[ "$?" -eq "0" && -s "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}" ]]; then
         tolog "03.01 OpenWrt downloaded successfully."
@@ -205,20 +203,25 @@ download_firmware() {
         tolog "03.02 OpenWrt download failed." "1"
     fi
 
+    # Download address of sha256sums file
+    shafile_path="$(echo ${opfile_path} | awk -F'/' '{print $1}')"
+    shafile_file="https://github.com/ophub/amlogic-s9xxx-openwrt/releases/download/${shafile_path}/sha256sums"
+    # Restore converted characters in file names(%2B to +)
     firmware_download_oldname="${opfile_path##*/}"
     firmware_download_oldname="${firmware_download_oldname//%2B/+}"
+    # Download sha256sums file
     if wget "${shafile_file}" -q -O "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
-        tolog "03.03 Sha256sums download complete."
+        tolog "03.03 Sha256sums downloaded successfully."
         releases_firmware_sha256sums="$(cat sha256sums | grep ${firmware_download_oldname} | awk '{print $1}')"
         download_firmware_sha256sums="$(sha256sum ${firmware_download_name} | awk '{print $1}')"
-        [[ -n "${releases_firmware_sha256sums}" && "${releases_firmware_sha256sums}" != "${download_firmware_sha256sums}" ]] && tolog "03.04 sha256sum verification failed." "1"
+        [[ -n "${releases_firmware_sha256sums}" && "${releases_firmware_sha256sums}" != "${download_firmware_sha256sums}" ]] && tolog "03.04 The sha256sum check is different." "1"
     fi
     sync && sleep 3
 
     tolog "You can update."
 
     #echo '<a href="javascript:;" onclick="return amlogic_update(this, '"'${firmware_download_name}'"')">Update</a>' >$START_LOG
-    tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_update(this, '"'${firmware_download_name}@${latest_updated_at}@${FIRMWARE_DOWNLOAD_PATH}'"')"/>' "1"
+    tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_update(this, '"'${firmware_download_name}@${down_check_code}@${FIRMWARE_DOWNLOAD_PATH}'"')"/>' "1"
 
     exit 0
 }
