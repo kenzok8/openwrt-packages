@@ -1498,7 +1498,6 @@ tr>th,
 }
 
 #cbi-wireless .td,
-#cbi-network .tr:first-child>.td,
 .table[width="100%"]>.tr:first-child>.td,
 [data-page="admin-network-diagnostics"] .tr>.td,
 .tr.table-titles>.th,
@@ -1507,6 +1506,10 @@ tr>th,
     background-color: #f6f9fc;
     padding: 1.1em 1.25rem;
     line-height: 1.3rem;
+}
+
+#cbi-network .tr:first-child>.td {
+    border-top: 0;
 }
 
 .table[width="100%"]>.tr:first-child>.td {
