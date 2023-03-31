@@ -192,7 +192,10 @@ download_firmware() {
 
     # Download firmware
     opfile_path="$(echo ${download_version} | awk -F'@' '{print $2}')"
-    latest_url="https://github.com/ophub/amlogic-s9xxx-openwrt/releases/download/${opfile_path}"
+    # Restore converted characters in file names(%2B to +)
+    firmware_download_oldname="${opfile_path//%2B/+}"
+    latest_url="https://github.com/${server_firmware_url}/releases/download/${firmware_download_oldname}"
+    #tolog "${latest_url}"
 
     # Download to OpenWrt file
     firmware_download_name="openwrt_${BOARD}_k${main_line_version}_github${firmware_suffix}"
@@ -205,14 +208,11 @@ download_firmware() {
 
     # Download address of sha256sums file
     shafile_path="$(echo ${opfile_path} | awk -F'/' '{print $1}')"
-    shafile_file="https://github.com/ophub/amlogic-s9xxx-openwrt/releases/download/${shafile_path}/sha256sums"
-    # Restore converted characters in file names(%2B to +)
-    firmware_download_oldname="${opfile_path##*/}"
-    firmware_download_oldname="${firmware_download_oldname//%2B/+}"
+    shafile_file="https://github.com/${server_firmware_url}/releases/download/${shafile_path}/sha256sums"
     # Download sha256sums file
     if wget "${shafile_file}" -q -O "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
         tolog "03.03 Sha256sums downloaded successfully."
-        releases_firmware_sha256sums="$(cat sha256sums | grep ${firmware_download_oldname} | awk '{print $1}')"
+        releases_firmware_sha256sums="$(cat sha256sums | grep ${firmware_download_oldname##*/} | awk '{print $1}')"
         download_firmware_sha256sums="$(sha256sum ${firmware_download_name} | awk '{print $1}')"
         [[ -n "${releases_firmware_sha256sums}" && "${releases_firmware_sha256sums}" != "${download_firmware_sha256sums}" ]] && tolog "03.04 The sha256sum check is different." "1"
     fi
