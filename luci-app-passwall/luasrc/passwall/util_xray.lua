@@ -809,28 +809,37 @@ function gen_config(var)
 							table.insert(protocols, w)
 						end)
 					end
-					local _domain = nil
 					if e.domain_list then
-						_domain = {}
+						local _domain = {}
 						string.gsub(e.domain_list, '[^' .. "\r\n" .. ']+', function(w)
 							table.insert(_domain, w)
 						end)
+						table.insert(rules, {
+							type = "field",
+							outboundTag = outboundTag,
+							domain = _domain,
+							protocol = protocols
+						})
 					end
-					local _ip = nil
 					if e.ip_list then
-						_ip = {}
+						local _ip = {}
 						string.gsub(e.ip_list, '[^' .. "\r\n" .. ']+', function(w)
 							table.insert(_ip, w)
 						end)
+						table.insert(rules, {
+							type = "field",
+							outboundTag = outboundTag,
+							ip = _ip,
+							protocol = protocols
+						})
 					end
-					table.insert(rules, {
-						type = "field",
-						outboundTag = outboundTag,
-						balancerTag = balancerTag,
-						domain = _domain,
-						ip = _ip,
-						protocol = protocols
-					})
+					if not e.domain_list and not e.ip_list and protocols then
+						table.insert(rules, {
+							type = "field",
+							outboundTag = outboundTag,
+							protocol = protocols
+						})
+					end
 				end
 			end)
 
