@@ -1251,8 +1251,6 @@ p#shadowsocksr_status {
     padding-top:6px;
 }
 
- 
-
 .main > .main-left > .nav > .slide {
     padding: 0;
     padding-top:8px;
@@ -1291,6 +1289,10 @@ p#shadowsocksr_status {
 
 .main .main-left .nav li.slide .menu.active::after {
   transform: rotate(90deg);
+}
+
+.main > .main-left > .nav > .slide > a[data-title="QuickStart"]:before {
+    content: "\e67e";
 }
 
 .main > .main-left > .nav > .slide > a[data-title="Status"]:before {
@@ -1336,12 +1338,10 @@ p#shadowsocksr_status {
   content: "\e7dd";
 }
 
-.main > .main-left > .nav > li > a[data-title="Inital Setup"]:before {
-    content: "\e67e";
-}
-
+.main > .main-left > .nav > li > a[data-title="Inital Setup"]:before,
+.main > .main-left > .nav > li > a[data-title="NetworkGuide"]:before,
 .main > .main-left > .nav > li > a[href="/cgi-bin/luci//admin/wizard"]:before {
-    content: "\e67e";
+    content: "\e719";
 }
 
 .main > .main-left > .nav > li > a[data-title="iStore"]:before {
@@ -1402,8 +1402,6 @@ p#shadowsocksr_status {
     margin-top: 8px;
     border-radius: 6px;
 }
-
-
 
 .main > .main-left > .nav > .slide > .slide-menu > .active {
     background-color: var(--activeColor);

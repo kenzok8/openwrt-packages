@@ -58,12 +58,12 @@
      * @returns {boolean} success?
      */
     function getCurrentNodeByUrl() {
-        const urlReg = new RegExp(nodeUrl + "$")
-        var ret = false;
         if (!$('body').hasClass('logged-in')) {
             luciLocation = ["Main", "Login"];
             return true;
         }
+        const urlReg = new RegExp(nodeUrl + "$")
+        var ret = false;
         $(".main > .main-left > .nav > .slide > .active").next(".slide-menu").stop(true).slideUp("fast");
         $(".main > .main-left > .nav > .slide > .menu").removeClass("active");
         $(".main > .main-left > .nav > .slide > .menu").each(function () {
