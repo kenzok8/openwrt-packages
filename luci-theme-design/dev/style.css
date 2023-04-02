@@ -2076,7 +2076,7 @@ div > .cbi-value:nth-of-type(2n) {
     height: 20px;
     line-height: 20px;
     min-width: 60px;
-    padding: 0;
+    /* padding: 0; */
     margin: 0;
 }
 
@@ -3339,3 +3339,8 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-nas-fileassistant .fb-container .cbi-value-perm {
     display: table-cell;
 }
+/* fix luci-app-adguardhome style */
+.node-services-adguardhome input[onclick*="window.open('http://'+window.location.hostname+':"] {
+    line-height: 0;
+}
+
