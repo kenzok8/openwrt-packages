@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 PATH="/usr/sbin:/usr/bin:/sbin:/bin"
 update_mode=$1
@@ -9,6 +9,7 @@ if [[ -z ${binpath} ]]; then
 fi
 [[ ! -d ${binpath%/*} ]] && mkdir -p ${binpath%/*}
 upxflag=$(uci get AdGuardHome.AdGuardHome.upxflag 2>/dev/null)
+
 [[ -z ${upxflag} ]] && upxflag=off
 enabled=$(uci get AdGuardHome.AdGuardHome.enabled 2>/dev/null)
 core_version=$(uci get AdGuardHome.AdGuardHome.core_version 2>/dev/null)
@@ -200,7 +201,7 @@ GET_Arch() {
 }
 
 EXIT(){
-	rm -rf /var/run/update_core 2>/dev/null
+	rm -rf /var/run/update_core $LOCKU 2>/dev/null
 	[[ $1 != 0 ]] && touch /var/run/update_core_error
 	exit $1
 }
