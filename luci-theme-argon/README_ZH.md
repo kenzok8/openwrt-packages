@@ -27,6 +27,7 @@
 
 
 ## 注意
+
 强烈建议使用Chrome 浏览器。主题中使用了一些新的css3特性，目前只有Chrome有最佳的兼容性。
 主线版本 IE 系列目前还有Bug有待解决。
 FireFox 默认不开启backdrop-filter，开启方法见这里：https://developer.mozilla.org/zh-CN/docs/Web/CSS/backdrop-filter
@@ -34,9 +35,11 @@ FireFox 默认不开启backdrop-filter，开启方法见这里：https://develop
 v2.x.x 适配主线快照版本。  
 v1.x.x 适配18.06 和 Lean Openwrt [如果你是lean代码 请选择这个版本]
 
+## 更新日志 2023.04.03 v2.3
 
-## 更新日志 2021.10.16 v2.2.9
-
+- 【v2.3】更新了Loading的样式
+- 【v2.3】修复了大量的CSS样式错误，整体更加统一
+- 【v2.3】修复了暗色模式下个别颜色不受控制的问题
 - 【v2.2.9】修复了在手机模式下无法弹出菜单的bug  
 - 【v2.2.9】统一css间距的设置  
 - 【v2.2.9】重构了登录页面的代码  

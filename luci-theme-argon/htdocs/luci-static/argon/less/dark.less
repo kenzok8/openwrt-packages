@@ -28,6 +28,8 @@
  *  Licensed to the public under the Apache License 2.0
  */
 
+
+
 body {
     background: #1e1e1e;
     color: #cccccc;
@@ -104,6 +106,10 @@ header::after {
                                 background-color: #cccccc !important;
                             }
                         }
+
+                        &::after {
+                            background-color: var(--dark-primary) !important;
+                        }
                     }
 
                     li {
@@ -113,6 +119,10 @@ header::after {
 
                         a:hover {
                             background: none !important;
+                        }
+
+                        &::after {
+                            background-color: var(--dark-primary) !important;
                         }
                     }
                 }
@@ -138,6 +148,7 @@ header::after {
                     background-color: var(--dark-primary) !important;
                     color: #cccccc !important;
                 }
+
             }
         }
 
@@ -168,8 +179,6 @@ h3 {
 }
 
 a:-webkit-any-link {
-    color: -webkit-link;
-    cursor: pointer;
     color: #483d8b;
     color: var(--dark-primary);
 }
@@ -210,7 +219,6 @@ header.bg-primary {
 .panel-title {
     color: #ccc;
     background-color: #333333;
-    border-bottom: 0px;
 }
 
 div>table>tbody>tr:nth-of-type(2n),
@@ -249,7 +257,6 @@ table>thead>tr>td {
 #membuff>div>div>div>small,
 #conns>div>div>div>small,
 #memtotal>div>div>div>small {
-
     color: #ccc !important;
 }
 
@@ -270,7 +277,6 @@ table>thead>tr>td {
 table>tbody>tr>th,
 table>tfoot>tr>th,
 table>thead>tr>th {
-
     background-color: #252526;
     border-bottom: black 1px solid !important;
 }
@@ -302,9 +308,6 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 .panel-title,
 h3 {
     color: #ccc;
-    border-bottom: 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
 }
 
 h4 {
@@ -312,14 +315,7 @@ h4 {
 }
 
 .cbi-progressbar {
-    position: relative;
-    min-width: 170px;
-    height: 20px;
-    margin: 6px 0;
-    border: thin solid #999;
-    background: transparent;
-    border-radius: 0.2rem;
-    overflow: hidden;
+    background: #282a2c;
 
     div {
         background-color: #32325d !important;
@@ -338,8 +334,6 @@ h4 {
 
 .cbi-section-node {
     background: none;
-    border-radius: 0 0 .375rem .375rem;
-    padding: 0rem;
 }
 
 abbr {
@@ -370,6 +364,16 @@ div>.table>.tbody>.tr:nth-of-type(2n) {
 
 .tabs {
     background-color: #252526;
+
+    li[class~="active"],
+    li:hover {
+        cursor: pointer;
+        color: #ccc !important;
+
+        a {
+            color: #ccc !important;
+        }
+    }
 }
 
 .tabs>li[class~="active"]>a {
@@ -380,7 +384,7 @@ div>.table>.tbody>.tr:nth-of-type(2n) {
 .tabs>li:hover {
     border-bottom: 0.18751rem solid #483d8b;
     border-bottom: 0.18751rem solid var(--dark-primary);
-    color: #ccc;
+    color: var(--dark-primary) !important;
     background-color: #181819;
 }
 
@@ -404,10 +408,12 @@ div>.table>.tbody>.tr:nth-of-type(2n) {
 .cbi-tabmenu>li:hover {
     color: #ccc;
     background: #2d2d2d;
+    border-bottom: 0.18751rem solid var(--dark-primary) !important;
 }
 
 .cbi-tabmenu>li[class~="cbi-tab"] {
     background-color: #181819;
+    border-bottom: 0.18751rem solid var(--dark-primary) !important;
 }
 
 .cbi-tabcontainer>.cbi-value:nth-of-type(2n) {
@@ -477,12 +483,9 @@ select {
 
 }
 
-.cbi-section-node .cbi-value {
-    padding: 1rem 1rem 0.3rem 1rem;
-}
 
 .ifacebox {
-    background-color: none;
+    background-color: transparent !important;
     border: 1px solid #1e1e1e;
 }
 
@@ -595,7 +598,6 @@ td.cbi-value-field var {
 .cbi-button[onclick^="iface_reconnect"],
 .cbi-button[onclick="handleReset(event)"],
 .cbi-button-neutral[value="Disable"] {
-    font-weight: normal;
     color: #fff;
     border: thin solid darkorange !important;
     background-color: darkorange !important;
@@ -607,8 +609,6 @@ fieldset[id^="cbi-apply-"] {
 
 #detail-bubble>div {
     border: 1px solid #ccc;
-    border-radius: 2px;
-    padding: 5px;
     background: #252525;
 }
 
@@ -709,6 +709,7 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#fff"] {
 .cbi-value input[type="password"]+.cbi-button-neutral {
     background-color: #483d8b !important;
     background-color: var(--dark-primary) !important;
+    border-color: var(--dark-primary) !important;
 }
 
 .btn,
@@ -796,6 +797,7 @@ input,
 .cbi-button[onclick="addKey(event)"] {
     background: #483d8b !important;
     background: var(--dark-primary) !important;
+    border-color: var(--dark-primary) !important;
 }
 
 .btn.primary,
@@ -817,7 +819,24 @@ input,
     color: #ccc !important;
 }
 
+#view>.spinning {
+    background: #333333 !important;
+}
 
+@media screen and (min-width: 600px) {
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--dark-primary);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--dark-primary);
+    }
+
+    ::-webkit-scrollbar-thumb:active {
+        background: var(--dark-primary);
+    }
+}
 
 
 @media screen and (max-width: 480px) {

@@ -28,7 +28,8 @@
 
 <br>English | [简体中文](README_ZH.md)
 
-## Notice 
+## Notice
+
 It is strongly recommended to use the Chrome browser. Some new css3 features are used in the theme, and currently only Chrome has the best compatibility.
 The mainline version of IE series currently has bugs to be resolved.
 FireFox does not enable the backdrop-filter by default, see here for the opening method: https://developer.mozilla.org/zh-CN/docs/Web/CSS/backdrop-filter
@@ -36,12 +37,18 @@ FireFox does not enable the backdrop-filter by default, see here for the opening
 v2.x.x Adapt to official mainline snapshot.  
 You can checkout branch 18.06 for OpenWRT 18.06 or lean 19.07.
 
-## Update Log 2021.10.16 v2.2.9
+## Update Log 2023.04.03 v2.3
 
-- 【v2.2.9】Fix the problem that the menu could not pop up in mobile mode  
-- 【v2.2.9】Unify the settings of css spacing  
-- 【v2.2.9】Refactored the code of the login page  
-- 【v2.2.8】Fix the problem that the Minify Css option is turned on when compiling, which causes the frosted glass effect to be invalid and the logo font is lost.  
+- 【v2.3】Updated the style of Loading.
+- 【v2.3】Fixed a large number of CSS style errors and made the overall more uniform.
+- 【v2.3】Fixed the problem of uncontrolled individual colors in dark mode.
+- 【v2.2.9】Unify the settings of css spacing
+- 【v2.2.9】Refactored the code of the login page
+- 【v2.2.8】Fix the problem that the Minify Css option is turned on when compiling, which causes the
+- 【v2.2.9】Fix the problem that the menu could not pop up in mobile mode
+- 【v2.2.9】Unify the settings of css spacing
+- 【v2.2.9】Refactored the code of the login page
+- 【v2.2.8】Fix the problem that the Minify Css option is turned on when compiling, which causes the frosted glass effect to be invalid and the logo font is lost.
 - 【v2.2.5】New config app for argon theme. You can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos.[Chrome is recommended] [Download](https://github.com/jerrykuku/luci-app-argon-config/releases/download/v0.8-beta/luci-app-argon-config_0.8-beta_all.ipk)
 - 【v2.2.5】Automatically set as the default theme when compiling.
 - 【v2.2.5】Modify the file structure to adapt to luci-app-argon-config. The old method of turning on dark mode is no longer applicable, please use it with luci-app-argon-config.
