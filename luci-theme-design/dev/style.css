@@ -2637,7 +2637,7 @@ header > .container > .pull-right > * {
 }
 
 .node-system-flashops .cbi-section {
-    padding: 0;
+    /* padding: 0; */
 }
 .node-system-flashops .cbi-section-descr {
     padding: 12px;
