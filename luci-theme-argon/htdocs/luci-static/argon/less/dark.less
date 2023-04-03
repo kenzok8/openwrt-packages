@@ -819,8 +819,21 @@ input,
     color: #ccc !important;
 }
 
+[data-page="admin-system-startup"] textarea {
+    color: #ccc;
+    background-color: transparent;
+}
+
+[data-page="admin-network-firewall-custom"] #view p textarea,
+[data-page="admin-status-routes"] #view p textarea,
+[data-page="admin-system-crontab"] #view p textarea {
+    color: #ccc;
+    background-color: transparent;
+}
+
 #view>.spinning {
     background: #333333 !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03) !important;
 }
 
 @media screen and (min-width: 600px) {

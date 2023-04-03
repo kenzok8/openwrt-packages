@@ -1381,12 +1381,11 @@ body[class*="node-"]>.main>.main-left>.nav>.slide>.menu.active::before {
     border-radius: 0.375rem;
     background-color: #fff;
     box-shadow: 0 0 1rem 0 rgba(136, 152, 170, .15);
+    overflow: hidden;
 
     &:last-child {
         margin: 0;
-
         border: 0;
-        box-shadow: none;
     }
 
 }
@@ -1401,6 +1400,10 @@ body[class*="node-"]>.main>.main-left>.nav>.slide>.menu.active::before {
     margin-left: 0;
 }
 
+.cbi-map:not(:first-child) {
+    margin-top: 1rem;
+}
+
 .cbi-map-descr {
     font-size: small;
     line-height: 1.5;
@@ -1410,6 +1413,12 @@ body[class*="node-"]>.main>.main-left>.nav>.slide>.menu.active::before {
 .cbi-section {
     &>.cbi-section-descr {
         padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+
+        &:empty {
+            padding-top: 0 !important;
+            padding-bottom: 0rem !important;
+        }
     }
 }
 
@@ -1468,7 +1477,7 @@ fieldset>fieldset,
 }
 
 .cbi-tblsection {
-    overflow-x: scroll;
+    overflow-x: auto;
 }
 
 table {
@@ -1759,7 +1768,6 @@ td>table>tbody>tr>td,
 .cbi-button[name="zero"],
 .cbi-button[name="restart"],
 .cbi-button[onclick="hide_empty(this)"] {
-    font-weight: bold;
     color: #fff;
     border: thin solid #8898aa;
     background-color: #8898aa;
@@ -2319,7 +2327,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
             color: #8898aa;
             border: 1px solid #dee2e6;
             border-radius: .25rem 0 0 .25rem;
-            border-right-width:0;
+            border-right-width: 0;
             outline: 0;
             background-image: none;
             box-shadow: none;
@@ -2659,73 +2667,94 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
     max-width: 600px;
     min-height: 32px;
     margin: 5em auto;
-    padding: 1em;
-    border-radius: 3px !important;
+    padding: 1rem;
+    border-radius: 0.375rem !important;
     background: #fff;
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
+
+    &>* {
+        line-height: normal;
+        flex-basis: 100%;
+        margin-bottom: .5em;
+        max-width: 100%;
+    }
+
+    &>pre,
+    &>textarea {
+        font-size: 1rem;
+        font-size-adjust: .35;
+        overflow: auto;
+        margin-bottom: .5em;
+        padding: 8.5px;
+        cursor: auto;
+        white-space: pre-wrap;
+        color: #eee;
+        outline: 0;
+        background-color: #101010;
+        box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
+    }
+
+    &>h4 {
+        display: block;
+        flex-grow: 1;
+        max-width: none;
+        padding: 1rem;
+        margin: -1rem -1rem 0 -1rem;
+        font-size: 1rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+        border-radius: 0.375rem 0 0 0.375rem;
+    }
+
+    h5 {
+        margin-top: 1rem;
+        font-weight: 600;
+    }
+
+    label>input[type="checkbox"] {
+        top: 0;
+    }
+
+    ul {
+        margin-left: 2.2em;
+
+        &:not(.cbi-tabmenu) {
+            margin-top: 1rem;
+        }
+
+        li {
+            list-style-type: square;
+            color: #808080;
+        }
+    }
+
+    p {
+        word-break: break-word;
+        margin-top: 1rem;
+    }
+
+    .label {
+        font-size: .6rem;
+        font-weight: normal;
+        padding: .1rem .3rem;
+        padding-bottom: 0;
+        cursor: default;
+        border-radius: 0;
+    }
+
+    .label.warning {
+        background-color: #f0ad4e !important;
+    }
+
+    .btn {
+        padding: 0.45rem 0.8rem;
+    }
+
+    &.cbi-modal {
+        max-width: 90%;
+        max-height: none;
+    }
 }
 
-.modal>* {
-    line-height: normal;
-    flex-basis: 100%;
-    margin-bottom: .5em;
-    max-width: 100%;
-}
-
-.modal>pre,
-.modal>textarea {
-    font-size: 1rem;
-    font-size-adjust: .35;
-    overflow: auto;
-    margin-bottom: .5em;
-    padding: 8.5px;
-    cursor: auto;
-    white-space: pre-wrap;
-    color: #eee;
-    outline: 0;
-    background-color: #101010;
-    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
-}
-
-.modal>h4 {
-    margin: .5em 0;
-}
-
-.modal ul {
-    margin-left: 2.2em;
-}
-
-.modal li {
-    list-style-type: square;
-    color: #808080;
-}
-
-.modal p {
-
-    word-break: break-word;
-}
-
-.modal .label {
-    font-size: .6rem;
-    font-weight: normal;
-    padding: .1rem .3rem;
-    padding-bottom: 0;
-    cursor: default;
-    border-radius: 0;
-}
-
-.modal .label.warning {
-    background-color: #f0ad4e !important;
-}
-
-.modal .btn {
-    padding: 0.45rem 0.8rem;
-}
-
-.modal.cbi-modal {
-    max-width: 90%;
-    max-height: none;
-}
 
 body.modal-overlay-active {
     overflow: hidden;
@@ -2749,7 +2778,7 @@ body.modal-overlay-active #modal_overlay {
     position: absolute;
     top: 0;
     bottom: 0;
-    
+
     left: .2em;
     width: 32px;
     content: "";
@@ -2757,14 +2786,20 @@ body.modal-overlay-active #modal_overlay {
     background-size: 16px;
 }
 
-#view>.spinning {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-50%);
-    padding: 1rem;
-    border-radius: 0.5rem;
-    background: #ffffff;
+#view {
+    border-radius: 0.375rem;
+    overflow: hidden;
+
+    &>.spinning {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background: #ffffff;
+        box-shadow: 0 0 1rem 0 rgba(136, 152, 170, .15);
+    }
 }
 
 /* luci */
@@ -2802,7 +2837,7 @@ body.modal-overlay-active #modal_overlay {
 }
 
 .cbi-page-actions {
-    padding-top: 1rem;
+    padding: 1rem;
     text-align: right;
     justify-content: flex-end;
 }
@@ -2901,6 +2936,10 @@ td>.ifacebadge,
     color: #000;
 }
 
+#content_syslog {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+}
+
 #syslog {
     font-size: small;
     line-height: 1.25;
@@ -2913,7 +2952,7 @@ td>.ifacebadge,
     border: 0;
     border-radius: 0.375rem;
     background-color: #ffffff;
-    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
+
 }
 
 #syslog:focus {
@@ -3287,6 +3326,18 @@ input[name="nslookup"] {
     background: transparent;
 }
 
+[data-page="admin-system-filetransfer"] {
+
+    #cbi-upload {
+        margin-top: 0;
+    }
+
+    .cbi-section-table {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+    }
+
+}
+
 /* samba */
 #cbi-samba [data-tab="template"] .cbi-value-field {
     display: block;
@@ -3307,6 +3358,12 @@ input[name="nslookup"] {
     color: var(--gray-dark);
 }
 
+/* admin-system-admin-sshkeys */
+[data-page="admin-system-admin-sshkeys"] {
+    .cbi-dynlist {
+        margin-left: 1rem;
+    }
+}
 
 /* software */
 [data-page="admin-system-opkg"] h2 {
@@ -3365,7 +3422,8 @@ input[name="nslookup"] {
     .control-group {
         margin-top: 0.5rem;
     }
-    .cbi-dynlist{
+
+    .cbi-dynlist {
         margin: 0.25rem 0;
     }
 }
@@ -3408,9 +3466,11 @@ input[name="nslookup"] {
             padding: 1rem;
             resize: none;
             color: #242424;
-            border: 0;
             border-radius: 0.375rem;
             background-color: transparent;
+            background: var(--white);
+            outline: none;
+            border-radius: 0.375rem;
         }
     }
 }
@@ -3465,6 +3525,7 @@ input[name="nslookup"] {
         font-weight: 600;
         padding: 1rem 0 1rem 1.5rem;
         color: #525f7f;
+
     }
 
     .cbi-page-actions {
@@ -3562,15 +3623,25 @@ input[name="nslookup"] {
     width: 100%;
 }
 
-[data-page="admin-network-firewall-custom"] #view p,
-[data-page="admin-status-routes"] #view p {
-    padding: 0 1.5rem;
-    margin-bottom: 1rem;
+[data-page="admin-network-firewall-custom"],
 
-    textarea {
-        padding: 1rem;
-        border-radius: 0.375rem;
+[data-page="admin-status-routes"] {
+    #view {
+        p {
+            padding: 0 1.5rem;
+            margin-bottom: 1rem;
+
+            textarea {
+                padding: 1rem;
+                border-radius: 0.375rem;
+            }
+        }
+
+        &>h3 {
+            border-radius: 0.375rem 0.375rem 0 0;
+        }
     }
+
 }
 
 /* applyreboot fix */
