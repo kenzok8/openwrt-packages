@@ -434,8 +434,25 @@ svg {
     color: var(--bg) !important;
 }
 
-/** img retina **/
+/* file selector upload button */
+::file-selector-button {
+    transition: all .1s ease-in-out;
+    border-radius: 5px;
+    border: 3px solid #337ab7!important;
+    color: #fff!important;
+    background-color: #337ab7!important;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+::file-selector-button:hover,
+::file-selector-button:focus,
+::file-selector-button:active {
+    color: #fff!important;
+    background-color: #6a65d6!important;
+    border-color: #6a65d6!important
+}
 
+/** img retina **/
 img[src*="/luci-static/resources/icons/port_up.png"] {
     background-image: url(../images/port_up.png);
     background-size: 32px 32px;
