@@ -74,6 +74,7 @@ luci-theme-design is an OpenWrt LuCI theme for immersive WebApp experience and o
 - Fix nlbw component
 - Support QWRT (QSDK), iStore wizard navigation
 - Adapt to OpenWrt 21/22
+- Adapt to linkease series icons
 
 ### Compile
 
