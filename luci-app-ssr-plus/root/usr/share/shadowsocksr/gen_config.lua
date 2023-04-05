@@ -22,40 +22,26 @@ function vmess_vless()
 						id = server.vmess_id,
 						security = (server.v2ray_protocol == "vmess" or not server.v2ray_protocol) and server.security or nil,
 						encryption = (server.v2ray_protocol == "vless") and server.vless_encryption or nil,
-						flow = (server.xtls == '1') and (server.vless_flow or "xtls-rprx-splice") or (server.tls == '1') and server.tls_flow or nil
+						flow = ((server.tls == '1') or (server.reality == '1')) and server.tls_flow or nil
 					}
 				}
 			}
-		},
-		packetEncoding = server.packet_encoding or nil
+		}
 	}
 end
 function trojan_shadowsocks()
 	outbound_settings = {
-		plugin = ((server.v2ray_protocol == "shadowsocks") and server.plugin ~= "none" and server.plugin) or (server.v2ray_protocol == "shadowsocksr" and "shadowsocksr") or nil,
-		pluginOpts = (server.v2ray_protocol == "shadowsocks") and server.plugin_opts or nil,
-		pluginArgs = (server.v2ray_protocol == "shadowsocksr") and {
-			"--protocol=" .. server.protocol,
-			"--protocol-param=" .. (server.protocol_param or ""),
-			"--obfs=" .. server.obfs,
-			"--obfs-param=" .. (server.obfs_param or "")
-		} or nil,
 		servers = {
 			{
 				address = server.server,
 				port = tonumber(server.server_port),
 				password = server.password,
-				method = ((server.v2ray_protocol == "shadowsocks") and server.encrypt_method_ss) or ((server.v2ray_protocol == "shadowsocksr") and server.encrypt_method) or nil,
+				method = ((server.v2ray_protocol == "shadowsocks") and server.encrypt_method_ss) or nil,
 				uot = (server.v2ray_protocol == "shadowsocks") and (server.uot == '1') or nil,
 				ivCheck = (server.v2ray_protocol == "shadowsocks") and (server.ivCheck == '1') or nil,
-				flow = (server.v2ray_protocol == "trojan") and (server.xtls == '1') and (server.vless_flow or "xtls-rprx-splice") or nil
 			}
 		}
 	}
-
-	if server.v2ray_protocol == "shadowsocksr" then
-		server.v2ray_protocol = "shadowsocks"
-	end
 end
 function socks_http()
 	outbound_settings = {
@@ -109,9 +95,6 @@ function outbound:handleIndex(index)
 		shadowsocks = function()
 			trojan_shadowsocks()
 		end,
-		shadowsocksr = function()
-			trojan_shadowsocks()
-		end,
 		socks = function()
 			socks_http()
 		end,
@@ -157,29 +140,25 @@ local Xray = {
 		-- 底层传输配置
 		streamSettings = {
 			network = server.transport or "tcp",
-			security = (server.xtls == '1') and "xtls" or (server.tls == '1') and "tls" or nil,
-			tlsSettings = (server.tls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
+			security = (server.tls == '1') and "tls" or (server.reality == '1') and "reality" or nil,
+			tlsSettings = (server.tls == '1') and {
 				-- tls
 				alpn = server.tls_alpn,
 				fingerprint = server.fingerprint,
-				allowInsecure = (server.insecure == "1") and true or nil,
+				allowInsecure = (server.insecure == "1"),
 				serverName = server.tls_host,
 				certificates = server.certificate and {
 					usage = "verify",
 					certificateFile = server.certpath
 				} or nil
 			} or nil,
-			xtlsSettings = (server.xtls == '1' and (server.insecure == "1" or server.tls_host or server.fingerprint)) and {
-				-- xtls
-				alpn = server.tls_alpn,
+			realitySettings = (server.reality == '1') and {
+				show = false,
+				publicKey = server.reality_publickey,
+				shortId = server.reality_shortid,
+				spiderX = server.reality_spiderx,
 				fingerprint = server.fingerprint,
-				allowInsecure = (server.insecure == "1") and true or nil,
-				serverName = server.tls_host,
-				minVersion = "1.3",
-				certificates = server.certificate and {
-					usage = "verify",
-					certificateFile = server.certpath
-				} or nil
+				serverName = server.tls_host
 			} or nil,
 			tcpSettings = (server.transport == "tcp" and server.tcp_guise == "http") and {
 				-- tcp
@@ -229,7 +208,6 @@ local Xray = {
 			grpcSettings = (server.transport == "grpc") and {
 				-- grpc
 				serviceName = server.serviceName or "",
-				mode = (server.grpc_mode ~= "gun") and server.grpc_mode or nil,
 				multiMode = (server.grpc_mode == "multi") and true or false,
 				idle_timeout = tonumber(server.idle_timeout) or nil,
 				health_check_timeout = tonumber(server.health_check_timeout) or nil,
@@ -237,11 +215,10 @@ local Xray = {
 				initial_windows_size = tonumber(server.initial_windows_size) or nil
 			} or nil
 		},
-		mux = (server.mux == "1" and server.xtls ~= "1" and server.transport ~= "grpc") and {
+		mux = (server.mux == "1" and server.transport ~= "grpc") and {
 			-- mux
 			enabled = true,
-			concurrency = tonumber(server.concurrency),
-			packetEncoding = (server.v2ray_protocol == "vmess" or server.v2ray_protocol == "vless") and server.packet_encoding or nil
+			concurrency = tonumber(server.concurrency)
 		} or nil
 	} or nil
 }
@@ -325,7 +302,8 @@ local hysteria = {
 	recv_window_conn = tonumber(server.recv_window_conn),
 	recv_window = tonumber(server.recv_window),
 	disable_mtu_discovery = (server.disable_mtu_discovery == "1") and true or false,
-	fast_open = (server.fast_open == "1") and true or false
+	fast_open = (server.fast_open == "1") and true or false,
+	lazy_start = (server.lazy_start == "1") and true or false
 }
 local tuic = {
 	relay = {

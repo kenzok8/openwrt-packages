@@ -4,15 +4,15 @@ XHR.poll(3, '<%=url([[admin]], [[services]], [[AdGuardHome]], [[status]])%>', nu
 		var tb = document.getElementById('AdGuardHome_status');
 		if (data && tb) {
 			if (data.running) {
-				tb.innerHTML = '<em><b><font color=green>AdGuardHome <%:RUNNING%></font></b></em>';
+				tb.innerHTML = '<em><b style=color:green>AdGuardHome <%:RUNNING%></b></em>';
 			} else {
-				tb.innerHTML = '<em><b><font color=red>AdGuardHome <%:NOT RUNNING%></font></b></em>';
+				tb.innerHTML = '<em><b style=color:red>AdGuardHome <%:NOT RUNNING%></b></em>';
 			}
 			if (data.redirect)
 			{
-				tb.innerHTML+='<em><b><font color=green><%:Redirected%></font></b></em>'
+				tb.innerHTML+='<em><b style=color:green><%:Redirected%></b></em>'
 			} else {
-				tb.innerHTML+='<em><b><font color=red><%:Not redirect%></font></b></em>'	
+				tb.innerHTML+='<em><b style=color:red><%:Not redirect%></b></em>'	
 			}
 		}
 	}

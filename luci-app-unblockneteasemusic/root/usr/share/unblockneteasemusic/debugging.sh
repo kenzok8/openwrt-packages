@@ -71,33 +71,13 @@ echo -e "\n"
 
 [ -n "$is_stopped" ] || {
 	echo -e "Firewall info:"
-	if [ -e "$(command -v fw4)" ]; then
-		[ -e "/etc/nftables.d/90-$NAME-rules.nft" ] || echo -e 'netease_cloud_music nft rule file not found.'
-		echo -e ""
-		nft list set inet fw4 "acl_neteasemusic_http" 2>&1
-		echo -e ""
-		nft list set inet fw4 "acl_neteasemusic_https" 2>&1
-		echo -e ""
-		nft list set inet fw4 "local_addr" 2>&1
-		echo -e ""
-		nft list set inet fw4 "neteasemusic" 2>&1
-		echo -e ""
-		nft list chain inet fw4 "input_wan" | grep "unblockneteasemusic-http-" 2>"/dev/null" || echo -e 'Http Port pub access rule not found.'
-		echo -e ""
-		nft list chain inet fw4 "input_wan" | grep "unblockneteasemusic-https-" 2>"/dev/null" || echo -e 'Https Port pub access rule not found.'
-		echo -e ""
-		nft list chain inet fw4 "netease_cloud_music" 2>&1
-		echo -e ""
-		nft list chain inet fw4 "netease_cloud_music_redir" 2>&1
-	else
-		iptables -t "nat" -L "netease_cloud_music" 2>"/dev/null" || echo -e 'Chain "netease_cloud_music" not found.'
-		echo -e ""
-		ipset list "neteasemusic" 2>"/dev/null" || echo -e 'Table "neteasemusic" not found.'
-		echo -e ""
-		ipset list "acl_neteasemusic_http" 2>"/dev/null" || echo -e 'Table "acl_neteasemusic_http" not found.'
-		echo -e ""
-		ipset list "acl_neteasemusic_https" 2>"/dev/null" || echo -e 'Table "acl_neteasemusic_https" not found.'
-	fi
+	iptables -t "nat" -L "netease_cloud_music" 2>"/dev/null" || echo -e 'Chain "netease_cloud_music" not found.'
+	echo -e ""
+	ipset list "neteasemusic" 2>"/dev/null" || echo -e 'Table "neteasemusic" not found.'
+	echo -e ""
+	ipset list "acl_neteasemusic_http" 2>"/dev/null" || echo -e 'Table "acl_neteasemusic_http" not found.'
+	echo -e ""
+	ipset list "acl_neteasemusic_https" 2>"/dev/null" || echo -e 'Table "acl_neteasemusic_https" not found.'
 	echo -e ""
 	cat "/tmp/dnsmasq.d/dnsmasq-$NAME.conf"
 	echo -e "\n"
@@ -111,4 +91,4 @@ echo -e "\n"
 	echo -e ""
 }
 
-cat "/tmp/$NAME.log" 2>"/dev/null" || echo -e "Log is not avaiable."
+cat "/var/run/$NAME/run.log" 2>"/dev/null" || echo -e "Log is not avaiable."

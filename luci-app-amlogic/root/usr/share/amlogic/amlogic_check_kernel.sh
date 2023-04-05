@@ -20,8 +20,6 @@ AMLOGIC_SOC_FILE="/etc/flippy-openwrt-release"
 START_LOG="${TMP_CHECK_DIR}/amlogic_check_kernel.log"
 RUNNING_LOG="${TMP_CHECK_DIR}/amlogic_running_script.log"
 LOG_FILE="${TMP_CHECK_DIR}/amlogic.log"
-github_api_kernel_library="${TMP_CHECK_DIR}/github_api_kernel_library"
-github_api_kernel_file="${TMP_CHECK_DIR}/github_api_kernel_file"
 support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
@@ -91,65 +89,35 @@ fi
 tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
 sleep 2
 
-# Step 1: URL formatting start -----------------------------------------------------------
-#
-# 01. Download server version documentation
+# Step 1. Set the kernel query api
 tolog "01. Start checking the kernel version."
-server_firmware_url="$(uci get amlogic.config.amlogic_firmware_repo 2>/dev/null)"
-[[ -n "${server_firmware_url}" ]] || tolog "01.01 The custom kernel download repo is invalid." "1"
-server_kernel_path="$(uci get amlogic.config.amlogic_kernel_path 2>/dev/null)"
-[[ -n "${server_kernel_path}" ]] || tolog "01.02 The custom kernel download path is invalid." "1"
-#
-# Supported format:
-#
-# server_firmware_url="https://github.com/ophub/amlogic-s9xxx-openwrt"
-# server_firmware_url="ophub/amlogic-s9xxx-openwrt"
-#
-# server_kernel_path="https://github.com/ophub/amlogic-s9xxx-openwrt/tree/main/amlogic-s9xxx/amlogic-kernel"
-# server_kernel_path="https://github.com/ophub/amlogic-s9xxx-openwrt/trunk/amlogic-s9xxx/amlogic-kernel"
-# server_kernel_path="amlogic-s9xxx/amlogic-kernel"
-#
-if [[ "${server_firmware_url}" == http* ]]; then
-    server_firmware_url="${server_firmware_url#*com\/}"
+firmware_repo="$(uci get amlogic.config.amlogic_firmware_repo 2>/dev/null)"
+[[ -n "${firmware_repo}" ]] || tolog "01.01 The custom kernel download repo is invalid." "1"
+kernel_repo="$(uci get amlogic.config.amlogic_kernel_path 2>/dev/null)"
+[[ -n "${kernel_repo}" ]] || tolog "01.02 The custom kernel download repo is invalid." "1"
+
+if [[ "${kernel_repo}" == "opt/kernel" ]]; then
+    uci set amlogic.config.amlogic_kernel_path="${firmware_repo}" 2>/dev/null
+    uci commit amlogic 2>/dev/null
+    kernel_repo="${firmware_repo}"
 fi
 
-if [[ "${server_kernel_path}" == http* && -n "$(echo ${server_kernel_path} | grep "tree")" ]]; then
-    # Left part
-    server_kernel_path_left="${server_kernel_path%\/tree*}"
-    server_kernel_path_left="${server_kernel_path_left#*com\/}"
-    server_firmware_url="${server_kernel_path_left}"
-    # Right part
-    server_kernel_path_right="${server_kernel_path#*tree\/}"
-    server_kernel_path_right="${server_kernel_path_right#*\/}"
-    server_kernel_path="${server_kernel_path_right}"
-elif [[ "${server_kernel_path}" == http* && -n "$(echo ${server_kernel_path} | grep "trunk")" ]]; then
-    # Left part
-    server_kernel_path_left="${server_kernel_path%\/trunk*}"
-    server_kernel_path_left="${server_kernel_path_left#*com\/}"
-    server_firmware_url="${server_kernel_path_left}"
-    # Right part
-    server_kernel_path_right="${server_kernel_path#*trunk\/}"
-    server_kernel_path="${server_kernel_path_right}"
-fi
-
-server_kernel_url="https://api.github.com/repos/${server_firmware_url}/contents/${server_kernel_path}"
-#
-# Step 1: URL formatting end -----------------------------------------------------------
+# Convert kernel repo to api format
+[[ "${kernel_repo}" =~ ^https: ]] && kernel_repo="$(echo ${kernel_repo} | awk -F'/' '{print $4"/"$5}')"
+kernel_api="https://api.github.com/repos/${kernel_repo}"
+[[ "${SOC}" == "rk3588" ]] && kernel_tag="rk3588" || kernel_tag="stable"
 
 # Step 2: Check if there is the latest kernel version
 check_kernel() {
     # 02. Query local version information
     tolog "02. Start checking the kernel version."
     # 02.01 Query the current version
-    current_kernel_v=$(ls /lib/modules/ 2>/dev/null | grep -oE '^[1-9].[0-9]{1,2}.[0-9]+')
+    current_kernel_v=$(uname -r 2>/dev/null | grep -oE '^[1-9]\.[0-9]{1,2}\.[0-9]+')
     tolog "02.01 current version: ${current_kernel_v}"
     sleep 2
 
     # 02.02 Version comparison
-    main_line_ver="$(echo "${current_kernel_v}" | cut -d '.' -f1)"
-    main_line_maj="$(echo "${current_kernel_v}" | cut -d '.' -f2)"
-    main_line_now="$(echo "${current_kernel_v}" | cut -d '.' -f3)"
-    main_line_version="${main_line_ver}.${main_line_maj}"
+    main_line_version="$(echo ${current_kernel_v} | awk -F '.' '{print $1"."$2}')"
 
     # 02.03 Query the selected branch in the settings
     server_kernel_branch="$(uci get amlogic.config.amlogic_kernel_branch 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}')"
@@ -158,8 +126,7 @@ check_kernel() {
         uci set amlogic.config.amlogic_kernel_branch="${main_line_version}" 2>/dev/null
         uci commit amlogic 2>/dev/null
     fi
-    branch_ver="$(echo "${server_kernel_branch}" | cut -d '.' -f1)"
-    branch_maj="$(echo "${server_kernel_branch}" | cut -d '.' -f2)"
+
     if [[ "${server_kernel_branch}" != "${main_line_version}" ]]; then
         main_line_version="${server_kernel_branch}"
         main_line_now="0"
@@ -168,21 +135,24 @@ check_kernel() {
     fi
 
     # Check the version on the server
-    rm -f ${github_api_kernel_library} 2>/dev/null && sync
-    curl -s "${server_kernel_url}" >${github_api_kernel_library} && sync
-    sleep 1
-
-    latest_version="$(cat ${github_api_kernel_library} | grep "name" | grep -oE "${main_line_version}.[0-9]+" | sed -e "s/${main_line_version}.//g" | sort -n | sed -n '$p')"
-    #latest_version="124"
+    latest_version="$(
+        curl -s \
+            -H "Accept: application/vnd.github+json" \
+            ${kernel_api}/releases/tags/kernel_${kernel_tag} |
+            jq -r '.assets[].name' |
+            grep -oE "${main_line_version}\.[0-9]+" |
+            sort -rV | head -n 1
+    )"
     [[ -n "${latest_version}" ]] || tolog "02.03 No kernel available, please use another kernel branch." "1"
-    tolog "02.03 current version: ${current_kernel_v}, Latest version: ${main_line_version}.${latest_version}"
+
+    tolog "02.03 current version: ${current_kernel_v}, Latest version: ${latest_version}"
     sleep 2
 
-    if [[ "${latest_version}" -eq "${main_line_now}" && "${main_line_maj}" -eq "${branch_maj}" ]]; then
+    if [[ "${latest_version}" == "${current_kernel_v}" ]]; then
         tolog "02.04 Already the latest version, no need to update." "1"
         sleep 2
     else
-        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_kernel(this, '"'download_${main_line_version}.${latest_version}'"')"/> Latest version: '${main_line_version}.${latest_version}'' "1"
+        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_kernel(this, '"'download_${latest_version}'"')"/> Latest version: '${latest_version}'' "1"
     fi
 
     exit 0
@@ -191,7 +161,7 @@ check_kernel() {
 # Step 3: Download the latest kernel version
 download_kernel() {
     tolog "03. Start download the kernels."
-    if [[ "${download_version}" == download* ]]; then
+    if [[ "${download_version}" == "download_"* ]]; then
         download_version="$(echo "${download_version}" | cut -d '_' -f2)"
         tolog "03.01 The kernel version: ${download_version}, downloading..."
     else
@@ -202,82 +172,19 @@ download_kernel() {
     rm -f ${KERNEL_DOWNLOAD_PATH}/*.tar.gz 2>/dev/null && sync
     rm -f ${KERNEL_DOWNLOAD_PATH}/sha256sums 2>/dev/null && sync
 
-    rm -f ${github_api_kernel_file} 2>/dev/null && sync
-    curl -s "${server_kernel_url}/${download_version}" >${github_api_kernel_file} && sync
-    sleep 1
+    kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kernel_tag}/${download_version}.tar.gz"
+    wget "${kernel_down_from}" -q -P "${KERNEL_DOWNLOAD_PATH}"
+    [[ "${?}" -ne "0" ]] && tolog "03.03 The kernel download failed." "1"
 
-    # 01. Download boot file from the kernel directory under the path: ${server_kernel_url}/${download_version}/
-    server_kernel_boot="$(cat ${github_api_kernel_file} | grep "download_url" | grep -o "https.*/boot-${download_version}.*.tar.gz" | head -n 1)"
-    # Download boot file from current path: ${server_kernel_url}/
-    if [[ -z "${server_kernel_boot}" ]]; then
-        server_kernel_boot="$(cat ${github_api_kernel_library} | grep "download_url" | grep -o "https.*/boot-${download_version}.*.tar.gz" | head -n 1)"
-    fi
-    boot_file_name="${server_kernel_boot##*/}"
-    server_kernel_boot_name="${boot_file_name//%2B/+}"
-    wget "${server_kernel_boot}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_boot_name}" >/dev/null 2>&1 && sync
-    if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_boot_name}" ]]; then
-        tolog "03.03 The boot file download complete."
-    else
-        tolog "03.04 The boot file download failed." "1"
-    fi
+    tar -xf "${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz" -C "${KERNEL_DOWNLOAD_PATH}"
+    [[ "${?}" -ne "0" ]] && tolog "03.04 Kernel decompression failed." "1"
+    mv -f ${KERNEL_DOWNLOAD_PATH}/${download_version}/* -t ${KERNEL_DOWNLOAD_PATH}
+
+    sync && sleep 3
+    rm -rf "${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz" "${KERNEL_DOWNLOAD_PATH}/${download_version}"
+
+    tolog "03.05 The kernel is ready, you can update."
     sleep 2
-
-    if [[ "${PLATFORM}" != "qemu-aarch64" ]]; then
-        # 02. Download dtb file from the kernel directory under the path: ${server_kernel_url}/${download_version}/
-        server_kernel_dtb="$(cat ${github_api_kernel_file} | grep "download_url" | grep -o "https.*/dtb-${PLATFORM}-${download_version}.*.tar.gz" | head -n 1)"
-        # Download dtb file from current path: ${server_kernel_url}/
-        if [[ -z "${server_kernel_dtb}" ]]; then
-            server_kernel_dtb="$(cat ${github_api_kernel_library} | grep "download_url" | grep -o "https.*/dtb-${PLATFORM}-${download_version}.*.tar.gz" | head -n 1)"
-        fi
-        dtb_file_name="${server_kernel_dtb##*/}"
-        server_kernel_dtb_name="${dtb_file_name//%2B/+}"
-        wget "${server_kernel_dtb}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" >/dev/null 2>&1 && sync
-        if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_dtb_name}" ]]; then
-            tolog "03.05 The dtb file download complete."
-        else
-            tolog "03.06 The dtb file download failed." "1"
-        fi
-        sleep 2
-    fi
-
-    # 03. Download modules file from the kernel directory under the path: ${server_kernel_url}/${download_version}/
-    server_kernel_modules="$(cat ${github_api_kernel_file} | grep "download_url" | grep -o "https.*/modules-${download_version}.*.tar.gz" | head -n 1)"
-    # Download modules file from current path: ${server_kernel_url}/
-    if [[ -z "${server_kernel_modules}" ]]; then
-        server_kernel_modules="$(cat ${github_api_kernel_library} | grep "download_url" | grep -o "https.*/modules-${download_version}.*.tar.gz" | head -n 1)"
-    fi
-    modules_file_name="${server_kernel_modules##*/}"
-    server_kernel_modules_name="${modules_file_name//%2B/+}"
-    wget "${server_kernel_modules}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_modules_name}" >/dev/null 2>&1 && sync
-    if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_modules_name}" ]]; then
-        tolog "03.07 The modules file download complete."
-    else
-        tolog "03.08 The modules file download failed." "1"
-    fi
-    sleep 2
-
-    # 04. Download sha256sums file from the kernel directory under the path: ${server_kernel_url}/${download_version}/
-    server_kernel_sha256sums="$(cat ${github_api_kernel_file} | grep "download_url" | grep -o "https.*/sha256sums" | head -n 1)"
-    # Download modules file from current path: ${server_kernel_url}/
-    if [[ -z "${server_kernel_sha256sums}" ]]; then
-        server_kernel_sha256sums="$(cat ${github_api_kernel_library} | grep "download_url" | grep -o "https.*/sha256sums" | head -n 1)"
-    fi
-    if [[ -n "${server_kernel_sha256sums}" ]]; then
-        server_kernel_sha256sums_name="sha256sums"
-        wget "${server_kernel_sha256sums}" -O "${KERNEL_DOWNLOAD_PATH}/${server_kernel_sha256sums_name}" >/dev/null 2>&1 && sync
-        if [[ "$?" -eq "0" && -s "${KERNEL_DOWNLOAD_PATH}/${server_kernel_sha256sums_name}" ]]; then
-            tolog "03.09 The sha256sums file download complete."
-        else
-            tolog "03.10 The sha256sums file download failed." "1"
-        fi
-        sleep 2
-    fi
-
-    tolog "04 The kernel is ready, you can update."
-    sleep 2
-
-    # Delete temporary files
-    rm -f ${github_api_kernel_library} ${github_api_kernel_file} 2>/dev/null && sync
 
     #echo '<a href="javascript:;" onclick="return amlogic_kernel(this)">Update</a>' >$START_LOG
     tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_kernel(this)"/>' "1"

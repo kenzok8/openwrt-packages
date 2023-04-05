@@ -3,53 +3,53 @@ local appname = api.appname
 local uci = api.uci
 
 if not arg[1] or not uci:get(appname, arg[1]) then
-    luci.http.redirect(api.url("node_list"))
+	luci.http.redirect(api.url("node_list"))
 end
 
 local ss_encrypt_method_list = {
-    "rc4-md5", "aes-128-cfb", "aes-192-cfb", "aes-256-cfb", "aes-128-ctr",
-    "aes-192-ctr", "aes-256-ctr", "bf-cfb", "salsa20", "chacha20", "chacha20-ietf",
-    "aes-128-gcm", "aes-192-gcm", "aes-256-gcm", "chacha20-ietf-poly1305",
-    "xchacha20-ietf-poly1305"
+	"rc4-md5", "aes-128-cfb", "aes-192-cfb", "aes-256-cfb", "aes-128-ctr",
+	"aes-192-ctr", "aes-256-ctr", "bf-cfb", "salsa20", "chacha20", "chacha20-ietf",
+	"aes-128-gcm", "aes-192-gcm", "aes-256-gcm", "chacha20-ietf-poly1305",
+	"xchacha20-ietf-poly1305"
 }
 
 local ss_rust_encrypt_method_list = {
-    "plain", "none",
-    "aes-128-gcm", "aes-256-gcm", "chacha20-ietf-poly1305",
-    "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha8-poly1305", "2022-blake3-chacha20-poly1305"
+	"plain", "none",
+	"aes-128-gcm", "aes-256-gcm", "chacha20-ietf-poly1305",
+	"2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha8-poly1305", "2022-blake3-chacha20-poly1305"
 }
 
 local ssr_encrypt_method_list = {
-    "none", "table", "rc2-cfb", "rc4", "rc4-md5", "rc4-md5-6", "aes-128-cfb",
-    "aes-192-cfb", "aes-256-cfb", "aes-128-ctr", "aes-192-ctr", "aes-256-ctr",
-    "bf-cfb", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb",
-    "cast5-cfb", "des-cfb", "idea-cfb", "seed-cfb", "salsa20", "chacha20",
-    "chacha20-ietf"
+	"none", "table", "rc2-cfb", "rc4", "rc4-md5", "rc4-md5-6", "aes-128-cfb",
+	"aes-192-cfb", "aes-256-cfb", "aes-128-ctr", "aes-192-ctr", "aes-256-ctr",
+	"bf-cfb", "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb",
+	"cast5-cfb", "des-cfb", "idea-cfb", "seed-cfb", "salsa20", "chacha20",
+	"chacha20-ietf"
 }
 
 local ssr_protocol_list = {
-    "origin", "verify_simple", "verify_deflate", "verify_sha1", "auth_simple",
-    "auth_sha1", "auth_sha1_v2", "auth_sha1_v4", "auth_aes128_md5",
-    "auth_aes128_sha1", "auth_chain_a", "auth_chain_b", "auth_chain_c",
-    "auth_chain_d", "auth_chain_e", "auth_chain_f"
+	"origin", "verify_simple", "verify_deflate", "verify_sha1", "auth_simple",
+	"auth_sha1", "auth_sha1_v2", "auth_sha1_v4", "auth_aes128_md5",
+	"auth_aes128_sha1", "auth_chain_a", "auth_chain_b", "auth_chain_c",
+	"auth_chain_d", "auth_chain_e", "auth_chain_f"
 }
 local ssr_obfs_list = {
-    "plain", "http_simple", "http_post", "random_head", "tls_simple",
-    "tls1.0_session_auth", "tls1.2_ticket_auth"
+	"plain", "http_simple", "http_post", "random_head", "tls_simple",
+	"tls1.0_session_auth", "tls1.2_ticket_auth"
 }
 
 local v_ss_encrypt_method_list = {
-    "aes-128-gcm", "aes-256-gcm", "chacha20-poly1305"
+	"aes-128-gcm", "aes-256-gcm", "chacha20-poly1305"
 }
 
 local x_ss_encrypt_method_list = {
-    "aes-128-gcm", "aes-256-gcm", "chacha20-poly1305", "xchacha20-poly1305", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"
+	"aes-128-gcm", "aes-256-gcm", "chacha20-poly1305", "xchacha20-poly1305", "2022-blake3-aes-128-gcm", "2022-blake3-aes-256-gcm", "2022-blake3-chacha20-poly1305"
 }
 
-local security_list = {"none", "auto", "aes-128-gcm", "chacha20-poly1305", "zero"}
+local security_list = { "none", "auto", "aes-128-gcm", "chacha20-poly1305", "zero" }
 
 local header_type_list = {
-    "none", "srtp", "utp", "wechat-video", "dtls", "wireguard"
+	"none", "srtp", "utp", "wechat-video", "dtls", "wireguard"
 }
 local encrypt_methods_ss_aead = {
 	"chacha20-ietf-poly1305",
@@ -75,42 +75,42 @@ remarks.rmempty = false
 
 type = s:option(ListValue, "type", translate("Type"))
 if api.is_finded("ipt2socks") then
-    type:value("Socks", translate("Socks"))
+	type:value("Socks", translate("Socks"))
 end
 if api.is_finded("ss-redir") then
-    type:value("SS", translate("Shadowsocks Libev"))
+	type:value("SS", translate("Shadowsocks Libev"))
 end
 if api.is_finded("sslocal") then
-    type:value("SS-Rust", translate("Shadowsocks Rust"))
+	type:value("SS-Rust", translate("Shadowsocks Rust"))
 end
 if api.is_finded("ssr-redir") then
-    type:value("SSR", translate("ShadowsocksR Libev"))
+	type:value("SSR", translate("ShadowsocksR Libev"))
 end
 if api.is_finded("v2ray") then
-    type:value("V2ray", translate("V2ray"))
+	type:value("V2ray", translate("V2ray"))
 end
 if api.is_finded("xray") then
-    type:value("Xray", translate("Xray"))
+	type:value("Xray", translate("Xray"))
 end
 if api.is_finded("brook") then
-    type:value("Brook", translate("Brook"))
+	type:value("Brook", translate("Brook"))
 end
 --[[
 if api.is_finded("trojan-plus") or api.is_finded("trojan") then
-    type:value("Trojan", translate("Trojan"))
+	type:value("Trojan", translate("Trojan"))
 end
 ]]--
 if api.is_finded("trojan-plus") then
-    type:value("Trojan-Plus", translate("Trojan-Plus"))
+	type:value("Trojan-Plus", translate("Trojan-Plus"))
 end
 if api.is_finded("trojan-go") then
-    type:value("Trojan-Go", translate("Trojan-Go"))
+	type:value("Trojan-Go", translate("Trojan-Go"))
 end
 if api.is_finded("naive") then
-    type:value("Naiveproxy", translate("NaiveProxy"))
+	type:value("Naiveproxy", translate("NaiveProxy"))
 end
 if api.is_finded("hysteria") then
-    type:value("Hysteria", translate("Hysteria"))
+	type:value("Hysteria", translate("Hysteria"))
 end
 
 protocol = s:option(ListValue, "protocol", translate("Protocol"))
@@ -132,69 +132,114 @@ iface.default = "eth1"
 iface:depends("protocol", "_iface")
 
 local nodes_table = {}
+local balancers_table = {}
 for k, e in ipairs(api.get_valid_nodes()) do
-    if e.node_type == "normal" then
-        nodes_table[#nodes_table + 1] = {
-            id = e[".name"],
-            remarks = e["remark"]
-        }
-    end
+	if e.node_type == "normal" then
+		nodes_table[#nodes_table + 1] = {
+			id = e[".name"],
+			remarks = e["remark"]
+		}
+	end
+	if e.protocol == "_balancing" then
+		balancers_table[#balancers_table + 1] = {
+			id = e[".name"],
+			remarks = e["remark"]
+		}
+	end
 end
 
 -- 负载均衡列表
-balancing_node = s:option(DynamicList, "balancing_node", translate("Load balancing node list"), translate("Load balancing node list, <a target='_blank' href='https://toutyrater.github.io/routing/balance2.html'>document</a>"))
+local balancing_node = s:option(DynamicList, "balancing_node", translate("Load balancing node list"), translate("Load balancing node list, <a target='_blank' href='https://toutyrater.github.io/routing/balance2.html'>document</a>"))
 for k, v in pairs(nodes_table) do balancing_node:value(v.id, v.remarks) end
 balancing_node:depends("protocol", "_balancing")
 
+local balancingStrategy = s:option(ListValue, "balancingStrategy", translate("Balancing Strategy"))
+balancingStrategy:depends("protocol", "_balancing")
+balancingStrategy:value("random")
+balancingStrategy:value("leastPing")
+balancingStrategy.default = "random"
+-- 探测地址
+local useCustomProbeUrl = s:option(Flag, "useCustomProbeUrl", translate("Use Custome Probe URL"), translate("By default the built-in probe URL will be used, enable this option to use a custom probe URL."))
+useCustomProbeUrl:depends("balancingStrategy", "leastPing")
+local probeUrl = s:option(Value, "probeUrl", translate("Probe URL"))
+probeUrl:depends("useCustomProbeUrl", true)
+probeUrl.default = "https://www.google.com/generate_204"
+probeUrl.description = translate("The URL used to detect the connection status.")
+-- 探测间隔
+local probeInterval = s:option(Value, "probeInterval", translate("Probe Interval"))
+probeInterval:depends("balancingStrategy", "leastPing")
+probeInterval.default = "1m"
+probeInterval.description = translate("The interval between initiating probes. Every time this time elapses, a server status check is performed on a server. The time format is numbers + units, such as '10s', '2h45m', and the supported time units are <code>ns</code>, <code>us</code>, <code>ms</code>, <code>s</code>, <code>m</code>, <code>h</code>, which correspond to nanoseconds, microseconds, milliseconds, seconds, minutes, and hours, respectively.")
+
 -- 分流
+if #nodes_table > 0 then
+	o = s:option(Flag, "preproxy_enabled", translate("Preproxy"))
+	o:depends("protocol", "_shunt")
+	o.rmempty = false
+	o = s:option(ListValue, "main_node", string.format('<a style="color:red">%s</a>', translate("Preproxy Node")), translate("Set the node to be used as a pre-proxy. Each rule (including <code>Default</code>) has a separate switch that controls whether this rule uses the pre-proxy or not."))
+	o:depends("preproxy_enabled", "1")
+	local dialerProxy = s:option(Flag, "dialerProxy", translate("dialerProxy"))
+	dialerProxy.hidden = true
+	dialerProxy:depends({ type = "Xray", protocol = "_shunt", preproxy_enabled = "1" })
+	for k, v in pairs(balancers_table) do
+		o:value(v.id, v.remarks)
+	end
+	for k, v in pairs(nodes_table) do
+		o:value(v.id, v.remarks)
+		--dialerProxy:depends({ type = "Xray", main_node = v.id })
+	end
+	o.default = "nil"
+end
 uci:foreach(appname, "shunt_rules", function(e)
-    if e[".name"] and e.remarks then
-        o = s:option(ListValue, e[".name"], string.format('* <a href="%s" target="_blank">%s</a>', api.url("shunt_rules", e[".name"]), e.remarks))
-        o:value("nil", translate("Close"))
-        o:value("_default", translate("Default"))
-        o:value("_direct", translate("Direct Connection"))
-        o:value("_blackhole", translate("Blackhole"))
-        o:depends("protocol", "_shunt")
+	if e[".name"] and e.remarks then
+		o = s:option(ListValue, e[".name"], string.format('* <a href="%s" target="_blank">%s</a>', api.url("shunt_rules", e[".name"]), e.remarks))
+		o:value("nil", translate("Close"))
+		o:value("_default", translate("Default"))
+		o:value("_direct", translate("Direct Connection"))
+		o:value("_blackhole", translate("Blackhole"))
+		o:depends("protocol", "_shunt")
 
-        if #nodes_table > 0 then
-            _proxy_tag = s:option(ListValue, e[".name"] .. "_proxy_tag", string.format('* <a style="color:red">%s</a>', e.remarks .. " " .. translate("Preproxy")))
-            _proxy_tag:value("nil", translate("Close"))
-            _proxy_tag:value("default", translate("Default"))
-            _proxy_tag:value("main", translate("Default Preproxy"))
-            _proxy_tag.default = "nil"
-
-            for k, v in pairs(nodes_table) do
-                o:value(v.id, v.remarks)
-                _proxy_tag:depends(e[".name"], v.id)
-            end
-        end
-    end
+		if #nodes_table > 0 then
+			for k, v in pairs(balancers_table) do
+				o:value(v.id, v.remarks)
+			end
+			local pt = s:option(ListValue, e[".name"] .. "_proxy_tag", string.format('* <a style="color:red">%s</a>', e.remarks .. " " .. translate("Preproxy")))
+			pt:value("nil", translate("Close"))
+			pt:value("main", translate("Preproxy Node"))
+			pt.default = "nil"
+			for k, v in pairs(nodes_table) do
+				o:value(v.id, v.remarks)
+				pt:depends({ preproxy_enabled = "1", [e[".name"]] = v.id })
+			end
+		end
+	end
 end)
 
 shunt_tips = s:option(DummyValue, "shunt_tips", " ")
 shunt_tips.rawhtml = true
 shunt_tips.cfgvalue = function(t, n)
-    return string.format('<a style="color: red" href="../rule">%s</a>', translate("No shunt rules? Click me to go to add."))
+	return string.format('<a style="color: red" href="../rule">%s</a>', translate("No shunt rules? Click me to go to add."))
 end
 shunt_tips:depends("protocol", "_shunt")
 
-default_node = s:option(ListValue, "default_node", string.format('* <a style="color:red">%s</a>', translate("Default")))
+local default_node = s:option(ListValue, "default_node", string.format('* <a style="color:red">%s</a>', translate("Default")))
+default_node:depends("protocol", "_shunt")
 default_node:value("_direct", translate("Direct Connection"))
 default_node:value("_blackhole", translate("Blackhole"))
-for k, v in pairs(nodes_table) do default_node:value(v.id, v.remarks) end
-default_node:depends("protocol", "_shunt")
 
 if #nodes_table > 0 then
-    o = s:option(ListValue, "main_node", string.format('* <a style="color:red">%s</a>', translate("Default Preproxy")), translate("When using, localhost will connect this node first and then use this node to connect the default node."))
-    o:value("nil", translate("Close"))
-    for k, v in pairs(nodes_table) do
-        o:value(v.id, v.remarks)
-        o:depends("default_node", v.id)
-    end
+	for k, v in pairs(balancers_table) do
+		default_node:value(v.id, v.remarks)
+	end
+	local dpt = s:option(ListValue, "default_proxy_tag", string.format('* <a style="color:red">%s</a>', translate("Default Preproxy")), translate("When using, localhost will connect this node first and then use this node to connect the default node."))
+	dpt:value("nil", translate("Close"))
+	dpt:value("main", translate("Preproxy Node"))
+	dpt.default = "nil"
+	for k, v in pairs(nodes_table) do
+		default_node:value(v.id, v.remarks)
+		dpt:depends({ preproxy_enabled = "1", default_node = v.id })
+	end
 end
-
-dialerProxy = s:option(Flag, "dialerProxy", translate("dialerProxy"))
-dialerProxy:depends({ type = "Xray", protocol = "_shunt"})
 
 domainStrategy = s:option(ListValue, "domainStrategy", translate("Domain Strategy"))
 domainStrategy:value("AsIs")
@@ -202,16 +247,14 @@ domainStrategy:value("IPIfNonMatch")
 domainStrategy:value("IPOnDemand")
 domainStrategy.default = "IPOnDemand"
 domainStrategy.description = "<br /><ul><li>" .. translate("'AsIs': Only use domain for routing. Default value.")
-.. "</li><li>" .. translate("'IPIfNonMatch': When no rule matches current domain, resolves it into IP addresses (A or AAAA records) and try all rules again.")
-.. "</li><li>" .. translate("'IPOnDemand': As long as there is a IP-based rule, resolves the domain into IP immediately.")
-.. "</li></ul>"
-domainStrategy:depends("protocol", "_balancing")
+	.. "</li><li>" .. translate("'IPIfNonMatch': When no rule matches current domain, resolves it into IP addresses (A or AAAA records) and try all rules again.")
+	.. "</li><li>" .. translate("'IPOnDemand': As long as there is a IP-based rule, resolves the domain into IP immediately.")
+	.. "</li></ul>"
 domainStrategy:depends("protocol", "_shunt")
 
 domainMatcher = s:option(ListValue, "domainMatcher", translate("Domain matcher"))
 domainMatcher:value("hybrid")
 domainMatcher:value("linear")
-domainMatcher:depends("protocol", "_balancing")
 domainMatcher:depends("protocol", "_shunt")
 
 
@@ -504,13 +547,13 @@ uuid:depends({ type = "Xray", protocol = "vless" })
 tls = s:option(Flag, "tls", translate("TLS"))
 tls.default = 0
 tls.validate = function(self, value, t)
-    if value then
-        local type = type:formvalue(t) or ""
-        if value == "0" and (type == "Trojan" or type == "Trojan-Plus") then
-            return nil, translate("Original Trojan only supported 'tls', please choose 'tls'.")
-        end
-        return value
-    end
+	if value then
+		local type = type:formvalue(t) or ""
+		if value == "0" and (type == "Trojan" or type == "Trojan-Plus") then
+			return nil, translate("Original Trojan only supported 'tls', please choose 'tls'.")
+		end
+		return value
+	end
 end
 tls:depends({ type = "V2ray", protocol = "vmess" })
 tls:depends({ type = "V2ray", protocol = "vless" })
@@ -589,9 +632,9 @@ xray_fingerprint:value("chrome")
 xray_fingerprint:value("firefox")
 xray_fingerprint:value("safari")
 xray_fingerprint:value("ios")
-xray_fingerprint:value("android")
+-- xray_fingerprint:value("android")
 xray_fingerprint:value("edge")
-xray_fingerprint:value("360")
+-- xray_fingerprint:value("360")
 xray_fingerprint:value("qq")
 xray_fingerprint:value("random")
 xray_fingerprint:value("randomized")
@@ -623,9 +666,9 @@ reality_fingerprint:value("chrome")
 reality_fingerprint:value("firefox")
 reality_fingerprint:value("safari")
 reality_fingerprint:value("ios")
-reality_fingerprint:value("android")
+-- reality_fingerprint:value("android")
 reality_fingerprint:value("edge")
-reality_fingerprint:value("360")
+-- reality_fingerprint:value("360")
 reality_fingerprint:value("qq")
 reality_fingerprint:value("random")
 reality_fingerprint:value("randomized")
@@ -801,7 +844,7 @@ h2_path:depends("transport", "h2")
 h2_path:depends("ss_transport", "h2")
 
 h2_health_check = s:option(Flag, "h2_health_check", translate("Health check"))
-h2_health_check:depends({ type = "Xray", transport = "h2"})
+h2_health_check:depends({ type = "Xray", transport = "h2" })
 
 h2_read_idle_timeout = s:option(Value, "h2_read_idle_timeout", translate("Idle timeout"))
 h2_read_idle_timeout.default = "10"
@@ -836,10 +879,10 @@ grpc_serviceName:depends("transport", "grpc")
 grpc_mode = s:option(ListValue, "grpc_mode", "gRPC " .. translate("Transfer mode"))
 grpc_mode:value("gun")
 grpc_mode:value("multi")
-grpc_mode:depends({ type = "Xray", transport = "grpc"})
+grpc_mode:depends({ type = "Xray", transport = "grpc" })
 
 grpc_health_check = s:option(Flag, "grpc_health_check", translate("Health check"))
-grpc_health_check:depends({ type = "Xray", transport = "grpc"})
+grpc_health_check:depends({ type = "Xray", transport = "grpc" })
 
 grpc_idle_timeout = s:option(Value, "grpc_idle_timeout", translate("Idle timeout"))
 grpc_idle_timeout.default = "10"
@@ -855,7 +898,7 @@ grpc_permit_without_stream:depends("grpc_health_check", true)
 
 grpc_initial_windows_size = s:option(Value, "grpc_initial_windows_size", translate("Initial Windows Size"))
 grpc_initial_windows_size.default = "0"
-grpc_initial_windows_size:depends({ type = "Xray", transport = "grpc"})
+grpc_initial_windows_size:depends({ type = "Xray", transport = "grpc" })
 
 -- [[ Trojan-Go Shadowsocks2 ]] --
 ss_aead = s:option(Flag, "ss_aead", translate("Shadowsocks secondary encryption"))
@@ -925,12 +968,15 @@ hysteria_hop_interval:depends("type", "Hysteria")
 hysteria_disable_mtu_discovery = s:option(Flag, "hysteria_disable_mtu_discovery", translate("Disable MTU detection"))
 hysteria_disable_mtu_discovery:depends("type", "Hysteria")
 
+hysteria_lazy_start = s:option(Flag, "hysteria_lazy_start", translate("Lazy Start"))
+hysteria_lazy_start:depends("type", "Hysteria")
+
 protocol.validate = function(self, value)
-    if value == "_shunt" or value == "_balancing" then
-        address.rmempty = true
-        port.rmempty = true
-    end
-    return value
+	if value == "_shunt" or value == "_balancing" then
+		address.rmempty = true
+		port.rmempty = true
+	end
+	return value
 end
 
 return m

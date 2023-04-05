@@ -1,5 +1,5 @@
 local fs = require "nixio.fs"
-local conffile = "/tmp/unblockneteasemusic.log"
+local conffile = "/var/run/unblockneteasemusic/run.log"
 
 f = SimpleForm("logview")
 

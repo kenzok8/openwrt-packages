@@ -3,14 +3,15 @@
 
 command -v "curl" >"/dev/null" || { echo -e "curl is not found."; exit 1; }
 
-mkdir -p "/tmp"
-/usr/share/unblockneteasemusic/debugging.sh 2>&1 | tee "/tmp/unm-debugging-output.txt"
+RUN_DIR="/var/run/unblockneteasemusic"
+mkdir -p "$RUN_DIR"
+/usr/share/unblockneteasemusic/debugging.sh 2>&1 | tee "$RUN_DIR/unm-debugging-output.txt"
 
-catbox_link="$(curl -fsS -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@/tmp/unm-debugging-output.txt" "https://litterbox.catbox.moe/resources/internals/api.php")"
-transfer_link="$(curl -fsS --upload-file "/tmp/unm-debugging-output.txt" "https://transfer.sh/unm-debugging-output.txt")"
+catbox_link="$(curl -fsS -F "reqtype=fileupload" -F "time=72h" -F "fileToUpload=@$RUN_DIR/unm-debugging-output.txt" "https://litterbox.catbox.moe/resources/internals/api.php")"
+transfer_link="$(curl -fsS --upload-file "$RUN_DIR/unm-debugging-output.txt" "https://transfer.sh/unm-debugging-output.txt")"
 echo -e "\n"
 echo -e "Log is available at:"
 echo -e "$catbox_link"
 echo -e "$transfer_link"
 
-rm -f "/tmp/unm-debugging-output.txt"
+rm -f "$RUN_DIR/unm-debugging-output.txt"

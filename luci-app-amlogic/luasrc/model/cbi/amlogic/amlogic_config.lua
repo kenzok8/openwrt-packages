@@ -53,7 +53,7 @@ firmware_suffix.rmempty = false
 --5.Set OpenWrt Kernel DownLoad Path
 kernel_path = o:option(Value, "amlogic_kernel_path", translate("Download path of OpenWrt kernel:"))
 kernel_path.description = translate("Set the download path of the kernel in the github.com repository in [Online Download Update].")
-kernel_path.default = "opt/kernel"
+kernel_path.default = "https://github.com/breakings/OpenWrt"
 kernel_path.rmempty = false
 
 --6.Set kernel version branch
@@ -62,10 +62,8 @@ kernel_branch.description = translate("Set the version branch of the openwrt fir
 kernel_branch:value("5.4", translate("5.4"))
 kernel_branch:value("5.10", translate("5.10"))
 kernel_branch:value("5.15", translate("5.15"))
-kernel_branch:value("6.0", translate("6.0"))
 kernel_branch:value("6.1", translate("6.1"))
-kernel_branch:value("6.2", translate("6.2"))
-local default_kernel_branch = luci.sys.exec("ls /lib/modules/ 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}'")
+local default_kernel_branch = luci.sys.exec("uname -r | grep -oE '^[1-9].[0-9]{1,3}'")
 kernel_branch.default = trim(default_kernel_branch)
 kernel_branch.rmempty = false
 

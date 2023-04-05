@@ -46,7 +46,7 @@
     --logo_color: #222b36;
     --alertColor: #000000;
     --alertBackground: rgb(230 230 230);
-    --scrollbarColor:#d0d0d0;
+    --scrollbarColor:#c5c5c5;
     --ifaceboxBorderColor: #b8b8b8bd;
     --ifaceboxFontColor: #404040;
     --liSelectedColor: #c5c5c5;
@@ -90,7 +90,7 @@
     --logo_color: #fefefe;
     --alertColor: #ffffff;
     --alertBackground: rgb(30 30 30);
-    --scrollbarColor:#222;
+    --scrollbarColor:#2f2f2f;
     --ifaceboxBorderColor: #636363bd;
     --ifaceboxFontColor: #404040;
     --liSelectedColor: #2f2f2f;
@@ -194,8 +194,8 @@ input {
     font-family: -apple-system, 'Microsoft Yahei', sans-serif, Helvetica, Arial, sans-serif;
     border: var(--inputBorder);
     background-color: var(--inputbgColor);
-    transition: color 150ms ease, border-color 150ms ease, opacity 150ms ease;
-    -webkit-transition: color 150ms ease, border-color 150ms ease, opacity 150ms ease;
+    transition: color 100ms ease, border-color 100ms ease, opacity 100ms ease;
+    -webkit-transition: color 100ms ease, border-color 100ms ease, opacity 100ms ease;
     outline-style: none;
     vertical-align: middle;
     border-radius: 8px;
@@ -283,8 +283,8 @@ header, .main {
 
 header {
     background-color: var(--bgwhite);
-    box-shadow: 17rem 2px 4px rgba(0, 0, 0, 0.08);
-    transition: box-shadow 0.2s;
+    box-shadow: 18rem 2px 4px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.1s;
     height: 55px;
     float: left;
     position: fixed;
@@ -335,7 +335,11 @@ text, line {
 .node-services-passwall2 input.cbi-button.cbi-button {
     max-width: unset;
 }
-
+/* fix luci-app-passwall/luci-app-passwall2 node_div style */
+.node-services-passwall #set_node_div,
+.node-services-passwall2 #set_node_div {
+    background: var(--sectionbgColor);
+}
 
 .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
     font-family: -apple-system, 'Microsoft Yahei';
@@ -371,13 +375,6 @@ label.zonebadge{
 svg {
     background-color: var(--sectionbgColor);
 }
-
-/* fix p#aliyundrive-webdav_status b */
-
-/* p#aliyundrive-webdav_status b {
-    color: #ff6666 !important;
-    text-transform:capitalize;
-} */
 
 /* fix .cbi-section .cbi-section */
 .cbi-section .cbi-section {
@@ -437,8 +434,25 @@ svg {
     color: var(--bg) !important;
 }
 
-/** img retina **/
+/* file selector upload button */
+::file-selector-button {
+    transition: all .1s ease-in-out;
+    border-radius: 5px;
+    border: 3px solid #337ab7!important;
+    color: #fff!important;
+    background-color: #337ab7!important;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+::file-selector-button:hover,
+::file-selector-button:focus,
+::file-selector-button:active {
+    color: #fff!important;
+    background-color: #6a65d6!important;
+    border-color: #6a65d6!important
+}
 
+/** img retina **/
 img[src*="/luci-static/resources/icons/port_up.png"] {
     background-image: url(../images/port_up.png);
     background-size: 32px 32px;
@@ -1002,7 +1016,6 @@ img[src*="/luci-static/resources/icons/signal-none.png"]
 .node-main-login > .main form > div:nth-last-child(1) {
 }
 
-
 .node-main-login > .main .cbi-value > * {
     display: inline-block !important;
 }
@@ -1081,19 +1094,19 @@ img[src*="/luci-static/resources/icons/signal-none.png"]
 
 .main-left {
     float: left;
-    width: 17rem;
+    width: 18rem;
     background-color: var(--mainleftbgColor);
     overflow-x: auto;
     height: calc(100% - 3.5rem);
     position: fixed;
     padding-top: 15px;
     box-shadow: 0 0px 4px rgb(0 0 0 / 8%);
-    transition: visibility 150ms, width 150ms;
+    transition: visibility 100ms, width 100ms;
 }
 
 .main-right {
     width: 85%;
-    width: calc(100% - 17rem);
+    width: calc(100% - 18rem);
     float: right;
     height: 100%;
     border-left: var(--sectionBorder);
@@ -1129,13 +1142,15 @@ header > .container > .brand {
     cursor: default;
     /*background: #51c291;*/
     display:block;
-    width:17rem;
+    width:18rem;
     /* padding-left: 30px; */
     height:60px;
     text-align:center;
     float:left;
     font-weight:900;
     letter-spacing:1px;
+    padding: 0 4.5rem;
+    transition: 0.1s ease-in-out;
 }
 header > .container > a[class="brand"]:after {
     content:"";
@@ -1152,7 +1167,7 @@ header > .container > .brand-hostname {
     color: #555555;
     cursor: default;
     display:block;
-    width:17rem;
+    width:18rem;
     padding-right: 10px;
     height:60px;
     text-align:left;
@@ -1237,7 +1252,7 @@ p#shadowsocksr_status {
     cursor: pointer;
     font-weight: bold;
     font-size: 1.1rem;
-    transition: all 0.2s;
+    transition: all 0.1s;
 }
 
 /*
@@ -1252,8 +1267,6 @@ p#shadowsocksr_status {
     cursor: pointer;
     padding-top:6px;
 }
-
- 
 
 .main > .main-left > .nav > .slide {
     padding: 0;
@@ -1285,14 +1298,18 @@ p#shadowsocksr_status {
     line-height: 1.6;
     /* Better Font Rendering =========== */
     -moz-osx-font-smoothing: grayscale;
-    transition: all 0.15s ease;
+    transition: all 0.1s ease;
     text-rendering: auto;
     -webkit-font-smoothing: antialiased;
-    transition: all 0.3s;
+    transition: all 0.1s;
 }
 
 .main .main-left .nav li.slide .menu.active::after {
   transform: rotate(90deg);
+}
+
+.main > .main-left > .nav > .slide > a[data-title="QuickStart"]:before {
+    content: "\e67e";
 }
 
 .main > .main-left > .nav > .slide > a[data-title="Status"]:before {
@@ -1338,12 +1355,10 @@ p#shadowsocksr_status {
   content: "\e7dd";
 }
 
-.main > .main-left > .nav > li > a[data-title="Inital Setup"]:before {
-    content: "\e67e";
-}
-
+.main > .main-left > .nav > li > a[data-title="Inital Setup"]:before,
+.main > .main-left > .nav > li > a[data-title="NetworkGuide"]:before,
 .main > .main-left > .nav > li > a[href="/cgi-bin/luci//admin/wizard"]:before {
-    content: "\e67e";
+    content: "\e719";
 }
 
 .main > .main-left > .nav > li > a[data-title="iStore"]:before {
@@ -1405,8 +1420,6 @@ p#shadowsocksr_status {
     border-radius: 6px;
 }
 
-
-
 .main > .main-left > .nav > .slide > .slide-menu > .active {
     background-color: var(--activeColor);
 }
@@ -1421,7 +1434,7 @@ p#shadowsocksr_status {
     text-transform: capitalize;
     font-size: 1rem;
     margin: 0.1rem 0.5rem 0.1rem 0.5rem;
-    padding: 0.675rem 0 0.675rem 2.5rem;
+    padding: 0.675rem 0 0.675rem 3.2rem;
 }
 .main .main-left .nav li.slide .slide-menu .active a {
     color: #000;
@@ -1438,7 +1451,7 @@ p#shadowsocksr_status {
 .main > .main-left > .nav > .slide > .slide-menu > li:hover {
     background: var(--activeColor);
     color:white !important;
-    transition: all 0.2s;
+    transition: all 0.1s;
 }
 
 .main > .main-left > .nav > .slide > .slide-menu > .active:hover {
@@ -1749,7 +1762,7 @@ td#__status-ifc-signal {
     text-transform: uppercase;
     color: #fff;
     background-color: #337ab7;
-    transition: all 0.2s ease-in-out;
+    transition: all 0.1s ease-in-out;
     display: inline-block;
     border: none;
     cursor: pointer;
@@ -1765,7 +1778,7 @@ td#__status-ifc-signal {
     width: auto !important;
     min-width: 80px;
     padding: 0px 8px 0px 8px;
-    max-width: 160px;
+    /* max-width: 160px; */
     border-radius: 8px;
     height: 35px;
     line-height: 35px;
@@ -1932,8 +1945,8 @@ form.inline + form.inline,
 }
 
 .cbi-tabmenu > li[class~="cbi-tab"] a {
-    color: var(--activeColor) ;
-    border-bottom: 2px solid var(--activeColor);
+    color: var(--activeColor) !important;
+    border-bottom: 2px solid var(--activeColor) !important;
 }
 
 .cbi-section-node-tabbed {
@@ -2080,7 +2093,7 @@ div > .cbi-value:nth-of-type(2n) {
     height: 20px;
     line-height: 20px;
     min-width: 60px;
-    padding: 0;
+    /* padding: 0; */
     margin: 0;
 }
 
@@ -2387,12 +2400,12 @@ header > .container > .pull-right > * {
 }
 
 #xhr_poll_status > .label.success {
-    padding: 10px 0;
+    padding: 0.7rem 0;
     border-radius: 20px;
 }
 
 #xhr_poll_status_off {
-    padding: 10px 0;
+    padding: 0.7rem 0;
     border-radius: 20px;
 }
 
@@ -2407,14 +2420,15 @@ header > .container > .pull-right > * {
 }
 
 .notice {
-    background-color: var(--activeColor);
-    color: #fff;
+    color: var(--activeColor);
     font-size: .8rem;
-    padding: 2.8px 10px;
+    /* padding: 0.15rem; */
+    padding-right: 0.5rem;
     border-radius: 10px;
     z-index: 10;
-    top: 22px;
-    margin-right: 30px;
+    /* top: 1.45rem; */
+    font-size: 1.8rem;
+    font-family: design;
 }
 
 #refresh_on, #refresh_off {
@@ -2640,7 +2654,7 @@ header > .container > .pull-right > * {
 }
 
 .node-system-flashops .cbi-section {
-    padding: 0;
+    /* padding: 0; */
 }
 .node-system-flashops .cbi-section-descr {
     padding: 12px;
@@ -2696,6 +2710,11 @@ header > .container > .pull-right > * {
 .node-status-realtime fieldset[id="cbi-table-table"] table[id="connections"] tr.cbi-section-table-row.cbi-rowstyle-2 {
     background-color: unset;
 }
+/* fix luci-app-appfilter table overflow style */
+/* fix node-nas-fileassistant table overflow style */
+/* fix node-status-realtime table style */
+.node-services-appfilter .cbi-section.cbi-tblsection,
+.node-nas-fileassistant #list-content,
 .node-status-realtime fieldset[id="cbi-table-table"] .cbi-section-node {
     overflow: auto;
 }
@@ -2744,12 +2763,12 @@ body.lang_pl.node-main-login .cbi-value-title {
     }
 
     .main-left {
-        width: calc(0% + 17rem);
+        width: calc(0% + 18rem);
         top: 50px;
     }
 
     .main-right {
-        width: calc(100% - 17rem);
+        width: calc(100% - 18rem);
     }
 
 
@@ -2844,7 +2863,7 @@ body.lang_pl.node-main-login .cbi-value-title {
         position: absolute;
         width: 300px;
         height: 50px;
-        padding: 17px 27px;
+        padding: 1.15rem 2rem;
     }
 
     .showSide:before {
@@ -3021,11 +3040,6 @@ body.lang_pl.node-main-login .cbi-value-title {
     select {
         width: 100%;
     }
-    .label {
-        position: absolute;
-        right: 5px;
-        top: -70px;
-    }
 
     header {
         height: 55px;
@@ -3152,7 +3166,6 @@ body.lang_pl.node-main-login .cbi-value-title {
         width: 65%;
     }
 
-
     h2 {
         font-size: 1.2rem;
         text-transform: capitalize;
@@ -3186,7 +3199,6 @@ body.lang_pl.node-main-login .cbi-value-title {
     #memcache div div,
     #memtotal div div{
     }
-   
 
     .node-status-iptables > .main div > .cbi-map > form input[type="submit"]{
         margin: 0;
@@ -3221,6 +3233,13 @@ body.lang_pl.node-main-login .cbi-value-title {
     }
 }
 
+@media screen and (max-width: 315px) {
+    .label {
+        position: absolute;
+        right: 5px;
+        top: -70px;
+    }
+}
 
 /* fix http://192.168.2.1/cgi-bin/luci/admin/nlbw/usage */
 #intervalSelect {
@@ -3249,21 +3268,15 @@ body.lang_pl.node-main-login .cbi-value-title {
 }
 
 /* fix wireless_join list button */
-form[action="/cgi-bin/luci/admin/network/wireless"] input[class="cbi-button cbi-button-reset"] {
+form[action="/cgi-bin/luci/admin/network/wireless"] input[class="cbi-button cbi-button-reset"],
+form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button cbi-input-find"] {
     height: 25px;
     min-width: 80px;
 }
-    
-form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button cbi-input-find"]  {
-    height: 25px;
-    min-width: 70px;
-}
-
 /* fix node-services-aliyundrive-webdav mask-box background style */
 .node-services-aliyundrive-webdav #mask-box {
     background: rgb(64 64 64 / 0%);
 }
-
 /* fix node-servces-ddns input style */
 .node-services-ddns #cbi-ddns-service input {
     width: unset;
@@ -3272,19 +3285,12 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-services-ddns .cbi-value input[type="text"] {
     width: 100% !important;
 }
-
 /* fix luci-app-fileassistant botton style */
 .fb-container .cbi-button {
     border-radius: 8px;
     margin: 3px 3px 3px 0;
     height: unset !important;
 }
-
-/* fix luci-app-appfilter table overflow style */
-.node-services-appfilter .cbi-section.cbi-tblsection {
-    overflow: auto;
-}
-
 /* update node-system-commands style */
 .node-system-commands h3 {
     text-transform: unset;
@@ -3344,5 +3350,14 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 /* adaption plug-in luci-app-watchcat-plus */
 .node-services-watchcat-plus select[id*="cbi.opt.watchcat"] {
     width: auto;
+}
+/* fix node-nas-fileassistant table cell style */
+.node-nas-fileassistant .fb-container .cbi-value-owner,
+.node-nas-fileassistant .fb-container .cbi-value-perm {
+    display: table-cell;
+}
+/* fix luci-app-adguardhome style */
+.node-services-adguardhome input[onclick*="window.open('http://'+window.location.hostname+':"] {
+    line-height: 0;
 }
 

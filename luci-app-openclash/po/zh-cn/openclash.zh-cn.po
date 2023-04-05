@@ -251,6 +251,9 @@ msgstr "指定下方列表中域名的 DNS 服务器，只支持填写一个IP�
 msgid "Domain Names In The List Do Not Return Fake-IP, One rule per line, Depend on Dnsmasq"
 msgstr "每行请只填写一个域名，列表中的域名将使用上方指定的 DNS 进行查询并返回真实IP地址，此功能依赖于 Dnsmasq"
 
+msgid "Domain Names In The List Do Not Return Fake-IP, One rule per line"
+msgstr "每行请只填写一个域名，列表中的域名在 Fake-IP 模式下将返回真实IP地址"
+
 msgid "Domain Names In The List Use The Custom DNS Server, But Still Return Fake-IP Results, One rule per line"
 msgstr "每行请只填写一个规则，列表中的域名将使用指定的 DNS 进行查询，但 Fake-IP 模式下仍将返回保留地址"
 
@@ -405,7 +408,7 @@ msgid "Default Config File With Correct Template"
 msgstr "参考配置文件，方便您查询各项参数注释和正确的设置、顺序"
 
 msgid "Config File Edited By OpenClash For Running"
-msgstr "OpenClash修改后用于启动的配置文件"
+msgstr "OpenClash 修改后用于启动的配置文件"
 
 msgid "Dashboard Secret"
 msgstr "管理页面登录密钥"
@@ -1116,8 +1119,8 @@ msgstr "排序"
 msgid "Append Node Type"
 msgstr "插入节点类型"
 
-msgid "Convert Subscribe Online With Template, Mix Proxies and Keep Settings options Will Not Effect"
-msgstr "根据模板在线转换配置文件，混合节点和保留配置功能将不可用"
+msgid "Convert Subscribe Online With Template"
+msgstr "根据模板在线转换配置文件"
 
 msgid "Convert Subscribe function of Online is Supported By subconverter Written By tindy X"
 msgstr "在线订阅转换功能由 tindy X 通过 subconverter 提供支持"
@@ -1384,7 +1387,10 @@ msgid "Restore failed!"
 msgstr "还原默认配置失败！"
 
 msgid "Support syntax check, press"
-msgstr "支持语法检查，按下"
+msgstr "支持语法检查，按钮"
+
+msgid "to control diff option, press"
+msgstr "控制 Diff 显示，按钮"
 
 msgid "to enter full screen editing mode"
 msgstr "进入全屏编辑模式"
@@ -2972,15 +2978,6 @@ msgstr "（TUN&Meta 内核）"
 
 msgid "Warning: Only Meta Core Support QUIC Type DNS, Skip"
 msgstr "警告：仅 Meta 内核支持 QUIC 类型的 DNS，跳过"
-
-msgid "Force Sniffing Domains Lists"
-msgstr "强制探测（嗅探）的域名列表"
-
-msgid "Force Sniffing Domains(sni) Filter"
-msgstr "忽略探测（嗅探）的域名（sni）列表"
-
-msgid "Sniffing Ports Filter"
-msgstr "指定探测（嗅探）的端口列表"
 
 msgid "Will Override Dns Queries If Domains in The List"
 msgstr "列表中的域名将会强制进行探测（嗅探）"

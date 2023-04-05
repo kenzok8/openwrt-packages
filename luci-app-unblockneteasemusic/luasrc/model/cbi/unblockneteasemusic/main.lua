@@ -29,41 +29,6 @@ o.description = translate("自定义模式下，多个音源请用空格隔开")
 o.default = "default"
 o.rmempty = false
 
-o = s:option(Flag, "follow_source_order", translate("顺序查询"))
-o.description = translate("默认为并行查询并返回第一个结果，开启后将严格按照配置音源的顺序进行查询")
-o.default = 0
-o.rmempty = false
-
-o = s:option(Flag, "search_album", translate("附加专辑名"))
-o.description = translate("在其他音源搜索歌曲时携带专辑名称（默认搜索条件 歌曲名 - 歌手，启用后搜索条件 歌曲名 - 歌手 专辑名）")
-o.default = 0
-o.rmempty = false
-
-o = s:option(Flag, "local_vip", translate("启用本地 VIP"))
-o.description = translate("启用后，可以使用去广告、个性换肤、鲸云音效等本地功能")
-o.default = 0
-o.rmempty = false
-
-o = s:option(Flag, "enable_flac", translate("启用无损音质"))
-o.description = translate("目前仅支持酷狗、酷我、咪咕、pyncmd、QQ 音源")
-o.default = 0
-o.rmempty = false
-
-o = s:option(Flag, "disable_upgrade_check", translate("禁用更新检查"))
-o.description = translate("禁止客户端检查更新，全平台支持")
-o.default = 1
-o.rmempty = false
-
-o = s:option(ListValue, "replace_music_source", translate("强制音乐音源替换"))
-o:value("dont_replace", translate("不强制替换音乐音源"))
-o:value("lower_than_192kbps", translate("当音质低于 192 Kbps（中）时"))
-o:value("lower_than_320kbps", translate("当音质低于 320 Kbps（高）时"))
-o:value("lower_than_999kbps", translate("当音质低于 999 Kbps（无损）时"))
-o:value("replace_all", translate("替换所有音乐音源"))
-o.description = translate("当音乐音质低于指定数值时，尝试强制使用其他平台的高音质版本进行替换")
-o.default = "dont_replace"
-o.rmempty = false
-
 o = s:option(Flag, "use_custom_cookie", translate("使用自定义 Cookie"))
 o.description = translate("使用自定义 Cookie 请求音源接口")
 o.default = 0
@@ -91,10 +56,46 @@ o.description = translate("API Key 申请地址：https://developers.google.com/
 o.datatype = "string"
 o:depends("use_custom_cookie", 1)
 
+o = s:option(Flag, "follow_source_order", translate("顺序查询"))
+o.description = translate("默认为并行查询并返回第一个结果，开启后将严格按照配置音源的顺序进行查询")
+o.default = 0
+
+o = s:option(Flag, "search_album", translate("附加专辑名"))
+o.description = translate("在其他音源搜索歌曲时携带专辑名称（默认搜索条件 歌曲名 - 歌手，启用后搜索条件 歌曲名 - 歌手 专辑名）")
+o.default = 0
+
+o = s:option(Flag, "enable_flac", translate("启用无损音质"))
+o.description = translate("目前仅支持酷狗、酷我、咪咕、pyncmd、QQ 音源")
+o.default = 0
+
+o = s:option(Flag, "select_max_br", translate("选取最高音质"))
+o.description = translate("选择所有音源中的最高码率替换音频。")
+o.default = 0
+
+o = s:option(ListValue, "replace_music_source", translate("音源替换"))
+o:value("dont_replace", translate("不强制替换音乐音源"))
+o:value("lower_than_192kbps", translate("当音质低于 192 Kbps（中）时"))
+o:value("lower_than_320kbps", translate("当音质低于 320 Kbps（高）时"))
+o:value("lower_than_999kbps", translate("当音质低于 999 Kbps（无损）时"))
+o:value("replace_all", translate("替换所有音乐音源"))
+o.description = translate("当音乐音质低于指定数值时，尝试强制使用其他平台的高音质版本进行替换")
+o.default = "dont_replace"
+
+o = s:option(Flag, "disable_upgrade_check", translate("禁用更新检查"))
+o.description = translate("禁止客户端检查更新，全平台支持")
+o.default = 0
+
+o = s:option(Flag, "block_ads", translate("屏蔽广告"))
+o.description = translate("启用后，可屏蔽应用内部分广告。")
+o.default = 0
+
+o = s:option(Flag, "local_vip", translate("启用本地 VIP"))
+o.description = translate("启用后，可以使用去广告、个性换肤、鲸云音效等本地功能")
+o.default = 0
+
 o = s:option(Flag, "auto_update", translate("启用自动更新"))
 o.description = translate("启用后，每天将定时自动检查最新版本并更新")
 o.default = 0
-o.rmempty = false
 
 o = s:option(ListValue, "update_time", translate("检查更新时间"))
 for update_time_hour = 0,23 do
@@ -132,7 +133,6 @@ end
 o = s:option(Flag, "advanced_mode", translate("启用进阶设置"))
 o.description = translate("非必要不推荐使用")
 o.default = 0
-o.rmempty = false
 
 o = s:option(ListValue, "log_level", translate("日志等级"))
 o:value("debug", translate("'调试"));
@@ -178,22 +178,14 @@ o.description = translate("如果使用Hosts劫持，程序监听的 HTTP/HTTPS 
 o.default = "dont_hijack"
 o:depends("advanced_mode", 1)
 
-o = s:option(Flag, "keep_core_when_upgrade", translate("升级时保留核心程序"))
-o.description = translate("默认情况下，在系统升级后会导致核心程序丢失，开启此选项后会保留当前下载的核心程序")
-o.default = 0
-o.rmempty = false
-o:depends("advanced_mode", 1)
-
 o = s:option(Flag, "pub_access", translate("部署到公网"))
 o.description = translate("默认仅监听局域网，如需提供公开访问请勾选此选项")
 o.default = 0
-o.rmempty = false
 o:depends("advanced_mode", 1)
 
 o = s:option(Flag, "strict_mode", translate("启用严格模式"))
 o.description = translate("若将服务部署到公网，则强烈建议使用严格模式，此模式下仅放行网易云音乐所属域名的请求；注意：该模式下不能使用全局代理")
 o.default = 0
-o.rmempty = false
 o:depends("advanced_mode", 1)
 
 o = s:option(Value, "netease_server_ip", translate("网易云服务器 IP"))
@@ -226,10 +218,16 @@ s.sortable = true
 s.anonymous = true
 s.addremove = true
 
+o = s:option(Flag, "enable", ("启用"))
+o.width = "33%"
+o.default = 0
+o.rmempty = false
+
 o = s:option(Value, "ip_addr", translate("IP 地址"))
-o.width = "40%"
+o.width = "33%"
 o.datatype = "ip4addr"
 o.placeholder = "0.0.0.0/0"
+o.rmempty = false
 luci.ip.neighbors({ family = 4 }, function(entry)
 	if entry.reachable then
 		o:value(entry.dest:string())
@@ -237,7 +235,7 @@ luci.ip.neighbors({ family = 4 }, function(entry)
 end)
 
 o = s:option(ListValue, "filter_mode", translate("规则"))
-o.width = "40%"
+o.width = "33%"
 o.default = "disable_all"
 o.rmempty = false
 o:value("disable_all", translate("不代理 HTTP 和 HTTPS"))

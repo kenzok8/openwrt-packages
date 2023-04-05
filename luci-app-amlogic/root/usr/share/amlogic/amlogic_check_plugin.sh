@@ -18,7 +18,6 @@ AMLOGIC_SOC_FILE="/etc/flippy-openwrt-release"
 START_LOG="${TMP_CHECK_DIR}/amlogic_check_plugin.log"
 RUNNING_LOG="${TMP_CHECK_DIR}/amlogic_running_script.log"
 LOG_FILE="${TMP_CHECK_DIR}/amlogic.log"
-github_api_plugin="${TMP_CHECK_DIR}/github_api_plugin"
 support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
@@ -97,55 +96,51 @@ tolog "01.01 current version: ${current_plugin_v}"
 sleep 2
 
 # 02. Check the version on the server
-tolog "02. Query server version information."
+tolog "02. Start querying plugin version..."
 
-curl -s "https://api.github.com/repos/ophub/luci-app-amlogic/releases" >${github_api_plugin} && sync
-sleep 1
-
-server_plugin_version="$(cat ${github_api_plugin} | grep "tag_name" | awk -F '"' '{print $4}' | tr " " "\n" | sort -rV | head -n 1)"
-[[ -n "${server_plugin_version}" ]] || tolog "02.01 Query failed, please try again." "1"
-tolog "02.01 current version: ${current_plugin_v}, Latest version: ${server_plugin_version}"
+# Query the latest version
+latest_version="$(
+    curl -s \
+        -H "Accept: application/vnd.github+json" \
+        https://api.github.com/repos/ophub/luci-app-amlogic/releases |
+        jq -r '.[].tag_name' |
+        sort -rV | head -n 1
+)"
+[[ -n "${latest_version}" ]] || tolog "02.01 Query failed, please try again." "1"
+tolog "02.01 current version: ${current_plugin_v}, Latest version: ${latest_version}"
 sleep 2
 
-if [[ "${current_plugin_v}" == "${server_plugin_version}" ]]; then
+if [[ "${current_plugin_v}" == "${latest_version}" ]]; then
     tolog "02.02 Already the latest version, no need to update." "1"
 else
-    tolog "02.03 Check the latest plug-in download address."
+    tolog "02.03 Start downloading the latest plugin..."
 
-    server_plugin_url="https://github.com/ophub/luci-app-amlogic/releases/download"
-    server_plugin_file_ipk="$(cat ${github_api_plugin} | grep -E "browser_.*${server_plugin_version}.*" | grep -oE "luci-app-amlogic_.*.ipk" | head -n 1)"
-    server_plugin_file_i18n="$(cat ${github_api_plugin} | grep -E "browser_.*${server_plugin_version}.*" | grep -oE "luci-i18n-amlogic-zh-cn_.*.ipk" | head -n 1)"
+    # Set the plugin download path
+    download_repo="https://github.com/ophub/luci-app-amlogic/releases/download"
+    plugin_file="${download_repo}/${latest_version}/luci-app-amlogic_${latest_version}_all.ipk"
+    language_file="${download_repo}/${latest_version}/luci-i18n-amlogic-zh-cn_${latest_version}_all.ipk"
 
-    if [[ -n "${server_plugin_file_ipk}" && -n "${server_plugin_file_i18n}" ]]; then
-        tolog "02.04 Start downloading the latest plugin..."
+    # Download the plug-in's i18n file
+    wget "${language_file}" -q -P "${TMP_CHECK_DIR}"
+    if [[ "${?}" -eq "0" ]]; then
+        tolog "02.04 Language pack downloaded successfully."
     else
-        tolog "02.04 No available plugins found!" "1"
+        tolog "02.04 Language pack download failed." "1"
     fi
 
-    # Download plugin ipk file
-    wget "${server_plugin_url}/${server_plugin_version}/${server_plugin_file_ipk}" -O "${TMP_CHECK_DIR}/${server_plugin_file_ipk}" >/dev/null 2>&1 && sync
-    if [[ "$?" -eq "0" && -s "${TMP_CHECK_DIR}/${server_plugin_file_ipk}" ]]; then
-        tolog "02.05 ${server_plugin_file_ipk} complete."
+    # Download the plug-in's ipk file
+    wget "${plugin_file}" -q -P "${TMP_CHECK_DIR}"
+    if [[ "${?}" -eq "0" ]]; then
+        tolog "02.05 Plugin downloaded successfully."
     else
-        tolog "02.05 The plugin file failed to download." "1"
+        tolog "02.05 Plugin download failed." "1"
     fi
-    sleep 2
 
-    # Download plugin i18n file
-    wget "${server_plugin_url}/${server_plugin_version}/${server_plugin_file_i18n}" -O "${TMP_CHECK_DIR}/${server_plugin_file_i18n}" >/dev/null 2>&1 && sync
-    if [[ "$?" -eq "0" && -s "${TMP_CHECK_DIR}/${server_plugin_file_i18n}" ]]; then
-        tolog "02.06 ${server_plugin_file_i18n} complete."
-    else
-        tolog "02.06 The plugin i18n failed to download." "1"
-    fi
-    sleep 2
+    sync && sleep 2
 fi
 
 tolog "03. The plug is ready, you can update."
 sleep 2
-
-# Delete temporary files
-rm -f ${github_api_plugin} 2>/dev/null && sync
 
 #echo '<a href=upload>Update</a>' >$START_LOG
 tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_plugin(this)"/> Latest version: '${server_plugin_version}'' "1"

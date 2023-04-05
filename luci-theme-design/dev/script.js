@@ -1,8 +1,8 @@
 /**
  *  Material is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI
  *
- *  luci-theme-material
- *      Copyright 2015 Lutty Yang <lutty@wcan.in>
+ *  luci-theme-argon
+ *      Copyright 2023 gngpp <gngppz@gmail.com>
  *
  *  Have a bug? Please create an issue here on GitHub!
  *      https://github.com/LuttyYang/luci-theme-material/issues
@@ -14,59 +14,17 @@
  *
  *  MUI:
  *      https://github.com/muicss/mui
+ * 
+ *      luci-theme-material:
+ *      https://github.com/LuttyYang/luci-theme-material/
+ *
  *
  *  Licensed to the public under the Apache License 2.0
  */
 (function ($) {
 
-    // Fixed openclash plugin causing env(safe-area-inset-bottom) to be 0 under https
-    const appleUserAgentRegex = /(iPhone|iPad|iPod|iOS|Mac|Macintosh)/i;
-    var url = self.location.href; 
-    if (navigator.userAgent.match(appleUserAgentRegex) && url.indexOf("openclash") != -1 ) {
-        var oMeta = document.createElement('meta');
-        oMeta.content = 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover';
-        oMeta.name = 'viewport';
-        document.querySelector('head').appendChild(oMeta);
-    }
+    $(".main > .loading").fadeOut();
     
-
-    function settingGlobalScroll() {
-        const global = $('head #global-scroll');
-        const isMobile = /phone|pad|pod|iPhone|iPod|ios|iOS|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone/i.test(navigator.userAgent);
-        
-        if (!isMobile && global.length === 0) {
-          const style = document.createElement('style');
-          style.type = 'text/css';
-          style.id = 'global-scroll';
-          style.textContent = '::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px; }';
-          $('head').append(style);
-        } else if (isMobile && global.length > 0) {
-          global.remove();
-        }
-    }
-
-    $(document).ready(() => {
-        // Fixed scrollbar styles for browsers on different platforms
-        settingGlobalScroll();
-        // .node-status-realtime embed[src="/luci-static/resources/bandwidth.svg"] + div + br + table
-        // .node-status-realtime embed[src="/luci-static/resources/wifirate.svg"] + div + br + table
-        // .node-status-realtime embed[src="/luci-static/resources/wireless.svg"] + div + br + table
-        if ($('.node-status-realtime').length != 0) {
-            const selectorValues = ["bandwidth", "wifirate", "wireless"];
-            selectorValues.forEach(value => {
-              const target = $(`.node-status-realtime embed[src="/luci-static/resources/${value}.svg"] + div + br + table`);
-              if (target.length) {
-                const div = document.createElement("div");
-                div.style.overflowX = "auto";
-                target.before(div);
-                const newTarget = target.clone();
-                target.remove();
-                div.appendChild(newTarget.get(0));
-              }
-            });
-        }
-    });
-
     /**
      * trim text, Remove spaces, wrap
      * @param text
@@ -76,21 +34,20 @@
         return text.replace(/[ \t\n\r]+/g, " ");
     }
 
-
     var lastNode = undefined;
     var mainNodeName = undefined;
 
     var nodeUrl = "";
-    (function(node){
-        if (node[0] == "admin"){
+    (function (node) {
+        if (node[0] == "admin") {
             luciLocation = [node[1], node[2]];
-        }else{
+        } else {
             luciLocation = node;
         }
 
-        for(var i in luciLocation){
+        for (var i in luciLocation) {
             nodeUrl += luciLocation[i];
-            if (i != luciLocation.length - 1){
+            if (i != luciLocation.length - 1) {
                 nodeUrl += "/";
             }
         }
@@ -101,19 +58,22 @@
      * @returns {boolean} success?
      */
     function getCurrentNodeByUrl() {
-        var ret = false;
         if (!$('body').hasClass('logged-in')) {
             luciLocation = ["Main", "Login"];
             return true;
         }
-
+        const urlReg = new RegExp(nodeUrl + "$")
+        var ret = false;
+        $(".main > .main-left > .nav > .slide > .active").next(".slide-menu").stop(true).slideUp("fast");
+        $(".main > .main-left > .nav > .slide > .menu").removeClass("active");
         $(".main > .main-left > .nav > .slide > .menu").each(function () {
             var ulNode = $(this);
+
             ulNode.next().find("a").each(function () {
                 var that = $(this);
                 var href = that.attr("href");
 
-                if (href.indexOf(nodeUrl) != -1) {
+                if (urlReg.test(href)) {
                     ulNode.click();
                     ulNode.next(".slide-menu").stop(true, true);
                     lastNode = that.parent();
@@ -150,11 +110,19 @@
         }
     });
 
+    if ($("#cbi-dhcp-lan-ignore").length > 0) {
+        observer.observe(document.getElementById("cbi-dhcp-lan-ignore"), {
+            subtree: true,
+            attributes: true
+        });
+    }
+
     /**
      * hook menu click and add the hash
      */
     $(".main > .main-left > .nav > .slide > .slide-menu > li > a").click(function () {
-        if (lastNode != undefined) lastNode.removeClass("active");
+        if (lastNode != undefined) 
+        lastNode.removeClass("active");
         $(this).parent().addClass("active");
         $(".main > .loading").fadeIn("fast");
         return true;
@@ -164,7 +132,8 @@
      * fix menu click
      */
     $(".main > .main-left > .nav > .slide > .slide-menu > li").click(function () {
-        if (lastNode != undefined) lastNode.removeClass("active");
+        if (lastNode != undefined) 
+            lastNode.removeClass("active");
         $(this).addClass("active");
         $(".main > .loading").fadeIn("fast");
         window.location = $($(this).find("a")[0]).attr("href");
@@ -179,9 +148,9 @@
         mainNodeName = mainNodeName.replace(/[ \t\n\r\/]+/g, "_").toLowerCase();
         $("body").addClass(mainNodeName);
     }
+    
     $(".cbi-button-up").val("");
     $(".cbi-button-down").val("");
-
 
     /**
      * hook other "A Label" and add hash to it.
@@ -204,6 +173,7 @@
      * Sidebar expand
      */
     var showSide = false;
+
     $(".showSide").click(function () {
         if (showSide) {
             $(".darkMask").stop(true).fadeOut("fast");
@@ -211,49 +181,54 @@
                 width: "0"
             }, "fast");
             $(".main-right").css("overflow-y", "auto");
+            $("header>.container>.brand").css("padding", "0 4.5rem")
             showSide = false;
         } else {
             $(".darkMask").stop(true).fadeIn("fast");
             $(".main-left").stop(true).animate({
-                width: "17rem"
+                width: "18rem"
             }, "fast");
             $(".main-right").css("overflow-y", "hidden");
             $(".showSide").css("display", "none");
-            $("header").css("box-shadow",   "17rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header").css("box-shadow", "18rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", '0rem')
             showSide = true;
         }
     });
 
-
     $(".darkMask").click(function () {
         if (showSide) {
-            showSide = false;
             $(".darkMask").stop(true).fadeOut("fast");
             $(".main-left").stop(true).animate({
                 width: "0"
             }, "fast");
             $(".main-right").css("overflow-y", "auto");
             $(".showSide").css("display", "");
-            $("header").css("box-shadow",   "0 2px 4px rgb(0 0 0 / 8%)")
+            $("header").css("box-shadow", "0 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", "0 4.5rem")
+            showSide = false;
         }
     });
 
     $(window).resize(function () {
-        // Fixed scrollbar styles for browsers on different platforms
-        settingGlobalScroll();
-
         if ($(window).width() > 992) {
+            showSide = false;
             $(".showSide").css("display", "");
             $(".main-left").css("width", "");
             $(".darkMask").stop(true);
             $(".darkMask").css("display", "none");
-            showSide = false;
-            $("header").css("box-shadow",   "17rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header").css("box-shadow", "18rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", '0rem')
         } else {
-            $("header").css("box-shadow",   "0 2px 4px rgb(0 0 0 / 8%)")
+            $("header").css("box-shadow", "0 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", "0 4.5rem")
+        }
+        if (showSide) {
+            $("header").css("box-shadow", "18rem 2px 4px rgb(0 0 0 / 8%)")
+            $("header>.container>.brand").css("padding", '0rem')
         }
     });
-
+   
     /**
      * fix legend position
      */
@@ -267,7 +242,6 @@
     $("input").attr("size", "0");
 
     if (mainNodeName != undefined) {
-        console.log(mainNodeName);
         switch (mainNodeName) {
             case "node-status-system_log":
             case "node-status-kernel_log":

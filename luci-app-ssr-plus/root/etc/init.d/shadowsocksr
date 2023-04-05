@@ -981,7 +981,6 @@ reset() {
 		set shadowsocksr.@global[0].switch_time='667'
 		set shadowsocksr.@global[0].switch_timeout='5'
 		set shadowsocksr.@global[0].switch_try_count='3'
-		set shadowsocksr.@global[0].default_packet_encoding='xudp'
 		set shadowsocksr.@global[0].gfwlist_url='https://fastly.jsdelivr.net/gh/YW5vbnltb3Vz/domain-list-community@release/gfwlist.txt'
 		set shadowsocksr.@global[0].chnroute_url='https://ispip.clang.cn/all_cn.txt'
 		set shadowsocksr.@global[0].nfip_url='https://fastly.jsdelivr.net/gh/QiuSimons/Netflix_IP/NF_only.txt'

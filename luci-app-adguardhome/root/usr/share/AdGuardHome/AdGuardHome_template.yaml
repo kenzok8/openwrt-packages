@@ -1,61 +1,59 @@
-# 使用本模板，点击下方 [保存&应用] 就可以开始正常使用 AdGuardHome 服务
-# Enhanced by Hyy2001
-
 bind_host: 0.0.0.0
 bind_port: 3000
 beta_bind_port: 0
 users:
 - name: root
-  password: $2a$10$rYaGunOdH6N62SDycg3rQO1POzr39lXF8vHZ/28wkJq3RY69DJYT2
+  password: $2y$10$dwn0hTYoECQMZETBErGlzOId2VANOVsPHsuH13TM/8KnysM5Dh/ve
 auth_attempts: 5
 block_auth_min: 15
 http_proxy: ""
-language: ""
-rlimit_nofile: 0
+language: zh-cn
 debug_pprof: false
 web_session_ttl: 720
 dns:
-  bind_hosts:
-  - 0.0.0.0
-  port: 5553
-  statistics_interval: 90
+  bind_host: 0.0.0.0
+  port: 1745
+  statistics_interval: 30
   querylog_enabled: true
   querylog_file_enabled: true
-  querylog_interval: 1
+  querylog_interval: 6h
   querylog_size_memory: 1000
   anonymize_client_ip: false
   protection_enabled: true
   blocking_mode: default
   blocking_ipv4: ""
   blocking_ipv6: ""
-  blocked_response_ttl: 10
+  blocked_response_ttl: 60
   parental_block_host: family-block.dns.adguard.com
   safebrowsing_block_host: standard-block.dns.adguard.com
   ratelimit: 0
   ratelimit_whitelist: []
-  refuse_any: true
+  refuse_any: false
   upstream_dns:
-  - https://dns.alidns.com/dns-query
-  - tls://dns.alidns.com
-  - 114.114.114.114
   - 223.5.5.5
   upstream_dns_file: ""
   bootstrap_dns:
-#bootstrap_dns
-  all_servers: true
+  - 119.29.29.29
+  - 223.5.5.5
+  all_servers: false
   fastest_addr: false
+  fastest_timeout: 1s
   allowed_clients: []
   disallowed_clients: []
   blocked_hosts:
   - version.bind
   - id.server
   - hostname.bind
+  trusted_proxies:
+  - 127.0.0.0/8
+  - ::1/128
   cache_size: 4194304
   cache_ttl_min: 0
   cache_ttl_max: 0
+  cache_optimistic: true
   bogus_nxdomain: []
-  aaaa_disabled: true
-  enable_dnssec: true
+  aaaa_disabled: false
+  enable_dnssec: false
   edns_client_subnet: false
   max_goroutines: 300
   ipset: []
@@ -70,8 +68,10 @@ dns:
   cache_time: 30
   rewrites: []
   blocked_services: []
+  upstream_timeout: 10s
   local_domain_name: lan
-  resolve_clients: false
+  resolve_clients: true
+  use_private_ptr_resolvers: true
   local_ptr_upstreams: []
 tls:
   enabled: false
@@ -91,24 +91,21 @@ tls:
 filters:
 - enabled: true
   url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
-  name: AdGuard Home
-  id: 1
+  name: AdGuard DNS filter
+  id: 1628750870
 - enabled: true
-  url: https://banbendalao.coding.net/p/adgk/d/ADgk/git/raw/master/ADgk.txt
-  name: AD-gk
-  id: 2
-- enabled: false
   url: https://anti-ad.net/easylist.txt
-  name: anti-AD
-  id: 4
-- enabled: true
-  url: https://raw.githubusercontent.com/o0HalfLife0o/list/master/ad.txt
-  name: HalfLife
-  id: 5
+  name: 'CHN: anti-AD'
+  id: 1628750871
 whitelist_filters: []
 user_rules:
-- '@@||iwx.mail.qq.com^$important'
-- '@@||gm.mmstat.com^$important'
+- '@@||taobao.com^$important'
+- '@@||jd.com^important'
+- '@@||flyme.cn^$important'
+- '@@||meizu.com^$important'
+- '@@||wl.jd.com^$important'
+- '@@||flydigi.com^'
+- '@@||pv.sohu.com^$important'
 dhcp:
   enabled: false
   interface_name: ""
@@ -133,4 +130,4 @@ log_max_size: 100
 log_max_age: 3
 log_file: ""
 verbose: false
-schema_version: 10
+schema_version: 7

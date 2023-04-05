@@ -254,9 +254,10 @@ function urltest_node()
 end
 
 function set_node()
-	local protocol = luci.http.formvalue("protocol")
+	local type = luci.http.formvalue("type")
+	local config = luci.http.formvalue("config")
 	local section = luci.http.formvalue("section")
-	ucic:set(appname, "@global[0]", protocol .. "_node", section)
+	ucic:set(appname, type, config, section)
 	ucic:commit(appname)
 	luci.sys.call("/etc/init.d/passwall2 restart > /dev/null 2>&1 &")
 	luci.http.redirect(api.url("log"))
