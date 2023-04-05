@@ -224,11 +224,11 @@ input[type='file'] {
 input[type='checkbox'] {
     height: 1.2rem;
     width: 1.2rem;
-    
 }
 input[type='radio'] {
     height: 1.2rem;
     width: 1.2rem;
+    box-shadow: var(--bg);
 }
 
 select[multiple="multiple"] {
@@ -3369,16 +3369,12 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
     line-height: 0;
 }
 /* adapt to mt798x series closed source wireless driver page */
-.node-network-wifi .cbi-section-table tr .cbi-value-field
+/* open source wireless style */
+.node-network-wifi .cbi-section-table tr .cbi-value-field,
 .node-network-wireless .cbi-section-table tr .cbi-value-field {
     width: unset !important;
     text-align: right;
 }
 .node-network-wifi table, td, th {
     border-top: unset !important;
-}
-/* open source wireless style */
-.node-network-wireless .cbi-section-table tr .cbi-value-field {
-    width: unset !important;
-    padding: 3px!important;
 }
