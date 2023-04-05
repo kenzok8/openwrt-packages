@@ -127,6 +127,8 @@ wget --no-check-certificate https://github.com/jerrykuku/luci-app-argon-config/r
 opkg install luci-app-argon-config*.ipk
 ```
 
+## Wanted
+
 ## Notice
 
 - Chrome browser is highly recommended. There are some new css3 features used in this theme, currently only Chrome has the best compatibility.
@@ -145,6 +147,13 @@ opkg install luci-app-argon-config*.ipk
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
+
+## Related Projects
+
+- [luci-app-argon-config](https://github.com/jerrykuku/luci-app-argon-config): Argon theme config plugin
+- [luci-app-vssr](https://github.com/jerrykuku/luci-app-vssr): An OpenWrt internet surfing plugin
+- [openwrt-package](https://github.com/jerrykuku/openwrt-package): My OpenWrt package
+- [CasaOS](https://github.com/IceWhaleTech/CasaOS): A simple, easy-to-use, elegant open-source Personal Cloud system (My current main project)
 
 ## Credits
 

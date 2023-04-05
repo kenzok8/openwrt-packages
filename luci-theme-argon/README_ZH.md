@@ -146,6 +146,13 @@ opkg install luci-app-argon-config*.ipk
 
 Made with [contrib.rocks](https://contrib.rocks).
 
+## 相关项目
+
+- [luci-app-argon-config](https://github.com/jerrykuku/luci-app-argon-config): Argon 主题的设置插件
+- [luci-app-vssr](https://github.com/jerrykuku/luci-app-vssr): 一个 OpenWrt 的互联网冲浪插件
+- [openwrt-package](https://github.com/jerrykuku/openwrt-package): 我的 OpenWrt Package
+- [CasaOS](https://github.com/IceWhaleTech/CasaOS): 一个简单、易用且优雅的开源个人家庭云系统（我目前主要开发的项目）
+
 ## 鸣谢
 
 [luci-theme-material](https://github.com/LuttyYang/luci-theme-material/)

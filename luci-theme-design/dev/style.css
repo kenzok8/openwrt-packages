@@ -3378,3 +3378,6 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-network-wifi table, td, th {
     border-top: unset !important;
 }
+.node-network-wifi .cbi-section-table td[colspan="2"]  {
+    padding-left: unset !important
+}
