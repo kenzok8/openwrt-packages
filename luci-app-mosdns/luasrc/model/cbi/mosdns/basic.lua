@@ -45,7 +45,7 @@ remote_dns:value("tls://208.67.220.220", "208.67.220.220 (Open DNS)")
 remote_dns:value("tls://94.140.14.140", "94.140.14.140 (AdGuard)")
 remote_dns:value("tls://94.140.14.141", "94.140.14.141 (AdGuard)")
 remote_dns:depends( "configfile", "./def_config.yaml")
-remote_dns = s:option(Value, "remote_dns2", " ")
+remote_dns = s:option(Value, "remote_dns2", "ㅤ")
 remote_dns.default = "tls://208.67.220.220"
 remote_dns:value("tls://8.8.8.8", "8.8.8.8 (Google DNS)")
 remote_dns:value("tls://8.8.4.4", "8.8.4.4 (Google DNS)")
