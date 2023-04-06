@@ -9,6 +9,11 @@
  *
  *  Licensed to the public under the Apache License 2.0
  */
+ :root {
+    --commonRadius0: 8px;
+    --commonRadius1: 5px
+ }
+
  [data-theme='light'] {
     --bg: #f1f4f5;
     --mainbg: #fff;
@@ -200,12 +205,11 @@ input {
     -webkit-transition: color 100ms ease, border-color 100ms ease, opacity 100ms ease;
     outline-style: none;
     vertical-align: middle;
-    border-radius: 8px;
+    border-radius: var(--commonRadius0);
     margin: 3px 3px 3px 0;
     height: 2.8rem;
     line-height: 2.8rem;
-    max-width: 550px;
-    
+    max-width: 550px; 
 }
 
 select:not([multiple="multiple"]):focus,
@@ -274,9 +278,9 @@ hr{
     opacity: 0.1;
 }
 
-.cbi-section-table-cell br, #cbi-system br, #cbi-dropbear br, .node-status-routes br {
+/* .cbi-section-table-cell br, #cbi-system br, #cbi-dropbear br, .node-status-routes br {
     display: none;
-}
+} */
 
 header, .main {
     width: 100%;
@@ -339,8 +343,15 @@ text, line {
 }
 /* fix luci-app-passwall/luci-app-passwall2 node_div style */
 .node-services-passwall #set_node_div,
-.node-services-passwall2 #set_node_div {
+.node-services-passwall2 #set_node_div,
+.node-services-passwall #add_link_div,
+.node-services-passwall2 #add_link_div {
     background: var(--sectionbgColor);
+    border-radius: var(--commonRadius0);
+}
+.node-services-passwall #add_link_div #nodes_link,
+.node-services-passwall2 #add_link_div #nodes_link {
+    width: 100% !important;
 }
 
 .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
@@ -357,7 +368,7 @@ label.zonebadge.zonebadge-empty {
 }
 
 label.zonebadge{
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
     padding: 2px 5px 2px 5px !important;
     /* background-color: #5bdeae !important; */
     display: inline-block;
@@ -439,7 +450,7 @@ svg {
 /* file selector upload button */
 ::file-selector-button {
     transition: all .1s ease-in-out;
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
     border: 3px solid #337ab7!important;
     color: #fff!important;
     background-color: #337ab7!important;
@@ -521,6 +532,64 @@ li img[src*="/luci-static/resources/icons/ethernet_disabled.png"]
     padding: 0 0 0 16px;
 }
 #__status-ifc-signal img[src*="/luci-static/resources/icons/ethernet_disabled.png"]
+{
+    background-size: 32px 32px!important;
+    height: 32px !important;
+    width: 32px!important;
+    padding: 0 0 0 32px!important;
+    width: 0;
+}
+
+#wan4_i img[src*="/luci-static/resources/icons/switch.png"],
+#wan6_i img[src*="/luci-static/resources/icons/switch.png"],
+img[src*="/luci-static/resources/icons/switch.png"] {
+    background-image: url(../images/switch.png);
+    background-size: 32px 32px;
+    height: 32px;
+    width: 32px;
+    padding: 0 0 0 32px;
+    width: 0;
+}
+#cbi-network-lan-ifname_multi img[src*="/luci-static/resources/icons/switch.png"],
+#cbi-network-1-_ifname img[src*="/luci-static/resources/icons/switch.png"],
+.ifacebadge img[src*="/luci-static/resources/icons/switch.png"],
+li img[src*="/luci-static/resources/icons/switch.png"]
+ {
+    background-size: 16px 16px;
+    height: 16px;
+    width: 16px;
+    padding: 0 0 0 16px;
+}
+#__status-ifc-signal img[src*="/luci-static/resources/icons/switch.png"]
+{
+    background-size: 32px 32px!important;
+    height: 32px !important;
+    width: 32px!important;
+    padding: 0 0 0 32px!important;
+    width: 0;
+}
+
+#wan4_i img[src*="/luci-static/resources/icons/switch_disabled.png"],
+#wan6_i img[src*="/luci-static/resources/icons/switch_disabled.png"],
+img[src*="/luci-static/resources/icons/switch_disabled.png"] {
+    background-image: url(../images/switch_disabled.png);
+    background-size: 32px 32px;
+    height: 32px;
+    width: 32px;
+    padding: 0 0 0 32px;
+    width: 0;
+}
+#cbi-network-lan-ifname_multi img[src*="/luci-static/resources/icons/switch_disabled.png"],
+#cbi-network-1-_ifname img[src*="/luci-static/resources/icons/switch_disabled.png"],
+.ifacebadge img[src*="/luci-static/resources/icons/switch_disabled.png"],
+li img[src*="/luci-static/resources/icons/switch_disabled.png"]
+ {
+    background-size: 16px 16px;
+    height: 16px;
+    width: 16px;
+    padding: 0 0 0 16px;
+}
+#__status-ifc-signal img[src*="/luci-static/resources/icons/switch_disabled.png"]
 {
     background-size: 32px 32px!important;
     height: 32px !important;
@@ -1541,6 +1610,7 @@ table {
     border-collapse: collapse;
     width: 100%;
     border: 0px solid #eee;
+    margin: 0 !important;
 }
 
 /* fix qwrt network share table style */
@@ -1589,11 +1659,11 @@ table > tbody > tr:last-child {
 }
 
 .cbi-section-table-cell {
-    text-align: center;
+    text-align: center !important;
 }
 
 .cbi-section-table-row {
-    text-align: center;
+    text-align: center !important;
 }
 
 .cbi-section-remove{
@@ -1708,29 +1778,24 @@ fieldset > table > tbody > tr:nth-of-type(odd) {
     white-space: nowrap;
 }
 
-div [id*="cbi-network-"] [id*="-__status"] table {
-    width: auto;
+#cbi-network .cbi-value-field ul input[type="text"],
+#cbi-wireless .cbi-value-field ul input[type="text"],
+#cbi-firewall .cbi-value-field ul input[type="text"] {
+    max-width: 10rem;
+    width: 100% !important;
 }
 
-div [id*="cbi-network-"] [id*="-__status"] table td {
-    width: 0;
-    padding: 0;
-    white-space: normal;
-}
-div [id*="cbi-network-"] [id*="-__status"] table td small {
-    width: auto;
-}
-
+div [id*="cbi-network-"] [id*="-__status"] table,
 div [id*="cbi-wireless"] [id*="-__status"] table {
     width: auto;
 }
 
+div [id*="cbi-network-"] [id*="-__status"] table td,
 div [id*="cbi-wireless"] [id*="-__status"] table td {
     width: 0;
     padding: 0;
-    white-space: normal;
-
 }
+div [id*="cbi-network-"] [id*="-__status"] table td small,
 div [id*="cbi-wireless"] [id*="-__status"] table td small {
     width: auto;
 }
@@ -1797,7 +1862,7 @@ td#__status-ifc-signal {
     min-width: 80px;
     padding: 0px 8px 0px 8px;
     /* max-width: 160px; */
-    border-radius: 8px;
+    border-radius: var(--commonRadius0);
     height: 35px;
     line-height: 35px;
 }
@@ -2138,7 +2203,7 @@ div > .cbi-value:nth-of-type(2n) {
     background-color: var(--badgebgColor);
     align-content: center;
     align-items: center;
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
     border: var(--badgeBorder);
     color: #666666
 }
@@ -2228,7 +2293,7 @@ width:50px !important;
 }
 .uci-change-legend .uci-change-legend-label ins {
     overflow-x: unset;
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
 }
     
 .uci-change-list del,
@@ -2244,7 +2309,7 @@ width:50px !important;
 }
 .uci-change-legend .uci-change-legend-label del {
     overflow-x: unset;
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
 }
 
 .uci-change-list var,
@@ -2261,7 +2326,7 @@ width:50px !important;
 }
 .uci-change-legend .uci-change-legend-label var {
     overflow-x: unset;
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
 }    
 
 .uci-change-list var ins,
@@ -2271,7 +2336,7 @@ width:50px !important;
     font-style: normal;
     padding: 0px;
     color:black;
-    /* border-radius: 5px; */
+    /* border-radius: var(--commonRadius1); */
     overflow-x: auto;
 }
 
@@ -2321,7 +2386,7 @@ width:50px !important;
 
 .ifacebox {
     border: var(--ifaceboxBorderColor) 1px solid;
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
     font-size:0.92rem;
     font-weight:normal;
 }
@@ -2595,7 +2660,7 @@ header > .container > .pull-right > * {
     padding: 5px;
     width: 150px;
     margin: 10px;
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
     border: #ccc 1px solid;
 
 }
@@ -3046,7 +3111,11 @@ body.lang_pl.node-main-login .cbi-value-title {
     .main-right > #maincontent {
         overflow: auto;
     }
-
+    /* network and wireless table status icon */
+    div [id*="cbi-network-"] [id*="-__status"] table td,
+    div [id*="cbi-wireless"] [id*="-__status"] table td {
+        white-space: normal;
+    }
 }
 
 @media screen and (max-width: 370px) {
@@ -3305,7 +3374,7 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 }
 /* fix luci-app-fileassistant botton style */
 .fb-container .cbi-button {
-    border-radius: 8px;
+    border-radius: var(--commonRadius0);
     margin: 3px 3px 3px 0;
     height: unset !important;
 }
@@ -3330,7 +3399,7 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
     align-items: unset;
     text-align: unset;
 }
-
+/* network */
 .node-network-network .ifacebox strong{
     color: var(--ifaceboxFontColor);
     padding: 5px;
@@ -3339,22 +3408,36 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-network-firewall label strong {
     color: var(--ifaceboxFontColor);
 }
+/* adapt to mt798x series closed source wireless driver page */
+/* open source wireless style */
+.node-network-wifi .cbi-section-table tr .cbi-value-field,
+.node-network-wireless .cbi-section-table tr .cbi-value-field {
+    width: unset !important;
+    text-align: right;
+}
+.node-network-wireless .cbi-section-table .cbi-section-table-row td[colspan="8"],
+.node-network-wifi .cbi-section-table .cbi-section-table-row td[colspan="8"] {
+    text-align: center !important;
+}
+.node-network-wifi table, td, th {
+    border-top: unset !important;
+}
+.node-network-wifi .cbi-section-table td[colspan="2"]  {
+    padding-left: unset !important
+}
 /* fix new version luci-app-openclash style */
 .node-services-openclash  ul li.selected {
     background-color: var(--liSelectedColor) !important;
 }
-
 .node-services-openclash .cbi-button-reset, 
 .node-services-openclash .cbi-input-remove {
     max-width: unset !important;
 }
-
 .node-services-openclash #tab-header ul li.selected,
 .node-services-openclash #tab-header ul li {
     color: black !important;
     background-color: unset !important
 }
-
 /* fix qBittorrent status style*/
 .node-nas-qbittorrent p#qBittorrent_status input {
     line-height: unset;
@@ -3363,7 +3446,7 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 /* fix node-system-diskman dialog-format-active */
 .node-system-diskman.dialog-format-active #dialog_format .dialog_box {
     background: var(--alertBackground);
-    border-radius: 5px;
+    border-radius: var(--commonRadius1);
 }
 /* adaption plug-in luci-app-watchcat-plus */
 .node-services-watchcat-plus select[id*="cbi.opt.watchcat"] {
@@ -3377,17 +3460,4 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 /* fix luci-app-adguardhome style */
 .node-services-adguardhome input[onclick*="window.open('http://'+window.location.hostname+':"] {
     line-height: 0;
-}
-/* adapt to mt798x series closed source wireless driver page */
-/* open source wireless style */
-.node-network-wifi .cbi-section-table tr .cbi-value-field,
-.node-network-wireless .cbi-section-table tr .cbi-value-field {
-    width: unset !important;
-    text-align: right;
-}
-.node-network-wifi table, td, th {
-    border-top: unset !important;
-}
-.node-network-wifi .cbi-section-table td[colspan="2"]  {
-    padding-left: unset !important
 }
