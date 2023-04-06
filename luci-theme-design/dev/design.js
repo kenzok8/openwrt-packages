@@ -7,7 +7,7 @@
     if (!isMobile && global.length === 0) {
       const style = document.createElement('style');
       style.id = 'global-scroll';
-      style.textContent = `::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px; }`;
+      style.textContent = `*::-webkit-scrollbar { width: 4px;height: 4px; } *::-webkit-scrollbar-thumb { background: var(--scrollbarColor); border-radius: 2px; }`;
       $('head').append(style);
     } else if (isMobile && global.length > 0) {
       global.remove();

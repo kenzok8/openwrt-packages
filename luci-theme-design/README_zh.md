@@ -78,7 +78,7 @@ luci-theme-design 是一个针对移动端和PC端的沉浸式WebApp体验和优
 ### 编译
 
 ```
-git clone -b v5.5.9-20230325 https://github.com/gngpp/luci-theme-design.git  package/luci-theme-design
+git clone https://github.com/gngpp/luci-theme-design.git  package/luci-theme-design
 make menuconfig # choose LUCI->Theme->Luci-theme-design  
 make V=s
 ```
@@ -102,9 +102,11 @@ make V=s
 </details>
 
 <img src="./preview/login.png"/>
+<img src="./preview/login1.png"/>
 <img src="./preview/page.png"/>
 <img src="./preview/home.png"/>
 <img src="./preview/light.png"/>
 <img src="./preview/home1.png"/>
 <img src="./preview/wifi.png"/>
 <img src="./preview/iface.png"/>
+<img src="./preview/firewall.png"/>

@@ -110,13 +110,6 @@
         }
     });
 
-    if ($("#cbi-dhcp-lan-ignore").length > 0) {
-        observer.observe(document.getElementById("cbi-dhcp-lan-ignore"), {
-            subtree: true,
-            attributes: true
-        });
-    }
-
     /**
      * hook menu click and add the hash
      */

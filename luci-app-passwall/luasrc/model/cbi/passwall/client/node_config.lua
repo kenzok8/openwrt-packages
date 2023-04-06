@@ -175,18 +175,13 @@ probeInterval.description = translate("The interval between initiating probes. E
 if #nodes_table > 0 then
 	o = s:option(Flag, "preproxy_enabled", translate("Preproxy"))
 	o:depends("protocol", "_shunt")
-	o.rmempty = false
 	o = s:option(ListValue, "main_node", string.format('<a style="color:red">%s</a>', translate("Preproxy Node")), translate("Set the node to be used as a pre-proxy. Each rule (including <code>Default</code>) has a separate switch that controls whether this rule uses the pre-proxy or not."))
 	o:depends("preproxy_enabled", "1")
-	local dialerProxy = s:option(Flag, "dialerProxy", translate("dialerProxy"))
-	dialerProxy.hidden = true
-	dialerProxy:depends({ type = "Xray", protocol = "_shunt", preproxy_enabled = "1" })
 	for k, v in pairs(balancers_table) do
 		o:value(v.id, v.remarks)
 	end
 	for k, v in pairs(nodes_table) do
 		o:value(v.id, v.remarks)
-		--dialerProxy:depends({ type = "Xray", main_node = v.id })
 	end
 	o.default = "nil"
 end
@@ -752,6 +747,11 @@ wireguard_local_address:depends({ type = "Xray", protocol = "wireguard" })
 wireguard_mtu = s:option(Value, "wireguard_mtu", translate("MTU"))
 wireguard_mtu.default = "1420"
 wireguard_mtu:depends({ type = "Xray", protocol = "wireguard" })
+
+if api.compare_versions(api.get_app_version("xray"), ">=", "1.8.0") then
+	wireguard_reserved = s:option(Value, "wireguard_reserved", translate("Reserved"))
+	wireguard_reserved:depends({ type = "Xray", protocol = "wireguard" })
+end
 
 wireguard_keepAlive = s:option(Value, "wireguard_keepAlive", translate("Keep Alive"))
 wireguard_keepAlive.default = "0"

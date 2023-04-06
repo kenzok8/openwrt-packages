@@ -42,11 +42,9 @@ function gen_outbound(flag, node, tag, proxy_table)
 
 		local proxy = 0
 		local proxy_tag = "nil"
-		local dialerProxy = nil
 		if proxy_table ~= nil and type(proxy_table) == "table" then
 			proxy = proxy_table.proxy or 0
 			proxy_tag = proxy_table.tag or "nil"
-			dialerProxy = proxy_table.dialerProxy
 		end
 
 		if node.type == "V2ray" or node.type == "Xray" then
@@ -54,18 +52,10 @@ function gen_outbound(flag, node, tag, proxy_table)
 			else
 				proxy = 0
 				if proxy_tag ~= "nil" then
-					if dialerProxy and dialerProxy == "1" then
-						node.streamSettings = {
-							sockopt = {
-								dialerProxy = proxy_tag
-							}
-						}
-					else
-						node.proxySettings = {
-							tag = proxy_tag,
-							transportLayer = true
-						}
-					end
+					node.proxySettings = {
+						tag = proxy_tag,
+						transportLayer = true
+					}
 				end
 			end
 		end
@@ -110,6 +100,14 @@ function gen_outbound(flag, node, tag, proxy_table)
 			end
 		end
 
+		if node.protocol == "wireguard" and node.wireguard_reserved then
+			local bytes = {}
+			node.wireguard_reserved:gsub("[^,]+", function(b)
+				bytes[#bytes+1] = tonumber(b)
+			end)
+			node.wireguard_reserved = #bytes > 0 and bytes or nil
+		end
+
 		result = {
 			_flag_tag = node_id,
 			_flag_proxy = proxy,
@@ -124,8 +122,7 @@ function gen_outbound(flag, node, tag, proxy_table)
 			-- 底层传输配置
 			streamSettings = (node.streamSettings or node.protocol == "vmess" or node.protocol == "vless" or node.protocol == "socks" or node.protocol == "shadowsocks" or node.protocol == "trojan") and {
 				sockopt = {
-					mark = 255,
-					dialerProxy = (node.streamSettings and dialerProxy and dialerProxy == "1") and node.streamSettings.sockopt.dialerProxy or nil
+					mark = 255
 				},
 				network = node.transport,
 				security = node.stream_security,
@@ -234,7 +231,8 @@ function gen_outbound(flag, node, tag, proxy_table)
 						keepAlive = node.wireguard_keepAlive and tonumber(node.wireguard_keepAlive) or nil
 					}
 				} or nil,
-				mtu = (node.protocol == "wireguard" and node.wireguard_mtu) and tonumber(node.wireguard_mtu) or nil
+				mtu = (node.protocol == "wireguard" and node.wireguard_mtu) and tonumber(node.wireguard_mtu) or nil,
+				reserved = (node.protocol == "wireguard" and node.wireguard_reserved) and node.wireguard_reserved or nil
 			}
 		}
 		local alpn = {}
@@ -663,9 +661,28 @@ function gen_config(var)
 			local rules = {}
 			local balancers = {}
 
-			local preproxy_enabled = false
+			local preproxy_enabled = node.preproxy_enabled == "1"
 			local preproxy_tag = "main"
-			local preproxy_node_id = node[preproxy_tag .. "_node"] or "nil"
+			local preproxy_node_id = node["main_node"]
+			local preproxy_node = preproxy_enabled and preproxy_node_id and uci:get_all(appname, preproxy_node_id) or nil
+			local preproxy_is_balancer
+			if preproxy_node and api.is_normal_node(preproxy_node) then
+				local preproxy_outbound = gen_outbound(flag, preproxy_node, preproxy_tag)
+				if preproxy_outbound then
+					table.insert(outbounds, preproxy_outbound)
+				else
+					preproxy_enabled = false
+				end
+			elseif preproxy_node and preproxy_node.protocol == "_balancing" then
+				preproxy_is_balancer = true
+				local preproxy_balancer, preproxy_rule = gen_balancer(preproxy_node, preproxy_tag)
+				if preproxy_balancer and preproxy_rule then
+					table.insert(balancers, preproxy_balancer)
+					table.insert(rules, preproxy_rule)
+				else
+					preproxy_enabled = false
+				end
+			end
 
 			local function gen_shunt_node(rule_name, _node_id, as_proxy)
 				if not rule_name then return nil, nil end
@@ -682,27 +699,20 @@ function gen_config(var)
 					local _node = uci:get_all(appname, _node_id)
 					if not _node then return nil, nil end
 
-					if api.is_normal_node(_node) then --这一块根据代理设置的修改方向还需要修改
-						local proxy_tag = node[rule_name .. "_proxy_tag"] or "nil"
-						if proxy_tag == preproxy_tag and not preproxy_enabled then proxy_tag = "nil" end
-						local proxy_node_id = proxy_tag ~= "nil" and node[proxy_tag .. "_node"] or "nil" --为了适配之前默认节点也可用作前置代理的写法，只设一个的话直接用preproxy_node_id
-						if _node_id == proxy_node_id then proxy_tag = "nil" end --规则启用了前置代理，但规则本身节点和前置代理节点是同一个，则前置代理设置无效
-						local proxy_node = uci:get_all(appname, proxy_node_id) --前置代理节点
-						local is_balancing_proxy
-						if proxy_node and proxy_node.protocol == "_balancing" then
-							is_balancing_proxy = true
+					if api.is_normal_node(_node) then
+						local proxy = preproxy_enabled and node[rule_name .. "_proxy_tag"] == preproxy_tag and _node_id ~= preproxy_node_id
+						if proxy and preproxy_is_balancer then
 							local blc_nodes = proxy_node.balancing_node
 							for _, blc_node_id in ipairs(blc_nodes) do
 								if _node_id == blc_node_id then
-									proxy_tag = "nil"
+									proxy = false
 									break
 								end
 							end
 						end
-
 						local copied_outbound
 						for index, value in ipairs(outbounds) do
-							if value["_flag_tag"] == _node_id and value["_flag_proxy_tag"] == proxy_tag then
+							if value["_flag_tag"] == _node_id and value["_flag_proxy_tag"] == preproxy_tag then
 								copied_outbound = api.clone(value)
 								break
 							end
@@ -712,7 +722,7 @@ function gen_config(var)
 							table.insert(outbounds, copied_outbound)
 							rule_outboundTag = rule_name
 						else
-							if proxy_tag ~= "nil" then
+							if proxy then
 								local pre_proxy = nil
 								if _node.type ~= "V2ray" and _node.type ~= "Xray" then
 									pre_proxy = true
@@ -737,15 +747,15 @@ function gen_config(var)
 									table.insert(rules, 1, {
 										type = "field",
 										inboundTag = {"proxy_" .. rule_name},
-										outboundTag = is_balancing_proxy and nil or proxy_tag,
+										outboundTag = is_balancing_proxy and nil or preproxy_tag,
 										balancerTag = is_balancing_proxy and get_balancer_tag(proxy_node_id) or nil
 									})
 								end
 							end
-							local _outbound = gen_outbound(flag, _node, rule_name, { proxy = (proxy_tag ~= "nil") and 1 or 0, tag = (proxy_tag ~= "nil") and proxy_tag or nil, dialerProxy = node.dialerProxy })
+							local _outbound = gen_outbound(flag, _node, rule_name, { proxy = proxy and 1 or 0, tag = proxy and preproxy_tag or nil })
 							if _outbound then
 								table.insert(outbounds, _outbound)
-								if proxy_tag == preproxy_tag then preproxy_used = true end
+								if proxy then preproxy_used = true end
 								rule_outboundTag = rule_name
 							end
 						end
@@ -758,12 +768,10 @@ function gen_config(var)
 								break
 							end
 						end
-						if is_new_balancer then --注释掉的是给需要用作前置代理的balancer生成等效OutboundTag（loopback + 规则路由至）的代码，可能用上
-							--local loopbackTag = as_proxy == true and rule_name or nil
-							local balancer = gen_balancer(_node) --local balancer, rule = gen_balancer(_node)
+						if is_new_balancer then
+							local balancer = gen_balancer(_node)
 							if balancer then
 								table.insert(balancers, balancer)
-								--if rule then table.insert(rules, rule) end
 								rule_balancerTag = balancer.tag
 							end
 						end
@@ -771,36 +779,16 @@ function gen_config(var)
 				end
 				return rule_outboundTag, rule_balancerTag
 			end
-
-			--[[此处只要前置代理设置选择了节点，即使全部规则都没使用，仍会先尝试生成，生成有效配置才真正开启功能，会造成配置文件里面会有多余未使用的outbound，
-			如果放到最后，判断节点有使用前置代理才生成又不能提前检测前置代理节点能否正确生成配置项，主要是负载均衡类型节点不好处理，生成的配置项多，
-			只能先读取分流规则和默认的 proxy_tag，有启用前置代理的，就生成前置代理配置]]
-			if preproxy_node_id ~= "nil" then
-				local preproxy_node = uci:get_all(appname, preproxy_node_id)
-				if preproxy_node and api.is_normal_node(preproxy_node) then
-					local preproxy_outbound = gen_outbound(flag, preproxy_node, preproxy_tag)
-					if preproxy_outbound then
-						table.insert(outbounds, preproxy_outbound)
-						preproxy_enabled = true
-					end
-				elseif preproxy_node and preproxy_node.protocol == "_balancing" then
-					local preproxy_balancer, preproxy_rule = gen_balancer(preproxy_node, preproxy_tag)
-					if preproxy_balancer and preproxy_rule then
-						table.insert(balancers, preproxy_balancer)
-						table.insert(rules, preproxy_rule)
-						preproxy_enabled = true
-					end
-				end
-			end
-
+			--default_node
 			local default_node_id = node.default_node or "_direct"
 			local default_outboundTag, default_balancerTag = gen_shunt_node("default", default_node_id)
-
+			--shunt rule
 			uci:foreach(appname, "shunt_rules", function(e)
 				local outboundTag, balancerTag = gen_shunt_node(e[".name"])
 				if outboundTag or balancerTag and e.remarks then
 					if outboundTag == "default" then
 						outboundTag = default_outboundTag
+						balancerTag = default_balancerTag
 					end
 					local protocols = nil
 					if e["protocol"] and e["protocol"] ~= "" then
