@@ -124,13 +124,14 @@
     src : url('../fonts/GenJyuuGothic-Medium.otf') format('opentype');
 }
 
-::-webkit-scrollbar {
+*::-webkit-scrollbar {
     width: 4px;
-}
-::-webkit-scrollbar-thumb {
-    background: var(--scrollbarColor) ;
-    border-radius: 2px;
-}
+    height: 4px;
+ }
+ *::-webkit-scrollbar-thumb {
+     background: var(--scrollbarColor) ;
+     border-radius: 2px;
+ }
 
 div{
     font-family: 'HYk2gj';
@@ -171,7 +172,8 @@ em {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    }
+    -webkit-tap-highlight-color: transparent;
+}
 
 select {
     overflow: hidden !important;
@@ -1301,7 +1303,6 @@ p#shadowsocksr_status {
     transition: all 0.1s ease;
     text-rendering: auto;
     -webkit-font-smoothing: antialiased;
-    transition: all 0.1s;
 }
 
 .main .main-left .nav li.slide .menu.active::after {
@@ -1699,6 +1700,14 @@ fieldset > table > tbody > tr:nth-of-type(odd) {
     white-space: nowrap;
 } */
 
+/* node-network-network ul list overflow */
+#cbi-network .cbi-value-field ul,
+#cbi-wireless .cbi-value-field ul,
+#cbi-firewall .cbi-value-field ul {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
 div [id*="cbi-network-"] [id*="-__status"] table {
     width: auto;
 }
@@ -1706,7 +1715,7 @@ div [id*="cbi-network-"] [id*="-__status"] table {
 div [id*="cbi-network-"] [id*="-__status"] table td {
     width: 0;
     padding: 0;
-
+    white-space: normal;
 }
 div [id*="cbi-network-"] [id*="-__status"] table td small {
     width: auto;
@@ -1719,6 +1728,7 @@ div [id*="cbi-wireless"] [id*="-__status"] table {
 div [id*="cbi-wireless"] [id*="-__status"] table td {
     width: 0;
     padding: 0;
+    white-space: normal;
 
 }
 div [id*="cbi-wireless"] [id*="-__status"] table td small {
