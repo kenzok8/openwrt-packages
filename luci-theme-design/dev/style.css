@@ -1800,6 +1800,25 @@ div [id*="cbi-wireless"] [id*="-__status"] table td small {
     width: auto;
 }
 
+/* adapt to mt798x series closed source wireless driver page */
+/* open source wireless style */
+.node-network-wifi .cbi-section-table tr .cbi-value-field,
+.node-network-wireless .cbi-section-table tr .cbi-value-field {
+    width: unset !important;
+    text-align: right;
+}
+.node-network-wireless #iw-assoclist .cbi-section-table-row td[colspan="6"],
+.node-network-wireless .cbi-section-table .cbi-section-table-row td[colspan="6"],
+.node-network-wifi .cbi-section-table .cbi-section-table-row td[colspan="8"] {
+    text-align: center !important;
+}
+.node-network-wifi table, td, th {
+    border-top: unset !important;
+}
+.node-network-wifi .cbi-section-table td[colspan="2"]  {
+    padding-left: unset !important
+}
+
 /* fix node-status-routes */
 .node-status-routes .cbi-section-node{
     max-height: 500px;
@@ -3408,23 +3427,7 @@ form[action="/cgi-bin/luci/admin/network/wireless_join"] input[class="cbi-button
 .node-network-firewall label strong {
     color: var(--ifaceboxFontColor);
 }
-/* adapt to mt798x series closed source wireless driver page */
-/* open source wireless style */
-.node-network-wifi .cbi-section-table tr .cbi-value-field,
-.node-network-wireless .cbi-section-table tr .cbi-value-field {
-    width: unset !important;
-    text-align: right;
-}
-.node-network-wireless .cbi-section-table .cbi-section-table-row td[colspan="8"],
-.node-network-wifi .cbi-section-table .cbi-section-table-row td[colspan="8"] {
-    text-align: center !important;
-}
-.node-network-wifi table, td, th {
-    border-top: unset !important;
-}
-.node-network-wifi .cbi-section-table td[colspan="2"]  {
-    padding-left: unset !important
-}
+
 /* fix new version luci-app-openclash style */
 .node-services-openclash  ul li.selected {
     background-color: var(--liSelectedColor) !important;
