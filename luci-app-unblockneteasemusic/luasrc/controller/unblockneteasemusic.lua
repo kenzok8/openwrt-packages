@@ -32,7 +32,7 @@ function act_status()
 end
 
 function update_core()
-	local core_cloud_ver = luci.sys.exec("uclient-fetch -qO- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jsonfilter -e '@[0].sha'")
+	local core_cloud_ver = luci.sys.exec("wget -qO- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jsonfilter -e '@[0].sha'")
 	local core_cloud_ver_mini = string.sub(core_cloud_ver, 1, 7)
 	local core_local_ver
 	if (not core_cloud_ver) or (not core_cloud_ver_mini) then
