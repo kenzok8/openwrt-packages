@@ -5,11 +5,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-passwall2
-PKG_VERSION:=1.10
-PKG_RELEASE:=6
+PKG_VERSION:=1.11
+PKG_RELEASE:=1
 
 PKG_CONFIG_DEPENDS:= \
 	CONFIG_PACKAGE_$(PKG_NAME)_Transparent_Proxy \
+	CONFIG_PACKAGE_$(PKG_NAME)_Transparent_Proxy_Iptables-nft \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Brook \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_Hysteria \
 	CONFIG_PACKAGE_$(PKG_NAME)_INCLUDE_IPv6_Nat \
@@ -52,6 +53,7 @@ menu "Configuration"
 config PACKAGE_$(PKG_NAME)_Transparent_Proxy
 	bool "Transparent Proxy"
 	select PACKAGE_dnsmasq-full
+	select PACKAGE_dnsmasq_full_ipset
 	select PACKAGE_ipset
 	select PACKAGE_iptables
 	select PACKAGE_iptables-zz-legacy
@@ -61,7 +63,21 @@ config PACKAGE_$(PKG_NAME)_Transparent_Proxy
 	select PACKAGE_iptables-mod-conntrack-extra
 	select PACKAGE_kmod-ipt-nat
 	depends on PACKAGE_$(PKG_NAME)
-	default y
+	default y if ! PACKAGE_firewall4
+
+config PACKAGE_$(PKG_NAME)_Transparent_Proxy_Iptables-nft
+	bool "Transparent Proxy Use Iptables-nft"
+	select PACKAGE_dnsmasq-full
+	select PACKAGE_dnsmasq_full_ipset
+	select PACKAGE_ipset
+	select PACKAGE_iptables-nft
+	select PACKAGE_iptables-mod-iprange
+	select PACKAGE_iptables-mod-socket
+	select PACKAGE_iptables-mod-tproxy
+	select PACKAGE_iptables-mod-conntrack-extra
+	select PACKAGE_kmod-ipt-nat
+	depends on PACKAGE_$(PKG_NAME)
+	default y if PACKAGE_firewall4
 
 config PACKAGE_$(PKG_NAME)_INCLUDE_Brook
 	bool "Include Brook"

@@ -126,7 +126,7 @@ update_rules() {
 	yhosts_rules_local=`cat /usr/share/koolproxy/data/rules/yhosts.txt  | sed -n '1p' | cut -d ":" -f2`
 	antiad_rules_local=`cat /usr/share/koolproxy/data/rules/antiad.txt  | sed -n '2p' | cut -d "=" -f2`
 	koolproxy_rules_local=`cat /usr/share/koolproxy/data/rules/koolproxy.txt  | sed -n '3p'|awk '{print $3,$4}'`
-	adgk_rules_local=`cat /usr/share/koolproxy/data/rules/adgk.txt  | sed -n '1p'|awk '{print $3}'`
+	adgk_rules_local=`cat /usr/share/koolproxy/data/rules/adgk.txt  | sed -n '2p'|awk '{print $3}'`
 	echo $(date "+%F %T"): -------------------AdGuard规则 Version $adg_rules_local >>$LOGFILE
 	echo $(date "+%F %T"): -------------------Steven规则 Version $steven_rules_local >>$LOGFILE
 	echo $(date "+%F %T"): -------------------Yhosts规则 Version $yhosts_rules_local >>$LOGFILE

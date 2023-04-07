@@ -106,6 +106,14 @@ function gen_outbound(flag, node, tag, proxy_table)
             end
         end
 
+		if node.protocol == "wireguard" and node.wireguard_reserved then
+			local bytes = {}
+			node.wireguard_reserved:gsub("[^,]+", function(b)
+				bytes[#bytes+1] = tonumber(b)
+			end)
+			node.wireguard_reserved = #bytes > 0 and bytes or nil
+		end
+
         result = {
             _flag_tag = node_id,
             _flag_proxy = proxy,
@@ -230,7 +238,8 @@ function gen_outbound(flag, node, tag, proxy_table)
                         keepAlive = node.wireguard_keepAlive and tonumber(node.wireguard_keepAlive) or nil
                     }
                 } or nil,
-                mtu = (node.protocol == "wireguard" and node.wireguard_mtu) and tonumber(node.wireguard_mtu) or nil
+                mtu = (node.protocol == "wireguard" and node.wireguard_mtu) and tonumber(node.wireguard_mtu) or nil,
+                reserved = (node.protocol == "wireguard" and node.wireguard_reserved) and node.wireguard_reserved or nil
             }
         }
         local alpn = {}
@@ -522,6 +531,7 @@ function gen_config(var)
     local inbounds = {}
     local outbounds = {}
     local routing = nil
+    local observatory = nil
 
     if local_socks_port then
         local inbound = {
@@ -817,10 +827,18 @@ function gen_config(var)
                     local outbound = gen_outbound(flag, node)
                     if outbound then table.insert(outbounds, outbound) end
                 end
+				if node.balancingStrategy == "leastPing" then
+					observatory = {
+						subjectSelector = nodes,
+						probeInterval = node.probeInterval or "1m"
+					}
+				end
                 routing = {
-                    domainStrategy = node.domainStrategy or "AsIs",
-                    domainMatcher = node.domainMatcher or "hybrid",
-                    balancers = {{tag = "balancer", selector = nodes}},
+                    balancers = {{
+						tag = "balancer",
+						selector = nodes,
+						strategy = {type = node.balancingStrategy or "random"}
+					}},
                     rules = {
                         {type = "field", network = "tcp,udp", balancerTag = "balancer"}
                     }
@@ -1093,6 +1111,8 @@ function gen_config(var)
             inbounds = inbounds,
             -- 传出连接
             outbounds = outbounds,
+            -- 连接观测
+			observatory = observatory,
             -- 路由
             routing = routing,
             -- 本地策略
@@ -1277,7 +1297,7 @@ function gen_dns_config(var)
         dns = {
             tag = "dns-in1",
             hosts = {},
-            disableCache = (dns_cache and dns_cache == "0") and true or false,
+            disableCache = (dns_cache == "1") and false or true,
             disableFallback = true,
             disableFallbackIfMatch = true,
             servers = {},

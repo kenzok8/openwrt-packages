@@ -13,6 +13,17 @@ command_timeout = 300
 LEDE_BOARD = nil
 DISTRIB_TARGET = nil
 
+LOG_FILE = "/tmp/log/passwall2.log"
+
+function log(...)
+    local result = os.date("%Y-%m-%d %H:%M:%S: ") .. table.concat({...}, " ")
+    local f, err = io.open(LOG_FILE, "a")
+    if f and err == nil then
+        f:write(result .. "\n")
+        f:close()
+    end
+end
+
 function exec_call(cmd)
     local process = io.popen(cmd .. '; echo -e "\n$?"')
     local lines = {}
@@ -355,7 +366,7 @@ function get_customed_path(e)
 end
 
 function is_finded(e)
-    return luci.sys.exec('type -t -p "/bin/%s" -p "%s" "%s"' % {e, get_customed_path(e), e}) ~= "" and true or false
+    return luci.sys.exec('type -t -p "/bin/%s" -p "/usr/bin/%s" -p "%s" "%s"' % {e, e, get_customed_path(e), e}) ~= "" and true or false
 end
 
 
