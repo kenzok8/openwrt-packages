@@ -130,8 +130,8 @@
 }
 
 *::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
  }
  *::-webkit-scrollbar-thumb {
      background: var(--scrollbarColor) ;
@@ -241,9 +241,14 @@ select[multiple="multiple"] {
     height: auto;
 }
 
+.node-docker-images input[type='text'] {
+    width: auto !important;
+}
+
 input[type='text'],input[type='password'] {
     width: 100%;
 }
+
 code {
     color: #0099CC;
 }
@@ -1659,11 +1664,11 @@ table > tbody > tr:last-child {
 }
 
 .cbi-section-table-cell {
-    text-align: center !important;
+    text-align: center;
 }
 
 .cbi-section-table-row {
-    text-align: center !important;
+    text-align: center;
 }
 
 .cbi-section-remove{
@@ -2771,6 +2776,10 @@ header > .container > .pull-right > * {
 .node-system-packages .cbi-tabmenu,
 .node-system-flashops .cbi-tabmenu {
    /* border: none; **/
+}
+
+#cbi-firewall-redirect .cbi-section-table-titles .cbi-section-table-cell {
+    text-align: left;
 }
 
 #cbi-firewall-redirect table *,
