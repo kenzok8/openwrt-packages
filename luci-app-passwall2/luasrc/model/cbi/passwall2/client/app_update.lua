@@ -5,9 +5,9 @@ m = Map(appname)
 
 -- [[ App Settings ]]--
 s = m:section(TypedSection, "global_app", translate("App Update"),
-              "<font color='red'>" ..
-                  translate("Please confirm that your firmware supports FPU.") ..
-                  "</font>")
+	"<font color='red'>" ..
+	translate("Please confirm that your firmware supports FPU.") ..
+	"</font>")
 s.anonymous = true
 s:append(Template(appname .. "/app_update/v2ray_version"))
 s:append(Template(appname .. "/app_update/xray_version"))
@@ -33,7 +33,7 @@ o.rmempty = false
 o = s:option(DummyValue, "tips", " ")
 o.rawhtml = true
 o.cfgvalue = function(t, n)
-    return string.format('<font color="red">%s</font>', translate("if you want to run from memory, change the path, /tmp beginning then save the application and update it manually."))
+	return string.format('<font color="red">%s</font>', translate("if you want to run from memory, change the path, /tmp beginning then save the application and update it manually."))
 end
 
 return m

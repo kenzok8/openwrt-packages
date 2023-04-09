@@ -124,6 +124,7 @@ start_service() {
 	append_param_env "config" "youtube_key" "YOUTUBE_KEY"
 	append_param_env "config" "self_issue_cert_crt" "SIGN_CERT" "$UNM_DIR/core/server.crt"
 	append_param_env "config" "self_issue_cert_key" "SIGN_KEY" "$UNM_DIR/core/server.key"
+	append_param_env "config" "local_vip" "ENABLE_LOCAL_VIP"
 
 	append_param_boolenv "config" "follow_source_order" "FOLLOW_SOURCE_ORDER"
 	append_param_boolenv "config" "search_album" "SEARCH_ALBUM"
@@ -131,7 +132,6 @@ start_service() {
 	append_param_boolenv "config" "select_max_br" "SELECT_MAX_BR"
 	append_param_boolenv "config" "disable_upgrade_check" "DISABLE_UPGRADE_CHECK"
 	append_param_boolenv "config" "block_ads" "BLOCK_ADS"
-	append_param_boolenv "config" "local_vip" "ENABLE_LOCAL_VIP"
 	case "$(config_get "config" "replace_music_source")" in
 		"lower_than_192kbps") procd_append_param env MIN_BR="192000" ;;
 		"lower_than_320kbps") procd_append_param env MIN_BR="320000" ;;

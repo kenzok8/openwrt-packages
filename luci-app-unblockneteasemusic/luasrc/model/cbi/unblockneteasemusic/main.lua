@@ -73,12 +73,12 @@ o.description = translate("选择所有音源中的最高码率替换音频。")
 o.default = 0
 
 o = s:option(ListValue, "replace_music_source", translate("音源替换"))
+o.description = translate("当音乐音质低于指定数值时，尝试强制使用其他平台的高音质版本进行替换")
 o:value("dont_replace", translate("不强制替换音乐音源"))
 o:value("lower_than_192kbps", translate("当音质低于 192 Kbps（中）时"))
 o:value("lower_than_320kbps", translate("当音质低于 320 Kbps（高）时"))
 o:value("lower_than_999kbps", translate("当音质低于 999 Kbps（无损）时"))
 o:value("replace_all", translate("替换所有音乐音源"))
-o.description = translate("当音乐音质低于指定数值时，尝试强制使用其他平台的高音质版本进行替换")
 o.default = "dont_replace"
 
 o = s:option(Flag, "disable_upgrade_check", translate("禁用更新检查"))
@@ -89,9 +89,11 @@ o = s:option(Flag, "block_ads", translate("屏蔽广告"))
 o.description = translate("启用后，可屏蔽应用内部分广告。")
 o.default = 0
 
-o = s:option(Flag, "local_vip", translate("启用本地 VIP"))
-o.description = translate("启用后，可以使用去广告、个性换肤、鲸云音效等本地功能")
-o.default = 0
+o = s:option(ListValue, "local_vip", translate("伪装本地 VIP"))
+o.description = translate("设置后，可以使用去广告、个性换肤、鲸云音效等本地功能")
+o:value("", translate("禁用"))
+o:value("cvip", translate("CVIP"))
+o:value("svip", translate("SVIP"))
 
 o = s:option(Flag, "auto_update", translate("启用自动更新"))
 o.description = translate("启用后，每天将定时自动检查最新版本并更新")

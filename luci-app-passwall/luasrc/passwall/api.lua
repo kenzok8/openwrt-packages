@@ -18,12 +18,12 @@ LOG_FILE = "/tmp/log/" .. appname .. ".log"
 CACHE_PATH = "/tmp/etc/" .. appname .. "_tmp"
 
 function log(...)
-    local result = os.date("%Y-%m-%d %H:%M:%S: ") .. table.concat({...}, " ")
-    local f, err = io.open(LOG_FILE, "a")
-    if f and err == nil then
-        f:write(result .. "\n")
-        f:close()
-    end
+	local result = os.date("%Y-%m-%d %H:%M:%S: ") .. table.concat({...}, " ")
+	local f, err = io.open(LOG_FILE, "a")
+	if f and err == nil then
+		f:write(result .. "\n")
+		f:close()
+	end
 end
 
 function exec_call(cmd)
@@ -322,7 +322,7 @@ function get_valid_nodes()
 	return nodes
 end
 
-function get_full_node_remarks(n)
+function get_node_remarks(n)
 	local remarks = ""
 	if n then
 		if n.protocol and (n.protocol == "_balancing" or n.protocol == "_shunt" or n.protocol == "_iface") then
@@ -340,7 +340,17 @@ function get_full_node_remarks(n)
 				end
 				type2 = type2 .. " " .. protocol
 			end
-			remarks = "%s：[%s] %s:%s" % {type2, n.remarks, n.address, n.port}
+			remarks = "%s：[%s]" % {type2, n.remarks}
+		end
+	end
+	return remarks
+end
+
+function get_full_node_remarks(n)
+	local remarks = get_node_remarks(n)
+	if #remarks > 0 then
+		if n.address and n.port then
+			remarks = remarks .. " " .. n.address .. ":" .. n.port
 		end
 	end
 	return remarks

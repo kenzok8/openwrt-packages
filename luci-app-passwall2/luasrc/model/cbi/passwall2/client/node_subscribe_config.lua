@@ -7,16 +7,16 @@ local has_v2ray = api.is_finded("v2ray")
 local has_xray = api.is_finded("xray")
 local ss_aead_type = {}
 if has_ss then
-    ss_aead_type[#ss_aead_type + 1] = "shadowsocks-libev"
+	ss_aead_type[#ss_aead_type + 1] = "shadowsocks-libev"
 end
 if has_ss_rust then
-    ss_aead_type[#ss_aead_type + 1] = "shadowsocks-rust"
+	ss_aead_type[#ss_aead_type + 1] = "shadowsocks-rust"
 end
 if has_v2ray then
-    ss_aead_type[#ss_aead_type + 1] = "v2ray"
+	ss_aead_type[#ss_aead_type + 1] = "v2ray"
 end
 if has_xray then
-    ss_aead_type[#ss_aead_type + 1] = "xray"
+	ss_aead_type[#ss_aead_type + 1] = "xray"
 end
 
 m = Map(appname)
@@ -57,12 +57,12 @@ o:depends("filter_keyword_mode", "3")
 o:depends("filter_keyword_mode", "4")
 
 if #ss_aead_type > 0 then
-    o = s:option(ListValue, "ss_aead_type", translate("SS AEAD Node Use Type"))
-    o.default = "global"
-    o:value("global", translate("Use global config"))
-    for key, value in pairs(ss_aead_type) do
-        o:value(value, translate(value:gsub("^%l",string.upper)))
-    end
+	o = s:option(ListValue, "ss_aead_type", translate("SS AEAD Node Use Type"))
+	o.default = "global"
+	o:value("global", translate("Use global config"))
+	for key, value in pairs(ss_aead_type) do
+		o:value(value, translate(value:gsub("^%l",string.upper)))
+	end
 end
 
 ---- Enable auto update subscribe

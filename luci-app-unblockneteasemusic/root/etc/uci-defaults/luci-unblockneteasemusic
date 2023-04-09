@@ -1,5 +1,9 @@
 #!/bin/sh
 
+sed -e "s,local_vip '1',local_vip 'cvip',g" \
+    -e "/local_vip '0'/d" \
+	-i "/etc/config/unblockneteasemusic"
+
 uci -q batch <<-EOF >"/dev/null"
 	delete ucitrack.@unblockneteasemusic[-1]
 	add ucitrack unblockneteasemusic
