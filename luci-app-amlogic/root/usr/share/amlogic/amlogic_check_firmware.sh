@@ -140,7 +140,7 @@ check_updated() {
             https://api.github.com/repos/${server_firmware_url}/releases |
             jq '.[]' |
             jq -s --arg RTK "${releases_tag_keywords}" '.[] | select(.tag_name | contains($RTK))' |
-            jq -s '.[] | {data:.published_at, url:.assets[].browser_download_url }' |
+            jq -s '.[].assets[] | {data:.updated_at, url:.browser_download_url}' |
             jq -s --arg BOARD "_${BOARD}_" --arg MLV "${main_line_version}." '.[] | select((.url | contains($BOARD)) and (.url | contains($MLV)))' |
             jq -s 'sort_by(.data)|reverse[]' |
             jq -s '.[0]' -c
