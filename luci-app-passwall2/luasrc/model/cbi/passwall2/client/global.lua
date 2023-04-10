@@ -48,7 +48,7 @@ o.rmempty = false
 
 local auto_switch_tip
 local auto_switch_flag
-local current_node = luci.sys.exec(string.format("[ -f '/tmp/etc/%s/id/TCP' ] && echo -n $(cat /tmp/etc/%s/id/TCP)", appname, appname))
+local current_node = luci.sys.exec(string.format("[ -f '/tmp/etc/%s/id/global' ] && echo -n $(cat /tmp/etc/%s/id/global)", appname, appname))
 if current_node and current_node ~= "" and current_node ~= "nil" then
 	local n = uci:get_all(appname, current_node)
 	if n then
@@ -61,7 +61,7 @@ if current_node and current_node ~= "" and current_node ~= "nil" then
 				elseif shunt_logic == 2 then
 					auto_switch_flag = "main"
 				end
-				current_node = luci.sys.exec(string.format("[ -f '/tmp/etc/%s/id/TCP_%s' ] && echo -n $(cat /tmp/etc/%s/id/TCP_%s)", appname, auto_switch_flag, appname, auto_switch_flag))
+				current_node = luci.sys.exec(string.format("[ -f '/tmp/etc/%s/id/global_%s' ] && echo -n $(cat /tmp/etc/%s/id/global_%s)", appname, auto_switch_flag, appname, auto_switch_flag))
 				if current_node and current_node ~= "" and current_node ~= "nil" then
 					n = uci:get_all(appname, current_node)
 				end
