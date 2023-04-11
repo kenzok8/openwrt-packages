@@ -1802,7 +1802,7 @@ div [id*="cbi-wireless"] [id*="-__status"] table {
 
 div [id*="cbi-network-"] [id*="-__status"] table td,
 div [id*="cbi-wireless"] [id*="-__status"] table td {
-    width: 0 !important;
+    width: auto;
     padding: 0 !important;
 }
 div [id*="cbi-network-"] [id*="-__status"] table td small,
