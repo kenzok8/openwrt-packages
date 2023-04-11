@@ -976,6 +976,7 @@ reset() {
 		set shadowsocksr.@global[0].dports='2'
 		set shadowsocksr.@global[0].pdnsd_enable='1'
 		set shadowsocksr.@global[0].tunnel_forward='8.8.4.4:53'
+		set shadowsocksr.@global[0].chinadns_forward='114.114.114.114:53'
 		set shadowsocksr.@global[0].monitor_enable='1'
 		set shadowsocksr.@global[0].enable_switch='1'
 		set shadowsocksr.@global[0].switch_time='667'
