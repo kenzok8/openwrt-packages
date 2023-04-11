@@ -852,7 +852,6 @@ img[src*="/luci-static/resources/icons/loading.gif"] {
 
 .ifacebox-body img {
     background-size: 20px 20px;
-    padding: 0 0 0 20px;
     width:20px !important;
     height:20px !important;
     padding: 0 0 0 20px !important;
@@ -1642,12 +1641,6 @@ strong {
 
 }
 
-/* fixed DHCPv6 lease table host names incorrectly displayed */
-#lease6_status_table > tbody > .cbi-section-table-row.cbi-rowstyle-1 div,
-#lease6_status_table > tbody > .cbi-section-table-row.cbi-rowstyle-2 div{
-  min-width:100%;
-}
-
 table > tbody > tr > td, table > tbody > tr > th, table > tfoot > tr > td, table > tfoot > tr > th, table > thead > tr > td, table > thead > tr > th {
     padding: 12px;
     white-space: nowrap;
@@ -1679,6 +1672,18 @@ table > tbody > tr:last-child {
 }
 fieldset > table > tbody > tr:nth-of-type(odd) {
     background-color: var(--sectionbgColor2);
+}
+
+/* fixed DHCPv6 lease table host names incorrectly displayed */
+#lease6_status_table > tbody > .cbi-section-table-row.cbi-rowstyle-1 div,
+#lease6_status_table > tbody > .cbi-section-table-row.cbi-rowstyle-2 div{
+  min-width:100%;
+}
+
+/* fix status overview */
+.node-status-overview > .main fieldset:nth-child(4) td:nth-child(2),
+.node-status-overview table[id="wifi_status_table"] > tbody > tr > td {
+    white-space: normal;
 }
 
 /* fix progress bar */
@@ -1797,8 +1802,8 @@ div [id*="cbi-wireless"] [id*="-__status"] table {
 
 div [id*="cbi-network-"] [id*="-__status"] table td,
 div [id*="cbi-wireless"] [id*="-__status"] table td {
-    width: 0;
-    padding: 0;
+    width: 0 !important;
+    padding: 0 !important;
 }
 div [id*="cbi-network-"] [id*="-__status"] table td small,
 div [id*="cbi-wireless"] [id*="-__status"] table td small {
@@ -2576,17 +2581,7 @@ header > .container > .pull-right > * {
     border-radius: 10px;
 }
 
-/* fix status overview */
-
-.node-status-overview > .main fieldset:nth-child(4) td:nth-child(2) {
-    white-space: normal;
-}
-.node-status-overview small {
-    white-space: nowrap;
-}
-
 /* fix status processes */
-
 .node-status-processes > .main table tr td:nth-child(3) {
     white-space: normal;
 }
@@ -3142,6 +3137,33 @@ body.lang_pl.node-main-login .cbi-value-title {
     /* network and wireless table status icon */
     div [id*="cbi-network-"] [id*="-__status"] table td,
     div [id*="cbi-wireless"] [id*="-__status"] table td {
+        white-space: normal;
+    }
+    
+    .node-system-leds .cbi-section em,
+    .node-network-network #cbi-network .cbi-map .cbi-section-table cbi-section-table-row,
+    .node-network-network #cbi-network .cbi-map .cbi-section-table td {
+        display: block;
+    }
+    .node-network-network #cbi-network .cbi-map .cbi-section-table td {
+        width: 100%!important;
+        text-align: center!important;
+        white-space: normal;
+    }
+    .node-network-network #cbi-network .cbi-map .cbi-button {
+        min-width: 60px !important;
+    }
+    .node-network-network .cbi-section-table .cbi-section-table-titles .cbi-section-table-cell {
+        flex: 1!important
+    }
+    .node-network-network .cbi-section-table .cbi-section-table-titles th:nth-child(2) {
+        text-align: center !important;
+    }
+    .node-network-network .cbi-section-table .cbi-section-table-titles {
+        display: flex
+    }
+    .node-network-wireless fieldset:nth-child(1) table > tbody > tr > td,
+    .node-network-wireless fieldset:nth-child(2) table > tbody > tr > td {
         white-space: normal;
     }
 }
