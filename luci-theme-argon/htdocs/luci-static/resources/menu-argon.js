@@ -78,7 +78,7 @@ return baseclass.extend({
 				submenu = this.renderMainMenu(children[i], url + '/' + children[i].name, l),
 				hasChildren = submenu.children.length,
 				slideClass = hasChildren ? 'slide' : null,
-				menuClass = hasChildren ? 'menu' : null;
+				menuClass = hasChildren ? 'menu' : 'food';
 			if (isActive) {
 				ul.classList.add('active');
 				slideClass += " active";

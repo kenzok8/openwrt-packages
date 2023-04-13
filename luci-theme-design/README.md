@@ -12,85 +12,83 @@
   </a><a href="https://github.com/gngpp/luci-theme-design/releases">
     <img src="https://img.shields.io/github/release/gngpp/luci-theme-design.svg?style=flat">
   </a><a href="hhttps://github.com/gngpp/luci-theme-design/releases">
-    <img src="https://img.shields.io/github/downloads/gngpp/luci-theme-design/total?style=flat">
+    <img src="https://img.shields.io/github/downloads/gngpp/luci-theme-design/total?style=flat&?">
   </a>
 </div>
 <br>
 
-<br>English | [简体中文](README_zh.md)
+<br>简体中文 | [English](README_en.md)
 
 # luci-theme-design
 
-luci-theme-design is an OpenWrt LuCI theme for immersive WebApp experience and optimization on mobile and PC
+luci-theme-design 是一个针对移动端和PC端的沉浸式WebApp体验和优化的OpenWrt LuCI主题
 
-> **luci-theme-design** based on luci-theme-neobird, suitable for [lede](https://github.com/coolsnowwolf/lede) / [OpenWrt](https://github.com/openwrt/openwrt ).
-> The default branch only supports the lua version of the lede source code. If you use openwrt 21/22, please pull the [js](https://github.com/gngpp/luci-theme-design/tree/js) version(Development stage).
+> **luci-theme-design**基于luci-theme-neobird, 适用于[lede](https://github.com/coolsnowwolf/lede) / [OpenWrt](https://github.com/openwrt/openwrt)
+> 默认分支只支持lede源码的lua版本，若使用openwrt 21/22请拉取[js](https://github.com/gngpp/luci-theme-design/tree/js)版本(开发阶段)。
 
-- You can use [plugins](https://github.com/gngpp/luci-app-design-config) to define Settings.
-  - Support changing theme dark/light mode
-  - Support display/hide navbar
-  - Support for replacing commonly used proxy icons
-  
-- Thanks for non-commercial open source development authorization by [JetBrains](https://www.jetbrains.com/)!
+- 你可以使用[插件](https://github.com/gngpp/luci-app-design-config)定义一些设置
+  - 支持更改主题深色/浅色模式
+  - 支持显示/隐藏导航栏
+  - 支持更换常用的代理图标
+
+- 感谢 [JetBrains](https://www.jetbrains.com/) 提供的非商业开源软件开发授权！
 <a href="https://www.jetbrains.com/?from=gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" width="250" align="middle"/></a>
 
-### Release version
+### 发布版本
 
-- Lua version select 5.x version
-- JS version select 6.x version
+- Lua 版本选择5.x版本
+- JS 版本选择6.x版本
 
-### Features
+### 主要特点
 
-- Optimized for the mobile terminal, especially suitable for the mobile terminal as a WebApp
-- Modified and optimized the display of many plug-ins, improved icon icons, and unified visuals as much as possible
-- Simple login interface, bottom navigation bar, immersive app-like experience;
-- Adapt to dark mode, adapt to automatic switching of the system;
-- Adapt to openwrt 21/22, lede
+- 适配移动端响应式优化，适合手机端做为WebApp使用
+- 修改和优化了很多插件显示，完善的icon图标，尽量视觉统一
+- 简洁的登录界面，底部导航栏，类App的沉浸式体验
+- 适配深色模式，适配系统自动切换，支持自定义模式
+- 适配openwrt 21/22、lede
 
-### Experience WebApp method
+### 体验WebApp方法
 
-- Open the settings management in the mobile browser (iOS/iPadOS, Android Google) and add it to the home screen.
-- If the SSL certificate is not used, iOS/iPadOS will display the menu bar at the top of the browser after opening a new page for security reasons.
+- 在移动端(iOS/iPadOS、Android谷歌)浏览器打开设置管理，添加到主屏幕即可。
 
-### Optimization
+### 优化
 
-- Fix the white background of the installation package prompt information
-- Optimize menu collapsing and zooming
-- Optimized to display network port down state display icon
-- Optimize logo display
-- Added the status icon display of each device
-- Replace the logo display with the font "OpenWrt", and support displaying the logo with the host name
-- Fix some plug-in display bugs
-- Fix vssr status bar
-- Fixed many bugs
-- Fix compatibility with some plug-in styles
-- Fix aliyundrive-webdav style
-- Fixed the abnormal display of vssr in iOS/iPadOS WebApp mode
-- Fix openclash plugin env(safe-area-inset-bottom) = 0 in iOS/iPadOS WebApp mode
-- Optimize menu hover action state resolution
-- Support luci-app-wizard wizard menu
+- 修复安装package提示信息背景泛白
+- 优化菜单折叠和缩放
+- 优化显示网口down状态显示图标
+- 优化logo显示
+- 新增各设备状态图标显示
+- 更换logo显示为字体"OpenWrt"，支持以主机名显示logo
+- 修复部分插件显示bug
+- 修复vssr状态bar
+- 修复诸多bug
+- 修复兼容部分插件样式
+- 修复aliyundrive-webdav样式
+- 修复vssr在iOS/iPadOS WebApp模式下显示异常
+- 修复openclash插件在iOS/iPadOS WebApp 模式下env(safe-area-inset-bottom) = 0
+- 优化菜单hover action状态分辨
+- 支持luci-app-wizard向导菜单
 - Update header box-shadow style
--Update uci-change overflow
+- Update uci-change overflow
 - Fix nlbw component
-- Support QWRT (QSDK), iStore wizard navigation
-- Adapt to OpenWrt 21/22
-- Adapt to linkease series icons
+- 支持QWRT(QSDK)、iStore向导导航
+- 适配OpenWrt 21/22
 
-### Compile
+### 编译
 
 ```
-git clone https://github.com/gngpp/luci-theme-design.git package/luci-theme-design
-make menuconfig # choose LUCI->Theme->Luci-theme-design
+git clone https://github.com/gngpp/luci-theme-design.git  package/luci-theme-design
+make menuconfig # choose LUCI->Theme->Luci-theme-design  
 make V=s
 ```
 
 ### Q&A
 
-- The resource interface icon is not perfect. If you have the ability to draw a picture, you are welcome to pr, but please make sure it is consistent with the existing icon color style
-- If there is a bug, please raise an issue
-- The theme's personal color matching may not meet the public's appetite, welcome to provide color matching suggestions
+- 资源接口icon未完善，如果有能力画图的欢迎pr，但请确保跟现有icon颜色风格一致
+- 有bug欢迎提issue
+- 主题个人配色可能会不符合大众胃口，欢迎提配色建议
 
-### Preview
+### 预览
 
 <details> <summary>iOS</summary>
 <img src="./preview/webapp_home.PNG"/>

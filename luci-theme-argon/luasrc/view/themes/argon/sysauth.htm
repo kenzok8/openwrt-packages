@@ -31,7 +31,7 @@
 	local uci		= require 'luci.model.uci'.cursor()
 
 	-- Fetch Local Background Media
-	
+
 	local function glob(...)
 		local iter, code, msg = fs.glob(...)
 		if iter then
@@ -45,9 +45,9 @@
 	local imageTypes = " jpg png gif webp "
 	local videoTypes = " mp4 webm "
 	local allTypes = imageTypes .. videoTypes
-	local function fetchMedia(path,themeDir)
-		local backgroundTable 	= {}
-		local backgroundCount 	= 0
+	local function fetchMedia(path, themeDir)
+		local backgroundTable = {}
+		local backgroundCount = 0
 		for i, f in ipairs(glob(path)) do
 			attr = fs.stat(f)
 			if attr then
@@ -59,43 +59,44 @@
 					local bg = {}
 					bg.type = ext
 					bg.url = themeDir .. fs.basename(f)
-					table.insert(backgroundTable,bg)
+					table.insert(backgroundTable, bg)
 					backgroundCount = backgroundCount + 1
 				end
 			end
 		end
-		return backgroundTable,backgroundCount
+		return backgroundTable, backgroundCount
 	end
 	local function selectBackground(themeDir)
-		local bgUrl 			= media .. "/img/bg1.jpg"
-		local backgroundType 	= "Image"
-		local mimeType 			= ""
+		local bgUrl			= media .. "/img/bg1.jpg"
+		local backgroundType	= "Image"
+		local mimeType			= ""
 
 		if fs.access("/etc/config/argon") then
-			if uci:get_first('argon', 'global', 'bing_background') == "1" then
-				local bing = sys.exec("/usr/libexec/argon/bing_wallpaper")
-				if (bing and bing ~= '') then
-					return bing, "Image", ""
+			local online_wallpaper = uci:get_first('argon', 'global', 'online_wallpaper') or (uci:get_first('argon', 'global', 'bing_background') == '1' and 'bing')
+			if (online_wallpaper and online_wallpaper ~= "none") then
+				local picurl = sys.exec("/usr/libexec/argon/online_wallpaper")
+				if (picurl and picurl ~= '') then
+					return picurl, "Image", ""
 				end
 			end
 		end
 
-		local backgroundTable, backgroundCount 		= fetchMedia("/www" .. themeDir .. "*",themeDir)
+		local backgroundTable, backgroundCount = fetchMedia("/www" .. themeDir .. "*", themeDir)
 		if ( backgroundCount > 0 ) then
-			local currentBg = backgroundTable[math.random(1,backgroundCount)]
-			bgUrl 			= currentBg.url
+			local currentBg = backgroundTable[math.random(1, backgroundCount)]
+			bgUrl			= currentBg.url
 			if (string.match(videoTypes, " "..currentBg.type.." ") ~= nil) then
-				backgroundType 	= "Video"
-				mimeType 		= "video/" .. currentBg.type
+				backgroundType	= "Video"
+				mimeType		= "video/" .. currentBg.type
 			end
 		end
 
-		return bgUrl,backgroundType,mimeType
+		return bgUrl, backgroundType, mimeType
 	end
 
 	local boardinfo			= util.ubus("system", "board")
 	local themeDir			= media .. "/background/"
-	local bgUrl,backgroundType,mimeType = selectBackground(themeDir)
+	local bgUrl, backgroundType, mimeType = selectBackground(themeDir)
 %>
 <!-- Login Page Start -->
 <div class="login-page">
