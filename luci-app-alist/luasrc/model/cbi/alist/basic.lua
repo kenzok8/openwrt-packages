@@ -8,7 +8,7 @@ s = m:section(TypedSection, "alist")
 s.addremove = false
 s.anonymous = true
 
-o = s:option(Flag, "enabled", translate("Enable"))
+o = s:option(Flag, "enabled", translate("Enabled"))
 o.rmempty = false
 
 o = s:option(Value, "port", translate("Port"))
