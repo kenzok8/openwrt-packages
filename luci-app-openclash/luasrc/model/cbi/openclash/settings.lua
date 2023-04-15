@@ -48,7 +48,7 @@ s:tab("debug", translate("Debug Logs"))
 s:tab("dlercloud", translate("Dler Cloud"))
 
 o = s:taboption("op_mode", Flag, "enable_meta_core", font_red..bold_on..translate("Enable Meta Core")..bold_off..font_off)
-o.description = font_red..bold_on..translate("Some Premium Core Features are Unavailable, For Other More Useful Functions Go Wiki:")..bold_off..font_off.." ".."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://clashmeta.gitbook.io/meta/\")'>https://clashmeta.gitbook.io/meta/</a>"
+o.description = font_red..bold_on..translate("Some Premium Core Features are Unavailable, For Other More Useful Functions Go Wiki:")..bold_off..font_off.." ".."<a href='javascript:void(0)' onclick='javascript:return winOpen(\"https://clash-meta.wiki/\")'>https://clash-meta.wiki/</a>"
 o.default = 0
 
 o = s:taboption("op_mode", ListValue, "en_mode", font_red..bold_on..translate("Select Mode")..bold_off..font_off)
@@ -219,7 +219,7 @@ o.datatype = "ipmask"
 o.description = translate("In The Fake-IP Mode, Only Pure IP Requests Are Supported")
 
 o = s:taboption("lan_ac", DynamicList, "lan_ac_black_ports", translate("Lan Bypassed Port List"))
-o.datatype = "port"
+o.datatype = "or(port, portrange)"
 o.placeholder = translate("5000 or 1234-2345")
 o:value("5000", translate("5000(NAS)"))
 o.description = "1."..translate("The Traffic From The Local Specified Port Will Not Pass The Core, Try To Set When The Bypass Gateway Forwarding Fails").."<br>".."2."..translate("In The Fake-IP Mode, Only Pure IP Requests Are Supported")
@@ -1081,6 +1081,27 @@ o.rawhtml = true
 o = s:taboption("ipv6", Flag, "ipv6_enable", translate("Proxy IPv6 Traffic"))
 o.description = font_red..bold_on..translate("The Gateway and DNS of The Connected Device Must be The Router IP, Disable IPv6 DHCP To Avoid Abnormal Connection If You Do Not Use")..bold_off..font_off
 o.default = 0
+
+o = s:taboption("ipv6", ListValue, "ipv6_mode", translate("IPv6 Proxy Mode"))
+o:value("0", translate("TProxy Mode"))
+o:value("1", translate("Redirect Mode"))
+o:value("2", translate("TUN Mode")..translate("(Only Meta Core)"))
+o.default = "0"
+o:depends("ipv6_enable", "1")
+
+o = s:taboption("ipv6", ListValue, "stack_type_v6", translate("Select Stack Type"))
+o.description = translate("Select Stack Type For TUN Mode, According To The Running Speed on Your Machine")
+o:depends({ipv6_mode= "2", en_mode = "redir-host"})
+o:depends({ipv6_mode= "2", en_mode = "fake-ip"})
+o:value("system", translate("System　"))
+o:value("gvisor", translate("Gvisor"))
+o.default = "system"
+
+o = s:taboption("ipv6", Flag, "enable_v6_udp_proxy", translate("Proxy UDP Traffics"))
+o.description = translate("The Servers Must Support UDP forwarding").."<br>"..font_red..bold_on..translate("If Docker is Installed, UDP May Not Forward Normally")..bold_off..font_off
+o:depends("ipv6_mode", "0")
+o:depends("ipv6_mode", "1")
+o.default = 1
 
 o = s:taboption("ipv6", Flag, "ipv6_dns", translate("IPv6 DNS Resolve"))
 o.description = translate("Enable to Resolve IPv6 DNS Requests")

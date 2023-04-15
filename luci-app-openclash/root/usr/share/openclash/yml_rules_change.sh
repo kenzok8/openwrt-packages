@@ -604,7 +604,7 @@ yml_other_set()
             if Value_1 != false then
                if Value_1.class.to_s == 'Hash' then
                  if not Value_1['rules'].to_a.empty? and Value_1['rules'].class.to_s == 'Array' then
-                     Value_1.each{|x|
+                     Value_1['rules'].each{|x|
                      if ${10} != 1 then
                         if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|^SUB-RULE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                            puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
@@ -635,7 +635,7 @@ yml_other_set()
                if Value['rules'].to_a.empty? then
                   if Value_2.class.to_s == 'Hash' then
                      if not Value_2['rules'].to_a.empty? and Value_2['rules'].class.to_s == 'Array' then
-                        Value_2.each{|x|
+                        Value_2['rules'].each{|x|
                            if ${10} != 1 then
                               if x =~ /(^GEOSITE,|^AND,|^OR,|^NOT,|^IP-SUFFIX,|^SRC-IP-SUFFIX,|^IN-TYPE,|^SUB-RULE,|PORT,[0-9]+\/+|PORT,[0-9]+-+)/ or x.split(',')[-1] == 'tcp' or x.split(',')[-1] == 'udp' then
                                  puts '${LOGTIME} Warning: Skip the Custom Rule that Core not Support【' + x + '】'
@@ -787,7 +787,7 @@ yml_other_set()
          if Value.key?(i) then
             Value[i].values.each{
             |x,v|
-            if x['path'] and not x['path'].include? p and not x['path'].include? 'game_rules' then
+            if x['path'] and not x['path'] =~ /.\/#{p}\/*/ and not x['path'] =~ /.\/game_rules\/*/ then
                v=File.basename(x['path']);
                x['path']='./'+p+'/'+v;
             end;
@@ -898,7 +898,7 @@ yml_other_rules_get()
    fi
    
    if [ -n "$rule_name" ]; then
-      LOG_OUT "Warrning: Multiple Other-Rules-Configurations Enabled, Ignore..."
+      LOG_OUT "Warning: Multiple Other-Rules-Configurations Enabled, Ignore..."
       return
    fi
    

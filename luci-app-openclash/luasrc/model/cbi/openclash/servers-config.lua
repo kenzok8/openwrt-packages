@@ -335,7 +335,6 @@ o:depends("type", "ssr")
 
 -- AlterId
 o = s:option(Value, "alterId", translate("AlterId"))
-o.datatype = "port"
 o.default = "32"
 o.rmempty = true
 o:depends("type", "vmess")
@@ -384,6 +383,7 @@ o:value("tls")
 o:value("http")
 o:value("websocket", translate("websocket (ws)"))
 o:value("shadow-tls", translate("shadow-tls")..translate("(Only Meta Core)"))
+o:value("restls", translate("restls")..translate("(Only Meta Core)"))
 o:depends("type", "ss")
 
 o = s:option(ListValue, "obfs_snell", translate("obfs-mode"))
@@ -428,12 +428,25 @@ o:depends("obfs", "tls")
 o:depends("obfs", "http")
 o:depends("obfs", "websocket")
 o:depends("obfs", "shadow-tls")
+o:depends("obfs", "restls")
 o:depends("obfs_snell", "tls")
 o:depends("obfs_snell", "http")
 
 o = s:option(Value, "obfs_password", translate("obfs-password"))
 o.rmempty = true
 o:depends("obfs", "shadow-tls")
+o:depends("obfs", "restls")
+
+o = s:option(ListValue, "obfs_version_hint", translate("version-hint"))
+o.rmempty = true
+o:value("tls13")
+o:value("tls12")
+o:depends("obfs", "restls")
+
+o = s:option(Value, "obfs_restls_script", translate("restls-script"))
+o.rmempty = true
+o:depends("obfs", "restls")
+o.placeholder = translate("1000?100<1,500~100,350~100,600~100,400~200")
 
 -- vmess路径
 o = s:option(Value, "path", translate("path"))
@@ -580,7 +593,6 @@ o:depends("type", "hysteria")
 
 -- [[ headers ]]--
 o = s:option(DynamicList, "http_headers", translate("headers"))
-o.description = translate("Only Meta Core")
 o.rmempty = true
 o.placeholder = translate("User-Agent: okhttp/3.11.0 Dalvik/2.1.0 ...... ")
 o:depends("type", "http")
@@ -736,6 +748,7 @@ o = s:option(Value, "fingerprint", translate("Fingerprint")..translate("(Only Me
 o.rmempty = true
 o:depends("type", "hysteria")
 o:depends("type", "socks5")
+o:depends("type", "http")
 o:depends("type", "trojan")
 o:depends("type", "vless")
 o:depends({type = "ss", obfs = "websocket"})
@@ -748,12 +761,14 @@ o:depends({type = "vmess", obfs_vmess = "grpc"})
 o = s:option(ListValue, "client_fingerprint", translate("Client Fingerprint")..translate("(Only Meta Core)"))
 o.rmempty = true
 o:value("none")
-o:value("random")
 o:value("chrome")
 o:value("firefox")
 o:value("safari")
-o.default = "random"
+o:value("ios")
+o.default = "none"
 o:depends("type", "vless")
+o:depends({type = "ss", obfs = "restls"})
+o:depends({type = "ss", obfs = "shadow-tls"})
 o:depends({type = "trojan", obfs_vmess = "grpc"})
 o:depends({type = "vmess", obfs_vmess = "websocket"})
 o:depends({type = "vmess", obfs_vmess = "http"})

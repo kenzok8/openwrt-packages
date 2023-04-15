@@ -31,18 +31,18 @@ enable_rule_proxy=$(uci -q get openclash.config.enable_rule_proxy)
 en_mode=$(uci -q get openclash.config.en_mode)
 RAW_CONFIG_FILE=$(uci -q get openclash.config.config_path)
 CONFIG_FILE="/etc/openclash/$(uci -q get openclash.config.config_path |awk -F '/' '{print $5}' 2>/dev/null)"
-core_type=$(uci -q get openclash.config.core_version)
+core_model=$(uci -q get openclash.config.core_version)
 cpu_model=$(opkg status libc 2>/dev/null |grep 'Architecture' |awk -F ': ' '{print $2}' 2>/dev/null)
 core_version=$(/etc/openclash/core/clash -v 2>/dev/null |awk -F ' ' '{print $2}' 2>/dev/null)
 core_tun_version=$(/etc/openclash/core/clash_tun -v 2>/dev/null |awk -F ' ' '{print $2}' 2>/dev/null)
-core_meta_version=$(/etc/openclash/core/clash_meta -v 2>/dev/null |awk -F ' ' '{print $3}' 2>/dev/null)
+core_meta_version=$(/etc/openclash/core/clash_meta -v 2>/dev/null |awk -F ' ' '{print $3}' |head -1 2>/dev/null)
 servers_update=$(uci -q get openclash.config.servers_update)
 mix_proxies=$(uci -q get openclash.config.mix_proxies)
 op_version=$(opkg status luci-app-openclash 2>/dev/null |grep 'Version' |awk -F 'Version: ' '{print "v"$2}')
 china_ip_route=$(uci -q get openclash.config.china_ip_route)
 common_ports=$(uci -q get openclash.config.common_ports)
 router_self_proxy=$(uci -q get openclash.config.router_self_proxy)
-core_type=$(uci -q get openclash.config.core_type)
+core_type=$(uci -q get openclash.config.core_type || echo "Dev")
 da_password=$(uci -q get openclash.config.dashboard_password)
 cn_port=$(uci -q get openclash.config.cn_port)
 lan_ip=$(uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null || ip address show $(uci -q -p /tmp/state get network.lan.ifname || uci -q -p /tmp/state get network.lan.device) | grep -w "inet"  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1)
@@ -149,8 +149,6 @@ kmod-ipt-nat: $(ts_re "$(opkg status kmod-ipt-nat 2>/dev/null |grep 'Status' |aw
 EOF
 fi
 
-EOF
-
 #core
 cat >> "$DEBUG_LOG" <<-EOF
 
@@ -160,7 +158,7 @@ EOF
 if pidof clash >/dev/null; then
 cat >> "$DEBUG_LOG" <<-EOF
 运行状态: 运行中
-内核：$core_type
+运行内核：$core_type
 进程pid: $(pidof clash)
 运行权限: `getpcaps $(pidof clash)`
 运行用户: $(ps |grep "/etc/openclash/clash" |grep -v grep |awk '{print $2}' 2>/dev/null)
@@ -170,11 +168,11 @@ cat >> "$DEBUG_LOG" <<-EOF
 运行状态: 未运行
 EOF
 fi
-if [ "$core_type" = "0" ]; then
-   core_type="未选择架构"
+if [ "$core_model" = "0" ]; then
+   core_model="未选择架构"
 fi
 cat >> "$DEBUG_LOG" <<-EOF
-已选择的架构: $core_type
+已选择的架构: $core_model
 
 #下方无法显示内核版本号时请确认您的内核版本是否正确或者有无权限
 EOF
