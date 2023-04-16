@@ -1613,14 +1613,9 @@ table {
     border-spacing: 0;
     border-collapse: collapse;
     width: 100%;
-    border: 0px solid #eee;
+    border: 0px solid #eee !important;
     margin: 0 !important;
 }
-
-/* fix qwrt network share table style */
-/* table tr th:empty {
-    display: none;
-} */
 
 strong {
     font-weight: bold;
@@ -1647,6 +1642,14 @@ table > tbody > tr > td, table > tbody > tr > th, table > tfoot > tr > td, table
     line-height:1.5;
     vertical-align: middle !important;
 }
+
+.node-services-appfilter table > tbody > tr > th,
+.node-services-appfilter table > tbody > tr > td,
+.node-nlbw-usage table > tbody > tr > th, 
+.node-nlbw-usage table > tbody > tr > td {
+    text-align: center;
+}
+
 
 table > tbody > tr {
     border-bottom: var(--cbilineColor) !important;
@@ -1855,12 +1858,43 @@ td > table > tbody > tr > td {
     border: none;
 }
 
-div#container\.nlbw\.traffic {
-    /* overflow: auto; */
+#container\.nlbw\.traffic th, 
+#container\.nlbw\.traffic td, 
+#container\.nlbw\.layer7 th, 
+#container\.nlbw\.layer7 td,  
+#container\.nlbw\.ipv6 th,
+#container\.nlbw\.ipv6 td, 
+#container\.nlbw\.export th, 
+#container\.nlbw\.export td {
+    padding: 12px !important;
+    border-top: none;
+    border: unset;
+    text-align: center;
+    /* border-left: #ccc 1px solid;
+    border-right: #ccc 1px solid;
+    border-bottom: #ccc 1px solid; */
+ }
+
+ #container\.nlbw\.traffic tr td:nth-child(4), 
+ #container\.nlbw\.layer7 tr td:nth-child(3), 
+ #container\.nlbw\.ipv6 tr td:nth-child(4), 
+ #container\.nlbw\.export tr td:nth-child(4),
+ #container\.nlbw\.traffic tr td:nth-child(6), 
+ #container\.nlbw\.layer7 tr td:nth-child(5), 
+ #container\.nlbw\.ipv6 tr td:nth-child(6), 
+ #container\.nlbw\.export tr td:nth-child(6) {
+     text-align: right !important;
 }
-div#container\.nlbw\.traffic #host-data {
-    display: block;
-    overflow: auto;
+ 
+ #container\.nlbw\.traffic tr td:nth-child(5), 
+ #container\.nlbw\.layer7 tr td:nth-child(4), 
+ #container\.nlbw\.ipv6 tr td:nth-child(5), 
+ #container\.nlbw\.export tr td:nth-child(5),
+ #container\.nlbw\.traffic tr td:nth-child(7), 
+ #container\.nlbw\.layer7 tr td:nth-child(6), 
+ #container\.nlbw\.ipv6 tr td:nth-child(7), 
+ #container\.nlbw\.export tr td:nth-child(7){
+     text-align: left !important;
 }
 
 td#__status-ifc-signal {
@@ -2670,7 +2704,7 @@ header > .container > .pull-right > * {
     border-bottom: var(--sectionBorder);
     border-left: var(--sectionBorder);
     border-right: var(--sectionBorder);
-    background-color: var(--sectionbgColor);
+    /* background-color: var(--sectionbgColor); */
     border-radius: 10px;
 }
 
@@ -2683,28 +2717,6 @@ header > .container > .pull-right > * {
     border: #ccc 1px solid;
 
 }
-
-#container\.nlbw\.traffic table, 
-#container\.nlbw\.layer7 table, 
-#container\.nlbw\.ipv6 table, 
-#container\.nlbw\.export table {
-    border: #ccc 1px solid;
-}
-
-#container\.nlbw\.traffic th, 
-#container\.nlbw\.traffic td, 
-#container\.nlbw\.layer7 th, 
-#container\.nlbw\.layer7 td,  
-#container\.nlbw\.ipv6 th,
-#container\.nlbw\.ipv6 td, 
-#container\.nlbw\.export th, 
-#container\.nlbw\.export td {
-    padding: 3px;
-    border-top: none;
-    border-left: #ccc 1px solid;
-    border-right: #ccc 1px solid;
-    border-bottom: #ccc 1px solid;
- }
 
 .cbi-tabmenu + .cbi-section ul {
     text-align: left;
@@ -2933,6 +2945,13 @@ body.lang_pl.node-main-login .cbi-value-title {
         overflow: auto;
     }
     .node-nlbw-usage table {
+        display: block;
+        overflow: auto;
+    }
+    #container\.nlbw\.traffic table, 
+    #container\.nlbw\.layer7 table, 
+    #container\.nlbw\.ipv6 table, 
+    #container\.nlbw\.export table {
         display: block;
         overflow: auto;
     }
