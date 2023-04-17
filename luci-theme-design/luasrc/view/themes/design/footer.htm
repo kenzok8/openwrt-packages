@@ -50,8 +50,11 @@
         </div>
 
     <script>
-            // thanks for Jo-Philipp Wich <jow@openwrt.org>
-            var luciLocation = <%= luci.http.write_json(luci.dispatcher.context.path) %>;
+        	// fix legend position
+			$("legend").each(function () {
+        		var that = $(this);
+        		that.after("<span class='panel-title'>" + that.text() + "</span>");
+    		});
             // Fixed openclash plugin causing env(safe-area-inset-bottom) to be 0 under
             if (/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent) && self.location.pathname.indexOf("openclash") != -1) {
                 var oMeta = document.createElement('meta');
@@ -60,6 +63,5 @@
                 document.querySelector('head').appendChild(oMeta);
             }
     </script>  
-    <script src="<%=media%>/js/script.js?v=<%= ver.luciversion %>"></script>
 </body>
 </html>

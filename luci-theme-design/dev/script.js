@@ -221,14 +221,6 @@
             $("header>.container>.brand").css("padding", '0rem')
         }
     });
-   
-    /**
-     * fix legend position
-     */
-    $("legend").each(function () {
-        var that = $(this);
-        that.after("<span class='panel-title'>" + that.text() + "</span>");
-    });
 
     $(".main-right").focus();
     $(".main-right").blur();

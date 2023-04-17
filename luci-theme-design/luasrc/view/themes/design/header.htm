@@ -315,3 +315,9 @@
 					 </div>
 				 <%- end -%>
 				 <% if category then subtree("/" .. category .. "/", cattree) end %>
+
+    <script>
+            // thanks for Jo-Philipp Wich <jow@openwrt.org>
+            var luciLocation = <%= luci.http.write_json(luci.dispatcher.context.path) %>;
+    </script>  
+    <script src="<%=media%>/js/script.js?v=<%= ver.luciversion %>"></script>

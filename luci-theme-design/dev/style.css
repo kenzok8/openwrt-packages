@@ -130,8 +130,8 @@
 }
 
 *::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 5px;
+    height: 5px;
  }
  *::-webkit-scrollbar-thumb {
      background: var(--scrollbarColor) ;
@@ -1684,7 +1684,7 @@ fieldset > table > tbody > tr:nth-of-type(odd) {
 }
 
 /* fix status overview */
-.node-status-overview > .main fieldset:nth-child(4) td:nth-child(2),
+.node-status-overview > .main fieldset:nth-child(6) td:nth-child(2),
 .node-status-overview table[id="wifi_status_table"] > tbody > tr > td {
     white-space: normal;
 }
@@ -1824,6 +1824,9 @@ div [id*="cbi-wireless"] [id*="-__status"] table td small {
 .node-network-wireless .cbi-section-table .cbi-section-table-row td[colspan="6"],
 .node-network-wifi .cbi-section-table .cbi-section-table-row td[colspan="8"] {
     text-align: center !important;
+}
+.node-network-wireless #iw-assoclist .cbi-section-table-row td div {
+    max-width: unset !important;
 }
 .node-network-wifi table, td, th {
     border-top: unset !important;
