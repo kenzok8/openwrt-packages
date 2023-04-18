@@ -10,19 +10,19 @@ WRLOCK=/var/lock/argon_${WEB_PIC_SRC}.lock
 fetch_pic_url() {
     case $WEB_PIC_SRC in
     bing)
-        local picpath=$(curl -fks --max-time 1 \
+        local picpath=$(curl -fks --max-time 3 \
             "https://www.bing.com/HPImageArchive.aspx?format=js&n=1" |
             jsonfilter -q -e '@.images[0].url')
         [ -n "${picpath}" ] && echo "//www.bing.com${picpath}"
         ;;
     unsplash)
-        curl -fks --max-time 1 \
+        curl -fks --max-time 3 \
             "https://source.unsplash.com/1920x1080/daily?wallpapers" |
             sed -E 's#^.*href="([^?]+)\?.*$#\1?fm=jpg\&fit=crop\&w=1920\&h=1080#'
         ;;
     unsplash_*)
         local collection_id=${WEB_PIC_SRC#unsplash_}
-        curl -fks --max-time 1 \
+        curl -fks --max-time 3 \
             "https://source.unsplash.com/collection/${collection_id}/1920x1080" |
             sed -E 's#^.*href="([^?]+)\?.*$#\1?fm=jpg\&fit=crop\&w=1920\&h=1080#'
         ;;
@@ -36,7 +36,7 @@ try_update() {
     if flock -n 200 >/dev/null 2>&1; then
         local picurl=$(fetch_pic_url)
         if [ -n "$picurl" ]; then
-            echo "${picurl}" >"$CACHE"
+            echo "${picurl}" | tee "$CACHE"
         else
             if [ -s "$CACHE" ]; then
                 cat "$CACHE"
