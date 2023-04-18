@@ -143,24 +143,38 @@ opentopd是一款基于luci-theme-material构建,使用HTML5、CSS3编写的Luci
 ### 你可以随意使用其中的源码，但请注明出处。
 
 
+
+
+## 使用与授权相关说明
+ 
+- 本人开源的所有源码，任何引用需注明本处出处，如需修改二次发布必告之本人，未经许可不得做于任何商用用途。
+
+
 # My other project
 
-网络速度测试 ：https://github.com/sirpdboy/NetSpeedTest
+- 网络速度测试 ：https://github.com/sirpdboy/NetSpeedTest
 
-定时设置插件 : https://github.com/sirpdboy/luci-app-autotimeset
+- 定时设置插件 : https://github.com/sirpdboy/luci-app-autotimeset
 
-关机功能插件 : https://github.com/sirpdboy/luci-app-poweroffdevice
+- 关机功能插件 : https://github.com/sirpdboy/luci-app-poweroffdevice
 
-opentopd主题 : https://github.com/sirpdboy/luci-theme-opentopd
+- opentopd主题 : https://github.com/sirpdboy/luci-theme-opentopd
 
-opentoks 主题: https://github.com/sirpdboy/luci-theme-opentoks [仿KOOLSAHRE主题]
+- kucat 主题: https://github.com/sirpdboy/luci-theme-kucat
 
-btmob 主题: https://github.com/sirpdboy/luci-theme-btmob
+- 家长控制: https://github.com/sirpdboy/luci-theme-parentcontrol
 
-系统高级设置 : https://github.com/sirpdboy/luci-app-advanced
+- 系统高级设置 : https://github.com/sirpdboy/luci-app-advanced
 
-ddns-go动态域名: https://github.com/sirpdboy/luci-app-ddns-go
+- ddns-go动态域名: https://github.com/sirpdboy/luci-app-ddns-go
 
+- 进阶设置（系统高级设置+主题设置kucat/agron/opentopd）: https://github.com/sirpdboy/luci-app-advancedplus
+
+- 设置向导: https://github.com/sirpdboy/luci-app-wizard
+
+- 分区扩容: https://github.com/sirpdboy/luci-app-partexp
+
+- lukcy大吉: https://github.com/sirpdboy/luci-app-lukcy
 
 ## 捐助
 
@@ -173,4 +187,3 @@ ddns-go动态域名: https://github.com/sirpdboy/luci-app-ddns-go
 <a href="#readme">
     <img src="https://img.shields.io/badge/-返回顶部-orange.svg" alt="图飞了😂" title="返回顶部" align="right"/>
 </a>
-

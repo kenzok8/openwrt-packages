@@ -126,31 +126,42 @@ luci-app-lucky 动态域名ddns-go服务,替代socat主要用于公网IPv6 tcp/u
 ![screenshots](https://raw.githubusercontent.com/sirpdboy/openwrt/master/doc/lucky3.jpg)
 
 
+
+
+## 使用与授权相关说明
+ 
+- 本人开源的所有源码，任何引用需注明本处出处，如需修改二次发布必告之本人，未经许可不得做于任何商用用途。
+
+
 # My other project
 
-网络速度测试 ：https://github.com/sirpdboy/NetSpeedTest
+- 网络速度测试 ：https://github.com/sirpdboy/NetSpeedTest
 
-定时设置插件 : https://github.com/sirpdboy/luci-app-autotimeset
+- 定时设置插件 : https://github.com/sirpdboy/luci-app-autotimeset
 
-关机功能插件 : https://github.com/sirpdboy/luci-app-poweroffdevice
+- 关机功能插件 : https://github.com/sirpdboy/luci-app-poweroffdevice
 
-opentopd主题 : https://github.com/sirpdboy/luci-theme-opentopd
+- opentopd主题 : https://github.com/sirpdboy/luci-theme-opentopd
 
-opentoks 主题: https://github.com/sirpdboy/luci-theme-opentoks [仿KOOLSAHRE主题]
+- kucat 主题: https://github.com/sirpdboy/luci-theme-kucat
 
-btmob 主题: https://github.com/sirpdboy/luci-theme-btmob
+- 家长控制: https://github.com/sirpdboy/luci-theme-parentcontrol
 
-系统高级设置 : https://github.com/sirpdboy/luci-app-advanced
+- 系统高级设置 : https://github.com/sirpdboy/luci-app-advanced
 
-DDNS-GO动态域名: https://github.com/sirpdboy/luci-app-DDNS-GO
+- ddns-go动态域名: https://github.com/sirpdboy/luci-app-ddns-go
 
-Lucky(大吉): https://github.com/sirpdboy/luci-app-lucky 
+- 进阶设置（系统高级设置+主题设置kucat/agron/opentopd）: https://github.com/sirpdboy/luci-app-advancedplus
 
+- 设置向导: https://github.com/sirpdboy/luci-app-wizard
+
+- 分区扩容: https://github.com/sirpdboy/luci-app-partexp
+
+- lukcy大吉: https://github.com/sirpdboy/luci-app-lukcy
 
 ## 捐助
 
--如果你觉得此项目对你有帮助，请捐助我们，以使项目能持续发展，更加完善。··请作者喝杯咖啡~~~**
--你们的支持就是我的动力！**
+![screenshots](https://raw.githubusercontent.com/sirpdboy/openwrt/master/doc/说明3.jpg)
 
 |     <img src="https://img.shields.io/badge/-支付宝-F5F5F5.svg" href="#赞助支持本项目-" height="25" alt="图飞了😂"/>  |  <img src="https://img.shields.io/badge/-微信-F5F5F5.svg" height="25" alt="图飞了😂" href="#赞助支持本项目-"/>  | 
 | :-----------------: | :-------------: |
@@ -159,4 +170,3 @@ Lucky(大吉): https://github.com/sirpdboy/luci-app-lucky
 <a href="#readme">
     <img src="https://img.shields.io/badge/-返回顶部-orange.svg" alt="图飞了😂" title="返回顶部" align="right"/>
 </a>
-

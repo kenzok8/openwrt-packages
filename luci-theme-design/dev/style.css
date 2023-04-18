@@ -2707,7 +2707,7 @@ header > .container > .pull-right > * {
     border-bottom: var(--sectionBorder);
     border-left: var(--sectionBorder);
     border-right: var(--sectionBorder);
-    /* background-color: var(--sectionbgColor); */
+    background-color: var(--sectionbgColor);
     border-radius: 10px;
 }
 
