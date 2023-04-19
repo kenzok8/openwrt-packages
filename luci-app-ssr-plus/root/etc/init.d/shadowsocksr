@@ -226,7 +226,8 @@ gen_service_file() {
 	if [ $1 == "ssr" ]; then
 		cat <<-EOF >$3
 			{
-			  "server": ["[::0]", "0.0.0.0"],
+			  "server": "0.0.0.0",
+			  "server_ipv6": "::",
 			  "server_port": $(uci_get_by_name $2 server_port),
 			  "mode": "tcp_and_udp",
 			  "password": "$(uci_get_by_name $2 password)",
@@ -242,7 +243,8 @@ gen_service_file() {
 	else
 		cat <<-EOF >$3
 			{
-			  "server": ["[::0]", "0.0.0.0"],
+			  "server": "0.0.0.0",
+			  "server_ipv6": "::",
 			  "server_port": $(uci_get_by_name $2 server_port),
 			  "mode": "tcp_and_udp",
 			  "password": "$(uci_get_by_name $2 password)",
