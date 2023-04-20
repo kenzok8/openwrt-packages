@@ -130,10 +130,10 @@ header::after {
                 .menu.active {
                     background-color: #483d8b !important;
                     background-color: var(--dark-primary) !important;
-                    color: #cccccc !important;
+                    color: #ffffff !important;
 
                     a::after {
-                        background-color: #cccccc !important;
+                        background-color: #ffffff !important;
                     }
                 }
             }
@@ -146,7 +146,7 @@ header::after {
                 a:hover {
                     background-color: #483d8b !important;
                     background-color: var(--dark-primary) !important;
-                    color: #cccccc !important;
+                    color: #ffffff !important;
                 }
 
             }
@@ -178,6 +178,14 @@ h3 {
     background: #333333;
 }
 
+h4 {
+    color: #8C6900;
+}
+
+abbr {
+    color: var(--dark-primary) !important;
+}
+
 a:-webkit-any-link {
     color: #483d8b;
     color: var(--dark-primary);
@@ -186,6 +194,10 @@ a:-webkit-any-link {
 
 input:-webkit-autofill {
     background-color: #3c3c3c !important;
+}
+
+#channel_graph {
+    background-color: transparent !important;
 }
 
 .cbi-value-field .cbi-input-apply,
@@ -248,7 +260,7 @@ table>thead>tr>td {
 #membuff>div>div,
 #conns>div>div,
 #memtotal>div>div {
-    background-color: #32325d !important;
+    background-color: var(--dark-primary) !important;
 }
 
 #swaptotal>div>div>div>small,
@@ -268,7 +280,7 @@ table>thead>tr>td {
         background-color: transparent !important;
 
         div {
-            background-color: #32325d !important;
+            background-color: #ba8b00 !important;
         }
     }
 
@@ -318,7 +330,7 @@ h4 {
     background: #282a2c;
 
     div {
-        background-color: #32325d !important;
+        background-color: var(--dark-primary) !important;
     }
 }
 
@@ -327,7 +339,7 @@ h4 {
 }
 
 .cbi-button {
-    color: #ccc !important;
+    color: #ffffff !important;
     background-color: #483d8b;
     background-color: var(--dark-primary);
 }
@@ -432,12 +444,20 @@ input {
     box-shadow: none;
 }
 
+
 select:not([multiple="multiple"]):focus,
 input:focus {
     border-color: #483d8b !important;
     border-color: var(--dark-primary) !important;
     outline: 0;
 
+}
+
+select:not([multiple="multiple"]):focus,
+input:not(.cbi-button):focus,
+.cbi-dropdown:focus {
+    border-color: #5e72e4;
+    border-color: var(--dark-primary) !important;
 }
 
 select {
@@ -469,6 +489,12 @@ select {
 .cbi-input-textarea {
     background-color: #1e1e1e;
     color: #ccc;
+}
+
+textarea {
+    &:focus-visible {
+        border: 1px solid var(--dark-primary);
+    }
 }
 
 
@@ -613,14 +639,13 @@ fieldset[id^="cbi-apply-"] {
 }
 
 .ifacebox-head.active {
-    background-color: #32325d !important;
+    background-color: var(--dark-primary) !important;
 }
 
 header .fill .status span[data-style="active"] {
     color: #ccc !important;
     background-color: darkolivegreen !important;
 }
-
 #cbi-wireless .td,
 #cbi-network .tr:first-child>.td,
 .table[width="100%"]>.tr:first-child>.td,
@@ -640,11 +665,13 @@ header .fill .status span[data-style="active"] {
 
 td>.ifacebadge,
 .td>.ifacebadge {
-
+    color: #fff;
     background-color: #483d8b;
     background-color: var(--dark-primary);
     border: 0;
 }
+
+
 
 .btn.danger,
 .cbi-section-remove>.cbi-button,
@@ -753,7 +780,7 @@ input,
 
 .cbi-dropdown[open]>ul.dropdown {
     background: #252526 !important;
-    color: #ccc !important;
+    color: #ffffff !important;
     box-shadow: none;
     border: 1px solid #3c3c3c !important;
 
@@ -761,7 +788,7 @@ input,
 }
 
 .cbi-dropdown[open]>ul.dropdown li {
-    color: #ccc;
+    color: #ffffff;
     border-bottom: 1px solid #3c3c3c !important;
 }
 
@@ -822,6 +849,10 @@ input,
 [data-page="admin-system-startup"] textarea {
     color: #ccc;
     background-color: transparent;
+
+    &:focus-visible {
+        border: 1px solid var(--dark-primary);
+    }
 }
 
 [data-page="admin-network-firewall-custom"] #view p textarea,

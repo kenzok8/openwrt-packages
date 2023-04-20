@@ -1,5 +1,13 @@
 # Update log for master branch
 
+## v2.3.1 [ 2023.04.20 ]
+
+- Fixed the issue where the dropdown menu was being clipped.
+- Fixed the problem where the exit icon was replaced with the app store icon.
+- Fixed the issue where some colors were out of control in dark mode.
+- Fixed the problem where the local startup script textarea could not be scrolled in the startup item.
+- Fixed the problem where the Passwall node list button was misaligned.
+
 ## v2.3 [ 2023.04.03 ]
 
 - Updated the style of Loading.

@@ -118,6 +118,11 @@ body {
 
 textarea {
     padding: 0.2rem;
+
+    &:focus-visible {
+        outline: none;
+        border: 1px solid var(--primary);
+    }
 }
 
 ::selection {
@@ -527,12 +532,13 @@ h5 {
                 display: flex;
                 -webkit-box-align: center;
                 align-items: center;
-                margin: 50px auto 100px 50px;
+                margin: 50px 50px 100px 50px;
                 color: #525461;
                 color: var(--default);
+                justify-content: center;
 
                 .icon {
-                    width: 50px;
+                    width: 180px;
                     height: auto;
                     margin-right: 25px;
                 }
@@ -753,6 +759,7 @@ small {
         text-align: center;
 
         .brand {
+            display: block;
             font-size: 1.8rem;
             color: #5e72e4;
             color: var(--primary);
@@ -760,7 +767,12 @@ small {
             text-decoration: none;
             text-align: center;
             cursor: default;
-            vertical-align: text-bottom;
+            margin: 0 2rem;
+
+            .logo {
+                max-width: 100%;
+                height: auto;
+            }
         }
     }
 
@@ -950,6 +962,8 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#fff"] {
 .alert-message {
     font-weight: bold;
     margin-bottom: 1.25rem;
+    margin-left: 1.25rem;
+    margin-right: 1.25rem;
     padding: 1rem 1.25rem;
     border: 0;
     border-radius: 0.375rem !important;
@@ -987,6 +1001,8 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#fff"] {
 
 .container .alert,
 .container .alert-message {
+    margin-left: 0;
+    margin-right: 0;
     margin-top: 0rem;
 }
 
@@ -1299,10 +1315,14 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#fff"] {
                     color: #fb6340;
                 }
 
-                .food[data-title=Logout]:before {
-                    content: "\e907";
-                    color: #adb5bd;
+                a[data-title=Logout],
+                .food[data-title=Logout] {
+                    &::before {
+                        content: "\e907";
+                        color: #adb5bd;
+                    }
                 }
+
             }
         }
     }
@@ -1381,7 +1401,6 @@ body[class*="node-"]>.main>.main-left>.nav>.slide>.menu.active::before {
     border-radius: 0.375rem;
     background-color: #fff;
     box-shadow: 0 0 1rem 0 rgba(136, 152, 170, .15);
-    overflow: hidden;
 
     &:last-child {
         margin: 0;
@@ -1660,7 +1679,6 @@ td>table>tbody>tr>td,
     vertical-align: middle;
     white-space: nowrap;
     text-decoration: none;
-    text-transform: uppercase;
     border: 0;
     border-radius: .2rem;
     background-color: #f0f0f0;
@@ -1668,8 +1686,6 @@ td>table>tbody>tr>td,
     appearance: none;
     -ms-touch-action: manipulation;
     touch-action: manipulation;
-
-
 }
 
 .btn,
@@ -1705,7 +1721,7 @@ td>table>tbody>tr>td,
 }
 
 .cbi-button:not(select) {
-    -webkit-appearance: none !important;
+    appearance: none !important;
 }
 
 
@@ -1866,7 +1882,7 @@ td>table>tbody>tr>td,
 .cbi-value-field .cbi-button-add {
     font-weight: bold;
     padding: 1px 6px;
-    display: flex;
+    display: inline-block;
     align-items: center;
 }
 
@@ -2875,7 +2891,7 @@ td>.ifacebadge,
 .ifacebadge>em,
 .ifacebadge>img {
     display: inline-block;
-    align-self: flex-start;
+    margin: 0 0.75rem;
 }
 
 .ifacebadge>img+img {
@@ -2918,8 +2934,6 @@ td>.ifacebadge,
             background-color: #fff;
 
             >span {
-                height: 100%;
-                align-self: flex-start;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -2936,6 +2950,7 @@ td>.ifacebadge,
     min-height: 14rem;
     padding: .8rem;
     color: #000;
+    border-radius: 0.375rem;
 }
 
 #content_syslog {
@@ -3141,7 +3156,7 @@ td>.ifacebadge,
     padding: .5rem 1rem;
 }
 
-.cbi-section-create>* {}
+
 
 .cbi-section-remove {
     padding: .5rem 1rem;
@@ -3440,7 +3455,7 @@ input[name="nslookup"] {
 
     textarea {
         line-height: 1.25;
-        overflow-y: hidden;
+        overflow-y: auto;
         width: 100%;
         min-height: 15rem;
         padding: 1rem;
@@ -3448,6 +3463,12 @@ input[name="nslookup"] {
         color: #242424;
         border-radius: 0.375rem;
         background-color: #ffffff;
+
+        &:focus-visible {
+            outline: none;
+            box-shadow: none;
+            border: 1px solid var(--primary);
+        }
     }
 }
 
