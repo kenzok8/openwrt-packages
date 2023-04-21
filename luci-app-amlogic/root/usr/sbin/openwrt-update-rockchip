@@ -76,6 +76,13 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa E25")" != "" ]]; then
         MYDTB_FDTFILE="rk3568-radxa-e25.dtb"
     fi
     SOC="e25"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "Ariaboard Photonicat")" != "" ]]; then
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-photonicat.dtb"
+    fi
+    SOC="photonicat"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa ROCK 5B")" != "" ]]; then
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
@@ -89,7 +96,7 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OWL H88K")" != "" ]]; then
     else
         MYDTB_FDTFILE="rk3588-hinlink-h88k.dtb"
     fi
-    SOC="h88k"
+    SOC="ak88/h88k"
 else
     echo "Unknown device: [ ${MYDEVICE_NAME} ], Not supported."
     exit 1
