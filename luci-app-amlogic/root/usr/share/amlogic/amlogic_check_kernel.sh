@@ -79,6 +79,7 @@ if [[ -s "${AMLOGIC_SOC_FILE}" ]]; then
     source "${AMLOGIC_SOC_FILE}" 2>/dev/null
     PLATFORM="${PLATFORM}"
     SOC="${SOC}"
+    KERNEL_TAGS="${KERNEL_TAGS}"
 else
     tolog "${AMLOGIC_SOC_FILE} file is missing!" "1"
 fi
@@ -105,7 +106,11 @@ fi
 # Convert kernel repo to api format
 [[ "${kernel_repo}" =~ ^https: ]] && kernel_repo="$(echo ${kernel_repo} | awk -F'/' '{print $4"/"$5}')"
 kernel_api="https://api.github.com/repos/${kernel_repo}"
-[[ "${SOC}" == "rk3588" ]] && kernel_tag="rk3588" || kernel_tag="stable"
+if [[ -n "${KERNEL_TAGS}" ]]; then
+    kernel_tag="${KERNEL_TAGS}"
+else
+    [[ "${SOC}" == "rk3588" ]] && kernel_tag="rk3588" || kernel_tag="stable"
+fi
 
 # Step 2: Check if there is the latest kernel version
 check_kernel() {
