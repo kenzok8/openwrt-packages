@@ -796,7 +796,7 @@ acl_app() {
 		echolog "访问控制："
 		for item in $items; do
 			index=$(expr $index + 1)
-			local enabled sid remarks sources node direct_dns_protocol direct_dns direct_dns_doh direct_dns_client_ip direct_dns_query_strategy remote_dns_protocol only_proxy_fakedns remote_dns remote_dns_doh remote_dns_client_ip remote_dns_query_strategy
+			local enabled sid remarks sources node direct_dns_protocol direct_dns direct_dns_doh direct_dns_client_ip direct_dns_query_strategy remote_dns_protocol remote_dns remote_dns_doh remote_dns_client_ip remote_dns_query_strategy
 			local _ip _mac _iprange _ipset _ip_or_mac rule_list config_file
 			sid=$(uci -q show "${CONFIG}.${item}" | grep "=acl_rule" | awk -F '=' '{print $1}' | awk -F '.' '{print $2}')
 			eval $(uci -q show "${CONFIG}.${item}" | cut -d'.' -sf 3-)
@@ -901,8 +901,8 @@ start() {
 	start_socks
 
 	local USE_TABLES="iptables"
-	if [ -z "$(command -v iptables-legacy || command -v iptables)" ] || [ -z "$(command -v ipset)" ]; then
-		echolog "系统未安装iptables或ipset，无法透明代理！"
+	if [ -z "$(command -v iptables-legacy || command -v iptables)" ] || [ -z "$(command -v ipset)" ] || [ -z "$(dnsmasq --version | grep 'Compile time options:.* ipset')" ]; then
+		echolog "系统未安装iptables或ipset或Dnsmasq没有开启ipset支持，无法透明代理！"
 	fi
 
 	[ "$ENABLED_DEFAULT_ACL" == 1 ] && run_global

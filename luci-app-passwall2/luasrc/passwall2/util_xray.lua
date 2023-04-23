@@ -108,9 +108,16 @@ function gen_outbound(flag, node, tag, proxy_table)
 
 		if node.protocol == "wireguard" and node.wireguard_reserved then
 			local bytes = {}
-			node.wireguard_reserved:gsub("[^,]+", function(b)
-				bytes[#bytes+1] = tonumber(b)
-			end)
+			if not node.wireguard_reserved:match("[^%d,]+") then
+				node.wireguard_reserved:gsub("%d+", function(b)
+					bytes[#bytes + 1] = tonumber(b)
+				end)
+			else
+				local result = api.bin.b64decode(node.wireguard_reserved)
+				for i = 1, #result do
+					bytes[i] = result:byte(i)
+				end
+			end
 			node.wireguard_reserved = #bytes > 0 and bytes or nil
 		end
 
@@ -122,8 +129,9 @@ function gen_outbound(flag, node, tag, proxy_table)
 			proxySettings = node.proxySettings or nil,
 			protocol = node.protocol,
 			mux = {
-				enabled = (node.mux == "1") and true or false,
-				concurrency = (node.mux_concurrency) and tonumber(node.mux_concurrency) or 8
+				enabled = (node.mux == "1" or node.xmux == "1") and true or false,
+				concurrency = (node.mux == "1" and ((node.mux_concurrency) and tonumber(node.mux_concurrency) or 8)) or ((node.xmux == "1") and -1) or nil,
+				xudpConcurrency = (node.xmux == "1" and ((node.xudp_concurrency) and tonumber(node.xudp_concurrency) or 8)) or nil
 			} or nil,
 			-- 底层传输配置
 			streamSettings = (node.streamSettings or node.protocol == "vmess" or node.protocol == "vless" or node.protocol == "socks" or node.protocol == "shadowsocks" or node.protocol == "trojan") and {

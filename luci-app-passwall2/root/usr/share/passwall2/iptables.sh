@@ -228,12 +228,12 @@ load_acl() {
 						
 						[ "$accept_icmp" = "1" ] && {
 							$ipt_n -A PSW2 $(comment "$remarks") -p icmp ${_ipt_source} -d $FAKE_IP $(REDIRECT)
-							[ "$only_proxy_fakedns" != "1" ] && $ipt_n -A PSW2 $(comment "$remarks") -p icmp ${_ipt_source} $(REDIRECT)
+							$ipt_n -A PSW2 $(comment "$remarks") -p icmp ${_ipt_source} $(REDIRECT)
 						}
 						
 						[ "$accept_icmpv6" = "1" ] && [ "$PROXY_IPV6" == "1" ] && {
 							$ip6t_n -A PSW2 $(comment "$remarks") -p ipv6-icmp ${_ipt_source} -d $FAKE_IP_6 $(REDIRECT) 2>/dev/null
-							[ "$only_proxy_fakedns" != "1" ] && $ip6t_n -A PSW2 $(comment "$remarks") -p ipv6-icmp ${_ipt_source} $(REDIRECT) 2>/dev/null
+							$ip6t_n -A PSW2 $(comment "$remarks") -p ipv6-icmp ${_ipt_source} $(REDIRECT) 2>/dev/null
 						}
 						
 						[ "$tcp_no_redir_ports" != "disable" ] && {
@@ -245,16 +245,16 @@ load_acl() {
 						
 						if [ "${ipt_tmp}" = "${ipt_n}" ]; then
 							$ipt_n -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} -d $FAKE_IP $(REDIRECT $redir_port)
-							[ "$only_proxy_fakedns" != "1" ] && $ipt_n -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(factor $tcp_redir_ports "-m multiport --dport") $(REDIRECT $redir_port)
+							$ipt_n -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(factor $tcp_redir_ports "-m multiport --dport") $(REDIRECT $redir_port)
 						else
 							$ipt_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} -d $FAKE_IP -j PSW2_RULE
-							[ "$only_proxy_fakedns" != "1" ] && $ipt_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(factor $tcp_redir_ports "-m multiport --dport") -j PSW2_RULE
-							[ "$only_proxy_fakedns" != "1" ] && $ipt_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(REDIRECT $redir_port TPROXY)
+							$ipt_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(factor $tcp_redir_ports "-m multiport --dport") -j PSW2_RULE
+							$ipt_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(REDIRECT $redir_port TPROXY)
 						fi
 						[ "$PROXY_IPV6" == "1" ] && {
 							$ip6t_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} -d $FAKE_IP_6 -j PSW2_RULE 2>/dev/null
-							[ "$only_proxy_fakedns" != "1" ] && $ip6t_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(factor $tcp_redir_ports "-m multiport --dport") -j PSW2_RULE 2>/dev/null
-							[ "$only_proxy_fakedns" != "1" ] && $ip6t_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(REDIRECT $redir_port TPROXY) 2>/dev/null
+							$ip6t_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(factor $tcp_redir_ports "-m multiport --dport") -j PSW2_RULE 2>/dev/null
+							$ip6t_m -A PSW2 $(comment "$remarks") -p tcp ${_ipt_source} $(REDIRECT $redir_port TPROXY) 2>/dev/null
 						}
 					else
 						msg2="${msg}不代理TCP"
@@ -277,13 +277,13 @@ load_acl() {
 						msg2="${msg2}所有端口"
 						
 						$ipt_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} -d $FAKE_IP -j PSW2_RULE
-						[ "$only_proxy_fakedns" != "1" ] && $ipt_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} $(factor $udp_redir_ports "-m multiport --dport") -j PSW2_RULE
-						[ "$only_proxy_fakedns" != "1" ] && $ipt_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} $(REDIRECT $redir_port TPROXY)
+						$ipt_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} $(factor $udp_redir_ports "-m multiport --dport") -j PSW2_RULE
+						$ipt_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} $(REDIRECT $redir_port TPROXY)
 
 						[ "$PROXY_IPV6" == "1" ] && [ "$PROXY_IPV6_UDP" == "1" ] && {
 							$ip6t_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} -d $FAKE_IP_6 -j PSW2_RULE 2>/dev/null
-							[ "$only_proxy_fakedns" != "1" ] && $ip6t_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} $(factor $udp_redir_ports "-m multiport --dport") -j PSW2_RULE 2>/dev/null
-							[ "$only_proxy_fakedns" != "1" ] && $ip6t_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} $(REDIRECT $redir_port TPROXY) 2>/dev/null
+							$ip6t_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} $(factor $udp_redir_ports "-m multiport --dport") -j PSW2_RULE 2>/dev/null
+							$ip6t_m -A PSW2 $(comment "$remarks") -p udp ${_ipt_source} $(REDIRECT $redir_port TPROXY) 2>/dev/null
 						}
 					else
 						msg2="${msg}不代理UDP"
@@ -322,27 +322,27 @@ load_acl() {
 
 				[ "$accept_icmp" = "1" ] && {
 					$ipt_n -A PSW2 $(comment "默认") -p icmp -d $FAKE_IP $(REDIRECT)
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_n -A PSW2 $(comment "默认") -p icmp $(REDIRECT)
+					$ipt_n -A PSW2 $(comment "默认") -p icmp $(REDIRECT)
 				}
 				
 				[ "$accept_icmpv6" = "1" ] && [ "$PROXY_IPV6" == "1" ] && {
 					$ip6t_n -A PSW2 $(comment "默认") -p ipv6-icmp -d $FAKE_IP_6 $(REDIRECT)
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_n -A PSW2 $(comment "默认") -p ipv6-icmp $(REDIRECT)
+					$ip6t_n -A PSW2 $(comment "默认") -p ipv6-icmp $(REDIRECT)
 				}
 				
 				if [ "${ipt_tmp}" = "${ipt_n}" ]; then
 					$ipt_n -A PSW2 $(comment "默认") -p tcp -d $FAKE_IP $(REDIRECT $REDIR_PORT)
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_n -A PSW2 $(comment "默认") -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") $(REDIRECT $REDIR_PORT)
+					$ipt_n -A PSW2 $(comment "默认") -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") $(REDIRECT $REDIR_PORT)
 				else
 					$ipt_m -A PSW2 $(comment "默认") -p tcp -d $FAKE_IP -j PSW2_RULE
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_m -A PSW2 $(comment "默认") -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_m -A PSW2 $(comment "默认") -p tcp $(REDIRECT $REDIR_PORT TPROXY)
+					$ipt_m -A PSW2 $(comment "默认") -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
+					$ipt_m -A PSW2 $(comment "默认") -p tcp $(REDIRECT $REDIR_PORT TPROXY)
 				fi
 
 				[ "$PROXY_IPV6" == "1" ] && {
 					$ip6t_m -A PSW2 $(comment "默认") -p tcp -d $FAKE_IP_6 -j PSW2_RULE
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_m -A PSW2 $(comment "默认") -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_m -A PSW2 $(comment "默认") -p tcp $(REDIRECT $REDIR_PORT TPROXY)
+					$ip6t_m -A PSW2 $(comment "默认") -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
+					$ip6t_m -A PSW2 $(comment "默认") -p tcp $(REDIRECT $REDIR_PORT TPROXY)
 				}
 
 				echolog "${msg}"
@@ -366,13 +366,13 @@ load_acl() {
 				msg="${msg}所有端口"
 				
 				$ipt_m -A PSW2 $(comment "默认") -p udp -d $FAKE_IP -j PSW2_RULE
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_m -A PSW2 $(comment "默认") -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_m -A PSW2 $(comment "默认") -p udp $(REDIRECT $REDIR_PORT TPROXY)
+				$ipt_m -A PSW2 $(comment "默认") -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
+				$ipt_m -A PSW2 $(comment "默认") -p udp $(REDIRECT $REDIR_PORT TPROXY)
 
 				if [ "$PROXY_IPV6_UDP" == "1" ]; then
 					$ip6t_m -A PSW2 $(comment "默认") -p udp -d $FAKE_IP_6 -j PSW2_RULE
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_m -A PSW2 $(comment "默认") -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
-					[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_m -A PSW2 $(comment "默认") -p udp $(REDIRECT $REDIR_PORT TPROXY)
+					$ip6t_m -A PSW2 $(comment "默认") -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
+					$ip6t_m -A PSW2 $(comment "默认") -p udp $(REDIRECT $REDIR_PORT TPROXY)
 				fi
 
 				echolog "${msg}"
@@ -560,8 +560,6 @@ add_firewall_rule() {
 	elif [ "$tcp_proxy_way" = "tproxy" ]; then
 		is_tproxy="TPROXY"
 	fi
-	
-	ONLY_PROXY_FAKEDNS=$(config_t_get global only_proxy_fakedns 0)
 
 	$ipt_n -N PSW2
 	$ipt_n -A PSW2 $(dst $IPSET_LANIPLIST) -j RETURN
@@ -681,13 +679,13 @@ add_firewall_rule() {
 			[ "$accept_icmp" = "1" ] && {
 				$ipt_n -A OUTPUT -p icmp -j PSW2_OUTPUT
 				$ipt_n -A PSW2_OUTPUT -p icmp -d $FAKE_IP $(REDIRECT)
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_n -A PSW2_OUTPUT -p icmp $(REDIRECT)
+				$ipt_n -A PSW2_OUTPUT -p icmp $(REDIRECT)
 			}
 
 			[ "$accept_icmpv6" = "1" ] && {
 				$ip6t_n -A OUTPUT -p ipv6-icmp -j PSW2_OUTPUT
 				$ip6t_n -A PSW2_OUTPUT -p ipv6-icmp -d $FAKE_IP_6 $(REDIRECT)
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_n -A PSW2_OUTPUT -p ipv6-icmp $(REDIRECT)
+				$ip6t_n -A PSW2_OUTPUT -p ipv6-icmp $(REDIRECT)
 			}
 			
 			local ipt_tmp=$ipt_n
@@ -704,20 +702,20 @@ add_firewall_rule() {
 
 			if [ "${ipt_tmp}" = "${ipt_n}" ]; then
 				$ipt_n -A PSW2_OUTPUT -p tcp -d $FAKE_IP $(REDIRECT $REDIR_PORT)
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_n -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") $(REDIRECT $REDIR_PORT)
+				$ipt_n -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") $(REDIRECT $REDIR_PORT)
 				$ipt_n -A OUTPUT -p tcp -j PSW2_OUTPUT
 			else
 				$ipt_m -A PSW2_OUTPUT -p tcp -d $FAKE_IP -j PSW2_RULE
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_m -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_m -A PSW2 $(comment "本机") -p tcp -i lo $(REDIRECT $REDIR_PORT TPROXY)
+				$ipt_m -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
+				$ipt_m -A PSW2 $(comment "本机") -p tcp -i lo $(REDIRECT $REDIR_PORT TPROXY)
 				$ipt_m -A PSW2 $(comment "本机") -p tcp -i lo -j RETURN
 				$ipt_m -A OUTPUT -p tcp -j PSW2_OUTPUT
 			fi
 
 			if [ "$PROXY_IPV6" == "1" ]; then
 				$ip6t_m -A PSW2_OUTPUT -p tcp -d $FAKE_IP_6 -j PSW2_RULE
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_m -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_m -A PSW2 $(comment "本机") -p tcp -i lo $(REDIRECT $REDIR_PORT TPROXY)
+				$ip6t_m -A PSW2_OUTPUT -p tcp $(factor $TCP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
+				$ip6t_m -A PSW2 $(comment "本机") -p tcp -i lo $(REDIRECT $REDIR_PORT TPROXY)
 				$ip6t_m -A PSW2 $(comment "本机") -p tcp -i lo -j RETURN
 				$ip6t_m -A OUTPUT -p tcp -j PSW2_OUTPUT
 			fi
@@ -743,15 +741,15 @@ add_firewall_rule() {
 			}
 
 			$ipt_m -A PSW2_OUTPUT -p udp -d $FAKE_IP -j PSW2_RULE
-			[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_m -A PSW2_OUTPUT -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
-			[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ipt_m -A PSW2 $(comment "本机") -p udp -i lo $(REDIRECT $REDIR_PORT TPROXY)
+			$ipt_m -A PSW2_OUTPUT -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
+			$ipt_m -A PSW2 $(comment "本机") -p udp -i lo $(REDIRECT $REDIR_PORT TPROXY)
 			$ipt_m -A PSW2 $(comment "本机") -p udp -i lo -j RETURN
 			$ipt_m -A OUTPUT -p udp -j PSW2_OUTPUT
 
 			if [ "$PROXY_IPV6_UDP" == "1" ]; then
 				$ip6t_m -A PSW2_OUTPUT -p udp -d $FAKE_IP_6 -j PSW2_RULE
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_m -A PSW2_OUTPUT -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
-				[ "$ONLY_PROXY_FAKEDNS" != "1" ] && $ip6t_m -A PSW2 $(comment "本机") -p udp -i lo $(REDIRECT $REDIR_PORT TPROXY)
+				$ip6t_m -A PSW2_OUTPUT -p udp $(factor $UDP_REDIR_PORTS "-m multiport --dport") -j PSW2_RULE
+				$ip6t_m -A PSW2 $(comment "本机") -p udp -i lo $(REDIRECT $REDIR_PORT TPROXY)
 				$ip6t_m -A PSW2 $(comment "本机") -p udp -i lo -j RETURN
 				$ip6t_m -A OUTPUT -p udp -j PSW2_OUTPUT
 			fi

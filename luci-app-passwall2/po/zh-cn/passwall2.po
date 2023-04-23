@@ -118,12 +118,6 @@ msgstr "直连 DNS EDNS Client Subnet"
 msgid "Remote DNS Protocol"
 msgstr "远程 DNS 协议"
 
-msgid "Only Proxy FakeDNS"
-msgstr "仅代理 FakeDNS"
-
-msgid "When selected, only FakeDNS domain to proxy."
-msgstr "当勾选时，只会代理 FakeDNS 域名。"
-
 msgid "Remote DNS"
 msgstr "远程 DNS"
 
@@ -943,6 +937,9 @@ msgstr "额外的对称加密密钥"
 msgid "Local Address"
 msgstr "本地地址"
 
+msgid "Decimal numbers separated by \",\" or Base64-encoded strings."
+msgstr "用“,”隔开的十进制数字或 Base64 编码字符串。"
+
 msgid "Camouflage Type"
 msgstr "伪装类型"
 
@@ -1164,6 +1161,9 @@ msgstr "无法移动新文件到：%s"
 
 msgid "Mux concurrency"
 msgstr "最大并发连接数"
+
+msgid "XUDP Mux concurrency"
+msgstr "XUDP 最大并发连接数"
 
 msgid "Mux idle timeout"
 msgstr "最大闲置时间"

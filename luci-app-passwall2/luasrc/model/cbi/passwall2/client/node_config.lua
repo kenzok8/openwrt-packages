@@ -648,7 +648,7 @@ wireguard_mtu.default = "1420"
 wireguard_mtu:depends({ type = "Xray", protocol = "wireguard" })
 
 if api.compare_versions(api.get_xray_version(), ">=", "1.8.0") then
-	wireguard_reserved = s:option(Value, "wireguard_reserved", translate("Reserved"))
+	wireguard_reserved = s:option(Value, "wireguard_reserved", translate("Reserved"), translate("Decimal numbers separated by \",\" or Base64-encoded strings."))
 	wireguard_reserved:depends({ type = "Xray", protocol = "wireguard" })
 end
 
@@ -812,10 +812,20 @@ mux:depends({ type = "Xray", protocol = "socks" })
 mux:depends({ type = "Xray", protocol = "shadowsocks" })
 mux:depends({ type = "Xray", protocol = "trojan" })
 
+-- [[ XUDP Mux ]]--
+xmux = s:option(Flag, "xmux", translate("Mux"))
+xmux.default = 1
+xmux:depends({ type = "Xray", protocol = "vless", tlsflow = "xtls-rprx-vision" })
+xmux:depends({ type = "Xray", protocol = "vless", tlsflow = "xtls-rprx-vision-udp443" })
+
 mux_concurrency = s:option(Value, "mux_concurrency", translate("Mux concurrency"))
 mux_concurrency.default = 8
 mux_concurrency:depends("mux", true)
 mux_concurrency:depends("smux", true)
+
+xudp_concurrency = s:option(Value, "xudp_concurrency", translate("XUDP Mux concurrency"))
+xudp_concurrency.default = 8
+xudp_concurrency:depends("xmux", true)
 
 smux_idle_timeout = s:option(Value, "smux_idle_timeout", translate("Mux idle timeout"))
 smux_idle_timeout.default = 60
