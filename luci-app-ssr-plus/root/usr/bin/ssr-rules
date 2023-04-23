@@ -237,14 +237,12 @@ tp_rule() {
 	router)
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set ss_spec_wan_ac dst -j RETURN
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set china dst -j RETURN
-		$ipt -A SS_SPEC_TPROXY -p udp --dport 443 -j DROP
 		$ipt -A SS_SPEC_TPROXY -p udp --dport 80 -j DROP
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set ! --match-set china dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
 		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set ! --match-set ss_spec_wan_ac dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
 		;;
 	gfw)
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set china dst -j RETURN
-		$ipt -A SS_SPEC_TPROXY -p udp --dport 443 -j DROP
 		$ipt -A SS_SPEC_TPROXY -p udp --dport 80 -j DROP
 		$ipt -A SS_SPEC_TPROXY -p udp $PROXY_PORTS -m set --match-set gfwlist dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
 		$ipt -A SS_SPEC_TPROXY -p udp -m set --match-set gmlan src -m set ! --match-set china dst -j TPROXY --on-port "$LOCAL_PORT" --tproxy-mark 0x01/0x01
