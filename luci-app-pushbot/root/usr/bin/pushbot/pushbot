@@ -392,7 +392,7 @@ function cut_str {
 		temp_length=`expr $temp_length + 1`
 	done
 	temp_length=`expr $temp_length - 1`
-	echo $(echo "$1"|cut -c -$temp_length)"*"
+	echo $(echo "$1"|cut -c -$temp_length)"..."
 }
 
 # 随机数
