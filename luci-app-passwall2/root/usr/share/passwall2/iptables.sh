@@ -4,9 +4,11 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 MY_PATH=$DIR/iptables.sh
 IPSET_LANIPLIST="laniplist"
 IPSET_VPSIPLIST="vpsiplist"
+IPSET_WHITELIST="whitelist"
 
 IPSET_LANIPLIST6="laniplist6"
 IPSET_VPSIPLIST6="vpsiplist6"
+IPSET_WHITELIST6="whitelist6"
 
 FORCE_INDEX=2
 
@@ -502,9 +504,11 @@ add_firewall_rule() {
 	echolog "开始加载防火墙规则..."
 	ipset -! create $IPSET_LANIPLIST nethash maxelem 1048576
 	ipset -! create $IPSET_VPSIPLIST nethash maxelem 1048576
+	ipset -! create $IPSET_WHITELIST nethash maxelem 1048576
 
 	ipset -! create $IPSET_LANIPLIST6 nethash family inet6 maxelem 1048576
 	ipset -! create $IPSET_VPSIPLIST6 nethash family inet6 maxelem 1048576
+	ipset -! create $IPSET_WHITELIST6 nethash family inet6 maxelem 1048576
 
 	ipset -! -R <<-EOF
 		$(gen_laniplist | sed -e "s/^/add $IPSET_LANIPLIST /")
@@ -564,6 +568,7 @@ add_firewall_rule() {
 	$ipt_n -N PSW2
 	$ipt_n -A PSW2 $(dst $IPSET_LANIPLIST) -j RETURN
 	$ipt_n -A PSW2 $(dst $IPSET_VPSIPLIST) -j RETURN
+	$ipt_n -A PSW2 $(dst $IPSET_WHITELIST) ! -d $FAKE_IP -j RETURN
 
 	WAN_IP=$(get_wan_ip)
 	[ ! -z "${WAN_IP}" ] && $ipt_n -A PSW2 $(comment "WAN_IP_RETURN") -d "${WAN_IP}" -j RETURN
@@ -574,6 +579,7 @@ add_firewall_rule() {
 	$ipt_n -N PSW2_OUTPUT
 	$ipt_n -A PSW2_OUTPUT $(dst $IPSET_LANIPLIST) -j RETURN
 	$ipt_n -A PSW2_OUTPUT $(dst $IPSET_VPSIPLIST) -j RETURN
+	$ipt_n -A PSW2_OUTPUT $(dst $IPSET_WHITELIST) ! -d $FAKE_IP -j RETURN
 	$ipt_n -A PSW2_OUTPUT -m mark --mark 0xff -j RETURN
 
 	$ipt_n -N PSW2_REDIRECT
@@ -593,6 +599,7 @@ add_firewall_rule() {
 	$ipt_m -N PSW2
 	$ipt_m -A PSW2 $(dst $IPSET_LANIPLIST) -j RETURN
 	$ipt_m -A PSW2 $(dst $IPSET_VPSIPLIST) -j RETURN
+	$ipt_m -A PSW2 $(dst $IPSET_WHITELIST) ! -d $FAKE_IP -j RETURN
 	
 	[ ! -z "${WAN_IP}" ] && $ipt_m -A PSW2 $(comment "WAN_IP_RETURN") -d "${WAN_IP}" -j RETURN
 	unset WAN_IP
@@ -604,6 +611,7 @@ add_firewall_rule() {
 	$ipt_m -A PSW2_OUTPUT -m mark --mark 0xff -j RETURN
 	$ipt_m -A PSW2_OUTPUT $(dst $IPSET_LANIPLIST) -j RETURN
 	$ipt_m -A PSW2_OUTPUT $(dst $IPSET_VPSIPLIST) -j RETURN
+	$ipt_m -A PSW2_OUTPUT $(dst $IPSET_WHITELIST) ! -d $FAKE_IP -j RETURN
 
 	ip rule add fwmark 1 lookup 100
 	ip route add local 0.0.0.0/0 dev lo table 100
@@ -612,11 +620,13 @@ add_firewall_rule() {
 		$ip6t_n -N PSW2
 		$ip6t_n -A PSW2 $(dst $IPSET_LANIPLIST6) -j RETURN
 		$ip6t_n -A PSW2 $(dst $IPSET_VPSIPLIST6) -j RETURN
+		$ip6t_n -A PSW2 $(dst $IPSET_WHITELIST6) ! -d $FAKE_IP6 -j RETURN
 		$ip6t_n -A PREROUTING -p ipv6-icmp -j PSW2
 
 		$ip6t_n -N PSW2_OUTPUT
 		$ip6t_n -A PSW2_OUTPUT $(dst $IPSET_LANIPLIST6) -j RETURN
 		$ip6t_n -A PSW2_OUTPUT $(dst $IPSET_VPSIPLIST6) -j RETURN
+		$ip6t_n -A PSW2_OUTPUT $(dst $IPSET_WHITELIST6) ! -d $FAKE_IP6 -j RETURN
 		$ip6t_n -A PSW2_OUTPUT -m mark --mark 0xff -j RETURN
 	}
 
@@ -634,6 +644,7 @@ add_firewall_rule() {
 	$ip6t_m -N PSW2
 	$ip6t_m -A PSW2 $(dst $IPSET_LANIPLIST6) -j RETURN
 	$ip6t_m -A PSW2 $(dst $IPSET_VPSIPLIST6) -j RETURN
+	$ip6t_m -A PSW2 $(dst $IPSET_WHITELIST6) ! -d $FAKE_IP6 -j RETURN
 	
 	WAN6_IP=$(get_wan6_ip)
 	[ ! -z "${WAN6_IP}" ] && $ip6t_m -A PSW2 $(comment "WAN6_IP_RETURN") -d ${WAN6_IP} -j RETURN
@@ -646,6 +657,7 @@ add_firewall_rule() {
 	$ip6t_m -A PSW2_OUTPUT -m mark --mark 0xff -j RETURN
 	$ip6t_m -A PSW2_OUTPUT $(dst $IPSET_LANIPLIST6) -j RETURN
 	$ip6t_m -A PSW2_OUTPUT $(dst $IPSET_VPSIPLIST6) -j RETURN
+	$ip6t_m -A PSW2_OUTPUT $(dst $IPSET_WHITELIST6) ! -d $FAKE_IP6 -j RETURN
 
 	ip -6 rule add fwmark 1 table 100
 	ip -6 route add local ::/0 dev lo table 100
@@ -795,6 +807,8 @@ del_firewall_rule() {
 
 flush_ipset() {
 	del_firewall_rule
+	destroy_ipset $IPSET_WHITELIST $IPSET_VPSIPLIST $IPSET_LANIPLIST
+	destroy_ipset $IPSET_WHITELIST6 $IPSET_VPSIPLIST6 $IPSET_LANIPLIST6
 	/etc/init.d/passwall2 reload
 }
 

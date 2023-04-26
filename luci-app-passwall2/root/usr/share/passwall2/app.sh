@@ -348,13 +348,16 @@ run_v2ray() {
 
 		lua $UTIL_XRAY gen_dns_config ${V2RAY_DNS_DIRECT_ARGS} > $V2RAY_DNS_DIRECT_CONFIG
 		ln_run "$(first_type $(config_t_get global_app ${type}_file) ${type})" ${type} $V2RAY_DNS_DIRECT_LOG run -c "$V2RAY_DNS_DIRECT_CONFIG"
+		
+		direct_dnsmasq_listen_port=$(get_new_port $(expr $dns_direct_listen_port + 1) udp)
+		run_direct_ipset_dnsmasq listen_port=${direct_dnsmasq_listen_port} server_dns=127.0.0.1#${dns_direct_listen_port} ipset=whitelist,whitelist6 config_file=$TMP_PATH/dnsmasq_global_direct.conf
 
 		[ "$remote_dns_protocol" != "fakedns" ] && {
 			V2RAY_DNS_REMOTE_CONFIG="${TMP_PATH}/${flag}_dns_remote.json"
 			V2RAY_DNS_REMOTE_LOG="${TMP_PATH}/${flag}_dns_remote.log"
 			V2RAY_DNS_REMOTE_LOG="/dev/null"
 			V2RAY_DNS_REMOTE_ARGS="-dns_out_tag remote"
-			dns_remote_listen_port=$(get_new_port $(expr $dns_listen_port + 2) udp)
+			dns_remote_listen_port=$(get_new_port $(expr $direct_dnsmasq_listen_port + 1) udp)
 			V2RAY_DNS_REMOTE_ARGS="${V2RAY_DNS_REMOTE_ARGS} -dns_listen_port ${dns_remote_listen_port}"
 			case "$remote_dns_protocol" in
 				udp)
@@ -398,7 +401,7 @@ run_v2ray() {
 		[ -n "$dns_listen_port" ] && _extra_param="${_extra_param} -dns_listen_port ${dns_listen_port}"
 		[ -n "$dns_cache" ] && _extra_param="${_extra_param} -dns_cache ${dns_cache}"
 		_extra_param="${_extra_param} -dns_query_strategy UseIP"
-		_extra_param="${_extra_param} -direct_dns_port ${dns_direct_listen_port} -direct_dns_udp_server 127.0.0.1"
+		_extra_param="${_extra_param} -direct_dns_port ${direct_dnsmasq_listen_port} -direct_dns_udp_server 127.0.0.1"
 		if [ "$remote_dns_protocol" == "fakedns" ]; then
 			_extra_param="${_extra_param} -remote_dns_fake 1"
 		else
@@ -777,6 +780,15 @@ stop_crontab() {
 	clean_crontab
 	/etc/init.d/cron restart
 	#echolog "清除定时执行命令。"
+}
+
+run_direct_ipset_dnsmasq() {
+	local listen_port server_dns ipset config_file
+	eval_set_val $@
+	echo "port=${listen_port}" >> $config_file
+	echo "server=${server_dns}" >> $config_file
+	echo "ipset=${ipset}" >> $config_file
+	ln_run "$(first_type dnsmasq)" "dnsmasq" "/dev/null" -C $config_file
 }
 
 kill_all() {
