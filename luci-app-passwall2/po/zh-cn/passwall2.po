@@ -139,6 +139,9 @@ msgstr "直连查询策略"
 msgid "Remote Query Strategy"
 msgstr "远程查询策略"
 
+msgid "Use FakeDNS work in the shunt domain that proxy."
+msgstr "需要代理的分流规则域名使用 FakeDNS。"
+
 msgid "Domain Override"
 msgstr "域名重写"
 

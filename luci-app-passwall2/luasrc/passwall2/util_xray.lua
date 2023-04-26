@@ -885,7 +885,7 @@ function gen_config(var)
 
 	end
 	
-	if remote_dns_udp_server or remote_dns_fake then
+	if remote_dns_udp_server then
 		local rules = {}
 		local _remote_dns_proto
 	
@@ -931,16 +931,18 @@ function gen_config(var)
 		end
 	
 		if true then
-			local _remote_dns = {
-				_flag = "remote",
-				domains = #dns_remote_domains > 0 and dns_remote_domains or nil
-				--expectIPs = #dns_remote_expectIPs > 0 and dns_remote_expectIPs or nil
-			}
-	
 			if remote_dns_udp_server then
-				_remote_dns.address = remote_dns_udp_server
-				_remote_dns.port = tonumber(remote_dns_port) or 53
+				local _remote_dns = {
+					_flag = "remote",
+					address = remote_dns_udp_server,
+					port = tonumber(remote_dns_port) or 53
+				}
+				if not remote_dns_fake then
+					_remote_dns.domains = #dns_remote_domains > 0 and dns_remote_domains or nil
+					_remote_dns.expectIPs = #dns_remote_expectIPs > 0 and dns_remote_expectIPs or nil
+				end
 				_remote_dns_proto = "udp"
+				table.insert(dns.servers, _remote_dns)
 	
 				table.insert(routing.rules, 1, {
 					type = "field",
@@ -952,7 +954,6 @@ function gen_config(var)
 					outboundTag = "direct"
 				})
 			end
-	
 			if remote_dns_fake then
 				fakedns = {}
 				fakedns[#fakedns + 1] = {
@@ -965,10 +966,14 @@ function gen_config(var)
 						poolSize = 65535
 					}
 				end
-				_remote_dns.address = "fakedns"
+				local _remote_dns = {
+					_flag = "remote_fakedns",
+					address = "fakedns",
+					domains = #dns_remote_domains > 0 and dns_remote_domains or nil
+					--expectIPs = #dns_remote_expectIPs > 0 and dns_remote_expectIPs or nil
+				}
+				table.insert(dns.servers, _remote_dns)
 			end
-	
-			table.insert(dns.servers, _remote_dns)
 		end
 	
 		if true then
@@ -1069,6 +1074,10 @@ function gen_config(var)
 			local dns_servers = nil
 			for index, value in ipairs(dns.servers) do
 				if not dns_servers and value["_flag"] == default_dns_flag then
+					if value["_flag"] == default_dns_flag and remote_dns_fake then
+						value["_flag"] = "default"
+						break
+					end
 					dns_servers = {
 						_flag = "default",
 						address = value.address,
