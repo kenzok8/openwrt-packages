@@ -129,7 +129,7 @@ a.rmempty = true
 a.optional = false
 a.default = "60"
 a.datatype = "and(uinteger,min(10))"
-a.description = translate("越短的时间时间响应越及时，但会占用更多的系统资源")
+a.description = translate("越短的时间响应越及时，但会占用更多的系统资源")
 
 a = s:taboption("basic", ListValue, "oui_data", translate("MAC设备信息数据库"))
 a.rmempty = true

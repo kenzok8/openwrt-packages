@@ -27,6 +27,7 @@ a.description = translate("若无二级路由设备，信号强度良好，可�
 a = s:option(Value, "thread_num", translate('最大并发进程数'))
 a.default = "3"
 a.datatype = "uinteger"
+a.description = translate("低性能设备请勿更改设置值，或酌情减少参数")
 
 a = s:option(Value, "soc_code", "自定义温度读取命令")
 a.rmempty = true 

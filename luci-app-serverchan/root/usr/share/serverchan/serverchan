@@ -136,33 +136,39 @@ function getip(){
 		[ -z "$ipv4_interface" ] && local wanIP=$(getinterfacelist|grep '\"address\"'|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 		echo "$wanIP"
 	elif [ $1 == "hostipv4" ] ;then
+		local url_number=`echo "$ipv4_urllist"|wc -l`
+		local rand_number=`rand 1 $url_number`
 		function get_hostipv4()
 		{
-			local url_number=`echo "$ipv4_urllist"|wc -l`
-			local ipv4_URL=`echo "$ipv4_urllist"| sed -n "$(rand 1 $url_number)p"|sed -e 's/\r//g'`
+			local ipv4_URL=`echo "$ipv4_urllist"| sed -n "${1}p"|sed -e 's/\r//g'`
 			[ ! -z "$ipv4_interface" ] && local hostIP=$(curl -k -s -4 --interface ${ipv4_interface} -m 5 ${ipv4_URL}) || local hostIP=$(curl -k -s -4 -m 5 ${ipv4_URL})
+			[ -z "$hostIP" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv4_URL" >> ${logfile}
 			echo $hostIP|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1
 		}
-		local hostIP=`get_hostipv4`
-		[ -z "$hostIP" ] && sleep 1 && local hostIP=`get_hostipv4`
-		[ -z "$hostIP" ] && sleep 1 && local hostIP=`get_hostipv4`
-		echo $hostIP # 重试，偷懒，有空再优化
+		local hostIP=`get_hostipv4 ${rand_number}`
+		[ -z $hostIP ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;local hostIP=`get_hostipv4 ${rand_number}`
+		[ -z $hostIP ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;local hostIP=`get_hostipv4 ${rand_number}`
+		[ -z $hostIP ] && [ `expr $(date +%s) - $(date -r /usr/share/serverchan/api/ipv4.list +%s)` -gt "86400" ] && wget --no-check-certificate -t 3 -T 15 -O /usr/share/serverchan/api/ipv4.list https://raw.githubusercontent.com/tty228/luci-app-serverchan/master/root/usr/share/serverchan/api/ipv4.list >/dev/null 2>&1 && ipv4_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】多次获取 IP 失败，重新同步 API 列表" >> ${logfile}
+		[ ! -z $hostIP ] && echo $hostIP
 	elif [ $1 == "wanipv6" ] ;then
 		[ ! -z "$ipv6_interface" ] && local wanIPv6=$(ip addr show ${ipv6_interface}|grep -v deprecated|grep -A1 'inet6 [^f:]'|sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\2 \1#p;ta'|sort -nr|head -n1|awk '{print $2}')
 		[ -z "$ipv6_interface" ] && local wanIPv6=$(ip addr show|grep -v deprecated|grep -A1 'inet6 [^f:]'|sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\2 \1#p;ta'|sort -nr|head -n1|awk '{print $2}')
 		echo "$wanIPv6"
 	elif [ $1 == "hostipv6" ] ;then
+		local urlv6_number=`echo "$ipv6_urllist"|wc -l`
+		local rand_numberv6=`rand 1 $urlv6_number`
 		function get_hostipv6()
 		{
-			local urlv6_number=`echo "$ipv6_urllist"|wc -l`
-			local ipv6_URL=`echo "$ipv6_urllist"| sed -n "$(rand 1 $urlv6_number)p"|sed -e 's/\r//g'`
-			[ ! -z "$ipv6_interface" ] && local hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} -m 5 ${ipv6_URL}) || local hostIPv6=$(curl -k -s -6 -m 5 ${ipv6_URL})
-			echo $hostIPv6|grep -oE '([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}'|head -n1
+			local ipv6_URL=`echo "$ipv6_urllist"| sed -n "${1}p"|sed -e 's/\r//g'`
+			[ ! -z "$ipv6_interface" ] && local hostIPv6=$(curl -k -s -4 --interface ${ipv6_interface} -m 5 ${ipv6_URL}) || local hostIPv6=$(curl -k -s -4 -m 5 ${ipv6_URL})
+			[ -z "$hostIPv6" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv6_URL" >> ${logfile}
+			echo $hostIPv6|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1
 		}
-		local hostIPv6=`get_hostipv6`
-		[ -z "$hostIPv6" ] && sleep 1 && local hostIPv6=`get_hostipv6`
-		[ -z "$hostIPv6" ] && sleep 1 && local hostIPv6=`get_hostipv6`
-		echo $hostIPv6 # 重试，偷懒，有空再优化
+		local hostIPv6=`get_hostipv6 ${rand_numberv6}`
+		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;local hostIPv6=`get_hostipv6 ${rand_numberv6}`
+		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;local hostIPv6=`get_hostipv6 ${rand_numberv6}`
+		[ -z $hostIPv6 ] && [ `expr $(date +%s) - $(date -r /usr/share/serverchan/api/ipv4.list +%s)` -gt "86400" ] && wget --no-check-certificate -t 3 -T 15 -O /usr/share/serverchan/api/ipv6.list https://raw.githubusercontent.com/tty228/luci-app-serverchan/master/root/usr/share/serverchan/api/ipv6.list >/dev/null 2>&1 && ipv6_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】多次获取 IP 失败，重新同步 API 列表" >> ${logfile}
+		[ ! -z $hostIPv6 ] && echo $hostIPv6
 	fi
 }
 
@@ -393,7 +399,7 @@ function cut_str {
 		temp_length=`expr $temp_length + 1`
 	done
 	temp_length=`expr $temp_length - 1`
-	echo $(echo "$1"|cut -c -$temp_length)"*"
+	echo $(echo "$1"|cut -c -$temp_length)"..."
 }
 
 # 随机数
@@ -593,12 +599,12 @@ function rand_geturl(){
 		local urllist="https://www.163.com https://www.qq.com https://www.baidu.com https://www.qidian.com https://www.douban.com"
 		local url_number=`expr $(echo "$urllist"|grep -o ' '|wc -l) + 1`
 		local url_str=`echo "$urllist"|awk -v i=$(rand 1 $url_number) '{print $i}'`
-		echo `curl -k -s -w "%{http_code}" -m 5 ${url_str} -A "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36" -o /dev/null`
+		echo `curl -k -s -w "%{http_code}" -m 5 ${url_str} -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" -o /dev/null`
 	}
 	local check=`getcheck`
-	while [ -z "$check" ] || [ "$check" -ne "200" ]; do
+	while [ -z "$check" ] || [[ $check -ne 200 && $check -ne 301 && $check -ne 302 ]]; do
 		local check=`getcheck`
-		if [ ! -z "$check" ] && [ "$check" -eq "200" ]; then
+		if [ ! -z "$check" ] && [[ $check -eq 200 || $check -eq 301 || $check -eq 302 ]]; then
 			[ ! -z "$network_enable" ] && [ "$network_enable" -eq "404" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【网络状态】网络恢复正常.." >> ${logfile}
 			local network_enable="200"
 		else
@@ -698,8 +704,6 @@ function ip_changes(){
 			echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $last_IPv6 >> ${dir}ip
 			title="IP 地址变化"
 			content="${content}${str_splitline}${str_title_start} IP 地址变化${str_title_end}${str_linefeed}${str_tab}当前 IP：${IPv4}"
-		elif [ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && [ -z "$IPv4" ]; then
-			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】获取 IPv4 地址失败" >> ${logfile}
 		fi
 
 		if [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && [ ! -z "$IPv6" ] && ( ! echo "$IPv6"|grep -w -q ${last_IPv6} ); then
@@ -708,8 +712,6 @@ function ip_changes(){
 			[ -z "$title" ] && title="IPv6 地址变化"
 			[ ! -z "$title" ] && title="IP 地址变化"
 			content="${content}${str_splitline}${str_title_start} IPv6 地址变化${str_title_end}${str_linefeed}${str_tab}当前 IPv6：${IPv6}"
-		elif [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && [ -z "$IPv6" ]; then
-			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】获取 IPv6 地址失败" >> ${logfile}
 		fi
 
 	else
@@ -804,7 +806,8 @@ function down(){
 		LockFile unlock
 	else
 		local tmp_name=`cat ${dir}ipAddress|grep -w ${1}|awk '{print $3}'|grep -v "^$"|sort -u|head -n1`
-		if [ ${ip_name} != ${tmp_name} ]; then
+		local tmp_mac=`cat ${dir}ipAddress|grep -w ${1}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
+		if [ ${ip_name} != ${tmp_name} ] || [ ${ip_mac} != ${tmp_mac} ]; then
 			LockFile lock
 			local tmp_str=$(echo "$1 ${ip_mac} ${ip_name} `cat ${dir}ipAddress|grep -w ${1}|awk '{print $4}'|grep -v "^$"|sort -u|head -n1` ${ip_interface}")
 			sed -i "/^${1} /d" ${dir}ipAddress
@@ -1076,7 +1079,7 @@ function add_ip_black(){
 	[ ! -f "${ip_blacklist_path}" ] && touch ${ip_blacklist_path}
 	local logrow=$(grep -c "" ${ip_blacklist_path})
 	[ ! -z "$web_login_black" ] && [ "$web_login_black" -eq "0" ] || [ -z "$web_login_black" ] && logrow=0
-	[ ! -z "$1" ] && logrow=logrow+1
+	[ ! -z "$1" ] && logrow=`expr $logrow + 1`
 	ipset flush ip_blacklist >/dev/null 2>&1
 
 	if [ $logrow -le "0" ]; then
@@ -1111,7 +1114,7 @@ function send(){
 		local cpuload=`getcpu`
 		local ramload=`free -m|sed -n '2p'|awk '{printf "%.2f%%\n",($3/$2)*100}'`
 		local Qwai=`curl -o /dev/null --connect-timeout 5 -s -w %{http_code} www.google.com`
-		if [[ "$Qwai" -eq "200" ]] || [[ "$Qwai" -eq "301" ]] || [[ "$Qwai" -eq "302" ]]; then
+		if [[ $Qwai -eq 200 || $Qwai -eq 301 || $Qwai -eq 302 ]]; then
 			local Qwai_status="已连通！"
 		else
 			local Qwai_status="已断开！"
