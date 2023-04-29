@@ -23,8 +23,8 @@ function read_config(){
 	done
 	dir="/tmp/serverchan/" && mkdir -p ${dir} && mkdir -p ${dir}/client
 	tempjsonpath="/tmp/serverchan/temp.json"
-	ip_blacklist_path="/usr/bin/serverchan/api/ip_blacklist"
-	[ ! -z "$oui_dir" ] && [ "$oui_dir" -eq "1" ] && oui_base="${dir}oui_base.txt" || oui_base="/usr/bin/serverchan/oui_base.txt"
+	ip_blacklist_path="/usr/share/serverchan/api/ip_blacklist"
+	[ ! -z "$oui_dir" ] && [ "$oui_dir" -eq "1" ] && oui_base="${dir}oui_base.txt" || oui_base="/usr/share/serverchan/oui_base.txt"
 	debuglevel=`echo "$debuglevel"` && [ -z "$debuglevel" ] && logfile="/dev/null" || logfile="${dir}serverchan.log"
 	serverchan_blacklist=`echo "$serverchan_blacklist"|sed 's/ /\n/g'` 2>/dev/null
 	serverchan_whitelist=`echo "$serverchan_whitelist"|sed 's/ /\n/g'` 2>/dev/null
@@ -34,8 +34,8 @@ function read_config(){
 	ip_white_list=`echo "$ip_white_list"|sed 's/ /\n/g'` 2>/dev/null
 	mark_mac_list="${MAC_online_list} ${MAC_offline_list}"
 	mark_mac_list=`echo "$mark_mac_list"|sed 's/ /\n/g'|sed 's/-/ /'` 2>/dev/null
-	ipv4_urllist=`cat /usr/bin/serverchan/api/ipv4.list` 2>/dev/null
-	ipv6_urllist=`cat /usr/bin/serverchan/api/ipv6.list` 2>/dev/null
+	ipv4_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null
+	ipv6_urllist=`cat /usr/share/serverchan/api/ipv6.list` 2>/dev/null
 	[ -z "$serverchan_ipv4" ] && serverchan_ipv4=0
 	[ -z "$serverchan_ipv6" ] && serverchan_ipv6=0
 	[ "$iw_version" ] && wlan_interface=`iw dev|grep Interface|awk '{print $2}'` >/dev/null 2>&1
@@ -43,20 +43,20 @@ function read_config(){
 	[ -z "$down_timeout" ] || [ "$down_timeout" -eq "0" ] && down_timeout="20";down_timeout=`expr ${down_timeout} / 2 + 1`
 	[ -z "$timeout_retry_count" ] && timeout_retry_count="2";[ "$timeout_retry_count" -eq "0" ] && timeout_retry_count="1"
 	[ -z "$server_port" ] && server_port="22"
-	str_title_start=`/usr/bin/jq -r '.str_title_start' ${jsonpath}`
-	str_title_end=`/usr/bin/jq -r '.str_title_end' ${jsonpath}`
-	str_linefeed=`/usr/bin/jq -r '.str_linefeed' ${jsonpath}`
-	str_splitline=`/usr/bin/jq -r '.str_splitline' ${jsonpath}`
-	str_space=`/usr/bin/jq -r '.str_space' ${jsonpath}`
-	str_tab=`/usr/bin/jq -r '.str_tab' ${jsonpath}`
+	str_title_start=`jq -r '.str_title_start' ${jsonpath}`
+	str_title_end=`jq -r '.str_title_end' ${jsonpath}`
+	str_linefeed=`jq -r '.str_linefeed' ${jsonpath}`
+	str_splitline=`jq -r '.str_splitline' ${jsonpath}`
+	str_space=`jq -r '.str_space' ${jsonpath}`
+	str_tab=`jq -r '.str_tab' ${jsonpath}`
 	( echo "$lite_enable"|grep -q "content" ) && str_title_start="" && str_title_end="" && str_splitline="" && str_linefeed="" && str_tab=""
 }
 
 # 初始化
 function serverchan_init(){
 	enable_detection
-	if [ -f "/usr/bin/serverchan/errlog" ]; then
-		cat /usr/bin/serverchan/errlog > ${logfile}
+	if [ -f "/usr/share/serverchan/errlog" ]; then
+		cat /usr/share/serverchan/errlog > ${logfile}
 		echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】载入上次重启前日志" >> ${logfile}
 		echo "--------------------------------------------------------" >> ${logfile}
 	fi
@@ -64,11 +64,11 @@ function serverchan_init(){
 	get_syslog
 	add_ip_black
 
-	rm -f ${dir}fd1 ${dir}sheep_usage ${dir}old_sheep_usage ${dir}client_usage_aliases ${dir}old_client_usage_aliases /usr/bin/serverchan/errlog >/dev/null 2>&1
+	rm -f ${dir}fd1 ${dir}sheep_usage ${dir}old_sheep_usage ${dir}client_usage_aliases ${dir}old_client_usage_aliases /usr/share/serverchan/errlog >/dev/null 2>&1
 	[ ! -f "/usr/sbin/wrtbwmon" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】未安装 wrtbwmon ，流量统计不可用" >> ${logfile}
 	[ -z "$ip_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 iputils-arping 版本号，请确认插件是否正常运行" >> ${logfile}
 	[ -z "$cu_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 curl 版本号，请确认插件是否正常运行" >> ${logfile}
-	[ -z "${sckey}${tg_token}${pushplus_token}${corpid}${wxpusher_apptoken}${wxpusher_uids}${wxpusher_topicIds}" -a "${jsonpath}" != "/usr/bin/serverchan/api/diy.json" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的 key " >> ${logfile} && return 1
+	[ -z "${sckey}${tg_token}${pushplus_token}${corpid}${wxpusher_apptoken}${wxpusher_uids}${wxpusher_topicIds}" -a "${jsonpath}" != "/usr/share/serverchan/api/diy.json" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的 key " >> ${logfile} && return 1
 	local interfacelist=`getinterfacelist` && [ -z "$interfacelist" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取接口在线时间等信息，可能存在多个接口或配置错误，请确认插件是否正常运行" >> ${logfile}
 	return 0
 }
@@ -76,16 +76,16 @@ function serverchan_init(){
 # 推送
 function diy_send(){
 	( ! echo "$lite_enable"|grep -q "content" ) && ( ! echo "$lite_enable"|grep -q "nowtime" ) && local nowtime=`date "+%Y-%m-%d %H:%M:%S"`
-	local diyurl=`/usr/bin/jq -r .url ${3}` && local diyurl=`eval echo ${diyurl}`
-	local type=`/usr/bin/jq -r '.type' ${3}` && local type=`eval echo ${type}`
-	local data=`/usr/bin/jq -r '.data' ${3}` && local data=`eval echo ${data}`
-	local content_type=`/usr/bin/jq -r '.content_type' ${3}`
-	/usr/bin/jq ".type + $type" ${jsonpath} > ${tempjsonpath}
+	local diyurl=`jq -r .url ${3}` && local diyurl=`eval echo ${diyurl}`
+	local type=`jq -r '.type' ${3}` && local type=`eval echo ${type}`
+	local data=`jq -r '.data' ${3}` && local data=`eval echo ${data}`
+	local content_type=`jq -r '.content_type' ${3}`
+	jq ".type + $type" ${jsonpath} > ${tempjsonpath}
 
-	/usr/bin/jq -r '.[]' ${tempjsonpath}|grep -w "null" && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】参数值错误，请检查设置项  `/usr/bin/jq -r '.' ${tempjsonpath}|grep "null"`" >> ${logfile} && return 1
+	jq -r '.[]' ${tempjsonpath}|grep -w "null" && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】参数值错误，请检查设置项  `jq -r '.' ${tempjsonpath}|grep "null"`" >> ${logfile} && return 1
 	[ -f ${tempjsonpath} ] && local logrow=$(grep -c "" ${tempjsonpath}) || local logrow="0"
 	[ $logrow -eq "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】json 文件生成失败，请检查文件格式" >> ${logfile} && return 1
-	/usr/bin/jq -r '.[]' ${tempjsonpath}|grep "null" && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】参数变量生成失败，请检查设置项 `/usr/bin/jq -r '.' ${tempjsonpath}|grep "null"`" >> ${logfile}
+	jq -r '.[]' ${tempjsonpath}|grep "null" && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】参数变量生成失败，请检查设置项 `jq -r '.' ${tempjsonpath}|grep "null"`" >> ${logfile}
 
 	curl -X POST -H "$content_type" -d "${data}" "${diyurl}"
 }
@@ -220,7 +220,7 @@ function getname(){
 function getgateway(){
 	local loginfo=`curl -s -L "${gateway_host_url}" -c ${dir}cookies.txt -d "${gateway_username_id}=${gateway_username}&${gateway_password_id}=${gateway_password}"` 2>/dev/null
 	[ ! -z "$loginfo" ] && local mytoken=$(echo $loginfo |sed 's/{/\n/g' | grep token |awk '/realRestart/{print $2}'| sed $'s/\'//g')
-	[ ! -z "$mytoken" ] && local get_gateway=`curl -s -b ${dir}cookies.txt "${gateway_info_url}" -d 'token='$mytoken | /usr/bin/jq '.[] | iterables| "\(.ip) \(.devName) \(.model)"'|sed 's/unknown//g'|sed 's/  / /g'|sed 's/ /_/g'|sed 's/_/ /'|sed 's/\"//g'`
+	[ ! -z "$mytoken" ] && local get_gateway=`curl -s -b ${dir}cookies.txt "${gateway_info_url}" -d 'token='$mytoken | jq '.[] | iterables| "\(.ip) \(.devName) \(.model)"'|sed 's/unknown//g'|sed 's/  / /g'|sed 's/ /_/g'|sed 's/_/ /'|sed 's/\"//g'`
 	[ ! -z "$get_gateway" ] && curl -s -b ${dir}cookies.txt "${gateway_logout_url}" -d 'token='$mytoken 2>/dev/null
 	echo "$get_gateway"
 }
@@ -454,10 +454,10 @@ function serverchan_cron(){
 	[ ! -z "$regular_time_3" ] && local regular_time_3=",${regular_time_3}"
 	# 定时发送
 	if [ ! -z "$regular_time" ] || [ ! -z "$regular_time_2" ] || [ ! -z "$regular_time_3" ]; then
-		crontab -l 2>/dev/null > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/bin/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l 2>/dev/null > conf && echo -e "0 $regular_time$regular_time_2$regular_time_3 * * * /usr/share/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	# 间隔发送
 	elif [ ! -z "$interval_time" ]; then
-		crontab -l 2>/dev/null > conf && echo -e "0 */$interval_time * * * /usr/bin/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l 2>/dev/null > conf && echo -e "0 */$interval_time * * * /usr/share/serverchan/serverchan send &" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	fi
 	re_cron
 }
@@ -468,7 +468,7 @@ function serverchan_disturb(){
 	if [ `date +%H` -ge $endtime -a $starttime -lt $endtime ] || [ `date +%H` -lt $starttime -a $starttime -lt $endtime ] || [ `date +%H` -lt $starttime -a `date +%H` -ge $endtime -a $starttime -gt $endtime ]; then
 		unset sheep_starttime
 		rm -f ${dir}sheep_usage ${dir}old_sheep_usage  2>/dev/null
-		disturb_text=`/usr/bin/jq -r '._api' ${jsonpath}`
+		disturb_text=`jq -r '._api' ${jsonpath}`
 		return 0
 	else
 		[ -z "$sheep_starttime" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【免打扰】夜深了，该休息了" >> ${logfile} && sheep_starttime=`date +%s`
@@ -557,7 +557,7 @@ function unattended(){
 		local interfaceuptime=`getinterfaceuptime`
 		if [ ! -z "$autoreboot_time" ] && [ `cat /proc/uptime|awk -F. '{run_hour=$1/3600;printf("%d",run_hour)}'` -ge "$autoreboot_time" ] && [ "$system_time_event" -eq "1" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【无人值守任务】重启路由器咯" >> ${logfile}
-			cat ${logfile} > /usr/bin/serverchan/errlog
+			cat ${logfile} > /usr/share/serverchan/errlog
 			sleep 2 && reboot && exit
 		elif [ ! -z "$network_restart_time" ] && [ ! -z "$interfaceuptime" ] && [ `echo "$interfaceuptime"|awk -F. '{run_hour=$1/3600;printf("%d",run_hour)}'` -ge "$network_restart_time" ] && [ "$system_time_event" -eq "2" ]; then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【无人值守任务】重新拨号咯" >> ${logfile}
@@ -609,13 +609,13 @@ function rand_geturl(){
 				> ${dir}send_enable.lock && serverchan_first && deltemp
 				geterrdevicealiases
 				if [ "$?" -eq "0" ]; then
-					[ -f /usr/bin/serverchan/autoreboot_count ] && retry_count=`cat /usr/bin/serverchan/autoreboot_count` && rm -f /usr/bin/serverchan/autoreboot_count >/dev/null 2>&1
+					[ -f /usr/share/serverchan/autoreboot_count ] && retry_count=`cat /usr/share/serverchan/autoreboot_count` && rm -f /usr/share/serverchan/autoreboot_count >/dev/null 2>&1
 					[ ! -z ${retry_count} ] && retry_count=0;retry_count=`expr $retry_count + 1`
 					if [ "$network_err_event" -eq "1" ] ;then
 						if [ "$retry_count" -lt "3" ] ;then
-							echo "$retry_count" > /usr/bin/serverchan/autoreboot_count
+							echo "$retry_count" > /usr/share/serverchan/autoreboot_count
 							echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试重启路由，当前第 $retry_count 次 " >> ${logfile}
-							cat ${logfile} > /usr/bin/serverchan/errlog
+							cat ${logfile} > /usr/share/serverchan/errlog
 							sleep 2 && reboot && exit
 						fi
 						[ "$retry_count" -eq "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】已经重启路由2次，修复失败，请主人自行修复哦" >> ${logfile}
@@ -636,11 +636,11 @@ function rand_geturl(){
 							sleep 60 && network_restart
 						elif [ "$retry_count" -eq "3" ] ;then
 							echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试修复网络，当前第 3 次，备份设置项，并修改相关设置" >> ${logfile}
-							mkdir -p /usr/bin/serverchan/configbak
-							cp -p -f /etc/config/network /usr/bin/serverchan/configbak/network
-							cp -p -f /etc/config/dhcp /usr/bin/serverchan/configbak/dhcp
-							cp -p -f /etc/config/firewall /usr/bin/serverchan/configbak/firewall
-							cp -p -f /etc/firewall.user /usr/bin/serverchan/configbak/firewall.user
+							mkdir -p /usr/share/serverchan/configbak
+							cp -p -f /etc/config/network /usr/share/serverchan/configbak/network
+							cp -p -f /etc/config/dhcp /usr/share/serverchan/configbak/dhcp
+							cp -p -f /etc/config/firewall /usr/share/serverchan/configbak/firewall
+							cp -p -f /etc/firewall.user /usr/share/serverchan/configbak/firewall.user
 							uci set network.wan.peerdns='0'
 							uci delete network.wan.dns
 							uci add_list network.wan.dns='223.5.5.5'
@@ -657,22 +657,22 @@ function rand_geturl(){
 							uci commit firewall
 							sleep 60 && network_restart
 						elif [ "$retry_count" -eq "4" ] ;then
-							echo "$retry_count" > /usr/bin/serverchan/autoreboot_count
-							cat ${logfile} > /usr/bin/serverchan/errlog
+							echo "$retry_count" > /usr/share/serverchan/autoreboot_count
+							cat ${logfile} > /usr/share/serverchan/errlog
 							sleep 2 && reboot && exit
 						elif [ "$retry_count" -eq "5" ] ;then
-							echo "$retry_count" > /usr/bin/serverchan/autoreboot_count
+							echo "$retry_count" > /usr/share/serverchan/autoreboot_count
 							echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】修复失败，还原设置中，请自行检查网络设置" >> ${logfile}
-							cp -p -f /usr/bin/serverchan/configbak/network /etc/config/network
-							cp -p -f /usr/bin/serverchan/configbak/dhcp /etc/config/dhcp
-							cp -p -f /usr/bin/serverchan/configbak/firewall /etc/config/firewall
-							cp -p -f /usr/bin/serverchan/configbak/firewall.user /etc/firewall.user
-							cat ${logfile} > /usr/bin/serverchan/errlog
+							cp -p -f /usr/share/serverchan/configbak/network /etc/config/network
+							cp -p -f /usr/share/serverchan/configbak/dhcp /etc/config/dhcp
+							cp -p -f /usr/share/serverchan/configbak/firewall /etc/config/firewall
+							cp -p -f /usr/share/serverchan/configbak/firewall.user /etc/firewall.user
+							cat ${logfile} > /usr/share/serverchan/errlog
 							sleep 2 && reboot && exit
 						fi
 					fi
 				fi
-			elif [ -f /usr/bin/serverchan/autoreboot_count ]; then
+			elif [ -f /usr/share/serverchan/autoreboot_count ]; then
 				network_err_time=`expr $network_err_time - 600` && sleep 60
 			fi
 			enable_detection
@@ -680,7 +680,7 @@ function rand_geturl(){
 		fi
 	continue
 	done
-	rm -f /usr/bin/serverchan/autoreboot_count >/dev/null 2>&1
+	rm -f /usr/share/serverchan/autoreboot_count >/dev/null 2>&1
 }
 
 # 检测 ip 状况
@@ -1177,6 +1177,7 @@ serverchan_cron
 
 # 限制并发进程
 [ -z "$thread_num" ] || [ "$thread_num" -eq "0" ] && thread_num=5
+[ "$1" ] && [ $1 == "t1" ] && thread_num=1
 [ -e ${dir}fd1 ] || mkfifo ${dir}fd1
 exec 5<>${dir}fd1
 rm -f ${dir}fd1 >/dev/null 2>&1
@@ -1190,7 +1191,7 @@ if [ "$1" ] ;then
 	[ $1 == "send" ] && send
 	[ $1 == "soc" ] && echo `soc_temp` > ${dir}soc_tmp
 	[ $1 == "test" ] && send test
-	exit
+	[ $1 == "t1" ] || exit
 fi
 
 # 载入在线设备

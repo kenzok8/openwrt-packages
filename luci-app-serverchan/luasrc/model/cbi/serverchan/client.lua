@@ -1,3 +1,7 @@
+f = SimpleForm("serverchan")
+f.reset = false
+f.submit = false
+
 local o = require "luci.dispatcher"
 local fs = require "nixio.fs"
 local jsonc = require "luci.jsonc"
@@ -17,10 +21,6 @@ if fs.access(session_path) then
         file:close()
     end
 end
-
-f = SimpleForm("processes", translate(""))
-f.reset = false
-f.submit = false
 
 local client_count = sys.exec("cat /tmp/serverchan/ipAddress | wc -l")
 t = f:section(Table, sessions, translate("当前共 ".. client_count .. "台设备在线"))

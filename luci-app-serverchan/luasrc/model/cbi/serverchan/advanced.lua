@@ -49,7 +49,7 @@ a:depends({soc_code = "pve"})
 a = s:option(Button, "soc", translate("测试温度命令"))
 a.inputtitle = translate("输出信息")
 a.write = function()
-	luci.sys.call("/usr/bin/serverchan/serverchan soc")
+	luci.sys.call("/usr/share/serverchan/serverchan soc")
 	luci.http.redirect(luci.dispatcher.build_url("admin", "services", "serverchan", "advanced"))
 end
 
@@ -128,7 +128,7 @@ a:value("", translate("无操作"))
 a:value("1", translate("重启路由器"))
 a:value("2", translate("重新拨号"))
 a:value("3", translate("修改相关设置项，尝试自动修复网络"))
-a.description = translate("选项 1 选项 2 不会修改设置，并最多尝试 2 次。<br/>选项 3 会将设置项备份于 /usr/bin/serverchan/configbak 目录，并在失败后还原。<br/>【！！无法保证兼容性！！】不熟悉系统设置项，不会救砖请勿使用")
+a.description = translate("选项 1 选项 2 不会修改设置，并最多尝试 2 次。<br/>选项 3 会将设置项备份于 /usr/share/serverchan/configbak 目录，并在失败后还原。<br/>【！！无法保证兼容性！！】不熟悉系统设置项，不会救砖请勿使用")
 
 a = s:option(ListValue, "system_time_event", translate("定时重启"))
 a.default = ""

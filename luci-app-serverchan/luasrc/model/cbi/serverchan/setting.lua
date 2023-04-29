@@ -35,89 +35,89 @@ a.default = nil
 a.optional = true
 
 a = s:taboption("basic", ListValue, "jsonpath", translate("推送模式"))
-a.default = "/usr/bin/serverchan/api/serverchan.json"
+a.default = "/usr/share/serverchan/api/serverchan.json"
 a.rmempty = true
-a:value("/usr/bin/serverchan/api/serverchan.json", translate("微信 Server酱"))
-a:value("/usr/bin/serverchan/api/qywx_mpnews.json", translate("企业微信 图文消息"))
-a:value("/usr/bin/serverchan/api/qywx_markdown.json", translate("企业微信 markdown版（不支持公众号）"))
-a:value("/usr/bin/serverchan/api/wxpusher.json", translate("微信 wxpusher"))
-a:value("/usr/bin/serverchan/api/pushplus.json", translate("微信 pushplus"))
-a:value("/usr/bin/serverchan/api/telegram.json", translate("Telegram"))
-a:value("/usr/bin/serverchan/api/diy.json", translate("自定义推送"))
+a:value("/usr/share/serverchan/api/serverchan.json", translate("微信 Server酱"))
+a:value("/usr/share/serverchan/api/qywx_mpnews.json", translate("企业微信 图文消息"))
+a:value("/usr/share/serverchan/api/qywx_markdown.json", translate("企业微信 markdown版（不支持公众号）"))
+a:value("/usr/share/serverchan/api/wxpusher.json", translate("微信 wxpusher"))
+a:value("/usr/share/serverchan/api/pushplus.json", translate("微信 pushplus"))
+a:value("/usr/share/serverchan/api/telegram.json", translate("Telegram"))
+a:value("/usr/share/serverchan/api/diy.json", translate("自定义推送"))
 
 a = s:taboption("basic", Value, "sckey", translate('微信推送/新旧共用'), translate("").."Server酱 sendkey <a href='https://sct.ftqq.com/' target='_blank'>点击这里</a><br>")
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/serverchan.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/serverchan.json")
 
 a = s:taboption("basic", Value, "corpid", translate('企业ID(corpid)'), translate("").."获取说明 <a href='https://work.weixin.qq.com/api/doc/10013' target='_blank'>点击这里</a>")
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_mpnews.json")
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_markdown.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_mpnews.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_markdown.json")
 
 a = s:taboption("basic", Value, "userid", translate('帐号(userid)'))
 a.rmempty = true
 a.description = translate("群发到应用请填入 @all ")
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_mpnews.json")
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_markdown.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_mpnews.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_markdown.json")
 
 a = s:taboption("basic", Value, "agentid", translate('应用id(agentid)'))
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_mpnews.json")
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_markdown.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_mpnews.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_markdown.json")
 
 a = s:taboption("basic", Value, "corpsecret", translate('应用密钥(Secret)'))
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_mpnews.json")
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_markdown.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_mpnews.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_markdown.json")
 
 a = s:taboption("basic", Value, "mediapath", translate('图片缩略图文件路径'))
 a.rmempty = true
-a.default = "/usr/bin/serverchan/api/logo.jpg"
-a:depends("jsonpath", "/usr/bin/serverchan/api/qywx_mpnews.json")
+a.default = "/usr/share/serverchan/api/logo.jpg"
+a:depends("jsonpath", "/usr/share/serverchan/api/qywx_mpnews.json")
 a.description = translate("只支持 2MB 以内 JPG,PNG 格式 <br> 900*383 或 2.35:1 为佳 ")
 
 a = s:taboption("basic", Value, "wxpusher_apptoken", translate('appToken'), translate("").."获取 appToken <a href='https://wxpusher.zjiecode.com/docs/#/?id=%e5%bf%ab%e9%80%9f%e6%8e%a5%e5%85%a5' target='_blank'>点击这里</a><br>")
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/wxpusher.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/wxpusher.json")
 
 a = s:taboption("basic", Value,"wxpusher_uids",translate('uids'))
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/wxpusher.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/wxpusher.json")
 
 a = s:taboption("basic", Value, "wxpusher_topicIds", translate('topicIds(群发)'), translate("").."接口说明 <a href='https://wxpusher.zjiecode.com/docs/#/?id=%e5%8f%91%e9%80%81%e6%b6%88%e6%81%af-1'target='_blank'>点击这里</a><br>")
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/wxpusher.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/wxpusher.json")
 
 a = s:taboption("basic", Value, "pushplus_token", translate('pushplus_token'), translate("").."获取pushplus_token <a href='http://www.pushplus.plus/' target='_blank'>点击这里</a><br>")
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/pushplus.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/pushplus.json")
 
 a = s:taboption("basic", Value, "tg_token", translate("TG_token"), translate("").."获取机器人<a href='https://t.me/BotFather' target='_blank'>点击这里</a><br>与创建的机器人发一条消息，开启对话<br>")
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/telegram.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/telegram.json")
 
 a = s:taboption("basic", Value, "chat_id", translate('TG_chatid'), translate("").."获取 chat_id <a href='https://t.me/getuserIDbot' target='_blank'>点击这里</a>")
 a.rmempty = true
-a:depends("jsonpath", "/usr/bin/serverchan/api/telegram.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/telegram.json")
 
 a = s:taboption("basic", TextValue, "diy_json", translate("自定义推送"))
 a.optional = false
 a.rows = 28
 a.wrap = "soft"
 a.cfgvalue = function(self, section)
-	return fs.readfile("/usr/bin/serverchan/api/diy.json")
+	return fs.readfile("/usr/share/serverchan/api/diy.json")
 end
 a.write = function(self, section, value)
-	fs.writefile("/usr/bin/serverchan/api/diy.json", value:gsub("\r\n", "\n"))
+	fs.writefile("/usr/share/serverchan/api/diy.json", value:gsub("\r\n", "\n"))
 end
-a:depends("jsonpath", "/usr/bin/serverchan/api/diy.json")
+a:depends("jsonpath", "/usr/share/serverchan/api/diy.json")
 
 a = s:taboption("basic", Button, "__add", translate("发送测试"))
 a.inputtitle = translate("发送")
 a.inputstyle = "apply"
 function a.write(self, section)
 	luci.sys.call("cbi.apply")
-	luci.sys.call("/usr/bin/serverchan/serverchan test &")
+	luci.sys.call("/usr/share/serverchan/serverchan test &")
 end
 
 a = s:taboption("basic", Value, "device_name", translate('本设备名称'))
@@ -185,10 +185,10 @@ a.optional = false
 a.rows = 8
 a.wrap = "soft"
 a.cfgvalue = function(self, section)
-	return fs.readfile("/usr/bin/serverchan/api/ipv4.list")
+	return fs.readfile("/usr/share/serverchan/api/ipv4.list")
 end
 a.write = function(self, section, value)
-	fs.writefile("/usr/bin/serverchan/api/ipv4.list", value:gsub("\r\n", "\n"))
+	fs.writefile("/usr/share/serverchan/api/ipv4.list", value:gsub("\r\n", "\n"))
 end
 a.description = translate("<br/>会因服务器稳定性、连接频繁等原因导致获取失败<br/>如接口可以正常获取 IP，不推荐使用<br/>从以上列表中随机地址访问")
 a:depends({serverchan_ipv4 = "2"})
@@ -221,10 +221,10 @@ a.optional = false
 a.rows = 8
 a.wrap = "soft"
 a.cfgvalue = function(self, section)
-	return fs.readfile("/usr/bin/serverchan/api/ipv6.list")
+	return fs.readfile("/usr/share/serverchan/api/ipv6.list")
 end
 a.write = function(self, section, value)
-	fs.writefile("/usr/bin/serverchan/api/ipv6.list", value:gsub("\r\n", "\n"))
+	fs.writefile("/usr/share/serverchan/api/ipv6.list", value:gsub("\r\n", "\n"))
 end
 a.description = translate("<br/>会因服务器稳定性、连接频繁等原因导致获取失败<br/>如接口可以正常获取 IP，不推荐使用<br/>从以上列表中随机地址访问")
 a:depends({serverchan_ipv6 = "2"})
@@ -334,10 +334,10 @@ a.optional = false
 a.rows = 8
 a.wrap = "soft"
 a.cfgvalue = function(self, section)
-    return fs.readfile("/usr/bin/serverchan/api/ip_blacklist")
+    return fs.readfile("/usr/share/serverchan/api/ip_blacklist")
 end
 a.write = function(self, section, value)
-    fs.writefile("/usr/bin/serverchan/api/ip_blacklist", value:gsub("\r\n", "\n"))
+    fs.writefile("/usr/share/serverchan/api/ip_blacklist", value:gsub("\r\n", "\n"))
 end
 a:depends("web_login_black", "1")
 
@@ -422,7 +422,7 @@ e:depends("crontab", "2")
 e.inputstyle = "apply"
 function e.write(self, section)
 luci.sys.call("cbi.apply")
-		luci.sys.call("/usr/bin/serverchan/serverchan send &")
+		luci.sys.call("/usr/share/serverchan/serverchan send &")
 end
 
 --免打扰

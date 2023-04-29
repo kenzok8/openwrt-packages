@@ -4,17 +4,17 @@ START=99
 STOP=10
 
 start() {
-	state=`pgrep -f "/usr/bin/serverchan/serverchan"`
+	state=`pgrep -f "/usr/share/serverchan/serverchan"`
 	if [ ! -z "$state" ]; then
 		restart
 	else
-		/usr/bin/serverchan/serverchan &
+		/usr/share/serverchan/serverchan &
 	fi
 	echo "serverchan is starting now ..."
 }
 
 stop() {
-	kill -9 `pgrep -f "/usr/bin/serverchan/serverchan"` 2>/dev/null
+	kill -9 `pgrep -f "/usr/share/serverchan/serverchan"` 2>/dev/null
 	echo "serverchan exit ..."
 }
 

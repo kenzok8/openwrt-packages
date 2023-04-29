@@ -39,7 +39,7 @@
 - 新功能看情况开发，忙得头晕眼花
 - 欢迎各种代码提交
 - 提交bug时请尽量带上设备信息，日志与描述
-（如执行 `/usr/bin/serverchan/serverchan` 后的提示、日志信息、/tmp/serverchan/ipAddress 文件信息、或尝试使用 sh -x /usr/bin/serverchan/serverchan 查看详细运行信息 ）
+（如执行 `/usr/share/serverchan/serverchan` 后的提示、日志信息、/tmp/serverchan/ipAddress 文件信息、或尝试使用 `sh -x /usr/share/serverchan/serverchan t1` 查看详细运行信息 ）
 - 三言两句恕我无能为力
 
 # Donate
