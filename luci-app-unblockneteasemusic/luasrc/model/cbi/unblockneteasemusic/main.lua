@@ -137,7 +137,7 @@ o.description = translate("非必要不推荐使用")
 o.default = 0
 
 o = s:option(ListValue, "log_level", translate("日志等级"))
-o:value("debug", translate("'调试"));
+o:value("debug", translate("调试"));
 o:value("info", translate("信息（默认）"))
 o:value("silent", translate("静默"))
 o.default = "info";
