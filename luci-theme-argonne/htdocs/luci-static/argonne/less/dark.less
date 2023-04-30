@@ -3,10 +3,9 @@
  *  Argonne is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argonne Template
  *
  *  luci-theme-argonne
- *      Copyright 2020 Jerryk <jerrykuku@gmail.com>
  *
  *  Have a bug? Please create an issue here on GitHub!
- *      https://github.com/kenzok78/luci-theme-argonne/issues
+ *      https://github.com/jerrykuku/luci-theme-argonne/issues
  *
  *  luci-theme-bootstrap:
  *      Copyright 2008 Steven Barth <steven@midlink.org>
@@ -19,7 +18,7 @@
  *  luci-theme-material:
  *      https://github.com/LuttyYang/luci-theme-material/
  *
- *  Agron Theme
+ *  Argonne Theme
  *	    https://demos.creative-tim.com/argon-dashboard/index.html
  *
  *  Login background
@@ -272,6 +271,7 @@ table>thead>tr>td {
 
         div {
             background-color: #32325d !important;
+            background-color: var(--dark-primary) !important;
         }
     }
 
@@ -287,7 +287,7 @@ table>thead>tr>th {
 }
 
 .cbi-rowstyle-2 {
-    background-color: #1e1e1e;
+    background-color: #2c2c2c !important;
 }
 
 .cbi-rowstyle-1 {
@@ -306,7 +306,12 @@ table>thead>tr>th {
 
 .cbi-button {
     color: #ccc;
-    background-color: #252526;
+    background-color: #2c2c2c;
+}
+
+.cbi-rowstyle-2 .cbi-button-up,
+.cbi-rowstyle-2 .cbi-button-down {
+    background-color: #252526 !important;
 }
 
 .cbi-section-node {
@@ -324,6 +329,72 @@ abbr {
 div>table>tbody>tr:nth-of-type(2n),
 div>.table>.tbody>.tr:nth-of-type(2n) {
     background-color: #252526;
+}
+
+/* file selector button */
+::file-selector-button {
+    border: 1px solid darkseagreen !important;
+    background-color: darkseagreen !important;
+}
+
+/* Fix background color of table-titles */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-section-table-titles th {
+    background-color: #1e1e1e;
+    border: none !important;
+}
+
+/* Fix background color of table-descr */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-section-table-descr th {
+    background-color: #333333;
+    border: none !important;
+}
+
+/* Fix background color not change when the H tag is in the table rowstyle-1 */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-rowstyle-1 th {
+    background-color: #252526;
+    border-top: 1px solid #252526;
+    border-bottom: none !important;
+}
+
+/* Fix background color not change when the H tag is in the table rowstyle-2 */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-rowstyle-2 th {
+    background-color: #2c2c2c;
+    border-top: 1px solid #252526;
+    border-bottom: none !important;
+}
+
+/* Change the color of the H label in the table to make it more visible */
+th h1, td h1,
+th h2, td h2,
+th h3, td h3,
+th h4, td h4,
+th h5, td h5,
+th h6, td h6 {
+    background: var(--gray-dark);
+}
+
+/* Improved the background color of each itemes in "UNSAVED CHANGES" (dark mode only) */
+.uci-change-list del,
+.uci-change-legend-label del {
+    background-color: #fb74008c;
+}
+.uci-change-list var,
+.uci-change-legend-label var {
+    background-color: #333333;
+}
+.uci-change-list ins,
+.uci-change-legend-label ins {
+    background-color: #00ff0a45 !important;
+}
+
+/* OCD: Compatible the background color of the "Add the node via the link" & "USE(node)" pop-up window in PassWall (dark mode only) */
+#add_link_div,
+#set_node_div {
+    background-color: #333333f0 !important;
+    box-shadow: #00000094 10px 10px 30px 5px !important;
+}
+#add_link_div>.cbi-value>.cbi-value-field>#nodes_link {
+    background: #ccc;
 }
 
 #content_syslog {
@@ -464,7 +535,7 @@ select {
 }
 
 .ifacebox {
-    background-color: none;
+    background-color: #1e1e1e;
     border: 1px solid #1e1e1e;
 }
 
@@ -482,6 +553,30 @@ select {
 
 .zonebadge>.ifacebadge {
     background-color: #3c3c3c;
+}
+
+/* Fix firewall zone: "unspecified -or- create: " background color (dark mode only) */
+div[onclick$="._fwzone_new').checked=true"] {
+    border: 1px solid #3c3c3c;
+    background-color: transparent !important;
+}
+
+/* Improve the background color of "Any zone" and "Device" when ADD/EDIT Rules in Firewall > Traffic Rules (dark mode only) */
+label[for$=".src_any"],
+label[for$=".dest_empty"],
+label[for$=".dest_any"] {
+    background-color: #2888db !important;
+}
+
+/* Fix/add background color of wireless signal strength badge for dark mode */
+td>.ifacebadge,
+.td>.ifacebadge {
+    background-color: #3c3c3c;
+}
+
+/* Improved loading process gif color (dark mode only) */
+img[src="/luci-static/resources/icons/loading.gif"] {
+    filter: invert(1);
 }
 
 div.cbi-value var,
@@ -541,9 +636,35 @@ td.cbi-value-field var {
     background-color: darkolivegreen !important;
 }
 
+/* Define the warning background-color breathe display animation (dark mode) */
+@keyframes warning-background-color-breathe-dark {
+    0%{
+        color: #fff;
+        background-color: darkorange;
+    }
+    50%{
+        color: #ccc;
+        background-color: #333333;
+    }
+    100%{
+        color: #fff;
+        background-color: darkorange;
+    }
+}
+.warning,
+.warning * {
+    animation: warning-background-color-breathe-dark 1.5s ease-in-out infinite !important;
+}
+
 .notice {
     background-color: #483d8b !important;
     background-color: var(--dark-primary) !important;
+}
+
+/* Improved the aleart-message background color during device restart (dark mode only) */
+.errorbox,
+.alert-message {
+    background-color: #333333;
 }
 
 .cbi-input-find,
@@ -587,8 +708,30 @@ fieldset[id^="cbi-apply-"] {
     background: #252525;
 }
 
-.cbi-section-error {
+/* Define the error text border breathe display animation (dark mode) */
+@keyframes error-border-breathe-dark {
+    0%{
+        border-color: darkorange;
+    }
+    50%{
+        border-color: transparent;
+    }
+    100%{
+        border-color: darkorange;
+    }
+}
+
+/* Add border for error text box, and border breathe display animation to make it more noticeable (dark mode) */
+.cbi-section-error>ul>li {
     color: darkorange;
+    border: 2px solid darkorange ;
+    animation: error-border-breathe-dark 1.5s ease-in-out infinite;
+}
+
+.cbi-input-invalid,
+.cbi-value-error input {
+    color: darkorange;
+    border: 1px dashed darkorange !important;
 }
 
 .node-services-vssr .block h4 span{

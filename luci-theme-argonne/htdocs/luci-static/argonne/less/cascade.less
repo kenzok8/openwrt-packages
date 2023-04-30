@@ -3,10 +3,9 @@
  *  Argonne is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argonne Template
  *
  *  luci-theme-argonne
- *      Copyright 2020 Jerryk <jerrykuku@gmail.com>
  *
  *  Have a bug? Please create an issue here on GitHub!
- *      https://github.com/kenzok78/luci-theme-argonne/issues
+ *      https://github.com/jerrykuku/luci-theme-argonne/issues
  *
  *  luci-theme-bootstrap:
  *      Copyright 2008 Steven Barth <steven@midlink.org>
@@ -19,7 +18,7 @@
  *  luci-theme-material:
  *      https://github.com/LuttyYang/luci-theme-material/
  *
- *  Agron Theme
+ *  Argonne Theme
  *	    https://demos.creative-tim.com/argon-dashboard/index.html
  *
  *  Login background
@@ -362,7 +361,7 @@ li {
                     position: relative;
 
                     &::before {
-                        font-family: 'argon' !important;
+                        font-family: 'argonne' !important;
                         font-style: normal;
                         font-weight: normal;
                         font-variant: normal;
@@ -745,7 +744,7 @@ footer {
                         position: relative;
 
                         &::before {
-                            font-family: 'argon' !important;
+                            font-family: 'argonne' !important;
                             font-style: normal;
                             font-weight: normal;
                             font-variant: normal;
@@ -765,7 +764,7 @@ footer {
                             position: absolute;
                             right: 0.5rem;
                             top: 0.8rem;
-                            font-family: 'argon' !important;
+                            font-family: 'argonne' !important;
                             font-style: normal;
                             font-weight: normal;
                             font-variant: normal;
@@ -1060,7 +1059,7 @@ footer {
 }
 
 .cbi-button:active {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.19), 0 5px 5px rgba(0, 0, 0, 0.23);
 }
 
 .cbi-button:disabled {
@@ -1134,6 +1133,34 @@ form.inline+form.inline,
     min-width: 2.5rem !important;
 }
 
+/* Replace LuCI's default file and folder type icons */
+img[src="/luci-static/resources/cbi/reload.gif"] {
+    content: url("/luci-static/argonne/img/reload.webp");
+}
+img[src="/luci-static/resources/cbi/file.gif"] {
+    content: url("/luci-static/argonne/img/file.webp");
+}
+img[src="/luci-static/resources/cbi/add.gif"] {
+    content: url("/luci-static/argonne/img/add.webp");
+}
+img[src="/luci-static/resources/cbi/remove.gif"] {
+    content: url("/luci-static/argonne/img/remove.webp");
+}
+img[src="/luci-static/resources/cbi/edit.gif"] {
+    content: url("/luci-static/argonne/img/edit.webp");
+}
+img[src="/luci-static/resources/cbi/fieldadd.gif"] {
+    content: url("/luci-static/argonne/img/fieldadd.webp");
+}
+img[src="/luci-static/resources/cbi/link.gif"] {
+    content: url("/luci-static/argonne/img/link.webp");
+}
+img[src="/luci-static/resources/cbi/find.gif"] {
+    content: url("/luci-static/argonne/img/find.webp");
+}
+img[src="/luci-static/resources/cbi/folder.gif"] {
+    content: url("/luci-static/argonne/img/folder.webp");
+}
 
 /* input */
 .cbi-value input[type="password"],
@@ -1268,13 +1295,14 @@ input[type="checkbox"] {
     -webkit-appearance: none !important;
     border: 1px solid #dee2e6;
 
-    width: 16px !important;
-    height: 16px !important;
+    width: 17px !important;
+    height: 17px !important;
     padding: 0;
     cursor: pointer;
     transition: all 0.2s;
 
-    margin: 0.9rem 0.25rem 0 0.25rem;
+    margin: 0.5rem 0.25rem 0.7rem 0.25rem;
+    vertical-align: middle;
 }
 
 input[type="checkbox"]:checked {
@@ -1289,7 +1317,8 @@ input[type="checkbox"]:checked {
 }
 
 ul li .cbi-input-checkbox {
-    margin: 0.5rem 0.25rem !important;
+    margin: 0.5rem 0.25rem 0.7rem 0.25rem !important;
+    vertical-align: middle !important;
 }
 
 .cbi-input-radio {
@@ -1422,7 +1451,7 @@ ul li .cbi-input-checkbox {
 
 .cbi-section-create {
     margin: 0;
-    padding-left: 1rem;
+    padding-left: 0.5rem;
     align-items: center;
 
 }
@@ -1495,11 +1524,46 @@ small {
     display: none !important;
 }
 
-.cbi-section-error {
-    padding: 1.5rem;
-    color: #fb6340;
-    font-weight: 600;
+/* Define the error text border breathe display animation */
+@keyframes error-border-breathe {
+    0%{
+        border-color: #fb6340;
+    }
+    50%{
+        border-color: transparent;
+    }
+    100%{
+        border-color: #fb6340;
+    }
 }
+
+/* Center display error text box */
+.cbi-section-error > ul{
+    text-align: center;
+}
+
+/* Add border for error text box, and border breathe display animation to make it more noticeable */
+.cbi-section-error > ul > li {
+    font-weight: 600;
+    max-width: 60%;
+    color: #fb6340;
+    line-height: 1rem;
+    display: inline-block;
+    border: 2px solid #fb6340;
+    border-radius: 0.3rem;
+    animation: error-border-breathe 1.5s ease-in-out infinite;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+.cbi-input-invalid, 
+.cbi-value-error input {
+    color: #fb6340;
+    border: 1px dashed #fb6340;
+}
+
 
 fieldset>fieldset {
     margin: 0;
@@ -1571,6 +1635,7 @@ input[name="nslookup"] {
     height: 1.6rem !important;
     line-height: 1.6rem;
     border-radius: .25rem;
+    overflow: hidden;
 }
 
 #swaptotal>div>div,
@@ -1681,6 +1746,31 @@ td>table>tbody>tr>td,
 
 .a-to-btn {
     text-decoration: none;
+}
+
+/* file selector button */
+::file-selector-button {
+    color: #fff;
+    border-radius: .25rem;
+    border: 1px solid #2e6da4;
+    padding: .4rem .5rem;
+    background-color: #337ab7;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+::file-selector-button:hover,
+::file-selector-button:focus,
+::file-selector-button:active {
+    outline: 0;
+    text-decoration: none;
+}
+::file-selector-button:hover,
+::file-selector-button:focus {
+    box-shadow: 0 0px 2px rgba(0, 0, 0, 0.12), 0 2px 2px rgba(0, 0, 0, 0.2);
+}
+::file-selector-button:active {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.19), 0 5px 5px rgba(0, 0, 0, 0.23);
 }
 
 /* table */
@@ -1833,6 +1923,46 @@ td>table>tbody>tr>td,
 #cbi-network-switch_vlan .th,
 #cbi-network-switch_vlan .td {
     flex-basis: 12%;
+}
+
+/* Fix background color of table-titles */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-section-table-titles th {
+    background-color: var(--lighter);
+    border: none;
+}
+
+/* Fix background color of table-descr */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-section-table-descr th {
+    border: none;
+}
+
+/* Fix background color not change when the H tag is in the table rowstyle-1 */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-rowstyle-1 th {
+    background-color: #fff;
+    border-top: 1px solid #ddd;
+    border-bottom: none;
+}
+
+/* Fix background color not change when the H tag is in the table rowstyle-2 */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-rowstyle-2 th {
+    background-color: #f9f9f9;
+    border-top: 1px solid #ddd;
+    border-bottom: none;
+}
+
+/* Change the color of the H label in the table to make it more visible */
+th h1, td h1,
+th h2, td h2,
+th h3, td h3,
+th h4, td h4,
+th h5, td h5,
+th h6, td h6 {
+    background: var(--lighter);
+}
+
+/* OCD: Change the background color of the "now in use" node in PassWall  */
+.cbi-section-table>tbody>._now_use {
+    background: #5e72e473 !important;
 }
 
 /* language fix */
@@ -1989,7 +2119,7 @@ body.lang_pl.node-main-login .cbi-value-title {
 .cbi-value-helpicon,
 .showSide,
 .main>.loading>span {
-    font-family: 'argon' !important;
+    font-family: 'argonne' !important;
     font-style: normal !important;
     font-weight: normal !important;
     font-variant: normal !important;
@@ -2165,11 +2295,21 @@ table>thead>tr>th,
     margin-bottom: 0;
 }
 
+.cbi-section-table-row>.cbi-value-field .cbi-dropdown,
 .cbi-section-table-row>.cbi-value-field .cbi-input-select,
 .cbi-section-table-row>.cbi-value-field .cbi-input-text,
-.cbi-section-table-row>.cbi-value-field .cbi-input-password,
-.cbi-section-table-row>.cbi-value-field .cbi-dropdown {
-    width: 100%;
+.cbi-section-table-row>.cbi-value-field .cbi-input-password{
+    width:100%
+}
+
+.cbi-section-table-row>.cbi-value-field .cbi-input-text,
+.cbi-section-table-row>.cbi-value-field .cbi-input-password{
+    min-width:100px
+}
+
+#lease6_status_table > tbody > .cbi-section-table-row.cbi-rowstyle-1 div,
+#lease6_status_table > tbody > .cbi-section-table-row.cbi-rowstyle-2 div{
+    min-width:100%;
 }
 
 .cbi-section-table-row>.cbi-value-field [data-dynlist]>input,
@@ -2193,10 +2333,27 @@ div>.table>.tbody>.tr:nth-of-type(2n) {
     color: #fff !important;
 }
 
-.warning {
-    background-color: #fb6340 !important;
-    background-color: var(--warning) !important;
-    color: #fff !important;
+/* Define the warning background-color breathe display animation */
+@keyframes warning-background-color-breathe {
+    0%{
+        color: #fff;
+        background-color: #fb6340;
+    }
+    50%{
+        color: #32325d;
+        background-color: #fff;
+    }
+    100%{
+        color: #fff;
+        background-color: #fb6340;
+    }
+}
+.warning,
+.warning * {
+    background-color: #fb6340;
+    background-color: var(--warning);
+    color: #fff;
+    animation: warning-background-color-breathe 1.5s ease-in-out infinite !important;
 }
 
 .notice {
@@ -2373,7 +2530,6 @@ table>thead>tr>th {
     padding-top: .75rem;
     padding-bottom: .75rem;
     letter-spacing: 1px;
-    text-transform: uppercase;
     border-bottom: 1px solid #e9ecef;
 }
 
@@ -2484,7 +2640,7 @@ td>table>tbody>tr>td {
 
 .cbi-tabmenu {
     color: white;
-    padding: 0.5rem 1rem 0 1rem;
+    padding: 0.5rem 0.5rem 0 0.5rem;
     white-space: nowrap;
     overflow-x: auto;
     border-bottom: 1px solid #ddd !important;
@@ -2811,7 +2967,7 @@ select[multiple="multiple"] {
 
 
 .cbi-section-node .cbi-value {
-    padding: 0.3rem 1rem 0.3rem 1rem;
+    padding: 0.5rem 1rem 0.5rem 1rem !important;
 }
 
 
@@ -2827,6 +2983,18 @@ select[multiple="multiple"] {
 
 }
 
+/* Fix text position of the luci-app-filebrowser running state */
+#cbi-filebrowser>.cbi-section>.cbi-section>.cbi-value>.cbi-value-field,
+/* Fix text position of the luci-apps running state of the [Control] type */
+form>.cbi-map>.cbi-section>.cbi-section-node>.cbi-value>.cbi-value-field font {
+    word-wrap: break-word;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    padding: 0.7rem;
+    padding-left: 0;
+    text-align: right;
+    display: table-cell;
+}
 
 
 .cbi-value-helpicon>img {
@@ -2851,7 +3019,6 @@ select[multiple="multiple"] {
     padding: .7rem;
     padding-left: 0;
     width: 23rem;
-    float: left;
     text-align: right;
     display: table-cell;
 }
@@ -3097,21 +3264,25 @@ td>.ifacebadge,
     margin-top: 0.3rem;
 }
 
-.cbi-value-field .cbi-input-checkbox,
-.cbi-value-field .cbi-input-radio {
-    margin: 0.9rem 0.25rem 0 0.25rem;
+.cbi-value-field .cbi-input-checkbox {
+    margin: 0.5rem 0.25rem 0.7rem 0.25rem;
+    vertical-align: middle;
     height: 1rem;
     line-height: 1.6;
 }
 
 .cbi-input-checkbox {
-    margin: 0.9rem 0.25rem 0 0.25rem;
+    margin: 0.5rem 0.25rem 0.7rem 0.25rem;
+    vertical-align: middle;
 }
 
 .cbi-value-field .cbi-input-radio {
     margin: 0rem 0.25rem;
 }
 
+.cbi-input-radio {
+    margin: 0rem 0.25rem;
+}
 
 .cbi-value-field>input+.cbi-value-description {
     padding: 0;
@@ -3139,7 +3310,7 @@ td>.ifacebadge,
 }
 
 .cbi-section-create>.cbi-button-add {
-    margin: 0.5rem 0.5rem 0.5rem 0.5rem;
+    margin: 0.75rem 0.75rem 0.75rem 0.25rem;
 }
 
 .cbi-section-remove {
@@ -3276,6 +3447,10 @@ input[name="nslookup"] {
             border-right: 0 !important;
             background-color: #5e72e4 !important;
             background-color: var(--primary) !important;
+            height: 100% !important;
+            background-image: url(../img/trafficbar.png);
+            background-position: left top;
+            animation: sparkle 1500ms linear infinite;
         }
     }
 
@@ -3555,15 +3730,8 @@ input[name="nslookup"] {
         font-size: 1.7rem;
     }
 
-
-
     header>.fill>.container>.brand {
         display: inline-block;
-    }
-
-    .cbi-value-title {
-        width: 9rem;
-        padding-right: 1rem;
     }
 
     .node-network-diagnostics>.main .cbi-map fieldset>div * {
@@ -3714,13 +3882,6 @@ input[name="nslookup"] {
         display: inline-block;
         width: 100%;
         position: relative;
-    }
-
-    .cbi-value-field .cbi-input-checkbox,
-    .cbi-value-field .cbi-input-radio {
-        margin: 0rem 0.25rem 0 0.25rem;
-        height: 1rem;
-        line-height: 1.6;
     }
 
     .cbi-page-actions>div>input {

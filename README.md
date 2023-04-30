@@ -67,7 +67,6 @@ make menuconfig
 | luci-app-unblockneteasemusic | Unlock NetEase Cloud Music         | 解锁网易云音乐   |
 | luci-app-aliyundrive-webdav  | Aliyun Disk WebDAV Service            |  阿里云盘 WebDAV 服务   |
 | luci-app-amlogic  | Amlogic Service             |  晶晨宝盒   |
-* 修改argon为argonne，包括argonne-config，为防止同名argon，而影响编译
 
 ![暗黄主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-9.jpg)
 ![暗黄主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-10.jpg)

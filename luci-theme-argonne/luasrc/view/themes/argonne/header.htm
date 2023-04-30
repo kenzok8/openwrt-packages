@@ -2,7 +2,6 @@
 	Argonne is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI and Argonne Template
 
 	luci-theme-argonne
-	Copyright 2020 Jerryk <jerrykuku@gmail.com>
 
 	Have a bug? Please create an issue here on GitHub!
 	https://github.com/kenzok78/luci-theme-argonne/issues
@@ -15,7 +14,7 @@
 	MUI:
 	https://github.com/muicss/mui
 	
-	Agron Theme
+	Argonne Theme
 	https://demos.creative-tim.com/argon-dashboard/index.html
 
 	Licensed to the public under the Apache License 2.0
@@ -44,7 +43,7 @@
 	local node = disp.context.dispatched
 
 	local categories = disp.node_childs(tree)
-	local currentNode = luci.dispatcher.context.path
+
 	local c = tree
 	local i, r
 	
@@ -108,22 +107,16 @@
 		end
 	end
 
-	local function render_submenu(prefix,parent, node)
+	local function render_submenu(prefix, node)
 		local childs = disp.node_childs(node)
 		if #childs > 0 then
-			local active = (currentNode[2] == parent) and "active" or ""
-			local display = (currentNode[2] == parent) and 'style="display: block;"' or ""
-			
-			write('<ul class="slide-menu %s" %s>' %{
-				active,
-				display
-			})
+			write('<ul class="slide-menu">')
+
 			for i, r in ipairs(childs) do
 				local nnode = node.nodes[r]
 				local title = pcdata(striptags(translate(nnode.title)))
-				local subactive = (currentNode[3] == r) and 'class="active"' or ""
-				write('<li %s><a data-title="%s" href="%s">%s</a></li>' %{
-					subactive,
+
+				write('<li><a data-title="%s" href="%s">%s</a></li>' %{
 					title,
 					nodeurl(prefix, r, nnode.query),
 					title
@@ -138,21 +131,20 @@
 		local childs = disp.node_childs(cattree)
 		if #childs > 0 then
 			write('<ul class="nav">')
-			
+
 			for i, r in ipairs(childs) do
 				local nnode = cattree.nodes[r]
 				local grandchildren = disp.node_childs(nnode)
+
 				if #grandchildren > 0 then
-					local active = (currentNode[2] == r) and "active" or ""
 					local title = pcdata(striptags(translate(nnode.title)))
                                         local en_title = pcdata(striptags(string.gsub(nnode.title," ","_")))
-					write('<li class="slide"><a class="menu %s" data-title="%s" href="#">%s</a>' %{
-						active,
+					write('<li class="slide"><a class="menu" data-title="%s" href="#">%s</a>' %{
 						en_title,
 						title
 					})
 
-					render_submenu(category .. "/" .. r,r, nnode)
+					render_submenu(category .. "/" .. r, nnode)
 					write('</li>')
 				else
 					local title = pcdata(striptags(translate(nnode.title)))
@@ -240,11 +232,11 @@
 	<link rel="icon" type="image/png" sizes="32x32" href="<%=media%>/icon/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="96x96" href="<%=media%>/icon/favicon-96x96.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="<%=media%>/icon/favicon-16x16.png">
-	<link rel="manifest" href="<%=media%>/icon/manifest.json">
+	<link rel="manifest" href="<%=media%>/icon/manifest.json"  crossorigin="use-credentials">
 	<meta name="msapplication-TileColor" content="<%=bar_color%>">
 	<meta name="msapplication-TileImage" content="<%=media%>/icon/ms-icon-144x144.png">
 	<meta name="theme-color" content="<%=bar_color%>">
-	<link rel="stylesheet" href="<%=media%>/css/cascade.css?v=<%=math.random(1,100000)%>">
+	<link rel="stylesheet" href="<%=media%>/css/cascade.css<%# ?v=PKG_VERSION %>">
 	<style title="text/css">
 	<% if mode == 'normal' then %>
 		@media (prefers-color-scheme: dark) {
@@ -273,11 +265,11 @@
 	<% end -%>
 	<script src="<%=resource%>/cbi.js<%# ?v=PKG_VERSION %>"></script>
 	<script src="<%=resource%>/xhr.js<%# ?v=PKG_VERSION %>"></script>
-	<script src="<%=media%>/js/jquery.min.js<%# ?v=PKG_VERSION %>"></script>
+	<script src="<%=media%>/js/jquery.min.js?v=3.5.1"></script>
 </head>
 
 <body
-	class="<%- if node then %><%= striptags( node.title ) %><%- end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %> lang_<%=luci.i18n.context.lang%>  ">
+	class="<%- if node then %><%= striptags( node.title ) %><%- end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %> lang_<%=luci.i18n.context.lang%> <%=mode %>  ">
 
 	<div class="main">
 		<div class="main-left">
@@ -326,3 +318,12 @@
 					</noscript>
 
 					<% if category then render_tabmenu(category, cattree) end %>
+
+	<script>
+		// thanks for Jo-Philipp Wich <jow@openwrt.org>
+		var luciLocation = <%= luci.http.write_json(luci.dispatcher.context.path) %>;
+	</script>
+
+	<script src="<%=media%>/js/menu-argonne.js<%# ?v=PKG_VERSION %>"></script>
+
+	<script src="<%=media%>/js/sidebar-argonne.js<%# ?v=PKG_VERSION %>"></script>

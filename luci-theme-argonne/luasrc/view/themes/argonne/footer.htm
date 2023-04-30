@@ -1,8 +1,7 @@
 <%#
-	Argonne is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argonne Template
+	Argonne is a clean HTML5 theme for LuCI. It is based on luci-theme-material Argonne Template
 
 	luci-theme-argonne
-	Copyright 2019 Jerrykuku <jerrykuku@qq.com>
 
 	Have a bug? Please create an issue here on GitHub!
 	https://github.com/kenzok78/luci-theme-argonne/issues
@@ -18,7 +17,7 @@
 	luci-theme-material:
 	https://github.com/LuttyYang/luci-theme-material/
 
-	Agron Theme
+	Argonne Theme
 	https://demos.creative-tim.com/argon-dashboard/index.html
 
 	Login background
@@ -58,31 +57,28 @@
 </footer>
 </div>
 </div>
-
-<script>
-	// thanks for Jo-Philipp Wich <jow@openwrt.org>
-	var luciLocation = <%= luci.http.write_json(luci.dispatcher.context.path) %>;
-	var winHeight = $(window).height();
-	$(window).resize(function () {
-		var winWidth = $(window).width()
-		if(winWidth < 600){
-			var newHeight = $(this).height();
-			var keyboradHeight = newHeight - winHeight;
-			$(".ftc").css("bottom", keyboradHeight + 30);
-		}
-		if($(document.body).height() < 525 ){
-			if($(".ftc").css('display') != 'none'){
-				$(".ftc").hide()
+	<script>
+		// thanks for Jo-Philipp Wich <jow@openwrt.org>
+		var winHeight = $(window).height();
+		$(window).resize(function () {
+			if($(document.body).height() < 525 ){
+				if($(".ftc").css('display') != 'none'){
+					$(".ftc").hide()
+				}
+			}else{
+				if($(".ftc").css('display') == 'none'){
+					$(".ftc").show()
+				}
 			}
-		}else{
-			if($(".ftc").css('display') == 'none'){
-				$(".ftc").show()
-			}
-		}
-	})
-</script>
+		})
+	</script>
 
-<script src="<%=media%>/js/script.js"></script>
+	<script>
+		if (window.orientation == 90 || window.orientation == -90) {
+			$(".ftc").hide()
+		}
+	</script>
+
+	<script src="<%=media%>/js/styles-argonne.js<%# ?v=PKG_VERSION %>"></script>
 </body>
-
 </html>
