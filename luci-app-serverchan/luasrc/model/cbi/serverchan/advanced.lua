@@ -66,7 +66,7 @@ end
 a = s:option(Flag, "gateway_info_enable", translate("从光猫获取主机名等信息"))
 a.default = 0
 a.rmempty = true
-a.description = translate("适用于 OpenWrt 作为透明网关，无法获取设备主机名及完整的局域网设备列表时<br/>仅测试通过 HG5143F/HN8145V 天翼网关，不保证通用性")
+a.description = translate("适用于 OpenWrt 作为旁路网关，无法获取设备主机名及完整的局域网设备列表时<br/>仅测试通过 HG5143F/HN8145V 天翼网关，不保证通用性")
 
 a = s:option(Value, "gateway_host_url", translate('光猫登录地址 URL'))
 a.rmempty = true
