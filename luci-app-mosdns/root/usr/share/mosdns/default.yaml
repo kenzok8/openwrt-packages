@@ -74,12 +74,6 @@ plugins:
       files:
         - "/etc/mosdns/rule/local-ptr.txt"
 
-  - tag: sp_low
-    type: domain_set
-    args:
-      files:
-        - "/usr/share/mosdns/sp_low.tdata"
-
   - tag: lazy_cache
     type: cache
     args:
@@ -189,8 +183,6 @@ plugins:
         exec: reject 3
       - matches: qname $adlist
         exec: reject 3
-      - matches: qname $sp_low
-        exec: reject 3
       - matches:
         - qtype 12
         - qname $local_ptr
@@ -207,7 +199,6 @@ plugins:
         - "!qname $ddnslist"
         - "!qname $blocklist"
         - "!qname $adlist"
-        - "!qname $sp_low"
         - "!qname $local_ptr"
         exec: $lazy_cache
       - exec: $redirect

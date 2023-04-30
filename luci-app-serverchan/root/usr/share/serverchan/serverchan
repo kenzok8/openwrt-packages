@@ -62,10 +62,10 @@ function serverchan_init(){
 	fi
 	down_oui &
 	get_syslog
-	add_ip_black
+	set_ip_black
 
 	rm -f ${dir}fd1 ${dir}sheep_usage ${dir}old_sheep_usage ${dir}client_usage_aliases ${dir}old_client_usage_aliases /usr/share/serverchan/errlog >/dev/null 2>&1
-	[ ! -f "/usr/sbin/wrtbwmon" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】未安装 wrtbwmon ，流量统计不可用" >> ${logfile}
+	[ ! -f "/usr/sbin/wrtbwmon" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】未安装 wrtbwmon ，流量统计不可用" >> ${logfile}
 	[ -z "$ip_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 iputils-arping 版本号，请确认插件是否正常运行" >> ${logfile}
 	[ -z "$cu_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 curl 版本号，请确认插件是否正常运行" >> ${logfile}
 	[ -z "${sckey}${tg_token}${pushplus_token}${corpid}${wxpusher_apptoken}${wxpusher_uids}${wxpusher_topicIds}" -a "${jsonpath}" != "/usr/share/serverchan/api/diy.json" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的 key " >> ${logfile} && return 1
@@ -162,7 +162,7 @@ function getip(){
 			local ipv6_URL=`echo "$ipv6_urllist"| sed -n "${1}p"|sed -e 's/\r//g'`
 			[ ! -z "$ipv6_interface" ] && local hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} -m 5 ${ipv6_URL}) || local hostIPv6=$(curl -k -s -6 -m 5 ${ipv6_URL})
 			[ -z "$hostIPv6" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv6_URL" >> ${logfile}
-			echo $hostIPv6|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1
+			echo $hostIPv6|grep -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}"|head -n1
 		}
 		local hostIPv6=`get_hostipv6 ${rand_numberv6}`
 		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;local hostIPv6=`get_hostipv6 ${rand_numberv6}`
@@ -987,13 +987,19 @@ function login_send(){
 	[ -z "$web_logged" ] && [ -z "$ssh_logged" ] && [ -z "$web_login_failed" ] && [ -z "$ssh_login_failed" ] && return
 	[ ! -f ${dir}login_monitor ] && return
 	cat ${dir}login_monitor|grep -i "accepted login"|awk '{print $4" "$NF}' >> ${dir}web_login
+	
 	cat ${dir}login_monitor|grep -i "Password auth succeeded\|Pubkey auth succeeded"|grep -Eo "[0-9]{2}:[0-9]{2}:[0-9]{2}.*[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"|awk '{print $1" "$NF" "$5}' >> ${dir}ssh_login
 	cat ${dir}login_monitor|grep -i "failed login"|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" >> ${dir}web_failed
-	cat ${dir}login_monitor|grep -i "Exit before auth from"|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" >> ${dir}ssh_failed
+	cat ${dir}login_monitor|grep -i "Bad password attempt\|Login attempt for nonexistent user from"|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" >> ${dir}ssh_failed
+	
+	cat ${dir}login_monitor|grep -i "Password auth succeeded\|Pubkey auth succeeded"|grep -Eo "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}"|awk '{print $1" "$NF" "$5}' >> ${dir}ssh_login
+	cat ${dir}login_monitor|grep -i "failed login"|grep -Eo "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}" >> ${dir}web_failed
+	cat ${dir}login_monitor|grep -i "Bad password attempt\|Login attempt for nonexistent user from"|grep -Eo "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}" >> ${dir}ssh_failed
+	
 	echo "" > ${dir}login_monitor
-	add_ip_black
+	set_ip_black
 
-	local login_ip_list=`cat ${dir}web_login|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
+	local login_ip_list=`cat ${dir}web_login|awk '{print $2}'|grep -v "^$"|sort -u`
 	for login_ip in $login_ip_list; do
 		[ -z "$login_ip" ] && continue
 		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
@@ -1011,12 +1017,14 @@ function login_send(){
 				content="${content}${str_splitline}${str_title_start} 登陆信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${web_login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
 			fi
 		fi
+		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
+		sed -i "/^${login_ip}$/d" ${dir}web_failed
 		echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}设备 ${login_ip} 通过 web ${web_login_mode} 登陆了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}web_login
 	unset login_ip login_ip_list
 
-	local login_ip_list=`cat ${dir}ssh_login|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
+	local login_ip_list=`cat ${dir}ssh_login|awk '{print $2}'|grep -v "^$"|sort -u`
 	for login_ip in $login_ip_list; do
 		[ -z "$login_ip" ] && continue
 		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
@@ -1035,12 +1043,13 @@ function login_send(){
 				content="${content}${str_splitline}${str_title_start} 登陆信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${ssh_login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
 			fi
 		fi
+		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
 		echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】设备 ${login_ip} 通过 ssh ${ssh_login_mode} 登陆了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}ssh_login
 	unset login_ip login_ip_list
 
-	local login_ip_list=`cat ${dir}web_failed|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
+	local login_ip_list=`cat ${dir}web_failed|awk '{print $1}'|grep -v "^$"|sort -u`
 	for login_ip in $login_ip_list; do
 		[ -z "$login_ip" ] && continue
 		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
@@ -1065,7 +1074,7 @@ function login_send(){
 	done
 	unset login_ip
 
-	local login_ip_list=`cat ${dir}ssh_failed|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
+	local login_ip_list=`cat ${dir}ssh_failed|awk '{print $1}'|grep -v "^$"|sort -u`
 	for login_ip in $login_ip_list; do
 		[ -z "$login_ip" ] && continue
 		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
@@ -1094,26 +1103,61 @@ function login_send(){
 
 # 添加黑名单
 function add_ip_black(){
-	[ ! -f "${ip_blacklist_path}" ] && touch ${ip_blacklist_path}
-	local logrow=$(grep -c "" ${ip_blacklist_path})
-	[ ! -z "$web_login_black" ] && [ "$web_login_black" -eq "0" ] || [ -z "$web_login_black" ] && logrow=0
-	[ ! -z "$1" ] && logrow=`expr $logrow + 1`
-	ipset flush ip_blacklist >/dev/null 2>&1
+	[ ! "$1" ] && return
+	( ipset -q test ip_blacklist ${1} ) && continue
+	( ipset -q test ip_blacklistv6 ${1} ) && continue
+	[ "$1" ] && echo "$1 timeout ${ip_black_timeout}" >> ${ip_blacklist_path}
 
-	if [ $logrow -le "0" ]; then
+	# 检查并添加
+	if ( echo ${1}|grep -q -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" ); then
+		ipset list ip_blacklist >/dev/null 2>&1 || ipset create ip_blacklist hash:ip timeout ${ip_black_timeout} >/dev/null 2>&1
+		iptables -C INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1 || iptables -I INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1
+		ipset add ip_blacklist ${1}
+	elif ( echo ${1}|grep -q -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}" ); then
+		ipset list ip_blacklistv6 >/dev/null 2>&1 || ipset create ip_blacklistv6 hash:ip timeout ${ip_black_timeout} family inet6 >/dev/null 2>&1
+		ip6tables -C INPUT -m set --match-set ip_blacklistv6 src -j DROP >/dev/null 2>&1 || ip6tables -I INPUT -m set --match-set ip_blacklistv6 src -j DROP >/dev/null 2>&1
+		ipset add ip_blacklistv6 ${1} 
+	fi
+}
+
+# 移出黑名单
+function del_ip_black(){
+	[ ! "$1" ] && return
+	sed -i "/^${1}/d" ${ip_blacklist_path}
+	
+	if ( echo ${1}|grep -q -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" ); then
+		ipset list ip_blacklist >/dev/null 2>&1 && ipset -! del ip_blacklist ${1}
+	elif ( echo ${1}|grep -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}" ); then
+		ipset list ip_blacklistv6 >/dev/null 2>&1 && ipset -! del ip_blacklistv6 ${1}
+	fi
+}
+# 设置黑名单列表
+function set_ip_black(){
+	[ `tail -n1 "${ip_blacklist_path}" | wc -l` -eq "0" ] && echo -e >> ${ip_blacklist_path}
+	# 如果黑名单列表为空，移除集合并退出
+	if  [ ! -z "$web_login_black" ] && [ "$web_login_black" -eq "0" ] || [ -z "$web_login_black" ] || [ ! -f ${ip_blacklist_path} ] || [ -z "`cat ${ip_blacklist_path}`" ]; then
 		iptables -D INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1
 		ipset destroy ip_blacklist >/dev/null 2>&1
+		ip6tables -D INPUT -m set --match-set ip_blacklistv6 src -j DROP >/dev/null 2>&1
+		ipset destroy ip_blacklistv6 >/dev/null 2>&1
 		return
 	fi
-
-	ipset list ip_blacklist >/dev/null 2>&1 || ipset create ip_blacklist hash:ip timeout ${ip_black_timeout} >/dev/null 2>&1
-	iptables -C INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1 || iptables -I INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1
-	echo "$1" >> ${ip_blacklist_path}
-	for ip_black in `cat ${ip_blacklist_path}`; do
-		ip_black=`echo "$ip_black"|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"`
-		ipset -! add ip_blacklist $ip_black >/dev/null 2>&1
+	
+	for ip_black in `cat ${ip_blacklist_path}|awk '{print $1}'`; do
+		add_ip_black ${ip_black}
 	done
-	ipset list ip_blacklist|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" > ${ip_blacklist_path}
+	
+	for fw_ip_blacklist in `ipset list ip_blacklist 2>/dev/null|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}"`; do
+		[ -z "$fw_ip_blacklist" ] && continue
+		local fw_info_blacklist=`ipset list ip_blacklist 2>/dev/null|grep -w -i ${fw_ip_blacklist}`
+		cat ${ip_blacklist_path}|grep -q -w -i ${fw_ip_blacklist} && sed -i "/^${fw_ip_blacklist}/d" ${ip_blacklist_path} && echo ${fw_info_blacklist} >> ${ip_blacklist_path} || del_ip_black ${fw_ip_blacklist}
+	done
+	
+	for fw_ip_blacklistv6 in `ipset list ip_blacklistv6 2>/dev/null|grep -Eo "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}"`; do
+		[ -z "$fw_ip_blacklistv6" ] && continue
+		local fw_info_blacklistv6=`ipset list ip_blacklistv6 2>/dev/null|grep -w -i ${fw_ip_blacklistv6}`
+		cat ${ip_blacklist_path}|grep -q -w -i ${fw_ip_blacklistv6} && sed -i "/^${fw_ip_blacklistv6}/d" ${ip_blacklist_path} && echo ${fw_info_blacklistv6} >> ${ip_blacklist_path} || del_ip_black ${fw_ip_blacklistv6}
+	done
 }
 
 
