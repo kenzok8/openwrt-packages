@@ -17,6 +17,7 @@ m:section(SimpleSection).template  = "serverchan/serverchan_status"
 s = m:section(NamedSection, "serverchan", "serverchan", translate(""))
 s:tab("basic", translate("基本设置"))
 s:tab("content", translate("推送内容"))
+s:tab("ipset", translate("自动封禁"))
 s:tab("crontab", translate("定时推送"))
 s:tab("disturb", translate("免打扰"))
 s.addremove = false
@@ -300,22 +301,23 @@ a.default = "3"
 a.datatype = "and(uinteger,min(1))"
 a:depends("web_login_failed", "1")
 a:depends("ssh_login_failed", "1")
-a.description = translate("超过次数后推送提醒")
+a.description = translate("超过次数后推送提醒，并可选自动拉黑")
 
-a = s:taboption("content", Flag, "web_login_black", translate("自动拉黑"))
+--自动封禁
+
+a = s:taboption("ipset", Flag, "web_login_black", translate("自动拉黑非法登录设备"))
 a.default = 0
 a.rmempty = true
 a:depends("web_login_failed", "1")
 a:depends("ssh_login_failed", "1")
-a.description = translate("直到重启前都不会重置次数，请先添加白名单")
 
-a = s:taboption("content", Value, "ip_black_timeout", "拉黑时间(秒)")
+a = s:taboption("ipset", Value, "ip_black_timeout", "拉黑时间(秒)")
 a.default = "86400"
 a.datatype = "and(uinteger,min(0))"
 a:depends("web_login_black", "1")
 a.description = translate("0 为永久拉黑，慎用<br>如不幸误操作，请更改设备 IP 进入 LUCI 界面清空规则")
 
-a = s:taboption("content", DynamicList, "ip_white_list", translate("白名单 IP 列表"))
+a = s:taboption("ipset", DynamicList, "ip_white_list", translate("白名单 IP 列表"))
 a.datatype = "ipaddr"
 a.rmempty = true
 luci.ip.neighbors({family = 4}, function(entry)
@@ -327,9 +329,33 @@ a:depends("web_logged", "1")
 a:depends("ssh_logged", "1")
 a:depends("web_login_failed", "1")
 a:depends("ssh_login_failed", "1")
-a.description = translate("忽略白名单登陆提醒和拉黑操作，暂不支持掩码位表示")
+a.description = translate("忽略拉黑操作，暂不支持掩码位表示")
 
-a = s:taboption("content", TextValue, "ip_black_list", translate("IP 黑名单列表"))
+a = s:taboption("ipset", Flag, "port_knocking", translate("端口敲门"))
+a.default = 0
+a.rmempty = true
+a.description = translate("登录成功后开放端口")
+
+a = s:taboption("ipset", Value, "ip_port_white", "端口")
+a.default = "3000"
+a.rmempty = true
+a.description = translate("例：'22'、'21:25'、'21:25,135:139'")
+a:depends("port_knocking", "1")
+
+a = s:taboption("ipset", DynamicList, "port_forward_list", "端口转发")
+a.default = "10.0.0.1,13389,10.0.0.2,3389"
+a.rmempty = true
+a.description = translate("例：将本机(10.0.0.1)的 13389 端口转发到 10.0.0.2 的3389：<br/>'10.0.0.1,13389,10.0.0.2,3389'<br/>IPv6 未测试")
+a:depends("port_knocking", "1")
+
+a = s:taboption("ipset", Value, "ip_white_timeout", "放行时间(秒)")
+a.default = "600"
+a.rmempty = true
+a.datatype = "and(uinteger,min(0))"
+a.description = translate("0 为永久放行，慎用<br/>连接成功后不断开就不需要重新连接，故不需要设置太大<br/>注：响应时间与检测间隔和每一次检测所需的时间相关，故反应不是很快，将就用吧")
+a:depends("port_knocking", "1")
+
+a = s:taboption("ipset", TextValue, "ip_black_list", translate("IP 黑名单列表"))
 a.optional = false
 a.rows = 8
 a.wrap = "soft"
@@ -340,6 +366,7 @@ a.write = function(self, section, value)
     fs.writefile("/usr/share/serverchan/api/ip_blacklist", value:gsub("\r\n", "\n"))
 end
 a:depends("web_login_black", "1")
+a.description = translate("可在此处添加或删除，timeout 后的数字为剩余时间(秒)，添加时只需要输入 IP")
 
 --定时推送
 a = s:taboption("crontab", ListValue, "crontab", translate("定时任务设定"))
