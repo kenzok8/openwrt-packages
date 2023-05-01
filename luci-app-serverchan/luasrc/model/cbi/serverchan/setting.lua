@@ -23,7 +23,7 @@ s:tab("disturb", translate("免打扰"))
 s.addremove = false
 s.anonymous = true
 
---基本设置
+-- 基本设置
 a = s:taboption("basic", Flag, "serverchan_enable", translate("启用"))
 a.rmempty = true
 
@@ -157,7 +157,7 @@ a = s:taboption("basic", DynamicList, "device_aliases", translate("设备别名"
 a.rmempty = true
 a.description = translate("<br/> 请输入设备 MAC 和设备别名，用“-”隔开，如：<br/> XX:XX:XX:XX:XX:XX-我的手机")
 
---设备状态
+-- 设备状态
 a = s:taboption("content", ListValue, "serverchan_ipv4", translate("IPv4 变动通知"))
 a.rmempty = true
 a.default = ""
@@ -303,7 +303,7 @@ a:depends("web_login_failed", "1")
 a:depends("ssh_login_failed", "1")
 a.description = translate("超过次数后推送提醒，并可选自动拉黑")
 
---自动封禁
+-- 自动封禁
 
 a = s:taboption("ipset", Flag, "web_login_black", translate("自动拉黑非法登录设备"))
 a.default = 0
@@ -329,7 +329,7 @@ a:depends("web_logged", "1")
 a:depends("ssh_logged", "1")
 a:depends("web_login_failed", "1")
 a:depends("ssh_login_failed", "1")
-a.description = translate("忽略拉黑操作，暂不支持掩码位表示")
+a.description = translate("忽略推送，仅在日志中记录，并忽略拉黑操作，暂不支持掩码位表示")
 
 a = s:taboption("ipset", Flag, "port_knocking", translate("端口敲门"))
 a.default = 0
@@ -368,7 +368,7 @@ end
 a:depends("web_login_black", "1")
 a.description = translate("可在此处添加或删除，timeout 后的数字为剩余时间(秒)，添加时只需要输入 IP")
 
---定时推送
+-- 定时推送
 a = s:taboption("crontab", ListValue, "crontab", translate("定时任务设定"))
 a.rmempty = true
 a.default = ""
@@ -452,7 +452,7 @@ luci.sys.call("cbi.apply")
 		luci.sys.call("/usr/share/serverchan/serverchan send &")
 end
 
---免打扰
+-- 免打扰
 a = s:taboption("disturb", ListValue, "serverchan_sheep", translate("免打扰时段设置"), translate("在指定整点时间段内，暂停推送消息<br/>免打扰时间中，定时推送也会被阻止。"))
 a.rmempty = true
 a:value("", translate("关闭"))
