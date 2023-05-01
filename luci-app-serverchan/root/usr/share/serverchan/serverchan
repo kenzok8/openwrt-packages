@@ -50,6 +50,7 @@ function read_config(){
 	str_splitline=`jq -r '.str_splitline' ${jsonpath}`
 	str_space=`jq -r '.str_space' ${jsonpath}`
 	str_tab=`jq -r '.str_tab' ${jsonpath}`
+	disturb_text=`jq -r '._api' ${jsonpath}`
 	( echo "$lite_enable"|grep -q "content" ) && str_title_start="" && str_title_end="" && str_splitline="" && str_linefeed="" && str_tab=""
 }
 
@@ -528,7 +529,7 @@ function serverchan_cron(){
 function serverchan_disturb(){
 	[ -z "$serverchan_sheep" ] || [ -z "$starttime" ] || [ -z "$endtime" ] && return 0
 	
-	# 非免打扰
+	# 非免打扰时间
 	if [ `date +%H` -ge $endtime -a $starttime -lt $endtime ] || [ `date +%H` -lt $starttime -a $starttime -lt $endtime ] || [ `date +%H` -lt $starttime -a `date +%H` -ge $endtime -a $starttime -gt $endtime ]; then
 		unset sheep_starttime
 		rm -f ${dir}sheep_usage ${dir}old_sheep_usage  2>/dev/null
@@ -1074,7 +1075,7 @@ function login_send(){
 		add_ip_white ${login_ip}
 		local web_login_time=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 		local web_login_mode=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $3}'|grep -v "^$"|sort -u|head -n1`
-		echo "$ip_white_list"|grep -w -q "$login_ip" && echo "${web_login_time} 【info】设备 ${login_ip} 通过 Web ${web_login_mode} 登陆了路由器 " >> ${logfile} && continue
+		echo "$ip_white_list"|grep -w -q "$login_ip" && echo "`date "+%Y-%m-%d"` ${web_login_time} 【info】设备 ${login_ip} 通过 Web ${web_login_mode} 登陆了路由器 " >> ${logfile} && continue
 		if [ ! -z "$web_logged" ] && [ "$web_logged" -eq "1" ]; then
 			if [ -z "$title" ]; then
 				title="${login_ip} 通过 Web 登陆了路由器"
@@ -1089,7 +1090,7 @@ function login_send(){
 		fi
 		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
 		sed -i "/^${login_ip}$/d" ${dir}web_failed
-		echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}设备 ${login_ip} 通过 Web ${web_login_mode} 登陆了路由器 " >> ${logfile}
+		echo "`date "+%Y-%m-%d"` ${web_login_time} ${disturb_text}设备 ${login_ip} 通过 Web ${web_login_mode} 登陆了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}web_login
 	unset login_ip login_ip_list
@@ -1100,7 +1101,7 @@ function login_send(){
 		add_ip_white ${login_ip}
 		local ssh_login_time=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 		local ssh_login_mode=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $3}'|grep -v "^$"|sort -u|head -n1`
-		echo "$ip_white_list"|grep -w -q "$login_ip" && echo "${ssh_login_time} 【info】设备 ${login_ip} 通过 SSH ${ssh_login_mode} 登陆了路由器 " >> ${logfile} && continue
+		echo "$ip_white_list"|grep -w -q "$login_ip" && echo "`date "+%Y-%m-%d"` ${web_login_time} 【info】设备 ${login_ip} 通过 SSH ${ssh_login_mode} 登陆了路由器 " >> ${logfile} && continue
 		[ ! -z "$ssh_login_mode" ] && local content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${ssh_login_mode}"
 		if [ ! -z "$ssh_logged" ] && [ "$ssh_logged" -eq "1" ]; then
 			if [ -z "$title" ]; then
@@ -1115,7 +1116,7 @@ function login_send(){
 			fi
 		fi
 		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
-		echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}设备 ${login_ip} 通过 SSH ${ssh_login_mode} 登陆了路由器 " >> ${logfile}
+		echo "`date "+%Y-%m-%d"` ${web_login_time} ${disturb_text}设备 ${login_ip} 通过 SSH ${ssh_login_mode} 登陆了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}ssh_login
 	unset login_ip login_ip_list
