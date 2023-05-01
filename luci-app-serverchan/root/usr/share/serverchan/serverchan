@@ -147,13 +147,13 @@ function getip(){
 		function get_hostipv4()
 		{
 			local ipv4_URL=`echo "$ipv4_urllist"| sed -n "${1}p"|sed -e 's/\r//g'`
-			[ ! -z "$ipv4_interface" ] && local hostIP=$(curl -k -s -4 --interface ${ipv4_interface} -m 5 ${ipv4_URL}) || local hostIP=$(curl -k -s -4 -m 5 ${ipv4_URL})
-			[ -z "$hostIP" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv4_URL" >> ${logfile}
-			echo $hostIP|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1
+			[ ! -z "$ipv4_interface" ] && local tmp_hostIP=$(curl -k -s -4 --interface ${ipv4_interface} -m 5 ${ipv4_URL}) || local tmp_hostIP=$(curl -k -s -4 -m 5 ${ipv4_URL})
+			[ -z "$tmp_hostIP" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv4_URL" >> ${logfile}
+			echo $tmp_hostIP|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1
 		}
 		local hostIP=`get_hostipv4 ${rand_number}`
-		[ -z $hostIP ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;local hostIP=`get_hostipv4 ${rand_number}`
-		[ -z $hostIP ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;local hostIP=`get_hostipv4 ${rand_number}`
+		[ -z $hostIP ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;[ -z $hostIP ] && local hostIP=`get_hostipv4 ${rand_number}`
+		[ -z $hostIP ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;[ -z $hostIP ] && local hostIP=`get_hostipv4 ${rand_number}`
 		[ -z $hostIP ] && [ `expr $(date +%s) - $(date -r /usr/share/serverchan/api/ipv4.list +%s)` -gt "86400" ] && wget --no-check-certificate -t 3 -T 15 -O /usr/share/serverchan/api/ipv4.list https://raw.githubusercontent.com/tty228/luci-app-serverchan/master/root/usr/share/serverchan/api/ipv4.list >/dev/null 2>&1 && ipv4_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】多次获取 IP 失败，重新同步 API 列表" >> ${logfile}
 		[ ! -z $hostIP ] && echo $hostIP
 		
@@ -170,13 +170,13 @@ function getip(){
 		function get_hostipv6()
 		{
 			local ipv6_URL=`echo "$ipv6_urllist"| sed -n "${1}p"|sed -e 's/\r//g'`
-			[ ! -z "$ipv6_interface" ] && local hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} -m 5 ${ipv6_URL}) || local hostIPv6=$(curl -k -s -6 -m 5 ${ipv6_URL})
-			[ -z "$hostIPv6" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv6_URL" >> ${logfile}
-			echo $hostIPv6|grep -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}"|head -n1
+			[ ! -z "$ipv6_interface" ] && local tmp_hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} -m 5 ${ipv6_URL}) || local tmp_hostIPv6=$(curl -k -s -6 -m 5 ${ipv6_URL})
+			[ -z "$tmp_hostIPv6" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv6_URL" >> ${logfile}
+			echo $tmp_hostIPv6|grep -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}"|head -n1
 		}
 		local hostIPv6=`get_hostipv6 ${rand_numberv6}`
-		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;local hostIPv6=`get_hostipv6 ${rand_numberv6}`
-		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;local hostIPv6=`get_hostipv6 ${rand_numberv6}`
+		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;[ -z $hostIPv6 ] && local hostIPv6=`get_hostipv6 ${rand_numberv6}`
+		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;[ -z $hostIPv6 ] && local hostIPv6=`get_hostipv6 ${rand_numberv6}`
 		[ -z $hostIPv6 ] && [ `expr $(date +%s) - $(date -r /usr/share/serverchan/api/ipv4.list +%s)` -gt "86400" ] && wget --no-check-certificate -t 3 -T 15 -O /usr/share/serverchan/api/ipv6.list https://raw.githubusercontent.com/tty228/luci-app-serverchan/master/root/usr/share/serverchan/api/ipv6.list >/dev/null 2>&1 && ipv6_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】多次获取 IP 失败，重新同步 API 列表" >> ${logfile}
 		[ ! -z $hostIPv6 ] && echo $hostIPv6
 	fi
@@ -1094,24 +1094,24 @@ function login_send(){
 	for login_ip in `cat ${dir}ssh_login|awk '{print $3}'|grep -v "^$"|sort -u|sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp'`; do
 		[ -z "$login_ip" ] && continue
 		add_ip_white ${login_ip}
-		local ssh_login_time=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
-		local ssh_login_mode=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
-		echo "$ip_white_list"|grep -w -q "$login_ip" && echo "`date "+%Y-%m-%d"` ${login_time} 【info】设备 ${login_ip} 通过 SSH ${ssh_login_mode} 登陆了路由器 " >> ${logfile} && continue
-		[ ! -z "$ssh_login_mode" ] && local content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${ssh_login_mode}"
+		local login_time=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
+		local login_mode=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
+		echo "$ip_white_list"|grep -w -q "$login_ip" && echo "`date "+%Y-%m-%d"` ${login_time} 【info】设备 ${login_ip} 通过 SSH ${login_mode} 登陆了路由器 " >> ${logfile} && continue
+		[ ! -z "$login_mode" ] && local content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
 		if [ ! -z "$ssh_logged" ] && [ "$ssh_logged" -eq "1" ]; then
 			if [ -z "$title" ]; then
 				title="${login_ip} 通过 SSH 登陆了路由器"
-				content="${content}${str_splitline}${str_title_start} 登陆信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${ssh_login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_title_start} 登陆信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
 			elif ( echo "$title"|grep -q "登陆了路由器" ); then
 				title="${login_ip} ${title}"
-				content="${content}${str_splitline}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${ssh_login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
 			else
 				title="设备状态变化"
-				content="${content}${str_splitline}${str_title_start} 登陆信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${ssh_login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_title_start} 登陆信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
 			fi
 		fi
 		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
-		echo "`date "+%Y-%m-%d"` ${ssh_login_time} ${disturb_text}设备 ${login_ip} 通过 SSH ${ssh_login_mode} 登陆了路由器 " >> ${logfile}
+		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} 通过 SSH ${login_mode} 登陆了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}ssh_login
 	unset login_ip login_time login_mode
