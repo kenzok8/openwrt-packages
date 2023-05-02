@@ -843,10 +843,10 @@ img[src*="/luci-static/resources/icons/wifi_big_disabled.png"] {
 
 img[src*="/luci-static/resources/icons/loading.gif"] {
     background-image: url(../images/loading.gif);
-    background-size: 20px 20px;
-    height: 20px;
-    width: 20px;
-    padding: 0 0 0 20px;
+    background-size: 32px 32px;
+    height: 32px;
+    width: 32px;
+    padding: 0 0 0 32px;
     width: 0;
 }
 
