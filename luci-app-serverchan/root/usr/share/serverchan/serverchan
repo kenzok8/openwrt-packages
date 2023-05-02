@@ -41,7 +41,7 @@ function read_config(){
 	[ -z "$serverchan_ipv6" ] && serverchan_ipv6=0
 	[ -z "$sleeptime" ] && sleeptime="60"
 	[ -z "$ip_black_timeout" ] && sleeptime="86400"
-	[ -z "$ip_white_timeout" ] && sleeptime="60"
+	[ -z "$ip_white_timeout" ] && sleeptime="600"
 	[ "$iw_version" ] && wlan_interface=`iw dev 2>/dev/null|grep Interface|awk '{print $2}'` >/dev/null 2>&1
 	[ -z "$up_timeout" ] || [ "$up_timeout" -eq "0" ] && up_timeout="2"
 	[ -z "$down_timeout" ] || [ "$down_timeout" -eq "0" ] && down_timeout="20";down_timeout=`expr ${down_timeout} / 2 + 1`
@@ -81,18 +81,22 @@ function serverchan_init(){
 # 推送
 function diy_send(){
 	( ! echo "$lite_enable"|grep -q "content" ) && ( ! echo "$lite_enable"|grep -q "nowtime" ) && local nowtime=`date "+%Y-%m-%d %H:%M:%S"`
+	! jq -r '.' ${3} >/dev/null 2>&1 && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】json 文件格式错误，这不是一个标准的 json 文件，请检查 ${3} 文件是否有特殊符号未转义或语法错误" >> ${logfile} && return 1
 	local diyurl=`jq -r .url ${3}` && local diyurl=`eval echo ${diyurl}`
 	local type=`jq -r '.type' ${3}` && local type=`eval echo ${type}`
 	local data=`jq -r '.data' ${3}` && local data=`eval echo ${data}`
 	local content_type=`jq -r '.content_type' ${3}`
-	jq "$type" ${3} > ${tempjsonpath}
+	! jq "$type" ${3} > ${tempjsonpath} && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】type:{ } 字段转义变量后格式错误，请检查 type:{ } 字段内是否有特殊符号未转义或语法错误" >> ${logfile} && return 1
 	
-	[ $4 ] && local debug="test"
-	! jq -r '.' ${3} >/dev/null 2>&1 && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】${3} 格式错误，这不是一个标准的 json 文件，请检查格式" >> ${logfile} && return 1
-	! jq -r '.' ${dir}debug_send_json && echo ${debug_json} > ${dir}debug_send_json && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】变量转义为 json 文件后格式错误，请检查是否有特殊符号或参数错误，文件已保存至 ${dir}debug_send_json" >> ${logfile} && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】变量转义为 json 文件后格式错误，请检查是否有特殊符号或参数错误，文件已保存至 ${dir}debug_send_json" >> ${logfile} && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】推送内容预览文件已保存至 ${dir}debug_send_content" >> ${logfile} && local debug="1"
-	[ $debug ] && echo '{"url":"'${diyurl}'","content_type":"'${content_type}'","type":'`jq "$type" ${3}`'}' > ${dir}debug_send_json && echo -e "${send_title}" "${send_content}" > ${dir}debug_send_content
-	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】测试模式，json 文件已保存至：${dir}debug_send_json"  >> ${logfile} && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】测试模式，推送内容预览文件保存至：${dir}debug_send_content" >> ${logfile}
-	[ "$debug" -eq "1" ] && return 1
+	[ $4 ] && echo '{"url":"'${diyurl}'","content_type":"'${content_type}'","type":'`jq "$type" ${3}`'}' > ${dir}debug_send_json
+	[ $4 ] && echo -e "${send_title}" "${send_content}" > ${dir}debug_send_content
+	[ $4 ] && cat ${tempjsonpath} > ${dir}debug_send_data
+	[ $4 ] && ! jq -r '.' ${dir}debug_send_json && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】转义变量后格式错误，请检查 ${dir}debug_send_json 字段内是否有特殊符号未转义或语法错误" >> ${logfile}
+	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】json 文件已保存至：${dir}debug_send_json"  >> ${logfile}
+	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】推送内容预览文件保存至：${dir}debug_send_content" >> ${logfile}
+	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】如果收不到信息，请检查 ${dir}debug_send_data 文件，或使用下列命令手动测试返回值 (可能需要关闭日志自动刷新方便选中)" >> ${logfile}
+	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】"'curl -X POST -H "'$content_type'" -d "@'${dir}debug_send_data'" "'${diyurl}'"  ' >> ${logfile}
+	
 	curl -X POST -H "$content_type" -d "$data" "${diyurl}"
 	[ $? -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】网络错误或 URL 错误，推送失败，curl 返回值为 ${tmp_value}" >> ${logfile} && return 1 || return 0
 }
