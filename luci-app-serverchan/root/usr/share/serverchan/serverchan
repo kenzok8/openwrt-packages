@@ -39,6 +39,9 @@ function read_config(){
 	port_forward_list=`echo "$port_forward_list"|sed 's/ /\n/g'|sed 's/,/ /g'` 2>/dev/null
 	[ -z "$serverchan_ipv4" ] && serverchan_ipv4=0
 	[ -z "$serverchan_ipv6" ] && serverchan_ipv6=0
+	[ -z "$sleeptime" ] && sleeptime="60"
+	[ -z "$ip_black_timeout" ] && sleeptime="86400"
+	[ -z "$ip_white_timeout" ] && sleeptime="60"
 	[ "$iw_version" ] && wlan_interface=`iw dev 2>/dev/null|grep Interface|awk '{print $2}'` >/dev/null 2>&1
 	[ -z "$up_timeout" ] || [ "$up_timeout" -eq "0" ] && up_timeout="2"
 	[ -z "$down_timeout" ] || [ "$down_timeout" -eq "0" ] && down_timeout="20";down_timeout=`expr ${down_timeout} / 2 + 1`
@@ -82,14 +85,16 @@ function diy_send(){
 	local type=`jq -r '.type' ${3}` && local type=`eval echo ${type}`
 	local data=`jq -r '.data' ${3}` && local data=`eval echo ${data}`
 	local content_type=`jq -r '.content_type' ${3}`
-	jq ".type + $type" ${jsonpath} > ${tempjsonpath}
-
-	jq -r '.[]' ${tempjsonpath}|grep -w "null" && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】参数值错误，请检查设置项  `jq -r '.' ${tempjsonpath}|grep "null"`" >> ${logfile} && return 1
-	[ -f ${tempjsonpath} ] && local logrow=$(grep -c "" ${tempjsonpath}) || local logrow="0"
-	[ $logrow -eq "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】json 文件生成失败，请检查文件格式" >> ${logfile} && return 1
-	jq -r '.[]' ${tempjsonpath}|grep "null" && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】参数变量生成失败，请检查设置项 `jq -r '.' ${tempjsonpath}|grep "null"`" >> ${logfile}
-
-	curl -X POST -H "$content_type" -d "${data}" "${diyurl}"
+	jq "$type" ${3} > ${tempjsonpath}
+	
+	[ $4 ] && local debug="test"
+	! jq -r '.' ${3} >/dev/null 2>&1 && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】${3} 格式错误，这不是一个标准的 json 文件，请检查格式" >> ${logfile} && return 1
+	! jq -r '.' ${dir}debug_send_json && echo ${debug_json} > ${dir}debug_send_json && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】变量转义为 json 文件后格式错误，请检查是否有特殊符号或参数错误，文件已保存至 ${dir}debug_send_json" >> ${logfile} && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】变量转义为 json 文件后格式错误，请检查是否有特殊符号或参数错误，文件已保存至 ${dir}debug_send_json" >> ${logfile} && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】推送内容预览文件已保存至 ${dir}debug_send_content" >> ${logfile} && local debug="1"
+	[ $debug ] && echo '{"url":"'${diyurl}'","content_type":"'${content_type}'","type":'`jq "$type" ${3}`'}' > ${dir}debug_send_json && echo -e "${send_title}" "${send_content}" > ${dir}debug_send_content
+	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】测试模式，json 文件已保存至：${dir}debug_send_json"  >> ${logfile} && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】测试模式，推送内容预览文件保存至：${dir}debug_send_content" >> ${logfile}
+	[ "$debug" -eq "1" ] && return 1
+	curl -X POST -H "$content_type" -d "$data" "${diyurl}"
+	[ $? -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】网络错误或 URL 错误，推送失败，curl 返回值为 ${tmp_value}" >> ${logfile} && return 1 || return 0
 }
 
 # 下载设备MAC厂商信息
@@ -1022,6 +1027,7 @@ function cpu_load(){
 	fi
 }
 
+# CPU 占用前三
 function cputop(){
 	[ -z "$1" ] && content="${content}${str_splitline}${str_title_start} 当前 CPU 占用前三的进程${str_title_end}"
 	local gettop=`top -bn 1|grep -v "top -bn 1"`
@@ -1169,8 +1175,6 @@ function login_send(){
 function add_ip_white(){
 	[ ! "$1" ] && return
 	[ -z "$port_knocking" ] || [ "$port_knocking" -ne "1" ] && return
-	( ipset -q test ip_whitelist ${1} ) && continue
-	( ipset -q test ip_whitelistv6 ${1} ) && continue
 	
 	# 开放端口
 	if ( echo ${1}|grep -q -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" ); then
@@ -1184,7 +1188,7 @@ function add_ip_white(){
 		done
 		
 		unset port_forward
-		ipset add ip_whitelist ${1}
+		ipset -exist add ip_whitelist ${1} timeout ${ip_white_timeout}
 		
 	elif ( echo ${1}|grep -q -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}" ); then
 		ipset list ip_whitelistv6 >/dev/null 2>&1 || ipset create ip_whitelistv6 hash:ip timeout ${ip_white_timeout} family inet6 >/dev/null 2>&1
@@ -1197,7 +1201,7 @@ function add_ip_white(){
 		done
 		
 		unset port_forward
-		ipset add ip_whitelistv6 ${1}
+		ipset -exist add ip_whitelistv6 ${1} timeout ${ip_white_timeout}
 	fi
 }
 
@@ -1212,11 +1216,11 @@ function add_ip_black(){
 	if ( echo ${1}|grep -q -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" ); then
 		ipset list ip_blacklist >/dev/null 2>&1 || ipset create ip_blacklist hash:ip timeout ${ip_black_timeout} >/dev/null 2>&1
 		iptables -C INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1 || iptables -I INPUT -m set --match-set ip_blacklist src -j DROP >/dev/null 2>&1
-		ipset add ip_blacklist ${1}
+		ipset add ip_blacklist ${1} timeout ${ip_black_timeout}
 	elif ( echo ${1}|grep -q -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}" ); then
 		ipset list ip_blacklistv6 >/dev/null 2>&1 || ipset create ip_blacklistv6 hash:ip timeout ${ip_black_timeout} family inet6 >/dev/null 2>&1
 		ip6tables -C INPUT -m set --match-set ip_blacklistv6 src -j DROP >/dev/null 2>&1 || ip6tables -I INPUT -m set --match-set ip_blacklistv6 src -j DROP >/dev/null 2>&1
-		ipset add ip_blacklistv6 ${1} 
+		ipset add ip_blacklistv6 ${1} timeout ${ip_black_timeout}
 	fi
 }
 
@@ -1231,6 +1235,7 @@ function del_ip_black(){
 		ipset list ip_blacklistv6 >/dev/null 2>&1 && ipset -! del ip_blacklistv6 ${1}
 	fi
 }
+
 # 设置防火墙列表
 function set_ip_black(){
 	# 检查换行，避免出错
@@ -1259,7 +1264,6 @@ function set_ip_black(){
 		cat ${ip_blacklist_path}|grep -q -w -i ${fw_ip_blacklistv6} && sed -i "/^${fw_ip_blacklistv6}/d" ${ip_blacklist_path} && echo ${fw_info_blacklistv6} >> ${ip_blacklist_path} || del_ip_black ${fw_ip_blacklistv6}
 	done
 }
-
 
 # 发送定时数据
 function send(){
@@ -1330,7 +1334,7 @@ function send(){
 	fi
 	[ ! -z "$device_name" ] && local send_title="【$device_name】${send_title}"
 	[ -z "$send_content" ] && local send_content="${str_splitline}${str_title_start} 我遇到了一个难题${str_title_end}${str_linefeed}${str_tab}定时发送选项错误，你没有选择需要发送的项目，该怎 么办呢${str_splitline}"
-	[ "$send_disturb" -eq "0" ] && diy_send "${send_title}" "${send_content}" "${jsonpath}" >/dev/null 2>&1
+	[ "$send_disturb" -eq "0" ] && diy_send "${send_title}" "${send_content}" "${jsonpath}" "$1" >/dev/null 2>&1
 	[ $? -eq 1 ] && [ "$send_disturb" -eq "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】定时推送失败，请检查网络或设置信息" >> ${logfile} || echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}定时推送任务完成" >> ${logfile}
 	deltemp
 }
@@ -1417,7 +1421,6 @@ while [ "$serverchan_enable" -eq "1" ]; do
 		[ ! -z "$device_name" ] && title="【$device_name】$title"
 		( echo "$lite_enable"|grep -q "content" ) && content="$title"
 		[ "$disturb" -eq "0" ] && diy_send "${title}" "${content}" "${jsonpath}" >/dev/null 2>&1
-		[ $? -eq 1 ] && [ "$disturb" -eq "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】推送失败，请检查网络或设置信息 " >> ${logfile}
 	fi
 	
 	# 等待定时任务推送完成
