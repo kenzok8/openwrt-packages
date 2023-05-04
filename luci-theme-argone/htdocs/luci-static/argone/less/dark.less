@@ -1,0 +1,755 @@
+//  compress: true
+/**
+ *  Argon is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argon Template
+ *
+ *  luci-theme-argon
+ *      Copyright 2020 Jerryk <jerrykuku@gmail.com>
+ *
+ *  Have a bug? Please create an issue here on GitHub!
+ *      https://github.com/jerrykuku/luci-theme-argon/issues
+ *
+ *  luci-theme-bootstrap:
+ *      Copyright 2008 Steven Barth <steven@midlink.org>
+ *      Copyright 2008 Jo-Philipp Wich <jow@openwrt.org>
+ *      Copyright 2012 David Menting <david@nut-bolt.nl>
+ *
+ *  MUI:
+ *      https://github.com/muicss/mui
+ *
+ *  luci-theme-material:
+ *      https://github.com/LuttyYang/luci-theme-material/
+ *
+ *  Argon Theme
+ *	    https://demos.creative-tim.com/argon-dashboard/index.html
+ *
+ *  Login background
+ *      https://unsplash.com/
+ *
+ *  Licensed to the public under the Apache License 2.0 
+ */
+
+body {
+    background: #1e1e1e;
+    color: #cccccc;
+}
+
+.login-page .login-container {
+
+    .login-form {
+        background-color: #1e1e1e;
+
+        .brand {
+            color: #adb5bd;
+        }
+
+        .form-login {
+            .input-group {
+                &::before {
+                    color: #adb5bd;
+                }
+
+                input {
+                    background-color: transparent !important;
+                    color: #adb5bd;
+                    border-bottom: #adb5bd 1px solid !important;
+                    border-radius: 0;
+                    border-top: none !important;
+                    border-left: none !important;
+                    border-right: none !important;
+                    box-shadow: none;
+
+                    &:focus {
+                        border-top: none !important;
+                        border-left: none !important;
+                        border-right: none !important;
+                    }
+                }
+            }
+
+            .cbi-button-apply {
+                background-color: #483d8b !important;
+                background-color: var(--dark-primary) !important;
+                &:hover,
+                &:focus {
+                    opacity: 0.9;
+                }
+            }
+        }
+
+
+    }
+
+    footer {
+        color: #adb5bd;
+    }
+
+}
+
+header::after {
+    background-color: #1e1e1e !important;
+}
+
+
+.main {
+    .main-left {
+
+        background-color: #333333 !important;
+        box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, .15);
+
+        .sidenav-header .brand {
+            color: #ccc;
+        }
+
+        .nav {
+            .slide {
+                .slide-menu {
+                    .active {
+                        a {
+                            color: #cccccc;
+
+                            &::after {
+                                background-color: #cccccc !important;
+                            }
+                        }
+                    }
+
+                    li {
+                        a {
+                            color: #cccccc;
+                        }
+
+                        a:hover {
+                            background: none !important;
+                        }
+                    }
+                }
+
+                .menu.active {
+                    background-color: #483d8b !important;
+                    background-color: var(--dark-primary) !important;
+                    color: #cccccc !important;
+
+                    a::after {
+                        background-color: #cccccc !important;
+                    }
+                }
+            }
+
+            li {
+                a {
+                    color: #cccccc !important;
+                }
+
+                a:hover {
+                    background-color: #483d8b !important;
+                    background-color: var(--dark-primary) !important;
+                    color: #cccccc !important;
+
+
+                }
+            }
+        }
+
+
+        &::-webkit-scrollbar-thumb {
+            background-color: #252526 !important;
+        }
+
+        &::-webkit-scrollbar-track {
+            background-color: #333;
+        }
+    }
+
+    .main-right {
+        background-color: #1e1e1e;
+    }
+}
+
+h2 {
+    color: #ccc;
+    background: #333333;
+}
+
+h3 {
+    color: #ccc;
+    border-bottom: 0;
+    background: #333333;
+}
+
+a:-webkit-any-link {
+    color: -webkit-link;
+    cursor: pointer;
+    color: #483d8b;
+    color: var(--dark-primary);
+}
+
+
+input:-webkit-autofill {
+    background-color: #3c3c3c !important;
+}
+
+.cbi-value-field .cbi-input-apply,
+.cbi-button-apply,
+.cbi-button-edit {
+    color: #fff !important;
+    background-color: #483d8b !important;
+    background-color: var(--dark-primary) !important;
+    border-color: #483d8b !important;
+    border-color: var(--dark-primary) !important;
+}
+
+
+.cbi-section em {
+    color: #483d8b;
+    color: var(--dark-primary);
+}
+
+
+
+header.bg-primary {
+    background-color: #1e1e1e !important;
+}
+
+
+
+.cbi-map-descr {
+    color: #ccc;
+}
+
+.cbi-section {
+    background: none;
+    box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, .35)
+}
+
+.panel-title {
+    color: #ccc;
+    background-color: #333333;
+    border-bottom: 0px;
+}
+
+table>tbody>tr>td,
+table>tfoot>tr>td,
+table>thead>tr>td {
+    color: #ccc;
+}
+
+fieldset>table>tbody>tr:nth-of-type(2n) {
+    background-color: #252526;
+}
+
+table>tbody>tr>td,
+table>tfoot>tr>td,
+table>thead>tr>td {
+    border-top: 1px solid #252526;
+}
+
+#swaptotal>div>div,
+#swapfree>div>div,
+#memfree>div>div,
+#membuff>div>div,
+#conns>div>div,
+#memtotal>div>div {
+    background-color: #483d8b !important;
+    background-color: var(--dark-primary) !important;
+}
+
+#swaptotal>div>div>div>small,
+#swapfree>div>div>div>small,
+#memfree>div>div>div>small,
+#membuff>div>div>div>small,
+#conns>div>div>div>small,
+#memtotal>div>div>div>small {
+
+    color: #ccc !important;
+}
+
+.node-system-packages>.main .cbi-section-node:first-child .cbi-value-last {
+    line-height: 1.8em;
+
+    div[style="margin:3px 0; width:300px; height:10px; border:1px solid #000000; background-color:#80C080"] {
+        border: 1px solid #999999 !important;
+        background-color: transparent !important;
+
+        div {
+            background-color: #32325d !important;
+            background-color: var(--dark-primary) !important;
+        }
+    }
+
+}
+
+
+table>tbody>tr>th,
+table>tfoot>tr>th,
+table>thead>tr>th {
+
+    background-color: #252526;
+    border-bottom: black 1px solid !important;
+}
+
+.cbi-rowstyle-2 {
+    background-color: #2c2c2c !important;
+}
+
+.cbi-rowstyle-1 {
+    background-color: #252526;
+}
+
+.cbi-section>h3:first-child,
+.panel-title {
+    color: #ccc;
+    border-bottom: 0;
+}
+
+.cbi-section-table .cbi-section-table-titles .cbi-section-table-cell {
+    background-color: #1e1e1f;
+}
+
+.cbi-button {
+    color: #ccc;
+    background-color: #2c2c2c;
+}
+
+.cbi-rowstyle-2 .cbi-button-up,
+.cbi-rowstyle-2 .cbi-button-down {
+    background-color: #252526 !important;
+}
+
+.cbi-section-node {
+    background: none;
+    border-radius: 0 0 .375rem .375rem;
+    padding: 0rem;
+}
+
+abbr {
+    color: #483d8b;
+    color: var(--dark-primary);
+
+}
+
+div>table>tbody>tr:nth-of-type(2n),
+div>.table>.tbody>.tr:nth-of-type(2n) {
+    background-color: #252526;
+}
+
+/* file selector button */
+::file-selector-button {
+    border: 1px solid darkseagreen !important;
+    background-color: darkseagreen !important;
+}
+
+/* Fix background color of table-titles */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-section-table-titles th {
+    background-color: #1e1e1e;
+    border: none !important;
+}
+
+/* Fix background color of table-descr */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-section-table-descr th {
+    background-color: #333333;
+    border: none !important;
+}
+
+/* Fix background color not change when the H tag is in the table rowstyle-1 */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-rowstyle-1 th {
+    background-color: #252526;
+    border-top: 1px solid #252526;
+    border-bottom: none !important;
+}
+
+/* Fix background color not change when the H tag is in the table rowstyle-2 */
+.cbi-section-node>.cbi-section-table>tbody>.cbi-rowstyle-2 th {
+    background-color: #2c2c2c;
+    border-top: 1px solid #252526;
+    border-bottom: none !important;
+}
+
+/* Change the color of the H label in the table to make it more visible */
+th h1, td h1,
+th h2, td h2,
+th h3, td h3,
+th h4, td h4,
+th h5, td h5,
+th h6, td h6 {
+    background: var(--gray-dark);
+}
+
+/* Improved the background color of each itemes in "UNSAVED CHANGES" (dark mode only) */
+.uci-change-list del,
+.uci-change-legend-label del {
+    background-color: #fb74008c;
+}
+.uci-change-list var,
+.uci-change-legend-label var {
+    background-color: #333333;
+}
+.uci-change-list ins,
+.uci-change-legend-label ins {
+    background-color: #00ff0a45 !important;
+}
+
+/* OCD: Compatible the background color of the "Add the node via the link" & "USE(node)" pop-up window in PassWall (dark mode only) */
+#add_link_div,
+#set_node_div {
+    background-color: #333333f0 !important;
+    box-shadow: #00000094 10px 10px 30px 5px !important;
+}
+#add_link_div>.cbi-value>.cbi-value-field>#nodes_link {
+    background: #ccc;
+}
+
+#content_syslog {
+    box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, .35)
+}
+
+#syslog {
+    color: #ccc;
+    background-color: #1e1e1e;
+}
+
+#iwsvg,
+#iwsvg2,
+#bwsvg {
+    overflow: hidden;
+    box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, .35);
+    background-color: #1e1e1e !important;
+}
+
+.tabs {
+    background-color: #252526;
+}
+
+.tabs>li[class~="active"]>a {
+    color: #ccc;
+}
+
+.tabs>li[class~="active"],
+.tabs>li:hover {
+    border-bottom: 0.18751rem solid #483d8b;
+    border-bottom: 0.18751rem solid var(--dark-primary);
+    color: #ccc;
+    background-color: #181819;
+}
+
+.cbi-tabmenu>li>a,
+.tabs>li>a {
+    color: #ccc;
+
+    &:hover {
+        color: #ccc;
+    }
+}
+
+.cbi-tabmenu>li {
+    background: #2d2d2d;
+}
+
+.cbi-tabmenu {
+    border-bottom: 0px solid #ddd !important;
+}
+
+.cbi-tabmenu li[class~="cbi-tab"] a {
+    color: #ccc;
+}
+
+.cbi-tabmenu>li:hover {
+    color: #ccc;
+    background: #2d2d2d;
+}
+
+.cbi-tabmenu>li[class~="cbi-tab"] {
+    background-color: #181819;
+}
+
+.cbi-tabcontainer>.cbi-value:nth-of-type(2n) {
+    background-color: #252526;
+}
+
+.cbi-value-title {
+    color: #ccc;
+}
+
+select,
+input {
+    color: #ccc;
+    background-color: transparent;
+    border: 1px solid #3c3c3c !important;
+    box-shadow: 0 3px 2px rgba(0, 0, 0, .05);
+}
+
+select:not([multiple="multiple"]):focus,
+input:focus {
+    border-color: #483d8b !important;
+    border-color: var(--dark-primary) !important;
+    background-color: transparent;
+    outline: 0;
+    box-shadow: none;
+}
+
+select {
+    background-color: #1e1e1e !important;
+}
+
+#cbi-dropbear h2,
+#cbi-dropbear .cbi-map-descr,
+#cbi-dropbear .cbi-map-descr abbr,
+#cbi-rc h2,
+#cbi-rc .cbi-map-descr,
+#cbi-distfeedconf h2,
+#cbi-distfeedconf .cbi-map-descr,
+#cbi-customfeedconf h2,
+#cbi-customfeedconf .cbi-map-descr,
+#cbi-download h2,
+#cbi-filelist h2 {
+    color: #ccc !important;
+}
+
+.cbi-value-field>ul>li .ifacebadge {
+    background-color: #3c3c3c;
+}
+
+.cbi-section-descr {
+    color: #ccc;
+}
+
+.cbi-input-textarea {
+    background-color: #1e1e1e;
+    color: #ccc;
+}
+
+
+
+.cbi-section-remove:nth-of-type(2n),
+.cbi-section-node:nth-of-type(2n) {
+    background-color: #1e1e1e;
+}
+
+.node-system-packages>.main table tr td:nth-last-child(1) {
+    color: #ccc;
+}
+.node-system-packages > .main .cbi-value > pre {
+    background-color: #333;
+}
+
+.cbi-section-node .cbi-value {
+    padding: 1rem 1rem 0.3rem 1rem;
+}
+
+.ifacebox {
+    background-color: #1e1e1e;
+    border: 1px solid #1e1e1e;
+}
+
+.ifacebox-head {
+    color: #666;
+}
+
+.ifacebox-body {
+    background-color: #333;
+}
+
+.zonebadge strong {
+    color: #333;
+}
+
+.zonebadge>.ifacebadge {
+    background-color: #3c3c3c;
+}
+
+/* Fix firewall zone: "unspecified -or- create: " background color (dark mode only) */
+div[onclick$="._fwzone_new').checked=true"] {
+    border: 1px solid #3c3c3c;
+    background-color: transparent !important;
+}
+
+/* Improve the background color of "Any zone" and "Device" when ADD/EDIT Rules in Firewall > Traffic Rules (dark mode only) */
+label[for$=".src_any"],
+label[for$=".dest_empty"],
+label[for$=".dest_any"] {
+    background-color: #2888db !important;
+}
+
+/* Fix/add background color of wireless signal strength badge for dark mode */
+td>.ifacebadge,
+.td>.ifacebadge {
+    background-color: #3c3c3c;
+}
+
+/* Improved loading process gif color (dark mode only) */
+img[src="/luci-static/resources/icons/loading.gif"] {
+    filter: invert(1);
+}
+
+div.cbi-value var,
+td.cbi-value-field var {
+    color: #483d8b;
+    color: var(--dark-primary);
+}
+
+#diag-rc-output>pre {
+    color: #ccc;
+    background-color: #1e1e1e;
+}
+
+.node-services-vssr .block {
+    background-color: #1e1e1e !important;
+    box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, .35);
+}
+
+.node-services-vssr .block h4 {
+    color: #ccc !important;
+}
+
+.node-services-vssr .status-bar {
+    color: #ccc;
+    box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, .35);
+    background-color: #1e1e1e;
+}
+
+.node-services-vssr .cbi-section-table-row {
+    color: #ccc;
+    background-color: #3c3c3c !important;
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, .35)
+}
+
+.node-services-vssr .cbi-section-table-row.fast {
+    background: #483d8b !important;
+    background: var(--dark-primary) !important;
+    color: #fff;
+}
+
+.node-services-vssr .ssr-button {
+    color: #ccc;
+
+}
+
+.node-services-vssr .incon:nth-child(2) {
+    border-right: #1e1e1e 1px solid;
+}
+
+.main .main-right #maincontent .container p {
+    color: #ccc;
+}
+
+#xhr_poll_status>.label.success {
+    color: #ccc !important;
+
+    background-color: darkolivegreen !important;
+}
+
+/* Define the warning background-color breathe display animation (dark mode) */
+@keyframes warning-background-color-breathe-dark {
+    0%{
+        color: #fff;
+        background-color: darkorange;
+    }
+    50%{
+        color: #ccc;
+        background-color: #333333;
+    }
+    100%{
+        color: #fff;
+        background-color: darkorange;
+    }
+}
+.warning,
+.warning * {
+    animation: warning-background-color-breathe-dark 1.5s ease-in-out infinite !important;
+}
+
+.notice {
+    background-color: #483d8b !important;
+    background-color: var(--dark-primary) !important;
+}
+
+/* Improved the aleart-message background color during device restart (dark mode only) */
+.errorbox,
+.alert-message {
+    background-color: #333333;
+}
+
+.cbi-input-find,
+.cbi-input-save,
+.cbi-button-add,
+.cbi-button-save,
+.cbi-button-find,
+.cbi-input-reload,
+.cbi-button-reload {
+    background-color: darkseagreen !important;
+    border-color: darkseagreen !important;
+}
+
+.cbi-button-reset,
+.cbi-input-remove {
+    color: #fff !important;
+    background-color: darkorange !important;
+    border-color: darkorange !important;
+}
+
+.cbi-page-actions .cbi-button-apply,
+.cbi-section-actions .cbi-button-edit,
+.cbi-button-edit.important,
+.cbi-button-apply.important,
+.cbi-button-reload.important,
+.cbi-button-action.important {
+    border: 1px #483d8b solid !important;
+    border: 1px var(--dark-primary) solid !important;
+}
+
+
+
+fieldset[id^="cbi-apply-"] {
+    background-color: #333333;
+}
+
+#detail-bubble>div {
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    padding: 5px;
+    background: #252525;
+}
+
+/* Define the error text border breathe display animation (dark mode) */
+@keyframes error-border-breathe-dark {
+    0%{
+        border-color: darkorange;
+    }
+    50%{
+        border-color: transparent;
+    }
+    100%{
+        border-color: darkorange;
+    }
+}
+
+/* Add border for error text box, and border breathe display animation to make it more noticeable (dark mode) */
+.cbi-section-error>ul>li {
+    color: darkorange;
+    border: 2px solid darkorange ;
+    animation: error-border-breathe-dark 1.5s ease-in-out infinite;
+}
+
+.cbi-input-invalid,
+.cbi-value-error input {
+    color: darkorange;
+    border: 1px dashed darkorange !important;
+}
+
+.node-services-vssr .block h4 span{
+    color: #ccc !important;
+}
+
+@supports (-webkit-backdrop-filter: none) or (backdrop-filter: none) {
+    .login-page .login-container .login-form {
+        -webkit-backdrop-filter: blur(var(--blur-radius-dark));
+        backdrop-filter: blur(var(--blur-radius-dark));
+        background-color: rgba(0, 0, 0, var(--blur-opacity-dark));
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .node-status-iptables>.main div>.cbi-map>form {
+        background-color: #1e1e1e;
+        box-shadow: 0 0 0.5rem 0 rgba(0, 0, 0, .35);
+    }
+}
