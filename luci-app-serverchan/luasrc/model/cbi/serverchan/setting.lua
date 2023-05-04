@@ -337,13 +337,13 @@ a.rmempty = true
 a.description = translate("登录成功后开放端口")
 
 a = s:taboption("ipset", Value, "ip_port_white", "端口")
-a.default = "3000"
+a.default = ""
 a.rmempty = true
 a.description = translate("例：'22'、'21:25'、'21:25,135:139'")
 a:depends("port_knocking", "1")
 
 a = s:taboption("ipset", DynamicList, "port_forward_list", "端口转发")
-a.default = "10.0.0.1,13389,10.0.0.2,3389"
+a.default = ""
 a.rmempty = true
 a.description = translate("例：将本机(10.0.0.1)的 13389 端口转发到 10.0.0.2 的3389：<br/>'10.0.0.1,13389,10.0.0.2,3389'<br/>IPv6 未测试")
 a:depends("port_knocking", "1")

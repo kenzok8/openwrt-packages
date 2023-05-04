@@ -1188,7 +1188,7 @@ function add_ip_white(){
 		# 端口转发
 		for port_forward in `echo "$port_forward_list"`; do
 			iptables -t nat -C PREROUTING -m set --match-set ip_whitelist src -p tcp --dport `echo ${port_forward}|awk '{print $2}'` -j DNAT --to-destination "`echo ${port_forward}|awk '{print $3}'`:`echo ${port_forward}|awk '{print $4}'`" >/dev/null 2>&1 || iptables -t nat -A PREROUTING -m set --match-set ip_whitelist src -p tcp --dport `echo ${port_forward}|awk '{print $2}'` -j DNAT --to-destination "`echo ${port_forward}|awk '{print $3}'`:`echo ${port_forward}|awk '{print $4}'`" >/dev/null 2>&1
-			iptables -t nat -A POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1 || iptables -t nat -A POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1
+			iptables -t nat -C POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1 || iptables -t nat -A POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1
 		done
 		
 		unset port_forward
@@ -1201,7 +1201,7 @@ function add_ip_white(){
 		# 端口转发
 		for port_forward in `echo "$port_forward_list"`; do
 			ip6tables -t nat -C PREROUTING -m set --match-set ip_whitelist src -p tcp --dport `echo ${port_forward}|awk '{print $2}'` -j DNAT --to-destination "`echo ${port_forward}|awk '{print $3}'`:`echo ${port_forward}|awk '{print $4}'`" >/dev/null 2>&1 || ip6tables -t nat -A PREROUTING -m set --match-set ip_whitelist src -p tcp --dport `echo ${port_forward}|awk '{print $2}'` -j DNAT --to-destination "`echo ${port_forward}|awk '{print $3}'`:`echo ${port_forward}|awk '{print $4}'`" >/dev/null 2>&1
-			ip6tables -t nat -A POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1 || ip6tables -t nat -A POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1
+			ip6tables -t nat -C POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1 || ip6tables -t nat -A POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1
 		done
 		
 		unset port_forward
