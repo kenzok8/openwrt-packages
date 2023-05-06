@@ -1101,7 +1101,7 @@ function login_send(){
 	echo "" > ${dir}web_login
 	unset login_ip login_time login_mode
 	# SSH 登录提醒
-	for login_ip in `cat ${dir}ssh_login|awk '{print $3}'|grep -v "^$"|sort -u|sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp'`; do
+	for login_ip in `cat ${dir}ssh_login|awk '{print $3}'|grep -v "^$"|sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp'|sort -u`; do
 		[ -z "$login_ip" ] && continue
 		add_ip_white ${login_ip}
 		local login_time=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
@@ -1150,7 +1150,7 @@ function login_send(){
 	done
 	unset login_ip login_sum
 	# SSH 非法登录
-	for login_ip in `cat ${dir}ssh_failed|awk '{print $1}'|grep -v "^$"|sort -u|sort -u|sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp'`; do
+	for login_ip in `cat ${dir}ssh_failed|awk '{print $1}'|grep -v "^$"|sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp'|sort -u`; do
 		[ -z "$login_ip" ] && continue
 		echo "$ip_white_list"|grep -w -q "$login_ip" && continue
 		local login_sum=`cat ${dir}ssh_failed|grep -w "${login_ip}"|wc -l`
