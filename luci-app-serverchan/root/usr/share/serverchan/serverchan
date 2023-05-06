@@ -96,8 +96,9 @@ function diy_send(){
 	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】如果收不到信息，请检查 ${dir}debug_send_data 文件，或使用下列命令手动测试返回值 (可能需要关闭日志自动刷新方便选中)" >> ${logfile}
 	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】"'curl -X POST -H "'$content_type'" -d "@'${dir}debug_send_data'" "'${diyurl}'"  ' >> ${logfile}
 	
-	curl -X POST -H "$content_type" -d "$data" "${diyurl}"
-	[ $? -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】网络错误或 URL 错误，推送失败，curl 返回值为 ${tmp_value}" >> ${logfile} && return 1 || return 0
+	curl --connect-timeout 10 -m 20 -X POST -H "$content_type" -d "$data" "${diyurl}"
+	local tmp_value=$?
+	[ $tmp_value -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】网络错误或 URL 错误，推送失败，curl 返回值为 ${tmp_value}" >> ${logfile} && return 1 || return 0
 }
 
 # 下载设备MAC厂商信息
@@ -1191,9 +1192,10 @@ function add_ip_white() {
     echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】白名单添加失败，IP 格式错误" >> ${logfile} && return
   fi
   
+  ipset list $ipset_name >/dev/null 2>&1 || ipset create $ipset_name hash:ip timeout ${ip_white_timeout} >/dev/null 2>&1
   # 端口放行
   if [ ! -z $ip_port_white ]; then
-	$iptables_cmd -C INPUT -m set --match-set "$ipset_name" src -p tcp -m multiport --dport $ip_port_white -j ACCEPT >/dev/null 2>&1 || $iptables_cmd -I INPUT -m set --match-set $ipset_name src -p tcp -m multiport --dport $ip_port_white -j ACCEPT >/dev/null 2>&1
+	$iptables_cmd -C INPUT -m set --match-set $ipset_name src -p tcp -m multiport --dport $ip_port_white -j ACCEPT >/dev/null 2>&1 || $iptables_cmd -I INPUT -m set --match-set $ipset_name src -p tcp -m multiport --dport $ip_port_white -j ACCEPT >/dev/null 2>&1
   fi
   # 端口转发
   for port_forward in "$port_forward_list"; do

@@ -70,6 +70,7 @@ o = s:taboption("advanced", Value, "speed_check_mode", translate("Speed Check Mo
 o.rmempty = true;
 o.placeholder = "default";
 o.default = o.enabled;
+o:value("", translate("default"))
 o:value("ping,tcp:80,tcp:443");
 o:value("ping,tcp:443,tcp:80");
 o:value("tcp:80,tcp:443,ping");
@@ -161,7 +162,7 @@ end
 
 ---- Domain prefetch load 
 o = s:taboption("advanced", Flag, "prefetch_domain", translate("Domain prefetch"), translate("Enable domain prefetch, accelerate domain response speed."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
@@ -182,8 +183,8 @@ o.rempty      = true
 
 ---- cache-persist;
 o = s:taboption("advanced", Flag, "cache_persist", translate("Cache Persist"), translate("Write cache to disk on exit and load on startup."))
-o.rmempty      = false;
-o.default     = o.enabled;
+o.rmempty      = false
+o.default     = o.enabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "1"
 end
@@ -198,8 +199,8 @@ end
 
 -- Force AAAA SOA
 o = s:taboption("advanced", Flag, "force_aaaa_soa", translate("Force AAAA SOA"), translate("Force AAAA SOA."))
-o.rmempty     = false
-o.default     = o.enabled
+o.rmempty     = true
+o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
 end
@@ -267,6 +268,12 @@ uci:foreach("smartdns", "download-file", function(section)
     o:value(section.name);
 end)
 
+---- other args
+o = s:taboption("advanced", Value, "server_flags", translate("Additional Server Args"), translate("Additional server args, refer to the help description of the bind option."))
+o.default     = ""
+o.rempty      = true
+o.optional    = true
+
 ---- second dns server
 ---- Eanble
 o = s:taboption("seconddns", Flag, "seconddns_enabled", translate("Enable"), translate("Enable or disable second DNS server."))
@@ -296,7 +303,7 @@ o.datatype    = "hostname"
 o.rempty      = true
 
 o = s:taboption("seconddns", Flag, "seconddns_no_speed_check", translate("Skip Speed Check"), translate("Do not check speed."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
@@ -304,7 +311,7 @@ end
 
 ---- skip address rules
 o = s:taboption("seconddns", Flag, "seconddns_no_rule_addr", translate("Skip Address Rules"), translate("Skip address rules."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
@@ -312,7 +319,7 @@ end
 
 ---- skip name server rules
 o = s:taboption("seconddns", Flag, "seconddns_no_rule_nameserver", translate("Skip Nameserver Rule"), translate("Skip nameserver rules."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
@@ -320,7 +327,7 @@ end
 
 ---- skip ipset rules
 o = s:taboption("seconddns", Flag, "seconddns_no_rule_ipset", translate("Skip Ipset Rule"), translate("Skip ipset rules."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
@@ -328,14 +335,14 @@ end
 
 ---- skip soa address rule
 o = s:taboption("seconddns", Flag, "seconddns_no_rule_soa", translate("Skip SOA Address Rule"), translate("Skip SOA address rules."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
 end
 
 o = s:taboption("seconddns", Flag, "seconddns_no_dualstack_selection", translate("Skip Dualstack Selection"), translate("Skip Dualstack Selection."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
@@ -343,7 +350,7 @@ end
 
 ---- skip cache
 o = s:taboption("seconddns", Flag, "seconddns_no_cache", translate("Skip Cache"), translate("Skip Cache."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
@@ -351,11 +358,38 @@ end
 
 ---- Force AAAA SOA
 o = s:taboption("seconddns", Flag, "seconddns_force_aaaa_soa", translate("Force AAAA SOA"), translate("Force AAAA SOA."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
 end
+
+o = s:taboption("seconddns", Value, "seconddns_ipset_name", translate("IPset Name"), translate("IPset name."))
+o.rmempty = true
+o.datatype = "hostname"
+o.rempty = true
+
+o = s:taboption("seconddns", Value, "seconddns_nftset_name", translate("NFTset Name"), translate("NFTset name, format: [#[4|6]:[family#table#set]]"))
+o.rmempty = true
+o.datatype = "string"
+o.rempty = true
+function o.validate(self, value) 
+    if (value == "") then
+        return value
+    end
+
+    if (value:match("#[4|6]:[a-zA-Z0-9%-_]+#[a-zA-Z0-9%-_]+#[a-zA-Z0-9%-_]+$")) then
+        return value
+    end
+
+    return nil, translate("NFTset name format error, format: [#[4|6]:[family#table#set]]")
+end
+
+---- other args
+o = s:taboption("seconddns", Value, "seconddns_server_flags", translate("Additional Server Args"),  translate("Additional server args, refer to the help description of the bind option."))
+o.default     = ""
+o.rempty      = true
+o.optional    = true
 
 ----- Proxy server settings
 o = s:taboption("proxy", Value, "proxy_server", translate("Proxy Server"), translate("Proxy Server URL, format: [socks5|http]://user:pass@ip:port."));
@@ -396,11 +430,35 @@ function custom.write(self, section, value)
 end
 
 o = s:taboption("custom", Flag, "coredump", translate("Generate Coredump"), translate("Generate Coredump file when smartdns crash, coredump file is located at /tmp/smartdns.xxx.core."))
-o.rmempty     = false
+o.rmempty     = true
 o.default     = o.disabled
 o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "0"
 end
+
+o = s:taboption("custom", Value, "log_size", translate("Log Size"))
+o.rmempty = true
+o.placeholder = "default"
+
+o = s:taboption("custom", ListValue, "log_level", translate("Log Level"))
+o.rmempty     = true
+o.placeholder = "default"
+o:value("", translate("default"))
+o:value("debug")
+o:value("info")
+o:value("notice")
+o:value("warn")
+o:value("error")
+o:value("fatal")
+o:value("off")
+
+o = s:taboption("custom", Value, "log_num", translate("Log Number"))
+o.rmempty = true
+o.placeholder = "default"
+
+o = s:taboption("custom", Value, "log_file", translate("Log File"))
+o.rmempty = true
+o.placeholder = "/var/log/smartdns/smartdns.log"
 
 -- Upstream servers
 s = m:section(TypedSection, "server", translate("Upstream Servers"), translate("Upstream Servers, support UDP, TCP protocol. " ..
@@ -500,11 +558,11 @@ end
 
 o = s:taboption("forwarding", Flag, "no_speed_check", translate("Skip Speed Check"),
     translate("Do not check speed."))
-o.rmempty = false
+o.rmempty = true
 o.default = o.disabled
 
 o = s:taboption("forwarding", Flag, "force_aaaa_soa", translate("Force AAAA SOA"), translate("Force AAAA SOA."))
-o.rmempty = false
+o.rmempty = true
 o.default = o.disabled
 
 o = s:taboption("forwarding", Value, "ipset_name", translate("IPset Name"), translate("IPset name."))
@@ -614,7 +672,7 @@ s.anonymous = true
 
 ---- download Files Settings
 o = s:option(Flag, "enable_auto_update", translate("Enable Auto Update"), translate("Enable daily auto update."))
-o.rmempty = false
+o.rmempty = true
 o.default = o.disabled
 o.rempty = true
 
@@ -636,7 +694,7 @@ o.root_directory = "/etc/smartdns/domain-set"
 
 o = s:option(Button, "_updateate")
 o.title = translate("Update Files")
-o.inputtitle = translate("update domain list files")
+o.inputtitle = translate("Update Files")
 o.inputstyle = "apply"
 o.write = function()
 	luci.sys.call("/etc/init.d/smartdns updatefiles >/dev/null 2>&1")
@@ -648,11 +706,11 @@ s.addremove = true
 s.template = "cbi/tblsection"
 
 o = s:option(Value, 'name', translate('File Name'), translate('File Name'))
-o.rmempty = false
+o.rmempty = true
 o.datatype = 'string'
 
 o = s:option(Value, 'url', translate('URL'), translate('URL'))
-o.rmempty = false
+o.rmempty = true
 o.datatype = 'string'
 function o.validate(self, value, section)
     if value == "" then
@@ -714,7 +772,7 @@ o.write = function()
 end
 
 o = s:option(Button, "Restart")
-o.title = translate("Restart smartdns")
+o.title = translate("Restart Service")
 o.inputtitle = translate("Restart")
 o.inputstyle = "apply"
 o.write = function()
