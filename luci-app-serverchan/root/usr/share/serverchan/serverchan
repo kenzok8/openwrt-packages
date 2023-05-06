@@ -36,7 +36,6 @@ function read_config(){
 	mark_mac_list=`echo "$mark_mac_list"|sed 's/ /\n/g'|sed 's/-/ /'` 2>/dev/null
 	ipv4_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null
 	ipv6_urllist=`cat /usr/share/serverchan/api/ipv6.list` 2>/dev/null
-	port_forward_list=`echo "$port_forward_list"|sed 's/ /\n/g'|sed 's/,/ /g'` 2>/dev/null
 	[ -z "$serverchan_ipv4" ] && serverchan_ipv4=0
 	[ -z "$serverchan_ipv6" ] && serverchan_ipv6=0
 	[ -z "$sleeptime" ] && sleeptime="60"
@@ -1176,37 +1175,39 @@ function login_send(){
 }
 
 # 添加白名单，懒得写删除项和信息显示了，感觉没啥必要
-function add_ip_white(){
-	[ ! "$1" ] && return
-	[ -z "$port_knocking" ] || [ "$port_knocking" -ne "1" ] && return
-	
-	# 开放端口
-	if ( echo ${1}|grep -q -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}" ); then
-		ipset list ip_whitelist >/dev/null 2>&1 || ipset create ip_whitelist hash:ip timeout ${ip_white_timeout} >/dev/null 2>&1
-		# 开放端口
-		iptables -C INPUT -m set --match-set ip_whitelist src -p tcp -m multiport --dport ${ip_port_white} -j ACCEPT >/dev/null 2>&1 || iptables -I INPUT -m set --match-set ip_whitelist src -p tcp -m multiport --dport ${ip_port_white} -j ACCEPT >/dev/null 2>&1
-		# 端口转发
-		for port_forward in `echo "$port_forward_list"`; do
-			iptables -t nat -C PREROUTING -m set --match-set ip_whitelist src -p tcp --dport `echo ${port_forward}|awk '{print $2}'` -j DNAT --to-destination "`echo ${port_forward}|awk '{print $3}'`:`echo ${port_forward}|awk '{print $4}'`" >/dev/null 2>&1 || iptables -t nat -I PREROUTING -m set --match-set ip_whitelist src -p tcp --dport `echo ${port_forward}|awk '{print $2}'` -j DNAT --to-destination "`echo ${port_forward}|awk '{print $3}'`:`echo ${port_forward}|awk '{print $4}'`" >/dev/null 2>&1
-			iptables -t nat -C POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1 || iptables -t nat -I POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1
-		done
-		
-		unset port_forward
-		ipset -exist add ip_whitelist ${1} timeout ${ip_white_timeout}
-		
-	elif ( echo ${1}|grep -q -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}" ); then
-		ipset list ip_whitelistv6 >/dev/null 2>&1 || ipset create ip_whitelistv6 hash:ip timeout ${ip_white_timeout} family inet6 >/dev/null 2>&1
-		# 开放端口
-		ip6tables -C INPUT -m set --match-set ip_whitelistv6 src -p tcp -m multiport --dport ${ip_port_white} -j ACCEPT >/dev/null 2>&1 || ip6tables -I INPUT -m set --match-set ip_whitelistv6 src -p tcp -m multiport --dport ${ip_port_white} -j ACCEPT >/dev/null 2>&1
-		# 端口转发
-		for port_forward in `echo "$port_forward_list"`; do
-			ip6tables -t nat -C PREROUTING -m set --match-set ip_whitelist src -p tcp --dport `echo ${port_forward}|awk '{print $2}'` -j DNAT --to-destination "`echo ${port_forward}|awk '{print $3}'`:`echo ${port_forward}|awk '{print $4}'`" >/dev/null 2>&1 || ip6tables -t nat -I PREROUTING -m set --match-set ip_whitelist src -p tcp --dport `echo ${port_forward}|awk '{print $2}'` -j DNAT --to-destination "`echo ${port_forward}|awk '{print $3}'`:`echo ${port_forward}|awk '{print $4}'`" >/dev/null 2>&1
-			ip6tables -t nat -C POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1 || ip6tables -t nat -I POSTROUTING -m set --match-set ip_whitelist src -p tcp -d `echo ${port_forward}|awk '{print $3}'` --dport `echo ${port_forward}|awk '{print $4}'` -j SNAT --to-source `echo ${port_forward}|awk '{print $1}'` >/dev/null 2>&1
-		done
-		
-		unset port_forward
-		ipset -exist add ip_whitelistv6 ${1} timeout ${ip_white_timeout}
-	fi
+function add_ip_white() {
+  local ip=$1
+  [ -n "$port_knocking" ] && [ "$port_knocking" -eq "1" ] || return
+  # 检查 IP 版本
+  if ( echo "$ip" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$' ); then
+    local ipset_name="ip_whitelist"
+    local iptables_cmd="iptables"
+    local nat_table_cmd=""
+  elif ( echo "$ip" | grep -Eq '^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$' ); then
+    local ipset_name="ip_whitelistv6"
+    local iptables_cmd="ip6tables"
+    local nat_table_cmd="family inet6"
+  else
+    echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】白名单添加失败，IP 格式错误" >> ${logfile} && return
+  fi
+  
+  # 端口放行
+  if [ ! -z $ip_port_white ]; then
+	$iptables_cmd -C INPUT -m set --match-set "$ipset_name" src -p tcp -m multiport --dport $ip_port_white -j ACCEPT >/dev/null 2>&1 || $iptables_cmd -I INPUT -m set --match-set $ipset_name src -p tcp -m multiport --dport $ip_port_white -j ACCEPT >/dev/null 2>&1
+  fi
+  # 端口转发
+  for port_forward in "$port_forward_list"; do
+	port_forward=`echo "$port_forward"|sed 's/,/ /g'` 2>/dev/null
+	[ `echo $port_forward| awk -F" " '{print NF}'` -ne "4" ] && continue
+    local src_ip=`echo ${port_forward}|awk '{print $1}'`
+    local src_port=`echo ${port_forward}|awk '{print $2}'`
+    local dst_ip=`echo ${port_forward}|awk '{print $3}'`
+    local dst_port=`echo ${port_forward}|awk '{print $4}'`
+    $iptables_cmd -t nat -C PREROUTING -m set --match-set $ipset_name src -p tcp --dport $src_port -j DNAT --to-destination "$dst_ip:$dst_port" >/dev/null 2>&1 || $iptables_cmd -t nat -I PREROUTING -m set --match-set $ipset_name src -p tcp --dport $src_port -j DNAT --to-destination "$dst_ip:$dst_port" >/dev/null 2>&1		
+    $iptables_cmd -t nat -C POSTROUTING -m set --match-set $ipset_name src -p tcp -d $dst_ip --dport $dst_port -j SNAT --to-source $src_ip >/dev/null 2>&1 || $iptables_cmd -t nat -I POSTROUTING  -m set --match-set $ipset_name src -p tcp -d $dst_ip --dport $dst_port -j SNAT --to-source $src_ip >/dev/null 2>&1
+  done
+  unset port_forward
+  ipset -exist add $ipset_name $ip timeout $ip_white_timeout
 }
 
 # 添加黑名单
