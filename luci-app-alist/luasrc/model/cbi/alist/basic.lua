@@ -39,7 +39,7 @@ o.default = "0"
 o.rmempty = false
 
 o = s:option(Value, "token_expires_in", translate("Login Validity Period (hours)"))
-o.datatype = "and(uinteger,min(0))"
+o.datatype = "and(uinteger,min(1))"
 o.default = "48"
 o.rmempty = false
 
