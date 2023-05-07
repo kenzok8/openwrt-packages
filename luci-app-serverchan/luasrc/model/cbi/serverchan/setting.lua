@@ -335,6 +335,7 @@ a = s:taboption("ipset", Flag, "port_knocking", translate("端口敲门"))
 a.default = 0
 a.rmempty = true
 a.description = translate("登录成功后开放端口")
+a.description = translate("如在 防火墙 - 区域设置 中禁用了 LAN 口入站和转发，将不起作用<br/>写起来太鸡儿麻烦了，告辞")
 
 a = s:taboption("ipset", Value, "ip_port_white", "端口")
 a.default = ""
