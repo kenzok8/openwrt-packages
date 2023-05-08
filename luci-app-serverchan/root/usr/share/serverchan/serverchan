@@ -1068,6 +1068,8 @@ EOF
 
 # 登陆提醒通知
 function login_send(){
+	[ -n "$port_knocking" ] && [ "$port_knocking" -eq "1" ] && init_ip_white "ipv4"
+	[ -n "$port_knocking" ] && [ "$port_knocking" -eq "1" ] && init_ip_white "ipv6"
 	[ -z "$web_logged" ] && [ -z "$ssh_logged" ] && [ -z "$web_login_failed" ] && [ -z "$ssh_login_failed" ] && return
 	[ ! -f ${dir}login_monitor ] && return
 	# 登录
@@ -1221,7 +1223,7 @@ function init_ip_white() {
 		if ( opkg list-installed|grep -w -q ^firewall4 ); then
 			local count_accept_rules=`nft list ruleset | grep -c "tcp dport.* ${ip_port_white}.* $ip_version saddr @${ipset_name} counter packets .* accept comment \"!serverchan Accept rule\""`
 			if [ $count_accept_rules -eq 0 ]; then
-				nft insert rule inet fw4 input tcp dport { $ip_port_white } $ip_version saddr @$ipset_name counter accept comment "!serverchan Accept rule" >/dev/null 2>&1
+				nft insert rule inet fw4 input tcp dport { $ip_port_white } $ip_version saddr @$ipset_name counter accept comment \"!serverchan Accept rule\" >/dev/null 2>&1
 			elif [ $count_accept_rules -ne 1 ]; then
 				local i=0
 				local handles=`nft --handle list ruleset | grep "!serverchan Accept rule" | grep -v "tcp dport.* ${ip_port_white}.* $ip_version saddr @${ipset_name} counter packets .* accept comment \"!serverchan Accept rule\"" | awk '{print $NF}'`
