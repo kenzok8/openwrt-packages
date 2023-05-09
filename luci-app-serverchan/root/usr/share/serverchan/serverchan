@@ -166,13 +166,14 @@ function getip(){
 			local ipv4_URL=`echo "$ipv4_urllist"| sed -n "${1}p"|sed -e 's/\r//g'`
 			[ ! -z "$ipv4_interface" ] && local tmp_hostIP=$(curl -k -s -4 --interface ${ipv4_interface} -m 5 ${ipv4_URL}) || local tmp_hostIP=$(curl -k -s -4 -m 5 ${ipv4_URL})
 			[ -z "$tmp_hostIP" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv4_URL" >> ${logfile}
-			echo $tmp_hostIP|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1
+			local tmp_hostIP=`echo $tmp_hostIP|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'|head -n1`
+			echo "{\"IP\":\"${tmp_hostIP}\", \"URL\":\"${ipv4_URL}\"}"
 		}
 		local hostIP=`get_hostipv4 ${rand_number}`
-		[ -z $hostIP ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;[ -z $hostIP ] && local hostIP=`get_hostipv4 ${rand_number}`
-		[ -z $hostIP ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;[ -z $hostIP ] && local hostIP=`get_hostipv4 ${rand_number}`
-		[ -z $hostIP ] && [ `expr $(date +%s) - $(date -r /usr/share/serverchan/api/ipv4.list +%s)` -gt "86400" ] && wget --no-check-certificate -t 3 -T 15 -O /usr/share/serverchan/api/ipv4.list https://raw.githubusercontent.com/tty228/luci-app-serverchan/master/root/usr/share/serverchan/api/ipv4.list >/dev/null 2>&1 && ipv4_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】多次获取 IP 失败，重新同步 API 列表" >> ${logfile}
-		[ ! -z $hostIP ] && echo $hostIP
+		[ -z `echo $hostIP|jq -r '.IP'` ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;[ -z `echo $hostIP|jq -r '.IP'` ] && local hostIP=`get_hostipv4 ${rand_number}`
+		[ -z `echo $hostIP|jq -r '.IP'` ] && local rand_number=`expr $rand_number + 1` && [ $rand_number -gt $url_number ] && local rand_number=1;[ -z `echo $hostIP|jq -r '.IP'` ] && local hostIP=`get_hostipv4 ${rand_number}`
+		[ -z `echo $hostIP|jq -r '.IP'` ] && [ `expr $(date +%s) - $(date -r /usr/share/serverchan/api/ipv4.list +%s)` -gt "86400" ] && wget --no-check-certificate -t 3 -T 15 -O /usr/share/serverchan/api/ipv4.list https://raw.githubusercontent.com/tty228/luci-app-serverchan/master/root/usr/share/serverchan/api/ipv4.list >/dev/null 2>&1 && ipv4_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】多次获取 IP 失败，重新同步 API 列表" >> ${logfile}
+		echo $hostIP
 		
 	# 从接口获取 IPv6
 	elif [ $1 == "wanipv6" ] ;then
@@ -189,13 +190,14 @@ function getip(){
 			local ipv6_URL=`echo "$ipv6_urllist"| sed -n "${1}p"|sed -e 's/\r//g'`
 			[ ! -z "$ipv6_interface" ] && local tmp_hostIPv6=$(curl -k -s -6 --interface ${ipv6_interface} -m 5 ${ipv6_URL}) || local tmp_hostIPv6=$(curl -k -s -6 -m 5 ${ipv6_URL})
 			[ -z "$tmp_hostIPv6" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】IP 获取失败，当前使用的 API 为 $ipv6_URL" >> ${logfile}
-			echo $tmp_hostIPv6|grep -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}"|head -n1
+			local tmp_hostIPv6=`echo $tmp_hostIPv6|grep -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}"|head -n1`
+			echo "{\"IP\":\"${tmp_hostIPv6}\", \"URL\":\"${ipv6_URL}\"}"
 		}
 		local hostIPv6=`get_hostipv6 ${rand_numberv6}`
-		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;[ -z $hostIPv6 ] && local hostIPv6=`get_hostipv6 ${rand_numberv6}`
-		[ -z $hostIPv6 ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;[ -z $hostIPv6 ] && local hostIPv6=`get_hostipv6 ${rand_numberv6}`
-		[ -z $hostIPv6 ] && [ `expr $(date +%s) - $(date -r /usr/share/serverchan/api/ipv4.list +%s)` -gt "86400" ] && wget --no-check-certificate -t 3 -T 15 -O /usr/share/serverchan/api/ipv6.list https://raw.githubusercontent.com/tty228/luci-app-serverchan/master/root/usr/share/serverchan/api/ipv6.list >/dev/null 2>&1 && ipv6_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】多次获取 IP 失败，重新同步 API 列表" >> ${logfile}
-		[ ! -z $hostIPv6 ] && echo $hostIPv6
+		[ -z `echo $hostIPv6|jq -r '.IP'` ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;[ -z `echo $hostIPv6|jq -r '.IP'` ] && local hostIPv6=`get_hostipv6 ${rand_numberv6}`
+		[ -z `echo $hostIPv6|jq -r '.IP'` ] && local rand_numberv6=`expr $rand_numberv6 + 1` && [ $rand_numberv6 -gt $urlv6_number ] && local rand_numberv6=1;[ -z `echo $hostIPv6|jq -r '.IP'` ] && local hostIPv6=`get_hostipv6 ${rand_numberv6}`
+		[ -z `echo $hostIPv6|jq -r '.IP'` ] && [ `expr $(date +%s) - $(date -r /usr/share/serverchan/api/ipv4.list +%s)` -gt "86400" ] && wget --no-check-certificate -t 3 -T 15 -O /usr/share/serverchan/api/ipv6.list https://raw.githubusercontent.com/tty228/luci-app-serverchan/master/root/usr/share/serverchan/api/ipv6.list >/dev/null 2>&1 && ipv6_urllist=`cat /usr/share/serverchan/api/ipv4.list` 2>/dev/null && echo "`date "+%Y-%m-%d %H:%M:%S"`  【info】多次获取 IP 失败，重新同步 API 列表" >> ${logfile}
+		echo $hostIPv6
 	fi
 }
 
@@ -661,16 +663,16 @@ function unattended(){
 	if [ ! -z "$public_ip_event" ] && [ ! -z "$public_ip_retry_count" ] && [ "$public_ip_count" -le "$public_ip_retry_count" ]; then
 		public_ip_count=`expr $public_ip_count + 1`
 		local wanIP=`getip wanipv4`
-		local hostIP=`getip hostipv4`
+		local hostIP=`getip hostipv4|jq -r '.IP'`
 		if [ ! -z "$wanIP" ] && [ ! -z "$hostIP" ] && ( ! echo "$wanIP"|grep -q -w ${hostIP} );then
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【无人值守任务】重拨尝试获取公网 ip，当前第 $public_ip_count 次 " >> ${logfile}
 			ifup wan >/dev/null 2>&1
 			sleep 60
-			local wanIP=`getip wanipv4` && local hostIP=`getip hostipv4`
+			local wanIP=`getip wanipv4` && local hostIP=`getip hostipv4|jq -r '.IP'`
 			[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "1" ] && local IPv4=${wanIP}
 			[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "2" ] && local IPv4=${hostIP}
 			[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "1" ] && local IPv6=`getip wanipv6`
-			[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "2" ] && local IPv6=`getip hostipv6`
+			[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "2" ] && local IPv6=`getip hostipv6|jq -r '.IP'`
 			[ ! -z "$wanIP" ] && [ ! -z "$hostIP" ] && ( ! echo "$wanIP"|grep -q -w ${hostIP} ) && echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $last_IPv6 >> ${dir}ip
 		fi
 	fi
@@ -776,24 +778,24 @@ function rand_geturl(){
 
 # 检测 ip 状况
 function ip_changes(){
-	[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "1" ] && local IPv4=`getip wanipv4`
-	[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "2" ] && local IPv4=`getip hostipv4`
-	[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "1" ] && local IPv6=`getip wanipv6`
-	[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "2" ] && local IPv6=`getip hostipv6`
+	[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "1" ] && local IPv4=`getip wanipv4` && local IPv4_URL="网络接口"
+	[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -eq "2" ] && local IPv4=`getip hostipv4` && local IPv4_URL=`echo ${IPv4}|jq -r '.URL'` && local IPv4=`echo ${IPv4}|jq -r '.IP'`
+	[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "1" ] && local IPv6=`getip wanipv6` && local IPv6_URL="网络接口"
+	[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -eq "2" ] && local IPv6=`getip hostipv6` && local IPv6_URL=`echo ${IPv6}|jq -r '.URL'` && local IPv6=`echo ${IPv6}|jq -r '.IP'`
 	
 	# 存在临时文件
 	if [ -f ${dir}ip ]; then
 		local last_IPv4=$(cat "${dir}ip"|grep IPv4|awk '{print $2}'|grep -v "^$"|sort -u|head -n1)
 		local last_IPv6=$(cat "${dir}ip"|grep IPv6|awk '{print $2}'|grep -v "^$"|sort -u|head -n1)
 		if [ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && [ ! -z "$IPv4" ] && ( ! echo ${IPv4}|grep -w -q ${last_IPv4} ); then
-			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前IP：${IPv4}" >> ${logfile}
+			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前 IP：${IPv4}    from：${IPv4_URL}" >> ${logfile}
 			echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $last_IPv6 >> ${dir}ip
 			title="IP 地址变化"
 			content="${content}${str_splitline}${str_title_start} IP 地址变化${str_title_end}${str_linefeed}${str_tab}当前 IP：${IPv4}"
 		fi
 
 		if [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && [ ! -z "$IPv6" ] && ( ! echo "$IPv6"|grep -w -q ${last_IPv6} ); then
-			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前IPv6：${IPv6}" >> ${logfile}
+			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前 IPv6：${IPv6}    from：${IPv6_URL}" >> ${logfile}
 			echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $IPv6 >> ${dir}ip
 			[ -z "$title" ] && title="IPv6 地址变化"
 			[ ! -z "$title" ] && title="IP 地址变化"
@@ -803,8 +805,8 @@ function ip_changes(){
 	# 临时文件目录为空
 	else
 		echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}路由器已经重启!" >> ${logfile}
-		[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  当前IP: ${IPv4}" >> ${logfile}
-		[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"`  当前IPv6: ${IPv6}" >> ${logfile}
+		[ ! -z "$serverchan_ipv4" ] && [ "$serverchan_ipv4" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前 IP: ${IPv4}    from：${IPv4_URL}" >> ${logfile}
+		[ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}当前 IPv6: ${IPv6}    from：${IPv6_URL}" >> ${logfile}
 		echo IPv4 $IPv4 > ${dir}ip && echo -e IPv6 $IPv6 >> ${dir}ip
 		title="路由器重新启动"
 		content="${content}${str_splitline}${str_title_start} 路由器重新启动${str_title_end}"
@@ -1090,6 +1092,7 @@ function login_send(){
 		local login_time=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 		local login_mode=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
 		echo "$ip_white_list"|grep -w -q "$login_ip" && echo "`date "+%Y-%m-%d"` ${login_time} 【info】设备 ${login_ip} 通过 Web ${login_mode} 登陆了路由器 " >> ${logfile} && continue
+		[ ! -z "$login_mode" ] && local content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
 		if [ ! -z "$web_logged" ] && [ "$web_logged" -eq "1" ]; then
 			if [ -z "$title" ]; then
 				title="${login_ip} 通过 Web 登陆了路由器"
@@ -1353,11 +1356,11 @@ function send(){
 	fi
 
 	if [ -z "$1" ] && [ ! -z "$router_wan" ] && [ "$router_wan" -eq "1" ]; then
-		local send_wanIP=`getip wanipv4`;local send_hostIP=`getip hostipv4`
+		local send_wanIP=`getip wanipv4`;local send_hostIP=`getip hostipv4|jq -r '.IP'`
 		local send_content="${send_content}${str_splitline}${str_title_start} WAN 口信息${str_title_end}${str_linefeed}${str_tab}接口 IPv4:${send_wanIP}"
 		local send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4:${send_hostIP}"
 		if [ ! -z "$serverchan_ipv6" ] && [ "$serverchan_ipv6" -ne "0" ]; then
-			local send_wanIPv6=`getip wanipv6`;local send_hostIPv6=`getip hostipv6`
+			local send_wanIPv6=`getip wanipv6`;local send_hostIPv6=`getip hostipv6|jq -r '.IP'`
 			local send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6:${send_wanIPv6}"
 			local send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6:${send_hostIPv6}"
 		fi

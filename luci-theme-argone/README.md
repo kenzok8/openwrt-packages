@@ -4,7 +4,7 @@
  ```bash
 git clone https://github.com/kenzok78/luci-theme-argone
 ```
-+ 21.02分支支持最新luci
++ 23 分支支持最新luci
  ```bash
-git clone -b 21.02 https://github.com/kenzok78/luci-theme-argone
+git clone -b 23 https://github.com/kenzok78/luci-theme-argone
 ```

@@ -1,11 +1,10 @@
 <%#
-	Argon is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI and Argon Template
+	Argone is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI and Argone Template
 
-	luci-theme-argon
-	Copyright 2021 Jerryk <jerrykuku@gmail.com>
+	luci-theme-argone
 
 	Have a bug? Please create an issue here on GitHub!
-	https://github.com/jerrykuku/luci-theme-argon/issues
+	https://github.com/kenzok78/luci-theme-argone/issues
 
 	luci-theme-bootstrap:
 	Copyright 2008 Steven Barth <steven@midlink.org>
@@ -15,7 +14,7 @@
 	MUI:
 	https://github.com/muicss/mui
 
-	Argon Theme
+	Argone Theme
 	https://demos.creative-tim.com/argon-dashboard/index.html
 
 	Licensed to the public under the Apache License 2.0
@@ -71,10 +70,10 @@
 		local backgroundType	= "Image"
 		local mimeType			= ""
 
-		if fs.access("/etc/config/argon") then
-			local online_wallpaper = uci:get_first('argon', 'global', 'online_wallpaper') or (uci:get_first('argon', 'global', 'bing_background') == '1' and 'bing')
+		if fs.access("/etc/config/argone") then
+			local online_wallpaper = uci:get_first('argone', 'global', 'online_wallpaper') or (uci:get_first('argone', 'global', 'bing_background') == '1' and 'bing')
 			if (online_wallpaper and online_wallpaper ~= "none") then
-				local picurl = sys.exec("/usr/libexec/argon/online_wallpaper")
+				local picurl = sys.exec("/usr/libexec/argone/online_wallpaper")
 				if (picurl and picurl ~= '') then
 					return picurl, "Image", ""
 				end
@@ -129,7 +128,7 @@
 	<div class="login-container">
 		<div class="login-form">
 			<!-- Logo Start -->
-			<a class="brand" href="/"><img src="<%=media%>/img/argon.svg" class="icon">
+			<a class="brand" href="/"><img src="<%=media%>/img/argone.svg" class="icon">
 				<span class="brand-text"><%=striptags( (boardinfo.hostname or "?") ) %></span>
 			</a>
 			<!-- Logo End -->

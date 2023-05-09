@@ -1,11 +1,11 @@
 #!/bin/sh
 # author jjm2473
 
-# the script will be excuted when `argon.@global[0].bing_background == '1'`
+# the script will be excuted when `argone.@global[0].bing_background == '1'`
 # defaults to 'bing' to be compatible with old config
-WEB_PIC_SRC=$(uci -q get argon.@global[0].online_wallpaper || echo 'bing')
-CACHE=/var/run/argon_${WEB_PIC_SRC}.url
-WRLOCK=/var/lock/argon_${WEB_PIC_SRC}.lock
+WEB_PIC_SRC=$(uci -q get argone.@global[0].online_wallpaper || echo 'bing')
+CACHE=/var/run/argone_${WEB_PIC_SRC}.url
+WRLOCK=/var/lock/argone_${WEB_PIC_SRC}.lock
 
 fetch_pic_url() {
     case $WEB_PIC_SRC in
