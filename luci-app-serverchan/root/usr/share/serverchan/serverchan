@@ -105,8 +105,8 @@ function diy_send(){
 	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】"'curl -X POST -H "'$content_type'" -d "@'${dir}debug_send_data'" "'${diyurl}'"  ' >> ${logfile}
 	
 	curl --connect-timeout 10 -m 20 -X POST -H "$content_type" -d "$data" "${diyurl}"
-	local tmp_value=$?
-	[ $tmp_value -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】网络错误或 URL 错误，推送失败，curl 返回值为 ${tmp_value}" >> ${logfile} && return 1 || return 0
+	local RETVAL=$?
+	[ $RETVAL -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】网络错误或 URL 错误，推送失败，curl 返回值为 ${RETVAL}" >> ${logfile} && return 1 || return 0
 }
 
 # 下载设备MAC厂商信息
@@ -1390,8 +1390,11 @@ function send(){
 	[ ! -z "$device_name" ] && local send_title="【$device_name】${send_title}"
 	[ -z "$send_content" ] && local send_content="${str_splitline}${str_title_start} 我遇到了一个难题${str_title_end}${str_linefeed}${str_tab}定时发送选项错误，你没有选择需要发送的项目，该怎 么办呢${str_splitline}"
 	[ "$send_disturb" -eq "0" ] && diy_send "${send_title}" "${send_content}" "${jsonpath}" "$1" >/dev/null 2>&1
-	[ $? -eq 1 ] && [ "$send_disturb" -eq "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】定时推送失败，请检查网络或设置信息" >> ${logfile} || echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}定时推送任务完成" >> ${logfile}
+	local RETVAL=$?
+	[ $RETVAL -eq 1 ] && [ "$send_disturb" -eq "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】定时推送失败，请检查网络或设置信息" >> ${logfile} || echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text}定时推送任务完成" >> ${logfile}
 	deltemp
+	echo $RETVAL >> ${logfile}
+	return $RETVAL
 }
 
 # 初始化
@@ -1412,9 +1415,9 @@ unset i
 
 # 启动参数
 if [ "$1" ] ;then
-	[ $1 == "send" ] && send
+	[ $1 == "send" ] && send && return $?
 	[ $1 == "soc" ] && echo `soc_temp` > ${dir}soc_tmp
-	[ $1 == "test" ] && send test
+	[ $1 == "test" ] && send test && return $?
 	[ $1 == "t1" ] || exit
 fi
 
