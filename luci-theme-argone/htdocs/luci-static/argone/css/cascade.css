@@ -17,7 +17,7 @@
  *  luci-theme-material:
  *      https://github.com/LuttyYang/luci-theme-material/
  *
- *  Argone Theme
+ *  Argon Theme
  *	    https://demos.creative-tim.com/argon-dashboard/index.html
  *
  *  Login background
@@ -314,7 +314,7 @@ li {
   position: relative;
 }
 .login-page .login-container .login-form .form-login .input-group::before {
-  font-family: 'argone' !important;
+  font-family: 'argon' !important;
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
@@ -632,7 +632,7 @@ footer a {
   position: relative;
 }
 .main .main-left .nav li.slide .menu::before {
-  font-family: 'argone' !important;
+  font-family: 'argon' !important;
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
@@ -651,7 +651,7 @@ footer a {
   position: absolute;
   right: 0.5rem;
   top: 0.8rem;
-  font-family: 'argone' !important;
+  font-family: 'argon' !important;
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
@@ -1753,7 +1753,7 @@ body.lang_pl.node-main-login .cbi-value-title {
 .cbi-value-helpicon,
 .showSide,
 .main > .loading > span {
-  font-family: 'argone' !important;
+  font-family: 'argon' !important;
   font-style: normal !important;
   font-weight: normal !important;
   font-variant: normal !important;
