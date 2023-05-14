@@ -56,63 +56,63 @@
 <html lang="<%=luci.i18n.context.lang%>">
 
 <head>
-    <meta charset="utf-8">
-    <title>
-        <%=striptags( (boardinfo.hostname or "?") .. ( (node and node.title) and ' - ' .. translate(node.title) or '')) %>
-        - LuCI</title>
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
-    <meta name="format-detection" content="telephone=no, email=no" />
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="x5-fullscreen" content="true">
-    <meta name="full-screen" content="yes">
-    <meta name="x5-page-mode" content="app">
-    <meta name="browsermode" content="application">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="msapplication-TileColor" content="<%=bar_color%>">
-    <meta name="application-name" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
-    <meta name="apple-mobile-web-app-title" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
-    <link rel="apple-touch-icon" sizes="60x60" href="<%=media%>/icon/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="<%=media%>/icon/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="<%=media%>/icon/apple-icon-144x144.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="<%=media%>/icon/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="<%=media%>/icon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="<%=media%>/icon/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="<%=media%>/icon/favicon-16x16.png">
-    <link rel="manifest" href="<%=media%>/icon/manifest.json" crossorigin="use-credentials">
-    <meta name="msapplication-TileColor" content="<%=bar_color%>">
-    <meta name="msapplication-TileImage" content="<%=media%>/icon/ms-icon-144x144.png">
-    <meta name="theme-color" content="<%=bar_color%>">
-    <link rel="stylesheet" href="<%=media%>/css/cascade.css<%# ?v=PKG_VERSION %>">
-    <style title="text/css">
-        <% if mode == 'normal' then %>
-            @media (prefers-color-scheme: dark) {
-                <%=dark_css%>
-            }
-        <% elseif mode == 'dark' then %>
-            <%=dark_css%>
-        <% end -%>
-        <% if fs.access('/etc/config/argon') then %>
-        :root {
-            --primary: <%=primary%>;
-            --dark-primary: <%=dark_primary%>;
-            --blur-radius:<%=blur_radius%>px;
-            --blur-opacity:<%=blur_opacity%>;
-            --blur-radius-dark:<%=blur_radius_dark%>px;
-            --blur-opacity-dark:<%=blur_opacity_dark%>;
-        }
-        <% end -%>
-    </style>
-    <link rel="shortcut icon" href="<%=media%>/favicon.ico">
-    <% if node and node.css then %>
-    <link rel="stylesheet" href="<%=resource%>/<%=node.css%>">
-    <% end -%>
-    <% if css then %>
-    <style title="text/css">
-        <%=css %>
-    </style>
-    <% end -%>
-    <script src="<%=media%>/js/jquery.min.js?v=3.5.1"></script>
+	<meta charset="utf-8">
+	<title>
+		<%=striptags( (boardinfo.hostname or "?") .. ( (node and node.title) and ' - ' .. translate(node.title) or '')) %>
+		- LuCI</title>
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
+	<meta name="format-detection" content="telephone=no, email=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="x5-fullscreen" content="true">
+	<meta name="full-screen" content="yes">
+	<meta name="x5-page-mode" content="app">
+	<meta name="browsermode" content="application">
+	<meta name="msapplication-tap-highlight" content="no">
+	<meta name="msapplication-TileColor" content="<%=bar_color%>">
+	<meta name="application-name" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+	<meta name="apple-mobile-web-app-title" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+	<link rel="apple-touch-icon" sizes="60x60" href="<%=media%>/icon/apple-icon-60x60.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="<%=media%>/icon/apple-icon-72x72.png">
+	<link rel="apple-touch-icon" sizes="144x144" href="<%=media%>/icon/apple-icon-144x144.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="<%=media%>/icon/android-icon-192x192.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="<%=media%>/icon/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="<%=media%>/icon/favicon-96x96.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="<%=media%>/icon/favicon-16x16.png">
+	<link rel="manifest" href="<%=media%>/icon/manifest.json" crossorigin="use-credentials">
+	<meta name="msapplication-TileColor" content="<%=bar_color%>">
+	<meta name="msapplication-TileImage" content="<%=media%>/icon/ms-icon-144x144.png">
+	<meta name="theme-color" content="<%=bar_color%>">
+	<link rel="stylesheet" href="<%=media%>/css/cascade.css<%# ?v=PKG_VERSION %>">
+	<style title="text/css">
+		<% if mode == 'normal' then %>
+			@media (prefers-color-scheme: dark) {
+				<%=dark_css%>
+			}
+		<% elseif mode == 'dark' then %>
+			<%=dark_css%>
+		<% end -%>
+		<% if fs.access('/etc/config/argon') then %>
+		:root {
+			--primary: <%=primary%>;
+			--dark-primary: <%=dark_primary%>;
+			--blur-radius:<%=blur_radius%>px;
+			--blur-opacity:<%=blur_opacity%>;
+			--blur-radius-dark:<%=blur_radius_dark%>px;
+			--blur-opacity-dark:<%=blur_opacity_dark%>;
+		}
+		<% end -%>
+	</style>
+	<link rel="shortcut icon" href="<%=media%>/favicon.ico">
+	<% if node and node.css then %>
+	<link rel="stylesheet" href="<%=resource%>/<%=node.css%>">
+	<% end -%>
+	<% if css then %>
+	<style title="text/css">
+		<%=css %>
+	</style>
+	<% end -%>
+	<script src="<%=media%>/js/jquery.min.js?v=3.5.1"></script>
 
 </head>
 

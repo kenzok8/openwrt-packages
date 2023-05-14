@@ -12,7 +12,7 @@ fetch_pic_url() {
     bing)
         local picpath=$(curl -fks --max-time 3 \
             "https://www.bing.com/HPImageArchive.aspx?format=js&n=1" |
-            jsonfilter -q -e '@.images[0].url')
+            jsonfilter -qe '@.images[0].url')
         [ -n "${picpath}" ] && echo "//www.bing.com${picpath}"
         ;;
     unsplash)
@@ -25,6 +25,11 @@ fetch_pic_url() {
         curl -fks --max-time 3 \
             "https://source.unsplash.com/collection/${collection_id}/1920x1080" |
             sed -E 's#^.*href="([^?]+)\?.*$#\1?fm=jpg\&fit=crop\&w=1920\&h=1080#'
+        ;;
+    wallhaven)
+        curl -fks --max-time 3 \
+            "https://wallhaven.cc/api/v1/search?resolutions=1920x1080&sorting=random" |
+            jsonfilter -qe '@.data[0].path'
         ;;
     esac
 }

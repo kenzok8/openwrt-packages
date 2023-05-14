@@ -74,8 +74,8 @@ msgstr "[暗色模式] 毛玻璃模糊半径"
 msgid "Larger value will more blurred ; ( Suggest: clear: 1 or blur preset: 10 )"
 msgstr "值越大越模糊; ( 建议: 清透 1 或 模糊预设 10 )"
 
-msgid "You can upload files such as jpg,png,gif,mp4,webm files, To change the login page background."
-msgstr "你可以上传jpg、png、gif或mp4、webm文件，以创建自己喜欢的登录界面"
+msgid "You can upload files such as jpg,png,gif,webp,mp4,webm files, To change the login page background."
+msgstr "你可以上传jpg、png、gif、webp或mp4、webm文件，以创建自己喜欢的登录界面"
 
 msgid "Save Changes"
 msgstr "保存更改"

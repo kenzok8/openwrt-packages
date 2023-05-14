@@ -121,7 +121,7 @@ function br.handle(self, state, data)
     return true
 end
 
-ful = SimpleForm('upload', translate('Upload  (Free: ') .. wa.byte_format(free_byte) .. ')', translate("You can upload files such as jpg,png,gif,mp4,webm files, To change the login page background."))
+ful = SimpleForm('upload', translate('Upload  (Free: ') .. wa.byte_format(free_byte) .. ')', translate("You can upload files such as jpg,png,gif,webp,mp4,webm files, To change the login page background."))
 ful.reset = false
 ful.submit = false
 
