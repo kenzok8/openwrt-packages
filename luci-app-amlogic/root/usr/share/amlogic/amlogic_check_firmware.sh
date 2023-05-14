@@ -141,7 +141,8 @@ check_updated() {
             jq '.[]' |
             jq -s --arg RTK "${releases_tag_keywords}" '.[] | select(.tag_name | contains($RTK))' |
             jq -s '.[].assets[] | {data:.updated_at, url:.browser_download_url}' |
-            jq -s --arg BOARD "_${BOARD}_" --arg MLV "${main_line_version}." '.[] | select((.url | contains($BOARD)) and (.url | contains($MLV)))' |
+            jq -s --arg BOARD "_${BOARD}_" --arg MLV "${main_line_version}." --arg FSX "${firmware_suffix}" \
+                '.[] | select((.url | contains($BOARD)) and (.url | contains($MLV)) and (.url | endswith($FSX)))' |
             jq -s 'sort_by(.data)|reverse[]' |
             jq -s '.[0]' -c
     )"
@@ -212,7 +213,12 @@ download_firmware() {
     shafile_path="$(echo ${opfile_path} | awk -F'/' '{print $1}')"
     shafile_file="https://github.com/${server_firmware_url}/releases/download/${shafile_path}/sha256sums"
     # Download sha256sums file
-    if wget "${shafile_file}" -q -O "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
+    if wget "${latest_url}.sha" -q -O "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
+        tolog "03.03 Sha256sums downloaded successfully."
+        releases_firmware_sha256sums="$(cat sha256sums | grep ${firmware_download_oldname##*/} | awk '{print $1}')"
+        download_firmware_sha256sums="$(sha256sum ${firmware_download_name} | awk '{print $1}')"
+        [[ -n "${releases_firmware_sha256sums}" && "${releases_firmware_sha256sums}" != "${download_firmware_sha256sums}" ]] && tolog "03.04 The sha256sum check is different." "1"
+    elif wget "${shafile_file}" -q -O "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
         tolog "03.03 Sha256sums downloaded successfully."
         releases_firmware_sha256sums="$(cat sha256sums | grep ${firmware_download_oldname##*/} | awk '{print $1}')"
         download_firmware_sha256sums="$(sha256sum ${firmware_download_name} | awk '{print $1}')"
