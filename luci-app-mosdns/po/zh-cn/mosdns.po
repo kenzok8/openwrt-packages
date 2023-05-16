@@ -199,11 +199,17 @@ msgstr "启用 EDNS 客户端子网"
 msgid "Add the EDNS Client Subnet option (ECS) to Remote DNS"
 msgstr "在远程 DNS 请求中加入 EDNS 客户端子网（即 ECS）选项（需要上游 DNS 服务器支持）"
 
-msgid "MosDNS will auto identify the IP address subnet segment of your remote connection (.0/24)"
-msgstr "MosDNS 将会自动获取您访问远程连接时使用的 IP 子网段（.0/24）"
+msgid "MosDNS will auto identify the IP address subnet segment of your remote connection (0/24)"
+msgstr "MosDNS 将会自动获取您访问远程连接时使用的 IP 子网段（0/24）"
 
 msgid "If your remote access network changes, May need restart MosDNS to update the ECS request address"
 msgstr "如果您的远程访问网络发生改变时可能需要重启 MosDNS 以更新 ECS 请求地址"
+
+msgid "Prevent DNS Leaks"
+msgstr "防止 DNS 泄漏"
+
+msgid "Enable this option fallback policy forces forwarding to remote DNS"
+msgstr "启用此选项 fallback 策略会强制转发到远程 DNS"
 
 msgid "DNS Cache Size"
 msgstr "DNS 缓存大小（条）"

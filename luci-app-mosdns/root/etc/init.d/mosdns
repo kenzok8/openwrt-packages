@@ -59,6 +59,7 @@ get_config() {
     config_get idle_timeout $1 idle_timeout 30
     config_get enable_http3 $1 enable_http3 0
     config_get enable_ecs_remote $1 enable_ecs_remote 0
+    config_get dns_leak $1 dns_leak 0
 }
 
 init_yaml() {
@@ -85,11 +86,12 @@ init_yaml() {
     [ "$dump_file" -eq 1 ] && [ ! -f $DUMP_FILE ] && cp -a $DUMP_FILE_DEFAULT $DUMP_FILE
     [ "$dump_file" -eq 0 ] && \cp -a $DUMP_FILE_DEFAULT $DUMP_FILE
     if [ "$enable_ecs_remote" -eq 1 ]; then
-        ecs_remote=$(sh /usr/share/mosdns/mosdns.sh ecs_remote)
+        ecs_remote=$(sh $MOSDNS_SCRIPT ecs_remote)
         sed -i "s,ecs_remote,$ecs_remote,g" $CONF
     else
         sed -i "/ecs_remote/d;" $CONF
     fi
+    [ $dns_leak -eq 1 ] && sed -i "s,primary: query_is_local_ip,primary: query_is_remote,g" $CONF
     rm -rf $TMPDIR
 }
 
