@@ -209,25 +209,20 @@ download_firmware() {
         tolog "03.02 OpenWrt download failed." "1"
     fi
 
-    # Download address of sha256sums file
-    shafile_path="$(echo ${opfile_path} | awk -F'/' '{print $1}')"
-    shafile_file="https://github.com/${server_firmware_url}/releases/download/${shafile_path}/sha256sums"
     # Download sha256sums file
     if wget "${latest_url}.sha" -q -O "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
         tolog "03.03 sha file downloaded successfully."
-    elif wget "${shafile_file}" -q -O "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
-        tolog "03.04 sha256sums file downloaded successfully."
-    fi
-    # If there is a sha256sum file, compare it
-    [[ -s "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" ]] && {
+
+        # If there is a sha256sum file, compare it
         releases_firmware_sha256sums="$(cat ${FIRMWARE_DOWNLOAD_PATH}/sha256sums | grep ${firmware_download_oldname##*/} | awk '{print $1}')"
         download_firmware_sha256sums="$(sha256sum ${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name} | awk '{print $1}')"
         if [[ -n "${releases_firmware_sha256sums}" && "${releases_firmware_sha256sums}" != "${download_firmware_sha256sums}" ]]; then
-            tolog "03.05 sha256sum verification mismatched." "1"
+            tolog "03.04 sha256sum verification mismatched." "1"
         else
-            tolog "03.06 sha256sum verification succeeded."
+            tolog "03.05 sha256sum verification succeeded."
         fi
-    }
+    fi
+
     sync && sleep 3
 
     tolog "You can update."
