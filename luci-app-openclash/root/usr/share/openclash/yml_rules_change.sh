@@ -28,6 +28,7 @@ yml_set_custom_rule_provider()
    config_get "interval" "$section" "interval" ""
    config_get "group" "$section" "group" ""
    config_get "position" "$section" "position" ""
+   config_get "format" "$section" "format" ""
 
    if [ "$enabled" = "0" ]; then
       return
@@ -69,6 +70,11 @@ cat >> "$RULE_PROVIDER_FILE" <<-EOF
     behavior: $behavior
     path: $path
 EOF
+    if [ -n "$format" ]; then
+cat >> "$RULE_PROVIDER_FILE" <<-EOF
+    format: $format
+EOF
+    fi
     if [ "$type" = "http" ]; then
 cat >> "$RULE_PROVIDER_FILE" <<-EOF
     url: $url
@@ -115,7 +121,7 @@ yml_gen_rule_provider_file()
       RULE_PROVIDER_FILE_URL="https://raw.githubusercontent.com/${RULE_PROVIDER_FILE_URL_PATH}"
    else
       if [ "$github_address_mod" == "https://cdn.jsdelivr.net/" ] || [ "$github_address_mod" == "https://fastly.jsdelivr.net/" ] || [ "$github_address_mod" == "https://testingcf.jsdelivr.net/" ]; then
-         RULE_PROVIDER_FILE_URL="https://cdn.jsdelivr.net/gh/"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"@master"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F 'master' '{print $2}')""
+         RULE_PROVIDER_FILE_URL="${github_address_mod}gh/"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"@master"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F 'master' '{print $2}')""
       elif [ "$github_address_mod" == "https://raw.fastgit.org/" ]; then
          RULE_PROVIDER_FILE_URL="https://raw.fastgit.org/"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F '/master' '{print $1}' 2>/dev/null)"/master"$(echo "$RULE_PROVIDER_FILE_URL_PATH" |awk -F 'master' '{print $2}')""
       else
@@ -136,7 +142,7 @@ cat >> "$RULE_PROVIDER_FILE" <<-EOF
 EOF
    if [ -z "$3" ]; then
 cat >> "$RULE_PROVIDER_FILE" <<-EOF
-    interval=86400
+    interval: 86400
 EOF
    else
 cat >> "$RULE_PROVIDER_FILE" <<-EOF
@@ -795,7 +801,7 @@ yml_other_set()
             if '$github_address_mod' != '0' then
                if '$github_address_mod' == 'https://cdn.jsdelivr.net/' or '$github_address_mod' == 'https://fastly.jsdelivr.net/' or '$github_address_mod' == 'https://testingcf.jsdelivr.net/'then
                   if x['url'] and x['url'] =~ /^https:\/\/raw.githubusercontent.com/ then
-                     x['url'] = '$github_address_mod' + x['url'].split('/')[3] + '/' + x['url'].split('/')[4] + '@' + x['url'].split(x['url'].split('/')[2] + '/' + x['url'].split('/')[3] + '/' + x['url'].split('/')[4] + '/')[1];
+                     x['url'] = '$github_address_mod' + 'gh/' + x['url'].split('/')[3] + '/' + x['url'].split('/')[4] + '@' + x['url'].split(x['url'].split('/')[2] + '/' + x['url'].split('/')[3] + '/' + x['url'].split('/')[4] + '/')[1];
                   end;
                elsif '$github_address_mod' == 'https://raw.fastgit.org/' then
                   if x['url'] and x['url'] =~ /^https:\/\/raw.githubusercontent.com/ then
@@ -822,7 +828,7 @@ yml_other_set()
          Value['proxy-groups'].each{
             |x|
                if x['type'] == 'url-test' then
-                  x['tolerance']='${tolerance}';
+                  x['tolerance']=${tolerance};
                end
             };
       end;
@@ -839,7 +845,7 @@ yml_other_set()
             Value['proxy-groups'].each{
                |x|
                if x['type'] == 'url-test' or x['type'] == 'fallback' or x['type'] == 'load-balance' then
-                  x['interval']='${urltest_interval_mod}';
+                  x['interval']=${urltest_interval_mod};
                end
             };
          end;
@@ -847,7 +853,7 @@ yml_other_set()
             Value['proxy-providers'].values.each{
                |x|
                if x['health-check'] and x['health-check']['enable'] and x['health-check']['enable'] == 'true' then
-                  x['health-check']['interval']='${urltest_interval_mod}';
+                  x['health-check']['interval']=${urltest_interval_mod};
                end;
             };
          end;

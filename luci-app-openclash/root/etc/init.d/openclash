@@ -106,6 +106,7 @@ change_dns() {
       uci -q set openclash.config.dnsmasq_resolvfile="$(uci -q get dhcp.@dnsmasq[0].resolvfile)"
       uci -q delete dhcp.@dnsmasq[0].resolvfile
       uci -q set dhcp.@dnsmasq[0].noresolv=1
+      uci -q set dhcp.@dnsmasq[0].localuse=1
       uci -q set openclash.config.redirect_dns=1
    else
       uci -q set openclash.config.redirect_dns=0
@@ -146,24 +147,35 @@ revert_dns() {
       
       if [ "$4" == "0" ] || [ -z "$4" ] || [ -z "$(uci -q show dhcp.@dnsmasq[0].server)" ]; then
          uci -q set dhcp.@dnsmasq[0].noresolv=0
-         if [ -n "$5" ]; then
+         if [ -n "$5" ] && [ -n "$(grep nameserver $5)" ]; then
             uci -q set dhcp.@dnsmasq[0].resolvfile="$5"
-         elif [ -n "$3" ]; then
+         elif [ -n "$3" ] && [ -n "$(grep nameserver $3)" ]; then
             uci -q set dhcp.@dnsmasq[0].resolvfile="$3"
+         elif [ -s "/tmp/resolv.conf.d/resolv.conf.auto" ] && [ -n "$(grep "nameserver" /tmp/resolv.conf.d/resolv.conf.auto)" ]; then
+            uci -q set dhcp.@dnsmasq[0].resolvfile=/tmp/resolv.conf.d/resolv.conf.auto
+            uci -q set openclash.config.default_resolvfile=/tmp/resolv.conf.d/resolv.conf.auto
+         elif [ -s "/tmp/resolv.conf.auto" ] && [ -n "$(grep "nameserver" /tmp/resolv.conf.auto)" ]; then
+            uci -q set dhcp.@dnsmasq[0].resolvfile=/tmp/resolv.conf.auto
+            uci -q set openclash.config.default_resolvfile=/tmp/resolv.conf.auto
+         else
+            uci -q set dhcp.@dnsmasq[0].resolvfile=/tmp/resolv.conf.d/resolv.conf.auto
+            uci -q set openclash.config.default_resolvfile=/tmp/resolv.conf.d/resolv.conf.auto
          fi
+         uci -q set dhcp.@dnsmasq[0].localuse=1
          uci -q commit dhcp
          /etc/init.d/dnsmasq restart >/dev/null 2>&1
          masq_port=$(uci -q get dhcp.@dnsmasq[0].port)
-         if [ "$(nslookup www.baidu.com 127.0.0.1:${masq_port} >/dev/null 2>&1 || echo $?)" = "1" ]; then
-            uci -q set openclash.config.default_resolvfile="/tmp/resolv.conf.auto"
-            rm -rf /tmp/resolv.conf.auto
-            touch /tmp/resolv.conf.auto 2>/dev/null
-            cat >> "/tmp/resolv.conf.auto" <<-EOF
+         if [ "$(nslookup www.apple.com 127.0.0.1:${masq_port} >/dev/null 2>&1 || echo $?)" = "1" ]; then
+            uci -q set openclash.config.default_resolvfile="/tmp/resolv.conf.d/resolv.conf.auto"
+            mkdir -p /tmp/resolv.conf.d
+            rm -rf /tmp/resolv.conf.d/resolv.conf.auto
+            touch /tmp/resolv.conf.d/resolv.conf.auto 2>/dev/null
+            cat >> "/tmp/resolv.conf.d/resolv.conf.auto" <<-EOF
 # Interface lan
-nameserver 114.114.114.114
 nameserver 119.29.29.29
+nameserver 8.8.8.8
 EOF
-            uci -q set dhcp.@dnsmasq[0].resolvfile="/tmp/resolv.conf.auto"
+            uci -q set dhcp.@dnsmasq[0].resolvfile="/tmp/resolv.conf.d/resolv.conf.auto"
          fi
       fi
    }
@@ -1431,12 +1443,6 @@ if [ -n "$FW4" ]; then
    else
       nft 'add element inet fw4 localnetwork { 0.0.0.0/8, 127.0.0.0/8, 10.0.0.0/8, 169.254.0.0/16, 192.168.0.0/16, 224.0.0.0/4, 240.0.0.0/4, 172.16.0.0/12, 100.64.0.0/10}'
    fi
-   
-   if [ -n "$lan_ip_cidrs" ]; then
-      for lan_ip_cidr in $lan_ip_cidrs; do
-         nft add element inet fw4 localnetwork { "$lan_ip_cidr" } 2>/dev/null
-      done
-   fi
 
    if [ -n "$wan_ip4s" ]; then
       for wan_ip4 in $wan_ip4s; do
@@ -1477,7 +1483,7 @@ if [ -n "$FW4" ]; then
          nft add rule inet fw4 openclash_wan_input udp dport {$proxy_port,$tproxy_port,$cn_port,$http_port,$socks_port,$mixed_port,$dns_port} counter reject
          nft add rule inet fw4 openclash_wan_input tcp dport {$proxy_port,$tproxy_port,$cn_port,$http_port,$socks_port,$mixed_port,$dns_port} counter reject
       else
-         LOG_OUT "Tip: Can't Get IPv4 WAN Interfaces, Please Verify The Firewall's WAN Zone Name is wan, Ignore This IF The Device Does not Have a WAN Interfaces..."
+         LOG_OUT "Warning: Can't Settting Only Intranet Allowed Function, Get IPv4 WAN Interfaces error, Please Verify The Firewall's WAN Zone Name is wan, Ignore This IF The Device Does not Have a WAN Interfaces..."
       fi
    fi
 
@@ -1906,12 +1912,6 @@ if [ -n "$FW4" ]; then
          nft 'add element inet fw4 localnetwork6 { ::/128, ::1/128, ::ffff:0:0/96, ::ffff:0:0:0/96, 64:ff9b::/96, 100::/64, 2001::/32, 2001:20::/28, 2001:db8::/32, 2002::/16, fc00::/7, fe80::/10, ff00::/8}'
       fi
 
-      if [ -n "$lan_ip6_cidrs" ]; then
-         for lan_ip6_cidr in $lan_ip6_cidrs; do
-            nft add element inet fw4 localnetwork6 { "$lan_ip6_cidr" } 2>/dev/null
-         done
-      fi
-
       if [ -n "$wan_ip6s" ]; then
          for wan_ip6 in $wan_ip6s; do
             nft add element inet fw4 localnetwork6 { "$wan_ip6" } 2>/dev/null
@@ -2056,7 +2056,7 @@ if [ -n "$FW4" ]; then
       #route
       if [ "$ipv6_mode" -ne 2 ]; then
          if [ "$enable_v6_udp_proxy" -eq 1 ] || [ "$ipv6_mode" -eq 0 ]; then
-            modprobe xt_TPROXY >/dev/null 2>&1
+            modprobe nft_tproxy >/dev/null 2>&1
             ip -6 rule add fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE"
             ip -6 route add local ::/0 dev lo table "$PROXY_ROUTE_TABLE"
          fi
@@ -2104,7 +2104,7 @@ if [ -n "$FW4" ]; then
             nft add rule inet fw4 openclash_wan6_input udp dport {$proxy_port,$tproxy_port,$cn_port,$http_port,$socks_port,$mixed_port,$dns_port} counter reject 2>/dev/null
             nft add rule inet fw4 openclash_wan6_input tcp dport {$proxy_port,$tproxy_port,$cn_port,$http_port,$socks_port,$mixed_port,$dns_port} counter reject 2>/dev/null
          else
-            LOG_OUT "Tip: Can't Get IPv6 WAN Interfaces, Please Verify The Firewall's WAN Zone Name is wan, Ignore This IF The Device Does not Have a WAN Interfaces..."
+            LOG_OUT "Warning: Can't Settting Only Intranet Allowed Function, Get IPv6 WAN Interfaces error, Please Verify The Firewall's WAN Zone Name is wan, Ignore This IF The Device Does not Have a WAN Interfaces..."
          fi
       fi
    fi 2>/dev/null
@@ -2182,12 +2182,6 @@ else
       ipset add localnetwork 172.16.0.0/12
       ipset add localnetwork 100.64.0.0/10
    fi
-   
-   if [ -n "$lan_ip_cidrs" ]; then
-      for lan_ip_cidr in $lan_ip_cidrs; do
-         ipset add localnetwork "$lan_ip_cidr" 2>/dev/null
-      done
-   fi
 
    if [ -n "$wan_ip4s" ]; then
       for wan_ip4 in $wan_ip4s; do
@@ -2226,7 +2220,7 @@ else
          iptables -t filter -A openclash_wan_input -p udp -m multiport --dport "$proxy_port,$tproxy_port,$cn_port,$http_port,$socks_port,$mixed_port,$dns_port" -j REJECT >/dev/null 2>&1
          iptables -t filter -A openclash_wan_input -p tcp -m multiport --dport "$proxy_port,$tproxy_port,$cn_port,$http_port,$socks_port,$mixed_port,$dns_port" -j REJECT >/dev/null 2>&1
       else
-         LOG_OUT "Tip: Can't Get IPv4 WAN Interfaces, Please Verify The Firewall's WAN Zone Name is wan, Ignore This IF The Device Does not Have a WAN Interfaces..."
+         LOG_OUT "Warning: Can't Settting Only Intranet Allowed Function, Get IPv4 WAN Interfaces error, Please Verify The Firewall's WAN Zone Name is wan, Ignore This IF The Device Does not Have a WAN Interfaces..."
       fi
    fi
 
@@ -2672,12 +2666,6 @@ else
          ipset add localnetwork6 ff00::/8
       fi
 
-      if [ -n "$lan_ip6_cidrs" ]; then
-         for lan_ip6_cidr in $lan_ip6_cidrs; do
-            ipset add localnetwork6 "$lan_ip6_cidr" 2>/dev/null
-         done
-      fi
-
       if [ -n "$wan_ip6s" ]; then
          for wan_ip6 in $wan_ip6s; do
             ipset add localnetwork6 "$wan_ip6"
@@ -2863,7 +2851,7 @@ else
             ip6tables -t filter -A openclash_wan_input -p udp -m multiport --dport "$proxy_port,$tproxy_port,$cn_port,$http_port,$socks_port,$mixed_port,$dns_port" -j REJECT >/dev/null 2>&1
             ip6tables -t filter -A openclash_wan_input -p tcp -m multiport --dport "$proxy_port,$tproxy_port,$cn_port,$http_port,$socks_port,$mixed_port,$dns_port" -j REJECT >/dev/null 2>&1
          else
-            LOG_OUT "Tip: Can't Get IPv6 WAN Interfaces, Please Verify The Firewall's WAN Zone Name is wan, Ignore This IF The Device Does not Have a WAN Interfaces..."
+            LOG_OUT "Warning: Can't Settting Only Intranet Allowed Function, Get IPv6 WAN Interfaces error, Please Verify The Firewall's WAN Zone Name is wan, Ignore This IF The Device Does not Have a WAN Interfaces..."
          fi
       fi
    fi 2>/dev/null
@@ -3001,9 +2989,7 @@ get_config()
    fi
    [ -z "$fakeip_range" ] && fakeip_range="198.18.0.1/16"
    lan_ip=$(uci -q get network.lan.ipaddr |awk -F '/' '{print $1}' 2>/dev/null || ip address show $(uci -q -p /tmp/state get network.lan.ifname || uci -q -p /tmp/state get network.lan.device) | grep -w "inet"  2>/dev/null |grep -Eo 'inet [0-9\.]+' | awk '{print $2}' || ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1)
-   lan_ip_cidrs=$(ip route | grep "/" | awk '{print $1}' | grep -vE "^$(echo "$fakeip_range"|awk -F '.' '{print $1"."$2}')" 2>/dev/null)
-   lan_ip6_cidrs=$(ip -6 route | grep "/" | awk '{print $1}' | grep -vE "^unreachable" 2>/dev/null)
-   wan_ip4s=$(ifconfig | grep 'inet addr' | awk '{print $2}' | cut -d: -f2 | grep -vE "(^$(echo "$fakeip_range"|awk -F '.' '{print $1"."$2}')|^192.168|^127.0)" 2>/dev/null)
+   wan_ip4s=$(/usr/share/openclash/openclash_get_network.lua "wanip" 2>/dev/null)
    wan_ip6s=$(ifconfig | grep 'inet6 addr' | awk '{print $3}' 2>/dev/null)
    disable_masq_cache=$(uci -q get openclash.config.disable_masq_cache)
    log_level=$(uci -q get openclash.config.log_level)

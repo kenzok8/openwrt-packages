@@ -107,6 +107,7 @@ do
    stream_auto_select_discovery_plus=$(uci -q get openclash.config.stream_auto_select_discovery_plus || echo 0)
    stream_auto_select_bilibili=$(uci -q get openclash.config.stream_auto_select_bilibili || echo 0)
    stream_auto_select_google_not_cn=$(uci -q get openclash.config.stream_auto_select_google_not_cn || echo 0)
+   stream_auto_select_chatgpt=$(uci -q get openclash.config.stream_auto_select_chatgpt || echo 0)
    upnp_lease_file=$(uci -q get upnpd.config.upnp_lease_file)
    
    enable=$(uci -q get openclash.config.enable)
@@ -183,16 +184,9 @@ fi
    check_dnsmasq
 
 ## Localnetwork 刷新
-   lan_ip_cidrs=$(ip route | grep "/" | awk '{print $1}' | grep -vE "^$(echo "$fakeip_range"|awk -F '.' '{print $1"."$2}')" 2>/dev/null)
-   lan_ip6_cidrs=$(ip -6 route | grep "/" | awk '{print $1}' | grep -vE "^unreachable" 2>/dev/null)
-   wan_ip4s=$(ifconfig | grep 'inet addr' | awk '{print $2}' | cut -d: -f2 | grep -vE "(^$(echo "$fakeip_range"|awk -F '.' '{print $1"."$2}')|^192.168|^127.0)" 2>/dev/null)
+   wan_ip4s=$(/usr/share/openclash/openclash_get_network.lua "wanip" 2>/dev/null)
+   wan_ip6s=$(ifconfig | grep 'inet6 addr' | awk '{print $3}' 2>/dev/null)
    if [ -n "$FW4" ]; then
-      if [ -n "$lan_ip_cidrs" ]; then
-         for lan_ip_cidr in $lan_ip_cidrs; do
-            nft add element inet fw4 localnetwork { "$lan_ip_cidr" } 2>/dev/null
-         done
-      fi
-
       if [ -n "$wan_ip4s" ]; then
          for wan_ip4 in $wan_ip4s; do
             nft add element inet fw4 localnetwork { "$wan_ip4" } 2>/dev/null
@@ -200,12 +194,6 @@ fi
       fi
 
       if [ "$ipv6_enable" -eq 1 ]; then
-         if [ -n "$lan_ip6_cidrs" ]; then
-            for lan_ip6_cidr in $lan_ip6_cidrs; do
-               nft add element inet fw4 localnetwork6 { "$lan_ip6_cidr" } 2>/dev/null
-            done
-         fi
-
          if [ -n "$wan_ip6s" ]; then
             for wan_ip6 in $wan_ip6s; do
                nft add element inet fw4 localnetwork6 { "$wan_ip6" } 2>/dev/null
@@ -213,24 +201,12 @@ fi
          fi
       fi
    else
-      if [ -n "$lan_ip_cidrs" ]; then
-         for lan_ip_cidr in $lan_ip_cidrs; do
-            ipset add localnetwork "$lan_ip_cidr" 2>/dev/null
-         done
-      fi
-
       if [ -n "$wan_ip4s" ]; then
          for wan_ip4 in $wan_ip4s; do
             ipset add localnetwork "$wan_ip4" 2>/dev/null
          done
       fi
       if [ "$ipv6_enable" -eq 1 ]; then
-         if [ -n "$lan_ip6_cidrs" ]; then
-            for lan_ip6_cidr in $lan_ip6_cidrs; do
-               ipset add localnetwork6 "$lan_ip6_cidr" 2>/dev/null
-            done
-         fi
-
          if [ -n "$wan_ip6s" ]; then
             for wan_ip6 in $wan_ip6s; do
                ipset add localnetwork6 "$wan_ip6" 2>/dev/null
@@ -375,6 +351,10 @@ fi
             if [ "$stream_auto_select_bilibili" -eq 1 ]; then
                LOG_OUT "Tip: Start Auto Select Proxy For Bilibili Unlock..."
                /usr/share/openclash/openclash_streaming_unlock.lua "Bilibili" >> $LOG_FILE
+            fi
+            if [ "$stream_auto_select_chatgpt" -eq 1 ]; then
+               LOG_OUT "Tip: Start Auto Select Proxy For ChatGPT Unlock..."
+               /usr/share/openclash/openclash_streaming_unlock.lua "ChatGPT" >> $LOG_FILE
             fi
          fi
       fi
