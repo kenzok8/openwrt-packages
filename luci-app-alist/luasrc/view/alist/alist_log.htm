@@ -12,12 +12,18 @@
 			}
 		);
 	}
+	var scrolled = false;
 	XHR.poll(2, '<%=url([[admin]], [[nas]], [[alist]], [[get_log]])%>', null,
 		function(x, data) {
 			if(x && x.status == 200) {
 				var log_textarea = document.getElementById('log_textarea');
-				log_textarea.innerHTML = x.responseText;
-				log_textarea.scrollTop = log_textarea.scrollHeight;
+				var str = x.responseText;
+				var logs = str.replace(//g, "🔧");
+				log_textarea.innerHTML = logs;
+				if (!scrolled) {
+					log_textarea.scrollTop = log_textarea.scrollHeight;
+					scrolled = true;
+				}
 			}
 		}
 	);
