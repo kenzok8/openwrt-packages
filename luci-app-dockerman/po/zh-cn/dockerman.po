@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5.2-dev\n"
+"X-Generator: Weblate 4.10-dev\n"
 
 #: applications/luci-app-dockerman/luasrc/model/cbi/dockerman/newcontainer.lua:619
 msgid "A list of kernel capabilities to add to the container"
