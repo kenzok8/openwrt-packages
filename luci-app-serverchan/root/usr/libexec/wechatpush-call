@@ -1,0 +1,49 @@
+#!/bin/sh
+
+logfile="/tmp/wechatpush/wechatpush.log"
+dir="/tmp/wechatpush/" && mkdir -p ${dir} && mkdir -p ${dir}/client
+oui_base=${dir}oui_base.txt
+oui_data=$(uci get wechatpush.config.oui_data 2>/dev/null)
+oui_url="https://standards-oui.ieee.org/oui/oui.txt"
+
+function file_date(){
+	file_dir="$1"
+	[ -f ${file_dir} ] && filerow=$(grep -c "" ${file_dir}) || filerow="0"
+	[ "$filerow" -ne "0" ] && datetime=$(date -r ${file_dir} +%s 2>/dev/null) || datetime=0
+	expr $(date +%s) - $datetime
+}
+
+function down_oui(){
+	echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】开始后台更新 $2 API 列表" >> ${logfile}
+	if [ ! -z "$oui_data" ] && [ "$oui_data" -ne "3" ]; then
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】设备 MAC 信息文件不存在或不是最新，重新下载" >> ${logfile}
+		wget --no-check-certificate -t 10 -T 15 -O ${dir}oui.txt "$oui_url" >/dev/null 2>&1
+		[ $? -ne "0"] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】设备 MAC 信息文件下载失败，返回码为 $? " && return
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】设备 MAC 信息文件下载成功，处理中" >> ${logfile}
+		if [ "$oui_data" -eq "1" ]; then
+			cat ${dir}oui.txt | grep -i -E ".*(base 16).*(apple|aruba|asus|autelan|belkin|bhu|buffalo|cctf|cisco|comba|datang|dell|dlink|dowell|ericsson|fast|feixun|fiberhome|fujitsu|grentech|h3c|hisense|hiwifi|honghai|honghao|hp|htc|huawei|intel|jinli|jse|lenovo|lg|liteon|malata|meizu|mercury|meru|moto|netcore|netgear|nokia|omron|oneplus|oppo|philips|router_unkown|samsung|shanzhai|sony|start_net|sunyuanda|tcl|tenda|texas|tianyu|tp-link|ubq|undefine|VMware|utstarcom|volans|xerox|xiaomi|zdc|zhongxing|smartisan).*" | sed -E 's/( Electronic| Technology| Intelligence| TECHNOLOGIES| Device| Systems| TELECOMMUNICATIONS| Instruments| Electronics| Corporation| Telecommunication| Communications| Electrical| Technology| Corporate| Intelligent| Interactive| MOBILE| Solutions| Mobility| Meraki| ELECTRO| VISUAL| Limited| International| Information| LLC|Co$|Co\.|Ltd\.$|Inc\.|B\.V\.$|AB$|,).*$/ /I; s/[[:space:]]*$//; s/ +$//' > ${oui_base}
+		elif [ "$oui_data" -eq "2" ]; then
+			cat ${dir}oui.txt | grep -i "(base 16)" | sed -E 's/( Electronic| Technology| Intelligence| TECHNOLOGIES| Device| Systems| TELECOMMUNICATIONS| Instruments| Electronics| Corporation| Telecommunication| Communications| Electrical| Technology| Corporate| Intelligent| Interactive| MOBILE| Solutions| Mobility| Meraki| ELECTRO| VISUAL| Limited| International| Information| LLC|Co$|Co\.|Ltd\.$|Inc\.|B\.V\.$|AB$|,).*$/ /I; s/[[:space:]]*$//; s/ +$//' > ${oui_base}
+		fi
+		rm -f ${dir}oui.txt >/dev/null 2>&1
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】设备 MAC 信息文件处理完成" >> ${logfile}
+	fi
+}
+	
+if [ "$1" == "get_client" ]; then
+	# 生成在线设备列表，沿用 LUA 版本生成的临时文件
+	devices=$(find /tmp/wechatpush/client -type f -print0 | xargs -0 cat | sed "s/'/\"/g" | tr '\n' ',')
+	echo "{\"devices\": [${devices%,}]}"
+elif [ "$1" == "clear_log" ]; then
+	# 清空日志
+	> /tmp/wechatpush/wechatpush.log
+elif [ "$1" == "update_list" ]; then
+	# 更新 API 列表
+	echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】开始更新 $2 API 列表" >> ${logfile}
+	wget --no-check-certificate -t 3 -T 15 -O "/tmp/wechatpush/${2}.list" "https://raw.githubusercontent.com/tty228/luci-app-wechatpush/master/root/usr/share/wechatpush/api/${2}.list" >/dev/null 2>&1
+	[ "$?" -eq "0" ] && mv -f "/tmp/wechatpush/${2}.list" "/usr/share/wechatpush/api/${2}.list" echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】 $2 API 列表更新成功" >> ${logfile}
+elif [ "$1" == "down_oui" ]; then
+	# 更新 MAC 信息列表
+	[ `file_date "$oui_base"` -lt "86400" ] && return 2
+	down_oui > /dev/null 2>&1 &
+fi

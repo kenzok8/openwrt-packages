@@ -1,21 +1,22 @@
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=luci-app-serverchan
-PKG_VERSION:=2.07.1
-PKG_RELEASE:=10
+PKG_NAME:=luci-app-wechatpush
+PKG_VERSION:=3.00.0
+PKG_RELEASE:=11
 
 PKG_MAINTAINER:=tty228 <tty228@yeah.net>
 
-LUCI_TITLE:=LuCI support for serverchan
+LUCI_TITLE:=LuCI support for wechatpush
 LUCI_PKGARCH:=all
 LUCI_DEPENDS:=+iputils-arping +curl +jq
 
 define Package/$(PKG_NAME)/conffiles
-/etc/config/serverchan
-/usr/share/serverchan/api/diy.json
-/usr/share/serverchan/api/logo.jpg
-/usr/share/serverchan/api/ipv4.list
-/usr/share/serverchan/api/ipv6.list
+/etc/config/wechatpush
+/usr/share/wechatpush/api/diy.json
+/usr/share/wechatpush/api/logo.jpg
+/usr/share/wechatpush/api/ipv4.list
+/usr/share/wechatpush/api/ipv6.list
+/usr/share/wechatpush/api/device_aliases.list
 endef
 
 include $(TOPDIR)/feeds/luci/luci.mk

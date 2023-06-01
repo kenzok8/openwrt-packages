@@ -1,0 +1,162 @@
+#!/bin/sh
+
+function get_config(){
+	while [[ "$*" != "" ]]; do
+		eval ${1}='`uci get serverchan.serverchan.$1`' 2>/dev/null
+		uci del serverchan.serverchan.$1 2>/dev/null
+		uci commit serverchan
+		shift
+	done
+}
+
+function serverchan_to_wechatpush_list(){
+	[ $2 ] && config_name=$2 || config_name=$1
+	config_list=`uci get serverchan.serverchan.$1` 2>/dev/null
+	[ -z "$config_list" ] && return
+	uci del serverchan.serverchan.$1 2>/dev/null
+	uci commit serverchan
+	for config in $config_list ;do
+		uci add_list wechatpush.config.$config_name="$config"
+	done
+	uci commit wechatpush
+}
+
+function serverchan_to_wechatpush_change(){
+	config=`uci get serverchan.serverchan.$1` 2>/dev/null
+	[ -z "$config" ] && return
+	uci del serverchan.serverchan.$1 2>/dev/null
+	uci commit serverchan
+	uci set wechatpush.config.$2=$config
+	uci commit wechatpush
+}
+
+function serverchan_to_wechatpush_get(){
+	while [[ "$*" != "" ]]; do
+		config=`uci get serverchan.serverchan.$1` 2>/dev/null
+		[ -z "$config" ] && shift && continue
+		uci del serverchan.serverchan.$1 2>/dev/null
+		uci commit serverchan
+		uci set wechatpush.config.${1}=${config}
+		uci commit wechatpush
+		shift
+	done
+}
+
+if [ ! -f "/etc/config/wechatpush" ]; then
+cat>/etc/config/wechatpush<<EOF
+
+config wechatpush "config"
+	option enable '0'
+	option sleeptime '60'
+	option debuglevel '1'
+	option up_timeout '2'
+	option down_timeout '20'
+	option timeout_retry_count '2'
+	option thread_num '3'
+
+EOF
+
+fi
+
+serverchan_config="/etc/config/serverchan"
+if [ -f "$serverchan_config" ]; then
+	cp "/etc/config/serverchan" "/etc/config/serverchan.bak"
+	sed -i 's#/usr/share/serverchan/api/telegram.json#/usr/share/wechatpush/api/telegram.json#g' "$serverchan_config" 2>/dev/null
+	sed -i 's#/root/usr/bin/serverchan/api/telegram.json#/usr/share/wechatpush/api/telegram.json#g' "$serverchan_config" 2>/dev/null
+fi
+
+get_config "serverchan_up" "serverchan_down"
+[ -n "$serverchan_up" ] && [ "$serverchan_up" -eq "1" ] && uci add_list wechatpush.config.device_notification='online'
+[ -n "$serverchan_down" ] && [ "$serverchan_down" -eq "1" ] && uci add_list wechatpush.config.device_notification='offline'
+
+get_config "cpuload_enable" "temperature_enable"
+[ -n "$cpuload_enable" ] && [ "$cpuload_enable" -eq "1" ] && uci add_list wechatpush.config.cpu_notification='load'
+[ -n "$temperature_enable" ] && [ "$temperature_enable" -eq "1" ] && uci add_list wechatpush.config.cpu_notification='temp'
+
+get_config "web_logged" "ssh_logged" "web_login_failed" "ssh_login_failed"
+[ -n "$web_logged" ] && [ "$web_logged" -eq "1" ] && uci add_list wechatpush.config.login_notification='web_logged'
+[ -n "$ssh_logged" ] && [ "$ssh_logged" -eq "1" ] && uci add_list wechatpush.config.login_notification='ssh_logged'
+[ -n "$web_login_failed" ] && [ "$web_login_failed" -eq "1" ] && uci add_list wechatpush.config.login_notification='web_login_failed'
+[ -n "$ssh_login_failed" ] && [ "$ssh_login_failed" -eq "1" ] && uci add_list wechatpush.config.login_notification='ssh_login_failed'
+
+get_config "router_status" "router_temp" "router_wan" "client_list"
+[ -n "$router_status" ] && [ "$router_status" -eq "1" ] && uci add_list wechatpush.config.send_notification='router_status'
+[ -n "$router_temp" ] && [ "$router_temp" -eq "1" ] && uci add_list wechatpush.config.send_notification='router_temp'
+[ -n "$router_wan" ] && [ "$router_wan" -eq "1" ] && uci add_list wechatpush.config.send_notification='wan_info'
+[ -n "$client_list" ] && [ "$client_list" -eq "1" ] && uci add_list wechatpush.config.send_notification='client_list'
+
+get_config "regular_time" "regular_time2" "regular_time3"
+[ -n "$regular_time" ] && uci add_list wechatpush.config.crontab_regular_time="$regular_time"
+[ -n "$regular_time2" ] && uci add_list wechatpush.config.crontab_regular_time="$regular_time2"
+[ -n "$regular_time3" ] && uci add_list wechatpush.config.crontab_regular_time="$regular_time3"
+
+serverchan_to_wechatpush_list "device_notification"
+serverchan_to_wechatpush_list "cpu_notification"
+serverchan_to_wechatpush_list "login_notification"
+serverchan_to_wechatpush_list "send_notification"
+serverchan_to_wechatpush_list "ip_white_list" "login_ip_white_list"
+serverchan_to_wechatpush_list "port_forward_list" "login_port_forward_list"
+serverchan_to_wechatpush_list "client_usage_whitelist"
+serverchan_to_wechatpush_list "serverchan_whitelist" "up_down_push_whitelist"
+serverchan_to_wechatpush_list "serverchan_blacklist" "up_down_push_blacklist"
+serverchan_to_wechatpush_list "MAC_online_list" "mac_online_list"
+serverchan_to_wechatpush_list "MAC_offline_list" "mac_offline_list"
+serverchan_to_wechatpush_list "err_device_aliases" "unattended_device_aliases"
+
+get_config "device_aliases"
+mkdir -p /usr/share/wechatpush/api/
+[ -n "$device_aliases" ] && echo "$device_aliases"|sed 's/ /\n/g'|sed 's/-/	/' > /usr/share/wechatpush/api/device_aliases.list
+serverchan_device_aliases_path="/usr/share/serverchan/api/device_aliases.list"
+wechatpush_device_aliases_path="/usr/share/wechatpush/api/device_aliases.list"
+[ -f "$wechatpush_device_aliases_path" ] && [ `tail -n1 "${wechatpush_device_aliases_path}" | wc -l` -eq "0" ] && echo -e >> ${wechatpush_device_aliases_path}
+[ -f "$serverchan_device_aliases_path" ] && grep -v '^#' "$serverchan_device_aliases_path" | grep -v '^[[:space:]]*$' | sort -u > "$wechatpush_device_aliases_path.temp" && mv "$wechatpush_device_aliases_path.temp" "$wechatpush_device_aliases_path"
+[ -f "$serverchan_device_aliases_path" ] && rm -rf "$serverchan_device_aliases_path"
+cp -r "/usr/share/serverchan/api/." "/usr/share/wechatpush/api/" 2>/dev/null
+rm -rf "/usr/share/serverchan/api" 2>/dev/null
+
+serverchan_to_wechatpush_change "serverchan_enable" "enable"
+serverchan_to_wechatpush_change "serverchan_ipv4" "get_ipv4_mode"
+serverchan_to_wechatpush_change "serverchan_ipv6" "get_ipv6_mode"
+serverchan_to_wechatpush_change "update_list" "auto_update_ip_list"
+serverchan_to_wechatpush_change "cpuload" "cpu_load_threshold"
+serverchan_to_wechatpush_change "temperature" "temperature_threshold"
+serverchan_to_wechatpush_change "web_login_black" "login_web_black"
+serverchan_to_wechatpush_change "ip_black_timeout" "login_ip_black_timeout"
+serverchan_to_wechatpush_change "port_knocking" "port_knocking_enable"
+serverchan_to_wechatpush_change "ip_white_timeout" "login_ip_white_timeout"
+serverchan_to_wechatpush_change "ip_port_white" "login_port_white"
+serverchan_to_wechatpush_change "regular_time" "crontab_regular_time"
+serverchan_to_wechatpush_change "interval_time" "crontab_interval_time"
+serverchan_to_wechatpush_change "serverchan_sheep" "do_not_disturb_mode"
+serverchan_to_wechatpush_change "starttime" "do_not_disturb_starttime"
+serverchan_to_wechatpush_change "endtime" "do_not_disturb_endtime"
+serverchan_to_wechatpush_change "serverchan_interface" "up_down_push_interface"
+serverchan_to_wechatpush_change "passive_option" "passive_mode"
+serverchan_to_wechatpush_change "err_enable" "unattended_enable"
+serverchan_to_wechatpush_change "err_sheep_enable" "unattended_only_on_disturb_time"
+serverchan_to_wechatpush_change "network_err_event" "network_disconnect_event"
+serverchan_to_wechatpush_change "system_time_event" "unattended_autoreboot_mode"
+serverchan_to_wechatpush_change "autoreboot_time" "autoreboot_system_uptime"
+serverchan_to_wechatpush_change "network_restart_time autoreboot_network_uptime"
+serverchan_to_wechatpush_change "crontab" "crontab_mode"
+serverchan_to_wechatpush_change "macmechanism" "mac_filtering_mode_1"
+serverchan_to_wechatpush_change "macmechanism2" "mac_filtering_mode_2"
+
+
+serverchan_to_wechatpush_get \
+	"enable" "lite_enable" "device_name" "sleeptime" "oui_data" "reset_regularly" "debuglevel" \
+	"jsonpath" "sckey" "corpid" "userid" "agentid" "corpsecret" "mediapath" "wxpusher_apptoken" "wxpusher_uids" "wxpusher_topicIds" "pushplus_token" "tg_token" "chat_id" \
+	"get_ipv4_mode" "ipv4_interface" "get_ipv6_mode" "ipv6_interface" "auto_update_ip_list" \
+	"device_notification" "cpu_notification" "cpu_load_threshold" "temperature_threshold" \
+	"client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" \
+	"login_notification" "login_max_num" "login_web_black" "login_ip_black_timeout" "login_ip_white_list" "port_knocking_enable" "login_ip_white_timeout" "login_port_white" "login_port_forward_list" \
+	"crontab_regular_time" "crontab_interval_time" \
+	"do_not_disturb_mode" "do_not_disturb_starttime" "do_not_disturb_endtime" "up_down_push_whitelist" "up_down_push_blacklist" "up_down_push_interface" "mac_online_list" "mac_offline_list" "login_disturb" "login_notification_delay" \
+	"up_timeout" "down_timeout" "timeout_retry_count" "passive_mode" "thread_num" "soc_code" "server_host" "server_port" \
+	"unattended_enable" "zerotier_helper" "unattended_only_on_disturb_time" "unattended_device_aliases" "network_disconnect_event" "unattended_autoreboot_mode" "autoreboot_system_uptime" "autoreboot_network_uptime" \
+	"gateway_info_enable" "gateway_host_url" "gateway_info_url" "gateway_logout_url" "gateway_username_id" "gateway_password_id" "gateway_username" "gateway_password" "gateway_sleeptime"
+
+uci commit wechatpush
+rm -rf "$serverchan_config" 2>/dev/null
+nohup sh -c 'while [ -f /var/lock/opkg.lock ]; do sleep 1; done; opkg remove luci-app-serverchan; rm -rf /tmp/luci-*' >/dev/null 2>&1 &
+
