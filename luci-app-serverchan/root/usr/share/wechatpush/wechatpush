@@ -1227,7 +1227,7 @@ function add_ip_white() {
 	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】白名单添加失败，IP 格式错误" >> ${logfile} && return
 
 	( opkg list-installed|grep -w -q ^firewall4 ) && nft delete element inet fw4 $ipset_name { $1 } >/dev/null 2>&1
-	( opkg list-installed|grep -w -q ^firewall4 ) && nft add element inet fw4 $ipset_name { $1 } && return #没找到刷新时间的命令，删除再添加
+	( opkg list-installed|grep -w -q ^firewall4 ) && nft add element inet fw4 $ipset_name { $1 expires ${login_ip_white_timeout}s } && return #没找到刷新时间的命令，删除再添加
 	ipset -exist add $ipset_name $1 timeout $login_ip_white_timeout
 }
 
@@ -1323,7 +1323,7 @@ function add_ip_black(){
 
 	! cat ${ip_blacklist_path}|grep -q -w -i ${1} && echo "$1 timeout ${login_ip_black_timeout}" >> ${ip_blacklist_path}
 
-	( opkg list-installed|grep -w -q ^firewall4 ) && nft add element inet fw4 ${ipset_name} { $1 } >/dev/null 2>&1
+	( opkg list-installed|grep -w -q ^firewall4 ) && nft add element inet fw4 ${ipset_name} { $1 expires ${login_ip_black_timeout}s } >/dev/null 2>&1
 	( opkg list-installed|grep -w -q ^firewall4 ) && return
 
 	ipset -exist add $ipset_name ${1} timeout ${login_ip_black_timeout}
