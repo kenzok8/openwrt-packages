@@ -76,6 +76,13 @@ elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H68K Board")" != "" ]]; the
         MYDTB_FDTFILE="rk3568-opc-h68k.dtb"
     fi
     SOC="h68k"
+elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H69K Board")" != "" ]]; then
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-opc-h69k.dtb"
+    fi
+    SOC="h69k"
 elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa E25")" != "" ]]; then
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
