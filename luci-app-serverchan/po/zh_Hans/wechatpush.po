@@ -712,6 +712,14 @@ msgstr "首次登录后推送通知，在设定时间内不再重复提醒<br/>�
 msgid "Login reminder whitelist"
 msgstr "登录提醒白名单"
 
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:689
+msgid "Login reminder log anti-flooding"
+msgstr "登录提醒日志免刷屏"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:690
+msgid "Users in the whitelist or during the undisturbed time period after their first login IP will be exempt from log recording, preventing log flooding."
+msgstr "白名单列表内的用户，或者登录 IP 处于首次登录后的免打扰时段，不做日志记录，避免日志刷屏"
+
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:688
 msgid "Do not send login events from IP addresses in the list, and ignore blacklisting operations. Only record in the log. Mask bit representation is not supported at the moment."
 msgstr "不对列表内 IP 登录事件推送，并忽略拉黑操作，仅在日志中记录，暂不支持掩码位表示"

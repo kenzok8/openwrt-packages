@@ -1,0 +1,2 @@
+curl -s cip.cc/${ip} | sed -n 's/地址[[:space:]]*:[[:space:]]*\(.*\)/\1/p'
+curl -s https://ip.rss.ink/v1/qqwry?ip=${ip} | jq -r '.data.area'

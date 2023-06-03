@@ -686,6 +686,11 @@ return view.extend({
 		o.depends({ login_notification: "ssh_login_failed", '!contains': true });
 		o.description = _('Do not send login events from IP addresses in the list, and ignore blacklisting operations. Only record in the log. Mask bit representation is not supported at the moment.');
 
+		o = s.taboption('disturb', form.Flag, 'login_log_enable', _('Login reminder log anti-flooding'));
+		o.description = _('Users in the whitelist or during the undisturbed time period after their first login IP will be exempt from log recording, preventing log flooding.');
+		o.depends('login_disturb', '1');
+		o.depends('login_disturb', '2');
+
 		return m.render();
 	}
 });

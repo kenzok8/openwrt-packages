@@ -14,9 +14,8 @@ function file_date(){
 }
 
 function down_oui(){
-	echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】开始后台更新 $2 API 列表" >> ${logfile}
 	if [ ! -z "$oui_data" ] && [ "$oui_data" -ne "3" ]; then
-		echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】设备 MAC 信息文件不存在或不是最新，重新下载" >> ${logfile}
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】开始后台更新 MAC 信息文件" >> ${logfile}
 		wget --no-check-certificate -t 10 -T 15 -O ${dir}oui.txt "$oui_url" >/dev/null 2>&1
 		[ $? -ne "0"] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】设备 MAC 信息文件下载失败，返回码为 $? " && return
 		echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】设备 MAC 信息文件下载成功，处理中" >> ${logfile}

@@ -38,7 +38,7 @@ function read_config(){
 	"client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" \
 	"login_notification" "login_max_num" "login_web_black" "login_ip_black_timeout" "login_ip_white_list" "port_knocking_enable" "login_ip_white_timeout" "login_port_white" "login_port_forward_list" \
 	"crontab_regular_time" "crontab_interval_time" \
-	"do_not_disturb_mode" "do_not_disturb_starttime" "do_not_disturb_endtime" "up_down_push_whitelist" "up_down_push_blacklist" "up_down_push_interface" "mac_online_list" "mac_offline_list" "login_disturb" "login_notification_delay" \
+	"do_not_disturb_mode" "do_not_disturb_starttime" "do_not_disturb_endtime" "up_down_push_whitelist" "up_down_push_blacklist" "up_down_push_interface" "mac_online_list" "mac_offline_list" "login_disturb" "login_notification_delay" "login_log_enable" \
 	"up_timeout" "down_timeout" "timeout_retry_count" "passive_mode" "thread_num" "soc_code" "server_host" "server_port" \
 	"unattended_enable" "zerotier_helper" "unattended_only_on_disturb_time" "unattended_device_aliases" "network_disconnect_event" "unattended_autoreboot_mode" "autoreboot_system_uptime" "autoreboot_network_uptime" \
 	"gateway_info_enable" "gateway_host_url" "gateway_info_url" "gateway_logout_url" "gateway_username_id" "gateway_password_id" "gateway_username" "gateway_password" "gateway_sleeptime"
@@ -70,6 +70,7 @@ function read_config(){
 	mark_mac_list=`echo "$mark_mac_list"|sed 's/ /\n/g'|sed 's/-/ /'` 2>/dev/null
 	ipv4_urllist=`cat /usr/share/wechatpush/api/ipv4.list` 2>/dev/null
 	ipv6_urllist=`cat /usr/share/wechatpush/api/ipv6.list` 2>/dev/null
+	User_Agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58"
 	[ -z "$get_ipv4_mode" ] && get_ipv4_mode=0
 	[ -z "$get_ipv6_mode" ] && get_ipv6_mode=0
 	[ -z "$sleeptime" ] && sleeptime="60"
@@ -752,7 +753,7 @@ function rand_geturl(){
 		local urllist="https://www.163.com https://www.qq.com https://www.baidu.com https://www.qidian.com https://www.douban.com"
 		local url_number=`expr $(echo "$urllist"|grep -o ' '|wc -l) + 1`
 		local url_str=`echo "$urllist"|awk -v i=$(rand 1 $url_number) '{print $i}'`
-		echo `curl -k -s -w "%{http_code}" -m 5 ${url_str} -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" -o /dev/null`
+		echo `curl -k -s -w "%{http_code}" -m 5 ${url_str} -A "${User_Agent}" -o /dev/null`
 	}
 	local check=`getcheck`
 	while [ -z "$check" ] || [[ $check -ne 200 && $check -ne 301 && $check -ne 302 ]]; do
@@ -1082,6 +1083,19 @@ EOF
 	rm -f ${dir}get_syslog >/dev/null 2>&1
 }
 
+# 查询 IP 归属地
+function get_ip_attribution(){
+	ip="$1"
+	[ -f ${dir}ipAddress ] && ( cat ${dir}ipAddress|grep -q -w -i "$ip" ) && echo "本地网络" && return
+	ip_attribution_urls=$(cat /usr/share/wechatpush/api/ip_attribution.list)
+	for ip_attribution_command in ${ip_attribution_urls}; do
+		login_ip_attribution=$(eval "$ip_attribution_command" 2>/dev/null)
+		[ "$login_ip_attribution" == "null" ] && unset login_ip_attribution
+		[ -n "$login_ip_attribution" ] && break
+	done
+	echo "$login_ip_attribution"
+}
+
 # 登录提醒通知
 function login_send(){
 	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv4"
@@ -1111,29 +1125,33 @@ function login_send(){
 		add_ip_white ${login_ip}
 		local login_time=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 		local login_mode=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
-		echo "$login_ip_white_list"|grep -w -q "$login_ip" && log_only="1"
-		if [ ! -z "$login_disturb" ] && [ "$login_disturb" -eq "2" ]; then
+		unset log_only content_attribution content_mode
+		echo "$login_ip_white_list"|grep -w -q "$login_ip" && log_only="1" && [ -n "$login_log_enable" ] && continue
+		if [ -z "$log_only" ] && [ ! -z "$login_disturb" ] && [ "$login_disturb" -eq "2" ]; then
 			[ -f "$logfile" ] && login_log=$(grep -w "$login_ip" "$logfile" | grep -v "\【info\】" | tail -n 1)
 			[ ! -z "$login_log" ] && log_timestamp=$(date -d "$(echo "$login_log" | awk '{print $1, $2}')" +%s) || log_timestamp=0
-			[ $(($(date +%s) - log_timestamp)) -lt $login_notification_delay ] && log_only="1"
+			[ $(($(date +%s) - log_timestamp)) -lt $login_notification_delay ] && log_only="1" && [ -n "$login_log_enable" ] && continue
 		fi
 		[ -n "$log_only" ] && echo "`date "+%Y-%m-%d"` ${login_time} 【info】设备 ${login_ip} 通过 Web ${login_mode} 登录了路由器 " >> ${logfile} && continue
-		[ ! -z "$login_mode" ] && local content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
+
+		login_ip_attribution=$(get_ip_attribution ${login_ip})
+		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}"
+		[ -n "$login_mode" ] && content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
 		if [ -n "$web_logged" ] && { [ -z "$login_disturb" ] || [ "$login_disturb" -ne "1" ]; }; then
 			if [ -z "$title" ]; then
 				title="${login_ip} 通过 Web 登录了路由器"
-				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
 			elif ( echo "$title"|grep -q "登录了路由器" ); then
 				title="${login_ip} ${title}"
-				content="${content}${str_splitline}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
 			else
 				title="${login_ip} 通过 Web 登录了路由器"
-				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
 			fi
 		fi
 		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
 		sed -i "/^${login_ip}$/d" ${dir}web_failed
-		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} 通过 Web ${login_mode} 登录了路由器 " >> ${logfile}
+		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} (${login_ip_attribution}) 通过 Web ${login_mode} 登录了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}web_login
 	unset login_ip login_time login_mode
@@ -1143,28 +1161,32 @@ function login_send(){
 		add_ip_white ${login_ip}
 		local login_time=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
 		local login_mode=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
-		echo "$login_ip_white_list"|grep -w -q "$login_ip" && log_only="1"
-		if [ ! -z "$login_disturb" ] && [ "$login_disturb" -eq "2" ]; then
+		unset log_only content_attribution content_mode
+		echo "$login_ip_white_list"|grep -w -q "$login_ip" && log_only="1" && [ -n "$login_log_enable" ] && continue
+		if [ -z "$log_only" ] && [ ! -z "$login_disturb" ] && [ "$login_disturb" -eq "2" ]; then
 			[ -f "$logfile" ] && login_log=$(grep -w "$login_ip" "$logfile" | grep -v "\【info\】" | tail -n 1)
 			[ ! -z "$login_log" ] && log_timestamp=$(date -d "$(echo "$login_log" | awk '{print $1, $2}')" +%s) || log_timestamp=0
-			[ $(($(date +%s) - log_timestamp)) -lt $login_notification_delay ] && log_only="1"
+			[ $(($(date +%s) - log_timestamp)) -lt $login_notification_delay ] && log_only="1" && [ -n "$login_log_enable" ] && continue
 		fi
 		[ -n "$log_only" ] && echo "`date "+%Y-%m-%d"` ${login_time} 【info】设备 ${login_ip} 通过 SSH ${login_mode} 登录了路由器 " >> ${logfile} && continue
-		[ ! -z "$login_mode" ] && local content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
+
+		login_ip_attribution=$(get_ip_attribution ${login_ip})
+		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}"
+		[ ! -z "$login_mode" ] && content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
 		if [ -n "$ssh_logged" ] && { [ -z "$login_disturb" ] || [ "$login_disturb" -ne "1" ]; }; then
 			if [ -z "$title" ]; then
 				title="${login_ip} 通过 SSH 登录了路由器"
-				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
 			elif ( echo "$title"|grep -q "登录了路由器" ); then
 				title="${login_ip} ${title}"
-				content="${content}${str_splitline}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
 			else
 				title="${login_ip} 通过 SSH 登录了路由器"
-				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_mode}"
+				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
 			fi
 		fi
 		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
-		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} 通过 SSH ${login_mode} 登录了路由器 " >> ${logfile}
+		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} (${login_ip_attribution}) 通过 SSH ${login_mode} 登录了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}ssh_login
 	unset login_ip login_time login_mode
@@ -1175,19 +1197,21 @@ function login_send(){
 		local login_sum=`cat ${dir}web_failed|grep -w "${login_ip}"|wc -l`
 		if [ "$login_sum" -ge "$login_max_num" ] ;then
 			if [ -n "$web_login_failed" ]; then
+				login_ip_attribution=$(get_ip_attribution ${login_ip})
+				[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
 				if [ -z "$title" ]; then
 					title="${login_ip} 通过 Web 频繁尝试登录"
-					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}"
+					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 				elif ( echo "$title"|grep -q "频繁尝试登录" ); then
 					title="${login_ip} ${title}"
-					content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}"
+					content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 				else
 					title="设备状态变化"
-					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}"
+					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 				fi
 			fi
 			sed -i "/^${login_ip}$/d" ${dir}web_failed
-			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} 通过 Web 频繁尝试登录" >> ${logfile}
+			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 Web 频繁尝试登录" >> ${logfile}
 			add_ip_black $login_ip
 		fi
 	done
@@ -1199,19 +1223,21 @@ function login_send(){
 		local login_sum=`cat ${dir}ssh_failed|grep -w "${login_ip}"|wc -l`
 		if [ "$login_sum" -ge "$login_max_num" ] ;then
 			if [ -n "$ssh_login_failed" ]; then
+				login_ip_attribution=$(get_ip_attribution ${login_ip})
+				[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
 				if [ -z "$title" ]; then
 					title="${login_ip} 通过 SSH 频繁尝试登录"
-					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}"
+					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 				elif ( echo "$title"|grep -q "频繁尝试登录" ); then
 					title="${login_ip} ${title}"
-					content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}"
+					content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 				else
 					title="设备状态变化"
-					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}"
+					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 				fi
 			fi
 			sed -i "/^${login_ip}$/d" ${dir}ssh_failed
-			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} 通过 SSH 频繁尝试登录" >> ${logfile}
+			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 SSH 频繁尝试登录" >> ${logfile}
 			add_ip_black $login_ip
 		fi
 	done
