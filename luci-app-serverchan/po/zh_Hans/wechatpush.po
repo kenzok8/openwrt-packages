@@ -57,11 +57,11 @@ msgid "Push Mode"
 msgstr "推送模式"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:135
-msgid "WeChat wechatpush"
+msgid "WeChat serverchan"
 msgstr "微信 Server 酱"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:136
-msgid "Using wechatpush API, simple configuration, supports multiple push methods"
+msgid "Using serverchan API, simple configuration, supports multiple push methods"
 msgstr "使用 Server酱 接口，配置较简单，支持多项推送方式"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:137

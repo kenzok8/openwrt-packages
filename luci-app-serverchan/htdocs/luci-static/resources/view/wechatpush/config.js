@@ -132,8 +132,8 @@ return view.extend({
 		o = s.taboption('basic', form.Flag, 'enable', _('Enabled'));
 
 		o = s.taboption('basic', cbiRichListValue, 'jsonpath', _('Push Mode'));
-		o.value('/usr/share/wechatpush/api/wechatpush.json', _('WeChat wechatpush'),
-			_('Using wechatpush API, simple configuration, supports multiple push methods'));
+		o.value('/usr/share/wechatpush/api/serverchan.json', _('WeChat serverchan'),
+			_('Using serverchan API, simple configuration, supports multiple push methods'));
 		o.value('/usr/share/wechatpush/api/qywx_mpnews.json', _('WeChat Work Image Message'),
 			_('Using WeChat Work application message, more complex configuration, and starting from June 20, 2022, additional configuration for trusted IP is required. Trusted IP cannot be shared. This channel is no longer recommended.'));
 		o.value('/usr/share/wechatpush/api/qywx_markdown.json', _('WeChat Work Markdown Version'),
@@ -150,7 +150,7 @@ return view.extend({
 		o = s.taboption('basic', form.Value, 'sckey', _('「wechatpush」sendkey'));
 		o.description = _('Get Instructions') + ' <a href="https://sct.ftqq.com/" target="_blank">' + _('Click here') + '</a>';
 		o.rmempty = false;
-		o.depends('jsonpath', '/usr/share/wechatpush/api/wechatpush.json');
+		o.depends('jsonpath', '/usr/share/wechatpush/api/serverchan.json');
 
 		o = s.taboption('basic', form.Value, 'corpid', _('corpid'));
 		o.description = _('Get Instructions') + ' <a href="https://work.weixin.qq.com/api/doc/10013" target="_blank">' + _('Click here') + '</a>';
