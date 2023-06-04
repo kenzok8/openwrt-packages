@@ -41,7 +41,7 @@ function read_config(){
 	"do_not_disturb_mode" "do_not_disturb_starttime" "do_not_disturb_endtime" "up_down_push_whitelist" "up_down_push_blacklist" "up_down_push_interface" "mac_online_list" "mac_offline_list" "login_disturb" "login_notification_delay" "login_log_enable" \
 	"up_timeout" "down_timeout" "timeout_retry_count" "passive_mode" "thread_num" "soc_code" "server_host" "server_port" \
 	"unattended_enable" "zerotier_helper" "unattended_only_on_disturb_time" "unattended_device_aliases" "network_disconnect_event" "unattended_autoreboot_mode" "autoreboot_system_uptime" "autoreboot_network_uptime" \
-	"gateway_info_enable" "gateway_host_url" "gateway_info_url" "gateway_logout_url" "gateway_username_id" "gateway_password_id" "gateway_username" "gateway_password" "gateway_sleeptime"
+	"device_info_helper" "gateway_host_url" "gateway_info_url" "gateway_logout_url" "gateway_username_id" "gateway_password_id" "gateway_username" "gateway_password" "scan_ip_range" "device_info_helper_sleeptime"
 	
 	( echo "$device_notification"|grep -q "online" ) && notification_online="true"
 	( echo "$device_notification"|grep -q "offline" ) && notification_offline="true"
@@ -51,6 +51,7 @@ function read_config(){
 	( echo "$login_notification"|grep -q "ssh_logged" ) && ssh_logged="true"
 	( echo "$login_notification"|grep -q "web_login_failed" ) && web_login_failed="true"
 	( echo "$login_notification"|grep -q "ssh_login_failed" ) && ssh_login_failed="true"
+	( echo "$device_info_helper"|grep -q "gateway_info" ) && gateway_info_enable="true"
 	for str_version in "wrtbwmon" "iputils-arping" "curl" "iw"; do
 		eval `echo ${str_version:0:2}"_version"`=`opkg list-installed|grep -w ^${str_version}|awk '{print $3}'` 2>/dev/null
 	done
@@ -294,9 +295,9 @@ function getname(){
 
 # 从光猫处获取设备信息
 function getgateway(){
-	[ -z "$gateway_info_enable" ] || [ "$gateway_info_enable" -ne "1" ] && return
-	datetime=$(date -r ${dir}gateway_info +%s 2>/dev/null) || datetime=0
-	if [ `expr $(date +%s) - $datetime` -gt "$gateway_sleeptime" ]; then
+	[ -z "$gateway_info_enable" ] && return
+	last_getgateway_time=$(date -r ${dir}gateway_info +%s 2>/dev/null) || last_getgateway_time=0
+	if [ `expr $(date +%s) - $last_getgateway_time` -gt "$device_info_helper_sleeptime" ]; then
 		# 登录
 		local loginfo=`curl -s -L "${gateway_host_url}" -c ${dir}cookies.txt -d "${gateway_username_id}=${gateway_username}&${gateway_password_id}=${gateway_password}"` 2>/dev/null
 		[ ! -z "$loginfo" ] && local mytoken=$(echo $loginfo |sed 's/{/\n/g' | grep token |awk '/realRestart/{print $2}'| sed $'s/\'//g')
@@ -307,6 +308,23 @@ function getgateway(){
 		[ -z "$get_gateway" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】获取光猫信息失败，可能当前用户未注销或设置错误" >> ${logfile}
 	fi
 	[ ! -z "$get_gateway" ] && echo "$get_gateway" > ${dir}gateway_info
+}
+
+# 扫描范围内 IP
+function scanlocalip(){
+	[ -z "$scan_ip_range" ] && return
+	[ -z "$last_scan_ip_time" ] && last_scan_ip_time=0
+	if [ `expr $(date +%s) - $last_scan_ip_time` -gt "$device_info_helper_sleeptime" ]; then
+		start_ip=$(echo "$scan_ip_range" | cut -d "-" -f 1)
+		end_ip=$(echo "$scan_ip_range" | cut -d "-" -f 2)
+
+		i=$(echo "$start_ip" | awk -F '.' '{print $NF}')
+		end_i=$(echo "$end_ip" | awk -F '.' '{print $NF}')
+		while [ "$i" -le "$end_i" ]; do
+			ping "${start_ip%.*}.$i" -c 1 >> /dev/null 2>&1 &
+			i=$((i + 1))
+		done
+	fi
 }
 
 # 查询设备接口
@@ -548,6 +566,7 @@ function rand(){
 function first(){
 	[ -f "${dir}ipAddress" ] && local IPLIST_ipAddress=`cat ${dir}ipAddress|awk '{print $1}'|grep -v "^$"|sort -u`
 	getgateway
+	scanlocalip;last_scan_ip_time=$(date +%s)
 	for ip in $IPLIST_ipAddress; do
 		[ ! -z "$passive_mode" ] && [ "$passive_mode" -eq "1" ] && break
 		read -u 5

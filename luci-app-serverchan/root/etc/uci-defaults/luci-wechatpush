@@ -1,6 +1,15 @@
 #!/bin/sh
 
-function get_config(){
+function get_config_wechatpush(){
+	while [[ "$*" != "" ]]; do
+		eval ${1}='`uci get wechatpush.config.$1`' 2>/dev/null
+		uci del wechatpush.config.$1 2>/dev/null
+		uci commit wechatpush
+		shift
+	done
+}
+
+function get_config_serverchan(){
 	while [[ "$*" != "" ]]; do
 		eval ${1}='`uci get serverchan.serverchan.$1`' 2>/dev/null
 		uci del serverchan.serverchan.$1 2>/dev/null
@@ -65,30 +74,34 @@ if [ -f "$serverchan_config" ]; then
 	sed -i 's#/root/usr/bin/serverchan/api/telegram.json#/usr/share/wechatpush/api/telegram.json#g' "$serverchan_config" 2>/dev/null
 fi
 
-get_config "serverchan_up" "serverchan_down"
+get_config_serverchan "serverchan_up" "serverchan_down"
 [ -n "$serverchan_up" ] && [ "$serverchan_up" -eq "1" ] && uci add_list wechatpush.config.device_notification='online'
 [ -n "$serverchan_down" ] && [ "$serverchan_down" -eq "1" ] && uci add_list wechatpush.config.device_notification='offline'
 
-get_config "cpuload_enable" "temperature_enable"
+get_config_serverchan "cpuload_enable" "temperature_enable"
 [ -n "$cpuload_enable" ] && [ "$cpuload_enable" -eq "1" ] && uci add_list wechatpush.config.cpu_notification='load'
 [ -n "$temperature_enable" ] && [ "$temperature_enable" -eq "1" ] && uci add_list wechatpush.config.cpu_notification='temp'
 
-get_config "web_logged" "ssh_logged" "web_login_failed" "ssh_login_failed"
+get_config_serverchan "web_logged" "ssh_logged" "web_login_failed" "ssh_login_failed"
 [ -n "$web_logged" ] && [ "$web_logged" -eq "1" ] && uci add_list wechatpush.config.login_notification='web_logged'
 [ -n "$ssh_logged" ] && [ "$ssh_logged" -eq "1" ] && uci add_list wechatpush.config.login_notification='ssh_logged'
 [ -n "$web_login_failed" ] && [ "$web_login_failed" -eq "1" ] && uci add_list wechatpush.config.login_notification='web_login_failed'
 [ -n "$ssh_login_failed" ] && [ "$ssh_login_failed" -eq "1" ] && uci add_list wechatpush.config.login_notification='ssh_login_failed'
 
-get_config "router_status" "router_temp" "router_wan" "client_list"
+get_config_serverchan "router_status" "router_temp" "router_wan" "client_list"
 [ -n "$router_status" ] && [ "$router_status" -eq "1" ] && uci add_list wechatpush.config.send_notification='router_status'
 [ -n "$router_temp" ] && [ "$router_temp" -eq "1" ] && uci add_list wechatpush.config.send_notification='router_temp'
 [ -n "$router_wan" ] && [ "$router_wan" -eq "1" ] && uci add_list wechatpush.config.send_notification='wan_info'
 [ -n "$client_list" ] && [ "$client_list" -eq "1" ] && uci add_list wechatpush.config.send_notification='client_list'
 
-get_config "regular_time" "regular_time2" "regular_time3"
+get_config_serverchan "regular_time" "regular_time2" "regular_time3"
 [ -n "$regular_time" ] && uci add_list wechatpush.config.crontab_regular_time="$regular_time"
 [ -n "$regular_time2" ] && uci add_list wechatpush.config.crontab_regular_time="$regular_time2"
 [ -n "$regular_time3" ] && uci add_list wechatpush.config.crontab_regular_time="$regular_time3"
+
+get_config_wechatpush "gateway_info_enable" "gateway_sleeptime"
+[ -n "$gateway_info_enable" ] && [ "$" -eq "1" ] && uci add_list wechatpush.config.device_info_helper='gateway_info'
+[ -n "$gateway_sleeptime" ] && uci set wechatpush.config.device_info_helper_sleeptime="$gateway_sleeptime"
 
 serverchan_to_wechatpush_list "device_notification"
 serverchan_to_wechatpush_list "cpu_notification"
@@ -103,7 +116,7 @@ serverchan_to_wechatpush_list "MAC_online_list" "mac_online_list"
 serverchan_to_wechatpush_list "MAC_offline_list" "mac_offline_list"
 serverchan_to_wechatpush_list "err_device_aliases" "unattended_device_aliases"
 
-get_config "device_aliases"
+get_config_serverchan "device_aliases"
 mkdir -p /usr/share/wechatpush/api/
 [ -n "$device_aliases" ] && echo "$device_aliases"|sed 's/ /\n/g'|sed 's/-/	/' > /usr/share/wechatpush/api/device_aliases.list
 serverchan_device_aliases_path="/usr/share/serverchan/api/device_aliases.list"
@@ -141,7 +154,6 @@ serverchan_to_wechatpush_change "network_restart_time autoreboot_network_uptime"
 serverchan_to_wechatpush_change "crontab" "crontab_mode"
 serverchan_to_wechatpush_change "macmechanism" "mac_filtering_mode_1"
 serverchan_to_wechatpush_change "macmechanism2" "mac_filtering_mode_2"
-
 
 serverchan_to_wechatpush_get \
 	"enable" "lite_enable" "device_name" "sleeptime" "oui_data" "reset_regularly" "debuglevel" \

@@ -79,55 +79,62 @@ return view.extend({
 			});
 		};
 
-		o = s.option(form.Flag, "gateway_info_enable", _("Get host information from the optical modem"));
-		o.default = 0;
-		o.rmempty = true;
-		o.description = _("Suitable for OpenWrt used as a bypass gateway when unable to obtain device hostnames and complete LAN device lists.<br/>Tested only on HG5143F/HN8145V China Telecom optical modems, universality is not guaranteed.");
+		o = s.option(form.MultiValue, 'device_info_helper', _('Assist in obtaining device information'));
+		o.value('gateway_info', _('Retrieve hostname list from modem'));
+		o.value('scan_local_ip', _('Scan local IP'));
+		o.modalonly = true;
+		o.description = _('When OpenWrt is used as a bypass gateway and cannot obtain device hostnames or a complete list of local network devices.<br/>the \"Retrieve hostname list from modem\" option has only been tested with HG5143F/HN8145V China Telecom gateways and may not be universally applicable.<br/>The \"Scan local IP\" option may not retrieve hostnames, so please use device name annotations in conjunction with it.');
 
 		o = s.option(form.Value, "gateway_host_url", _('Optical modem login URL'));
 		o.rmempty = true;
 		o.default = "http://192.168.1.1/cgi-bin/luci";
-		o.depends('gateway_info_enable', '1');
+		o.depends({ device_info_helper: "gateway_info", '!contains': true });
 
 		o = s.option(form.Value, "gateway_info_url", _('Device list JSON URL'));
 		o.rmempty = true;
 		o.default = "http://192.168.1.1/cgi-bin/luci/admin/allInfo";
 		o.description = _('Use F12 console to capture<br/>ip, devName, model are mandatory fields. Example JSON file information:<br/>{\"pc1\":{\"devName\":\"RouterOS\",\"model\":\"\",\"type\":\"pc\",\"ip\":\"192.168.1.7\"}}');
-		o.depends('gateway_info_enable', '1');
+		o.depends({ device_info_helper: "gateway_info", '!contains': true });
 
 		o = s.option(form.Value, "gateway_logout_url", _('Optical modem logout URL'))
 		o.rmempty = true
 		o.default = "http://192.168.1.1/cgi-bin/luci/admin/logout"
 		o.description = _("Not a mandatory field, but it may affect other users logging into the web management page, e.g., HG5143F")
-		o.depends('gateway_info_enable', '1');
+		o.depends({ device_info_helper: "gateway_info", '!contains': true });
 
 		o = s.option(form.Value, "gateway_username_id", _('Login page account input box ID'))
 		o.rmempty = true
 		o.default = "username"
-		o.depends('gateway_info_enable', '1');
+		o.depends({ device_info_helper: "gateway_info", '!contains': true });
 
 		o = s.option(form.Value, "gateway_password_id", _('Login page password input box ID'))
 		o.rmempty = true
 		o.default = "psd"
 		o.description = _("Right-click in the browser and select 'Inspect Element'")
-		o.depends('gateway_info_enable', '1');
+		o.depends({ device_info_helper: "gateway_info", '!contains': true });
 
 		o = s.option(form.Value, "gateway_username", _('Optical modem login account'))
 		o.rmempty = true
 		o.default = "useradmin"
-		o.depends('gateway_info_enable', '1');
+		o.depends({ device_info_helper: "gateway_info", '!contains': true });
 
 		o = s.option(form.Value, "gateway_password", _('Optical modem login password'))
 		o.rmempty = true
 		o.description = _("Use a regular account, no need for super password")
-		o.depends('gateway_info_enable', '1');
+		o.depends({ device_info_helper: "gateway_info", '!contains': true });
 
-		o = s.option(form.Value, 'gateway_sleeptime', _('Interval for capturing optical modem information'));
+		o = s.option(form.Value, "scan_ip_range", _('IP range to be scanned'))
+		o.rmempty = true
+		o.placeholder = _('192.168.1.1-100');
+		o.depends({ device_info_helper: "scan_local_ip", '!contains': true });
+
+		o = s.option(form.Value, 'device_info_helper_sleeptime', _('Interval for capturing info'));
 		o.rmempty = false;
 		o.placeholder = '600';
 		o.datatype = 'and(uinteger,min(60))'
 		o.description = _("Generally, frequent capturing is not necessary. Adjust it as needed.")
-		o.depends('gateway_info_enable', '1');
+		o.depends({ device_info_helper: "gateway_info", '!contains': true });
+		o.depends({ device_info_helper: "scan_local_ip", '!contains': true });
 
 		o = s.option(form.Flag, "unattended_enable", _("Unattended tasks"))
 		o.default = 0
