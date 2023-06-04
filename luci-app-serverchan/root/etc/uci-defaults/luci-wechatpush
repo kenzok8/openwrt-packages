@@ -70,8 +70,8 @@ fi
 serverchan_config="/etc/config/serverchan"
 if [ -f "$serverchan_config" ]; then
 	cp "/etc/config/serverchan" "/etc/config/serverchan.bak"
-	sed -i 's#/usr/share/serverchan/api/telegram.json#/usr/share/wechatpush/api/telegram.json#g' "$serverchan_config" 2>/dev/null
-	sed -i 's#/root/usr/bin/serverchan/api/telegram.json#/usr/share/wechatpush/api/telegram.json#g' "$serverchan_config" 2>/dev/null
+	sed -i 's#/usr/share/serverchan/api/#/usr/share/wechatpush/api/#g' "$serverchan_config" 2>/dev/null
+	sed -i 's#/root/usr/bin/serverchan/api/#/usr/share/wechatpush/api/#g' "$serverchan_config" 2>/dev/null
 fi
 
 get_config_serverchan "serverchan_up" "serverchan_down"
