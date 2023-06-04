@@ -55,24 +55,8 @@
 
 ### Optimization
 
-- Fix the white background of the installation package prompt information
 - Optimize menu collapsing and zooming
 - Optimized to display network port down state display icon
-- Optimize logo display
-- Added the status icon display of each device
-- Replace the logo display with the font "OpenWrt", and support displaying the logo with the host name
-- Fix some plug-in display bugs
-- Fix vssr status bar
-- Fixed many bugs
-- Fix compatibility with some plug-in styles
-- Fix aliyundrive-webdav style
-- Fixed the abnormal display of vssr in iOS/iPadOS WebApp mode
-- Fix openclash plugin env(safe-area-inset-bottom) = 0 in iOS/iPadOS WebApp mode
-- Optimize menu hover action state resolution
-- Support luci-app-wizard wizard menu
-- Update header box-shadow style
--Update uci-change overflow
-- Fix nlbw component
 - Support QWRT (QSDK), iStore wizard navigation
 - Adapt to OpenWrt 21/22
 - Adapt to linkease series icons
