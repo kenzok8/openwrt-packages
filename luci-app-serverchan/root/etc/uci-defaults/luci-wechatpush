@@ -13,7 +13,7 @@ function get_config_serverchan(){
 	while [[ "$*" != "" ]]; do
 		eval ${1}='`uci get serverchan.serverchan.$1`' 2>/dev/null
 		uci del serverchan.serverchan.$1 2>/dev/null
-		uci commit serverchan
+		uci commit serverchan 2>/dev/null
 		shift
 	done
 }
@@ -23,7 +23,7 @@ function serverchan_to_wechatpush_list(){
 	config_list=`uci get serverchan.serverchan.$1` 2>/dev/null
 	[ -z "$config_list" ] && return
 	uci del serverchan.serverchan.$1 2>/dev/null
-	uci commit serverchan
+	uci commit serverchan 2>/dev/null
 	for config in $config_list ;do
 		uci add_list wechatpush.config.$config_name="$config"
 	done
@@ -34,7 +34,7 @@ function serverchan_to_wechatpush_change(){
 	config=`uci get serverchan.serverchan.$1` 2>/dev/null
 	[ -z "$config" ] && return
 	uci del serverchan.serverchan.$1 2>/dev/null
-	uci commit serverchan
+	uci commit serverchan 2>/dev/null
 	uci set wechatpush.config.$2=$config
 	uci commit wechatpush
 }
@@ -44,7 +44,7 @@ function serverchan_to_wechatpush_get(){
 		config=`uci get serverchan.serverchan.$1` 2>/dev/null
 		[ -z "$config" ] && shift && continue
 		uci del serverchan.serverchan.$1 2>/dev/null
-		uci commit serverchan
+		uci commit serverchan 2>/dev/null
 		uci set wechatpush.config.${1}=${config}
 		uci commit wechatpush
 		shift
@@ -171,4 +171,3 @@ serverchan_to_wechatpush_get \
 uci commit wechatpush
 rm -rf "$serverchan_config" 2>/dev/null
 nohup sh -c 'while [ -f /var/lock/opkg.lock ]; do sleep 1; done; opkg remove luci-app-serverchan; rm -rf /tmp/luci-*' >/dev/null 2>&1 &
-
