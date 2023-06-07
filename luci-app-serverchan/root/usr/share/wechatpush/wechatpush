@@ -1214,24 +1214,23 @@ function login_send(){
 		[ -z "$login_ip" ] && continue
 		echo "$login_ip_white_list"|grep -w -q "$login_ip" && continue
 		local login_sum=`cat ${dir}web_failed|grep -w "${login_ip}"|wc -l`
-		if [ "$login_sum" -ge "$login_max_num" ] ;then
-			if [ -n "$web_login_failed" ]; then
-				login_ip_attribution=$(get_ip_attribution ${login_ip})
-				[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
-				if [ -z "$title" ]; then
-					title="${login_ip} 通过 Web 频繁尝试登录"
-					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-				elif ( echo "$title"|grep -q "频繁尝试登录" ); then
-					title="${login_ip} ${title}"
-					content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-				else
-					title="设备状态变化"
-					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-				fi
-			fi
+		if [ -n "$web_login_failed" ] && [ "$login_sum" -ge "$login_max_num" ]; then
+			login_ip_attribution=$(get_ip_attribution ${login_ip})
+			[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
 			sed -i "/^${login_ip}$/d" ${dir}web_failed
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 Web 频繁尝试登录" >> ${logfile}
 			add_ip_black $login_ip
+			[ -n "$login_disturb" ] && [ "$login_disturb" -eq "1" ] && continue
+			if [ -z "$title" ]; then
+				title="${login_ip} 通过 Web 频繁尝试登录"
+				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+			elif ( echo "$title"|grep -q "频繁尝试登录" ); then
+				title="${login_ip} ${title}"
+				content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+			else
+				title="设备状态变化"
+				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+			fi
 		fi
 	done
 	unset login_ip login_sum
@@ -1240,24 +1239,23 @@ function login_send(){
 		[ -z "$login_ip" ] && continue
 		echo "$login_ip_white_list"|grep -w -q "$login_ip" && continue
 		local login_sum=`cat ${dir}ssh_failed|grep -w "${login_ip}"|wc -l`
-		if [ "$login_sum" -ge "$login_max_num" ] ;then
-			if [ -n "$ssh_login_failed" ]; then
-				login_ip_attribution=$(get_ip_attribution ${login_ip})
-				[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
-				if [ -z "$title" ]; then
-					title="${login_ip} 通过 SSH 频繁尝试登录"
-					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-				elif ( echo "$title"|grep -q "频繁尝试登录" ); then
-					title="${login_ip} ${title}"
-					content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-				else
-					title="设备状态变化"
-					content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-				fi
-			fi
+		if [ -n "$ssh_login_failed" ] && [ "$login_sum" -ge "$login_max_num" ] ;then
+			login_ip_attribution=$(get_ip_attribution ${login_ip})
+			[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
 			sed -i "/^${login_ip}$/d" ${dir}ssh_failed
 			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 SSH 频繁尝试登录" >> ${logfile}
 			add_ip_black $login_ip
+			[ -n "$login_disturb" ] && [ "$login_disturb" -eq "1" ] && continue
+			if [ -z "$title" ]; then
+				title="${login_ip} 通过 SSH 频繁尝试登录"
+				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+			elif ( echo "$title"|grep -q "频繁尝试登录" ); then
+				title="${login_ip} ${title}"
+				content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+			else
+				title="设备状态变化"
+				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+			fi
 		fi
 	done
 	unset login_ip login_sum
