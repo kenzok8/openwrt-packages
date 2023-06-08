@@ -1,14 +1,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-wechatpush
-PKG_VERSION:=3.1.0
-PKG_RELEASE:=11
+PKG_VERSION:=3.2.0
+PKG_RELEASE:=12
 
 PKG_MAINTAINER:=tty228 <tty228@yeah.net>
 
 LUCI_TITLE:=LuCI support for wechatpush
 LUCI_PKGARCH:=all
-LUCI_DEPENDS:=+iputils-arping +curl +jq
+LUCI_DEPENDS:=+iputils-arping +curl +jq +bash
 
 define Package/$(PKG_NAME)/conffiles
 /etc/config/wechatpush

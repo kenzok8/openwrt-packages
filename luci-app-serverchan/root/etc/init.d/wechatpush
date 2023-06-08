@@ -4,6 +4,8 @@ START=99
 STOP=90
 USE_PROCD=1
 
+dir="/tmp/wechatpush/"
+
 start_service() {
 	procd_open_instance
 	enable_value=$(uci get wechatpush.config.enable 2>/dev/null || echo "0")
@@ -18,7 +20,15 @@ reload_service() {
 }
 
 stop_service() {
-	echo "Terminating wechatpush process..."
+    [ -f ${dir}child_pid ] && parent_pid=$(cat ${dir}child_pid)
+    [ -n "$parent_pid" ] && {
+        child_pids=$(pgrep -P $parent_pid)
+        echo "Terminating child processes of wechatpush..."
+        for child_pid in $child_pids; do
+            kill $child_pid
+        done
+    }
+    echo "Terminating wechatpush process..."
 }
 
 service_triggers() {

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # 读取设置文件
 function get_config(){
@@ -55,6 +55,7 @@ function read_config(){
 	for str_version in "wrtbwmon" "iputils-arping" "curl" "iw"; do
 		eval `echo ${str_version:0:2}"_version"`=`opkg list-installed|grep -w ^${str_version}|awk '{print $3}'` 2>/dev/null
 	done
+	( opkg list-installed|grep -w -q ^firewall4 ) && nftables_version="true"
 	dir="/tmp/wechatpush/" && mkdir -p ${dir} && mkdir -p ${dir}/client
 	tempjsonpath="/tmp/wechatpush/temp.json"
 	ip_blacklist_path="/usr/share/wechatpush/api/ip_blacklist"
@@ -111,7 +112,6 @@ function init(){
 		echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】载入上次重启前日志" >> ${logfile}
 	fi
 	/usr/libexec/wechatpush-call "down_oui"
-	get_syslog
 
 	rm -f ${dir}fd1 ${dir}sheep_usage ${dir}old_sheep_usage ${dir}client_usage_aliases ${dir}old_client_usage_aliases /usr/share/wechatpush/errlog >/dev/null 2>&1
 	[ ! -f "/usr/sbin/wrtbwmon" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】未安装 wrtbwmon ，流量统计不可用" >> ${logfile}
@@ -1088,20 +1088,6 @@ function cputop(){
 	[ ! -z "$1" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！警报！！】 CPU 占用前三: ${logtop}" >> ${logfile}
 }
 
-# 生成日志监控文件，避免后台影响 wait 语句
-function get_syslog(){
-	kill -9 `pgrep -f "logread -f -p notice"` 2>/dev/null
-	[ -z "$web_logged" ] && [ -z "$ssh_logged" ] && [ -z "$web_login_failed" ] && [ -z "$ssh_login_failed" ] && return
-	rm -f ${dir}login_monitor >/dev/null 2>&1
-
-cat>${dir}get_syslog<<EOF
-#!/bin/sh
-logread -f -p notice >> ${dir}login_monitor &
-EOF
-	chmod 0755 ${dir}get_syslog && ${dir}get_syslog
-	rm -f ${dir}get_syslog >/dev/null 2>&1
-}
-
 # 查询 IP 归属地
 function get_ip_attribution(){
 	ip="$1"
@@ -1122,30 +1108,16 @@ function login_send(){
 	[ -n "$login_web_black" ] && [ "$login_web_black" -eq "1" ] && init_ip_black "ipv4"
 	[ -n "$login_web_black" ] && [ "$login_web_black" -eq "1" ] && init_ip_black "ipv6"
 	[ -z "$web_logged" ] && [ -z "$ssh_logged" ] && [ -z "$web_login_failed" ] && [ -z "$ssh_login_failed" ] && return
-	[ ! -f ${dir}login_monitor ] && return
-	# 登录
-	cat ${dir}login_monitor|grep -i "accepted login"|awk '{print $4" "$8" "$NF}' >> ${dir}web_login
-	cat ${dir}login_monitor|grep -i "Password auth succeeded\|Pubkey auth succeeded"|awk '{print $4" "$8" "$NF}'|sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp' | sed -e 's/%.*//' >> ${dir}ssh_login
-
-	# 非法登录
-	cat ${dir}login_monitor|grep -i "failed login"|awk '{print $NF}' >> ${dir}web_failed
-	cat ${dir}login_monitor|grep -i "Bad password attempt\|Login attempt for nonexistent user from"|awk '{print $NF}'|sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp'|sed -e 's/%.*//' >> ${dir}ssh_failed
-	for failed_user_id in $(cat ${dir}login_monitor | sed -n 's/.*authpriv\.warn dropbear\[\([0-9]\+\)\]: Login attempt for nonexistent user/\1/p'); do
-		cat ${dir}login_monitor|grep "authpriv\.info dropbear\[${failed_user_id}\].*Child connection from"|awk '{print $NF}'|sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp'|sed -e 's/%.*//' >> ${dir}ssh_failed
-	done
-
-	# 读取信息后清空，避免重复统计次数
-	echo "" > ${dir}login_monitor
 	set_ip_black
+	sys_log=$(logread notice)
 
 	# Web 登录提醒
-	for login_ip in `cat ${dir}web_login|awk '{print $3}'|grep -v "^$"|sort -u`; do
+	for login_ip in `cat ${dir}web_login | sort -u`; do
 		[ -z "$login_ip" ] && continue
-		add_ip_white ${login_ip}
-		local login_time=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
-		local login_mode=`cat ${dir}web_login|grep -w ${login_ip}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
+		local login_time=$(echo "$sys_log" | grep -w ${login_ip} | awk '{print $4}' | tail -n 1)
+		local login_mode=$(echo "$sys_log" | grep -w ${login_ip} | awk '{print $13}' | tail -n 1)
 		unset log_only content_attribution content_mode
-		echo "$login_ip_white_list"|grep -w -q "$login_ip" && log_only="1" && [ -n "$login_log_enable" ] && continue
+		echo "$login_ip_white_list" | grep -w -q "$login_ip" && log_only="1" && [ -n "$login_log_enable" ] && continue
 		if [ -z "$log_only" ] && [ ! -z "$login_disturb" ] && [ "$login_disturb" -eq "2" ]; then
 			[ -f "$logfile" ] && login_log=$(grep -w "$login_ip" "$logfile" | grep -v "\【info\】" | tail -n 1)
 			[ ! -z "$login_log" ] && log_timestamp=$(date -d "$(echo "$login_log" | awk '{print $1, $2}')" +%s) || log_timestamp=0
@@ -1156,7 +1128,7 @@ function login_send(){
 		login_ip_attribution=$(get_ip_attribution ${login_ip})
 		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}"
 		[ -n "$login_mode" ] && content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
-		if [ -n "$web_logged" ] && { [ -z "$login_disturb" ] || [ "$login_disturb" -ne "1" ]; }; then
+		if { [ -z "$login_disturb" ] || [ "$login_disturb" -ne "1" ]; }; then
 			if [ -z "$title" ]; then
 				title="${login_ip} 通过 Web 登录了路由器"
 				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
@@ -1168,18 +1140,15 @@ function login_send(){
 				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
 			fi
 		fi
-		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
-		sed -i "/^${login_ip}$/d" ${dir}web_failed
 		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} (${login_ip_attribution}) 通过 Web ${login_mode} 登录了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}web_login
 	unset login_ip login_time login_mode
 	# SSH 登录提醒
-	for login_ip in `cat ${dir}ssh_login|awk '{print $3}'|grep -v "^$"|sort -u`; do
+	for login_ip in `cat ${dir}ssh_login | sort -u`; do
 		[ -z "$login_ip" ] && continue
-		add_ip_white ${login_ip}
-		local login_time=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $1}'|grep -v "^$"|sort -u|head -n1`
-		local login_mode=`cat ${dir}ssh_login|grep -w ${login_ip}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
+		local login_time=$(echo "$sys_log" | grep -w ${login_ip} | awk '{print $4}' | tail -n 1)
+		local login_mode=$(echo "$sys_log" | grep -w ${login_ip} | awk '{print $8}' | tail -n 1)
 		unset log_only content_attribution content_mode
 		echo "$login_ip_white_list"|grep -w -q "$login_ip" && log_only="1" && [ -n "$login_log_enable" ] && continue
 		if [ -z "$log_only" ] && [ ! -z "$login_disturb" ] && [ "$login_disturb" -eq "2" ]; then
@@ -1192,7 +1161,7 @@ function login_send(){
 		login_ip_attribution=$(get_ip_attribution ${login_ip})
 		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}"
 		[ ! -z "$login_mode" ] && content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
-		if [ -n "$ssh_logged" ] && { [ -z "$login_disturb" ] || [ "$login_disturb" -ne "1" ]; }; then
+		if { [ -z "$login_disturb" ] || [ "$login_disturb" -ne "1" ]; }; then
 			if [ -z "$title" ]; then
 				title="${login_ip} 通过 SSH 登录了路由器"
 				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
@@ -1204,61 +1173,50 @@ function login_send(){
 				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}时间：${str_space}${str_space}${str_space}${str_space}${str_space}${login_time}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}${content_mode}"
 			fi
 		fi
-		sed -i "/^${login_ip}$/d" ${dir}ssh_failed
 		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} (${login_ip_attribution}) 通过 SSH ${login_mode} 登录了路由器 " >> ${logfile}
 	done
 	echo "" > ${dir}ssh_login
 	unset login_ip login_time login_mode
 	# Web 非法登录
-	for login_ip in `cat ${dir}web_failed|awk '{print $1}'|grep -v "^$"|sort -u`; do
+	for login_ip in `cat ${dir}web_failed | sort -u`; do
 		[ -z "$login_ip" ] && continue
-		echo "$login_ip_white_list"|grep -w -q "$login_ip" && continue
-		local login_sum=`cat ${dir}web_failed|grep -w "${login_ip}"|wc -l`
-		if [ -n "$web_login_failed" ] && [ "$login_sum" -ge "$login_max_num" ]; then
-			login_ip_attribution=$(get_ip_attribution ${login_ip})
-			[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
-			sed -i "/^${login_ip}$/d" ${dir}web_failed
-			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 Web 频繁尝试登录" >> ${logfile}
-			add_ip_black $login_ip
-			[ -n "$login_disturb" ] && [ "$login_disturb" -eq "1" ] && continue
-			if [ -z "$title" ]; then
-				title="${login_ip} 通过 Web 频繁尝试登录"
-				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-			elif ( echo "$title"|grep -q "频繁尝试登录" ); then
-				title="${login_ip} ${title}"
-				content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-			else
-				title="设备状态变化"
-				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-			fi
+		login_ip_attribution=$(get_ip_attribution ${login_ip})
+		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 Web 频繁尝试登录" >> ${logfile}
+		[ -n "$login_disturb" ] && [ "$login_disturb" -eq "1" ] && continue
+		if [ -z "$title" ]; then
+			title="${login_ip} 通过 Web 频繁尝试登录"
+			content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+		elif ( echo "$title"|grep -q "频繁尝试登录" ); then
+			title="${login_ip} ${title}"
+			content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+		else
+			title="设备状态变化"
+			content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 		fi
 	done
-	unset login_ip login_sum
+	echo "" > ${dir}web_failed
+	unset login_ip
 	# SSH 非法登录
-	for login_ip in `cat ${dir}ssh_failed|awk '{print $1}'|grep -v "^$"|sort -u`; do
+	for login_ip in `cat ${dir}ssh_failed | sort -u`; do
 		[ -z "$login_ip" ] && continue
-		echo "$login_ip_white_list"|grep -w -q "$login_ip" && continue
-		local login_sum=`cat ${dir}ssh_failed|grep -w "${login_ip}"|wc -l`
-		if [ -n "$ssh_login_failed" ] && [ "$login_sum" -ge "$login_max_num" ] ;then
-			login_ip_attribution=$(get_ip_attribution ${login_ip})
-			[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
-			sed -i "/^${login_ip}$/d" ${dir}ssh_failed
-			echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 SSH 频繁尝试登录" >> ${logfile}
-			add_ip_black $login_ip
-			[ -n "$login_disturb" ] && [ "$login_disturb" -eq "1" ] && continue
-			if [ -z "$title" ]; then
-				title="${login_ip} 通过 SSH 频繁尝试登录"
-				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-			elif ( echo "$title"|grep -q "频繁尝试登录" ); then
-				title="${login_ip} ${title}"
-				content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-			else
-				title="设备状态变化"
-				content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
-			fi
+		login_ip_attribution=$(get_ip_attribution ${login_ip})
+		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 SSH 频繁尝试登录" >> ${logfile}
+		[ -n "$login_disturb" ] && [ "$login_disturb" -eq "1" ] && continue
+		if [ -z "$title" ]; then
+			title="${login_ip} 通过 SSH 频繁尝试登录"
+			content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+		elif ( echo "$title"|grep -q "频繁尝试登录" ); then
+			title="${login_ip} ${title}"
+			content="${content}${str_splitline}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
+		else
+			title="设备状态变化"
+			content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 		fi
 	done
-	unset login_ip login_sum
+	echo "" > ${dir}ssh_failed
+	unset login_ip
 }
 
 # 添加白名单，懒得写删除项和信息显示了，纯粹就是懒
@@ -1269,8 +1227,8 @@ function add_ip_white() {
 	( echo "$1"|grep -Eq '^([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}$' ) && local ipset_name="wechatpush_whitelistv6"
 	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】白名单添加失败，IP 格式错误" >> ${logfile} && return
 
-	( opkg list-installed|grep -w -q ^firewall4 ) && nft delete element inet fw4 $ipset_name { $1 } >/dev/null 2>&1
-	( opkg list-installed|grep -w -q ^firewall4 ) && nft add element inet fw4 $ipset_name { $1 expires ${login_ip_white_timeout}s } && return #没找到刷新时间的命令，删除再添加
+	[ -n "$nftables_version" ] && nft delete element inet fw4 $ipset_name { $1 } >/dev/null 2>&1
+	[ -n "$nftables_version" ] && nft add element inet fw4 $ipset_name { $1 expires ${login_ip_white_timeout}s } && return #没找到刷新时间的命令，删除再添加
 	ipset -exist add $ipset_name $1 timeout $login_ip_white_timeout
 }
 
@@ -1287,7 +1245,7 @@ function init_ip_white() {
 		nat_table_cmd="family inet6"
 	fi
 
-	if ( opkg list-installed|grep -w -q ^firewall4 ); then
+	if [ -n "$nftables_version" ]; then
 		! nft list set inet fw4 $ipset_name >/dev/null 2>&1 && nft add set inet fw4 $ipset_name { type ${1}_addr\; flags timeout\; timeout ${login_ip_white_timeout}s\; }
 		nft -- add chain inet fw4 wechatpush_dstnat { type nat hook prerouting priority -100 \; }
 		nft add chain inet fw4 wechatpush_srcnat { type nat hook postrouting priority 100 \; }
@@ -1298,7 +1256,7 @@ function init_ip_white() {
 	# 端口放行
 	if [ ! -z "$login_port_white" ]; then
 		local login_port_white=`echo "$login_port_white"|sed 's/ //g'|sed 's/,/, /g'` 2>/dev/null
-		if ( opkg list-installed|grep -w -q ^firewall4 ); then
+		if [ -n "$nftables_version" ]; then
 			local count_accept_rules=`nft list ruleset | grep -c "tcp dport.* ${login_port_white}.* $ip_version saddr @${ipset_name} counter packets .* accept comment \"\!wechatpush Accept rule\""`
 			if [ $count_accept_rules -eq 0 ]; then
 				nft insert rule inet fw4 input tcp dport { $login_port_white } $ip_version saddr @$ipset_name counter accept comment \"\!wechatpush Accept rule\" >/dev/null 2>&1
@@ -1323,7 +1281,7 @@ function init_ip_white() {
 		local src_port=`echo ${port_forward}|awk '{print $2}'`
 		local dst_ip=`echo ${port_forward}|awk '{print $3}'`
 		local dst_port=`echo ${port_forward}|awk '{print $4}'`
-		if ( opkg list-installed|grep -w -q ^firewall4 ); then
+		if [ -n "$nftables_version" ]; then
 			! nft list ruleset|grep "$ip_version saddr @${ipset_name} tcp dport $src_port counter .* dnat $ip_version to $dst_ip:$dst_port comment \"\!wechatpush DNAT rule\"" >/dev/null 2>&1 && nft insert rule inet fw4 wechatpush_dstnat meta nfproto $1 $ip_version saddr @${ipset_name} tcp dport $src_port counter dnat to "$dst_ip:$dst_port" comment \"\!wechatpush DNAT rule\" >/dev/null 2>&1
 			! nft list ruleset|grep "$ip_version daddr $dst_ip tcp dport $dst_port counter .* snat $ip_version to $src_ip comment \"\!wechatpush SNAT rule\"" >/dev/null 2>&1 && nft insert rule inet fw4 wechatpush_srcnat $ip_version daddr $dst_ip tcp dport $dst_port counter snat to $src_ip comment \"\!wechatpush SNAT rule\" >/dev/null 2>&1
 		else
@@ -1347,7 +1305,7 @@ function init_ip_black(){
 		nat_table_cmd="family inet6"
 	fi
 	
-	if ( opkg list-installed|grep -w -q ^firewall4 ); then
+	if [ -n "$nftables_version" ]; then
 		! nft list set inet fw4 ${ipset_name} >/dev/null 2>&1 && nft add set inet fw4 ${ipset_name} { type ${1}_addr\; flags timeout\; timeout ${login_ip_black_timeout}s\; }
 		! nft list ruleset|grep "$ip_version saddr @${ipset_name} counter .* comment \"\!wechatpush Drop rule\"" >/dev/null 2>&1 && nft insert rule inet fw4 input $ip_version saddr @${ipset_name} counter drop comment \"\!wechatpush Drop rule\" >/dev/null 2>&1
 	else
@@ -1359,6 +1317,7 @@ function init_ip_black(){
 # 添加黑名单
 function add_ip_black(){
 	[ ! "$1" ] && return
+	echo "$login_ip_white_list"|grep -w -q "$1" && return
 	# 检查 IP 版本
 	( echo "$1"|grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$' ) && ipset_name="wechatpush_blacklist"
 	( echo "$1"|grep -Eq '^([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}$' ) && ipset_name="wechatpush_blacklistv6"
@@ -1366,8 +1325,8 @@ function add_ip_black(){
 
 	! cat ${ip_blacklist_path}|grep -q -w -i ${1} && echo "$1 timeout ${login_ip_black_timeout}" >> ${ip_blacklist_path}
 
-	( opkg list-installed|grep -w -q ^firewall4 ) && nft add element inet fw4 ${ipset_name} { $1 expires ${login_ip_black_timeout}s } >/dev/null 2>&1
-	( opkg list-installed|grep -w -q ^firewall4 ) && return
+	[ -n "$nftables_version" ] && nft add element inet fw4 ${ipset_name} { $1 expires ${login_ip_black_timeout}s } >/dev/null 2>&1
+	[ -n "$nftables_version" ] && return
 
 	ipset -exist add $ipset_name ${1} timeout ${login_ip_black_timeout}
 }
@@ -1382,8 +1341,8 @@ function del_ip_black(){
 	( echo "$1"|grep -Eq '^([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}$' ) && ipset_name="wechatpush_blacklistv6"
 	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】黑名单删除失败，IP 格式错误" >> ${logfile} && return
 	
-	( opkg list-installed|grep -w -q ^firewall4 ) && nft delete element inet fw4 ${ipset_name} { $1 } >/dev/null 2>&1
-	( opkg list-installed|grep -w -q ^firewall4 ) && return
+	[ -n "$nftables_version" ] && nft delete element inet fw4 ${ipset_name} { $1 } >/dev/null 2>&1
+	[ -n "$nftables_version" ] && return
 	ipset list ${ipset_name} >/dev/null 2>&1 && ipset -! del ${ipset_name} ${1}
 }
 
@@ -1397,9 +1356,12 @@ function set_ip_black(){
 		add_ip_black ${ip_black}
 	done
 	# 当 ip_blacklist 文件清除 IP 时，从集合中清除 IP
-	( opkg list-installed|grep -w -q ^firewall4 ) && fw_info_blacklist=$(nft list set inet fw4 ${ipset_name} | tr -d '\n' | grep -oE 'elements = \{[^}]*\}' | grep -oE '[^{}]+ expires [^,}]+[,\}]' | tr ',}' '\n' | tr -s ' ' | sed -e 's/^[[:space:]]*//')
-	( ! opkg list-installed|grep -w -q ^firewall4 ) && fw_info_blacklist=$(ipset list ${ipset_name} | grep "timeout" 2>/dev/null)
+	[ -n "$nftables_version" ] && fw_info_blacklist=$(nft list set inet fw4 wechatpush_blacklist | tr -d '\n' | grep -oE 'elements = \{[^}]*\}' | grep -oE '[^{}]+ expires [^,}]+[,\}]' | tr ',}' '\n' | tr -s ' ' | sed -e 's/^[[:space:]]*//')
+	[ -n "$nftables_version" ] && fw_info_blacklistv6=$(nft list set inet fw4 wechatpush_blacklist | tr -d '\n' | grep -oE 'elements = \{[^}]*\}' | grep -oE '[^{}]+ expires [^,}]+[,\}]' | tr ',}' '\n' | tr -s ' ' | sed -e 's/^[[:space:]]*//')
+	[ -z "$nftables_version" ] && fw_info_blacklist=$(ipset list wechatpush_blacklist | grep "timeout" 2>/dev/null)
+	[ -z "$nftables_version" ] && fw_info_blacklistv6=$(ipset list wechatpush_blacklist | grep "timeout" 2>/dev/null)
 
+	fw_info_blacklist="${fw_info_blacklist}\n${fw_info_blacklistv6}"
 	IFS=$'\n'
 	for ip_black_info in `echo "$fw_info_blacklist"`; do
 		ip_black=$(echo "$ip_black_info"|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
@@ -1518,6 +1480,64 @@ for i in `seq 1 $thread_num`; do
 	echo >&5
 done
 unset i
+
+process_login() {
+	local login_ip=$1
+	local -n login_counts=$2
+
+	if [ -z "${login_counts["$login_ip"]}" ]; then
+		login_counts["$login_ip"]=0
+	fi
+	login_counts["$login_ip"]=$((login_counts["$login_ip"]+1))
+	local count=${login_counts["$login_ip"]}
+	login_log=$(logread notice | grep -w -i "$login_ip" | tail -n 1)
+
+	if [[ $count -eq $login_max_num && ( "$2" == "web_failed_counts" || "$2" == "ssh_failed_counts" ) ]]; then
+		add_ip_black ${login_ip}
+		unset login_counts["$login_ip"]
+		[ "$2" == "web_failed_counts" ] && echo "${login_ip}" >> ${dir}web_failed
+		[ "$2" == "ssh_failed_counts" ] && echo "${login_ip}" >> ${dir}ssh_failed
+	fi
+
+	if [[ "$2" == "web_login_counts" || "$2" == "ssh_login_counts" ]]; then
+		add_ip_white ${login_ip}
+		unset web_failed_counts["$login_ip"]
+		unset ssh_failed_counts["$login_ip"]
+		unset login_counts["$login_ip"]
+		[ "$2" == "web_login_counts" ] && echo "${login_ip}" >> ${dir}web_login
+		[ "$2" == "ssh_login_counts" ] && echo "${login_ip}" >> ${dir}ssh_login
+	fi
+}
+
+# 监听登录事件
+if [ -n "$web_logged" ] || [ -n "$ssh_logged" ] || [ -n "$web_login_failed" ] || [ -n "$ssh_login_failed" ]; then
+	declare -A web_login_counts
+	declare -A ssh_login_counts
+	declare -A web_failed_counts
+	declare -A ssh_failed_counts
+	[ -f ${dir}child_pid ] && child_pid=$(cat ${dir}child_pid)
+	[ -n "$child_pid" ] && kill $child_pid
+	(
+	logread -f -p notice | while IFS= read -r line; do
+		[ -n "$web_logged" ] && web_login_ip=$(echo "$line" | grep -i "accepted login" | awk '{print $NF}')
+		[ -n "$ssh_logged" ] && ssh_login_ip=$(echo "$line" | grep -i "Password auth succeeded\|Pubkey auth succeeded" | awk '{print $NF}' | sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp' | sed -e 's/%.*//')
+		[ -n "$web_login_failed" ] && web_failed_ip=$(echo "$line" | grep -i "failed login"|awk '{print $NF}')
+		[ -n "$ssh_login_failed" ] && ssh_failed_ip=$(echo "$line" | grep -i "Bad password attempt\|Login attempt for nonexistent user from" | awk '{print $NF}' | sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp' | sed -e 's/%.*//')
+		[ -n "$ssh_login_failed" ] && ssh_failed_num=$(echo "$line" | sed -n 's/.*authpriv\.warn dropbear\[\([0-9]\+\)\]: Login attempt for nonexistent user/\1/p')
+		[ -n "$ssh_failed_num" ] && ssh_failed_ip=$(logread notice | grep "authpriv\.info dropbear\[${failed_user_id}\].*Child connection from" | awk '{print $NF}' | sed -nr 's#^(.*):.[0-9]{1,5}#\1#gp' | sed -e 's/%.*//')
+
+		[ -n "$web_login_ip" ] && process_login "$web_login_ip" web_login_counts
+		[ -n "$ssh_login_ip" ] && process_login "$ssh_login_ip" ssh_login_counts
+		[ -n "$web_failed_ip" ] && process_login "$web_failed_ip" web_failed_counts
+		[ -n "$ssh_failed_ip" ] && process_login "$ssh_failed_ip" ssh_failed_counts
+	done
+	) &
+	# 分离子shell，避免影响 wait
+	child_pid=$!
+	sleep 1
+	disown "$child_pid"
+	echo $child_pid > ${dir}child_pid
+fi
 
 # 载入在线设备
 init;[ $? -eq 1 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】读取设置出错，请检查设置项 " >> ${logfile} && exit
