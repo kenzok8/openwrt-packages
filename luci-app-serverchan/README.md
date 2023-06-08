@@ -41,7 +41,7 @@ v2.06.2 之后的版本不再支持 LuCI 18.06，如需编译，请使用 openwr
 
 **关于安装：**
 
-插件依赖 iputils-arping + curl + jq ，对于内存有限的路由器，请酌情安装，**在安装之前，请先运行 `opkg update` 命令，以便在安装过程中安装依赖。**
+插件依赖 iputils-arping + curl + jq + bash，对于内存有限的路由器，请酌情安装，**在安装之前，请先运行 `opkg update` 命令，以便在安装过程中安装依赖。**
 
 基于 X86 OpenWrt v23.05.0 制作，不同系统不同设备，可能会遇到各种问题，**如获取到错误的温度信息、页面显示错误、报错等，自行适配**
 
@@ -74,7 +74,7 @@ v2.06.2 之后的版本不再支持 LuCI 18.06，如需编译，请使用 openwr
 - 设备信息及插件版本号
 - 执行 `/usr/share/wechatpush/wechatpush` 后的提示信息
 - 报错后的日志信息、`/tmp/wechatpush/` 目录下的文件信息
-- `sh -x /usr/share/wechatpush/wechatpush t1` 的详细运行信息
+- `bash -x /usr/share/wechatpush/wechatpush t1` 的详细运行信息
 
 
 ## 下载

@@ -31,7 +31,7 @@ Limited resources are available. If you need services such as DingTalk push, Fei
 
 **Regarding Installation:**
 
-The plugin requires dependencies on iputils-arping + curl + jq. For routers with limited memory, please consider the installation carefully. **Before installing, please run the opkg update command to install dependencies during the installation process.**
+The plugin requires dependencies on iputils-arping + curl + jq + bash. For routers with limited memory, please consider the installation carefully. **Before installing, please run the opkg update command to install dependencies during the installation process.**
 
 Developed based on X86 OpenWrt v23.05.0, different systems and devices may encounter various issues. **If you encounter errors in temperature information retrieval, display errors, or other issues, please adapt accordingly.**
 
@@ -64,7 +64,7 @@ When submitting a bug, please provide the following information if possible:
 - Device information and plugin version number.
 - Prompt information after executing `/usr/share/wechatpush/wechatpush`.
 - Log information and file information in the `/tmp/wechatpush/` directory after encountering an error.
-- Detailed execution information of `sh -x /usr/share/wechatpush/wechatpush t1`.
+- Detailed execution information of `bash -x /usr/share/wechatpush/wechatpush t1`.
 
 ## DownLoad
 
