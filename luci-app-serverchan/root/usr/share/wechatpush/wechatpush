@@ -1462,10 +1462,10 @@ function send(){
 # 初始化
 if [ "$1" ] ;then
 	[ $1 == "soc" ] && get_config "soc_code" "server_host" "server_port"
-	[ $1 == "soc" ] && soc_temp && return $?
+	[ $1 == "soc" ] && soc_temp && exit $?
 	read_config
-	[ $1 == "send" ] && send && return $?
-	[ $1 == "test" ] && send test && return $?
+	[ $1 == "send" ] && send && exit $?
+	[ $1 == "test" ] && send test && exit $?
 	[ $1 == "t1" ] && thread_num=1 || exit
 else
 	read_config

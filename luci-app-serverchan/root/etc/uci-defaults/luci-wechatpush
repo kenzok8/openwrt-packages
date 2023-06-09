@@ -170,4 +170,10 @@ serverchan_to_wechatpush_get \
 
 uci commit wechatpush
 rm -rf "$serverchan_config" 2>/dev/null
+dir="/tmp/wechatpush/" && mkdir -p ${dir}
+echo "" > ${dir}web_login
+echo "" > ${dir}ssh_login
+echo "" > ${dir}web_failed
+echo "" > ${dir}ssh_failed
+
 nohup sh -c 'while [ -f /var/lock/opkg.lock ]; do sleep 1; done; opkg remove luci-app-serverchan; rm -rf /tmp/luci-*' >/dev/null 2>&1 &
