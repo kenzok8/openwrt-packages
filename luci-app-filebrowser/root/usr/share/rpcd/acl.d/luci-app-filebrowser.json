@@ -2,6 +2,9 @@
 	"luci-app-filebrowser": {
 		"description": "Grant UCI access for luci-app-filebrowser",
 		"read": {
+			"ubus": {
+				"service": [ "list" ]
+			},
 			"uci": [ "filebrowser" ]
 		},
 		"write": {
