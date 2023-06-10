@@ -30,7 +30,7 @@
 [immortalwrt]: https://github.com/immortalwrt/immortalwrt
 
 <div align="center">
-<img src="https://raw.githubusercontent.com/jerrykuku/staff/master/argon_title2.svg">
+<img src="https://raw.githubusercontent.com/jerrykuku/staff/master/argon_title4.svg">
 
 # 一个全新的 OpenWrt 主题
 
@@ -77,7 +77,7 @@ Argon 是**一款干净整洁的 OpenWrt LuCI 主题**，
 | 分支   | 版本   | 介绍                        | 匹配源码                                              |
 | ------ | ------ | --------------------------- | ----------------------------------------------------- |
 | master | v2.x.x | 支持最新和比较新版本的 LuCI | [官方 OpenWrt][official] • [ImmortalWrt][immortalwrt] |
-| 18.06  | v1.x.x | 支持 18.06 版本的 LuCI      | [Lean LEDE][lede]                                     |
+| 18.06  | v1.x.x | 支持 18.06 版本的 LuCI      | [Lean's LEDE][lede]                                     |
 
 ## 版本历史
 
@@ -85,7 +85,7 @@ Argon 是**一款干净整洁的 OpenWrt LuCI 主题**，
 
 ## 快速开始
 
-### 使用 Lean LEDE 构建
+### 使用 Lean's LEDE 构建
 
 ```bash
 cd lede/package/lean
@@ -104,10 +104,10 @@ make menuconfig #choose LUCI->Theme->Luci-theme-argon
 make -j1 V=s
 ```
 
-### 在 18.06 的 LuCI 上安装
+### 在 18.06 的 LuCI 上安装 ( Lean's LEDE )
 
 ```bash
-wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v1.7.7/luci-theme-argon_1.7.7_all.ipk
+wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v1.8.2/luci-theme-argon_1.8.2-20230609_all.ipk
 opkg install luci-theme-argon*.ipk
 ```
 
@@ -116,7 +116,7 @@ opkg install luci-theme-argon*.ipk
 ```bash
 opkg install luci-compat
 opkg install luci-lib-ipkg
-wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.3/luci-theme-argon_2.3_all.ipk
+wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.3.1/luci-theme-argon_2.3.1_all.ipk
 opkg install luci-theme-argon*.ipk
 ```
 
@@ -130,7 +130,7 @@ opkg install luci-app-argon-config*.ipk
 ## 注意
 
 - 强烈建议使用 Chrome 浏览器。这个主题中使用了一些新的 css3 功能，目前只有 Chrome 浏览器有最好的兼容性。
-- 目前，IE 系列的主线版本有需要解决的错误。
+- 微软已正式退役 Internet Explorer，安息吧 IE🙏<del>目前，IE 系列的主线版本有需要解决的错误。</del>
 - FireFox 默认不启用 backdrop-filter，[见这里](https://developer.mozilla.org/zh-CN/docs/Web/CSS/backdrop-filter)的打开方法。
 
 ## 屏幕截图
