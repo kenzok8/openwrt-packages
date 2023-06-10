@@ -76,12 +76,13 @@ start_service() {
 	local update_time
 	config_get update_time "config" "update_time" "3"
 	sed -i "/$NAME/d" /etc/crontabs/root
-	is_enabled "config" "auto_update" && echo "0 ${update_time} * * * $UNM_DIR/update.sh update_core" >> "/etc/crontabs/root"
+	echo -e "30 2 * * * /etc/init.d/unblockneteasemusic" >> "/etc/crontabs/root"
+	! is_enabled "config" "auto_update" || echo -e "0 ${update_time} * * * $UNM_DIR/update.sh update_core" >> "/etc/crontabs/root"
 	/etc/init.d/cron restart
 
 	mkdir -p "$RUN_DIR"
-	[ ! -s "$UNM_DIR/core/app.js" ] && { rm -f "$UNM_DIR/local_ver"; sh "$UNM_DIR/update.sh" "update_core_non_restart"; }
-	[ ! -s "$UNM_DIR/core/app.js" ] && { echo "Core Not Found, please download it before starting." >> "$RUN_DIR/run.log"; return 1; }
+	[ -s "$UNM_DIR/core/app.js" ] || { rm -f "$UNM_DIR/local_ver"; sh "$UNM_DIR/update.sh" "update_core_non_restart"; }
+	[ -s "$UNM_DIR/core/app.js" ] || { echo "Core Not Found, please download it before starting." >> "$RUN_DIR/run.log"; return 1; }
 
 	procd_open_instance "$NAME"
 	procd_set_param command node "$UNM_DIR/core/app.js"
