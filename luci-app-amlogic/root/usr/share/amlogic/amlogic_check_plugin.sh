@@ -18,11 +18,17 @@ AMLOGIC_SOC_FILE="/etc/flippy-openwrt-release"
 START_LOG="${TMP_CHECK_DIR}/amlogic_check_plugin.log"
 RUNNING_LOG="${TMP_CHECK_DIR}/amlogic_running_script.log"
 LOG_FILE="${TMP_CHECK_DIR}/amlogic.log"
+all_plugin_list="${TMP_CHECK_DIR}/josn_api_plugin"
 support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
+# Set github API default value
+github_page="1"
+github_per_page="100"
+
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
 rm -f ${TMP_CHECK_DIR}/*.ipk 2>/dev/null && sync
 rm -f ${TMP_CHECK_DIR}/sha256sums 2>/dev/null && sync
+rm -f ${all_plugin_list}
 
 # Clean the running log
 clean_running() {
@@ -98,46 +104,37 @@ sleep 2
 # 02. Check the version on the server
 tolog "02. Start querying plugin version..."
 
-# Set github API default value
-github_page="1"
-github_per_page="100"
-github_releases_results=()
-
 # Get the release list
 while true; do
-    response=$(curl -s -L \
-        -H "Accept: application/vnd.github+json" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
-        "https://api.github.com/repos/ophub/luci-app-amlogic/releases?per_page=${github_per_page}&page=${github_page}")
+    response="$(
+        curl -s -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/ophub/luci-app-amlogic/releases?per_page=${github_per_page}&page=${github_page}"
+    )"
 
     # Check if the response is empty or an error occurred
-    if [ -z "${response}" ] || [[ "${response}" == *"Not Found"* ]]; then
+    if [[ -z "${response}" ]] || [[ "${response}" == *"Not Found"* ]]; then
+        tolog "02.01 Query failed, please try again." "1"
         break
+    else
+        echo "${response}" |
+            jq -r '.[].tag_name' | sort -rV \
+            >>${all_plugin_list}
     fi
-
-    # Append the current page's results to the overall results array
-    github_releases_results+=("${response}")
 
     # Check if the current page has fewer results than the per_page limit
-    if [ "$(echo "${response}" | jq '. | length')" -lt "${github_per_page}" ]; then
+    if [[ "$(echo "${response}" | jq '. | length')" -lt "${github_per_page}" ]]; then
         break
+    else
+        github_page="$((github_page + 1))"
     fi
-
-    ((github_page++))
 done
 
 # Get the latest version
-if [[ "${#github_releases_results[*]}" -ne "0" ]]; then
-    # Concatenate all the results into a single JSON array
-    all_results=$(echo "${github_releases_results[*]}" | jq -s 'add')
-
-    # Sort the results
-    latest_version="$(
-        echo "${all_results[*]}" |
-            jq -r '.[].tag_name' |
-            sort -rV | head -n 1
-    )"
-    if [[ "${latest_version}" == "null" ]]; then
+if [[ -s "${all_plugin_list}" ]]; then
+    latest_version="$(cat ${all_plugin_list} | sort -rV | head -n 1)"
+    if [[ -z "${latest_version}" ]]; then
         tolog "02.01 Query failed, please try again." "1"
     else
         tolog "02.01 current version: ${current_plugin_v}, Latest version: ${latest_version}"

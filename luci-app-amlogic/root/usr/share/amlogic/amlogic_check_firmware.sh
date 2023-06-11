@@ -20,9 +20,15 @@ AMLOGIC_SOC_FILE="/etc/flippy-openwrt-release"
 START_LOG="${TMP_CHECK_DIR}/amlogic_check_firmware.log"
 RUNNING_LOG="${TMP_CHECK_DIR}/amlogic_running_script.log"
 LOG_FILE="${TMP_CHECK_DIR}/amlogic.log"
+all_releases_list="${TMP_CHECK_DIR}/josn_api_releases"
 support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
+# Set github API default value
+github_page="1"
+github_per_page="100"
+
+rm -f ${all_releases_list}
 
 # Clean the running log
 clean_running() {
@@ -133,52 +139,42 @@ fi
 check_updated() {
     tolog "02. Start checking for the latest version..."
 
-    # Set github API default value
-    github_page="1"
-    github_per_page="100"
-    github_releases_results=()
-
     # Get the release list
     while true; do
-        response=$(curl -s -L \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            "https://api.github.com/repos/${server_firmware_url}/releases?per_page=${github_per_page}&page=${github_page}")
+        response="$(
+            curl -s -L \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/${server_firmware_url}/releases?per_page=${github_per_page}&page=${github_page}"
+        )"
 
         # Check if the response is empty or an error occurred
-        if [ -z "${response}" ] || [[ "${response}" == *"Not Found"* ]]; then
+        if [[ -z "${response}" ]] || [[ "${response}" == *"Not Found"* ]]; then
+            tolog "02.01 Invalid OpenWrt download address." "1"
             break
-        fi
-
-        # Append the current page's results to the overall results array
-        github_releases_results+=("${response}")
-
-        # Check if the current page has fewer results than the per_page limit
-        if [ "$(echo "${response}" | jq '. | length')" -lt "${github_per_page}" ]; then
-            break
-        fi
-
-        ((github_page++))
-    done
-
-    # Get the latest version
-    if [[ "${#github_releases_results[*]}" -ne "0" ]]; then
-        # Concatenate all the results into a single JSON array
-        all_results=$(echo "${github_releases_results[*]}" | jq -s 'add')
-
-        # Sort the results
-        latest_version="$(
-            echo "${all_results[*]}" |
+        else
+            # Filter the results and save them to the file
+            echo "${response}" |
                 jq '.[]' |
                 jq -s --arg RTK "${releases_tag_keywords}" '.[] | select(.tag_name | contains($RTK))' |
                 jq -s '.[].assets[] | {data:.updated_at, url:.browser_download_url}' |
                 jq -s --arg BOARD "_${BOARD}_" --arg MLV "${main_line_version}." --arg FSX "${firmware_suffix}" \
-                    '.[] | select((.url | contains($BOARD)) and (.url | contains($MLV)) and (.url | endswith($FSX)))' |
-                jq -s 'sort_by(.data) | reverse | .[0]' -c
-        )"
-        [[ "${latest_version}" == "null" ]] && tolog "02.01 Invalid OpenWrt download address." "1"
+                    '.[] | select((.url | contains($BOARD)) and (.url | contains($MLV)) and (.url | endswith($FSX)))' \
+                    >>${all_releases_list}
+        fi
 
-        # Get the latest version
+        # Check if the current page has fewer results than the per_page limit
+        if [[ "$(echo "${response}" | jq '. | length')" -lt "${github_per_page}" ]]; then
+            break
+        else
+            # Increase the page number
+            github_page="$((github_page + 1))"
+        fi
+    done
+
+    # Get the latest version
+    if [[ -s "${all_releases_list}" ]]; then
+        latest_version="$(cat ${all_releases_list} | jq -s 'sort_by(.data) | reverse | .[0]' -c)"
         latest_updated_at="$(echo ${latest_version} | jq -r '.data')"
         latest_url="$(echo ${latest_version} | jq -r '.url')"
 
