@@ -133,25 +133,60 @@ fi
 check_updated() {
     tolog "02. Start checking for the latest version..."
 
-    # Query the latest version
-    latest_version="$(
-        curl -s \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/${server_firmware_url}/releases |
-            jq '.[]' |
-            jq -s --arg RTK "${releases_tag_keywords}" '.[] | select(.tag_name | contains($RTK))' |
-            jq -s '.[].assets[] | {data:.updated_at, url:.browser_download_url}' |
-            jq -s --arg BOARD "_${BOARD}_" --arg MLV "${main_line_version}." --arg FSX "${firmware_suffix}" \
-                '.[] | select((.url | contains($BOARD)) and (.url | contains($MLV)) and (.url | endswith($FSX)))' |
-            jq -s 'sort_by(.data)|reverse[]' |
-            jq -s '.[0]' -c
-    )"
-    [[ "${latest_version}" == "null" ]] && tolog "02.01 Invalid OpenWrt download address." "1"
-    latest_updated_at="$(echo ${latest_version} | jq -r '.data')"
-    latest_url="$(echo ${latest_version} | jq -r '.url')"
+    # Set github API default value
+    github_page="1"
+    github_per_page="100"
+    github_releases_results=()
 
-    # Convert to readable date format
-    date_display_format="$(echo ${latest_updated_at} | tr 'T' '(' | tr 'Z' ')')"
+    # Get the release list
+    while true; do
+        response=$(curl -s -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${server_firmware_url}/releases?per_page=${github_per_page}&page=${github_page}")
+
+        # Check if the response is empty or an error occurred
+        if [ -z "${response}" ] || [[ "${response}" == *"Not Found"* ]]; then
+            break
+        fi
+
+        # Append the current page's results to the overall results array
+        github_releases_results+=("${response}")
+
+        # Check if the current page has fewer results than the per_page limit
+        if [ "$(echo "${response}" | jq '. | length')" -lt "${github_per_page}" ]; then
+            break
+        fi
+
+        ((github_page++))
+    done
+
+    # Get the latest version
+    if [[ "${#github_releases_results[*]}" -ne "0" ]]; then
+        # Concatenate all the results into a single JSON array
+        all_results=$(echo "${github_releases_results[*]}" | jq -s 'add')
+
+        # Sort the results
+        latest_version="$(
+            echo "${all_results[*]}" |
+                jq '.[]' |
+                jq -s --arg RTK "${releases_tag_keywords}" '.[] | select(.tag_name | contains($RTK))' |
+                jq -s '.[].assets[] | {data:.updated_at, url:.browser_download_url}' |
+                jq -s --arg BOARD "_${BOARD}_" --arg MLV "${main_line_version}." --arg FSX "${firmware_suffix}" \
+                    '.[] | select((.url | contains($BOARD)) and (.url | contains($MLV)) and (.url | endswith($FSX)))' |
+                jq -s 'sort_by(.data) | reverse | .[0]' -c
+        )"
+        [[ "${latest_version}" == "null" ]] && tolog "02.01 Invalid OpenWrt download address." "1"
+
+        # Get the latest version
+        latest_updated_at="$(echo ${latest_version} | jq -r '.data')"
+        latest_url="$(echo ${latest_version} | jq -r '.url')"
+
+        # Convert to readable date format
+        date_display_format="$(echo ${latest_updated_at} | tr 'T' '(' | tr 'Z' ')')"
+    else
+        tolog "02.02 The search results for releases are empty." "1"
+    fi
 
     # Check the firmware update code
     down_check_code="${latest_updated_at}.${main_line_version}"

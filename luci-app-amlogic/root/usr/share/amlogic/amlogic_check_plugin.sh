@@ -98,18 +98,56 @@ sleep 2
 # 02. Check the version on the server
 tolog "02. Start querying plugin version..."
 
-# Query the latest version
-latest_version="$(
-    curl -s \
-        -H "Accept: application/vnd.github+json" \
-        https://api.github.com/repos/ophub/luci-app-amlogic/releases |
-        jq -r '.[].tag_name' |
-        sort -rV | head -n 1
-)"
-[[ -n "${latest_version}" ]] || tolog "02.01 Query failed, please try again." "1"
-tolog "02.01 current version: ${current_plugin_v}, Latest version: ${latest_version}"
-sleep 2
+# Set github API default value
+github_page="1"
+github_per_page="100"
+github_releases_results=()
 
+# Get the release list
+while true; do
+    response=$(curl -s -L \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        "https://api.github.com/repos/ophub/luci-app-amlogic/releases?per_page=${github_per_page}&page=${github_page}")
+
+    # Check if the response is empty or an error occurred
+    if [ -z "${response}" ] || [[ "${response}" == *"Not Found"* ]]; then
+        break
+    fi
+
+    # Append the current page's results to the overall results array
+    github_releases_results+=("${response}")
+
+    # Check if the current page has fewer results than the per_page limit
+    if [ "$(echo "${response}" | jq '. | length')" -lt "${github_per_page}" ]; then
+        break
+    fi
+
+    ((github_page++))
+done
+
+# Get the latest version
+if [[ "${#github_releases_results[*]}" -ne "0" ]]; then
+    # Concatenate all the results into a single JSON array
+    all_results=$(echo "${github_releases_results[*]}" | jq -s 'add')
+
+    # Sort the results
+    latest_version="$(
+        echo "${all_results[*]}" |
+            jq -r '.[].tag_name' |
+            sort -rV | head -n 1
+    )"
+    if [[ "${latest_version}" == "null" ]]; then
+        tolog "02.01 Query failed, please try again." "1"
+    else
+        tolog "02.01 current version: ${current_plugin_v}, Latest version: ${latest_version}"
+        sleep 2
+    fi
+else
+    tolog "02.01 The search results for releases are empty." "1"
+fi
+
+# Compare the version and download the latest version
 if [[ "${current_plugin_v}" == "${latest_version}" ]]; then
     tolog "02.02 Already the latest version, no need to update." "1"
 else
@@ -143,6 +181,6 @@ tolog "03. The plug is ready, you can update."
 sleep 2
 
 #echo '<a href=upload>Update</a>' >$START_LOG
-tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_plugin(this)"/> Latest version: '${server_plugin_version}'' "1"
+tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_plugin(this)"/> Latest version: '${latest_version}'' "1"
 
 exit 0
