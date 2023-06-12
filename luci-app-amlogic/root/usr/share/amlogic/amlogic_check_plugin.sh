@@ -116,7 +116,6 @@ while true; do
     # Check if the response is empty or an error occurred
     if [[ -z "${response}" ]] || [[ "${response}" == *"Not Found"* ]]; then
         tolog "02.01 Query failed, please try again." "1"
-        break
     else
         echo "${response}" |
             jq -r '.[].tag_name' | sort -rV \

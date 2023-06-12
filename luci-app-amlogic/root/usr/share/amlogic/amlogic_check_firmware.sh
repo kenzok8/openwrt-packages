@@ -151,7 +151,6 @@ check_updated() {
         # Check if the response is empty or an error occurred
         if [[ -z "${response}" ]] || [[ "${response}" == *"Not Found"* ]]; then
             tolog "02.01 Invalid OpenWrt download address." "1"
-            break
         else
             # Filter the results and save them to the file
             echo "${response}" |
