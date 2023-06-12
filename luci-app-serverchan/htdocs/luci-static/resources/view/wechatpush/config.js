@@ -543,7 +543,7 @@ return view.extend({
 		o.modalonly = true;
 		o.depends("crontab_mode", "1");
 
-		o = s.taboption('crontab', form.ListValue, 'interval_time', _('Interval sending'));
+		o = s.taboption('crontab', form.ListValue, 'crontab_interval_time', _('Interval sending'));
 		o.default = "6"
 		for (var t = 0; t <= 12; t++) {
 			o.value(t, _("") + t + _("Hour"));

@@ -1112,7 +1112,7 @@ function login_send(){
 	sys_log=$(logread notice)
 
 	# Web 登录提醒
-	for login_ip in `cat ${dir}web_login | sort -u`; do
+	[ -f ${dir}web_login ] && for login_ip in `cat ${dir}web_login | sort -u`; do
 		[ -z "$login_ip" ] && continue
 		local login_time=$(echo "$sys_log" | grep -w ${login_ip} | awk '{print $4}' | tail -n 1)
 		local login_mode=$(echo "$sys_log" | grep -w ${login_ip} | awk '{print $13}' | tail -n 1)
@@ -1142,10 +1142,10 @@ function login_send(){
 		fi
 		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} (${login_ip_attribution}) 通过 Web ${login_mode} 登录了路由器 " >> ${logfile}
 	done
-	echo "" > ${dir}web_login
+	rm -f ${dir}web_login >/dev/null 2>&1
 	unset login_ip login_time login_mode
 	# SSH 登录提醒
-	for login_ip in `cat ${dir}ssh_login | sort -u`; do
+	[ -f ${dir}ssh_login ] && for login_ip in `cat ${dir}ssh_login | sort -u`; do
 		[ -z "$login_ip" ] && continue
 		local login_time=$(echo "$sys_log" | grep -w ${login_ip} | awk '{print $4}' | tail -n 1)
 		local login_mode=$(echo "$sys_log" | grep -w ${login_ip} | awk '{print $8}' | tail -n 1)
@@ -1175,10 +1175,10 @@ function login_send(){
 		fi
 		echo "`date "+%Y-%m-%d"` ${login_time} ${disturb_text}设备 ${login_ip} (${login_ip_attribution}) 通过 SSH ${login_mode} 登录了路由器 " >> ${logfile}
 	done
-	echo "" > ${dir}ssh_login
+	rm -f ${dir}ssh_login >/dev/null 2>&1
 	unset login_ip login_time login_mode
 	# Web 非法登录
-	for login_ip in `cat ${dir}web_failed | sort -u`; do
+	[ -f ${dir}web_failed ] && for login_ip in `cat ${dir}web_failed | sort -u`; do
 		[ -z "$login_ip" ] && continue
 		login_ip_attribution=$(get_ip_attribution ${login_ip})
 		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
@@ -1195,10 +1195,10 @@ function login_send(){
 			content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 		fi
 	done
-	echo "" > ${dir}web_failed
+	rm -f ${dir}web_failed >/dev/null 2>&1
 	unset login_ip
 	# SSH 非法登录
-	for login_ip in `cat ${dir}ssh_failed | sort -u`; do
+	[ -f ${dir}ssh_failed ] && for login_ip in `cat ${dir}ssh_failed | sort -u`; do
 		[ -z "$login_ip" ] && continue
 		login_ip_attribution=$(get_ip_attribution ${login_ip})
 		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
@@ -1215,7 +1215,7 @@ function login_send(){
 			content="${content}${str_splitline}${str_title_start} 登录信息${str_title_end}${str_linefeed}${str_tab}设备 IP： ${str_space}${str_space}${str_space}${str_space}${login_ip}${content_attribution}"
 		fi
 	done
-	echo "" > ${dir}ssh_failed
+	rm -f ${dir}ssh_failed >/dev/null 2>&1
 	unset login_ip
 }
 
@@ -1517,7 +1517,7 @@ if [ -n "$web_logged" ] || [ -n "$ssh_logged" ] || [ -n "$web_login_failed" ] ||
 	declare -A web_failed_counts
 	declare -A ssh_failed_counts
 	[ -f ${dir}child_pid ] && child_pid=$(cat ${dir}child_pid)
-	[ -n "$child_pid" ] && kill $child_pid
+	[ -n "$child_pid" ] && kill $child_pid >/dev/null 2>&1
 	(
 	logread -f -p notice | while IFS= read -r line; do
 		[ -n "$web_logged" ] && {
