@@ -6,9 +6,9 @@
 'require ui';
 'require view';
 
-var callSystemInfo = rpc.declare({
-	object: 'system',
-	method: 'info'
+var callAvailSpace = rpc.declare({
+	object: 'luci.argon',
+	method: 'avail'
 });
 
 var callRemoveArgon = rpc.declare({
@@ -34,7 +34,7 @@ return view.extend({
 	load: function() {
 		return Promise.all([
 			uci.load('argon'),
-			L.resolveDefault(callSystemInfo(), {}),
+			L.resolveDefault(callAvailSpace(), {}),
 			L.resolveDefault(fs.list(bg_path), {})
 		]);
 	},
@@ -120,7 +120,7 @@ return view.extend({
 		}
 
 		s = m.section(form.TypedSection, null, _('Upload background (available space: %1024.2mB)')
-			.format(data[1].root.avail * 1024),
+			.format(data[1].avail * 1024),
 			_('You can upload files such as gif/jpg/mp4/png/webm/webp files, to change the login page background.'));
 		s.addremove = false;
 		s.anonymous = true;

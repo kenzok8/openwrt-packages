@@ -32,11 +32,9 @@
 <div align="center">
 <img src="https://raw.githubusercontent.com/jerrykuku/staff/master/argon_title4.svg">
 
-# Argon Theme Config Plugin
+# Argon 主题设置插件
 
-You can set the blur and transparency of the login page of argon theme,
-
-and manage the background pictures and videos.
+您可以设置 Argon 主题登录页面的模糊度和透明度，并管理背景图片和视频。
 
 [![license][license-badge]][license]
 [![prs][prs-badge]][prs]
@@ -45,25 +43,26 @@ and manage the background pictures and videos.
 [![download][download-badge]][download]
 [![contact][contact-badge]][contact]
 
-**English** |
-[简体中文][zh-cn-link]
+[Engilish][en-us-link] |
+**简体中文**
 
 <img src="https://raw.githubusercontent.com/jerrykuku/staff/master/argon2.gif">
 </div>
 
 ## Branch Introduction
 
-There are currently two main branches that are adapted to different versions of the **OpenWrt** source code.  
-The table below will provide a detailed introduction:
+目前有两个主要的分支，适应于不同版本的**OpenWrt**源代码。  
+下表为详细的介绍：
 
-| Branch | Version | Description                        | Matching source                                           |
-| ------ | ------- | ---------------------------------- | --------------------------------------------------------- |
-| master | v1.x.x  | Support the latest version of LuCI | [Official OpenWrt][official] • [ImmortalWrt][immortalwrt] |
-| 18.06  | v0.9.x  | Support the 18.06 version of LuCI  | [Lean's LEDE][lede]                                         |
 
-## Getting started
+| 分支   | 版本   | 介绍                        | 匹配源码                                              |
+| ------ | ------ | --------------------------- | ----------------------------------------------------- |
+| master | v1.x.x | 支持最新和比较新版本的 LuCI | [官方 OpenWrt][official] • [ImmortalWrt][immortalwrt] |
+| 18.06  | v0.9.x | 支持 18.06 版本的 LuCI      | [Lean's LEDE][lede]                                                 |
 
-### Build for Lean's LEDE project
+## G快速开始
+
+### 使用 Lean's LEDE 构建
 
 ```bash
 cd lede/package/lean
@@ -73,7 +72,7 @@ make menuconfig #choose LUCI->Application->Luci-app-argon-config
 make -j1 V=s
 ```
 
-### Build for OpenWrt official SnapShots and ImmortalWrt
+### 使用官方 OpenWrt SnapShots 和 ImmortalWrt 构建
 
 ```bash
 cd openwrt/package
@@ -82,7 +81,7 @@ make menuconfig #choose LUCI->Application->Luci-app-argon-config
 make -j1 V=s
 ```
 
-## Contributors
+## 贡献者
 
 <a href="https://github.com/jerrykuku/luci-app-argon-config/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=jerrykuku/luci-app-argon-config" />
@@ -90,7 +89,7 @@ make -j1 V=s
 
 Made with [contrib.rocks](https://contrib.rocks).
 
-## Related Projects
+## 相关项目
 
 - [luci-theme-argon](https://github.com/jerrykuku/luci-theme-argon): Argon theme
 - [luci-app-vssr](https://github.com/jerrykuku/luci-app-vssr): An OpenWrt internet surfing plugin

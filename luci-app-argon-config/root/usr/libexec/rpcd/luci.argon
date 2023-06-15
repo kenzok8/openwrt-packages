@@ -9,6 +9,8 @@ readonly tmp_path="/tmp/argon_background.tmp"
 case "$1" in
 "list")
 	json_init
+	json_add_object "avail"
+	json_close_object
 	json_add_object "remove"
 		json_add_string "filename" "filename"
 	json_close_object
@@ -20,6 +22,12 @@ case "$1" in
 	;;
 "call")
 	case "$2" in
+	"avail")
+		json_init
+		json_add_int "avail" "$(df | grep -E '/$' | awk '{print $4}')"
+		json_dump
+		json_cleanup
+		;;
 	"remove")
 		read -r input
 		json_load "$input"

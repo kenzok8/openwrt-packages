@@ -6,8 +6,7 @@
 				"/www/luci-static/argon/background/*": [ "list" ]
 			},
 			"ubus": {
-				"luci.argon": [ "remove", "rename" ],
-				"system": [ "info" ]
+				"luci.argon": [ "avail", "remove", "rename" ]
 			},
 			"uci": [ "argon" ]
 		},
