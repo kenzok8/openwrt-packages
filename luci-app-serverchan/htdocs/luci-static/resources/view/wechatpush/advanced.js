@@ -21,20 +21,28 @@ return view.extend({
 		s.addremove = false
 
 		o = s.option(form.Value, 'up_timeout', _('Device online detection timeout (s)'));
-		o.default = "2"
+		o.placeholder = "2"
 		o.optional = false
 		o.datatype = "uinteger"
+		o.rmempty = false;
 
 		o = s.option(form.Value, "down_timeout", _('Device offline detection timeout (s)'))
-		o.default = "20"
+		o.placeholder = "10"
 		o.optional = false
 		o.datatype = "uinteger"
+		o.rmempty = false;
 
 		o = s.option(form.Value, "timeout_retry_count", _('Offline detection count'))
-		o.default = "2"
+		o.placeholder = "2"
 		o.optional = false
 		o.datatype = "uinteger"
+		o.rmempty = false;
 		o.description = _("If the device has good signal strength and no Wi-Fi sleep issues, you can reduce the above values.<br/>Due to the mysterious nature of Wi-Fi sleep during the night, if you encounter frequent disconnections, please adjust the parameters accordingly.<br/>..╮(╯_╰）╭..")
+
+		o = s.option(form.Flag, "only_timeout_push", _("Offline timeout applies only to the devices that receive push notifications"))
+		o.default = 0
+		o.rmempty = true
+		o.description = _("When this option is selected, the offline timeout and offline detection count apply only to the devices that require push notifications. Other devices will use default values, which can significantly reduce the time required for detection. However, it may result in inaccurate online time displayed in the online devices list. It is recommended to enable this option only when there are many devices and frequent offline occurrences are observed for specific devices of interest.")
 
 		o = s.option(form.Flag, "passive_mode", _("Disable active detection"))
 		o.default = 0
@@ -42,8 +50,9 @@ return view.extend({
 		o.description = _("Disable active detection of client online status. Enabling this feature will no longer prompt device online/offline events.<br/>Suitable for users who are not sensitive to online devices but need other features.")
 
 		o = s.option(form.Value, "thread_num", _('Maximum concurrent processes'))
-		o.default = "3"
+		o.placeholder = "3"
 		o.datatype = "uinteger"
+		o.rmempty = false;
 		o.description = _("Do not change the setting value for low-performance devices, or reduce the parameters as appropriate.")
 
 		o = s.option(form.Value, "soc_code", _('Custom temperature reading command'))

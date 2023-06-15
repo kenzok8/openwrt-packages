@@ -4,6 +4,6 @@ config wechatpush "config"
 	option sleeptime '60'
 	option debuglevel '1'
 	option up_timeout '2'
-	option down_timeout '20'
+	option down_timeout '10'
 	option timeout_retry_count '2'
 	option thread_num '3'
