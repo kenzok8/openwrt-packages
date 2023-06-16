@@ -35,10 +35,10 @@ get_config() {
     config_get enabled $1 enabled 0
     config_get adblock $1 adblock 0
     config_get ad_source $1 ad_source ""
-    config_get cache_size $1 cache_size 20000
+    config_get cache_size $1 cache_size 8000
     config_get cache_survival_time $1 cache_survival_time 86400
     config_get dump_file $1 dump_file 0
-    config_get dump_interval $1 dump_interval 600
+    config_get dump_interval $1 dump_interval 3600
     config_get enable_pipeline $1 enable_pipeline 0
     config_get geo_auto_update $1 geo_auto_update 0
     config_get geo_update_day_time $1 geo_update_day_time 2
