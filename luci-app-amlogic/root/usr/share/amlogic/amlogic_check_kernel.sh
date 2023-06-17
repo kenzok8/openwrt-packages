@@ -111,6 +111,7 @@ if [[ -n "${KERNEL_TAGS}" ]]; then
 else
     [[ "${SOC}" == "rk3588" ]] && kernel_tag="rk3588" || kernel_tag="stable"
 fi
+kernel_tag="${kernel_tag/kernel_/}"
 
 # Step 2: Check if there is the latest kernel version
 check_kernel() {
