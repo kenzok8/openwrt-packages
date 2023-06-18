@@ -5,12 +5,12 @@
 	"url": "\"https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=$(curl -s \"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpid}&corpsecret=${corpsecret}\"|jq '.access_token'|sed 's/\"//g')\"",
 	"data": "@${tempjsonpath}",
 	"content_type": "Content-Type: application/json",
-	"str_title_start": "<h3>",
-	"str_title_end": "</h3>",
-	"str_linefeed": "\\n",
+	"str_title_start": "<b>",
+	"str_title_end": "</b>",
+	"str_linefeed": "<br>",
 	"str_splitline": "<hr>",
 	"str_space": " ",
-	"str_tab": "<li>",
+	"str_tab": "",
 	"type":
 	  {
 		"touser": "\"${userid}\"",

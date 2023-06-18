@@ -486,11 +486,11 @@ return view.extend({
 		o.rmempty = false;
 		o.datatype = 'and(uinteger,min(0))';
 		o.depends('login_web_black', '1');
-		o.description = _('0 means permanent blacklist, use with caution. If misconfigured, change the device IP and clear rules in LUCI');
+		o.description = _('\"0\" in ipset means permanent blacklist, use with caution. If misconfigured, change the device IP and clear rules in LUCI.');
 
 		o = s.taboption('ipset', form.Flag, 'port_knocking_enable', _('Port knocking'));
 		o.default = '0';
-		o.description = _('If you have disabled LAN port inbound and forwarding in Firewall - Zone Settings, it won\'t work. Writing it is too complicated, so goodbye');
+		o.description = _('If you have disabled LAN port inbound and forwarding in Firewall - Zone Settings, it won\'t work.');
 		o.depends({ login_notification: "web_login_failed", '!contains': true });
 		o.depends({ login_notification: "ssh_login_failed", '!contains': true });
 
@@ -505,9 +505,9 @@ return view.extend({
 		o.depends('port_knocking_enable', '1');
 
 		o = s.taboption('ipset', form.Value, 'login_ip_white_timeout', _('Release time (s)'));
-		o.default = '600';
+		o.default = '86400';
 		o.datatype = 'and(uinteger,min(0))';
-		o.description = _('0 means permanent release, use with caution. If the connection is not disconnected after successful login, there is no need to reconnect, so a large value is not necessary.<br/>Note: Response time is related to the detection interval and the time required for each detection, so the response may not be very fast. Please bear with it');
+		o.description = _('\"0\" in ipset means permanent release, use with caution');
 		o.depends('port_knocking_enable', '1');
 
 		o = s.taboption('ipset', form.TextValue, 'ip_black_list', _('IP blacklist'));
@@ -684,7 +684,7 @@ return view.extend({
 		o.depends({ login_notification: "ssh_logged", '!contains': true });
 		o.depends({ login_notification: "web_login_failed", '!contains': true });
 		o.depends({ login_notification: "ssh_login_failed", '!contains': true });
-		o.description = _('Do not send login events from IP addresses in the list, and ignore blacklisting operations. Only record in the log. Mask bit representation is not supported at the moment.');
+		o.description = _('Add the IP addresses in the list to the whitelist for the blocking function (if available), and ignore automatic blocking and login event notifications. Only record in the log. Mask notation is currently not supported.');
 
 		o = s.taboption('disturb', form.Flag, 'login_log_enable', _('Login reminder log anti-flooding'));
 		o.description = _('Users in the whitelist or during the undisturbed time period after their first login IP will be exempt from log recording, preventing log flooding.');

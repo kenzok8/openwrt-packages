@@ -457,8 +457,8 @@ msgid "Blacklisting time (s)"
 msgstr "拉黑时间（秒）"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:489
-msgid "0 means permanent blacklist, use with caution. If misconfigured, change the device IP and clear rules in LUCI"
-msgstr "0 为永久拉黑，慎用。如不幸误操作，请更改设备 IP 进入 LUCI 界面清空规则"
+msgid "\"0\" in ipset means permanent blacklist, use with caution. If misconfigured, change the device IP and clear rules in LUCI."
+msgstr "ipset 中, \"0\" 为永久拉黑，慎用。如不幸误操作，请更改设备 IP 进入 LUCI 界面清空规则"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:491
 msgid "Port knocking"
@@ -473,8 +473,8 @@ msgid "Open port after successful login<br/>example：\"22\"、\"21:25\"、\"21:
 msgstr "登录成功后开放端口<br/>例：\"22\"、\"21:25\"、\"21:25,135:139\""
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:494
-msgid "If you have disabled LAN port inbound and forwarding in Firewall - Zone Settings, it won't work. Writing it is too complicated, so goodbye"
-msgstr "如在 防火墙 - 区域设置 中禁用了 LAN 口入站和转发，将不起作用<br/>写起来太鸡儿麻烦了，告辞"
+msgid "If you have disabled LAN port inbound and forwarding in Firewall - Zone Settings, it won't work."
+msgstr "如在 防火墙 - 区域设置 中禁用了 LAN 口入站和转发，该功能将不起作用"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:505
 msgid "Example: Forward port 13389 of this device (IPv4:10.0.0.1 / IPv6:fe80::10:0:0:2) to port 3389 of (IPv4:10.0.0.2 / IPv6:fe80::10:0:0:8)<br/>\"10.0.0.1,13389,10.0.0.2,3389\"<br/>\"fe80::10:0:0:1,13389,fe80::10:0:0:2,3389\""
@@ -485,8 +485,8 @@ msgid "Release time (s)"
 msgstr "放行时间（秒）"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:494
-msgid "0 means permanent release, use with caution. If the connection is not disconnected after successful login, there is no need to reconnect, so a large value is not necessary.<br/>Note: Response time is related to the detection interval and the time required for each detection, so the response may not be very fast. Please bear with it"
-msgstr "0 为永久放行，慎用<br/>连接成功后不断开就不需要重新连接，故不需要设置太大<br/>注：响应时间与检测间隔和每一次检测所需的时间有关，故反应不是很快，将就用吧"
+msgid "\"0\" in ipset means permanent release, use with caution"
+msgstr "ipset 中, \"0\" 为永久放行，慎用"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:514
 msgid "IP blacklist"
@@ -721,8 +721,8 @@ msgid "Users in the whitelist or during the undisturbed time period after their 
 msgstr "白名单列表内的用户，或者登录 IP 处于首次登录后的免打扰时段，不做日志记录，避免日志刷屏"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:688
-msgid "Do not send login events from IP addresses in the list, and ignore blacklisting operations. Only record in the log. Mask bit representation is not supported at the moment."
-msgstr "不对列表内 IP 登录事件推送，并忽略拉黑操作，仅在日志中记录，暂不支持掩码位表示"
+msgid "Add the IP addresses in the list to the whitelist for the blocking function (if available), and ignore automatic blocking and login event notifications. Only record in the log. Mask notation is currently not supported."
+msgstr "列表内 IP 加入封禁功能白名单(如果可用)，并忽略自动封禁和登录事件推送，仅在日志中记录，暂不支持掩码位表示"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/advanced.js:17
 msgid "If you are not familiar with the meanings of these options, please do not modify them.<br/><br/>"

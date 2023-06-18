@@ -121,10 +121,15 @@ function init(){
 	[ -n "$notification_load" ] && [ -n "$cpu_load_threshold" ] && local cpu_fuzai=`cat /proc/loadavg|awk '{print $1}'` 2>/dev/null || local cpu_fuzai="null"
 	[ -z "$cpu_fuzai" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法读取设备负载，请检查命令" >> ${logfile}
 
-	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv4"
-	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv6"
 	[ -n "$login_web_black" ] && [ "$login_web_black" -eq "1" ] && init_ip_black "ipv4"
 	[ -n "$login_web_black" ] && [ "$login_web_black" -eq "1" ] && init_ip_black "ipv6"
+	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv4"
+	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv6"
+
+	tmp_ip_list=`echo "$login_ip_white_list"|grep -v "^$"|sort -u`
+	while IFS= read -r tmp_ip; do
+		[ -n "$tmp_ip" ] && add_ip_white "$tmp_ip" "0"
+	done <<< "$tmp_ip_list"
 	set_ip_black
 	return 0
 }
@@ -500,7 +505,7 @@ function time_for_humans {
 	fi
 }
 
-# 计算字符真实长度
+# 计算字符显示宽度
 function length_str {
 	[ ! "$1" ] && return
 	
@@ -729,10 +734,10 @@ function geterrdevicealiases(){
 	if [ ! -z "$sheep_starttime" ] && [ "$((`date +%s`-$sheep_starttime))" -ge "3600" ]; then
 		> ${dir}sheep_usage
 		local MACLIST=`echo "$unattended_device_aliases"|grep -v "^$"|sort -u`
-		for mac in $MACLIST; do
+		while IFS= read -r mac; do
 			[ ! -z "$mac" ] && local tmptotal=`usage get ${mac} bytes`
 			[ ! -z "$tmptotal" ] && awk 'BEGIN{printf "%.0f\n",'$tmptotal'/'204800'}' 2>/dev/null >> ${dir}sheep_usage
-		done
+		done <<< "$MACLIST"
 		old_sheep_usage=`cat ${dir}old_sheep_usage` 2>/dev/null
 		sheep_usage=`cat ${dir}sheep_usage` 2>/dev/null
 		[ "$old_sheep_usage" == "$sheep_usage" ] && [ -z "$sheep_nousage_starttime" ] && sheep_nousage_starttime=`date +%s`
@@ -1179,10 +1184,14 @@ function get_ip_attribution(){
 
 # 登录提醒通知
 function login_send(){
-	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv4"
-	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv6"
 	[ -n "$login_web_black" ] && [ "$login_web_black" -eq "1" ] && init_ip_black "ipv4"
 	[ -n "$login_web_black" ] && [ "$login_web_black" -eq "1" ] && init_ip_black "ipv6"
+	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv4"
+	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] && init_ip_white "ipv6"
+	tmp_ip_list=`echo "$login_ip_white_list"|grep -v "^$"|sort -u`
+	while IFS= read -r tmp_ip; do
+		[ -n "$tmp_ip" ] && add_ip_white "$tmp_ip" "0"
+	done <<< "$tmp_ip_list"
 	[ -z "$web_logged" ] && [ -z "$ssh_logged" ] && [ -z "$web_login_failed" ] && [ -z "$ssh_login_failed" ] && return
 	set_ip_black
 	sys_log=$(logread notice)
@@ -1298,14 +1307,15 @@ function login_send(){
 # 添加白名单，懒得写删除项和信息显示了，纯粹就是懒
 function add_ip_white() {
 	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] || return
+	[ -z "$2" ] && timeout=$login_ip_white_timeout || timeout=$2
 	# 检查 IP 版本
 	( echo "$1"|grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$' ) && local ipset_name="wechatpush_whitelist"
 	( echo "$1"|grep -Eq '^([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}$' ) && local ipset_name="wechatpush_whitelistv6"
 	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】白名单添加失败，IP 格式错误" >> ${logfile} && return
 
 	[ -n "$nftables_version" ] && nft delete element inet fw4 $ipset_name { $1 } >/dev/null 2>&1
-	[ -n "$nftables_version" ] && nft add element inet fw4 $ipset_name { $1 expires ${login_ip_white_timeout}s } && return #没找到刷新时间的命令，删除再添加
-	ipset -exist add $ipset_name $1 timeout $login_ip_white_timeout
+	[ -n "$nftables_version" ] && nft add element inet fw4 $ipset_name { $1 expires ${timeout}s } && return #没找到刷新时间的命令，删除再添加
+	ipset -exist add $ipset_name $1 timeout $timeout
 }
 
 # 初始化白名单
@@ -1350,7 +1360,7 @@ function init_ip_white() {
 	fi
 	unset handle
 	# 端口转发
-	for port_forward in `echo "$login_port_forward_list"`; do
+	while IFS= read -r port_forward; do
 		port_forward=`echo "$port_forward"|sed 's/,/ /g'` 2>/dev/null
 		[ `echo $port_forward| awk -F" " '{print NF}'` -ne "4" ] && continue
 		local src_ip=`echo ${port_forward}|awk '{print $1}'`
@@ -1364,7 +1374,7 @@ function init_ip_white() {
 			${ip_version}tables -t nat -C PREROUTING -m set --match-set $ipset_name src -p tcp --dport $src_port -j DNAT --to-destination "$dst_ip:$dst_port" >/dev/null 2>&1 || ${ip_version}tables -t nat -I PREROUTING -m set --match-set $ipset_name src -p tcp --dport $src_port -j DNAT --to-destination "$dst_ip:$dst_port" >/dev/null 2>&1
 			${ip_version}tables -t nat -C POSTROUTING -m set --match-set $ipset_name src -p tcp -d $dst_ip --dport $dst_port -j SNAT --to-source $src_ip >/dev/null 2>&1 || ${ip_version}tables -t nat -I POSTROUTING -m set --match-set $ipset_name src -p tcp -d $dst_ip --dport $dst_port -j SNAT --to-source $src_ip >/dev/null 2>&1
 		fi
-	done
+	done <<< "$login_port_forward_list"
 	unset port_forward
 }
 
@@ -1438,13 +1448,12 @@ function set_ip_black(){
 	[ -z "$nftables_version" ] && fw_info_blacklistv6=$(ipset list wechatpush_blacklistv6 | grep "timeout" 2>/dev/null)
 
 	fw_info_blacklist="${fw_info_blacklist}\n${fw_info_blacklistv6}"
-	IFS=$'\n'
-	for ip_black_info in $(printf "%b" "$fw_info_blacklist"); do
+	while IFS= read -r ip_black_info; do
 		ip_black=$(echo "$ip_black_info"|grep -Eo "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}")
 		[ -z "$ip_black" ] && ip_black=$(echo "$ip_black_info"|grep -Eo "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}")
 		[ -z "$ip_black" ] && continue
 		cat ${ip_blacklist_path}|grep -q -w -i ${ip_black} && sed -i "/^${ip_black}/d" ${ip_blacklist_path} && echo ${ip_black_info} >> ${ip_blacklist_path} || del_ip_black ${ip_black}
-	done
+	done <<< "$fw_info_blacklist"
 }
 
 # 发送定时数据
