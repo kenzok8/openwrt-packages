@@ -84,3 +84,9 @@ msgstr "最大并发连接数"
 
 msgid "0 is unlimited, It is recommend to set a low number of concurrency (10-20) for poor performance device"
 msgstr "默认0不限制，低性能设备建议设置较低的并发数（10-20）"
+
+msgid "Site URL"
+msgstr "站点 URL"
+
+msgid "When the web is reverse proxied to a subdirectory, this option must be filled out to ensure proper functioning of the web. Do not include '/' at the end of the URL"
+msgstr "Web 被反向代理到二级目录时，必须填写该选项以确保 Web 正常工作。URL 结尾请勿携带 '/'"
