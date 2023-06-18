@@ -57,7 +57,7 @@ function read_config(){
 	done
 	( opkg list-installed|grep -w -q ^firewall4 ) && nftables_version="true"
 	dir="/tmp/wechatpush/" && mkdir -p ${dir} && mkdir -p ${dir}/client
-	tempjsonpath="/tmp/wechatpush/temp.json"
+	tempjsonpath="${dir}temp.json"
 	ip_blacklist_path="/usr/share/wechatpush/api/ip_blacklist"
 	oui_base="${dir}oui_base.txt"
 	debuglevel=`echo "$debuglevel"` && [ -z "$debuglevel" ] && logfile="/dev/null" || logfile="${dir}wechatpush.log"
@@ -80,7 +80,7 @@ function read_config(){
 	[ -z "$login_ip_white_timeout" ] && login_ip_white_timeout="600"
 	[ "$iw_version" ] && wlan_interface=`iw dev 2>/dev/null|grep Interface|awk '{print $2}'` >/dev/null 2>&1
 	[ -z "$server_port" ] && server_port="22"
-	output_dir="/tmp/wechatpush/json_output"
+	output_dir="${dir}json_output"
 	mkdir -p "$output_dir"
 	if ( echo "$lite_enable"|grep -q "content" ); then
 		str_title_start="" && str_title_end="" && str_splitline="" && str_linefeed="" && str_tab=""
@@ -372,7 +372,7 @@ function soc_temp(){
 		# AMD
 		local sensor_field2='["zenpower-pci-00c3"]["Tctl"]["temp1_input"]'
 		local sensor_field3='["k10temp-pci-00c3"]["Tctl"]["temp1_input"]'
-		eval "${1}sensors -j 2>/dev/null" | jq -r "
+		eval "${1} sensors -j 2>/dev/null" | jq -r "
 		if .${sensor_field1} != null then
 		  .${sensor_field1}
 		elif .${sensor_field2} != null then
@@ -385,7 +385,7 @@ function soc_temp(){
 		"
 	}
 
-	[ ! -z "$server_host" ] && ssh_command="ssh -o StrictHostKeyChecking=yes -o BatchMode=yes -i /root/.ssh/id_rsa root@${server_host} -p ${server_port} "
+	[ ! -z "$server_host" ] && ssh_command="ssh -o StrictHostKeyChecking=yes -o BatchMode=yes -i /root/.ssh/id_rsa root@${server_host} -p ${server_port}"
 	temperature=$(getsensors "$ssh_command" 2>/dev/null)
 	# 通用（只能取最高温度，不一定是 CPU，特殊设备自行修改）
 	# 将 grep °C 改为温度所在行的特别字符串，如 grep Core 0 等，就可以指定设备了
@@ -633,8 +633,8 @@ function cron(){
 
 	# 重置流量
 	if [ ! -z "$reset_regularly" ] && [ "$reset_regularly" -eq "1" ]; then
-		crontab -l 2>/dev/null > conf && echo -e "0 0 * * * rm /tmp/wechatpush/usage.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
-		crontab -l 2>/dev/null > conf && echo -e "0 0 * * * rm /tmp/wechatpush/usage6.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l 2>/dev/null > conf && echo -e "0 0 * * * rm ${dir}usage.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
+		crontab -l 2>/dev/null > conf && echo -e "0 0 * * * rm ${dir}usage6.db >/dev/null 2>&1" >> conf && crontab conf && rm -f conf >/dev/null 2>&1
 	fi
 
 	# 定时发送
@@ -1087,6 +1087,83 @@ function cputop(){
 	[ ! -z "$1" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！警报！！】 CPU 占用前三: ${logtop}" >> ${logfile}
 }
 
+# 检测硬盘状态
+function get_disk() {
+	mkdir -p "${dir}disk_info"
+	local_disk_names=()
+	pve_disk_names=()
+
+	# 查询本地硬盘名
+	local_disk_names=($(df -h | awk '/\/dev\/sd/ {print $1}' | awk -F '/' '{print $NF}' | sort -u))
+	local_disk_tags=($(for _ in "${local_disk_names[@]}"; do echo "local"; done))
+
+	# 查询远程硬盘名
+	if [ -n "$server_host" ]; then
+		ssh_command="ssh -o StrictHostKeyChecking=yes -o BatchMode=yes -i /root/.ssh/id_rsa root@${server_host} -p ${server_port}"
+		pve_disk_names=($(eval ${ssh_command} lsblk | awk '$NF=="disk" {print $1}' | sort -u))
+		pve_disk_tags=($(for _ in "${pve_disk_names[@]}"; do echo "pve"; done))
+	fi
+
+	# 合并本地和远程硬盘名及标记
+	all_disk_names=("${local_disk_names[@]}" "${pve_disk_names[@]}")
+	all_disk_tags=("${local_disk_tags[@]}" "${pve_disk_tags[@]}")
+
+	for i in "${!all_disk_names[@]}"; do
+		tmp_name=${all_disk_names[i]}
+		tmp_tag=${all_disk_tags[i]}
+		unset tmp_command disk_type
+
+		# 判断硬盘类型
+		if [ "$tmp_tag" == "pve" ]; then
+			tmp_command="$ssh_command"
+			disk_type="_pve"
+		fi
+		file_path="${dir}disk_info/${tmp_name}${disk_type}"
+		
+		# 手上的硬盘不能休眠，不确定命令是否会唤醒硬盘，每天只运行一次
+		last_disk_time=$(date -r "${file_path}" +%s 2>/dev/null) || last_disk_time=0
+
+		if [ $(( $(date +%s) - $last_disk_time )) -gt 86000 ]; then
+			eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}" | grep "STANDBY" && {
+				echo "STANDBY" > "${file_path}"
+			} || \
+			eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}" | grep "No such device\|Unknown USB bridge" | grep "STANDBY" && {
+				continue
+			} || \
+			eval ${tmp_command} smartctl -a -j /dev/${tmp_name} > ${file_path}
+		fi
+
+		# 硬盘状态
+		if [ -f "${file_path}" ] && ( ! cat "${file_path}" | grep -q -v "STANDBY" ); then
+			printf "\n${str_title_start} 硬盘名称：${tmp_name}${disk_type}${str_title_end}\n${str_tab}硬盘休眠中" >> "$output_dir/get_disk"
+		elif [ -f "${file_path}" ]; then
+			printf "\n${str_title_start} 硬盘名称：${tmp_name}${disk_type}${str_title_end}" >> "$output_dir/get_disk"
+			# 硬盘错误
+			disk_err=$(jq -r .ata_smart_error_log.summary.count ${file_path})
+			[[ -n $disk_err && $disk_err != null && $disk_err != 0 ]] && printf "\n${str_tab}硬盘错误：${disk_err}" >> "$output_dir/get_disk"
+			# 自检错误
+			disk_test_err=$(jq -r .ata_smart_self_test_log.standard.error_count_total ${file_path})
+			[[ -n $disk_test_err && $disk_test_err != null && $disk_test_err != 0 ]] && printf "\n${str_tab}自检错误：${disk_test_err}" >> "$output_dir/get_disk"
+			# 0E 错误
+			disk_0e_err=$(jq -r .nvme_smart_health_information_log.media_errors ${file_path})
+			[[ -n $disk_0e_err && $disk_0e_err != null && $disk_0e_err != 0 ]] && printf "\n${str_tab}0E 错误：${disk_0e_err}" >> "$output_dir/get_disk"
+			# 硬盘温度
+			disk_temp=$(jq -r .temperature.current ${file_path})
+			[[ -n $disk_temp && $disk_temp != null && $disk_temp != 0 ]] && printf "\n${str_tab}硬盘温度：${disk_temp}℃" >> "$output_dir/get_disk"
+			# 通电时间
+			disk_time=$(jq -r .power_on_time.hours ${file_path})
+			[[ -n $disk_time && $disk_time != null ]] && printf "\n${str_tab}通电时间：${disk_time}h" >> "$output_dir/get_disk"
+			# 使用空间
+			disk_use=$(df -h | grep -w "^/dev/${tmp_name}" | awk '{print $5}' | sort -u)
+			[ -n "$disk_use" ] && [ -n "${disk_use// }" ] && echo -e -n "\n${str_tab}使用空间：${disk_use}" >> "$output_dir/get_disk"
+			# 使用寿命
+			disk_health=$(jq -r .nvme_smart_health_information_log.percentage_used ${file_path})
+			[[ -n $disk_health && $disk_health != null ]] && echo -e -n "\n${str_tab}使用寿命：${disk_health}%" >> "$output_dir/get_disk"
+		fi
+	done
+}
+
+
 # 查询 IP 归属地
 function get_ip_attribution(){
 	ip="$1"
@@ -1375,7 +1452,7 @@ function send(){
 	echo "`date "+%Y-%m-%d %H:%M:%S"` 【定时数据】创建定时任务" >> ${logfile}
 	disturb;local send_disturb=$?
 	get_config "send_title" "send_notification"
-	
+
 	cpuload=`getcpu`
 	service_status=$(ubus call service list '{"name": "wechatpush"}' | grep -o '"running": true')
 	[ -z "$1" ] && ( echo "$send_notification"|grep -q "client_list" ) && > ${dir}send_enable.lock && [ -z "$service_status" ] && first &
@@ -1387,7 +1464,7 @@ function send(){
 		systeminfo_enable="1"
 	fi
 	[ -z "$1" ] && ( echo "$send_notification"|grep -q "router_temp" ) && soc_temp > "$output_dir/cputemp" &
-	
+
 	if [ -z "$1" ] && ( echo "$send_notification"|grep -q "wan_info" ); then
 		getip wanipv4 > "$output_dir/send_wanIP" &
 		getip hostipv4|jq -r '.IP' > "$output_dir/send_hostIP" &
@@ -1400,9 +1477,12 @@ function send(){
 		getinterfaceuptime > "$output_dir/interfaceuptime" &
 	fi
 
+	#[ -z "$1" ] && ( echo "$send_notification"|grep -q "disk_info" ) && get_disk &
+	[ -z "$1" ] && get_disk &
+
 	[ -z "$send_title" ] && send_title="路由状态："
 	[ ! -z "$1" ] && send_title="发送测试：" && send_content="${str_splitline}${str_title_start}内容1${str_title_end}${str_linefeed}${str_tab}设备1${str_linefeed}${str_tab}设备2${str_splitline}${str_title_start}内容2${str_title_end}${str_linefeed}${str_tab}设备3${str_linefeed}${str_tab}设备4"
-	
+
 	wait_and_cat
 	if [ -n "$systeminfo_enable" ]; then
 		[[ $Qwai -eq 200 || $Qwai -eq 301 || $Qwai -eq 302 ]] && Qwai_status="已连通！" || Qwai_status="已断开！"
@@ -1417,6 +1497,11 @@ function send(){
 	if [ -z "$1" ] && ( echo "$send_notification"|grep -q "router_temp" ); then
 		[ ! -z "$cputemp" ] && send_content="${send_content}${str_splitline}${str_title_start} 设备温度${str_title_end}${str_linefeed}${str_tab}CPU：${cputemp}℃"
 		[ -z "$cputemp" ] && send_content="${send_content}${str_splitline}${str_title_start} 设备温度${str_title_end}${str_linefeed}${str_tab}无法获取设备温度"
+	fi
+
+	#if [ -z "$1" ] && ( echo "$send_notification"|grep -q "disk_info" ); then
+	if [ -z "$1" ]; then
+		send_content="${send_content}${get_disk}"
 	fi
 
 	if [ -n "$waninfo_enable" ]; then
@@ -1595,6 +1680,9 @@ while [ "$enable" -eq "1" ]; do
 
 	# CPU 检测
 	[ ! -f "${dir}send_enable.lock" ] && cpu_load
+
+	# 硬盘检测
+	#[ ! -f "${dir}send_enable.lock" ] && get_disk
 
 	# 异常流量检测
 	[ ! -f "${dir}send_enable.lock" ] && get_client_usage
