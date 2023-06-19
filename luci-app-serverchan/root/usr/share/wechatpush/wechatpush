@@ -1129,20 +1129,34 @@ function get_disk() {
 		last_disk_time=$(date -r "${file_path}" +%s 2>/dev/null) || last_disk_time=0
 
 		if [ $(( $(date +%s) - $last_disk_time )) -gt 86000 ]; then
-			eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}" | grep "STANDBY" && {
-				echo "STANDBY" > "${file_path}"
-			} || \
-			eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}" | grep "No such device\|Unknown USB bridge" | grep "STANDBY" && {
+			disk_info=$(eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}")
+			echo "$disk_info" | grep "No such device\|Unknown USB bridge\|QEMU HARDDISK" && {
 				continue
+			} || \
+			echo "$disk_info" | grep "STANDBY" && {
+				echo "$disk_info" > "${file_path}"
 			} || \
 			eval ${tmp_command} smartctl -a -j /dev/${tmp_name} > ${file_path}
 		fi
 
+		
+
 		# 硬盘状态
 		if [ -f "${file_path}" ] && ( ! cat "${file_path}" | grep -q -v "STANDBY" ); then
-			printf "\n${str_title_start} 硬盘名称：${tmp_name}${disk_type}${str_title_end}\n${str_tab}硬盘休眠中" >> "$output_dir/get_disk"
+			disk_name=$(awk '/Device Model/{print $NF}' "$file_path")
+			[[ -n $disk_name && $disk_name != null && $disk_name != 0 ]] && {
+				[ $(length_str "$disk_name") -gt "20" ] && disk_name=$(echo "$disk_name" | awk '{print $1, $NF}')
+				[ $(length_str "$disk_name") -gt "20" ] && disk_name=$(cut_str "$disk_name" "20")
+			}
+			printf "\n${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}\n${str_tab}硬盘休眠中" >> "$output_dir/get_disk"
 		elif [ -f "${file_path}" ]; then
-			printf "\n${str_title_start} 硬盘名称：${tmp_name}${disk_type}${str_title_end}" >> "$output_dir/get_disk"
+			# 硬盘名称
+			disk_name=$(jq -r .model_name ${file_path})
+			[[ -n $disk_name && $disk_name != null && $disk_name != 0 ]] && {
+				[ $(length_str "$disk_name") -gt "20" ] && disk_name=$(echo "$disk_name" | awk '{print $1, $NF}')
+				[ $(length_str "$disk_name") -gt "20" ] && disk_name=$(cut_str "$disk_name" "20")
+			}
+			printf "\n${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}" >> "$output_dir/get_disk"
 			# 硬盘错误
 			disk_err=$(jq -r .ata_smart_error_log.summary.count ${file_path})
 			[[ -n $disk_err && $disk_err != null && $disk_err != 0 ]] && printf "\n${str_tab}硬盘错误：${disk_err}" >> "$output_dir/get_disk"
@@ -1174,11 +1188,11 @@ function get_ip_attribution(){
 	ip="$1"
 	[ -f ${dir}ipAddress ] && ( cat ${dir}ipAddress|grep -q -w -i "$ip" ) && echo "本地网络" && return
 	ip_attribution_urls=$(cat /usr/share/wechatpush/api/ip_attribution.list)
-	for ip_attribution_command in ${ip_attribution_urls}; do
+	while IFS= read -r ip_attribution_command; do
 		login_ip_attribution=$(eval "$ip_attribution_command" 2>/dev/null)
 		[ "$login_ip_attribution" == "null" ] && unset login_ip_attribution
 		[ -n "$login_ip_attribution" ] && break
-	done
+	done <<< "$ip_attribution_urls"
 	echo "$login_ip_attribution"
 }
 
