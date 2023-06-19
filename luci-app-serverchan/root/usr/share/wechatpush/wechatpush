@@ -1099,7 +1099,7 @@ function get_disk() {
 	pve_disk_names=()
 
 	# 查询本地硬盘名
-	local_disk_names=($(df -h | awk '/\/dev\/sd/ {print $1}' | awk -F '/' '{print $NF}' | sort -u))
+	local_disk_names=($(lsblk | awk '$NF=="disk" {print $1}' | sort -u))
 	local_disk_tags=($(for _ in "${local_disk_names[@]}"; do echo "local"; done))
 
 	# 查询远程硬盘名
@@ -1116,6 +1116,7 @@ function get_disk() {
 	for i in "${!all_disk_names[@]}"; do
 		tmp_name=${all_disk_names[i]}
 		tmp_tag=${all_disk_tags[i]}
+		error_pattern="No such device|Unable to detect device type|Unknown USB bridge|QEMU HARDDISK"
 		unset tmp_command disk_type
 
 		# 判断硬盘类型
@@ -1124,37 +1125,41 @@ function get_disk() {
 			disk_type="_pve"
 		fi
 		file_path="${dir}disk_info/${tmp_name}${disk_type}"
-		
+
+		# 如果不能获取值，使用分区名重试（因为不清楚是 OpenWrt 的原因还是 smartctl 版本的原因，使用出错重试的方式）
+		eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}" | grep -qE "$error_pattern" && {
+			tmp_name=$(df -h | awk "/^\\/dev\\/${tmp_name}/ {print \$1}" | awk -F '/' '{print $NF}' | head -n1)
+			[ -z "$tmp_name" ] && continue
+		}
+
 		# 手上的硬盘不能休眠，不确定命令是否会唤醒硬盘，每天只运行一次
 		last_disk_time=$(date -r "${file_path}" +%s 2>/dev/null) || last_disk_time=0
 
 		if [ $(( $(date +%s) - $last_disk_time )) -gt 86000 ]; then
 			disk_info=$(eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}")
-			echo "$disk_info" | grep "No such device\|Unknown USB bridge\|QEMU HARDDISK" && {
+			echo "$disk_info" | grep -qE "$error_pattern" && {
 				continue
 			} || \
-			echo "$disk_info" | grep "STANDBY" && {
+			echo "$disk_info" | grep -q "STANDBY" && {
 				echo "$disk_info" > "${file_path}"
 			} || \
 			eval ${tmp_command} smartctl -a -j /dev/${tmp_name} > ${file_path}
 		fi
 
-		
-
 		# 硬盘状态
 		if [ -f "${file_path}" ] && ( ! cat "${file_path}" | grep -q -v "STANDBY" ); then
 			disk_name=$(awk '/Device Model/{print $NF}' "$file_path")
 			[[ -n $disk_name && $disk_name != null && $disk_name != 0 ]] && {
-				[ $(length_str "$disk_name") -gt "20" ] && disk_name=$(echo "$disk_name" | awk '{print $1, $NF}')
-				[ $(length_str "$disk_name") -gt "20" ] && disk_name=$(cut_str "$disk_name" "20")
+				disk_name=$(cut_str "$disk_name" "20")
+				disk_name="${disk_name}_$(eval ${tmp_command} lsblk -o NAME,SIZE | awk "/^${all_disk_names[i]}/ {print \$NF}")"
 			}
 			printf "\n${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}\n${str_tab}硬盘休眠中" >> "$output_dir/get_disk"
 		elif [ -f "${file_path}" ]; then
 			# 硬盘名称
 			disk_name=$(jq -r .model_name ${file_path})
 			[[ -n $disk_name && $disk_name != null && $disk_name != 0 ]] && {
-				[ $(length_str "$disk_name") -gt "20" ] && disk_name=$(echo "$disk_name" | awk '{print $1, $NF}')
-				[ $(length_str "$disk_name") -gt "20" ] && disk_name=$(cut_str "$disk_name" "20")
+				disk_name=$(cut_str "$disk_name" "20")
+				disk_name="${disk_name}_$(eval ${tmp_command} lsblk -o NAME,SIZE | awk "/^${all_disk_names[i]}/ {print \$NF}")"
 			}
 			printf "\n${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}" >> "$output_dir/get_disk"
 			# 硬盘错误
@@ -1172,12 +1177,12 @@ function get_disk() {
 			# 通电时间
 			disk_time=$(jq -r .power_on_time.hours ${file_path})
 			[[ -n $disk_time && $disk_time != null ]] && printf "\n${str_tab}通电时间：${disk_time}h" >> "$output_dir/get_disk"
-			# 使用空间
-			disk_use=$(df -h | grep -w "^/dev/${tmp_name}" | awk '{print $5}' | sort -u)
-			[ -n "$disk_use" ] && [ -n "${disk_use// }" ] && echo -e -n "\n${str_tab}使用空间：${disk_use}" >> "$output_dir/get_disk"
-			# 使用寿命
+			# 空间使用
+			disk_use=$(eval ${tmp_command} lsblk -o NAME,FSUSE%,TYPE | awk -v part_name="${all_disk_names[i]}" '$NF == "part" && $1 ~ part_name && NF > 2 {sub(".*" part_name, part_name, $1); printf "%s: %s  ", $1, $2} END {print ""}')
+			[ -n "$disk_use" ] && [ -n "${disk_use// }" ] && echo -e -n "\n${str_tab}空间使用：${disk_use}" >> "$output_dir/get_disk"
+			# 寿命使用
 			disk_health=$(jq -r .nvme_smart_health_information_log.percentage_used ${file_path})
-			[[ -n $disk_health && $disk_health != null ]] && echo -e -n "\n${str_tab}使用寿命：${disk_health}%" >> "$output_dir/get_disk"
+			[[ -n $disk_health && $disk_health != null ]] && echo -e -n "\n${str_tab}寿命使用：${disk_health}%" >> "$output_dir/get_disk"
 		fi
 	done
 }
@@ -1528,15 +1533,29 @@ function send(){
 	fi
 
 	if [ -n "$waninfo_enable" ]; then
-		send_content="${send_content}${str_splitline}${str_title_start} WAN 口信息${str_title_end}${str_linefeed}${str_tab}接口 IPv4:${send_wanIP}"
-		send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4:${send_hostIP}"
+		send_content="${send_content}${str_splitline}${str_title_start} WAN 口信息${str_title_end}"
+		if [ "$send_wanIP" == "$send_hostIP" ]; then
+			send_content="${send_content}${str_linefeed}${str_tab}IPv4: ${send_wanIP}"
+		elif [ "$get_ipv4_mode" -eq "1" ]; then
+			send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4: ${send_wanIP}"
+			[ -n "$send_hostIP" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4: ${send_hostIP}"
+		elif [ "$get_ipv4_mode" -eq "2" ]; then
+			[ -n "$send_wanIP" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv4: ${send_wanIP}"
+			send_content="${send_content}${str_linefeed}${str_tab}外网 IPv4: ${send_hostIP}"
+		fi
 		if [ -n "$ipv6_enable" ]; then
-			send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6:${send_wanIPv6}"
-			send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6:${send_hostIPv6}"
+			if [ "$send_wanIPv6" == "$send_hostIPv6" ]; then
+				send_content="${send_content}${str_linefeed}${str_tab}IPv6: ${send_wanIPv6}"
+			elif [ "$get_ipv6_mode" -eq "1" ]; then
+				send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6: ${send_wanIPv6}"
+				[ -n "$send_hostIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6: ${send_hostIPv6}"
+			elif [ "$get_ipv6_mode" -eq "2" ]; then
+				[ -n "$send_wanIPv6" ] && send_content="${send_content}${str_linefeed}${str_tab}接口 IPv6: ${send_wanIPv6}"
+				send_content="${send_content}${str_linefeed}${str_tab}外网 IPv6: ${send_hostIPv6}"
+			fi
 		fi
 		interfaceuptime=`getinterfaceuptime`
 		[ ! -z "$interfaceuptime" ] && wanstatustime=$(printf "在线时间：%d天%d时%d分%d秒" $((interfaceuptime / 86400)) $(((interfaceuptime % 86400) / 3600)) $(((interfaceuptime % 3600) / 60)) $((interfaceuptime % 60)))
-		( ! echo "$send_wanIP"|grep -q -w ${send_hostIP} ) && send_content="${send_content}${str_linefeed}${str_tab}外网 IP 与接口 IP 不一致，你的 IP 可能不是公网 IP"
 		send_content="${send_content}${str_linefeed}${str_tab}${wanstatustime}"
 	fi
 
