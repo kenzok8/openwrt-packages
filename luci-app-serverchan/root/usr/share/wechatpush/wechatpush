@@ -1117,7 +1117,7 @@ function get_disk() {
 		tmp_name=${all_disk_names[i]}
 		tmp_tag=${all_disk_tags[i]}
 		error_pattern="No such device|Unable to detect device type|Unknown USB bridge|QEMU HARDDISK"
-		unset tmp_command disk_type
+		unset tmp_command disk_type disk_err
 
 		# 判断硬盘类型
 		if [ "$tmp_tag" == "pve" ]; then
@@ -1153,7 +1153,7 @@ function get_disk() {
 				disk_name=$(cut_str "$disk_name" "20")
 				disk_name="${disk_name}_$(eval ${tmp_command} lsblk -o NAME,SIZE | awk "/^${all_disk_names[i]}/ {print \$NF}")"
 			}
-			printf "\n${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}\n${str_tab}硬盘休眠中" >> "$output_dir/get_disk"
+			printf "${str_linefeed}${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}${str_linefeed}${str_tab}硬盘休眠中" >> "$output_dir/get_disk"
 		elif [ -f "${file_path}" ]; then
 			# 硬盘名称
 			disk_name=$(jq -r .model_name ${file_path})
@@ -1161,28 +1161,35 @@ function get_disk() {
 				disk_name=$(cut_str "$disk_name" "20")
 				disk_name="${disk_name}_$(eval ${tmp_command} lsblk -o NAME,SIZE | awk "/^${all_disk_names[i]}/ {print \$NF}")"
 			}
-			printf "\n${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}" >> "$output_dir/get_disk"
-			# 硬盘错误
-			disk_err=$(jq -r .ata_smart_error_log.summary.count ${file_path})
-			[[ -n $disk_err && $disk_err != null && $disk_err != 0 ]] && printf "\n${str_tab}硬盘错误：${disk_err}" >> "$output_dir/get_disk"
-			# 自检错误
-			disk_test_err=$(jq -r .ata_smart_self_test_log.standard.error_count_total ${file_path})
-			[[ -n $disk_test_err && $disk_test_err != null && $disk_test_err != 0 ]] && printf "\n${str_tab}自检错误：${disk_test_err}" >> "$output_dir/get_disk"
-			# 0E 错误
-			disk_0e_err=$(jq -r .nvme_smart_health_information_log.media_errors ${file_path})
-			[[ -n $disk_0e_err && $disk_0e_err != null && $disk_0e_err != 0 ]] && printf "\n${str_tab}0E 错误：${disk_0e_err}" >> "$output_dir/get_disk"
+			printf "${str_linefeed}${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}" >> "$output_dir/get_disk"
 			# 硬盘温度
 			disk_temp=$(jq -r .temperature.current ${file_path})
-			[[ -n $disk_temp && $disk_temp != null && $disk_temp != 0 ]] && printf "\n${str_tab}硬盘温度：${disk_temp}℃" >> "$output_dir/get_disk"
+			[[ -n $disk_temp && $disk_temp != null && $disk_temp != 0 ]] && printf "${str_linefeed}${str_tab}硬盘温度：${disk_temp}℃" >> "$output_dir/get_disk"
 			# 通电时间
 			disk_time=$(jq -r .power_on_time.hours ${file_path})
-			[[ -n $disk_time && $disk_time != null ]] && printf "\n${str_tab}通电时间：${disk_time}h" >> "$output_dir/get_disk"
+			[[ -n $disk_time && $disk_time != null ]] && printf "${str_linefeed}${str_tab}通电时间：${disk_time}h" >> "$output_dir/get_disk"
 			# 空间使用
 			disk_use=$(eval ${tmp_command} lsblk -o NAME,FSUSE%,TYPE | awk -v part_name="${all_disk_names[i]}" '$NF == "part" && $1 ~ part_name && NF > 2 {sub(".*" part_name, part_name, $1); printf "%s: %s  ", $1, $2} END {print ""}')
-			[ -n "$disk_use" ] && [ -n "${disk_use// }" ] && echo -e -n "\n${str_tab}空间使用：${disk_use}" >> "$output_dir/get_disk"
+			[ -n "$disk_use" ] && [ -n "${disk_use// }" ] && echo -e -n "${str_linefeed}${str_tab}空间使用：${disk_use}" >> "$output_dir/get_disk"
 			# 寿命使用
 			disk_health=$(jq -r .nvme_smart_health_information_log.percentage_used ${file_path})
-			[[ -n $disk_health && $disk_health != null ]] && echo -e -n "\n${str_tab}寿命使用：${disk_health}%" >> "$output_dir/get_disk"
+			[[ -n $disk_health && $disk_health != null ]] && echo -e -n "${str_linefeed}${str_tab}寿命使用：${disk_health}%" >> "$output_dir/get_disk"
+			# 错误日志
+			disk_log_err=$(jq -r .ata_smart_error_log.summary.count ${file_path})
+			[[ -n $disk_log_err && $disk_log_err != null && $disk_log_err != 0 ]] && disk_err="true" && printf "${str_linefeed}${str_tab}错误日志：${disk_log_err}" >> "$output_dir/get_disk"
+			# 自检错误
+			disk_test_err=$(jq -r .ata_smart_self_test_log.standard.error_count_total ${file_path})
+			[[ -n $disk_test_err && $disk_test_err != null && $disk_test_err != 0 ]] && disk_err="true" && printf "${str_linefeed}${str_tab}自检错误：${disk_test_err}" >> "$output_dir/get_disk"
+			# 0E 错误
+			disk_0e_err=$(jq -r .nvme_smart_health_information_log.media_errors ${file_path})
+			[[ -n $disk_0e_err && $disk_0e_err != null && $disk_0e_err != 0 ]] && disk_err="true" && printf "${str_linefeed}${str_tab}0E 错误：${disk_0e_err}" >> "$output_dir/get_disk"
+			# 整体健康
+			smart_status=$(jq -r .smart_status.passed ${file_path})
+			[[ -n $smart_status && $smart_status != null && $smart_status != "true" ]] && {
+				echo -e -n "${str_linefeed}${str_tab}${str_title_start}硬盘整体健康评估不通过!!!${str_title_end}" >> "$output_dir/get_disk"
+				disk_err="true"
+			}
+			[ -n "$disk_err" ] && echo -e -n "${str_linefeed}${str_tab}${str_title_start}硬盘存在错误，请及时备份数据!!!${str_title_end}" >> "$output_dir/get_disk"
 		fi
 	done
 }
