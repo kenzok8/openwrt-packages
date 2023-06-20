@@ -90,3 +90,6 @@ msgstr "站点 URL"
 
 msgid "When the web is reverse proxied to a subdirectory, this option must be filled out to ensure proper functioning of the web. Do not include '/' at the end of the URL"
 msgstr "Web 被反向代理到二级目录时，必须填写该选项以确保 Web 正常工作。URL 结尾请勿携带 '/'"
+
+msgid "Delayed Start (seconds)"
+msgstr "开机延时启动（秒）"

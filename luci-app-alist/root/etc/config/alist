@@ -6,3 +6,4 @@ config alist
 	option 'token_expires_in' '48'
 	option 'max_connections' '0'
 	option 'site_url' ''
+	option 'delayed_start' '0'

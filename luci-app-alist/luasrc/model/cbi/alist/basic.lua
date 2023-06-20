@@ -47,6 +47,11 @@ o.datatype = "and(uinteger,min(1))"
 o.default = "48"
 o.rmempty = false
 
+o = s:option(Value, "delayed_start", translate("Delayed Start (seconds)"))
+o.datatype = "and(uinteger,min(0))"
+o.default = "0"
+o.rmempty = false
+
 o = s:option(Value, "temp_dir", translate("Cache directory"))
 o.datatype = "string"
 o.default = "/tmp/alist"
