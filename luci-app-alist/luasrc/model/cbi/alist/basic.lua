@@ -31,6 +31,31 @@ o = s:option(Value,"ssl_key", translate("SSL key"), translate("SSL key file path
 o.datatype = "file"
 o:depends("ssl", "1")
 
+o = s:option(Flag, "mysql", translate("Enable MySQL"))
+o.rmempty=false
+
+o = s:option(Value,"mysql_host", translate("MySQL Host"))
+o.datatype = "string"
+o:depends("mysql", "1")
+
+o = s:option(Value,"mysql_port", translate("MySQL Port"))
+o.datatype = "and(port,min(1))"
+o.default = "3306"
+o:depends("mysql", "1")
+
+o = s:option(Value,"mysql_username", translate("MySQL Username"))
+o.datatype = "string"
+o:depends("mysql", "1")
+
+o = s:option(Value,"mysql_password", translate("MySQL Password"))
+o.datatype = "string"
+o.password = true
+o:depends("mysql", "1")
+
+o = s:option(Value,"mysql_database", translate("Database Name"))
+o.datatype = "string"
+o:depends("mysql", "1")
+
 o = s:option(Flag, "allow_wan", translate("Allow Access From Internet"))
 o.rmempty = false
 
@@ -51,6 +76,10 @@ o = s:option(Value, "delayed_start", translate("Delayed Start (seconds)"))
 o.datatype = "and(uinteger,min(0))"
 o.default = "0"
 o.rmempty = false
+
+o = s:option(Value, "data_dir", translate("Data directory"))
+o.datatype = "string"
+o.default = "/etc/alist"
 
 o = s:option(Value, "temp_dir", translate("Cache directory"))
 o.datatype = "string"

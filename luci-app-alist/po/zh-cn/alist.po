@@ -34,6 +34,9 @@ msgstr "SSL 密钥"
 msgid "SSL key file path"
 msgstr "SSL 密钥文件路径"
 
+msgid "Data directory"
+msgstr "数据目录"
+
 msgid "Cache directory"
 msgstr "缓存目录"
 
@@ -93,3 +96,21 @@ msgstr "Web 被反向代理到二级目录时，必须填写该选项以确保 W
 
 msgid "Delayed Start (seconds)"
 msgstr "开机延时启动（秒）"
+
+msgid "Enable MySQL"
+msgstr "启用 MySQL"
+
+msgid "MySQL Host"
+msgstr "主机"
+
+msgid "MySQL Port"
+msgstr "端口"
+
+msgid "MySQL Username"
+msgstr "用户名"
+
+msgid "MySQL Password"
+msgstr "密码"
+
+msgid "Database Name"
+msgstr "数据库名"
