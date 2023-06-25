@@ -1,0 +1,43 @@
+From 90530ab71c101e8aa620a8d7669ffd7f59dfebf4 Mon Sep 17 00:00:00 2001
+From: sbwml <admin@cooluc.com>
+Date: Sun, 25 Jun 2023 06:50:27 +0800
+Subject: [PATCH] add debug log again
+
+---
+ pkg/server/dns_handler/entry_handler.go | 4 +++-
+ plugin/executable/cache/cache.go        | 3 +++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/pkg/server/dns_handler/entry_handler.go b/pkg/server/dns_handler/entry_handler.go
+index 4737811..cec4123 100644
+--- a/pkg/server/dns_handler/entry_handler.go
++++ b/pkg/server/dns_handler/entry_handler.go
+@@ -90,7 +90,9 @@ func (h *EntryHandler) ServeDNS(ctx context.Context, qCtx *query_context.Context
+ 	err := h.opts.Entry.Exec(ctx, qCtx)
+ 	respMsg := qCtx.R()
+ 	if err != nil {
+-		h.opts.Logger.Warn("entry err", qCtx.InfoField(), zap.Error(err))
++		h.opts.Logger.Warn("entry returned an err", qCtx.InfoField(), zap.Error(err))
++	} else {
++		h.opts.Logger.Debug("entry returned", qCtx.InfoField())
+ 	}
+ 
+ 	if err == nil && respMsg == nil {
+diff --git a/plugin/executable/cache/cache.go b/plugin/executable/cache/cache.go
+index f67d740..c590a01 100644
+--- a/plugin/executable/cache/cache.go
++++ b/plugin/executable/cache/cache.go
+@@ -203,7 +203,10 @@ func (c *Cache) Exec(ctx context.Context, qCtx *query_context.Context, next sequ
+ 		c.hitTotal.Inc()
+ 		cachedResp.Id = q.Id // change msg id
+ 		shuffleIP(cachedResp)
++		c.logger.Debug("cache hit", qCtx.InfoField())
+ 		qCtx.SetResponse(cachedResp)
++	} else {
++		c.logger.Debug("cache miss", qCtx.InfoField())
+ 	}
+ 
+ 	err := next.ExecNext(ctx, qCtx)
+-- 
+2.34.8
+

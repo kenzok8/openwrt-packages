@@ -1,0 +1,57 @@
+From 0cb2257a6cbb63e0717f2324bb7563c32714934f Mon Sep 17 00:00:00 2001
+From: Irine Sistiana <49315432+IrineSistiana@users.noreply.github.com>
+Date: Fri, 16 Jun 2023 14:56:30 +0800
+Subject: [PATCH] fix #667
+
+---
+ pkg/nftset_utils/handler.go | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/pkg/nftset_utils/handler.go b/pkg/nftset_utils/handler.go
+index 7403f390a..3b79afb42 100644
+--- a/pkg/nftset_utils/handler.go
++++ b/pkg/nftset_utils/handler.go
+@@ -24,11 +24,12 @@ package nftset_utils
+ import (
+ 	"errors"
+ 	"fmt"
+-	"github.com/google/nftables"
+-	"go4.org/netipx"
+ 	"net/netip"
+ 	"sync"
+ 	"time"
++
++	"github.com/google/nftables"
++	"go4.org/netipx"
+ )
+ 
+ var (
+@@ -113,16 +114,18 @@ func (h *NftSetHandler) AddElems(es ...netip.Prefix) error {
+ 		elems = make([]nftables.SetElement, 0, len(es))
+ 	}
+ 
+-	for _, e := range es {
+-		if set.Interval && !e.IsSingleIP() {
+-			r := netipx.RangeOfPrefix(e)
+-			start := r.From()
+-			end := r.To()
+-			elems = append(
+-				elems,
+-				nftables.SetElement{Key: start.AsSlice(), IntervalEnd: false},
+-				nftables.SetElement{Key: end.Next().AsSlice(), IntervalEnd: true},
+-			)
++	for i, e := range es {
++		if !e.IsValid() {
++			return fmt.Errorf("invalid prefix at index %d", i)
++		}
++		if set.Interval {
++			start := e.Masked().Addr()
++			elems = append(elems, nftables.SetElement{Key: start.AsSlice(), IntervalEnd: false})
++			
++			end := netipx.PrefixLastIP(e).Next() // may be invalid if end is overflowed
++			if end.IsValid() {
++				elems = append(elems, nftables.SetElement{Key: end.AsSlice(), IntervalEnd: true})
++			}
+ 		} else {
+ 			elems = append(elems, nftables.SetElement{Key: e.Addr().AsSlice()})
+ 		}
