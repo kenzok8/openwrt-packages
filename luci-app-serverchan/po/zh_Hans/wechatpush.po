@@ -933,8 +933,8 @@ msgid "Redialing network"
 msgstr "重新拨号"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/advanced.js:174
-msgid "Option 1 and Option 2 will not modify settings and will try a maximum of 2 times.<br/>【!!This feature cannot guarantee compatibility!!】"
-msgstr "选项 1 选项 2 不会修改设置，并最多尝试 2 次。<br/>【！！此功能无法保证兼容性！！】"
+msgid "The restart operation will occur ten minutes after the network disconnection and will be attempted a maximum of two times. If the option to log in to the optical modem is available, this operation will attempt to restart the optical modem.<br/>【!!This feature cannot guarantee compatibility!!】"
+msgstr "重启操作将在网络断开十分钟后进行，且最多尝试两次。如果光猫登录选项可用，此操作将会尝试重启光猫。<br/>【！！此功能无法保证兼容性！！】"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/advanced.js:177
 msgid "Scheduled reboot"

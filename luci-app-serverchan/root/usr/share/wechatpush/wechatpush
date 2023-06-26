@@ -299,12 +299,15 @@ function getname(){
 function getgateway(){
 	[ -z "$gateway_info_enable" ] && return
 	last_getgateway_time=$(date -r ${dir}gateway_info +%s 2>/dev/null) || last_getgateway_time=0
+	[ "$1" ] && [ "$1" == "reboot" ] && last_getgateway_time=0
 	if [ `expr $(date +%s) - $last_getgateway_time` -gt "$device_info_helper_sleeptime" ]; then
 		# 登录
 		local loginfo=`curl -s -L "${gateway_host_url}" -c ${dir}cookies.txt -d "${gateway_username_id}=${gateway_username}&${gateway_password_id}=${gateway_password}"` 2>/dev/null
 		[ ! -z "$loginfo" ] && local mytoken=$(echo $loginfo |sed 's/{/\n/g' | grep token |awk '/realRestart/{print $2}'| sed $'s/\'//g')
 		# 获取
 		[ ! -z "$mytoken" ] && local get_gateway=`curl -s -b ${dir}cookies.txt "${gateway_info_url}" -d 'token='$mytoken | jq '.[] | iterables| "\(.ip) \(.devName) \(.model)"'|sed 's/unknown//g'|sed 's/  / /g'|sed 's/ /_/g'|sed 's/_/ /'|sed 's/\"//g'`
+		# 重启
+		[ "$1" ] && [ "$1" == "reboot" ] && curl -s -b ${dir}/cookies.txt "${gateway_host_url}/admin/reboot" -d "token=$mytoken" >/dev/null 2>&1
 		# 注销
 		[ ! -z "$get_gateway" ] && [ ! -z "$gateway_logout_url" ] && curl -s -b ${dir}cookies.txt "${gateway_logout_url}" -d 'token='$mytoken 2>/dev/null
 		[ -z "$get_gateway" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】获取光猫信息失败，可能当前用户未注销或设置错误" >> ${logfile}
@@ -798,6 +801,7 @@ function rand_geturl(){
 							echo "$retry_count" > /usr/share/wechatpush/autoreboot_count
 							echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试重启路由，当前第 $retry_count 次 " >> ${logfile}
 							cat ${logfile} > /usr/share/wechatpush/errlog
+							getgateway "reboot"
 							sleep 2 && reboot && exit
 						fi
 						[ "$retry_count" -eq "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】已经重启路由2次，修复失败，请主人自行修复哦" >> ${logfile}

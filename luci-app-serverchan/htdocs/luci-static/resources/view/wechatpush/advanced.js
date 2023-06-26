@@ -171,7 +171,7 @@ return view.extend({
 		o.value("", _("No operation"))
 		o.value("1", _("Restart the router"))
 		o.value("2", _("Redialing network"))
-		o.description = _("Option 1 and Option 2 will not modify settings and will try a maximum of 2 times.<br/>【!!This feature cannot guarantee compatibility!!】")
+		o.description = _("The restart operation will occur ten minutes after the network disconnection and will be attempted a maximum of two times. If the option to log in to the optical modem is available, this operation will attempt to restart the optical modem.<br/>【!!This feature cannot guarantee compatibility!!】")
 		o.depends('unattended_enable', '1');
 
 		o = s.option(form.ListValue, "unattended_autoreboot_mode", _("Scheduled reboot"))
