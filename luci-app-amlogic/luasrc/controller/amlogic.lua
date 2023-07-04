@@ -12,19 +12,20 @@ function index()
 	local platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)' | xargs") or "Unknown"
 	local install_menu = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep SHOW_INSTALL_MENU | awk -F'=' '{print $2}' | grep -oE '(yes|no)' | xargs") or "Unknown"
 
-	entry({ "admin", "system", "amlogic", "info" }, cbi("amlogic/amlogic_info"), _("Amlogic Service"), 1).leaf = true
+	entry({ "admin", "system", "amlogic", "info" }, form("amlogic/amlogic_info"), _("Amlogic Service"), 1).leaf = true
 	if (string.find(platfrom, "amlogic")) ~= nil or (string.find(install_menu, "yes")) ~= nil then
-		entry({ "admin", "system", "amlogic", "install" }, cbi("amlogic/amlogic_install"), _("Install OpenWrt"), 2).leaf = true
+		entry({ "admin", "system", "amlogic", "install" }, form("amlogic/amlogic_install"), _("Install OpenWrt"), 2).leaf = true
 	end
-	entry({ "admin", "system", "amlogic", "upload" }, cbi("amlogic/amlogic_upload"), _("Manually Upload Update"), 3).leaf = true
-	entry({ "admin", "system", "amlogic", "check" }, cbi("amlogic/amlogic_check"), _("Online Download Update"), 4).leaf = true
-	entry({ "admin", "system", "amlogic", "backup" }, cbi("amlogic/amlogic_backup"), _("Backup Firmware Config"), 5).leaf = true
+	entry({ "admin", "system", "amlogic", "upload" }, form("amlogic/amlogic_upload"), _("Manually Upload Update"), 3).leaf = true
+	entry({ "admin", "system", "amlogic", "check" }, form("amlogic/amlogic_check"), _("Online Download Update"), 4).leaf = true
+	entry({ "admin", "system", "amlogic", "backup" }, form("amlogic/amlogic_backup"), _("Backup Firmware Config"), 5).leaf = true
+	entry({ "admin", "system", "amlogic", "backuplist" }, form("amlogic/amlogic_backuplist")).leaf = true
 	if (string.find(platfrom, "qemu")) == nil then
 		entry({ "admin", "system", "amlogic", "armcpu" }, cbi("amlogic/amlogic_armcpu"), _("CPU Settings"), 6).leaf = true
 	end
 	entry({ "admin", "system", "amlogic", "config" }, cbi("amlogic/amlogic_config"), _("Plugin Settings"), 7).leaf = true
-	entry({ "admin", "system", "amlogic", "log" }, cbi("amlogic/amlogic_log"), _("Server Logs"), 8).leaf = true
-	entry({ "admin", "system", "amlogic", "poweroff" }, cbi("amlogic/amlogic_poweroff"), _("PowerOff"), 9).leaf = true
+	entry({ "admin", "system", "amlogic", "log" }, form("amlogic/amlogic_log"), _("Server Logs"), 8).leaf = true
+	entry({ "admin", "system", "amlogic", "poweroff" }, form("amlogic/amlogic_poweroff"), _("PowerOff"), 9).leaf = true
 	entry({ "admin", "system", "amlogic", "check_firmware" }, call("action_check_firmware"))
 	entry({ "admin", "system", "amlogic", "check_plugin" }, call("action_check_plugin"))
 	entry({ "admin", "system", "amlogic", "check_kernel" }, call("action_check_kernel"))

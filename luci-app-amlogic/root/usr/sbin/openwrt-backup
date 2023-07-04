@@ -11,7 +11,13 @@ SNAPSHOT_PRESTR=".snapshots/"
 BACKUP_DIR="/.reserved"
 BACKUP_NAME="openwrt_config.tar.gz"
 BACKUP_FILE="${BACKUP_DIR}/${BACKUP_NAME}"
-BACKUP_LIST='./etc/AdGuardHome.yaml \
+# Customize backup list
+backup_list_conf="/etc/amlogic_backup_list.conf"
+if [[ -s "${backup_list_conf}" ]]; then
+    BACKUP_LIST="$(cat ${backup_list_conf} 2>/dev/null)"
+else
+    BACKUP_LIST='./etc/AdGuardHome.yaml \
+./etc/amlogic_backup_list.conf \
 ./etc/adblocklist/ \
 ./etc/amule/ \
 ./etc/balance_irq \
@@ -73,6 +79,7 @@ BACKUP_LIST='./etc/AdGuardHome.yaml \
 ./etc/v2raya/ \
 ./etc/verysync/ \
 ./root/.ssh/'
+fi
 
 if dmesg | grep 'meson' >/dev/null 2>&1; then
     PLATFORM="amlogic"
@@ -82,11 +89,12 @@ elif dmesg | grep 'sun50i-h6' >/dev/null 2>&1; then
     PLATFORM="allwinner"
 else
     source /etc/flippy-openwrt-release
-    case $PLATFORM in 
-        amlogic|rockchip|allwinner|qemu-aarch64) : ;;
-	*) echo "Unknown platform, only support amlogic or rockchip or allwinner h6 or qemu-aarch64!"
-           exit 1
-	   ;;
+    case $PLATFORM in
+    amlogic | rockchip | allwinner | qemu-aarch64) : ;;
+    *)
+        echo "Unknown platform, only support amlogic or rockchip or allwinner h6 or qemu-aarch64!"
+        exit 1
+        ;;
     esac
 fi
 
@@ -231,7 +239,7 @@ EOF
 	option enabled '1'
 	option enabled_fsck '1'
 	option fstype '${BOOT_FSTYPE}'
-           
+
 EOF
     echo "/etc/config/fstab generated."
     echo "please reboot"
@@ -533,7 +541,7 @@ menu() {
         │       q. quit                   │
         │                                 │
         └─────────────────────────────────┘
-	
+
 EOF
         echo -ne "please select: [ ]\b\b"
         read select

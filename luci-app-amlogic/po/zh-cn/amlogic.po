@@ -245,6 +245,24 @@ msgstr "下载备份"
 msgid "Backup OpenWrt config (openwrt_config.tar.gz). Use this file to restore the config in [Manually Upload Update]."
 msgstr "备份当前 OpenWrt 的相关配置信息(openwrt_config.tar.gz)。使用此文件可在 [手动上传更新] 中恢复配置。"
 
+msgid "Edit List:"
+msgstr "编辑列表："
+
+msgid "Open the List"
+msgstr "打开列表"
+
+msgid "Backup Configuration - Custom List"
+msgstr "备份配置 - 自定义列表"
+
+msgid "Please maintain the format of the backup list. Except for the last line, each line should end with ' \\' character."
+msgstr "请保持备份列表的格式，除最后一行外，每行以 ' \\' 结尾。"
+
+msgid "Restore Backup:"
+msgstr "恢复备份："
+
+msgid "Upload Backup"
+msgstr "上传备份"
+
 msgid "Restore"
 msgstr "恢复"
 
