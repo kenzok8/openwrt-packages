@@ -35,7 +35,7 @@ my.template = "amlogic/other_button"
 my.render = function(self, section, scope)
 	self.section = true
 	scope.display = ""
-	self.inputtitle = translate("Open the List")
+	self.inputtitle = translate("Open List")
 	self.inputstyle = "save"
 	Button.render(self, section, scope)
 end

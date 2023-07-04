@@ -248,7 +248,7 @@ msgstr "备份当前 OpenWrt 的相关配置信息(openwrt_config.tar.gz)。使�
 msgid "Edit List:"
 msgstr "编辑列表："
 
-msgid "Open the List"
+msgid "Open List"
 msgstr "打开列表"
 
 msgid "Backup Configuration - Custom List"
