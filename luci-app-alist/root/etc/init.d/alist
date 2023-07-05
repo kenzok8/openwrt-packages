@@ -88,7 +88,7 @@ start_service() {
   "database": {
     "type": "$database",
     "host": "$mysql_host",
-    "port": "$mysql_port",
+    "port": $mysql_port,
     "user": "$mysql_username",
     "password": "$mysql_password",
     "name": "$mysql_database",
