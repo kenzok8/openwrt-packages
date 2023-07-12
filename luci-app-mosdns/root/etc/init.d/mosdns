@@ -20,8 +20,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-[ ! -f /etc/openwrt_release ] && exit 0
-
 START=99
 USE_PROCD=1
 
