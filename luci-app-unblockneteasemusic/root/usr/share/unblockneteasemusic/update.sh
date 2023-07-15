@@ -99,6 +99,6 @@ case "$1" in
 		rm -rf "$UNM_DIR/core" "$UNM_DIR/core_local_ver" "$LOCK"
 		;;
 	*)
-		echo -e "Usage: $0/update.sh update_core | remove_core"
+		echo -e "Usage: $0 update_core | remove_core"
 		;;
 esac

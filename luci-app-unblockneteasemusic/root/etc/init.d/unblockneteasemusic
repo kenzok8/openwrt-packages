@@ -106,7 +106,8 @@ start_service() {
 
 	local music_source
 	config_get music_source "config" "music_source" "default"
-	[ "${music_source}" != "default" ] && append_param -o "${music_source}"
+	[ "$music_source" != "default" ] || music_source="kugou kuwo migu pyncmd"
+	append_param -o "$music_source"
 
 	append_param_arg "config" "cnrelay" "-c"
 	append_param_arg "config" "endpoint_url" "-e" "https://music.163.com"
