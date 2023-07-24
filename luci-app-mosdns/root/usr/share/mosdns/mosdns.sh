@@ -22,7 +22,7 @@ interface_dns() (
             ipv6_check=$(uci -q get network.wan.dns)
             case "$ipv6_check" in
                 # ipv6 format
-                *:*) echo $(uci -q get network.wan.dns) | sed -E "s/([[:alnum:]]+:[:[:alnum:]]+)/'[\1]'/g" ;;
+                *:*) echo $(uci -q get network.wan.dns) | sed "s/[^ ]*:[^ ]*/'[&]'/g" ;;
                 *) uci -q get network.wan.dns ;;
             esac
         else
