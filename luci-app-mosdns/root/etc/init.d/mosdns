@@ -69,9 +69,9 @@ init_yaml() {
     [ $insecure_skip_verify -eq 1 ] && insecure_skip_verify=true || insecure_skip_verify=false
     [ $enable_http3 -eq 1 ] && enable_http3=true || enable_http3=false
     [ "$custom_local_dns" -eq 1 ] && \
-    local_dns=$($MOSDNS_SCRIPT dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: %s\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n",s,$i,s,s,s,s,s}' s='        ') || \
-    local_dns=$($MOSDNS_SCRIPT dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: %s\n",s,$i,s}' s='        ')
-    remote_dns=$(echo $remote_dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: %s\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n%s  enable_http3: '${enable_http3}'\n",s,$i,s,s,s,s,s,s}' s='        ')
+    local_dns=$($MOSDNS_SCRIPT dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n",s,$i,s,s,s,s,s}' s='        ') || \
+    local_dns=$($MOSDNS_SCRIPT dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: \"%s\"\n",s,$i,s}' s='        ')
+    remote_dns=$(echo $remote_dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n%s  enable_http3: '${enable_http3}'\n",s,$i,s,s,s,s,s,s}' s='        ')
     sed "s,log_level,$log_level,g;s,log_file,$log_file,g; \
     s,listen_port,$listen_port,g;s,cache_size,$cache_size,g; \
     s,cache_survival_time,$cache_survival_time,g; \
