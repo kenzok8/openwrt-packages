@@ -24,6 +24,7 @@ function index()
     entry({"admin", "store", "upload"}, post("store_upload"))
     entry({"admin", "store", "check_self_upgrade"}, call("check_self_upgrade"))
     entry({"admin", "store", "do_self_upgrade"}, post("do_self_upgrade"))
+    entry({"admin", "store", "toggle_docker"}, post("toggle_docker"))
 
     for _, action in ipairs({"update", "install", "upgrade", "remove"}) do
         store_api(action, true)
@@ -65,6 +66,16 @@ local function user_id()
     id.version = (fs.readfile("/etc/.app_store.version") or "?"):gsub("[\r\n]", "")
 
     return id
+end
+
+local function user_config() 
+    local uci  = require "luci.model.uci".cursor()
+
+    local data = {
+        hide_docker = uci:get("istore", "istore", "hide_docker") == "1",
+        channel = uci:get("istore", "istore", "channel")
+    }
+    return data
 end
 
 local function vue_lang()
@@ -131,11 +142,14 @@ function store_index()
     if luci.sys.call("[ -d /ext_overlay ] >/dev/null 2>&1") == 0 then
         features[#features+1] = "sandbox"
     end
-    luci.template.render("store/main", {prefix=luci.dispatcher.build_url(unpack(page_index)),id=user_id(),lang=vue_lang(),features=features})
+    if luci.sys.call("[ -f /www/luci-static/resources/luci.js ] >/dev/null 2>&1") == 0 then
+        features[#features+1] = "luci-js"
+    end
+    luci.template.render("store/main", {prefix=luci.dispatcher.build_url(unpack(page_index)),id=user_id(),lang=vue_lang(),user_config=user_config(),features=features})
 end
 
 function store_dev()
-    luci.template.render("store/main_dev", {prefix=luci.dispatcher.build_url(unpack({"admin", "store", "dev"})),id=user_id(),lang=vue_lang()})
+    luci.template.render("store/main_dev", {prefix=luci.dispatcher.build_url(unpack({"admin", "store", "dev"})),id=user_id(),lang=vue_lang(),user_config=user_config()})
 end
 
 function store_log()
@@ -259,7 +273,7 @@ function store_action(param)
                     code, out, err = _action(myopkg, action, unpack(pkgs))
                 else -- remove
                     for _, dep in ipairs(meta.depends) do
-                        if dep ~= "docker-deps" then
+                        if dep ~= "docker-deps" and dep ~= "luci-js-deps" then
                             pkgs[#pkgs+1] = dep
                         end
                     end
@@ -437,7 +451,7 @@ local function update_local_backup_path(path)
     if path ~= local_backup_path then
         -- set uci config
         x:set("istore","istore","local_backup_path",path)
-        x:commit("istore")        
+        x:commit("istore")
     end
 end
 
@@ -612,7 +626,7 @@ end
 -- post set_local_backup_dir_path
 function set_local_backup_dir_path()
     local path = luci.http.formvalue("path")
-    local success_ret = {code = 200,msg = "Success"}
+    local success_ret = {code = 200, msg = "Success"}
     local error_ret = {code = 500, msg = "Unknown"}
 
     if path ~= "" then
@@ -714,4 +728,13 @@ function get_block_devices()
         luci.http.prepare_content("application/json")
         luci.http.write_json(error_ret)
     end
+end
+
+function toggle_docker()
+    local uci  = require "luci.model.uci".cursor()
+    local hide = luci.http.formvalue("hide")
+    uci:set("istore", "istore", "hide_docker", hide == "true" and "1" or "0")
+    uci:commit("istore")
+    luci.http.prepare_content("application/json")
+    luci.http.write_json({code = 200, msg = "Success"})
 end
