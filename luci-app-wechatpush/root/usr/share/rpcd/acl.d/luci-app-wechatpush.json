@@ -1,0 +1,25 @@
+{
+	"luci-app-wechatpush": {
+		"description": "Grant UCI access for luci-app-wechatpush",
+		"read": {
+			"file": {
+				"/etc/init.d/wechatpush": [ "exec" ],
+				"/usr/share/wechatpush/wechatpush": [ "exec" ],
+				"/tmp/wechatpush/*": [ "read" ],
+				"/usr/share/wechatpush/api/*": [ "read" ],
+				"/usr/libexec/wechatpush-call": [ "exec" ]
+			},
+			"ubus": {
+				"service": [ "list" ]
+			},
+			"uci": [ "wechatpush" ]
+		},
+		"write": {
+			"file": {
+				"/usr/share/wechatpush/api/*": [ "write" ],
+				"/tmp/wechatpush/*": [ "write" ]
+			},
+			"uci": [ "wechatpush" ]
+		}
+	}
+}
