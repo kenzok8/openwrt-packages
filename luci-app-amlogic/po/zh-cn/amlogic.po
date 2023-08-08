@@ -173,29 +173,44 @@ msgstr "支持将 OpenWrt 系统写入 EMMC、升级固件与内核，备份与�
 msgid "Supported Boxes:"
 msgstr "支持的盒子："
 
-msgid "Amlogic s922x --- [ Belink, Belink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas VIM3(a311d) ]"
-msgstr "晶晨 s922x --- [ Belink, Belink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas VIM3(a311d) ]"
+msgid "Amlogic s922x --- [ Beelink, Beelink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas VIM3(a311d) ]"
+msgstr "晶晨 s922x --- [ Beelink, Beelink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas VIM3(a311d) ]"
 
 msgid "Amlogic s905x3 -- [ X96-Max+, HK1-Box, H96-Max-X3, Ugoos-X3, TX3, X96-Air, A95XF3-Air ]"
 msgstr "晶晨 s905x3 -- [ X96-Max+, HK1-Box, H96-Max-X3, Ugoos-X3, TX3, X96-Air, A95XF3-Air ]"
 
-msgid "Amlogic s905x2 -- [ X96Max-4G, X96Max-2G ]"
-msgstr "晶晨 s905x2 -- [ X96Max-4G, X96Max-2G ]"
-
-msgid "Amlogic s905x --- [ HG680P, B860H, TBee, MECOOL-KI-Pro ]"
-msgstr "晶晨 s905x --- [ 烽火HG680, 中兴B860H, TBee, MECOOL-KI-Pro ]"
-
-msgid "Amlogic s905w --- [ X96-Mini, TX3-Mini ]"
-msgstr "晶晨 s905w --- [ X96-Mini, TX3-Mini ]"
+msgid "Amlogic s905x2 -- [ X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2 ]"
+msgstr "晶晨 s905x2 -- [ X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2 ]"
 
 msgid "Amlogic s912 ---- [ H96-Pro-Plus, Octopus-Planet, A1, A2, Z6-Plus, TX92, X92, TX8-MAX, TX9-Pro ]"
 msgstr "晶晨 s912 ---- [ H96-Pro-Plus, 章鱼星球, A1, A2, Z6-Plus, TX92, X92, TX8-MAX, TX9-Pro ]"
 
-msgid "Amlogic s905d --- [ Phicomm-N1 ]"
-msgstr "晶晨 s905d --- [ 斐讯-N1 ]"
+msgid "Amlogic s905x --- [ HG680P, B860H, TBee, T95, TX9, XiaoMI-3S, X96 ]"
+msgstr "晶晨 s905x --- [ 烽火HG680, 中兴B860H, TBee, T95, TX9, XiaoMI-3S, X96 ]"
 
-msgid "Amlogic Other --- [ Optional DTB ]"
-msgstr "晶晨其他 ----- [ 自定义 DTB 文件 ]"
+msgid "Amlogic s905w --- [ X96-Mini, TX3-Mini, W95, X96W/FunTV, MXQ-Pro-4K ]"
+msgstr "晶晨 s905w --- [ X96-Mini, TX3-Mini, W95, X96W/FunTV, MXQ-Pro-4K ]"
+
+msgid "Amlogic s905d --- [ Phicomm-N1, MECOOL-KI-Pro, SML-5442TW ]"
+msgstr "晶晨 s905d --- [ 斐讯-N1, MECOOL-KI-Pro, SML-5442TW ]"
+
+msgid "Amlogic s905l --- [ UNT402A, M201-S ]"
+msgstr "晶晨 s905l --- [ UNT402A, M201-S ]"
+
+msgid "Amlogic s905l2 -- [ MGV2000, MGV3000, Wojia-TV-IPBS9505, M301A, E900v21E ]"
+msgstr "晶晨 s905l2 -- [ MGV2000, MGV3000, Wojia-TV-IPBS9505, M301A, E900v21E ]"
+
+msgid "Amlogic s905l3 -- [ CM211-1, CM311-1, HG680-LC, M401A, UNT400G1, UNT402A, ZXV10-BV310 ]"
+msgstr "晶晨 s905l3 -- [ CM211-1, CM311-1, HG680-LC, M401A, UNT400G1, UNT402A, ZXV10-BV310 ]"
+
+msgid "Amlogic s905l3a - [ E900V22C/D, CM311-1a-YST, M401A, M411A, UNT403A, UNT413A, IP112H ]"
+msgstr "晶晨 s905l3a - [ E900V22C/D, CM311-1a-YST, M401A, M411A, UNT403A, UNT413A, IP112H ]"
+
+msgid "Amlogic s905l3b - [ CM211-1, CM311-1, E900V22D, E900V21E, E900V22E, M302A/M304A ]"
+msgstr "晶晨 s905l3b - [ CM211-1, CM311-1, E900V22D, E900V21E, E900V22E, M302A/M304A ]"
+
+msgid "Amlogic s905 ---- [ Beelink-Mini-MX-2G, Sunvell-T95M, MXQ-Pro+4K, SumaVision-Q5 ]"
+msgstr "晶晨 s905 ---- [ Beelink-Mini-MX-2G, Sunvell-T95M, MXQ-Pro+4K, SumaVision-Q5 ]"
 
 msgid "Allwinner H6 ---- [ V-Plus Cloud ]"
 msgstr "全志 H6 ------ [ 微加云 ]"
