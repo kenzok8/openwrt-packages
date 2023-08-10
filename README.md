@@ -48,7 +48,7 @@ make menuconfig
 | luci-app-dnsfilter           | dns ad filtering            | 基于DNS的广告过滤        |
 | luci-app-openclash           | openclash proxy            |  clash的图形代理软件      |
 | luci-app-advanced            | System advanced settings               | 系统高级设置        |
-| luci-app-pushbot             | WeChat/DingTalk Pushed plugins    |   微信/钉钉推送        |
+| luci-app-wechatpush          | WeChat/DingTalk Pushed plugins    |   微信/钉钉推送        |
 | luci-theme-atmaterial_new    | atmaterial theme (adapted to luci-18.06) | Atmaterial 三合一主题        |
 | luci-app-aliddns             | aliyunddns         |   阿里云ddns插件      |
 | luci-app-eqos                | Speed ​​limit by IP address       | 依IP地址限速      |
@@ -56,8 +56,8 @@ make menuconfig
 | luci-app-adguardhome         | Block adg          |  AdG去广告      |
 | luci-app-smartdns            | smartdns dns pollution prevention     |  smartdns DNS防污染       |
 | luci-app-passwall            | passwall proxy      | passwall代理软件        |
-| luci-theme-argone            | argonne theme           | 修改老竭力主题名     |
-| luci-app-argone-config       | argonne theme settings            |  argonne主题设置      |
+| luci-theme-argone            | argone theme           | 修改老竭力主题名     |
+| luci-app-argone-config       | argone theme settings            |  argone主题设置      |
 | luci-app-ssr-plus            | ssr-plus proxy              | ssr-plus 代理软件       |
 | luci-theme-mcat              | Modify topic name          |   mcat主题        |
 | luci-theme-tomato            | Modify topic name             |  tomato主题        |
