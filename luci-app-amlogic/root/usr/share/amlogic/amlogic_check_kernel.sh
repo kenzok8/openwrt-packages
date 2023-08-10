@@ -183,7 +183,7 @@ download_kernel() {
     wget "${kernel_down_from}" -q -P "${KERNEL_DOWNLOAD_PATH}"
     [[ "${?}" -ne "0" ]] && tolog "03.03 The kernel download failed." "1"
 
-    tar -xzf ${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz -C ${KERNEL_DOWNLOAD_PATH}
+    tar -xf ${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz -C ${KERNEL_DOWNLOAD_PATH}
     [[ "${?}" -ne "0" ]] && tolog "03.04 Kernel decompression failed." "1"
     mv -f ${KERNEL_DOWNLOAD_PATH}/${download_version}/* ${KERNEL_DOWNLOAD_PATH}/
 
