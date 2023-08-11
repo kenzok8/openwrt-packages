@@ -41,8 +41,9 @@ function clear_log()
 end
 
 function admin_info()
-	local username = luci.sys.exec("/usr/bin/alist --data $(uci -q get alist.@alist[0].data_dir) password 2>&1 | tail -2 | awk 'NR==1 {print $2}'")
-	local password = luci.sys.exec("/usr/bin/alist --data $(uci -q get alist.@alist[0].data_dir) password 2>&1 | tail -2 | awk 'NR==2 {print $2}'")
+	local random = luci.sys.exec("/usr/bin/alist --data $(uci -q get alist.@alist[0].data_dir) admin random 2>&1")
+	local username = string.match(random, "username: (%S+)")
+	local password = string.match(random, "password: (%S+)")
 
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({username = username, password = password})

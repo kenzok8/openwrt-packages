@@ -86,7 +86,7 @@ o.datatype = "string"
 o.default = "/tmp/alist"
 o.rmempty = false
 
-o = s:option(Button, "admin_info", translate("View Password"))
+o = s:option(Button, "admin_info", translate("Reset Password"))
 o.rawhtml = true
 o.template = "alist/admin_info"
 

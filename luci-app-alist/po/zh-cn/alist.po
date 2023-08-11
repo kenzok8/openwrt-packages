@@ -64,20 +64,17 @@ msgstr "启用日志"
 msgid "Clear logs"
 msgstr "清空日志"
 
-msgid "View Password"
-msgstr "查看密码"
+msgid "Reset Password"
+msgstr "重置密码"
+
+msgid "Reset"
+msgstr "重置"
 
 msgid "Username:"
 msgstr "用户名："
 
 msgid "Password:"
 msgstr "密码："
-
-msgid "Reading..."
-msgstr "读取中..."
-
-msgid "Read"
-msgstr "读取"
 
 msgid "Login Validity Period (hours)"
 msgstr "登录有效期（小时）"

@@ -3,7 +3,7 @@
 	function admin_info(btn)
 	{
 		btn.disabled = true;
-		btn.value = '<%:Reading...%>';
+		btn.value = '<%:Collecting data...%>';
 		XHR.get('<%=luci.dispatcher.build_url("admin", "nas", "alist", "admin_info")%>',
 			null,
 			function(x,rv)
@@ -15,12 +15,12 @@
 				tb.innerHTML += "<%:Password:%>" + "<font color='green'>" + rv.password + "</font>";
 			}
 				btn.disabled = false;
-				btn.value = '<%:Read%>';
+				btn.value = '<%:Reset%>';
 			}
 		);
 		return false;
 	}
 //]]></script>
-<input type="button" class="btn cbi-button cbi-button-apply" value="<%:Read%>" onclick="return admin_info(this)" />
+<input type="button" class="btn cbi-button cbi-button-apply" value="<%:Reset%>" onclick="return admin_info(this)" />
 <span id="<%=self.option%>-status"><em><%=self.value%></em></span>
 <%+cbi/valuefooter%>
