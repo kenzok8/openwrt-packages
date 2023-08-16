@@ -3,6 +3,7 @@ module("luci.controller.tasks-lib", package.seeall)
 
 
 function index()
+  entry({"admin", "system", "tasks"}, call("tasks_ping")).dependent=false -- just for compatible
   entry({"admin", "system", "tasks", "status"}, call("tasks_status")).dependent=false
   entry({"admin", "system", "tasks", "log"}, call("tasks_log")).dependent=false
   entry({"admin", "system", "tasks", "stop"}, post("tasks_stop")).dependent=false
@@ -13,6 +14,11 @@ local jsonc = require "luci.jsonc"
 local ltn12 = require "luci.ltn12"
 
 local taskd = require "luci.model.tasks"
+
+function tasks_ping()
+  luci.http.prepare_content("application/json")
+  luci.http.write_json({})
+end
 
 function tasks_status()
   local data = taskd.status(luci.http.formvalue("task_id"))
