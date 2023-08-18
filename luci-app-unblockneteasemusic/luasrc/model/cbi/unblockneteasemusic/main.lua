@@ -40,12 +40,6 @@ o.placeholder = "wmid=; session_key="
 o.datatype = "string"
 o:depends("use_custom_cookie", 1)
 
-o = s:option(Value, "kuwo_cookie", translate("Kuwo Cookie"))
-o.description = translate("通过抓包 PC 网页搜索请求获取，需要 Hm 和 Secret 值")
-o.placeholder = "Hm_=; Secret="
-o.datatype = "string"
-o:depends("use_custom_cookie", 1)
-
 o = s:option(Value, "migu_cookie", translate("Migu Cookie"))
 o.description = translate("通过抓包手机客户端请求获取，需要 aversionid 值")
 o.datatype = "string"
