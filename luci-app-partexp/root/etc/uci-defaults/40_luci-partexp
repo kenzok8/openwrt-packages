@@ -1,0 +1,5 @@
+#!/bin/sh
+chmod +x /etc/init.d/partexp  >/dev/null 2>&1
+
+rm -rf /tmp/luci-modulecache /tmp/luci-indexcache*
+exit 0

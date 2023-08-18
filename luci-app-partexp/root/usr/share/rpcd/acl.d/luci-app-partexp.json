@@ -1,0 +1,11 @@
+{
+	"luci-app-partexp": {
+		"description": "Grant UCI access for luci-app-partexp",
+		"read": {
+			"uci": [ "partexp" ]
+		},
+		"write": {
+			"uci": [ "partexp" ]
+		}
+	}
+}

@@ -1,0 +1,106 @@
+<%#
+Copyright (C)  2022  sirpdboy  <herboy2008@gmail.com> https://github.com/sirpdboy/luci-app-partexp
+-%>
+<%
+local fs = require "nixio.fs"
+%>
+
+<%+cbi/valueheader%>
+
+<script src="/luci-static/vssr/jquery.min.js"></script>
+<label class="cbi-value-title"><%= translate("Select the function to be performed") %></label>
+<div class="cbi-value-field">
+	<input  class="cbi-button cbi-button-reload" id="go_partexprun" type="button" value="<%= translate("Perform operation") %>">
+
+</div>
+  <fieldset class="cbi-section" style="display:none">
+    <legend id="partexprun-legend">
+    <%:Collecting data...%>
+    </legend>
+    <span id="partexprun-output"></span>
+  </fieldset>
+
+<script type="text/javascript">
+    const PARTEXP_RUN_URL = '<%=luci.dispatcher.build_url("admin", "system", "partexp","partexprun")%>';
+    const PARTEXP_URL = '<%=luci.dispatcher.build_url("admin", "system", "partexp","global")%>';
+
+    var legend = document.getElementById('partexprun-legend');
+    var output = document.getElementById('partexprun-output');
+
+
+$(document).ready(function(){
+	//	alert("hello");
+    function go_run() { 
+	legend.style.display = 'none';
+	output.innerHTML ='</p><%:After operation, restart the machine, please wait...%></p>';
+	setTimeout(() => { window.location = PARTEXP_URL }, 6000);
+    }
+	
+    function go_err() { 
+	legend.style.display = 'none';
+	output.innerHTML ='</p><%:Please delete the partition or share and try again%></p>';
+	setTimeout(() => { window.location = PARTEXP_URL }, 6000);
+    }
+    $("#go_partexprun").click(function () {
+	if (confirm('<%:Restart the device to take effect. Confirm whether to continue?%>'))
+	{
+
+        prefix_array = $("#cbi-partexp .cbi-section-node").attr("id").split("-");
+        prefix_array[0] = "cbid";
+        prefix = prefix_array.join(".");
+        output.innerHTML =
+			'<img src="<%=resource%>/icons/loading.gif" alt="<%:Loading%>" style="vertical-align:middle" /> ' +
+			'<%:Operation in progress, please wait...%>'
+			;
+			legend.parentNode.style.display = 'block';
+			legend.style.display = 'inline';
+        var target_function = $("[name='" + prefix + ".target_function']").val();
+        if ($("[name='" + prefix + ".keep_config']").is(":checked")) {
+            var keep_config = "1";
+        } else {
+            var keep_config = "0";
+        }
+        var target_disk = $("[name='" + prefix + ".target_disk']").val();
+
+        if ($("[name='" + prefix + ".auto_format']").is(":checked")) {
+            var auto_format = "1";
+        } else {
+            var auto_format = "0";
+        }
+
+
+        var data = {
+            keep_config: keep_config,
+            target_disk: target_disk,
+            auto_format: auto_format,
+            target_function: target_function
+        }
+		
+        $.ajax({
+            type: "post",
+            url: PARTEXP_RUN_URL,
+            dataType: "json",
+            data: data,
+          success: function (d) {
+                if (d == 2) {
+                  	legend.style.display = 'none';
+                  	output.innerHTML ='</p><%:After operation, restart the machine, please wait...%></p>';
+
+                } else {
+						legend.style.display = 'none';
+						output.innerHTML ='</p>  <%:Operation execution complete%></p>';
+                }
+			setTimeout(() => { window.location = PARTEXP_URL }, 5000);
+            }
+
+        });
+        return false;
+	}
+    });
+});
+			
+
+   
+</script>
+
+<%+cbi/valuefooter%>
