@@ -5,6 +5,6 @@ function index()
 		return
 	end
 
-	local page = entry({"admin", "system", "argone-config"}, form("argone-config"), _("Argonne Config"), 90)
+	local page = entry({"admin", "system", "argone-config"}, form("argone-config"), _("Argone Config"), 90)
 	page.acl_depends = { "luci-app-argone-config" }
 end

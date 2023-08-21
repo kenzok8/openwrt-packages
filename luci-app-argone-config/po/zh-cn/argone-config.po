@@ -11,11 +11,11 @@ msgstr ""
 "Language: zh_CN\n"
 "X-Generator: Poedit 2.3.1\n"
 
-msgid "Argonne Config"
-msgstr "Argonne 主题设置"
+msgid "Argone Config"
+msgstr "Argone 主题设置"
 
-msgid "Here you can set the blur and transparency of the login page of argonne theme, and manage the background pictures and videos.[Chrome is recommended]"
-msgstr "在这里你可以设置argonne 主题的登录页面的模糊和透明度，并管理背景图片与视频。[建议使用 Chrome]"
+msgid "Here you can set the blur and transparency of the login page of argone theme, and manage the background pictures and videos.[Chrome is recommended]"
+msgstr "在这里你可以设置argone 主题的登录页面的模糊和透明度，并管理背景图片与视频。[建议使用 Chrome]"
 
 msgid "Wallpaper Source"
 msgstr "壁纸来源"
@@ -125,5 +125,5 @@ msgstr "上传 (剩余空间："
 msgid "Background file list"
 msgstr "背景文件列表"
 
-msgid "Upload file to '/www/luci-static/argonne/background/'"
-msgstr "文件将上传到'/www/luci-static/argonne/background/'"
+msgid "Upload file to '/www/luci-static/argone/background/'"
+msgstr "文件将上传到'/www/luci-static/argone/background/'"

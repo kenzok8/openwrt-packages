@@ -1,155 +1,155 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:97
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:97
 msgid "0 transparent - 1 opaque ; ( Suggest: Black translucent preset: 0.5 )"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:79
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:79
 msgid ""
 "0 transparent - 1 opaque ; ( Suggest: transparent: 0 or translucent preset: "
 "0.5 )"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:92
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:92
 msgid "A HEX Color ; ( Default: #483d8b )"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:72
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:72
 msgid "A HEX Color ; ( Default: #5e72e4 )"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/controller/argonne-config.lua:8
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:53
-msgid "Argonne Config"
+#: applications/luci-app-argone-config/luasrc/controller/argone-config.lua:8
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:53
+msgid "argone Config"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:195
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:195
 msgid "Background file list"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:60
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:60
 msgid "Bing Wallpapers"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:59
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:59
 msgid "Built-in"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/view/argonne-config/other_upload.htm:2
+#: applications/luci-app-argone-config/luasrc/view/argone-config/other_upload.htm:2
 msgid "Choose local file:"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:149
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:149
 msgid "Create upload file error."
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:200
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:200
 msgid "File name"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:159
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:159
 msgid "File saved to"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:65
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:65
 msgid "Follow System"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:67
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:67
 msgid "Force Dark"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:66
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:66
 msgid "Force Light"
 msgstr ""
 
-#: applications/luci-app-argonne-config/root/usr/share/rpcd/acl.d/luci-app-argonne-config.json:3
-msgid "Grant UCI access for luci-app-argonne-config"
+#: applications/luci-app-argone-config/root/usr/share/rpcd/acl.d/luci-app-argone-config.json:3
+msgid "Grant UCI access for luci-app-argone-config"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:53
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:53
 msgid ""
-"Here you can set the blur and transparency of the login page of argonne theme, "
+"Here you can set the blur and transparency of the login page of argone theme, "
 "and manage the background pictures and videos.[Chrome is recommended]"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:87
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:105
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:87
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:105
 msgid ""
 "Larger value will more blurred ; ( Suggest: clear: 1 or blur preset: 10 )"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:201
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:201
 msgid "Modify time"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:167
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:167
 msgid "No specify upload file."
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:203
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:203
 msgid "Remove"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:110
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:110
 msgid "Save Changes"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:202
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:202
 msgid "Size"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:64
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:64
 msgid "Theme mode"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/view/argonne-config/other_upload.htm:4
+#: applications/luci-app-argone-config/luasrc/view/argone-config/other_upload.htm:4
 msgid "Upload"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:124
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:124
 msgid "Upload (Free:"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:128
-msgid "Upload file to '/www/luci-static/argonne/background/'"
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:128
+msgid "Upload file to '/www/luci-static/argone/background/'"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:58
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:58
 msgid "Wallpaper Source"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:70
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:70
 msgid "You can choose Theme color mode here"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:124
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:124
 msgid ""
 "You can upload files such as jpg,png,gif,mp4,webm files, To change the login page "
 "background."
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:105
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:105
 msgid "[Dark mode] Frosted Glass Radius"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:92
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:92
 msgid "[Dark mode] Primary Color"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:97
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:97
 msgid "[Dark mode] Transparency"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:87
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:87
 msgid "[Light mode] Frosted Glass Radius"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:72
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:72
 msgid "[Light mode] Primary Color"
 msgstr ""
 
-#: applications/luci-app-argonne-config/luasrc/model/cbi/argonne-config.lua:79
+#: applications/luci-app-argone-config/luasrc/model/cbi/argone-config.lua:79
 msgid "[Light mode] Transparency"
 msgstr ""
