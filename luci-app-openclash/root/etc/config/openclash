@@ -168,13 +168,13 @@ config dns_servers
 	option group 'fallback'
 	option type 'https'
 	option ip 'jp.tiar.app/dns-query'
-	option enabled '1'
+	option enabled '0'
 
 config dns_servers
 	option group 'fallback'
 	option type 'https'
 	option ip 'jp.tiarap.org/dns-query'
-	option enabled '1'
+	option enabled '0'
 
 config dns_servers
 	option group 'fallback'
@@ -186,4 +186,46 @@ config dns_servers
 	option group 'fallback'
 	option ip 'dot.tiar.app'
 	option type 'tls'
+	option enabled '0'
+
+config dns_servers
+	option enabled '0'
+	option group 'fallback'
+	option type 'https'
+	option ip 'doh.dnslify.com/dns-query'
+
+config dns_servers
+	option enabled '0'
+	option group 'fallback'
+	option ip 'dns.twnic.tw/dns-query'
+	option type 'https'
+
+config dns_servers
 	option enabled '1'
+	option group 'fallback'
+	option ip 'dns.oszx.co/dns-query'
+	option type 'https'
+
+config dns_servers
+	option enabled '0'
+	option group 'fallback'
+	option ip 'doh.applied-privacy.net/query'
+	option type 'https'
+
+config dns_servers
+	option enabled '0'
+	option group 'fallback'
+	option ip 'dnsforge.de/dns-query'
+	option type 'https'
+
+config dns_servers
+	option enabled '0'
+	option group 'fallback'
+	option ip 'doh.ffmuc.net/dns-query'
+	option type 'https'
+
+config dns_servers
+	option enabled '0'
+	option group 'fallback'
+	option type 'https'
+	option ip 'doh.mullvad.net/dns-query'

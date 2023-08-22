@@ -368,14 +368,17 @@ Thread.new{
       Value['interface-name']='${24}';
    end;
    if ${19} == 1 then
-      if '${21}' != '0' then
+      if '${21}' == '1' then
          Value['geodata-mode']=true;
       end;
       if '${22}' != '0' then
          Value['geodata-loader']='${22}';
       end;
-      if '${25}' != '0' then
+      if '${25}' == '1' then
          Value['tcp-concurrent']=true;
+      end;
+      if '${34}' == '1' then
+         Value['unified-delay']=true;
       end;
       if '${29}' != '0' then
          Value['find-process-mode']='${29}';
@@ -392,10 +395,7 @@ Thread.new{
    end;
    if ${16} == 1 then
       Value['dns']['ipv6']=true;
-      #meta core v6 DNS
-      if ${19} == 1 then
-         Value['ipv6']=true;
-      end;
+      Value['ipv6']=true;
    else
       Value['dns']['ipv6']=false;
    end;
@@ -629,6 +629,14 @@ Thread.new{
       if File::exist?('/etc/openclash/custom/openclash_custom_domain_dns_policy.list') then
          Value_6 = YAML.load_file('/etc/openclash/custom/openclash_custom_domain_dns_policy.list');
          if Value_6 != false and not Value_6.nil? then
+            if ${19} != 1 then
+               Value_6.each{|k,v|
+                  if v.class == "Array" then
+                     Value_6.delete(k);
+                     puts '${LOGTIME} Warning: Skip the nameserver-policy that Core not Support【' + k + '】'
+                  end;
+               }
+            end;
             if Value['dns'].has_key?('nameserver-policy') and not Value['dns']['nameserver-policy'].to_a.empty? then
                Value['dns']['nameserver-policy'].merge!(Value_6);
             else
