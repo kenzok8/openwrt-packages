@@ -83,6 +83,8 @@ o:value("223.6.6.6", "223.6.6.6 (AliDNS Secondary)")
 o:value("114.114.114.114", "114.114.114.114 (114DNS Primary)")
 o:value("114.114.115.115", "114.114.115.115 (114DNS Secondary)")
 o:value("180.76.76.76", "180.76.76.76 (Baidu DNS)")
+o:value("8.8.8.8", "8.8.8.8 (Google DNS)")
+o:value("1.1.1.1", "1.1.1.1 (CloudFlare DNS)")
 o.default = "119.29.29.29"
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
