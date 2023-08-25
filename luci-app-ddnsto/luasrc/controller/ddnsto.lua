@@ -355,6 +355,9 @@ function ddnsto_submit()
             enabled = "1"
         end
         uci:set("ddnsto","@ddnsto[0]","enabled",enabled)
+        
+        local channel = (uci:get_first("istore", "istore", "channel") or "")
+        uci:set("ddnsto","@ddnsto[0]","supplier_code",channel)
 
         local token = ""
         if req.token then
