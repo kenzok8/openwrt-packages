@@ -164,7 +164,6 @@ start_service() {
         v2dat_dump >> $($MOSDNS_SCRIPT logfile) 2>&1
     fi
     procd_open_instance mosdns
-    procd_set_param env QUIC_GO_ENABLE_GSO=true
     procd_set_param command $PROG start -c "$CONF"
     procd_set_param user root
     procd_set_param stdout 1

@@ -1,17 +1,17 @@
-From dfa48e07c33f4d303d2a078a59800b8e48231a48 Mon Sep 17 00:00:00 2001
-From: Irine Sistiana <49315432+IrineSistiana@users.noreply.github.com>
-Date: Sun, 13 Aug 2023 17:30:47 +0800
-Subject: [PATCH] upgrade deps and upgrade quic to v0.37
+From 1a5d1bbc33a20856d20b3935338c279ee9aae584 Mon Sep 17 00:00:00 2001
+From: sbwml <admin@cooluc.com>
+Date: Fri, 25 Aug 2023 09:19:37 +0800
+Subject: [PATCH] update dependencies & quic-go v0.38.1
 
 ---
- go.mod                             |  64 ++++++-------
- go.sum                             | 145 ++++++++++++++---------------
+ go.mod                             |  66 +++++++------
+ go.sum                             | 149 ++++++++++++++---------------
  pkg/server/http_handler/handler.go |   1 +
  pkg/upstream/upstream.go           |  23 +++--
- 4 files changed, 116 insertions(+), 117 deletions(-)
+ 4 files changed, 119 insertions(+), 120 deletions(-)
 
 diff --git a/go.mod b/go.mod
-index 2212cd3..bde4556 100644
+index 2212cd3..1a1dd43 100644
 --- a/go.mod
 +++ b/go.mod
 @@ -3,26 +3,26 @@ module github.com/IrineSistiana/mosdns/v5
@@ -34,7 +34,7 @@ index 2212cd3..bde4556 100644
 -	github.com/spf13/viper v1.15.0
 -	github.com/stretchr/testify v1.8.1
 +	github.com/prometheus/client_golang v1.16.0
-+	github.com/quic-go/quic-go v0.37.4
++	github.com/quic-go/quic-go v0.38.1
 +	github.com/spf13/cobra v1.7.0
 +	github.com/spf13/viper v1.16.0
 +	github.com/stretchr/testify v1.8.4
@@ -47,8 +47,8 @@ index 2212cd3..bde4556 100644
 -	golang.org/x/sys v0.6.0
 -	google.golang.org/protobuf v1.29.1
 +	go.uber.org/zap v1.25.0
-+	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
-+	golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb
++	go4.org/netipx v0.0.0-20230824141953-6213f710f925
++	golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63
 +	golang.org/x/net v0.14.0
 +	golang.org/x/sync v0.3.0
 +	golang.org/x/sys v0.11.0
@@ -66,7 +66,7 @@ index 2212cd3..bde4556 100644
  	github.com/golang/protobuf v1.5.3 // indirect
  	github.com/google/go-cmp v0.5.9 // indirect
 -	github.com/google/pprof v0.0.0-20230309165930-d61513b1440d // indirect
-+	github.com/google/pprof v0.0.0-20230811205829-9131a7e9cc17 // indirect
++	github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f // indirect
  	github.com/hashicorp/hcl v1.0.0 // indirect
  	github.com/inconshreveable/mousetrap v1.1.0 // indirect
  	github.com/josharian/native v1.1.0 // indirect
@@ -78,7 +78,7 @@ index 2212cd3..bde4556 100644
 -	github.com/pelletier/go-toml/v2 v2.0.7 // indirect
 +	github.com/mdlayher/netlink v1.7.2 // indirect
 +	github.com/mdlayher/socket v0.4.1 // indirect
-+	github.com/onsi/ginkgo/v2 v2.11.0 // indirect
++	github.com/onsi/ginkgo/v2 v2.12.0 // indirect
 +	github.com/pelletier/go-toml/v2 v2.0.9 // indirect
  	github.com/pmezard/go-difflib v1.0.0 // indirect
 -	github.com/prometheus/client_model v0.3.0 // indirect
@@ -90,13 +90,14 @@ index 2212cd3..bde4556 100644
  	github.com/quic-go/qpack v0.4.0 // indirect
 -	github.com/quic-go/qtls-go1-19 v0.2.1 // indirect
 -	github.com/quic-go/qtls-go1-20 v0.1.1 // indirect
-+	github.com/quic-go/qtls-go1-20 v0.3.2 // indirect
++	github.com/quic-go/qtls-go1-20 v0.3.3 // indirect
  	github.com/spf13/afero v1.9.5 // indirect
 -	github.com/spf13/cast v1.5.0 // indirect
 +	github.com/spf13/cast v1.5.1 // indirect
  	github.com/spf13/jwalterweatherman v1.1.0 // indirect
  	github.com/spf13/pflag v1.0.5 // indirect
- 	github.com/subosito/gotenv v1.4.2 // indirect
+-	github.com/subosito/gotenv v1.4.2 // indirect
++	github.com/subosito/gotenv v1.6.0 // indirect
  	github.com/vishvananda/netns v0.0.1 // indirect
 -	go.uber.org/atomic v1.10.0 // indirect
 -	go.uber.org/multierr v1.10.0 // indirect
@@ -108,12 +109,12 @@ index 2212cd3..bde4556 100644
 +	golang.org/x/crypto v0.12.0 // indirect
 +	golang.org/x/mod v0.12.0 // indirect
 +	golang.org/x/text v0.12.0 // indirect
-+	golang.org/x/tools v0.12.0 // indirect
++	golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846 // indirect
  	gopkg.in/ini.v1 v1.67.0 // indirect
  	gopkg.in/yaml.v3 v3.0.1 // indirect
  )
 diff --git a/go.sum b/go.sum
-index 960ad98..403829d 100644
+index 960ad98..59c420f 100644
 --- a/go.sum
 +++ b/go.sum
 @@ -40,7 +40,7 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
@@ -155,8 +156,8 @@ index 960ad98..403829d 100644
  github.com/google/pprof v0.0.0-20201218002935-b9804c9f04c2/go.mod h1:kpwsk12EmLew5upagYY7GY0pfYCcupk39gWOCRROcvE=
 -github.com/google/pprof v0.0.0-20230309165930-d61513b1440d h1:um9/pc7tKMINFfP1eE7Wv6PRGXlcCSJkVajF7KJw3uQ=
 -github.com/google/pprof v0.0.0-20230309165930-d61513b1440d/go.mod h1:79YE0hCXdHag9sBkw2o+N/YnZtTkXi0UT9Nnixa5eYk=
-+github.com/google/pprof v0.0.0-20230811205829-9131a7e9cc17 h1:0h35ESZ02+hN/MFZb7XZOXg+Rl9+Rk8fBIf5YLws9gA=
-+github.com/google/pprof v0.0.0-20230811205829-9131a7e9cc17/go.mod h1:Jh3hGz2jkYak8qXPD19ryItVnUgpgeqzdkY/D0EaeuA=
++github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f h1:pDhu5sgp8yJlEF/g6osliIIpF9K4F5jvkULXa4daRDQ=
++github.com/google/pprof v0.0.0-20230821062121-407c9e7a662f/go.mod h1:czg5+yv1E0ZGTi6S6vVK1mke0fV+FaUhNGcd6VRS9Ik=
  github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm40UhjYkI=
  github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
  github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+vpHVxEJEs9eg=
@@ -183,7 +184,7 @@ index 960ad98..403829d 100644
  github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
  github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
  github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
-@@ -168,67 +167,65 @@ github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0V
+@@ -168,69 +167,67 @@ github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0V
  github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
  github.com/matttproud/golang_protobuf_extensions v1.0.4 h1:mmDVorXM7PCGKw94cs5zkfA9PSy5pEvNWRP0ET0TIVo=
  github.com/matttproud/golang_protobuf_extensions v1.0.4/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
@@ -207,9 +208,9 @@ index 960ad98..403829d 100644
 -github.com/pelletier/go-toml/v2 v2.0.7 h1:muncTPStnKRos5dpVKULv2FVd4bMOhNePj9CjgDb8Us=
 -github.com/pelletier/go-toml/v2 v2.0.7/go.mod h1:eumQOmlWiOPt5WriQQqoM5y18pDHwha2N+QD+EUNTek=
 -github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
-+github.com/onsi/ginkgo/v2 v2.11.0 h1:WgqUCUt/lT6yXoQ8Wef0fsNn5cAuMK7+KT9UFRz2tcU=
-+github.com/onsi/ginkgo/v2 v2.11.0/go.mod h1:ZhrRA5XmEE3x3rhlzamx/JJvujdZoJ2uvgI7kR0iZvM=
-+github.com/onsi/gomega v1.27.8 h1:gegWiwZjBsf2DgiSbf5hpokZ98JVDMcWkUiigk6/KXc=
++github.com/onsi/ginkgo/v2 v2.12.0 h1:UIVDowFPwpg6yMUpPjGkYvf06K3RAiJXUhCxEwQVHRI=
++github.com/onsi/ginkgo/v2 v2.12.0/go.mod h1:ZNEzXISYlqpb8S36iN71ifqLi3vVD1rVJGvWRCJOUpQ=
++github.com/onsi/gomega v1.27.10 h1:naR28SdDFlqrG6kScpT8VWpu1xWY5nJRCF3XaYyBjhI=
 +github.com/pelletier/go-toml/v2 v2.0.9 h1:uH2qQXheeefCCkuBBSLi7jCiSmj3VRh2+Goq2N7Xxu0=
 +github.com/pelletier/go-toml/v2 v2.0.9/go.mod h1:tJU2Z3ZkXwnxa4DPO899bsyIoywizdUvyaeZurnPPDc=
  github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -241,10 +242,10 @@ index 960ad98..403829d 100644
 -github.com/quic-go/qtls-go1-20 v0.1.1/go.mod h1:JKtK6mjbAVcUTN/9jZpvLbGxvdWIKS8uT7EiStoU1SM=
 -github.com/quic-go/quic-go v0.33.0 h1:ItNoTDN/Fm/zBlq769lLJc8ECe9gYaW40veHCCco7y0=
 -github.com/quic-go/quic-go v0.33.0/go.mod h1:YMuhaAV9/jIu0XclDXwZPAsP/2Kgr5yMYhe9oxhhOFA=
-+github.com/quic-go/qtls-go1-20 v0.3.2 h1:rRgN3WfnKbyik4dBV8A6girlJVxGand/d+jVKbQq5GI=
-+github.com/quic-go/qtls-go1-20 v0.3.2/go.mod h1:X9Nh97ZL80Z+bX/gUXMbipO6OxdiDi58b/fMC9mAL+k=
-+github.com/quic-go/quic-go v0.37.4 h1:ke8B73yMCWGq9MfrCCAw0Uzdm7GaViC3i39dsIdDlH4=
-+github.com/quic-go/quic-go v0.37.4/go.mod h1:YsbH1r4mSHPJcLF4k4zruUkLBqctEMBDR6VPvcYjIsU=
++github.com/quic-go/qtls-go1-20 v0.3.3 h1:17/glZSLI9P9fDAeyCHBFSWSqJcwx1byhLwP5eUIDCM=
++github.com/quic-go/qtls-go1-20 v0.3.3/go.mod h1:X9Nh97ZL80Z+bX/gUXMbipO6OxdiDi58b/fMC9mAL+k=
++github.com/quic-go/quic-go v0.38.1 h1:M36YWA5dEhEeT+slOu/SwMEucbYd0YFidxG3KlGPZaE=
++github.com/quic-go/quic-go v0.38.1/go.mod h1:ijnZM7JsFIkp4cRyjxJNIzdSfCLmUMg9wdyhGmg+SN4=
  github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 -github.com/rogpeppe/go-internal v1.6.1 h1:/FiVV8dS/e+YqF2JvO3yXRFbBLTIuSDkuC7aBOAvL+k=
 +github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
@@ -279,11 +280,15 @@ index 960ad98..403829d 100644
  github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 -github.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=
 -github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
+-github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8=
+-github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
 +github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 +github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
- github.com/subosito/gotenv v1.4.2 h1:X1TuBLAMDFbaTAChgCBLu3DU3UPyELpnF2jjJ2cz/S8=
- github.com/subosito/gotenv v1.4.2/go.mod h1:ayKnFf/c6rvx/2iiLrJUk1e6plDbT3edrFNGqEflhK0=
++github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8=
++github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
  github.com/vishvananda/netlink v1.2.1-beta.2.0.20221107222636-d3c0a2caa559 h1:NwQroOyW+fpfiUroBzAMqFc6NRwBmvJevoVtEK6gsFE=
+ github.com/vishvananda/netlink v1.2.1-beta.2.0.20221107222636-d3c0a2caa559/go.mod h1:cAAsePK2e15YDAMJNyOpGYEWNe4sIghTY7gpz4cX/Ik=
+ github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
 @@ -247,15 +244,13 @@ go.opencensus.io v0.22.2/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
  go.opencensus.io v0.22.3/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
  go.opencensus.io v0.22.4/go.mod h1:yxeiOL68Rb0Xd1ddK5vPZ/oVn4vY4Ynel7k9FzqtOIw=
@@ -302,8 +307,8 @@ index 960ad98..403829d 100644
 +go.uber.org/multierr v1.11.0/go.mod h1:20+QtiLqy0Nd6FdQB9TLXag12DsQkrbs3htMFfDN80Y=
 +go.uber.org/zap v1.25.0 h1:4Hvk6GtkucQ790dqmj7l1eEnRdKm3k3ZUrUMS2d5+5c=
 +go.uber.org/zap v1.25.0/go.mod h1:JIAUzQIH94IC4fOJQm7gMmBJP5k7wQfdcnYdPoEXJYk=
-+go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28 h1:zLxFnORHDFTSkJPawMU7LzsuGQJ4MUFS653jJHpORow=
-+go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28/go.mod h1:TQvodOM+hJTioNQJilmLXu08JNb8i+ccq418+KWu1/Y=
++go4.org/netipx v0.0.0-20230824141953-6213f710f925 h1:eeQDDVKFkx0g4Hyy8pHgmZaK0EqB4SD6rvKbUdN3ziQ=
++go4.org/netipx v0.0.0-20230824141953-6213f710f925/go.mod h1:PLyyIXexvUFg3Owu6p/WfdlivPbZJsZdgWZlrGope/Y=
  golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
  golang.org/x/crypto v0.0.0-20190510104115-cbcb75029529/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
  golang.org/x/crypto v0.0.0-20190605123033-f99c8df09eb5/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
@@ -324,8 +329,8 @@ index 960ad98..403829d 100644
  golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6/go.mod h1:3jZMyOhIsHpP37uCMkUooju7aAi5cS1Q23tOzKc+0MU=
 -golang.org/x/exp v0.0.0-20230314191032-db074128a8ec h1:pAv+d8BM2JNnNctsLJ6nnZ6NqXT8N4+eauvZSb3P0I0=
 -golang.org/x/exp v0.0.0-20230314191032-db074128a8ec/go.mod h1:CxIveKay+FTh1D0yPZemJVgC/95VzuuOLq5Qi4xnoYc=
-+golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb h1:mIKbk8weKhSeLH2GmUTrvx8CjkyJmnU1wFmg59CUjFA=
-+golang.org/x/exp v0.0.0-20230811145659-89c5cff77bcb/go.mod h1:FXUEEKJgO7OQYeo8N01OfiKP8RXMtf6e8aTskBGqWdc=
++golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63 h1:m64FZMko/V45gv0bNmrNYoDEq8U5YUhetc9cBWKS1TQ=
++golang.org/x/exp v0.0.0-20230817173708-d852ddb80c63/go.mod h1:0v4NqG35kSWCMzLaMeX+IQrlSnVE/bqGSyC2cz/9Le8=
  golang.org/x/image v0.0.0-20190227222117-0694c2d4d067/go.mod h1:kZ7UVZpmo3dzQBMxlp+ypCbDeSB+sBbTgSJuh5dn5js=
  golang.org/x/image v0.0.0-20190802002840-cff245a6509b/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
  golang.org/x/lint v0.0.0-20181026193005-c67002cb31c3/go.mod h1:UVdnD1Gm6xHRNCYTkRU2/jEulfH38KcIWyp/GAMgvoE=
@@ -390,8 +395,8 @@ index 960ad98..403829d 100644
  golang.org/x/tools v0.1.1/go.mod h1:o0xws9oXOQQZyjljx8fwUC0k7L1pTE6eaCbjGeHmOkk=
 -golang.org/x/tools v0.7.0 h1:W4OVu8VVOaIO0yzWMNdepAulS7YfoS3Zabrm8DOXXU4=
 -golang.org/x/tools v0.7.0/go.mod h1:4pg6aUX35JBAogB10C9AtvVL+qowtN4pT3CGSQex14s=
-+golang.org/x/tools v0.12.0 h1:YW6HUoUmYBpwSgyaGaZq1fHjrBjX1rlpZ54T6mu2kss=
-+golang.org/x/tools v0.12.0/go.mod h1:Sc0INKfu04TlqNoRA1hgpFZbhYXHPr4V5DzpSBTPqQM=
++golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846 h1:Vve/L0v7CXXuxUmaMGIEK/dEeq7uiqb5qBgQrZzIE7E=
++golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846/go.mod h1:Sc0INKfu04TlqNoRA1hgpFZbhYXHPr4V5DzpSBTPqQM=
  golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
  golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
  golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
