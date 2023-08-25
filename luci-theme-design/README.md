@@ -22,8 +22,8 @@
 # luci-theme-design
 
 ### luci-theme-design 是一个针对移动端和PC端的沉浸式WebApp体验和优化的OpenWrt LuCI主题
-- **luci-theme-design**基于luci-theme-neobird二次开发, 适用于[lede](https://github.com/coolsnowwolf/lede) / [OpenWrt](https://github.com/openwrt/openwrt)
-- 默认分支只支持lede源码的lua版本，若使用openwrt 21/22请拉取[js](https://github.com/gngpp/luci-theme-design/tree/js)版本(开发阶段)。
+- **luci-theme-design**基于luci-theme-neobird二次开发, 适用于[lede](https://github.com/coolsnowwolf/lede)
+- 只支持lede源码的lua版本
 
 - 你可以使用[插件](https://github.com/gngpp/luci-app-design-config)定义一些设置
   - 支持更改主题深色/浅色模式
@@ -33,18 +33,12 @@
 - 感谢 [JetBrains](https://www.jetbrains.com/) 提供的非商业开源软件开发授权！
 <a href="https://www.jetbrains.com/?from=gnet" target="_blank"><img src="https://raw.githubusercontent.com/panjf2000/illustrations/master/jetbrains/jetbrains-variant-4.png" width="250" align="middle"/></a>
 
-### 发布版本
-
-- Lua 版本选择5.x版本
-- ~~JS 版本选择6.x版本~~
-
 ### 主要特点
 
 - 适配移动端响应式优化，适合手机端做为WebApp使用
 - 修改和优化了很多插件显示，完善的设备icon图标，尽量视觉统一
 - 简洁的登录界面，底部导航栏，类App的沉浸式体验
 - 适配深色模式，适配系统自动切换，支持自定义模式
-- 适配 ~~openwrt 21/22、，因用户问题，不再考虑支持JS分支~~ lede
 - 支持插件式配置主题
 - 流畅度比肩bootstrap
 
