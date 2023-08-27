@@ -2,6 +2,7 @@
  *  Argone is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argone Template
  *
  *  luci-theme-argone
+ *      Copyright 2020 Jerryk
  *
  *  Have a bug? Please create an issue here on GitHub!
  *      https://github.com/kenzok78/luci-theme-argone/issues
@@ -46,12 +47,12 @@
 /* ICON Font */
 
 @font-face {
-    font-family: 'argon';
-    src: url('../fonts/argon.eot?u6kthm');
-    src: url('../fonts/argon.eot?u6kthm#iefix') format('embedded-opentype'),
-        url('../fonts/argon.ttf?u6kthm') format('truetype'),
-        url('../fonts/argon.woff?u6kthm') format('woff'),
-        url('../fonts/argon.svg?u6kthm#argon') format('svg');
+    font-family: 'argone';
+    src: url('../fonts/argone.eot?u6kthm');
+    src: url('../fonts/argone.eot?u6kthm#iefix') format('embedded-opentype'),
+        url('../fonts/argone.ttf?u6kthm') format('truetype'),
+        url('../fonts/argone.woff?u6kthm') format('woff'),
+        url('../fonts/argon.svg?u6kthm#argone') format('svg');
     font-weight: normal;
     font-style: normal;
     font-display: block;
@@ -60,7 +61,7 @@
 [class^="icon-"],
 [class*=" icon-"] {
     /* use !important to prevent issues with browser extensions that change fonts */
-    font-family: 'argon' !important;
+    font-family: 'argone' !important;
     font-style: normal;
     font-weight: normal;
     font-variant: normal;
