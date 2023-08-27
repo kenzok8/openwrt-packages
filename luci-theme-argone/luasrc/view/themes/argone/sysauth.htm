@@ -2,7 +2,6 @@
 	Argone is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI and Argone Template
 
 	luci-theme-argone
-	Copyright 2021 Jerryk
 
 	Have a bug? Please create an issue here on GitHub!
 	https://github.com/kenzok78/luci-theme-argone/issues
@@ -15,7 +14,7 @@
 	MUI:
 	https://github.com/muicss/mui
 
-	Argone Theme
+	Argon Theme
 	https://demos.creative-tim.com/argon-dashboard/index.html
 
 	Licensed to the public under the Apache License 2.0
@@ -129,8 +128,9 @@
 	<div class="login-container">
 		<div class="login-form">
 			<!-- Logo Start -->
-			<a class="brand" href="/"><img src="<%=media%>/img/argone.svg" class="icon"></a>
-			<span class="brand-text"><%=striptags( (boardinfo.hostname or "?") ) %></span>
+			<a class="brand" href="/"><img src="<%=media%>/img/argone.svg" class="icon">
+				<span class="brand-text"><%=striptags( (boardinfo.hostname or "?") ) %></span>
+			</a>
 			<!-- Logo End -->
 			<!-- Login Form Start -->
 			<form class="form-login" method="post" action="<%=pcdata(luci.http.getenv("REQUEST_URI"))%>">
