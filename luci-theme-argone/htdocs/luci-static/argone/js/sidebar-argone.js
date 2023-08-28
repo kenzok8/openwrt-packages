@@ -2,9 +2,10 @@
  *  Argone is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argone Template
  *
  *  luci-theme-argone
+ *      Copyright 2023 Jerrykuku
  *
  *  Have a bug? Please create an issue here on GitHub!
- *      https://github.com/kenzok78/luci-theme-argone/issues
+ *      https://github.com/jerrykuku/luci-theme-argone/issues
  *
  *  luci-theme-bootstrap:
  *      Copyright 2008 Steven Barth <steven@midlink.org>

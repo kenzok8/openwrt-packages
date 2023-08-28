@@ -2,6 +2,7 @@
  *  Argone is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argone Template
  *
  *  luci-theme-argone
+ *      Copyright 2020 Jerryk
  *
  *  Have a bug? Please create an issue here on GitHub!
  *      https://github.com/kenzok78/luci-theme-argone/issues
@@ -17,7 +18,7 @@
  *  luci-theme-material:
  *      https://github.com/LuttyYang/luci-theme-material/
  *
- *  Argon Theme
+ *  Argone Theme
  *	    https://demos.creative-tim.com/argon-dashboard/index.html
  *
  *  Login background
@@ -46,7 +47,7 @@
   --warning: #fb6340;
   --footer-color: #aaa;
   --menubar-background: #fff;
-  --menubar-scrollbar-thumb: #f6f9fc;
+  --menubar-scrollbar-thumb: #eee;
   --menubar-text-color: #4c4c4c;
   --blue: #5e72e4;
   --indigo: #5603ad;
@@ -154,12 +155,34 @@ body {
   color: #ffffff;
   color: var(--white);
 }
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #9e9e9e;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #757575;
+}
+::-webkit-scrollbar-thumb:active {
+  background: #424242;
+}
 a:link,
 a:visited,
 a:active {
-  color: #5e72e4;
   color: var(--primary);
   text-decoration: none;
+}
+a:-webkit-any-link:not(li a, .main-left a, .brand, .pull-right a, .alert-message a, .login-container footer a, .cbi-button) {
+  color: -webkit-link;
+  cursor: pointer;
+  color: var(--primary);
+  text-shadow: 1px 1px 2px #ccc;
 }
 a:hover {
   text-decoration: underline;
@@ -220,7 +243,8 @@ li {
 }
 .login-page .video video {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
 }
 .login-page .volume-control {
   position: fixed;
@@ -277,30 +301,41 @@ li {
   max-width: 420px;
   background-color: #fff;
   background-color: var(--white);
+  overflow:hidden;
 }
 .login-page .login-container .login-form .brand {
   display: flex;
   -webkit-box-align: center;
   align-items: center;
-  margin: 50px auto 100px 50px;
+  margin: 50px auto 15px auto;
   color: #525461;
   color: var(--default);
 }
 .login-page .login-container .login-form .brand .icon {
   width: 50px;
   height: auto;
-  margin-right: 25px;
 }
-.login-page .login-container .login-form .brand .brand-text {
-  font-size: 1.25rem;
+.login-page .login-container .login-form .brand-text {
+  font-size: 1.8rem;
   font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 85px;
   font-family: "TypoGraphica";
+  width: 420px;
+  padding: 0 0.5rem 0.1rem 0.5rem;
+  text-align: center;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 .login-page .login-container .login-form .brand:hover {
   text-decoration: none;
 }
 .login-page .login-container .login-form .form-login {
-  width: 100%;
+  width: 420px;
   padding: 20px 50px;
   box-sizing: border-box;
 }
@@ -416,6 +451,10 @@ li {
   position: absolute;
   bottom: 0;
 }
+.login-page .login-container footer,
+.login-page .login-container footer a {
+  color: var(--default);
+}
 .login-page .login-container footer .ftc {
   position: absolute;
   bottom: 30px;
@@ -495,13 +534,9 @@ header .fill .container .brand {
 footer {
   text-align: right;
   padding: 1rem;
-  color: #aaa;
-  color: var(--footer-color);
   font-size: 0.8rem;
 }
 footer a {
-  color: #aaa;
-  color: var(--footer-color);
   text-decoration: none;
 }
 /***********************
@@ -541,6 +576,7 @@ footer a {
   position: fixed;
   z-index: 100;
   transition: width 0.2s ease-in-out;
+  overflow-y: scroll;
 }
 .main .main-left::-webkit-scrollbar {
   width: 5px;
@@ -551,8 +587,7 @@ footer a {
   background-color: var(--menubar-scrollbar-thumb);
 }
 .main .main-left::-webkit-scrollbar-track {
-  background-color: #fff;
-  background-color: var(--menubar-background);
+  background-color: transparent;
 }
 .main .main-left .sidenav-header {
   padding: 1.5rem;
@@ -672,6 +707,7 @@ footer a {
   color: #fff;
   background: #5e72e4;
   background: var(--primary);
+  box-shadow: 0 0 1px #ccc;
 }
 .main .main-left .nav li.slide .menu:hover a,
 .main .main-left .nav li.slide .menu.active a {
@@ -763,6 +799,7 @@ footer a {
   background-color: #5e72e4;
   background-color: var(--primary);
   transition: all 0.2s;
+  box-shadow: 0 0 1px #ccc;
 }
 .main .main-left .nav li.slide .slide-menu li a:hover::after {
   color: #000;
@@ -929,9 +966,6 @@ form.inline + form.inline,
   border-color: #5e72e4 !important;
   border-color: var(--primary) !important;
 }
-.cbi-button-add {
-  margin-left: 1.5rem;
-}
 .node-services-vssr .ssr-button {
   margin-left: 0.3rem;
 }
@@ -1000,13 +1034,20 @@ select {
   text-align: center;
 }
 /*textarea*/
-.cbi-input-textarea {
-  width: 100%;
-  min-height: 14rem;
-  padding: 0.8rem;
-  font-size: 0.8rem;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+textarea {
+  border: 1px solid #dee2e6 !important;
+  outline: none;
+  min-height: 14rem !important;
+  padding: 0.8rem !important;
+  background-color: #fff;
+  font-family: var(--font-family-monospace) !important;
+  font-size: inherit;
   color: black;
+  border-radius: 0.375rem !important;
+  vertical-align: middle;
+}
+.cbi-value .cbi-value-field textarea {
+  margin: 0.25rem;
 }
 /* change */
 .uci-change-list {
@@ -1091,8 +1132,6 @@ input[type="checkbox"] {
   vertical-align: middle;
 }
 input[type="checkbox"]:checked {
-  border: 1px solid #5e72e4;
-  border: 1px solid var(--primary);
   background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 8 8\'%3e%3cpath fill=\'%23fff\' d=\'M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z\'/%3e%3c/svg%3e') !important;
   background-color: #5e72e4;
   background-color: var(--primary);
@@ -1117,8 +1156,6 @@ ul li .cbi-input-checkbox {
   margin: 0.25rem 0;
 }
 .cbi-input-radio:checked {
-  border: 1px solid #5e72e4;
-  border: 1px solid var(--primary);
   background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'-4 -4 8 8\'%3e%3ccircle r=\'3\' fill=\'%23fff\'/%3e%3c/svg%3e') !important;
   background-color: #5e72e4;
   background-color: var(--primary);
@@ -1228,7 +1265,8 @@ div.cbi-value var,
 td.cbi-value-field var,
 .td.cbi-value-field var {
   font-style: italic;
-  color: #0069D6;
+  color: var(--primary);
+  text-shadow: 1px 1px 2px #ccc;
 }
 small {
   font-size: 90%;
@@ -1382,7 +1420,15 @@ input[name="nslookup"] {
   background-color: var(--primary) !important;
   background-image: url(../img/trafficbar.png);
   background-position: left top;
-  animation: sparkle 1500ms linear infinite;
+  animation: sparkle 1000ms linear infinite;
+}
+#swaptotal > div > div > div > small,
+#swapfree > div > div > div > small,
+#memfree > div > div > div > small,
+#membuff > div > div > div > small,
+#conns > div > div > div > small,
+#memtotal > div > div > div > small {
+  text-shadow: 1px 1px 2px #ccc;
 }
 /* fix multiple table */
 table table,
@@ -1629,10 +1675,6 @@ th h5, td h5,
 th h6, td h6 {
   background: var(--lighter);
 }
-/* OCD: Change the background color of the "now in use" node in PassWall  */
-.cbi-section-table > tbody > ._now_use {
-  background: #5e72e473 !important;
-}
 /* language fix */
 body.lang_pl.node-main-login .cbi-value-title {
   width: 12rem;
@@ -1746,7 +1788,7 @@ body.lang_pl.node-main-login .cbi-value-title {
 }
 .cbi-rowstyle-2 .cbi-button-up,
 .cbi-rowstyle-2 .cbi-button-down {
-  background-color: #FFF !important;
+  background-color: var(--lighter);
 }
 .cbi-button-up,
 .cbi-button-down,
@@ -1788,7 +1830,8 @@ input {
   transition: box-shadow 0.15s ease;
   margin: 0.25rem;
 }
-select:not([multiple="multiple"]):focus,
+select:not([multiple="multiple"]):hover,
+input:hover,
 input:focus {
   border-color: #5e72e4;
   border-color: var(--primary);
@@ -2023,7 +2066,7 @@ h3 {
   letter-spacing: 0.1rem;
   padding: 1rem 1.5rem;
   border-radius: 0.375rem;
-  background: #fff;
+  background: var(--lighter);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
 }
 fieldset {
@@ -2065,6 +2108,8 @@ fieldset.cbi-section p {
   letter-spacing: 0.1rem;
   color: #32325d;
   font-weight: 600;
+  position: sticky;
+  left: 0;
 }
 table {
   border-spacing: 0;
@@ -2131,15 +2176,25 @@ td > table > tbody > tr > td {
   white-space: nowrap;
   overflow-x: auto;
 }
-.tabs::-webkit-scrollbar {
-  width: 1px;
+.tabs::-webkit-scrollbar,
+.cbi-section::-webkit-scrollbar,
+.cbi-section > *::-webkit-scrollbar,
+textarea::-webkit-scrollbar,
+div::-webkit-scrollbar {
+  width: 5px;
   height: 5px;
 }
 .tabs::-webkit-scrollbar-thumb {
-  background-color: #f6f9fc;
+  background-color: #9e9e9e;
+}
+.tabs::-webkit-scrollbar-thumb:hover {
+  background: #757575;
+}
+.tabs::-webkit-scrollbar-thumb:active {
+  background: #424242;
 }
 .tabs::-webkit-scrollbar-track {
-  background-color: #fff;
+  background-color: transparent;
 }
 .tabs li[class~="active"],
 .tabs li:hover {
@@ -2148,7 +2203,7 @@ td > table > tbody > tr > td {
   border-bottom: 0.18751rem solid var(--primary);
   color: #5e72e4;
   color: var(--primary);
-  background-color: #dce1fe;
+  background-color: var(--light-subtabs-background);
   margin-bottom: 0;
   border-radius: 0;
 }
@@ -2184,13 +2239,19 @@ td > table > tbody > tr > td {
   height: 5px;
 }
 .cbi-tabmenu::-webkit-scrollbar-thumb {
-  background-color: #f6f9fc;
+  background-color: #9e9e9e;
+}
+.cbi-tabmenu::-webkit-scrollbar-thumb:hover {
+  background: #757575;
+}
+.cbi-tabmenu::-webkit-scrollbar-thumb:active {
+  background: #424242;
 }
 .cbi-tabmenu::-webkit-scrollbar-track {
-  background-color: #fff;
+  background-color: transparent;
 }
 .cbi-tabmenu li {
-  background: #dce3e9;
+  background: #e3e3e3;
   display: inline-block;
   font-size: 0.875rem;
   border-top-left-radius: 0.25rem;
@@ -2209,7 +2270,7 @@ td > table > tbody > tr > td {
   border-bottom: 0.18751rem solid var(--primary);
   color: #5e72e4;
   color: var(--primary);
-  background-color: #dce1fe;
+  background-color: var(--light-subtabs-background);
   margin-bottom: 0;
 }
 .cbi-tabmenu li:hover a {
@@ -2219,7 +2280,7 @@ td > table > tbody > tr > td {
   border-bottom: 0.18751rem solid #5e72e4;
   border-bottom: 0.18751rem solid var(--primary);
   color: var(--primary);
-  background-color: #dce1fe;
+  background-color: var(--light-subtabs-background);
   margin-bottom: 0;
 }
 .cbi-tabmenu li[class~="cbi-tab"] a {
@@ -2442,7 +2503,8 @@ select[multiple="multiple"] {
 .cbi-section-node .cbi-value {
   padding: 0.5rem 1rem 0.5rem 1rem !important;
 }
-.cbi-tabcontainer > .cbi-value:nth-of-type(2n) {
+.cbi-tabcontainer > .cbi-value:nth-of-type(2n),
+.cbi-tabcontainer > .cbi-value:nth-of-type(2n)>textarea {
   background-color: #f9f9f9;
 }
 .cbi-value-field,
@@ -2470,8 +2532,9 @@ form > .cbi-map > .cbi-section > .cbi-section-node > .cbi-value > .cbi-value-fie
   content: "\f059";
 }
 .cbi-value-description {
+  color: #8d8d8d;
+  opacity: 0.8;
   font-size: small;
-  opacity: 0.5;
   padding: 0.5rem;
 }
 .cbi-value-title {
@@ -2540,23 +2603,11 @@ td > .ifacebadge {
   float: right;
   margin: 0 0.3rem;
 }
-/*textarea*/
-.cbi-input-textarea {
-  width: 100%;
-  border: 0;
-  outline: none;
-  min-height: 14rem;
-  padding: 0.8rem;
-  font-size: 0.8rem;
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color: black;
-}
 #syslog {
   width: 100%;
   min-height: 15rem;
   padding: 1rem;
   line-height: 1.4em;
-  font-size: small;
   color: #1e1e1e;
   border-radius: 0;
   background-color: #fff;
@@ -2580,7 +2631,7 @@ td > .ifacebadge,
 .ifacebadge > img {
   display: inline-block;
   margin: 0 0.3rem;
-  align-self: flex-start;
+  align-self: center;
 }
 .ifacebadge span {
   line-height: 1.6em;
@@ -2710,16 +2761,6 @@ td > .ifacebadge,
 .cbi-section-remove {
   padding: 0.5rem;
 }
-div.cbi-value var,
-td.cbi-value-field var {
-  font-style: italic;
-  color: #0069D6;
-}
-small {
-  font-size: 90%;
-  white-space: normal;
-  line-height: 1.42857143;
-}
 .cbi-optionals {
   padding: 1rem 1rem 0 1rem;
   border-top: 1px solid #CCC;
@@ -2812,7 +2853,7 @@ input[name="nslookup"] {
   height: 100% !important;
   background-image: url(../img/trafficbar.png);
   background-position: left top;
-  animation: sparkle 1500ms linear infinite;
+  animation: sparkle 1000ms linear infinite;
 }
 .node-system-leds .cbi-section em {
   display: block;
@@ -2829,14 +2870,13 @@ input[name="nslookup"] {
   overflow-y: hidden;
 }
 .cbi-section em {
-  padding: 0.75rem 1.5rem;
   font-size: 0.7rem;
   font-weight: 600;
-  color: #525f7f;
+  color: var(--primary);
+  text-shadow: 1px 1px 2px #ccc;
   text-align: center;
 }
 .cbi-section h4 {
-  padding: 0.75rem 1.5rem;
   font-size: 0.7rem;
   font-weight: 600;
   color: #525f7f;
@@ -2864,6 +2904,12 @@ input[name="nslookup"] {
 .node-system-packages fieldset,
 .node-system-flashops fieldset {
   margin-top: 0;
+}
+.node-system-flashops fieldset > ul {
+  padding: 1rem;
+}
+.node-system-flashops fieldset + .cbi-page-actions {
+  margin-top: 1rem;
 }
 .node-status-iptables .cbi-tabmenu,
 .node-system-packages .cbi-tabmenu,
@@ -2909,6 +2955,95 @@ input[name="nslookup"] {
 .node-nas-usb_printer em {
   display: block;
 }
+/* luci-app-passwall */
+#cbi-passwall #add_link_div,
+#cbi-passwall #set_node_div {
+  background: #fffffff0;
+}
+#cbi-passwall .cbi-section-table tbody ._now_use {
+  background: #5e72e473 !important;
+}
+/* luci-app-commands */
+.commandbox h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.commandbox code {
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+div.commandbox {
+  height: 16em;
+}
+/* luci-app-ssr-plus */
+#cbi-shadowsocksr .cbi-map-descr h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* luci-app-mwan3 */
+.node-status-mwan .cbi-tabmenu {
+  padding: 3rem 0.5rem 0 0.5rem;
+}
+/* luci-app-openclash */
+.node-services-openclash .cbi-tabmenu {
+  font-size: 0;
+}
+.node-services-openclash .cbi-tabmenu > li {
+  margin-right: 4px;
+}
+.node-services-openclash .cbi-tabmenu > li:last-child {
+  margin-right: 0;
+}
+/* luci-app-ddnsto */
+.node-services-ddnsto .cbi-section-node .cbi-value div {
+  display: table-cell;
+  line-height: 1.6;
+  font-size: 0.875rem;
+}
+
+/* luci-app-dockerman */
+#cbi-dockerd > .cbi-section > br,
+#cbi-docker > .cbi-section > br {
+  display: none;
+}
+
+/* luci-app-diskman */
+#cbi-diskman > .cbi-section > br {
+  display: none;
+}
+
+/* luci-app-istorex (Quick Start) */
+#app #main #page .app-container_body .btn-f,
+#app #main #page .app-container_body .btn-r {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
+  width: 30px;
+}
+
+/* luci-app-ttyd */
+.TTYD.node-system-terminal .main {
+  height: 100%!important;
+}
+.TTYD.node-system-terminal .main .main-right,
+.TTYD.node-system-terminal .main .main-right #maincontent,
+.TTYD.node-system-terminal .main .main-right #maincontent .container .cbi-map {
+  height: 100%!important;
+  display: flex!important;
+  flex-direction: column!important;
+}
+.TTYD.node-system-terminal .main .main-right #maincontent,
+.TTYD.node-system-terminal .main .main-right #maincontent .container,
+.TTYD.node-system-terminal .main .main-right #maincontent .container .cbi-map #terminal {
+  flex: 1!important;
+}
+
 @media screen and (max-width: 1600px) {
   .main .main-left {
     width: calc(0% + 13rem);
@@ -2916,7 +3051,7 @@ input[name="nslookup"] {
   .main .main-right {
     width: calc(100% - 13rem);
   }
-  .cbi-button {
+  .cbi-button:not(.cbi-button-up, .cbi-button-down) {
     /*padding: 0.3rem 1.5rem;*/
     font-size: 0.8rem;
   }
@@ -2932,9 +3067,6 @@ input[name="nslookup"] {
   }
   fieldset {
     padding: 0;
-  }
-  .cbi-input-textarea {
-    font-size: small;
   }
   .node-status-iptables > .main fieldset li > a {
     padding: 0.3rem 0.6rem;
@@ -2969,25 +3101,6 @@ input[name="nslookup"] {
   }
   .main > .main-left > .nav > .slide > .slide-menu > li > a {
     font-size: 0.7rem;
-  }
-}
-@media screen and (min-width: 600px) {
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar,
-  ::-webkit-scrollbar-corner {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #9e9e9e;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #757575;
-  }
-  ::-webkit-scrollbar-thumb:active {
-    background: #424242;
   }
 }
 @media screen and (max-width: 992px) {
@@ -3034,6 +3147,15 @@ input[name="nslookup"] {
     font-size: 1rem;
   }
 }
+@media screen and (max-width: 500px) {
+  .login-page .login-container {
+    margin-left: 0rem !important;
+    width: 500px;
+  }
+  .login-page .login-container .login-form {
+    max-width: 500px;
+  }
+}
 @media screen and (max-width: 480px) {
   body {
     font-size: 0.8rem;
@@ -3042,16 +3164,9 @@ input[name="nslookup"] {
     float: right;
     margin-top: 0rem !important;
   }
-  .login-page .video video {
-    width: auto !important;
-    height: 100% !important;
-  }
   .login-page .login-container {
     margin-left: 0rem !important;
     width: 100%;
-  }
-  .login-page .login-container .login-form {
-    max-width: 480px;
   }
   .login-page .login-container .login-form .form-login .input-group::before {
     color: #525461;
@@ -3124,10 +3239,9 @@ input[name="nslookup"] {
   .cbi-page-actions > div > input {
     display: none;
   }
-  .tabs::-webkit-scrollbar,
-  .cbi-tabmenu::-webkit-scrollbar {
-    width: 0px;
-    height: 0px;
+  ::-webkit-scrollbar {
+    width: 0px !important;
+    height: 0px  !important;
   }
   .tabs > li > a {
     font-size: 0.9rem;
