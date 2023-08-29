@@ -187,11 +187,17 @@ msgstr "禁用 TLS 证书"
 msgid "Disable TLS Servers certificate validation, Can be useful if system CA certificate expires or the system time is out of order"
 msgstr "禁用 TLS 服务器证书验证，当系统 CA 证书过期或系统时间错乱时，本选项可能会有用"
 
-msgid "Enable HTTP/3"
-msgstr "启用 HTTP/3"
+msgid "Local DNS Enable HTTP/3"
+msgstr "本地 DNS 启用 HTTP/3"
 
-msgid "Enable DoH HTTP/3 protocol support for remote DNS, Upstream DNS server support is required (Experimental)"
-msgstr "为远程 DNS 启用 DoH HTTP/3 协议支持，需要上游 DNS 服务器支持（实验性，谨慎启用该功能）"
+msgid "Enable DoH HTTP/3 protocol for Local DNS, Upstream DNS server support is required (Experimental)"
+msgstr "本地 DNS 启用 DoH HTTP/3 协议，需要上游 DNS 服务器支持（实验性，谨慎启用该功能）"
+
+msgid "Remote DNS Enable HTTP/3"
+msgstr "远程 DNS 启用 HTTP/3"
+
+msgid "Enable DoH HTTP/3 protocol for Remote DNS, Upstream DNS server support is required (Experimental)"
+msgstr "远程 DNS 启用 DoH HTTP/3 协议，需要上游 DNS 服务器支持（实验性，谨慎启用该功能）"
 
 msgid "Enable EDNS client subnet"
 msgstr "启用 EDNS 客户端子网"
