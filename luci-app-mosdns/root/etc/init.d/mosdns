@@ -30,6 +30,7 @@ DUMP_FILE=/etc/mosdns/cache.dump
 DUMP_FILE_DEFAULT=/usr/share/mosdns/cache.dump
 DEFAULT_CONF=/usr/share/mosdns/default.yaml
 MOSDNS_SCRIPT=/usr/share/mosdns/mosdns.sh
+RULE_HOSTS=/etc/mosdns/rule/hosts.txt
 
 get_config() {
     config_get enabled $1 enabled 0
@@ -70,6 +71,14 @@ init_yaml() {
     [ $insecure_skip_verify -eq 1 ] && insecure_skip_verify=true || insecure_skip_verify=false
     [ $enable_http3_local -eq 1 ] && enable_http3_local=true || enable_http3_local=false
     [ $enable_http3_remote -eq 1 ] && enable_http3_remote=true || enable_http3_remote=false
+    if [ $enable_http3_local = true ]; then
+        http3_dns=$(uci get mosdns.config.local_dns)
+        echo "$http3_dns" | grep -oE 'https?://[^/]+' | while read -r domain; do
+            address=$(nslookup "${domain#*://}" ${bootstrap_dns} | grep -A2 Name | grep Address | awk '{print $2}')
+            sed -i "/${domain#*://}/d" $RULE_HOSTS
+            [ -n "$address" ] && echo ${domain#*://} $address >> $RULE_HOSTS
+        done
+    fi
     [ "$custom_local_dns" -eq 1 ] && \
     local_dns=$($MOSDNS_SCRIPT dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n%s  enable_http3: '${enable_http3_local}'\n",s,$i,s,s,s,s,s,s}' s='        ') || \
     local_dns=$($MOSDNS_SCRIPT dns | awk '{for(i=1;i<=NF;i++)printf "%s- addr: \"%s\"\n",s,$i,s}' s='        ')
