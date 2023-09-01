@@ -160,7 +160,7 @@ function diy_send(){
 
 # 清理临时文件
 function deltemp(){
-	unset title	content ipAddress_logrow online_list online_mac mac_online_status gatewayinfo gateway_iplist
+	unset title	content ipAddress_logrow online_list online_mac mac_online_status gateway_iplist
 	rm -f ${dir}title ${dir}content ${dir}tmp_downlist ${dir}send_enable.lock ${tempjsonpath} ${dir}cookies.txt ${dir}tmp_sort_file >/dev/null 2>&1
 	[ ! -f ${dir}ipAddress ] && rm -f ${dir}client/* >/dev/null 2>&1
 	LockFile unlock
