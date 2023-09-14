@@ -244,6 +244,12 @@ msgstr "覆盖最大 TTL 值（默认 0）"
 msgid "Modify the Maximum TTL value (seconds) for DNS answer results, 0 indicating no modification"
 msgstr "修改 DNS 应答结果的最大 TTL 值（秒），0 表示不修改"
 
+msgid "Delay Start (seconds)"
+msgstr "开机延时启动（秒）"
+
+msgid "Start MosDNS Service with delay after the system boot"
+msgstr "系统启动后延迟启动 MosDNS 服务"
+
 msgid "Logs"
 msgstr "日志"
 

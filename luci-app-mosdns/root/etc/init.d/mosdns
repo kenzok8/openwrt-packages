@@ -62,6 +62,7 @@ get_config() {
     config_get enable_http3_remote $1 enable_http3_remote 0
     config_get enable_ecs_remote $1 enable_ecs_remote 0
     config_get dns_leak $1 dns_leak 0
+    config_get delayed_time $1 delayed_time 0
 }
 
 init_yaml() {
@@ -165,7 +166,9 @@ v2dat_dump() {
 start_service() {
     config_load "mosdns"
     config_foreach get_config "mosdns"
+    [ -f "/var/mosdns_sleep.lock" ] && exit 0
     [ $enabled -ne 1 ] && return 1
+    [ "$delayed_time" -gt 0 ] && $MOSDNS_SCRIPT delayed_start
     delcron ; setcron
     [ "${CONF}" = "/etc/mosdns/config.yaml" ] && init_yaml
     :> $($MOSDNS_SCRIPT logfile)

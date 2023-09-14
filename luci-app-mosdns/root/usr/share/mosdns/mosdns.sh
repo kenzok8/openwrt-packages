@@ -136,6 +136,14 @@ v2dat_dump() {
     fi
 }
 
+sleep_time() {
+    touch /var/mosdns_sleep.lock
+    [ $(awk -F. '{print $1}' /proc/uptime) -lt "120" ] && delayed_time=$(uci -q get mosdns.config.delayed_time) || delayed_time=0
+    [ "$delayed_time" -gt 0 ] && echo "start mosdns service with delay of $delayed_time seconds" >> $(uci -q get mosdns.config.logfile)
+    sleep $delayed_time
+    rm -f /var/mosdns_sleep.lock
+}
+
 case $script_action in
     "dns")
         interface_dns
@@ -163,6 +171,9 @@ case $script_action in
     ;;
     "version")
         mosdns version
+    ;;
+    "delayed_start")
+        sleep_time
     ;;
     *)
         exit 0
