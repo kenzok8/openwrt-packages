@@ -165,11 +165,6 @@ o.datatype = "and(uinteger,min(0),max(604800))"
 o.default = "0"
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
-o = s:taboption("advanced", Value, "delayed_time", translate("Delay Start (seconds)"), translate("Start MosDNS Service with delay after the system boot"))
-o.datatype = "and(uinteger,min(0))"
-o.default = "0"
-o:depends("configfile", "/etc/mosdns/config.yaml")
-
 o = s:taboption("advanced", Flag, "adblock", translate("Enable DNS ADblock"))
 o:depends("configfile", "/etc/mosdns/config.yaml")
 o.default = false

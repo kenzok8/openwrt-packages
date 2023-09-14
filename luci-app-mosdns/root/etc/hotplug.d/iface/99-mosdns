@@ -1,5 +1,2 @@
 #!/bin/sh
-
-[ -f "/var/mosdns_sleep.lock" ] && exit 0
-
 [ "$ACTION" = ifup ] && /etc/init.d/mosdns restart
