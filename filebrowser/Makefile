@@ -20,6 +20,7 @@ PKG_MAINTAINER:=CN_SZTL <cnsztl@immortalwrt.org>
 PKG_BUILD_DEPENDS:=golang/host node/host
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
+PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/filebrowser/filebrowser
 GO_PKG_LDFLAGS_X:= \
