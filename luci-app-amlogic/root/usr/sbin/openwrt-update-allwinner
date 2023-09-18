@@ -19,15 +19,22 @@ AUTO_MAINLINE_UBOOT=${2}
 BACKUP_RESTORE_CONFIG=${3}
 
 # Current FDT file
-if [ -f /boot/uEnv.txt ]; then
+if [[ -f "/boot/uEnv.txt" ]]; then
     source /boot/uEnv.txt 2>/dev/null
-    CURRENT_FDTFILE=$(basename $FDT)
+    MYDTB_FDTFILE=$(basename $FDT)
+elif [[ -f "/boot/armbianEnv.txt" ]]; then
+    source /boot/armbianEnv.txt 2>/dev/null
+    MYDTB_FDTFILE="$(basename $fdtfile)"
+elif [[ -f "/etc/flippy-openwrt-release" ]]; then
+    source /etc/flippy-openwrt-release 2>/dev/null
+    MYDTB_FDTFILE="${FDTFILE}"
 fi
-if [ -n "$CURRENT_FDTFILE" ]; then
-    MYDTB_FDTFILE="$CURRENT_FDTFILE"
-else
-    MYDTB_FDTFILE="sun50i-h6-vplus-cloud.dtb"
-fi
+
+[[ -z "${MYDTB_FDTFILE}" ]] && {
+    echo "Invalid FDTFILE: [ ${MYDTB_FDTFILE} ]"
+    exit 1
+}
+
 # Current device model
 MYDEVICE_NAME=$(cat /proc/device-tree/model | tr -d '\000')
 if [[ -z "${MYDEVICE_NAME}" ]]; then
