@@ -1,0 +1,43 @@
+From 9c235f5aa42fe0dcf410486b199b30dc9e40c998 Mon Sep 17 00:00:00 2001
+From: Irine Sistiana <49315432+IrineSistiana@users.noreply.github.com>
+Date: Mon, 18 Sep 2023 09:50:44 +0800
+Subject: [PATCH 06/10] fixed udp oob buf
+
+---
+ pkg/server/udp.go | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/pkg/server/udp.go b/pkg/server/udp.go
+index c1c9aa9..a1e478b 100644
+--- a/pkg/server/udp.go
++++ b/pkg/server/udp.go
+@@ -66,14 +66,14 @@ func (s *UDPServer) ServeUDP(c *net.UDPConn) error {
+ 	if err != nil {
+ 		return fmt.Errorf("failed to init oob handler, %w", err)
+ 	}
+-	var ob []byte
++	var ob *[]byte
+ 	if oobReader != nil {
+-		ob := pool.GetBuf(1024)
++		ob = pool.GetBuf(1024)
+ 		defer pool.ReleaseBuf(ob)
+ 	}
+ 
+ 	for {
+-		n, oobn, _, remoteAddr, err := c.ReadMsgUDPAddrPort(*rb, ob)
++		n, oobn, _, remoteAddr, err := c.ReadMsgUDPAddrPort(*rb, *ob)
+ 		if err != nil {
+ 			return fmt.Errorf("unexpected read err: %w", err)
+ 		}
+@@ -88,7 +88,7 @@ func (s *UDPServer) ServeUDP(c *net.UDPConn) error {
+ 		var dstIpFromCm net.IP
+ 		if oobReader != nil {
+ 			var err error
+-			dstIpFromCm, err = oobReader(ob[:oobn])
++			dstIpFromCm, err = oobReader((*ob)[:oobn])
+ 			if err != nil {
+ 				s.opts.Logger.Error("failed to get dst address from oob", zap.Error(err))
+ 			}
+-- 
+2.34.8
+

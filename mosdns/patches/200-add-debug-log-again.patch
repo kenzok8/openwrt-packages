@@ -1,12 +1,13 @@
-From 90530ab71c101e8aa620a8d7669ffd7f59dfebf4 Mon Sep 17 00:00:00 2001
+From 3f57bcbf18fc5a537a4365ce1e5f5798db3a9dc6 Mon Sep 17 00:00:00 2001
 From: sbwml <admin@cooluc.com>
 Date: Sun, 25 Jun 2023 06:50:27 +0800
-Subject: [PATCH] add debug log again
+Subject: [PATCH 10/10] add debug log again
 
 ---
  pkg/server/dns_handler/entry_handler.go | 4 +++-
+ pkg/server/http_handler/handler.go      | 1 +
  plugin/executable/cache/cache.go        | 3 +++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ 3 files changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/pkg/server/dns_handler/entry_handler.go b/pkg/server/dns_handler/entry_handler.go
 index 4737811..cec4123 100644
@@ -23,11 +24,23 @@ index 4737811..cec4123 100644
  	}
  
  	if err == nil && respMsg == nil {
+diff --git a/pkg/server/http_handler/handler.go b/pkg/server/http_handler/handler.go
+index 3e800f9..25f52e1 100644
+--- a/pkg/server/http_handler/handler.go
++++ b/pkg/server/http_handler/handler.go
+@@ -96,6 +96,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+ 	if err != nil {
+ 		h.warnErr(req, "invalid request", err)
+ 		w.WriteHeader(http.StatusBadRequest)
++		w.Write([]byte("Bad Request"))
+ 		return
+ 	}
+ 
 diff --git a/plugin/executable/cache/cache.go b/plugin/executable/cache/cache.go
-index f67d740..c590a01 100644
+index 58162ee..dd833dc 100644
 --- a/plugin/executable/cache/cache.go
 +++ b/plugin/executable/cache/cache.go
-@@ -203,7 +203,10 @@ func (c *Cache) Exec(ctx context.Context, qCtx *query_context.Context, next sequ
+@@ -204,7 +204,10 @@ func (c *Cache) Exec(ctx context.Context, qCtx *query_context.Context, next sequ
  		c.hitTotal.Inc()
  		cachedResp.Id = q.Id // change msg id
  		shuffleIP(cachedResp)
