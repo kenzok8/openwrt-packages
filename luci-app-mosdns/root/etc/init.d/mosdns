@@ -62,6 +62,7 @@ get_config() {
     config_get enable_http3_remote $1 enable_http3_remote 0
     config_get enable_ecs_remote $1 enable_ecs_remote 0
     config_get dns_leak $1 dns_leak 0
+    config_get cloudflare $1 cloudflare 0
 }
 
 init_yaml() {
@@ -103,6 +104,12 @@ init_yaml() {
         sed -i "/ecs_remote/d;" $CONF
     fi
     [ $dns_leak -eq 1 ] && sed -i "s,primary: query_is_local_ip,primary: query_is_remote,g" $CONF
+    if [ $cloudflare -eq 1 ]; then
+        cloudflare_ip=$(sh $MOSDNS_SCRIPT cloudflare)
+        sed -i "s/CLOUDFLARE_IP/$cloudflare_ip/g" $CONF
+    else
+        sed -i '/\$cloudflare_cidr\|CLOUDFLARE_IP/d' $CONF
+    fi
     rm -rf $TMPDIR
 }
 

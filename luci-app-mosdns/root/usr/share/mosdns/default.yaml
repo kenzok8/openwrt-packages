@@ -74,6 +74,12 @@ plugins:
       files:
         - "/etc/mosdns/rule/local-ptr.txt"
 
+  - tag: cloudflare_cidr
+    type: ip_set
+    args:
+      files:
+        - "/etc/mosdns/rule/cloudflare-cidr.txt"
+
   - tag: lazy_cache
     type: cache
     args:
@@ -123,6 +129,8 @@ plugins:
         exec: $modify_ddns_ttl
       - matches: "!qname $ddnslist"
         exec: $modify_ttl
+      - matches: "resp_ip $cloudflare_cidr"
+        exec: black_hole CLOUDFLARE_IP
       - matches: has_resp
         exec: accept
 

@@ -199,6 +199,29 @@ function o.write(self, section, value)
     fs.writefile("/etc/mosdns/config_custom.yaml", value)
 end
 
+s:tab("cloudflare", translate("Cloudflare Options"))
+o = s:taboption("cloudflare", Flag, "cloudflare", translate("Enabled"), translate("Match the parsing result with the Cloudflare IP ranges, and when there is a successful match, use the 'Custom IP' as the parsing result (experimental feature)"))
+o.rmempty = false
+o.default = false
+o:depends("configfile", "/etc/mosdns/config.yaml")
+
+o = s:taboption("cloudflare", DynamicList, "cloudflare_ip", translate("Custom IP"))
+o.datatype = "ipaddr"
+o:depends("configfile", "/etc/mosdns/config.yaml")
+
+o = s:taboption("cloudflare", TextValue, "cloudflare_cidr", translate("Cloudflare IP Ranges"))
+o.description = translate("IPv4 CIDR：") .. [[<a href="https://www.cloudflare.com/ips-v4" target="_blank">https://www.cloudflare.com/ips-v4</a>]] .. '<br />' .. translate("IPv6 CIDR：") .. [[<a href="https://www.cloudflare.com/ips-v6" target="_blank">https://www.cloudflare.com/ips-v6</a>]]
+o.template = "cbi/tvalue"
+o.rows = 15
+o:depends("configfile", "/etc/mosdns/config.yaml")
+function o.cfgvalue(self, section)
+    return fs.readfile("/etc/mosdns/rule/cloudflare-cidr.txt")
+end
+function o.write(self, section, value)
+    value = value:gsub("\r\n?", "\n")
+    fs.writefile("/etc/mosdns/rule/cloudflare-cidr.txt", value)
+end
+
 s:tab("api", translate("API Options"))
 
 o = s:taboption("api", Value, "listen_port_api", translate("API Listen port"))

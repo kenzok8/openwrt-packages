@@ -136,6 +136,10 @@ v2dat_dump() {
     fi
 }
 
+cloudflare_ip() {
+    uci -q get mosdns.config.cloudflare_ip
+}
+
 case $script_action in
     "dns")
         interface_dns
@@ -160,6 +164,9 @@ case $script_action in
     ;;
     "v2dat_dump")
         v2dat_dump
+    ;;
+    "cloudflare")
+        cloudflare_ip
     ;;
     "version")
         mosdns version

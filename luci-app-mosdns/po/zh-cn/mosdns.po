@@ -7,6 +7,9 @@ msgstr "基本选项"
 msgid "Advanced Options"
 msgstr "高级选项"
 
+msgid "Cloudflare Options"
+msgstr "Cloudflare 选项"
+
 msgid "API Options"
 msgstr "API 选项"
 
@@ -45,6 +48,15 @@ msgstr "刷新成功"
 
 msgid "Flushing Failed, Please check if MosDNS is enabled"
 msgstr "刷新失败，请检查 MosDNS 是否已启用"
+
+msgid "Match the parsing result with the Cloudflare IP ranges, and when there is a successful match, use the 'Custom IP' as the parsing result (experimental feature)"
+msgstr "将解析结果与 Cloudflare IP 范围进行匹配，当匹配成功时，使用 “自选 IP” 作为解析结果（实验性功能）"
+
+msgid "Custom IP"
+msgstr "自选 IP"
+
+msgid "Cloudflare IP Ranges"
+msgstr "Cloudflare IP 范围"
 
 msgid "Log Level"
 msgstr "日志等级"
