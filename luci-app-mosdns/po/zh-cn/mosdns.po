@@ -13,7 +13,7 @@ msgstr "Cloudflare 选项"
 msgid "API Options"
 msgstr "API 选项"
 
-msgid "MosDNS is a 'programmable' DNS forwarder."
+msgid "MosDNS is a plugin-based DNS forwarder/traffic splitter."
 msgstr "MosDNS 是一个插件化的 DNS 转发/分流器。"
 
 msgid "RUNNING"
@@ -230,10 +230,16 @@ msgid "Enable this option fallback policy forces forwarding to remote DNS"
 msgstr "启用此选项 fallback 策略会强制转发到远程 DNS"
 
 msgid "DNS Cache Size"
-msgstr "DNS 缓存大小（条）"
+msgstr "DNS 缓存大小"
 
-msgid "Cache Survival Time"
-msgstr "缓存生存时间（秒）"
+msgid "DNS cache size (in piece). To disable caching, please set to 0."
+msgstr "DNS 缓存大小（单位：条），要禁用缓存，请设置为 0"
+
+msgid "Lazy Cache TTL"
+msgstr "乐观缓存 TTL"
+
+msgid "Lazy cache survival time (in second). To disable Lazy Cache, please set to 0."
+msgstr "乐观缓存生存时间（单位：秒），要禁用乐观缓存，请设置为 0"
 
 msgid "Cache Dump"
 msgstr "自动保存缓存"

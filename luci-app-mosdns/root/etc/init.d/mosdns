@@ -110,6 +110,8 @@ init_yaml() {
     else
         sed -i '/\$cloudflare_cidr\|CLOUDFLARE_IP/d' $CONF
     fi
+    # disable lazy_cache plugin when cache_size is 0
+    [ $cache_size -eq 0 ] && sed -i -E ':l;N;/exec: \$lazy_cache/s/(\n[^\n]*){6}$//;bl' $CONF
     rm -rf $TMPDIR
 }
 

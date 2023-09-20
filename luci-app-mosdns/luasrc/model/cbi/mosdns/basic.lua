@@ -8,7 +8,7 @@ else
 end
 m = Map("mosdns")
 m.title = translate("MosDNS") .. " " .. mosdns_version
-m.description = translate("MosDNS is a 'programmable' DNS forwarder.")
+m.description = translate("MosDNS is a plugin-based DNS forwarder/traffic splitter.")
 
 m:section(SimpleSection).template = "mosdns/mosdns_status"
 
@@ -135,12 +135,12 @@ o.rmempty = false
 o.default = false
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
-o = s:taboption("advanced", Value, "cache_size", translate("DNS Cache Size"))
+o = s:taboption("advanced", Value, "cache_size", translate("DNS Cache Size"), translate("DNS cache size (in piece). To disable caching, please set to 0."))
 o.datatype = "and(uinteger,min(0))"
 o.default = "8000"
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
-o = s:taboption("advanced", Value, "cache_survival_time", translate("Cache Survival Time"))
+o = s:taboption("advanced", Value, "cache_survival_time", translate("Lazy Cache TTL"), translate("Lazy cache survival time (in second). To disable Lazy Cache, please set to 0."))
 o.datatype = "and(uinteger,min(0))"
 o.default = "86400"
 o:depends("configfile", "/etc/mosdns/config.yaml")
