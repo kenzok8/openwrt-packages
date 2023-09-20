@@ -76,14 +76,14 @@ msgstr "广告过滤规则来源"
 msgid "When using custom rule sources, use the rule types supported by MosDNS"
 msgstr "使用自定义规则来源时，请使用 MosDNS 支持的规则类型"
 
-msgid "Reload Service"
-msgstr "重载服务"
+msgid "Restart-Service"
+msgstr "重启服务"
 
-msgid "Reload service to take effect of new configuration"
-msgstr "重载 MosDNS 服务生效配置文件"
+msgid "Restart the MosDNS process to take effect of new configuration"
+msgstr "重启 MosDNS 进程使新配置文件生效"
 
-msgid "<font color=\"ff0000\"><strong>View the Custom YAML Configuration file used by this MosDNS. You can edit it as you own need.</strong></font>"
-msgstr "<font color=\"ff0000\"><strong>注意！此页的更改仅当配置文件为 “自定义” 时才会生效</strong></font>"
+msgid "Configuration Editor"
+msgstr "配置编辑器"
 
 msgid "Geodata Update"
 msgstr "更新数据库"

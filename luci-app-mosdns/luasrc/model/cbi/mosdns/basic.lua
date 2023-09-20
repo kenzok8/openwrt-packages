@@ -178,26 +178,26 @@ o:value("https://raw.githubusercontent.com/ookangzheng/dbl-oisd-nl/master/dbl_li
 o:value("https://raw.githubusercontent.com/ookangzheng/dbl-oisd-nl/master/dbl.txt", "oisd (big)")
 o:value("https://raw.githubusercontent.com/QiuSimons/openwrt-mos/master/dat/serverlist.txt", "QiuSimons/openwrt-mos")
 
-o = s:taboption("basic",  Button, "_reload", translate("Reload Service"), translate("Reload service to take effect of new configuration"))
+o = s:taboption("basic",  Button, "_reload", translate("Restart-Service"), translate("Restart the MosDNS process to take effect of new configuration"))
 o.write = function()
     sys.exec("/etc/init.d/mosdns reload")
 end
 o:depends("configfile", "/etc/mosdns/config_custom.yaml")
 
-o = s:taboption("basic", TextValue, "manual-config")
-o.description = translate("<font color=\"ff0000\"><strong>View the Custom YAML Configuration file used by this MosDNS. You can edit it as you own need.</strong></font>")
+o = s:taboption("basic", TextValue, "config_custom", translate("Configuration Editor"))
 o.template = "cbi/tvalue"
 o.rows = 25
 o:depends("configfile", "/etc/mosdns/config_custom.yaml")
-
 function o.cfgvalue(self, section)
     return fs.readfile("/etc/mosdns/config_custom.yaml")
 end
-
 function o.write(self, section, value)
     value = value:gsub("\r\n?", "\n")
     fs.writefile("/etc/mosdns/config_custom.yaml", value)
 end
+-- codemirror
+o = s:taboption("basic", DummyValue, "")
+o.template = "mosdns/mosdns_editor"
 
 s:tab("cloudflare", translate("Cloudflare Options"))
 o = s:taboption("cloudflare", Flag, "cloudflare", translate("Enabled"), translate("Match the parsing result with the Cloudflare IP ranges, and when there is a successful match, use the 'Custom IP' as the parsing result (experimental feature)"))
