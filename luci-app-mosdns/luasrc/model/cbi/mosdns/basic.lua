@@ -40,8 +40,8 @@ o.default = "info"
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
 o = s:taboption("basic", Value, "logfile", translate("Log File"))
-o.placeholder = "/tmp/mosdns.log"
-o.default = "/tmp/mosdns.log"
+o.placeholder = "/var/log/mosdns.log"
+o.default = "/var/log/mosdns.log"
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
 o = s:taboption("basic", Flag, "redirect", translate("DNS Forward"), translate("Forward Dnsmasq Domain Name resolution requests to MosDNS"))
@@ -92,7 +92,7 @@ s:tab("advanced", translate("Advanced Options"))
 
 o = s:taboption("advanced", Value, "concurrent", translate("Concurrent"), translate("DNS query request concurrency, The number of upstream DNS servers that are allowed to initiate requests at the same time"))
 o.datatype = "and(uinteger,min(1),max(3))"
-o.default = "1"
+o.default = "2"
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
 o = s:taboption("advanced", Value, "max_conns", translate("Maximum Connections"), translate("Set the Maximum connections for DoH and pipeline's TCP/DoT, Except for the HTTP/3 protocol"))

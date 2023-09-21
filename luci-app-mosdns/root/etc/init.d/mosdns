@@ -45,7 +45,7 @@ get_config() {
     config_get geo_update_day_time $1 geo_update_day_time 2
     config_get geo_update_week_time $1 geo_update_week_time "*"
     config_get listen_port $1 listen_port 5335
-    config_get log_file $1 logfile "/tmp/mosdns.log"
+    config_get log_file $1 logfile "/var/log/mosdns.log"
     config_get log_level $1 log_level "info"
     config_get maximum_ttl_custom $1 maximum_ttl 0
     config_get minimal_ttl_custom $1 minimal_ttl 0
