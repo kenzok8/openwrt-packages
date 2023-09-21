@@ -24,126 +24,147 @@ if [ -f /boot/armbianEnv.txt ]; then
     CURRENT_FDTFILE=$(basename ${fdtfile})
 fi
 MYDEVICE_NAME=$(cat /proc/device-tree/model | tr -d '\000')
-if [[ -z "${MYDEVICE_NAME}" ]]; then
-    echo "The device name is empty and cannot be recognized."
-    exit 1
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "Chainedbox L1 Pro")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3328-l1pro-1296mhz.dtb"
-    fi
-    SOC="l1pro"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "BeikeYun")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3328-beikeyun-1296mhz.dtb"
-    fi
-    SOC="beikeyun"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa CM3 RPI CM4 IO")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3566-radxa-cm3-rpi-cm4-io.dtb"
-    fi
-    SOC="radxa-cm3-rpi-cm4-io"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R66S")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3568-fastrhino-r66s.dtb"
-    fi
-    SOC="r66s"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "FastRhino R68S")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
-    fi
-    SOC="r68s"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H66K Board")" != "" || "$(echo ${MYDEVICE_NAME} | grep "Hlink H66K")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3568-hlink-h66k.dtb"
-    fi
-    SOC="h66k"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H68K Board")" != "" || "$(echo ${MYDEVICE_NAME} | grep "Hlink H68K")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3568-hlink-h68k.dtb"
-    fi
-    SOC="h68k"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OPC-H69K Board")" != "" || "$(echo ${MYDEVICE_NAME} | grep "Hlink H69K")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3568-hlink-h69k.dtb"
-    fi
-    SOC="h69k"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa E25")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3568-radxa-e25.dtb"
-    fi
-    SOC="e25"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "Ariaboard Photonicat")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3568-photonicat.dtb"
-    fi
-    SOC="photonicat"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "Watermelon Pi")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3568-watermelon-pi.dtb"
-    fi
-    SOC="watermelon-pi"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "Radxa ROCK 5B")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3588-rock-5b.dtb"
-    fi
-    SOC="rock5b"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OWL H88K-V3")" != "" || "$(echo ${MYDEVICE_NAME} | grep "Hlink H88K-V3")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3588-hlink-h88k-v3.dtb"
-    fi
-    SOC="h88k-v3"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "HINLINK OWL H88K")" != "" || "$(echo ${MYDEVICE_NAME} | grep "Hlink H88K")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3588-hlink-h88k.dtb"
-    fi
-    SOC="ak88/h88k"
-elif [[ "$(echo ${MYDEVICE_NAME} | grep "Hlink H28K")" != "" ]]; then
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="rk3528-hlink-h28k.dtb"
-    fi
-    SOC="h28k"
-elif [[ -f "/etc/flippy-openwrt-release" ]]; then
-    source /etc/flippy-openwrt-release 2>/dev/null
-    if [ -n "${CURRENT_FDTFILE}" ]; then
-        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-    else
-        MYDTB_FDTFILE="${FDTFILE}"
-    fi
-    SOC="${SOC}"
-else
-    echo "Unknown device: [ ${MYDEVICE_NAME} ], Not supported."
-    exit 1
-fi
+case $MYDEVICE_NAME in
+	"")
+		echo "The device name is empty and cannot be recognized."
+			exit 1
+		;;
+
+	"Chainedbox L1 Pro")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3328-l1pro-1296mhz.dtb"
+		fi
+			SOC="l1pro"
+		;;
+	"BeikeYun")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3328-beikeyun-1296mhz.dtb"
+		fi
+			SOC="beikeyun"
+		;;
+	"Radxa CM3 RPI CM4 IO")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3566-radxa-cm3-rpi-cm4-io.dtb"
+		fi
+			SOC="radxa-cm3-rpi-cm4-io"
+		;;
+	"FastRhino R66S")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-fastrhino-r66s.dtb"
+		fi
+			SOC="r66s"
+		;;
+	"FastRhino R68S")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
+		fi
+			SOC="r68s"
+		;;
+	"HINLINK OPC-H66K Board"|"Hlink H66K")
+		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h66k.dtb" ];then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-hlink-h66k.dtb"
+		fi
+			SOC="h66k"
+		;;
+	"HINLINK OPC-H68K Board")
+		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h68k.dtb" ];then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-hlink-h68k.dtb"
+		fi
+			SOC="h68k"
+		;;
+	"HINLINK OPC-H69K Board")
+		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h69k.dtb" ];then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-hlink-h69k.dtb"
+		fi
+			SOC="h69k"
+		;;
+	"Radxa E25")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-radxa-e25.dtb"
+		fi
+			SOC="e25"
+		;;
+	"Ariaboard Photonicat")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-photonicat.dtb"
+		fi
+			SOC="photonicat"
+		;;
+	"Watermelon Pi")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-watermelon-pi.dtb"
+		fi
+			SOC="watermelon-pi"
+		;;
+	"Radxa ROCK 5B")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3588-rock-5b.dtb"
+		fi
+			SOC="rock5b"
+		;;
+	"HINLINK OWL H88K-V3"|"Hlink H88K-V3")
+		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k-v3.dtb" ];then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3588-hlink-h88k-v3.dtb"
+		fi
+			SOC="h88k-v3"
+		;;
+	"HINLINK OWL H88K"|"Hlink H88K")
+		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k.dtb" ];then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3588-hlink-h88k.dtb"
+		fi
+			SOC="ak88/h88k"
+		;;
+	"Hlink H28K")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3528-hlink-h28k.dtb"
+		fi
+			SOC="h28k"
+		;;
+	*)	#default
+		if [ -f "/etc/flippy-openwrt-release" ]; then
+			source /etc/flippy-openwrt-release 2>/dev/null
+			if [ -n "${CURRENT_FDTFILE}" ]; then
+				MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+			else
+				MYDTB_FDTFILE="${FDTFILE}"
+			fi
+			SOC="${SOC}"
+		else
+			echo "Unknown device: [ ${MYDEVICE_NAME} ], Not supported."
+			exit 1
+		fi
+		;;
+esac
 
 [[ -z "${MYDTB_FDTFILE}" || -z "${SOC}" ]] && {
     echo "Invalid FDTFILE or SOC: [ ${MYDTB_FDTFILE} / ${SOC} ]"
@@ -678,6 +699,8 @@ echo "Start copy data from ${P2} to /boot ..."
 cd /boot
 echo -n "backup armbianEnv.txt ..."
 cp armbianEnv.txt /tmp/
+echo -n "backup current dtb file ..."
+cp -v dtb/rockchip/${CURRENT_FDTFILE} /tmp/
 echo -n "remove old boot files ..."
 rm -rf *
 echo "done"
@@ -697,18 +720,25 @@ sed -e '/rootfstype=/d' -i armbianEnv.txt
 sed -e '/rootflags=/d' -i armbianEnv.txt
 case $SOC in
 l1pro | beikeyun)
-    echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-    ;;
+	echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+	;;
 *)
-    echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-    ;;
+	echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+	;;
 esac
 cat >>armbianEnv.txt <<EOF
 rootdev=UUID=${NEW_ROOT_UUID}
 rootfstype=btrfs
 rootflags=compress=zstd:${ZSTD_LEVEL}
 EOF
+
+# 如果新的dtb文件不存在,则用旧的代替
+if [ ! -f "dtb/rockchip/${MYDTB_FDTFILE}" ];then
+	echo "The new dtb file does not exist, replace it with the old one."
+	cp -v /tmp/${CURRENT_FDTFILE} dtb/rockchip/${MYDTB_FDTFILE}
+fi
 sync
+
 echo "done"
 echo
 
