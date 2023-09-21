@@ -73,8 +73,11 @@ msgstr "启用 DNS 广告过滤"
 msgid "ADblock Source"
 msgstr "广告过滤规则来源"
 
-msgid "When using custom rule sources, use the rule types supported by MosDNS"
-msgstr "使用自定义规则来源时，请使用 MosDNS 支持的规则类型"
+msgid "When using custom rule sources, please use rule types supported by MosDNS (domain lists)."
+msgstr "使用自定义规则来源时，请使用 MosDNS 支持的规则类型（域名列表）"
+
+msgid "Support for local files, such as: file:///var/mosdns/example.txt"
+msgstr "支持本地文件，例如：file:///var/mosdns/example.txt"
 
 msgid "Restart-Service"
 msgstr "重启服务"

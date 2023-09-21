@@ -4,31 +4,17 @@ Date: Sun, 25 Jun 2023 06:50:27 +0800
 Subject: [PATCH 10/10] add debug log again
 
 ---
- pkg/server/dns_handler/entry_handler.go | 4 +++-
- pkg/server/http_handler/handler.go      | 1 +
- plugin/executable/cache/cache.go        | 3 +++
- 3 files changed, 7 insertions(+), 1 deletion(-)
+ pkg/server/http_handler.go          | 1 +
+ pkg/server_handler/entry_handler.go | 2 ++
+ pkg/upstream/bootstrap/bootstrap.go | 2 +-
+ plugin/executable/cache/cache.go    | 3 +++
+ 4 files changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/pkg/server/dns_handler/entry_handler.go b/pkg/server/dns_handler/entry_handler.go
-index 4737811..cec4123 100644
---- a/pkg/server/dns_handler/entry_handler.go
-+++ b/pkg/server/dns_handler/entry_handler.go
-@@ -90,7 +90,9 @@ func (h *EntryHandler) ServeDNS(ctx context.Context, qCtx *query_context.Context
- 	err := h.opts.Entry.Exec(ctx, qCtx)
- 	respMsg := qCtx.R()
- 	if err != nil {
--		h.opts.Logger.Warn("entry err", qCtx.InfoField(), zap.Error(err))
-+		h.opts.Logger.Warn("entry returned an err", qCtx.InfoField(), zap.Error(err))
-+	} else {
-+		h.opts.Logger.Debug("entry returned", qCtx.InfoField())
- 	}
- 
- 	if err == nil && respMsg == nil {
-diff --git a/pkg/server/http_handler/handler.go b/pkg/server/http_handler/handler.go
-index 3e800f9..25f52e1 100644
---- a/pkg/server/http_handler/handler.go
-+++ b/pkg/server/http_handler/handler.go
-@@ -96,6 +96,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+diff --git a/pkg/server/http_handler.go b/pkg/server/http_handler.go
+index 58f5811..5fa76b4 100644
+--- a/pkg/server/http_handler.go
++++ b/pkg/server/http_handler.go
+@@ -94,6 +94,7 @@ func (h *HttpHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
  	if err != nil {
  		h.warnErr(req, "invalid request", err)
  		w.WriteHeader(http.StatusBadRequest)
@@ -36,6 +22,32 @@ index 3e800f9..25f52e1 100644
  		return
  	}
  
+diff --git a/pkg/server_handler/entry_handler.go b/pkg/server_handler/entry_handler.go
+index 520e3d2..38df952 100644
+--- a/pkg/server_handler/entry_handler.go
++++ b/pkg/server_handler/entry_handler.go
+@@ -87,6 +87,8 @@ func (h *EntryHandler) Handle(ctx context.Context, q *dns.Msg, qInfo server.Quer
+ 	respMsg := qCtx.R()
+ 	if err != nil {
+ 		h.opts.Logger.Warn("entry err", qCtx.InfoField(), zap.Error(err))
++	} else {
++		h.opts.Logger.Debug("entry returned", qCtx.InfoField())
+ 	}
+ 
+ 	if err == nil && respMsg == nil {
+diff --git a/pkg/upstream/bootstrap/bootstrap.go b/pkg/upstream/bootstrap/bootstrap.go
+index 2cd8ef9..5192053 100644
+--- a/pkg/upstream/bootstrap/bootstrap.go
++++ b/pkg/upstream/bootstrap/bootstrap.go
+@@ -117,7 +117,7 @@ func (sp *Bootstrap) tryUpdate() {
+ 					if updateInterval < minimumUpdateInterval {
+ 						updateInterval = minimumUpdateInterval
+ 					}
+-					sp.logger.Info(
++					sp.logger.Debug(
+ 						"bootstrap addr updated",
+ 						zap.String("fqdn", sp.fqdn),
+ 						zap.Stringer("addr", addr),
 diff --git a/plugin/executable/cache/cache.go b/plugin/executable/cache/cache.go
 index 58162ee..dd833dc 100644
 --- a/plugin/executable/cache/cache.go

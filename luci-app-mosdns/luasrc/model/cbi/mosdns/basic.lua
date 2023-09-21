@@ -60,6 +60,7 @@ o:value("114.114.115.115", "114.114.115.115 (114DNS Secondary)")
 o:value("180.76.76.76", "180.76.76.76 (Baidu DNS)")
 o:value("https://doh.pub/dns-query", "DNSPod DoH")
 o:value("https://dns.alidns.com/dns-query", "AliDNS DoH")
+o:value("quic://dns.alidns.com", "AliDNS DoQ")
 o:value("https://doh.360.cn/dns-query", "360DNS DoH")
 o:depends("custom_local_dns", "1")
 
@@ -169,9 +170,8 @@ o = s:taboption("advanced", Flag, "adblock", translate("Enable DNS ADblock"))
 o:depends("configfile", "/etc/mosdns/config.yaml")
 o.default = false
 
-o = s:taboption("advanced", Value, "ad_source", translate("ADblock Source"), translate("When using custom rule sources, use the rule types supported by MosDNS"))
+o = s:taboption("advanced", DynamicList, "ad_source", translate("ADblock Source"), translate("When using custom rule sources, please use rule types supported by MosDNS (domain lists).") .. '<br />' .. translate("Support for local files, such as: file:///var/mosdns/example.txt"))
 o:depends("adblock", "1")
-o.default = "https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt"
 o:value("geosite.dat", "v2ray-geosite")
 o:value("https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt", "anti-AD")
 o:value("https://raw.githubusercontent.com/ookangzheng/dbl-oisd-nl/master/dbl_light.txt", "oisd (small)")
