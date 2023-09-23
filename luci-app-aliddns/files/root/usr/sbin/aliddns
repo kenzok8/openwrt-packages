@@ -102,11 +102,14 @@ check_aliddns6() {
 		return 0
 	fi
 	current_ip6=$(resolve2ip6 "$dm_real")
-	if [ "Z$current_ip6" == "Z" ]; then
+
+    #urlencode current_ip6
+    current_ip6_urlencode=$(urlencode "$current_ip6")
+	if [ "Z$current_ip6_urlencode" == "Z" ]; then
 		rrid6='' # NO Resolve IP Means new Record_ID
 	fi
-	echo "$DATE DOMAIN-IP6: ${current_ip6}"
-	if [ "Z$ip6" == "Z$current_ip6" ]; then
+	echo "$DATE DOMAIN-IP6: ${current_ip6_urlencode}"
+	if [ "Z$ip6" == "Z$current_ip6_urlencode" ]; then
 		echo "$DATE IPv6 dont need UPDATE..."
 		return 0
 	else

@@ -1,0 +1,32 @@
+From 1fa552cbe353e6467d33bd9366712ad150f06af0 Mon Sep 17 00:00:00 2001
+From: Irine Sistiana <49315432+IrineSistiana@users.noreply.github.com>
+Date: Sat, 23 Sep 2023 14:29:25 +0800
+Subject: [PATCH 9/9] upstream/doq: send STREAM FIN after query is sent
+
+fixed #720
+---
+ pkg/upstream/doq/upstream.go | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/pkg/upstream/doq/upstream.go b/pkg/upstream/doq/upstream.go
+index 23d7f1c..78d30db 100644
+--- a/pkg/upstream/doq/upstream.go
++++ b/pkg/upstream/doq/upstream.go
+@@ -242,6 +242,14 @@ func (u *Upstream) exchange(s quic.Stream, payload []byte) (*dns.Msg, error) {
+ 		return nil, err
+ 	}
+ 
++	// RFC 9250 4.2
++	//    The client MUST send the DNS query over the selected stream and MUST
++	//    indicate through the STREAM FIN mechanism that no further data will
++	//    be sent on that stream.
++	//
++	// Call Close() here will send the STREAM FIN. It won't close Read.
++	s.Close()
++
+ 	resp, _, err := dnsutils.ReadMsgFromTCP(s)
+ 	if err != nil {
+ 		return nil, err
+-- 
+2.34.8
+
