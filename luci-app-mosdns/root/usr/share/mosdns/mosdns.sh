@@ -53,7 +53,7 @@ get_adlist() (
 )
 
 adlist_update() (
-    [ $(uci -q get mosdns.config.adblock) -eq 0 ] && exit 0
+    [ "$(uci -q get mosdns.config.adblock)" != 1 ] && exit 0
     ad_source=$(uci -q get mosdns.config.ad_source)
     AD_TMPDIR=$(mktemp -d) || exit 1
     google_status=$(curl -I -4 -m 3 -o /dev/null -s -w %{http_code} http://www.google.com/generate_204)
