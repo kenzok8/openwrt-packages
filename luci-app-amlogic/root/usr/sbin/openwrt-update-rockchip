@@ -126,7 +126,7 @@ case $MYDEVICE_NAME in
 		fi
 			SOC="rock5b"
 		;;
-	"HINLINK OWL H88K-V3"|"Hlink H88K-V3")
+	"HINLINK OWL H88K-V3 Board"|"Hlink H88K-V3")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k-v3.dtb" ];then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
 		else
@@ -134,7 +134,7 @@ case $MYDEVICE_NAME in
 		fi
 			SOC="h88k-v3"
 		;;
-	"HINLINK OWL H88K"|"Hlink H88K")
+	"HINLINK OWL H88K Board"|"Hlink H88K")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k.dtb" ];then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
 		else
@@ -623,7 +623,7 @@ cat >>./etc/crontabs/root <<EOF
 EOF
 
 sed -e 's/ttyAMA0/ttyS2/' -i ./etc/inittab
-[ "${SOC}" != "h28k" ] && $sed -e 's/ttyS0/tty1/' -i ./etc/inittab
+[ "${SOC}" != "h28k" ] && sed -e 's/ttyS0/tty1/' -i ./etc/inittab
 sss=$(date +%s)
 ddd=$((sss / 86400))
 sed -e "s/:0:0:99999:7:::/:${ddd}:0:99999:7:::/" -i ./etc/shadow
