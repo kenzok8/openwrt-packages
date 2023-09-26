@@ -36,7 +36,7 @@ get_adlist() (
         ad_source=$(uci -q get mosdns.config.ad_source)
         for url in $ad_source;
         do
-		    if [ $(echo $url) = 'geosite.dat' ]; then
+            if [ $(echo $url) = 'geosite.dat' ]; then
                 echo "        - \"/var/mosdns/geosite_category-ads-all.txt\""
             elif echo "$url" | grep -Eq "^file://" ; then
                 echo "        - \"$(echo "$url" | sed 's/file:\/\///')\""
@@ -44,7 +44,7 @@ get_adlist() (
                 echo "        - \"/etc/mosdns/rule/adlist/$(basename $url)\""
                 [ ! -f "/etc/mosdns/rule/adlist/$(basename $url)" ] && touch /etc/mosdns/rule/adlist/$(basename $url)
             fi
-	    done
+        done
     else
         rm -rf /etc/mosdns/rule/adlist /etc/mosdns/rule/.ad_source /etc/mosdns/rule/adlist.txt
         touch /var/disable-ads.txt
