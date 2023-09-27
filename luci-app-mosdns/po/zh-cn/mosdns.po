@@ -154,14 +154,23 @@ msgstr "自定义"
 msgid "Log File"
 msgstr "日志文件"
 
-msgid "Local DNS"
-msgstr "本地 DNS"
+msgid "Custom China DNS"
+msgstr "自定义国内 DNS"
 
 msgid "Follow WAN interface DNS if not enabled"
 msgstr "不启用则使用 WAN 接口 DNS"
 
-msgid "Upstream DNS servers"
-msgstr "上游 DNS 服务器"
+msgid "Apple domains optimization"
+msgstr "Apple 域名解析优化"
+
+msgid "For Apple domains equipped with Chinese mainland CDN, always responsive to Chinese CDN IP addresses"
+msgstr "配备中国大陆 CDN 的 Apple 域名，始终应答中国大陆 CDN 地址"
+
+msgid "China DNS server"
+msgstr "国内 DNS 服务器"
+
+msgid "Remote DNS server"
+msgstr "远程 DNS 服务器"
 
 msgid "Bootstrap DNS servers"
 msgstr "Bootstrap DNS 服务器"
@@ -169,8 +178,62 @@ msgstr "Bootstrap DNS 服务器"
 msgid "Bootstrap DNS servers are used to resolve IP addresses of the DoH/DoT resolvers you specify as upstreams"
 msgstr "Bootstrap DNS 服务器用于解析您指定为上游的 DoH / DoT 解析器的 IP 地址"
 
-msgid "Remote DNS"
-msgstr "远程 DNS"
+msgid "Tencent Public DNS (119.29.29.29)"
+msgstr "腾讯公共 DNS（119.29.29.29）"
+
+msgid "Tencent Public DNS (119.28.28.28)"
+msgstr "腾讯公共 DNS（119.28.28.28）"
+
+msgid "Aliyun Public DNS (223.5.5.5)"
+msgstr "阿里云公共 DNS（223.5.5.5）"
+
+msgid "Aliyun Public DNS (223.6.6.6)"
+msgstr "阿里云公共 DNS（223.6.6.6）"
+
+msgid "Xinfeng Public DNS (114.114.114.114)"
+msgstr "信风公共 DNS（114.114.114.114）"
+
+msgid "Xinfeng Public DNS (114.114.115.115)"
+msgstr "信风公共 DNS（114.114.115.115）"
+
+msgid "Baidu Public DNS (180.76.76.76)"
+msgstr "百度公共 DNS（180.76.76.76）"
+
+msgid "Tencent Public DNS (DNS over HTTPS)"
+msgstr "腾讯公共 DNS（DNS over HTTPS）"
+
+msgid "Aliyun Public DNS (DNS over QUIC)"
+msgstr "阿里云公共 DNS（DNS over QUIC）"
+
+msgid "Aliyun Public DNS (DNS over HTTPS)"
+msgstr "阿里云公共 DNS（DNS over HTTPS）"
+
+msgid "360 Public DNS (DNS over HTTPS)"
+msgstr "360 安全 DNS（DNS over HTTPS）"
+
+msgid "CloudFlare Public DNS (1.1.1.1)"
+msgstr "CloudFlare 公共 DNS（1.1.1.1）"
+
+msgid "CloudFlare Public DNS (1.0.0.1)"
+msgstr "CloudFlare 公共 DNS（1.0.0.1）"
+
+msgid "Google Public DNS (8.8.8.8)"
+msgstr "谷歌公共 DNS（8.8.8.8）"
+
+msgid "Google Public DNS (8.8.4.4)"
+msgstr "谷歌公共 DNS（8.8.4.4）"
+
+msgid "Quad9 Public DNS (9.9.9.9)"
+msgstr "Quad9 公共 DNS（9.9.9.9）"
+
+msgid "Quad9 Public DNS (149.112.112.112)"
+msgstr "Quad9 公共 DNS（149.112.112.112）"
+
+msgid "Cisco Public DNS (208.67.222.222)"
+msgstr "思科公共 DNS（208.67.222.222）"
+
+msgid "Cisco Public DNS (208.67.220.220)"
+msgstr "思科公共 DNS（208.67.220.220）"
 
 msgid "Concurrent"
 msgstr "DNS 服务器并发数（默认 2）"

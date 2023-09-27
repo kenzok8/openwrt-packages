@@ -20,6 +20,12 @@ plugins:
       files:
         - "/var/mosdns/geoip_cn.txt"
 
+  - tag: geosite_apple
+    type: domain_set
+    args:
+      files:
+        - "/var/mosdns/geosite_apple.txt"
+
   - tag: geosite_no_cn
     type: domain_set
     args:
@@ -85,6 +91,22 @@ plugins:
     args:
       size: cache_size
       lazy_cache_ttl: cache_survival_time
+
+  - tag: forward_dnspod_udp
+    type: forward
+    args:
+      concurrent: 2
+      upstreams:
+        - addr: "119.29.29.29"
+        - addr: "119.28.28.28"
+
+  - tag: forward_xinfeng_udp
+    type: forward
+    args:
+      concurrent: 2
+      upstreams:
+        - addr: "114.114.114.114"
+        - addr: "114.114.115.115"
 
   - tag: forward_local
     type: forward
@@ -154,6 +176,16 @@ plugins:
       threshold: 500
       always_standby: true
 
+  - tag: query_is_apple_domain
+    type: sequence
+    args:
+      - matches: qname $geosite_apple
+        exec: $forward_dnspod_udp
+      - matches: "!resp_ip $geoip_cn"
+        exec: drop_resp
+      - matches: "!has_resp"
+        exec: $forward_xinfeng_udp
+
   - tag: query_is_ddns_domain
     type: sequence
     args:
@@ -210,6 +242,8 @@ plugins:
         - "!qname $local_ptr"
         exec: $lazy_cache
       - exec: $redirect
+      - exec: jump has_resp_sequence
+      - exec: $query_is_apple_domain
       - exec: jump has_resp_sequence
       - exec: $query_is_ddns_domain
       - exec: jump has_resp_sequence

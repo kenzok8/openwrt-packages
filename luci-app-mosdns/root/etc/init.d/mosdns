@@ -52,6 +52,7 @@ get_config() {
     config_get redirect $1 redirect 0
     config_get remote_dns $1 remote_dns "tls://8.8.8.8 tls://1.1.1.1"
     config_get custom_local_dns $1 custom_local_dns 0
+    config_get apple_optimization $1 apple_optimization 0
     config_get bootstrap_dns $1 bootstrap_dns "119.29.29.29"
     config_get listen_port_api $1 listen_port_api 9091
     config_get concurrent $1 concurrent 1
@@ -92,6 +93,8 @@ init_yaml() {
     s,maximum_ttl_custom,$maximum_ttl_custom,g; \
     s,concurrent_num,$concurrent,g;s,api_port,$listen_port_api,g; \
     s,remote_dns_pipeline,$enable_pipeline,g" $DEFAULT_CONF > $CONF
+    # Apple optimization
+    [ "$apple_optimization" != 1 ] && sed -i '/- exec: \$query_is_apple_domain/,+1d' $CONF
     # Adlist
     adlist=$($MOSDNS_SCRIPT adlist)
     echo "${adlist}" > $TMPDIR/adlist_files.txt
