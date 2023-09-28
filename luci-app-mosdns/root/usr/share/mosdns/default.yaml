@@ -179,8 +179,9 @@ plugins:
   - tag: query_is_apple_domain
     type: sequence
     args:
-      - matches: qname $geosite_apple
-        exec: $forward_dnspod_udp
+      - matches: "!qname $geosite_apple"
+        exec: return
+      - exec: $forward_local
       - matches: "!resp_ip $geoip_cn"
         exec: drop_resp
       - matches: "!has_resp"
