@@ -1,7 +1,7 @@
-From a53f4d9a5994e28be07c832308160d4cc17f604f Mon Sep 17 00:00:00 2001
+From 2dc08749e2de8f19ef869e7f89c9979edbbc71ff Mon Sep 17 00:00:00 2001
 From: sbwml <admin@cooluc.com>
 Date: Wed, 20 Sep 2023 21:05:18 +0800
-Subject: [PATCH] format logtime
+Subject: [PATCH 5/5] format logtime
 
 ---
  mlog/logger.go | 18 ++++++++++++++----
@@ -47,5 +47,5 @@ index 861f091..1508db0 100644
  
  // L is a global logger.
 -- 
-2.34.8
+2.42.0
 

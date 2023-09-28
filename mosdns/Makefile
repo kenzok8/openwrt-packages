@@ -5,12 +5,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=mosdns
-PKG_VERSION:=5.1.3
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=5.2.1
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/IrineSistiana/mosdns/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=7db89b2399ace81e86b53e95e5260e55778ad5e6e8dd82a73dd6989dcd2e0eda
+PKG_HASH:=f6ed7c29408f4db69f8b5b9fa041e77b2460e561fc889116edb8f6021fad966a
 
 PKG_LICENSE:=GPL-3.0
 PKG_LICENSE_FILE:=LICENSE
@@ -22,7 +22,7 @@ PKG_USE_MIPS16:=0
 PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/IrineSistiana/mosdns
-GO_PKG_LDFLAGS_X:=main.version=v$(PKG_VERSION)-$(PKG_RELEASE)
+GO_PKG_LDFLAGS_X:=main.version=v$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk

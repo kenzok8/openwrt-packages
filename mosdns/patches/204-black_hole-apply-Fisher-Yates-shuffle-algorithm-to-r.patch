@@ -1,8 +1,8 @@
-From 6c00597904ba487615e3a49626ccbb7d5623283f Mon Sep 17 00:00:00 2001
+From e34dca717e78d24a84b98c2b5d371c4253b7e260 Mon Sep 17 00:00:00 2001
 From: sbwml <admin@cooluc.com>
 Date: Wed, 20 Sep 2023 14:51:19 +0800
-Subject: [PATCH] black_hole: apply Fisher-Yates shuffle algorithm to randomize
- IP order
+Subject: [PATCH 4/5] black_hole: apply Fisher-Yates shuffle algorithm to
+ randomize IP order
 
 ---
  plugin/executable/black_hole/black_hole.go | 15 +++++++++++++++
@@ -52,5 +52,5 @@ index 775253d..f955019 100644
  		qCtx.SetResponse(r)
  	}
 -- 
-2.34.8
+2.42.0
 

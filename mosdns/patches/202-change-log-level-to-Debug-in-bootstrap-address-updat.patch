@@ -1,0 +1,25 @@
+From 67d1b8f8c914a9b16d96ce0b712a08fc5e0f22d5 Mon Sep 17 00:00:00 2001
+From: sbwml <admin@cooluc.com>
+Date: Thu, 28 Sep 2023 16:41:18 +0800
+Subject: [PATCH 2/5] change log level to Debug in bootstrap address update
+
+---
+ pkg/upstream/bootstrap/bootstrap.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pkg/upstream/bootstrap/bootstrap.go b/pkg/upstream/bootstrap/bootstrap.go
+index 2cd8ef9..5192053 100644
+--- a/pkg/upstream/bootstrap/bootstrap.go
++++ b/pkg/upstream/bootstrap/bootstrap.go
+@@ -117,7 +117,7 @@ func (sp *Bootstrap) tryUpdate() {
+ 					if updateInterval < minimumUpdateInterval {
+ 						updateInterval = minimumUpdateInterval
+ 					}
+-					sp.logger.Info(
++					sp.logger.Debug(
+ 						"bootstrap addr updated",
+ 						zap.String("fqdn", sp.fqdn),
+ 						zap.Stringer("addr", addr),
+-- 
+2.42.0
+
