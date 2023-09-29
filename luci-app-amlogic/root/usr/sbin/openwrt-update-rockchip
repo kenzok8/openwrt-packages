@@ -78,7 +78,7 @@ case $MYDEVICE_NAME in
 		fi
 			SOC="h66k"
 		;;
-	"HINLINK OPC-H68K Board")
+	"HINLINK OPC-H68K Board"|"Hlink H68K")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h68k.dtb" ];then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
 		else
@@ -86,7 +86,7 @@ case $MYDEVICE_NAME in
 		fi
 			SOC="h68k"
 		;;
-	"HINLINK OPC-H69K Board")
+	"HINLINK OPC-H69K Board"|"Hlink H69K")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h69k.dtb" ];then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
 		else
