@@ -66,6 +66,7 @@ o:value("180.76.76.76", translate("Baidu Public DNS (180.76.76.76)"))
 o:value("https://doh.pub/dns-query", translate("Tencent Public DNS (DNS over HTTPS)"))
 o:value("quic://dns.alidns.com", translate("Aliyun Public DNS (DNS over QUIC)"))
 o:value("https://dns.alidns.com/dns-query", translate("Aliyun Public DNS (DNS over HTTPS)"))
+o:value("h3://dns.alidns.com/dns-query", translate("Aliyun Public DNS (DNS over HTTPS/3)"))
 o:value("https://doh.360.cn/dns-query", translate("360 Public DNS (DNS over HTTPS)"))
 o:depends("custom_local_dns", "1")
 
@@ -116,16 +117,6 @@ o.default = false
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
 o = s:taboption("advanced", Flag, "insecure_skip_verify", translate("Disable TLS Certificate"), translate("Disable TLS Servers certificate validation, Can be useful if system CA certificate expires or the system time is out of order"))
-o.rmempty = false
-o.default = false
-o:depends("configfile", "/etc/mosdns/config.yaml")
-
-o = s:taboption("advanced", Flag, "enable_http3_local", translate("China DNS Enable HTTP/3"), translate("Enable DoH HTTP/3 protocol for China DNS, Upstream DNS server support is required (Experimental feature)"))
-o.rmempty = false
-o.default = false
-o:depends("custom_local_dns", "1")
-
-o = s:taboption("advanced", Flag, "enable_http3_remote", translate("Remote DNS Enable HTTP/3"), translate("Enable DoH HTTP/3 protocol for Remote DNS, Upstream DNS server support is required (Experimental feature)"))
 o.rmempty = false
 o.default = false
 o:depends("configfile", "/etc/mosdns/config.yaml")
