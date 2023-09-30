@@ -207,8 +207,8 @@ function getip(){
 
 	# 从接口获取 IPv6
 	elif [ $1 == "wanipv6" ] ;then
-		[ ! -z "$ipv6_interface" ] && local wanIPv6=$(ip addr show ${ipv6_interface}|grep -v deprecated|grep -A1 'inet6 [^f:]'|sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\2 \1#p;ta'|sort -nr|head -n1|awk '{print $2}')
-		[ -z "$ipv6_interface" ] && local wanIPv6=$(ip addr show|grep -v deprecated|grep -A1 'inet6 [^f:]'|sed -nr ':a;N;s#^ +inet6 ([a-f0-9:]+)/.+? scope global .*? valid_lft ([0-9]+sec) .*#\2 \1#p;ta'|sort -nr|head -n1|awk '{print $2}')
+		[ ! -z "$ipv6_interface" ] && local wanIPv6=$(ip -6 addr show dev ${ipv6_interface}|grep "inet6"|grep "global dynamic noprefixroute"|awk '{print $2, $4}'|sort -k3 -n|head -n 1|awk '{print $1}'|grep -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}")
+		[ -z "$ipv6_interface" ] && local wanIPv6=$(ip -6 addr show|grep "inet6"|grep "global dynamic noprefixroute"|awk '{print $2, $4}'|sort -k3 -n|head -n 1|awk '{print $1}'|grep -oE "([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}")
 		echo "$wanIPv6"
 
 	# 从 URL 获取 IPv6
