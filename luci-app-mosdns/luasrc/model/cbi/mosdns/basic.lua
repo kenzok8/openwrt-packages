@@ -167,11 +167,12 @@ o.default = false
 
 o = s:taboption("advanced", DynamicList, "ad_source", translate("ADblock Source"), translate("When using custom rule sources, please use rule types supported by MosDNS (domain lists).") .. '<br />' .. translate("Support for local files, such as: file:///var/mosdns/example.txt"))
 o:depends("adblock", "1")
+o.default = "geosite.dat"
 o:value("geosite.dat", "v2ray-geosite")
 o:value("https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-domains.txt", "anti-AD")
+o:value("https://raw.githubusercontent.com/Cats-Team/AdRules/main/mosdns_adrules.txt", "Cats-Team/AdRules")
 o:value("https://raw.githubusercontent.com/ookangzheng/dbl-oisd-nl/master/dbl_light.txt", "oisd (small)")
 o:value("https://raw.githubusercontent.com/ookangzheng/dbl-oisd-nl/master/dbl.txt", "oisd (big)")
-o:value("https://raw.githubusercontent.com/QiuSimons/openwrt-mos/master/dat/serverlist.txt", "QiuSimons/openwrt-mos")
 
 o = s:taboption("basic",  Button, "_reload", translate("Restart-Service"), translate("Restart the MosDNS process to take effect of new configuration"))
 o.write = function()
