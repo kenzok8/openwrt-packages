@@ -70,30 +70,6 @@ case $MYDEVICE_NAME in
 		fi
 			SOC="r68s"
 		;;
-	"HINLINK OPC-H66K Board"|"Hlink H66K")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h66k.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-hlink-h66k.dtb"
-		fi
-			SOC="h66k"
-		;;
-	"HINLINK OPC-H68K Board"|"Hlink H68K")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h68k.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-hlink-h68k.dtb"
-		fi
-			SOC="h68k"
-		;;
-	"HINLINK OPC-H69K Board"|"Hlink H69K")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h69k.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-hlink-h69k.dtb"
-		fi
-			SOC="h69k"
-		;;
 	"Radxa E25")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
@@ -125,30 +101,6 @@ case $MYDEVICE_NAME in
 			MYDTB_FDTFILE="rk3588-rock-5b.dtb"
 		fi
 			SOC="rock5b"
-		;;
-	"HINLINK OWL H88K-V3 Board"|"Hlink H88K-V3")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k-v3.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3588-hlink-h88k-v3.dtb"
-		fi
-			SOC="h88k-v3"
-		;;
-	"HINLINK OWL H88K Board"|"Hlink H88K")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3588-hlink-h88k.dtb"
-		fi
-			SOC="ak88/h88k"
-		;;
-	"Hlink H28K")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3528-hlink-h28k.dtb"
-		fi
-			SOC="h28k"
 		;;
 	*)	#default
 		if [ -f "/etc/flippy-openwrt-release" ]; then
