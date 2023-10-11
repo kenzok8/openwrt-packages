@@ -6,3 +6,6 @@ msgstr "zh-cn"
 
 msgid "iStore"
 msgstr "iStore"
+
+msgid "This package is broken! Please reinstall or uninstall it."
+msgstr "此軟體包已損壞！請重新安裝或卸載它。"

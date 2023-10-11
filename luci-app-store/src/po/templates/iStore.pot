@@ -6,3 +6,6 @@ msgstr "en"
 
 msgid "iStore"
 msgstr ""
+
+msgid "This package is broken! Please reinstall or uninstall it."
+msgstr ""

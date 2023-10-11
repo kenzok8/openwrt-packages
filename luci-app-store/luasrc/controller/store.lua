@@ -227,7 +227,7 @@ function store_action(param)
         local metadata = fs.readfile(metadir .. "/" .. pkg .. ".json")
 
         if metadata ~= nil then
-            meta = json_parse(metadata)
+            meta = json_parse(metadata) or {}
         end
         meta.installed = false
         local status = ipkg.status(metapkg)
@@ -247,6 +247,20 @@ function store_action(param)
                     local metadata = fs.readfile(metadir .. "/" .. pkg)
                     if metadata ~= nil then
                         local meta = json_parse(metadata)
+                        if meta == nil then
+                            local i18n = require("luci.i18n")
+                            local name = pkg:gsub("^(.-)%.json$", "%1")
+                            meta = {
+                                name = name,
+                                title = "{ " .. name .. " }",
+                                author = "<UNKNOWN>",
+                                version = "0.0.0",
+                                description = i18n.translate("This package is broken! Please reinstall or uninstall it."),
+                                depends = {},
+                                tags = {"broken"},
+                                broken = true,
+                            }
+                        end
                         local metapkg = metapkgpre .. meta.name
                         local status = ipkg.status(metapkg)
                         if next(status) ~= nil then
@@ -267,6 +281,11 @@ function store_action(param)
             else
                 local meta = json_parse(fs.readfile(metadir .. "/" .. pkg .. ".json"))
                 local pkgs = {}
+                if meta == nil then
+                    meta = {
+                        depends = {},
+                    }
+                end
                 if action == "upgrade" then
                     pkgs = meta.depends
                     table.insert(pkgs, metapkg)
