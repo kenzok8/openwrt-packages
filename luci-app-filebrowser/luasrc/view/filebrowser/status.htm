@@ -1,0 +1,38 @@
+<%
+local dsp = require "luci.dispatcher"
+-%>
+
+<fieldset class="cbi-section">
+	<legend><%:Running Status%></legend>
+	<fieldset class="cbi-section">
+		<div class="cbi-value">
+			<label class="cbi-value-title"><%:Status%></label>
+			<div class="cbi-value-field" id="_status"><p><span><%:Collecting data...%></span></p></div>
+		</div>
+	</fieldset>
+</fieldset>
+
+<script type="text/javascript">//<![CDATA[
+	var _status = document.getElementById('_status');
+	XHR.poll(3,'<%=dsp.build_url("admin/services/filebrowser/status")%>', null,
+		function(x, json) {
+			if (x && x.status == 200) {
+				if (_status)
+					_status.innerHTML = json.status ? '<p><span style="color:green;"><%:RUNNING%></span> <input type="button" class="cbi-button cbi-input-apply" value="<%:Enter interface%>" onclick="openwebui()" /></p>' : '<p><span style="color:red;"><%:NOT RUNNING%></span></p>';
+			}
+		});
+		
+	function openwebui(){
+		
+		var url = window.location.host;
+		if (url.indexOf(':')) {
+			url = url.split(':')[0];
+		}
+		ssl_cert = "<%=luci.sys.exec("uci get filebrowser.@global[0].ssl_cert"):gsub("^%s*(.-)%s*$", "%1")%>";
+		ssl_key = "<%=luci.sys.exec("uci get filebrowser.@global[0].ssl_key"):gsub("^%s*(.-)%s*$", "%1")%>";
+		port = "<%=luci.sys.exec("uci get filebrowser.@global[0].port"):gsub("^%s*(.-)%s*$", "%1")%>";
+		protocol = 'http';
+		if (ssl_cert !== '' && ssl_key !== '') protocol = 'https';
+		window.open(protocol+'://'+url+':'+port,'target','');
+	}
+//]]></script>
