@@ -269,8 +269,8 @@ msgstr "打开列表"
 msgid "Backup Configuration - Custom List"
 msgstr "备份配置 - 自定义列表"
 
-msgid "Please maintain the format of the backup list. Except for the last line, each line should end with ' \\' character."
-msgstr "请保持备份列表的格式，除最后一行外，每行以 ' \\' 结尾。"
+msgid "Write one configuration item per line, and directories should end with a /."
+msgstr "每行写一个配置项，目录需要以/结尾。"
 
 msgid "Restore Backup:"
 msgstr "恢复备份："

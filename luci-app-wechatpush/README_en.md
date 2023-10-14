@@ -5,7 +5,7 @@
 
 [中文文档](README.md) | [English](README_en.md)
 
-A plugin for OpenWRT routers to push various information to a mobile phone via WeChat or Telegram.
+A plugin for OpenWRT routers to send various information notifications to a mobile phone via WeChat or Telegram.
 Supported services:
 | Push application | Method | description |
 | :-------- | :----- | :----- |

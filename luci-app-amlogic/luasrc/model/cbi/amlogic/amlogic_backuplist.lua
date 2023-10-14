@@ -15,28 +15,19 @@ function remove_spaces(value)
 	return value
 end
 
--- Add ' \' to the end of each line except the last line
-function check_backslash(str)
+-- Remove backslash at the end of each line
+function remove_backslash_at_end(value)
 	local lines = {}
-	for line in str:gmatch("[^\r\n]+") do
+	for line in value:gmatch("[^\r\n]+") do
+		line = line:gsub("%s*\\%s*$", "")
 		table.insert(lines, line)
 	end
-
-	local lastLineIndex = #lines
-	for i, line in ipairs(lines) do
-		if i < lastLineIndex then
-			if not line:match("%s+\\%s*$") then
-				lines[i] = line .. " \\"
-			end
-		end
-	end
-
 	return table.concat(lines, "\n")
 end
 
 local f = SimpleForm("customize",
 	translate("Backup Configuration - Custom List"),
-	translate("Please maintain the format of the backup list. Except for the last line, each line should end with ' \\' character."))
+	translate("Write one configuration item per line, and directories should end with a /."))
 
 local o = f:field(Value, "_custom")
 
@@ -46,13 +37,13 @@ o.rows = 30
 function o.cfgvalue(self, section)
 	local readconf = fs.readfile(backup_list_conf)
 	local value = remove_spaces(readconf)
-	local value = check_backslash(value)
+	local value = remove_backslash_at_end(value)
 	return value
 end
 
 function o.write(self, section, value)
 	local value = remove_spaces(value)
-	local value = check_backslash(value)
+	local value = remove_backslash_at_end(value)
 	fs.writefile(backup_list_conf, value)
 	luci.http.redirect(luci.dispatcher.build_url("admin", "system", "amlogic", "backup"))
 end

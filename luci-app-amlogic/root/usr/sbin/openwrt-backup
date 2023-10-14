@@ -14,7 +14,9 @@ BACKUP_FILE="${BACKUP_DIR}/${BACKUP_NAME}"
 # Customize backup list
 backup_list_conf="/etc/amlogic_backup_list.conf"
 if [[ -s "${backup_list_conf}" ]]; then
-    BACKUP_LIST="$(cat ${backup_list_conf} 2>/dev/null)"
+    while IFS= read -r line; do
+        BACKUP_LIST+="${line} "
+    done < "${backup_list_conf}"
 else
     BACKUP_LIST='./etc/AdGuardHome.yaml \
 ./etc/amlogic_backup_list.conf \
