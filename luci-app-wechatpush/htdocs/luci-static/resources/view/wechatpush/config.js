@@ -525,7 +525,7 @@ return view.extend({
 			});
 		};
 		o.depends('login_web_black', '1');
-		o.description = _('You can add or delete here, the numbers after represent the remaining time. When adding, only the IP needs to be entered.<br/>When clearing, please leave a blank line, otherwise it cannot be saved ╮(╯_╰)╭<br/>Please use the 「Save」 button in the text box.');
+		o.description = _('You can add or delete here, the numbers after represent the remaining time. When adding, only the IP needs to be entered.<br/>Due to limitations on the web interface, please keep one empty line if you need to clear the content; otherwise, it will not be possible to submit. ╮(╯_╰)╭<br/>Please use the 「Save」 button in the text box.');
 
 		// 定时推送
 		o = s.taboption('crontab', cbiRichListValue, 'crontab_mode', _('Scheduled Tasks'));

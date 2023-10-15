@@ -493,8 +493,8 @@ msgid "IP blacklist"
 msgstr "IP 黑名单列表"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:529
-msgid "You can add or delete here, the numbers after represent the remaining time. When adding, only the IP needs to be entered.<br/>When clearing, please leave a blank line, otherwise it cannot be saved ╮(╯_╰)╭<br/>Please use the 「Save」 button in the text box."
-msgstr "可在此处添加或删除，后面的数字为剩余时间，添加时只需要输入 IP<br/>清空时请保留一个回车，否则无法保存 ╮(╯_╰)╭<br/>文本框请使用「保存」按钮"
+msgid "You can add or delete here, the numbers after represent the remaining time. When adding, only the IP needs to be entered.<br/>Due to limitations on the web interface, please keep one empty line if you need to clear the content; otherwise, it will not be possible to submit. ╮(╯_╰)╭<br/>Please use the 「Save」 button in the text box."
+msgstr "可在此处添加或删除，后面的数字为剩余时间，添加时只需要输入 IP<br/>由于网页端的限制，如需清空内容，请保留一处空白的换行，否则内容为空会导致无法提交 ╮(╯_╰)╭<br/>文本框请使用「保存」按钮"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:535
 msgid "Scheduled sending"

@@ -1339,6 +1339,7 @@ function add_ip_white() {
 	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq "1" ] || return
 	[ -z "$2" ] && timeout=$login_ip_white_timeout || timeout=$2
 	# 检查 IP 版本
+	unset ipset_name
 	( echo "$1"|grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$' ) && local ipset_name="wechatpush_whitelist"
 	( echo "$1"|grep -Eq '^([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}$' ) && local ipset_name="wechatpush_whitelistv6"
 	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】白名单添加失败，IP 格式错误" >> ${logfile} && return
@@ -1435,6 +1436,7 @@ function add_ip_black(){
 	[ ! "$1" ] && return
 	echo "$login_ip_white_list"|grep -w -q "$1" && return
 	# 检查 IP 版本
+	unset ipset_name
 	( echo "$1"|grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$' ) && ipset_name="wechatpush_blacklist"
 	( echo "$1"|grep -Eq '^([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}$' ) && ipset_name="wechatpush_blacklistv6"
 	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】黑名单添加失败，IP 格式错误" >> ${logfile} && return
@@ -1453,6 +1455,7 @@ function del_ip_black(){
 	sed -i "/^${1}/d" ${ip_blacklist_path}
 	
 	# 检查 IP 版本
+	unset ipset_name
 	( echo "$1"|grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$' ) && ipset_name="wechatpush_blacklist"
 	( echo "$1"|grep -Eq '^([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}$' ) && ipset_name="wechatpush_blacklistv6"
 	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】黑名单删除失败，IP 格式错误" >> ${logfile} && return
