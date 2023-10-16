@@ -53,7 +53,7 @@ o.default = false
 
 o = s:taboption("basic", Flag, "apple_optimization", translate("Apple domains optimization"), translate("For Apple domains equipped with Chinese mainland CDN, always responsive to Chinese CDN IP addresses"))
 o:depends("custom_local_dns", "1")
-o.default = true
+o.default = false
 
 o = s:taboption("basic", DynamicList, "local_dns", translate("China DNS server"))
 o:value("119.29.29.29", translate("Tencent Public DNS (119.29.29.29)"))

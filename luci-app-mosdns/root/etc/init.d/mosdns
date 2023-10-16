@@ -123,7 +123,7 @@ init_yaml() {
         sed -i "/ecs_remote/d;" $CONF
     fi
     # DNS Leak
-    [ $dns_leak -eq 1 ] && sed -i "s,primary: query_is_local_ip,primary: query_is_remote,g" $CONF
+    [ $dns_leak -eq 1 ] && sed -i "0,/primary: query_is_non_local_ip/s/primary: query_is_non_local_ip/primary: forward_remote_upstream/" $CONF
     # Cloudflare IP
     if [ $cloudflare -eq 1 ]; then
         cloudflare_ip=$(sh $MOSDNS_SCRIPT cloudflare)
