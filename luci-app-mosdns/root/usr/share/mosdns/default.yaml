@@ -153,7 +153,7 @@ plugins:
   - tag: fallback
     type: fallback
     args:
-      primary: query_is_non_local_ip
+      primary: UNDEFINED
       secondary: forward_remote_upstream
       threshold: 500
       always_standby: true
