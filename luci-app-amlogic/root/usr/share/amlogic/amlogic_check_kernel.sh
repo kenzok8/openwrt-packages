@@ -105,7 +105,7 @@ fi
 
 # Convert kernel repo to api format
 [[ "${kernel_repo}" =~ ^https: ]] && kernel_repo="$(echo ${kernel_repo} | awk -F'/' '{print $4"/"$5}')"
-kernel_api="https://api.github.com/repos/${kernel_repo}"
+kernel_api="https://github.com/${kernel_repo}"
 if [[ -n "${KERNEL_TAGS}" ]]; then
     kernel_tag="${KERNEL_TAGS}"
 else
@@ -142,12 +142,10 @@ check_kernel() {
 
     # Check the version on the server
     latest_version="$(
-        curl -s \
-            -H "Accept: application/vnd.github+json" \
-            ${kernel_api}/releases/tags/kernel_${kernel_tag} |
-            jq -r '.assets[].name' |
-            grep -oE "${main_line_version}\.[0-9]+" |
-            sort -rV | head -n 1
+        curl -fsSL \
+            ${kernel_api}/releases/expanded_assets/kernel_${kernel_tag} |
+            grep -oE "${main_line_version}.[0-9]+.tar.gz" | sed 's/.tar.gz//' |
+            sort -urV | head -n 1
     )"
     [[ -n "${latest_version}" ]] || tolog "02.03 No kernel available, please use another kernel branch." "1"
 
