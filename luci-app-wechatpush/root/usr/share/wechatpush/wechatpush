@@ -115,7 +115,7 @@ function init(){
 	[ -z "$ip_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 iputils-arping 版本号，请确认插件是否正常运行" >> ${logfile}
 	[ -z "$cu_version" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取依赖项 curl 版本号，请确认插件是否正常运行" >> ${logfile}
 	[ -z "${sckey}${tg_token}${pushplus_token}${corpid}${wxpusher_apptoken}${wxpusher_uids}${wxpusher_topicIds}" -a "${jsonpath}" != "/usr/share/wechatpush/api/diy.json" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】请填写正确的 key " >> ${logfile} && return 1
-	local interfacelist=`getinterfacelist` && [ -z "$interfacelist" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法获取接口在线时间等信息，可能存在多个接口或配置错误，请确认插件是否正常运行" >> ${logfile}
+	local interfacelist=`getinterfacelist` && [ -z "$interfacelist" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】存在多个接口或配置错误，可能无法获取接口在线时间等信息，请确认插件是否正常运行" >> ${logfile}
 	[ -n "$notification_temp" ] && [ -n "$temperature_threshold" ] && local cpu_temp=`soc_temp` || local cpu_temp="null"
 	[ -z "$cpu_temp" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】无法读取设备温度，请检查命令" >> ${logfile}
 	[ -n "$notification_load" ] && [ -n "$cpu_load_threshold" ] && local cpu_fuzai=`cat /proc/loadavg|awk '{print $1}'` 2>/dev/null || local cpu_fuzai="null"
@@ -285,7 +285,7 @@ function getname(){
 	[ -z "$tmp_name" ] && [ -f "/tmp/dhcp.leases" ] && local tmp_name=`cat /tmp/dhcp.leases|grep -w ${1}|awk '{print $4}'|grep -v "^$"|sort -u|head -n1`
 	# 光猫
 	echo "$tmp_name" | grep -q -w "unknown\|*" && unset tmp_name # 为unknown时重新读取
-	[ -z "$tmp_name" ] && local	tmp_name=$(cut_str "$(echo "$gatewayinfo"|grep -w ${1}|awk '{print $2}'|sort -u|head -n1)" "30")
+	[ -z "$tmp_name" ] && [ -f "${dir}gateway_info" ] && gatewayinfo=`cat ${dir}gateway_info` && local tmp_name=$(cut_str "$(echo "$gatewayinfo"|grep -w ${1}|awk '{print $2}'|sort -u|head -n1)" "30")
 	# MAC设备信息数据库
 	echo "$tmp_name" | grep -q -w "unknown\|*" && unset tmp_name # 为unknown时重新读取
 	[ -z "$tmp_name" ] && [ -f "$oui_base" ] && local tmp_name=$(cat $oui_base|grep -i $(echo "$2"|cut -c 1,2,4,5,7,8)|sed -nr 's#^.*16)..(.*)#\1#gp')
@@ -326,7 +326,9 @@ function scanlocalip(){
 		i=$(echo "$start_ip" | awk -F '.' '{print $NF}')
 		end_i=$(echo "$end_ip" | awk -F '.' '{print $NF}')
 		while [ "$i" -le "$end_i" ]; do
-			ping "${start_ip%.*}.$i" -c 1 >> /dev/null 2>&1 &
+			if ping -c 1 "${start_ip%.*}.$i" > /dev/null 2>&1 & then
+				echo "${start_ip%.*}.$i" >> "${dir}gateway_info"
+			fi
 			i=$((i + 1))
 		done
 	fi
