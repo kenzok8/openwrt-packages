@@ -46,7 +46,7 @@ get_adlist() (
             fi
         done
     else
-        rm -rf /etc/mosdns/rule/adlist /etc/mosdns/rule/.ad_source /etc/mosdns/rule/adlist.txt
+        rm -rf /etc/mosdns/rule/adlist /etc/mosdns/rule/.ad_source
         touch /var/disable-ads.txt
         echo "        - \"/var/disable-ads.txt\""
     fi
