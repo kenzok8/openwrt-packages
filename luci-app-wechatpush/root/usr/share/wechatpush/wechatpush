@@ -311,8 +311,12 @@ function getgateway(){
 		# 注销
 		[ ! -z "$get_gateway" ] && [ ! -z "$gateway_logout_url" ] && curl -s -b ${dir}cookies.txt "${gateway_logout_url}" -d 'token='$mytoken 2>/dev/null
 		[ -z "$get_gateway" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【info】获取光猫信息失败，可能当前用户未注销或设置错误" >> ${logfile}
+		# 保存信息
+		[ ! -z "$get_gateway" ] && echo "$get_gateway" > ${dir}gateway_info
+		gateway_iplist=`echo "${get_gateway}"|awk '{print $1}'`
+	else
+		unset gateway_iplist
 	fi
-	[ ! -z "$get_gateway" ] && echo "$get_gateway" > ${dir}gateway_info
 }
 
 # 扫描范围内 IP
@@ -327,10 +331,13 @@ function scanlocalip(){
 		end_i=$(echo "$end_ip" | awk -F '.' '{print $NF}')
 		while [ "$i" -le "$end_i" ]; do
 			if ping -c 1 "${start_ip%.*}.$i" > /dev/null 2>&1 & then
-				echo "${start_ip%.*}.$i" >> "${dir}gateway_info"
+				echo "${start_ip%.*}.$i" >> "${dir}scan_info"
 			fi
 			i=$((i + 1))
 		done
+		scan_iplist=`cat ${dir}scan_info`
+	else
+		unset scan_iplist
 	fi
 }
 
@@ -585,9 +592,7 @@ function first(){
 	wait
 
 	local IPLIST=`cat /proc/net/arp|grep "0x2\|0x6"|awk '{print $1}'|grep -v "^169.254."|grep -v "^$"|sort -u|grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'`
-	[ -f "${dir}gateway_info" ] && gatewayinfo=`cat ${dir}gateway_info`
-	local gateway_iplist=`echo "${gatewayinfo}"|awk '{print $1}'`
-	[ ! -z "$gateway_iplist" ] && local IPLIST=`echo -e "${IPLIST}\n${gateway_iplist}"|grep -v "^$"|sort -u`
+	local IPLIST=`echo -e "${IPLIST}\n${gateway_iplist}\n${scan_iplist}"|grep -v "^$"|sort -u`
 	for ip in $IPLIST; do
 		[ ! -z "$passive_mode" ] && [ "$passive_mode" -eq "1" ] && break
 		read -u 5
@@ -945,7 +950,6 @@ function down(){
 		LockFile lock
 		[ ! -f "${dir}send_enable.lock" ] && cat ${dir}ipAddress|grep -w ${1}|grep -v "^$"|sort -u|head -n1 >> ${dir}tmp_downlist
 		sed -i "/^${1} /d" ${dir}ipAddress
-		sed -i "/^${1} /d" ${dir}gateway_info
 		rm -f ${dir}client/${1} >/dev/null 2>&1
 		LockFile unlock
 	# 更新主机名或 MAC
