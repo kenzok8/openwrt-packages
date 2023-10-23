@@ -8,7 +8,7 @@ PKG_MAINTAINER:=<https://github.com/rufengsuixing/luci-app-adguardhome>
 
 LUCI_TITLE:=LuCI app for AdGuardHome
 LUCI_PKGARCH:=all
-LUCI_DEPENDS:=+!wget-ssl&&!curl:wget-ssl +xz-utils +xz
+LUCI_DEPENDS:=+ca-certs +curl +wget-ssl +PACKAGE_$(PKG_NAME)_INCLUDE_binary:adguardhome
 LUCI_DESCRIPTION:=LuCI support for AdGuardHome
 
 

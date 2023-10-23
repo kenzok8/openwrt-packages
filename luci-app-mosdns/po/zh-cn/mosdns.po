@@ -271,14 +271,14 @@ msgstr "禁用 TLS 服务器证书验证，当系统 CA 证书过期或系统时
 msgid "Enable EDNS client subnet"
 msgstr "启用 EDNS 客户端子网"
 
-msgid "Add the EDNS Client Subnet option (ECS) to Remote DNS"
-msgstr "在远程 DNS 请求中加入 EDNS 客户端子网（即 ECS）选项（需要上游 DNS 服务器支持）"
+msgid "IP Address"
+msgstr "IP 地址"
 
-msgid "MosDNS will auto identify the IP address subnet segment of your remote connection (0/24)"
-msgstr "MosDNS 将会自动获取您访问远程连接时使用的 IP 子网段（0/24）"
+msgid "Please provide the IP address you use when accessing foreign websites. This IP subnet (0/24) will be used as the ECS address for Remote DNS requests"
+msgstr "请提供您在访问国外网站时使用的 IP 地址，这个 IP 子网（0/24）将用作远程 DNS 请求的 ECS 地址"
 
-msgid "If your remote access network changes, May need restart MosDNS to update the ECS request address"
-msgstr "如果您的远程访问网络发生改变时可能需要重启 MosDNS 以更新 ECS 请求地址"
+msgid "This feature is typically used when using a self-built DNS server as an Remote DNS upstream (requires support from the upstream server)"
+msgstr "此功能通常在使用自建 DNS 服务器作为 远程 DNS 上游时使用（需要上游服务器的支持）"
 
 msgid "Prevent DNS Leaks"
 msgstr "防止 DNS 泄漏"
@@ -359,7 +359,7 @@ msgid "These domains are always resolved using local DNS. And force TTL 5 second
 msgstr "加入的域名始终使用 “本地 DNS” 进行解析，并且强制 TTL 5 秒，解析结果不会进入缓存（每个域名一行，支持域名匹配规则）"
 
 msgid "Hosts For example: baidu.com 10.0.0.1"
-msgstr "自定义 Hosts 重写，如：baidu.com 10.0.0.1（每个规则一行）"
+msgstr "自定义 Hosts 重写，如：baidu.com 10.0.0.1（每个规则一行，支持域名匹配规则）"
 
 msgid "Redirect"
 msgstr "重定向"
