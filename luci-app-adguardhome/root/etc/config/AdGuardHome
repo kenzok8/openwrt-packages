@@ -7,7 +7,7 @@ config AdGuardHome 'AdGuardHome'
 	option workdir '/tmp/AdGuardHome'
 	option logfile '/tmp/AdGuardHome.log'
 	option verbose '0'
-	option binpath '/usr/bin/AdGuardHome/AdGuardHome'
+	option binpath '/usr/bin/AdGuardHome'
 	option upxflag '-1'
 
 	option waitonboot '0'
