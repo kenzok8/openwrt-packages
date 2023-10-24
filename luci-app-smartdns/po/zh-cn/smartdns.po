@@ -187,6 +187,9 @@ msgstr "启用TCP服务器。"
 msgid "Enable daily auto update."
 msgstr "启用每日自动更新"
 
+msgid "Update time (every day)"
+msgstr "更新时间(每天)"
+
 msgid "Enable domain prefetch, accelerate domain response speed."
 msgstr "启用域名预加载，加速域名响应速度。"
 
