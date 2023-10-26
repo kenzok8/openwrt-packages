@@ -7,12 +7,12 @@ STOP=01
 
 CONFIGURATION=AdGuardHome
 CRON_FILE=/etc/crontabs/root
-EXTRA_COMMANDS="do_redirect testbackup test_crontab force_reload isrunning"
-EXTRA_HELP="        do_redirect 0 or 1\
-        testbackup backup or restore\
-		test_crontab
-		force_reload
-		isrunning"
+
+extra_command "do_redirect" "0 or 1"
+extra_command "testbackup" "backup or restore"
+extra_command "test_crontab"
+extra_command "force_reload"
+extra_command "isrunning"
 
 set_forward_dnsmasq()
 {
@@ -50,9 +50,7 @@ stop_forward_dnsmasq()
 	uci del_list dhcp.@dnsmasq[0].server=$addr 2>/dev/null
 	addrlist="`uci get dhcp.@dnsmasq[0].server 2>/dev/null`"
 	if [ -z "$addrlist" ] ; then
-		resolvfile="/tmp/resolv.conf.d/resolv.conf.auto"
-		[ ! -f "$resolvfile" ] && resolvfile="/tmp/resolv.conf.auto"
-		uci set dhcp.@dnsmasq[0].resolvfile="$resolvfile" 2>/dev/null
+		uci set dhcp.@dnsmasq[0].resolvfile=/tmp/resolv.conf.d/resolv.conf.auto 2>/dev/null
 		uci delete dhcp.@dnsmasq[0].noresolv 2>/dev/null
 	fi
 	uci commit dhcp
@@ -76,9 +74,9 @@ EOF
 	for IP in $IPS
 	do
 		if [ "$tcp_server" == "1" ]; then
-			iptables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+			iptables -t nat -I PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
 		fi
-		iptables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+		iptables -t nat -I PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
 	done
 
 	if [ "$ipv6_server" == 0 ]; then
@@ -89,9 +87,9 @@ EOF
 	for IP in $IPS
 	do
 		if [ "$tcp_server" == "1" ]; then
-			ip6tables -t nat -A PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+			ip6tables -t nat -I PREROUTING -p tcp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
 		fi
-		ip6tables -t nat -A PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
+		ip6tables -t nat -I PREROUTING -p udp -d $IP --dport 53 -j REDIRECT --to-ports $AdGuardHome_PORT >/dev/null 2>&1
 	done
 }
 
@@ -136,7 +134,7 @@ isrunning(){
 }
 
 _isrunning(){
-	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome/AdGuardHome"
+	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
 	[ ! -f "$binpath" ] && return 2
 	pgrep $binpath 2>&1 >/dev/null && return 0
 	return 1
@@ -188,7 +186,7 @@ rm_port53()
 	config_editor "dns.port" "$dnsmasq_port" "$configpath"
 	uci set dhcp.@dnsmasq[0].port="53"
 	uci commit dhcp
-	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome/AdGuardHome"
+	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
 	killall -9 $binpath
 	/etc/init.d/dnsmasq restart
 }
@@ -210,7 +208,7 @@ use_port53()
 	config_editor "dns.port" "53" "$configpath"
 	uci set dhcp.@dnsmasq[0].port="$AdGuardHome_PORT"
 	uci commit dhcp
-	/etc/init.d/dnsmasq restart
+	/etc/init.d/dnsmasq reload
 }
 
 do_redirect()
@@ -244,7 +242,6 @@ _do_redirect()
 	config_get "old_port" "$section" "old_port" "0"
 	config_get "old_enabled" "$section" "old_enabled" "0"
 	uci get dhcp.@dnsmasq[0].port >/dev/null 2>&1 || uci set dhcp.@dnsmasq[0].port="53" >/dev/null 2>&1
-	uci commit dhcp
 	if [ "$old_enabled" = "1" -a "$old_redirect" == "exchange" ]; then
 		AdGuardHome_PORT=$(uci get dhcp.@dnsmasq[0].port 2>/dev/null)
 	fi
@@ -353,7 +350,7 @@ boot_service() {
 	config_load "${CONFIGURATION}"
 	config_get waitonboot $CONFIGURATION waitonboot "0"
 	config_get_bool enabled $CONFIGURATION enabled 0
-	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome/AdGuardHome"
+	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
 	[ -f "$binpath" ] && start_service
 	if [ "$enabled" == "1" ] && [ "$waitonboot" == "1" ]; then
 		procd_open_instance "waitnet"
@@ -374,15 +371,15 @@ testbackup(){
 
 restore()
 {
-	config_get workdir $CONFIGURATION workdir "/usr/bin/AdGuardHome"
-	config_get backupwdpath $CONFIGURATION backupwdpath "/usr/bin/AdGuardHome"
+	config_get workdir $CONFIGURATION workdir "/etc/AdGuardHome"
+	config_get backupwdpath $CONFIGURATION backupwdpath "/etc/AdGuardHome"
 	cp -u -r -f $backupwdpath/data $workdir
 }
 
 backup() {
-	config_get backupwdpath $CONFIGURATION backupwdpath "/usr/bin/AdGuardHome"
+	config_get backupwdpath $CONFIGURATION backupwdpath "/etc/AdGuardHome"
 	mkdir -p $backupwdpath/data
-	config_get workdir $CONFIGURATION workdir "/usr/bin/AdGuardHome"
+	config_get workdir $CONFIGURATION workdir "/etc/AdGuardHome"
 	config_get backupfile $CONFIGURATION backupfile ""
 	for one in $backupfile;
 	do
@@ -427,7 +424,7 @@ start_service() {
 		return
 	fi
 	#what need to do before reload
-	config_get workdir $CONFIGURATION workdir "/usr/bin/AdGuardHome"
+	config_get workdir $CONFIGURATION workdir "/etc/AdGuardHome"
 
 	config_get backupfile $CONFIGURATION backupfile ""
 	mkdir -p $workdir/data
@@ -452,7 +449,7 @@ start_service() {
 		fi
 	fi
 	local ADDITIONAL_ARGS=""
-	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome/AdGuardHome"
+	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
 
 	mkdir -p ${binpath%/*}
 	ADDITIONAL_ARGS="$ADDITIONAL_ARGS -c $configpath"
@@ -577,8 +574,8 @@ do_crontab(){
 	[ "$enabled" == "0" ] || [ "${crontab//autoupdate/}" == "$crontab" ] && cronenable=0 || cronenable=1
 	crontab_editor
 
-	config_get workdir $CONFIGURATION workdir "/usr/bin/AdGuardHome"
-	config_get lastworkdir $CONFIGURATION lastworkdir "/usr/bin/AdGuardHome"
+	config_get workdir $CONFIGURATION workdir "/etc/AdGuardHome"
+	config_get lastworkdir $CONFIGURATION lastworkdir "/etc/AdGuardHome"
 	findstr="/usr/share/AdGuardHome/tailto.sh [0-9]* \$(uci get AdGuardHome.AdGuardHome.workdir)/data/querylog.json"
 	#[ -n "$lastworkdir" ] && findstr="/usr/share/AdGuardHome/tailto.sh [0-9]* $lastworkdir/data/querylog.json" && [ "$lastworkdir" != "$workdir" ] && replace="${lastworkdir//\//\\/}/${workdir//\//\\/}"
 	default="0 * * * * /usr/share/AdGuardHome/tailto.sh 2000 \$(uci get AdGuardHome.AdGuardHome.workdir)/data/querylog.json"
