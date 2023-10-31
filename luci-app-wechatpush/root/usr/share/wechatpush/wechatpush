@@ -235,8 +235,10 @@ function getip(){
 # 获取接口信息
 function getinterfacelist(){
 	[ `ubus list|grep -w -i "network.interface.wan"|wc -l` -ge "1" ] && ubus call network.interface.wan status && return
-	local ubuslist=`ubus list|grep -i "network.interface."|grep -v "loopback"|grep -v -i "wan6"|grep -v -i "lan6"|grep -v -i "ipsec.*"|grep -v -i "VPN.*"|grep -v -i "DOCKER.*"`
-	[ `echo "${ubuslist}" |wc -l` -eq "1" ] && ubus call ${ubuslist} status && return
+	[ ! -z "$ipv4_interface" ] && local device_name=$ipv4_interface || [ ! -z "$ipv6_interface" ] && local device_name=$ipv6_interface
+	[ ! -z "$device_name" ] && local interface_name=`ubus call network.interface dump | jq -r --arg intf "$device_name" '.interface[] | select(.device == $intf and (.interface | endswith("6") | not)) | .interface'`
+	[ -z "$interface_name" ] && local interface_name=`ubus list | grep -i "network.interface." | grep -v "loopback" | grep -v -i "wan6" | grep -v -i "lan6" | grep -v -i "ipsec.*" | grep -v -i "VPN.*" | grep -v -i "DOCKER.*" | awk -F '.' '{print $3}'`
+	[ `echo "${interface_name}" |wc -l` -eq "1" ] && ubus call network.interface.${interface_name} status && return
 }
 
 # 获取接口在线时间
@@ -797,12 +799,13 @@ function rand_geturl(){
 			local network_enable="404"
 			# 无人值守、待弃用或改进
 			[ -z "$network_unattended_time" ] && network_unattended_time=`date +%s`
-			if [ ! -z "$network_disconnect_event" ] && [ "$((`date +%s`-$network_unattended_time))" -ge "600" ]; then
+			if [ ! -z "$network_disconnect_event" ] && [ "$((`date +%s`-$network_unattended_time))" -ge "300" ]; then
 				> ${dir}send_enable.lock && first && deltemp
 				geterrdevicealiases
 				if [ "$?" -eq "0" ]; then
 					[ -f /usr/share/wechatpush/autoreboot_count ] && retry_count=`cat /usr/share/wechatpush/autoreboot_count` && rm -f /usr/share/wechatpush/autoreboot_count >/dev/null 2>&1
-					[ ! -z "${retry_count}" ] && retry_count=0;retry_count=`expr $retry_count + 1`
+					[ ! -z "${retry_count}" ] && retry_count=0
+					retry_count=$((retry_count + 1))
 					if [ "$network_disconnect_event" -eq "1" ] ;then
 						if [ "$retry_count" -lt "3" ] ;then
 							echo "$retry_count" > /usr/share/wechatpush/autoreboot_count
@@ -813,12 +816,12 @@ function rand_geturl(){
 						fi
 						[ "$retry_count" -eq "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】已经重启路由2次，修复失败，请主人自行修复哦" >> ${logfile}
 					elif [ "$network_disconnect_event" -eq "2" ] ;then
-						[ "$retry_count" -lt "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试重启网络，当前第 $retry_count 次 " >> ${logfile} && ifup wan >/dev/null 2>&1
+						[ "$retry_count" -lt "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试重启网络，当前第 $retry_count 次 " >> ${logfile} && /etc/init.d/network restart >/dev/null 2>&1
 						[ "$retry_count" -eq "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】已经重启网络2次，修复失败，请主人自行修复哦 " >> ${logfile}
 					fi
 				fi
 			elif [ -f /usr/share/wechatpush/autoreboot_count ]; then
-				network_unattended_time=`expr $network_unattended_time - 600` && sleep 60
+				network_unattended_time=$((network_unattended_time - 300)) && sleep 60
 			fi
 			enable_detection
 			sleep $sleeptime
