@@ -276,6 +276,10 @@ msgid "Please enter the device MAC and device alias separated by a space, such a
 msgstr "请输入设备 MAC 和设备别名，用空格隔开，例如：<br/> XX:XX:XX:XX:XX:XX 我的手机<br/> 192.168.1.2 我的电脑<br />文本框请使用「保存」按钮"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:306
+msgid "Test IP acquisition command"
+msgstr "测试 IP 获取命令"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:306
 msgid "IPv4 Dynamic Notification"
 msgstr "IPv4 变动通知"
 
@@ -806,8 +810,9 @@ msgid "Test temperature command"
 msgstr "测试温度命令"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/advanced.js:82
-msgid "Returned temperature value is empty"
-msgstr "返回的温度值为空"
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:312
+msgid "Returned value is empty"
+msgstr "返回值为空"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/advanced.js:87
 msgid "Fetch failed："

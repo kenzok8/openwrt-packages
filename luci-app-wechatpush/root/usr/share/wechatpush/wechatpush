@@ -534,7 +534,7 @@ function cut_str {
 	[ ! "$2" ] && return
 
 	if [ $(length_str "$1") -le "$2" ]; then
-		echo "$1"
+		echo -n "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
 		return
 	fi
 	
@@ -551,7 +551,7 @@ function cut_str {
 		done
 		local text=$(echo -n "$1" | cut -d ' ' -f $max_column)
 		if [ $(length_str "$text") -le "$2" ]; then
-			echo "$text"
+			echo "$text" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
 			return
 		fi
 	fi
@@ -565,7 +565,7 @@ function cut_str {
 	done
 	temp_length=$(expr $temp_length - 1)
 
-	echo "$(echo -n "$1" | cut -c -$temp_length)"..
+	echo "$(echo -n "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | cut -c -$temp_length).."
 }
 
 
@@ -837,6 +837,11 @@ function ip_changes(){
 	[ "$get_ipv4_mode" -eq "2" ] && local IPv4=`getip hostipv4` && local IPv4_URL=`echo ${IPv4}|jq -r '.URL'` && local IPv4=`echo ${IPv4}|jq -r '.IP'`
 	[ "$get_ipv6_mode" -eq "1" ] && local IPv6=`getip wanipv6` && local IPv6_URL="网络接口"
 	[ "$get_ipv6_mode" -eq "2" ] && local IPv6=`getip hostipv6` && local IPv6_URL=`echo ${IPv6}|jq -r '.URL'` && local IPv6=`echo ${IPv6}|jq -r '.IP'`
+
+	if [ "$1" ] && [ $1 == "getip" ]; then
+		echo "IPv4 $IPv4    接口：$IPv4_URL <br/>IPv6 $IPv6    接口：$IPv6_URL"
+		return
+	fi
 
 	# 存在临时文件
 	if [ -f ${dir}ip ]; then
@@ -1112,7 +1117,9 @@ function get_disk() {
 	pve_disk_names=()
 
 	# 查询本地硬盘名
-	local_disk_names=($(lsblk | awk '$NF=="disk" {print $1}' | sort -u))
+	local_disk_names=($(lsblk 2>/dev/null | awk '$NF=="disk" {print $1}' | sort -u))
+	# 如未安装 lsblk，查找以 /dev/ 开头，但挂载点不是根目录 / 的设备，然后提取硬盘的名称(准确性较低)
+	[ -z "$local_disk_names" ] && local_disk_names=($(df -h 2>/dev/null | awk '$1 ~ /^\/dev/ {if ($NF ~ /^\/[a-zA-Z0-9]/) { sub("/dev/", "", $1); sub(/[0-9]+$/, "", $1); print $1 }}'))
 	local_disk_tags=($(for _ in "${local_disk_names[@]}"; do echo "local"; done))
 
 	# 查询远程硬盘名
@@ -1140,8 +1147,8 @@ function get_disk() {
 		file_path="${dir}disk_info/${tmp_name}${disk_type}"
 
 		# 如果不能获取值，使用分区名重试（因为不清楚是 OpenWrt 的原因还是 smartctl 版本的原因，使用出错重试的方式）
-		eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}" | grep -qE "$error_pattern" && {
-			tmp_name=$(df -h | awk "/^\\/dev\\/${tmp_name}/ {print \$1}" | awk -F '/' '{print $NF}' | head -n1)
+		eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}" 2>/dev/null | grep -qE "$error_pattern" && {
+			tmp_name=$(eval ${tmp_command} df -h | awk "/^\\/dev\\/${tmp_name}/ {print \$1}" | awk -F '/' '{print $NF}' | head -n1)
 			[ -z "$tmp_name" ] && continue
 		}
 
@@ -1149,18 +1156,18 @@ function get_disk() {
 		last_disk_time=$(date -r "${file_path}" +%s 2>/dev/null) || last_disk_time=0
 
 		if [ $(( $(date +%s) - $last_disk_time )) -gt 86000 ]; then
-			disk_info=$(eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}")
+			disk_info=$(eval ${tmp_command} smartctl -i -n standby "/dev/${tmp_name}" 2>/dev/null)
 			echo "$disk_info" | grep -qE "$error_pattern" && {
 				continue
 			} || \
 			echo "$disk_info" | grep -q "STANDBY" && {
 				echo "$disk_info" > "${file_path}"
 			} || \
-			eval ${tmp_command} smartctl -a -j /dev/${tmp_name} > ${file_path}
+			eval ${tmp_command} smartctl -a -j /dev/${tmp_name} 2>/dev/null> ${file_path}
 		fi
 
 		# 硬盘状态
-		if [ -f "${file_path}" ] && ( ! cat "${file_path}" | grep -q -v "STANDBY" ); then
+		if [ -f "${file_path}" ] && [ -s "${file_path}" ] && ( ! cat "${file_path}" | grep -q -v "STANDBY" ); then
 			disk_name=$(awk '/Device Model/{print $NF}' "$file_path")
 			[[ -n $disk_name && $disk_name != null && $disk_name != 0 ]] && {
 				disk_name=$(cut_str "$disk_name" "20")
@@ -1170,9 +1177,12 @@ function get_disk() {
 		elif [ -f "${file_path}" ]; then
 			# 硬盘名称
 			disk_name=$(jq -r .model_name ${file_path})
+			[ -z "$disk_name" ] && disk_name=$(cat /sys/block/"${all_disk_names[i]}"/device/model)
 			[[ -n $disk_name && $disk_name != null && $disk_name != 0 ]] && {
 				disk_name=$(cut_str "$disk_name" "20")
-				disk_name="${disk_name}_$(eval ${tmp_command} lsblk -o NAME,SIZE | awk "/^${all_disk_names[i]}/ {print \$NF}")"
+				disk_size=$(eval ${tmp_command} lsblk -o NAME,SIZE 2>/dev/null | awk "/^${all_disk_names[i]}/ {print \$NF}")
+				[ -z "$disk_size" ] && disk_size=$(eval ${tmp_command} df -h 2>/dev/null | awk -v tmp_disk_name="${all_disk_names[i]}" '$1 ~ "^/dev/"tmp_disk_name {print $2}')
+				disk_name="${disk_name}_${disk_size}"
 			}
 			printf "${str_linefeed}${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}" >> "$output_dir/get_disk"
 			# 硬盘温度
@@ -1182,7 +1192,8 @@ function get_disk() {
 			disk_time=$(jq -r .power_on_time.hours ${file_path})
 			[[ -n $disk_time && $disk_time != null ]] && printf "${str_linefeed}${str_tab}通电时间：${disk_time}h" >> "$output_dir/get_disk"
 			# 空间使用
-			disk_use=$(eval ${tmp_command} lsblk -o NAME,FSUSE%,TYPE | awk -v part_name="${all_disk_names[i]}" '$NF == "part" && $1 ~ part_name && NF > 2 {sub(".*" part_name, part_name, $1); printf "%s: %s  ", $1, $2} END {print ""}')
+			disk_use=$(eval ${tmp_command} lsblk -o NAME,FSUSE%,TYPE 2>/dev/null | awk -v part_name="${all_disk_names[i]}" '$NF == "part" && $1 ~ part_name && NF > 2 {sub(".*" part_name, part_name, $1); printf "%s: %s  ", $1, $2} END {print ""}')
+			[ -z "$disk_use" ] && disk_use=$(eval ${tmp_command} df -h 2>/dev/null | awk -v part_name="${all_disk_names[i]}" '$1 ~ "^/dev/"part_name && NF > 1 {sub("/dev/", "", $1); sub(/[0-9]+$/, "", $1); printf "%s: %s  ", $1, $5} END {print ""}')
 			[ -n "$disk_use" ] && [ -n "${disk_use// }" ] && echo -e -n "${str_linefeed}${str_tab}空间使用：${disk_use}" >> "$output_dir/get_disk"
 			# 寿命使用
 			disk_health=$(jq -r .nvme_smart_health_information_log.percentage_used ${file_path})
@@ -1598,7 +1609,7 @@ function send(){
 			send_content="${send_content}${str_linefeed}【${tmp_name}】  ${ip_total}${str_linefeed}${str_tab}${tmp_ip}    在线 ${time_online}"
 		done < "${dir}tmp_sort_file"
 	fi
-	
+
 	[ ! -z "$device_name" ] && send_title="【$device_name】${send_title}"
 	[ -z "$send_content" ] && send_content="${str_splitline}${str_title_start} 我遇到了一个难题${str_title_end}${str_linefeed}${str_tab}定时发送选项错误，你没有选择需要发送的项目，该怎 么办呢${str_splitline}"
 	[ "$send_disturb" -eq "0" ] && diy_send "${send_title}" "${send_content}" "${jsonpath}" "$1" >/dev/null 2>&1
@@ -1612,6 +1623,12 @@ function send(){
 if [ "$1" ] ;then
 	[ $1 == "soc" ] && get_config "soc_code" "server_host" "server_port"
 	[ $1 == "soc" ] && soc_temp && exit $?
+	[ $1 == "getip" ] && {
+		get_config "get_ipv4_mode" "ipv4_interface" "get_ipv6_mode" "ipv6_interface"
+		ipv4_urllist=`cat /usr/share/wechatpush/api/ipv4.list` 2>/dev/null
+		ipv6_urllist=`cat /usr/share/wechatpush/api/ipv6.list` 2>/dev/null
+		ip_changes getip && exit $?
+		}
 	read_config
 	[ $1 == "send" ] && send && exit $?
 	[ $1 == "test" ] && send test && exit $?

@@ -19,7 +19,7 @@
 		"mpnews":{
 		"articles":[
 			{
-				"title": "\"${nowtime}${str_linefeed}${1}\"",
+				"title": "\"${1} ${nowtime}\"",
 				"thumb_media_id": "\"`curl \"https://qyapi.weixin.qq.com/cgi-bin/media/upload?access_token=$(curl -s \"https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${corpid}&corpsecret=${corpsecret}\"|jq '.access_token'|sed 's/\"//g')&type=image\" -F \"file=@${mediapath}\"|jq '.media_id'|sed 's/\"//g'`\"",
 				"author": "\"\"",
 				"content_source_url": "\"\"",

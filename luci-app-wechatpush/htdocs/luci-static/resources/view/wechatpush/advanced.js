@@ -78,7 +78,7 @@ return view.extend({
 			var _this = this;
 			return fs.exec(programPath, ['soc']).then(function (res) {
 				if (!res.stdout) {
-					throw new Error(_('Returned temperature value is empty'));
+					throw new Error(_('Returned value is empty'));
 				}
 				_this.description = res.stdout.trim();
 				return _this.map.reset();

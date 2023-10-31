@@ -303,6 +303,22 @@ return view.extend({
 		o.description = _('Please enter the device MAC and device alias separated by a space, such as:<br/> XX:XX:XX:XX:XX:XX My Phone<br/> 192.168.1.2 My PC<br />Please use the 「Save」 button in the text box.');
 
 		// 推送内容
+		o = s.taboption('content', form.Button, '_getip', _('Test IP acquisition command'), _('You may need to save the configuration before sending.'));
+		o.inputstyle = 'action';
+		o.onclick = function () {
+			var _this = this;
+			return fs.exec(programPath, ['getip']).then(function (res) {
+				if (!res.stdout) {
+					throw new Error(_('Returned value is empty'));
+				}
+				_this.description = res.stdout.trim();
+				return _this.map.reset();
+			}).catch(function (err) {
+				_this.description = _('Fetch failed：') + err.message;
+				return _this.map.reset();
+			});
+		};
+
 		o = s.taboption('content', cbiRichListValue, 'get_ipv4_mode', _('IPv4 Dynamic Notification'));
 		o.value('', _('Close'),
 			_(' '));
