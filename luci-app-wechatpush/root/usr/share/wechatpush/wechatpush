@@ -839,7 +839,7 @@ function ip_changes(){
 	[ "$get_ipv6_mode" -eq "2" ] && local IPv6=`getip hostipv6` && local IPv6_URL=`echo ${IPv6}|jq -r '.URL'` && local IPv6=`echo ${IPv6}|jq -r '.IP'`
 
 	if [ "$1" ] && [ $1 == "getip" ]; then
-		echo "IPv4 $IPv4    接口：$IPv4_URL <br/>IPv6 $IPv6    接口：$IPv6_URL"
+		echo "IPv4：$IPv4<br/>地址：$(get_ip_attribution $IPv4)<br/>接口：$IPv4_URL<br/>IPv6：$IPv6<br/>地址：$(get_ip_attribution $IPv6)<br/>接口：$IPv6_URL"
 		return
 	fi
 
@@ -1222,10 +1222,10 @@ function get_disk() {
 # 查询 IP 归属地
 function get_ip_attribution(){
 	ip="$1"
-	[ -f ${dir}ipAddress ] && ( cat ${dir}ipAddress|grep -q -w -i "$ip" ) && echo "本地网络" && return
+	[ -f ${dir}ipAddress ] && ( cat ${dir}ipAddress|grep -q -w -i "$ip" ) && echo "本地局域网" && return
 	ip_attribution_urls=$(cat /usr/share/wechatpush/api/ip_attribution.list)
 	while IFS= read -r ip_attribution_command; do
-		login_ip_attribution=$(eval "$ip_attribution_command" 2>/dev/null)
+		local login_ip_attribution=$(eval "$ip_attribution_command" 2>/dev/null)
 		[ "$login_ip_attribution" == "null" ] && unset login_ip_attribution
 		[ -n "$login_ip_attribution" ] && break
 	done <<< "$ip_attribution_urls"
@@ -1260,7 +1260,7 @@ function login_send(){
 		fi
 		[ -n "$log_only" ] && echo "`date "+%Y-%m-%d"` ${login_time} 【info】设备 ${login_ip} 通过 Web ${login_mode} 登录了路由器 " >> ${logfile} && continue
 
-		login_ip_attribution=$(get_ip_attribution ${login_ip})
+		local login_ip_attribution=$(get_ip_attribution ${login_ip})
 		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}"
 		[ -n "$login_mode" ] && content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
 		if { [ -z "$login_disturb" ] || [ "$login_disturb" -ne "1" ]; }; then
@@ -1293,7 +1293,7 @@ function login_send(){
 		fi
 		[ -n "$log_only" ] && echo "`date "+%Y-%m-%d"` ${login_time} 【info】设备 ${login_ip} 通过 SSH ${login_mode} 登录了路由器 " >> ${logfile} && continue
 
-		login_ip_attribution=$(get_ip_attribution ${login_ip})
+		local login_ip_attribution=$(get_ip_attribution ${login_ip})
 		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}"
 		[ ! -z "$login_mode" ] && content_mode="${str_linefeed}${str_tab}登录方式： ${str_space}${str_space}${str_space}${str_space}${login_mode}"
 		if { [ -z "$login_disturb" ] || [ "$login_disturb" -ne "1" ]; }; then
@@ -1315,7 +1315,7 @@ function login_send(){
 	# Web 非法登录
 	[ -f ${dir}web_failed ] && for login_ip in `cat ${dir}web_failed | sort -u`; do
 		[ -z "$login_ip" ] && continue
-		login_ip_attribution=$(get_ip_attribution ${login_ip})
+		local login_ip_attribution=$(get_ip_attribution ${login_ip})
 		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
 		echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 Web 频繁尝试登录" >> ${logfile}
 		[ -n "$login_disturb" ] && [ "$login_disturb" -eq "1" ] && continue
@@ -1335,7 +1335,7 @@ function login_send(){
 	# SSH 非法登录
 	[ -f ${dir}ssh_failed ] && for login_ip in `cat ${dir}ssh_failed | sort -u`; do
 		[ -z "$login_ip" ] && continue
-		login_ip_attribution=$(get_ip_attribution ${login_ip})
+		local login_ip_attribution=$(get_ip_attribution ${login_ip})
 		[ -n "$login_ip_attribution" ] && content_attribution="${str_linefeed}${str_tab}IP 归属地： ${str_space}${str_space}${str_space}${str_space}${login_ip_attribution}" || unset content_attribution
 		echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】设备 ${login_ip} (${login_ip_attribution}) 通过 SSH 频繁尝试登录" >> ${logfile}
 		[ -n "$login_disturb" ] && [ "$login_disturb" -eq "1" ] && continue
