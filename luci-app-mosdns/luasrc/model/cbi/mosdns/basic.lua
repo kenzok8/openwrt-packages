@@ -101,11 +101,6 @@ o.datatype = "and(uinteger,min(1),max(3))"
 o.default = "2"
 o:depends("configfile", "/etc/mosdns/config.yaml")
 
-o = s:taboption("advanced", Value, "max_conns", translate("Maximum Connections"), translate("Set the Maximum connections for DoH and pipeline's TCP/DoT, Except for the HTTP/3 protocol"))
-o.datatype = "and(uinteger,min(1))"
-o.default = "2"
-o:depends("configfile", "/etc/mosdns/config.yaml")
-
 o = s:taboption("advanced", Value, "idle_timeout", translate("Idle Timeout"), translate("DoH/TCP/DoT Connection Multiplexing idle timeout (default 30 seconds)"))
 o.datatype = "and(uinteger,min(1))"
 o.default = "30"

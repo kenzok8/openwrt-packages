@@ -55,7 +55,6 @@ get_config() {
     config_get bootstrap_dns $1 bootstrap_dns "119.29.29.29"
     config_get listen_port_api $1 listen_port_api 9091
     config_get concurrent $1 concurrent 1
-    config_get max_conns $1 max_conns 2
     config_get insecure_skip_verify $1 insecure_skip_verify 0
     config_get idle_timeout $1 idle_timeout 30
     config_get enable_ecs_remote $1 enable_ecs_remote 0
@@ -73,9 +72,9 @@ init_yaml() {
         local_dns=$($MOSDNS_SCRIPT dns | awk -v s='        ' '{
           for(i=1; i<=NF; i++) {
             if ($i ~ /^h3:\/\//) {
-              printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n%s  enable_http3: true\n",s,$i,s,s,s,s,s,s
+              printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n%s  enable_http3: true\n",s,$i,s,s,s,s,s
             } else {
-              printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n",s,$i,s,s,s,s,s
+              printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n",s,$i,s,s,s,s
             }
           }
         }')
@@ -86,9 +85,9 @@ init_yaml() {
     remote_dns=$(echo $remote_dns | awk -v s='        ' '{
       for(i=1; i<=NF; i++) {
         if ($i ~ /^h3:\/\//) {
-          printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n%s  enable_http3: true\n",s,$i,s,s,s,s,s,s
+          printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n%s  enable_http3: true\n",s,$i,s,s,s,s,s
         } else {
-          printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  max_conns: '${max_conns}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n",s,$i,s,s,s,s,s
+          printf "%s- addr: \"%s\"\n%s  bootstrap: '${bootstrap_dns}'\n%s  enable_pipeline: '${enable_pipeline}'\n%s  insecure_skip_verify: '${insecure_skip_verify}'\n%s  idle_timeout: '${idle_timeout}'\n",s,$i,s,s,s,s
         }
       }
     }')
