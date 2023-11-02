@@ -31,14 +31,14 @@ wait_and_cat() {
 # 初始化设置信息
 function read_config(){
 	get_config \
-	"enable" "lite_enable" "device_name" "sleeptime" "oui_data" "reset_regularly" "debuglevel" \
+	"enable" "lite_enable" "device_name" "proxy_address" "sleeptime" "oui_data" "reset_regularly" "debuglevel" \
 	"jsonpath" "sckey" "corpid" "userid" "agentid" "corpsecret" "mediapath" "wxpusher_apptoken" "wxpusher_uids" "wxpusher_topicIds" "pushplus_token" "tg_token" "chat_id" \
 	"get_ipv4_mode" "ipv4_interface" "get_ipv6_mode" "ipv6_interface" "auto_update_ip_list" \
 	"device_notification" "cpu_notification" "cpu_load_threshold" "temperature_threshold" \
 	"client_usage" "client_usage_max" "client_usage_disturb" "client_usage_whitelist" \
 	"login_notification" "login_max_num" "login_web_black" "login_ip_black_timeout" "login_ip_white_list" "port_knocking_enable" "login_ip_white_timeout" "login_port_white" "login_port_forward_list" \
 	"crontab_regular_time" "crontab_interval_time" \
-	"do_not_disturb_mode" "do_not_disturb_starttime" "do_not_disturb_endtime" "up_down_push_whitelist" "up_down_push_blacklist" "up_down_push_interface" "mac_online_list" "mac_offline_list" "login_disturb" "login_notification_delay" "login_log_enable" \
+	"do_not_disturb_mode" "do_not_disturb_starttime" "do_not_disturb_endtime" "up_down_push_whitelist" "up_down_push_blacklist" "up_down_push_interface" "mac_online_list" "mac_offline_list" "cpu_threshold_duration" "cpu_notification_delay" "login_disturb" "login_notification_delay" "login_log_enable" \
 	"up_timeout" "down_timeout" "timeout_retry_count" "only_timeout_push" "passive_mode" "thread_num" "soc_code" "server_host" "server_port" \
 	"unattended_enable" "zerotier_helper" "unattended_only_on_disturb_time" "unattended_device_aliases" "network_disconnect_event" "unattended_autoreboot_mode" "autoreboot_system_uptime" "autoreboot_network_uptime" \
 	"device_info_helper" "gateway_host_url" "gateway_info_url" "gateway_logout_url" "gateway_username_id" "gateway_password_id" "gateway_username" "gateway_password" "scan_ip_range" "device_info_helper_sleeptime"
@@ -80,6 +80,7 @@ function read_config(){
 	[ -z "$login_ip_white_timeout" ] && login_ip_white_timeout="600"
 	[ "$iw_version" ] && wlan_interface=`iw dev 2>/dev/null|grep Interface|awk '{print $2}'` >/dev/null 2>&1
 	[ -z "$server_port" ] && server_port="22"
+	cpu_notification_delay=$((${cpu_notification_delay} - ${cpu_threshold_duration}))
 	output_dir="${dir}json_output"
 	mkdir -p "$output_dir"
 	if ( echo "$lite_enable"|grep -q "content" ); then
@@ -144,18 +145,24 @@ function diy_send(){
 	local content_type=`jq -r '.content_type' ${3}`
 	! jq "$type" ${3} > ${tempjsonpath} && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】type:{ } 字段转义变量后格式错误，请检查 type:{ } 字段内是否有特殊符号未转义或语法错误" >> ${logfile} && return 1
 
-	[ $4 ] && echo '{"url":"'${diyurl}'","content_type":"'${content_type}'","type":'`jq "$type" ${3}`'}' > ${dir}debug_send_json
-	[ $4 ] && echo -e "${send_title}" "${send_content}" > ${dir}debug_send_content
-	[ $4 ] && cat ${tempjsonpath} > ${dir}debug_send_data
-	[ $4 ] && ! jq -r '.' ${dir}debug_send_json && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】转义变量后格式错误，请检查 ${dir}debug_send_json 字段内是否有特殊符号未转义或语法错误" >> ${logfile}
-	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】json 文件已保存至：${dir}debug_send_json"  >> ${logfile}
-	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】推送内容预览文件保存至：${dir}debug_send_content" >> ${logfile}
-	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】如果收不到信息，请检查 ${dir}debug_send_data 文件，或使用下列命令手动测试返回值 (可能需要关闭日志自动刷新方便选中)" >> ${logfile}
-	[ $4 ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】"'curl -X POST -H "'$content_type'" -d "@'${dir}debug_send_data'" "'${diyurl}'"  ' >> ${logfile}
-
-	curl --connect-timeout 30 -m 60 -X POST -H "$content_type" -d "$data" "${diyurl}"
+	[ -n "$proxy_address" ] && local proxy_cmd="-x $proxy_address"
+	curl $proxy_cmd --connect-timeout 30 -m 60 --retry 1 -X POST -H "$content_type" -d "$data" "${diyurl}"
 	local RETVAL=$?
-	[ $RETVAL -ne "0" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】网络错误或 URL 错误，推送失败，curl 返回值为 ${RETVAL}" >> ${logfile} && return 1 || return 0
+	if [ -n "$4" ] || [ $RETVAL -ne 0 ]; then
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】网络错误或 URL 错误，推送失败，curl 返回值为 ${RETVAL}，请参考如下调试信息进行排查" >> ${logfile}
+		echo '{"url":"'${diyurl}'","content_type":"'${content_type}'","type":'`jq "$type" ${3}`'}' > ${dir}debug_send_json
+		echo -e "${send_title}" "${send_content}" > ${dir}debug_send_content
+		cat ${tempjsonpath} > ${dir}debug_send_data
+		! jq -r '.' ${dir}debug_send_json && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！】转义变量后格式错误，请检查 ${dir}debug_send_json 字段内是否有特殊符号未转义或语法错误" >> ${logfile}
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】json 文件已保存至：${dir}debug_send_json"  >> ${logfile}
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】推送内容预览文件保存至：${dir}debug_send_content" >> ${logfile}
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】如果收不到信息，请检查 ${dir}debug_send_data 文件，或使用下列命令手动测试返回值 (可能需要关闭日志自动刷新方便选中)" >> ${logfile}
+		echo "`date "+%Y-%m-%d %H:%M:%S"` 【debug】"'curl -X POST -H "'$content_type'" -d "@'${dir}debug_send_data'" "'${diyurl}'"  ' >> ${logfile}
+		[ -n "$4" ] && [ $RETVAL -eq 0 ] && return 0
+		return 1
+	else
+	  return 0
+	fi
 }
 
 # 清理临时文件
@@ -816,7 +823,7 @@ function rand_geturl(){
 						fi
 						[ "$retry_count" -eq "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】已经重启路由2次，修复失败，请主人自行修复哦" >> ${logfile}
 					elif [ "$network_disconnect_event" -eq "2" ] ;then
-						[ "$retry_count" -lt "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试重启网络，当前第 $retry_count 次 " >> ${logfile} && /etc/init.d/network restart >/dev/null 2>&1
+						[ "$retry_count" -lt "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】正在尝试重启网络，当前第 $retry_count 次 " >> ${logfile} && network_restart
 						[ "$retry_count" -eq "3" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【！！！！】已经重启网络2次，修复失败，请主人自行修复哦 " >> ${logfile}
 					fi
 				fi
@@ -833,26 +840,13 @@ function rand_geturl(){
 
 # 检测 ip 状况
 function ip_changes(){
-	[ "$get_ipv4_mode" -eq 1 ] && {
-		getip wanipv4 > "$output_dir/IPv4" &
-		local IPv4_URL="网络接口"
-	}
-	[ "$get_ipv6_mode" -eq 1 ] && {
-		getip wanipv6 > "$output_dir/IPv6" &
-		local IPv6_URL="网络接口"
-	}
-	[ "$get_ipv4_mode" -eq 2 ] && getip hostipv4 > "$output_dir/IPv4" &
-	[ "$get_ipv6_mode" -eq 2 ] && getip hostipv6 > "$output_dir/IPv6" &
+	local IPv4_URL="网络接口"
+	local IPv6_URL="网络接口"
+	[ "$get_ipv4_mode" -eq "1" ] && getip wanipv4 > "$output_dir/IPv4" &
+	[ "$get_ipv6_mode" -eq "1" ] && getip wanipv6 > "$output_dir/IPv6" &
 	wait_and_cat
-	[ "$get_ipv4_mode" -eq 2 ] && {
-		echo ${IPv4}|jq -r '.URL' > "$output_dir/IPv4_URL" &
-		echo ${IPv4}|jq -r '.IP' > "$output_dir/IPv4" &
-	}
-	[ "$get_ipv6_mode" -eq 2 ] && {
-		echo ${IPv6}|jq -r '.URL' > "$output_dir/IPv6_URL" &
-		echo ${IPv6}|jq -r '.IP' > "$output_dir/IPv6" &
-	}
-	wait_and_cat
+	[ "$get_ipv4_mode" -eq "2" ] && local IPv4=`getip hostipv4` && local IPv4_URL=`echo ${IPv4}|jq -r '.URL'` && local IPv4=`echo ${IPv4}|jq -r '.IP'`
+	[ "$get_ipv6_mode" -eq "2" ] && local IPv6=`getip hostipv6` && local IPv6_URL=`echo ${IPv6}|jq -r '.URL'` && local IPv6=`echo ${IPv6}|jq -r '.IP'`
 
 	if [ "$1" ] && [ $1 == "getip" ]; then
 		echo "IPv4：$IPv4<br/>地址：$(get_ip_attribution $IPv4)<br/>接口：$IPv4_URL<br/>IPv6：$IPv6<br/>地址：$(get_ip_attribution $IPv6)<br/>接口：$IPv6_URL"
@@ -1073,12 +1067,12 @@ function cpu_load(){
 			temp_last_overload_time=`date +%s`
 		fi
 
-		if [ ! -z "$cpu_temp" ] && [ "$((`date +%s`-$temp_last_overload_time))" -ge "300" ] && [ -z "$temperaturecd_time" ]; then
+		if [ ! -z "$cpu_temp" ] && [ "$((`date +%s`-$temp_last_overload_time))" -ge "$cpu_threshold_duration" ] && [ -z "$temperaturecd_time" ]; then
 			title="CPU 温度过高！"
 			temperaturecd_time=`date +%s`
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text} CPU 温 度过高: ${cpu_temp}" >> ${logfile}
 			content="${content}${str_splitline}${str_title_start} CPU 温度过高${str_title_end}${str_linefeed}${str_tab}CPU 温度已连续五分钟超过预设${str_linefeed}${str_tab}接下来一小 时不再提示${str_linefeed}${str_tab}当前温度：${cpu_temp}℃"
-		elif [ ! -z "$temperaturecd_time" ] && [ "$((`date +%s`-$temperaturecd_time))" -ge "3300" ] ;then
+		elif [ ! -z "$temperaturecd_time" ] && [ "$((`date +%s`-$temperaturecd_time))" -ge "$cpu_notification_delay" ] ;then
 			unset temperaturecd_time
 		fi
 	fi
@@ -1094,7 +1088,7 @@ function cpu_load(){
 			cpu_last_overload_time=`date +%s`
 		fi
 
-		if [ ! -z "$cpu_fuzai" ] && [ "$((`date +%s`-$cpu_last_overload_time))" -ge "300" ] && [ -z "$cpucd_time" ]; then
+		if [ ! -z "$cpu_fuzai" ] && [ "$((`date +%s`-$cpu_last_overload_time))" -ge "$cpu_threshold_duration" ] && [ -z "$cpucd_time" ]; then
 			unset getlogtop
 			if [ ! -z "$title" ] && ( echo "$title"|grep -q "过高" ); then
 				title="设备报警！"
@@ -1105,7 +1099,7 @@ function cpu_load(){
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text} CPU 负 载过高: ${cpu_fuzai}" >> ${logfile}
 			content="${content}${str_splitline}${str_title_start} CPU 负载过高${str_title_end}${str_linefeed}${str_tab}CPU 负载已连续五分钟超过预设${str_linefeed}${str_tab}接下来一小 时不再提示${str_linefeed}${str_tab}当前负载：${cpu_fuzai}"
 			cputop
-		elif [ ! -z "$cpucd_time" ] && [ "$((`date +%s`-$cpucd_time))" -ge "3300" ] ;then
+		elif [ ! -z "$cpucd_time" ] && [ "$((`date +%s`-$cpucd_time))" -ge "$cpu_notification_delay" ] ;then
 			unset cpucd_time
 		fi
 	fi
@@ -1135,7 +1129,7 @@ function get_disk() {
 	# 查询本地硬盘名
 	local_disk_names=($(lsblk 2>/dev/null | awk '$NF=="disk" {print $1}' | sort -u))
 	# 如未安装 lsblk，查找以 /dev/ 开头，但挂载点不是根目录 / 的设备，然后提取硬盘的名称(准确性较低)
-	[ -z "$local_disk_names" ] && local_disk_names=($(df -h 2>/dev/null | awk '$1 ~ /^\/dev/ {if ($NF ~ /^\/[a-zA-Z0-9]/) { sub("/dev/", "", $1); sub(/[0-9]+$/, "", $1); print $1 }}'))
+	[ -z "$local_disk_names" ] && local_disk_names=($(df -h 2>/dev/null | awk '$1 ~ /^\/dev/ {if ($NF ~ /^\/[a-zA-Z0-9]/) { sub("/dev/", "", $1); sub(/[0-9]+$/, "", $1); print $1 }}' | sort -u))
 	local_disk_tags=($(for _ in "${local_disk_names[@]}"; do echo "local"; done))
 
 	# 查询远程硬盘名
@@ -1187,17 +1181,17 @@ function get_disk() {
 			disk_name=$(awk '/Device Model/{print $NF}' "$file_path")
 			[[ -n $disk_name && $disk_name != null && $disk_name != 0 ]] && {
 				disk_name=$(cut_str "$disk_name" "20")
-				disk_name="${disk_name}_$(eval ${tmp_command} lsblk -o NAME,SIZE | awk "/^${all_disk_names[i]}/ {print \$NF}")"
+				disk_name="${disk_name}_$(eval ${tmp_command} lsblk -o NAME,SIZE | awk "/^${tmp_name}/ {print \$NF}")"
 			}
 			printf "${str_linefeed}${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}${str_linefeed}${str_tab}硬盘休眠中" >> "$output_dir/get_disk"
 		elif [ -f "${file_path}" ]; then
 			# 硬盘名称
 			disk_name=$(jq -r .model_name ${file_path})
-			[ -z "$disk_name" ] && disk_name=$(cat /sys/block/"${all_disk_names[i]}"/device/model)
+			[ -z "$disk_name" ] && disk_name=$(cat /sys/block/"${tmp_name}"/device/model)
 			[[ -n $disk_name && $disk_name != null && $disk_name != 0 ]] && {
 				disk_name=$(cut_str "$disk_name" "20")
-				disk_size=$(eval ${tmp_command} lsblk -o NAME,SIZE 2>/dev/null | awk "/^${all_disk_names[i]}/ {print \$NF}")
-				[ -z "$disk_size" ] && disk_size=$(eval ${tmp_command} df -h 2>/dev/null | awk -v tmp_disk_name="${all_disk_names[i]}" '$1 ~ "^/dev/"tmp_disk_name {print $2}')
+				disk_size=$(eval ${tmp_command} lsblk -o NAME,SIZE 2>/dev/null | awk "/^${tmp_name}/ {print \$NF}")
+				[ -z "$disk_size" ] && disk_size=$(eval ${tmp_command} df -h 2>/dev/null | awk -v tmp_disk_name="${tmp_name}" '$1 ~ "^/dev/"tmp_disk_name && !disk_found {print $2; disk_found=1}')
 				disk_name="${disk_name}_${disk_size}"
 			}
 			printf "${str_linefeed}${str_title_start} 硬盘名称：${disk_name}${disk_type}${str_title_end}" >> "$output_dir/get_disk"
@@ -1208,8 +1202,8 @@ function get_disk() {
 			disk_time=$(jq -r .power_on_time.hours ${file_path})
 			[[ -n $disk_time && $disk_time != null ]] && printf "${str_linefeed}${str_tab}通电时间：${disk_time}h" >> "$output_dir/get_disk"
 			# 空间使用
-			disk_use=$(eval ${tmp_command} lsblk -o NAME,FSUSE%,TYPE 2>/dev/null | awk -v part_name="${all_disk_names[i]}" '$NF == "part" && $1 ~ part_name && NF > 2 {sub(".*" part_name, part_name, $1); printf "%s: %s  ", $1, $2} END {print ""}')
-			[ -z "$disk_use" ] && disk_use=$(eval ${tmp_command} df -h 2>/dev/null | awk -v part_name="${all_disk_names[i]}" '$1 ~ "^/dev/"part_name && NF > 1 {sub("/dev/", "", $1); sub(/[0-9]+$/, "", $1); printf "%s: %s  ", $1, $5} END {print ""}')
+			disk_use=$(eval ${tmp_command} lsblk -o NAME,FSUSE%,TYPE 2>/dev/null | awk -v part_name="${tmp_name}" '$NF == "part" && $1 ~ part_name && NF > 2 {sub(".*" part_name, part_name, $1); printf "%s: %s  ", $1, $2} END {print ""}')
+			[ -z "$disk_use" ] && disk_use=$(eval ${tmp_command} df -h 2>/dev/null | awk -v part_name="${tmp_name}" '$1 ~ "^/dev/"part_name && NF > 1 {sub("/dev/", "", $1); sub(/[0-9]+$/, "", $1); printf "%s: %s  ", $1, $5} END {print ""}')
 			[ -n "$disk_use" ] && [ -n "${disk_use// }" ] && echo -e -n "${str_linefeed}${str_tab}空间使用：${disk_use}" >> "$output_dir/get_disk"
 			# 寿命使用
 			disk_health=$(jq -r .nvme_smart_health_information_log.percentage_used ${file_path})
@@ -1563,8 +1557,8 @@ function send(){
 	disturb;local send_disturb=$?
 	get_config "send_title" "send_notification"
 
-	cpuload=`getcpu`
-	service_status=$(ubus call service list '{"name": "wechatpush"}' | grep -o '"running": true')
+	[ -z "$1" ] && cpuload=`getcpu`
+	[ -z "$1" ] && service_status=$(ubus call service list '{"name": "wechatpush"}' | grep -o '"running": true')
 	[ -z "$1" ] && ( echo "$send_notification"|grep -q "client_list" ) && > ${dir}send_enable.lock && [ -z "$service_status" ] && first &
 	if [ -z "$1" ] && ( echo "$send_notification"|grep -q "router_status" ); then
 		cat /proc/loadavg|awk '{print $1" "$2" "$3}' > "$output_dir/systemload" &
@@ -1590,11 +1584,11 @@ function send(){
 	#[ -z "$1" ] && ( echo "$send_notification"|grep -q "disk_info" ) && get_disk &
 	[ -z "$1" ] && get_disk &
 
-	[ -z "$send_title" ] && send_title="路由状态："
+	[ -z "$1" ] && send_title="路由状态："
 	[ ! -z "$1" ] && send_title="发送测试：" && send_content="${str_splitline}${str_title_start}内容1${str_title_end}${str_linefeed}${str_tab}设备1${str_linefeed}${str_tab}设备2${str_splitline}${str_title_start}内容2${str_title_end}${str_linefeed}${str_tab}设备3${str_linefeed}${str_tab}设备4"
 
 	wait_and_cat
-	if [ -n "$systeminfo_enable" ]; then
+	if [ -z "$1" ] && [ -n "$systeminfo_enable" ]; then
 		[[ $Qwai -eq 200 || $Qwai -eq 301 || $Qwai -eq 302 ]] && Qwai_status="已连通！" || Qwai_status="已断开！"
 		send_content="${send_content}${str_splitline}${str_title_start} 系统运行状态${str_title_end}"
 		send_content="${send_content}${str_linefeed}${str_tab}平均负载：${systemload}"
@@ -1614,7 +1608,7 @@ function send(){
 		send_content="${send_content}${get_disk}"
 	fi
 
-	if [ -n "$waninfo_enable" ]; then
+	if [ -z "$1" ] && [ -n "$waninfo_enable" ]; then
 		send_content="${send_content}${str_splitline}${str_title_start} WAN 口信息${str_title_end}"
 		if [ "$send_wanIP" == "$send_hostIP" ]; then
 			send_content="${send_content}${str_linefeed}${str_tab}IPv4: ${send_wanIP}"

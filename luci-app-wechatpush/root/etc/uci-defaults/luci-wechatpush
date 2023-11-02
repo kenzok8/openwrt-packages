@@ -103,6 +103,11 @@ get_config_wechatpush "gateway_info_enable" "gateway_sleeptime"
 [ -n "$gateway_info_enable" ] && [ "$" -eq "1" ] && uci add_list wechatpush.config.device_info_helper='gateway_info'
 [ -n "$gateway_sleeptime" ] && uci set wechatpush.config.device_info_helper_sleeptime="$gateway_sleeptime"
 
+cpu_threshold_duration=$(uci get wechatpush.config.cpu_threshold_duration 2>/dev/null)
+cpu_notification_delay=$(uci get wechatpush.config.cpu_notification_delay 2>/dev/null)
+[ -z "$cpu_threshold_duration" ] && uci set wechatpush.config.cpu_threshold_duration='300'
+[ -z "$cpu_notification_delay" ] && uci set wechatpush.config.cpu_notification_delay='3600'
+
 serverchan_to_wechatpush_list "device_notification"
 serverchan_to_wechatpush_list "cpu_notification"
 serverchan_to_wechatpush_list "login_notification"

@@ -150,6 +150,14 @@ msgstr "图片缩略图文件路径"
 msgid "Supports JPG and PNG formats within 2MB <br> Optimal size: 900383 or 2.35:1"
 msgstr "只支持 2MB 以内 JPG、PNG 格式<br>最佳尺寸：900383 或 2.35:1"
 
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:183
+msgid "Trusted IP address"
+msgstr "可信 IP 地址"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:187
+msgid "If the application was created after June 20, 2022, you need to set the trusted IP. This option should be used in conjunction with a proxy server."
+msgstr "如果是 2022 年 6 月 20 日之后新创建的应用，需设置可信 IP，该选项需配合代理服务器使用"
+
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:192
 msgid "topicIds(Mass sending)"
 msgstr "topicIds(群发)"
@@ -173,6 +181,14 @@ msgstr "<br />如需通过群组/频道推送，请创建一个非中文的群�
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:226
 msgid "Please refer to the comments and other interface files for modifications. Limited resources, no longer supporting more interfaces, please debug on your own.<br />You can use a similar website to check the JSON file format: https://www.google.com/search?q=JSON+Parser+Online<br />Please use the 「Save」 button in the text box."
 msgstr "请参照注释和其他接口文件修改，精力有限，不再支持更多接口，自行调试<br />请参考类似网站检查 JSON 文件格式：https://www.baidu.com/s?wd=json在线解析<br />文本框请使用「保存」按钮"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:229
+msgid "Proxy Address"
+msgstr "代理地址"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:230
+msgid "When you want to use a proxy to push information, you can use this option.<br/>This may be helpful for scenarios like trusted IPs for WeChat Work.Using special characters may cause sending failure.<br/>Example:<br/>http://username:password@127.0.0.1:1080<br/>socks5://username:password@127.0.0.1:1080"
+msgstr "当你想要使用代理推送信息时，可以使用这个选项<br/>可能有助于企业微信可信 IP 等情况，默认为空，使用特殊符号可能会造成发送失败<br/>例子：<br/>http://username:password@127.0.0.1:1080<br/>socks5://username:password@127.0.0.1:1080"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:230
 msgid "Send Test"
@@ -202,6 +218,10 @@ msgstr "发送失败"
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:583
 msgid "Unknown error: %s."
 msgstr "未知错误：%s"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:248
+msgid "Device Name"
+msgstr "设备名称"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:249
 msgid "The device name will be displayed in the push message title to identify the source device of the message."
@@ -379,6 +399,10 @@ msgstr "设备报警只会在连续五分钟超过设定值时才会推送，一
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:424
 msgid "Load alert threshold"
 msgstr "负载报警阈值"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:451
+msgid "In general, when the load value is lower than the number of logical cores, you typically don\'t need to pay much attention to it"
+msgstr "通常情况下，负载值低于逻辑核心数量时，你不需要关注它"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:433
 msgid "Please enter a numeric value only"
@@ -683,6 +707,22 @@ msgstr "设备在线免打扰列表"
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:662
 msgid "Do Not Disturb device offline list"
 msgstr "设备离线免打扰列表"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:682
+msgid "When CPU temperature or load exceeds the threshold continuously for (s) seconds."
+msgstr "当 CPU 温度或负载超过阈值持续超过（秒）"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:686
+msgid "If set to 0, it's a single check without considering duration."
+msgstr "如果设置为 0，则为单次检测，不考虑持续时间"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:688
+msgid "CPU alarm quiet time (seconds)"
+msgstr "CPU 报警免打扰时间（秒）"
+
+#: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:692
+msgid "No repeat notifications within the set time after the initial push notification."
+msgstr "首次推送通知后，在设定时间内不再重复提醒"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:667
 msgid "Do Not Disturb for Login Reminders"

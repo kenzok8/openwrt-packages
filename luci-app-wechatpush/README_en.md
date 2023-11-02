@@ -58,7 +58,7 @@ Traffic statistics functionality depends on `wrtbwmon`. Please install or compil
 
 **About Hard Drive Information:**
 
-When the OpenWrt system or remote host (PVE) does not have lsblk installed, the total hard drive capacity information may be inconsistent with the actual capacity.
+When the OpenWrt system or remote host (PVE) does not have lsblk installed, the hard drive capacity information may be inconsistent with the actual capacity.
 
 When the OpenWrt system or remote host (PVE) does not have smartctl installed, information such as hard drive temperature, uptime, and health status will not be available.
 
