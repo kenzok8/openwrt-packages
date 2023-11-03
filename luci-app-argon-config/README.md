@@ -93,6 +93,5 @@ Made with [contrib.rocks](https://contrib.rocks).
 ## Related Projects
 
 - [luci-theme-argon](https://github.com/jerrykuku/luci-theme-argon): Argon theme
-- [luci-app-vssr](https://github.com/jerrykuku/luci-app-vssr): An OpenWrt internet surfing plugin
 - [openwrt-package](https://github.com/jerrykuku/openwrt-package): My OpenWrt package
 - [CasaOS](https://github.com/IceWhaleTech/CasaOS): A simple, easy-to-use, elegant open-source Personal Cloud system (My current main project)

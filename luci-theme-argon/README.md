@@ -149,7 +149,6 @@ Made with [contrib.rocks](https://contrib.rocks).
 ## Related Projects
 
 - [luci-app-argon-config](https://github.com/jerrykuku/luci-app-argon-config): Argon theme config plugin
-- [luci-app-vssr](https://github.com/jerrykuku/luci-app-vssr): An OpenWrt internet surfing plugin
 - [openwrt-package](https://github.com/jerrykuku/openwrt-package): My OpenWrt package
 - [CasaOS](https://github.com/IceWhaleTech/CasaOS): A simple, easy-to-use, elegant open-source Personal Cloud system (My current main project)
 
