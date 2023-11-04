@@ -1226,6 +1226,7 @@ header > .container > .brand {
     letter-spacing:1px;
     padding: 0 4.5rem;
     transition: 0.1s ease-in-out;
+    position: absolute;
 }
 header > .container > a[class="brand"]:after {
     content:"";
@@ -2992,6 +2993,7 @@ body.lang_pl.node-main-login .cbi-value-title {
         width: 18.75rem;
         height: 2.8125rem;
         padding: 1.15rem 2rem;
+        z-index: 100;
     }
 
     .showSide:before {

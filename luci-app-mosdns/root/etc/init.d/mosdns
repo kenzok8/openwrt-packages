@@ -117,8 +117,7 @@ init_yaml() {
     [ "$dump_file" -eq 0 ] && \cp -a $DUMP_FILE_DEFAULT $DUMP_FILE
     # ECS
     if [ "$enable_ecs_remote" -eq 1 ]; then
-        ecs_remote=$(echo "ecs ${remote_ecs_ip%.*}.0/24")
-        sed -i "s,ecs_remote,$ecs_remote,g" $CONF
+        sed -i "s,ecs_remote,ecs\ $remote_ecs_ip,g" $CONF
     else
         sed -i "/ecs_remote/d;" $CONF
     fi
