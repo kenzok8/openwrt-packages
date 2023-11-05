@@ -124,6 +124,12 @@ msgstr "每周六"
 msgid "Every Sunday"
 msgstr "每周日"
 
+msgid "GitHub Proxy"
+msgstr "GitHub 代理"
+
+msgid "Update data files with GitHub Proxy, leave blank to disable proxy downloads."
+msgstr "通过 GitHub 代理更新数据文件，留空则禁用代理下载。"
+
 msgid "Database Update"
 msgstr "数据库更新"
 

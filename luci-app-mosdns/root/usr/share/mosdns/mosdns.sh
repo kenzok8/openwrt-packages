@@ -56,7 +56,6 @@ adlist_update() {
     [ "$(uci -q get mosdns.config.adblock)" != 1 ] && exit 0
     ad_source=$(uci -q get mosdns.config.ad_source)
     AD_TMPDIR=$(mktemp -d) || exit 1
-    google_status=$(curl -I -4 -m 3 -o /dev/null -s -w %{http_code} http://www.google.com/generate_204)
     mirror=""
     : > /etc/mosdns/rule/.ad_source
     has_update=0
@@ -66,7 +65,7 @@ adlist_update() {
             echo "$url" >> /etc/mosdns/rule/.ad_source
             filename=$(basename $url)
             if echo "$url" | grep -Eq "^https://raw.githubusercontent.com" ; then
-                [ "$google_status" -ne "204" ] && mirror="https://ghproxy.com/"
+                [ -n "$(uci -q get mosdns.config.github_proxy)" ] && mirror="$(uci -q get mosdns.config.github_proxy)/"
             fi
             echo -e "\e[1;32mDownloading $mirror$url\e[0m"
             curl --connect-timeout 5 -m 90 --ipv4 -kfSLo "$AD_TMPDIR/$filename" "$mirror$url"
@@ -89,8 +88,7 @@ adlist_update() {
 
 geodat_update() (
     TMPDIR=$(mktemp -d) || exit 1
-    google_status=$(curl -I -4 -m 3 -o /dev/null -s -w %{http_code} http://www.google.com/generate_204)
-    [ "$google_status" -ne "204" ] && mirror="https://ghproxy.com/"
+    [ -n "$(uci -q get mosdns.config.github_proxy)" ] && mirror="$(uci -q get mosdns.config.github_proxy)/"
     # geoip.dat - cn-private
     echo -e "\e[1;32mDownloading "$mirror"https://github.com/Loyalsoldier/geoip/releases/latest/download/geoip-only-cn-private.dat\e[0m"
     curl --connect-timeout 5 -m 60 --ipv4 -kfSLo "$TMPDIR/geoip.dat" ""$mirror"https://github.com/Loyalsoldier/geoip/releases/latest/download/geoip-only-cn-private.dat"
