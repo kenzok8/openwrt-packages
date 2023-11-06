@@ -1254,10 +1254,6 @@ function login_send(){
 	[ -n "$login_web_black" ] && [ "$login_web_black" -eq 1 ] && init_ip_black "ipv6"
 	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq 1 ] && init_ip_white "ipv4"
 	[ -n "$port_knocking_enable" ] && [ "$port_knocking_enable" -eq 1 ] && init_ip_white "ipv6"
-	tmp_ip_list=`echo "$login_ip_white_list"|grep -v "^$"|sort -u`
-	while IFS= read -r tmp_ip; do
-		[ -n "$tmp_ip" ] && add_ip_white "$tmp_ip" "0"
-	done <<< "$tmp_ip_list"
 	[ -z "$web_logged" ] && [ -z "$ssh_logged" ] && [ -z "$web_login_failed" ] && [ -z "$ssh_login_failed" ] && return
 	set_ip_black
 	sys_log=$(logread notice)
@@ -1495,13 +1491,13 @@ function init_ip_black(){
 
 # 添加黑名单
 function add_ip_black(){
-	[ ! "$1" ] && return
-	echo "$login_ip_white_list"|grep -w -q "$1" && return
+	[ ! "$1" ] && return 1
+	echo "$login_ip_white_list"|grep -w -q "$1" && return 1
 	# 检查 IP 版本
 	unset ipset_name
 	( echo "$1"|grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$' ) && ipset_name="wechatpush_blacklist"
 	( echo "$1"|grep -Eq '^([\da-fA-F0-9]{1,4}(:{1,2})){1,15}[\da-fA-F0-9]{1,4}$' ) && ipset_name="wechatpush_blacklistv6"
-	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】黑名单添加失败，IP 格式错误" >> ${logfile} && return
+	[ -z "$ipset_name" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【!!!】黑名单添加失败，IP 格式错误" >> ${logfile} && return 1
 
 	! cat ${ip_blacklist_path}|grep -q -w -i ${1} && echo "$1 timeout ${login_ip_black_timeout}" >> ${ip_blacklist_path}
 
@@ -1705,14 +1701,16 @@ process_login() {
 	login_log=$(logread notice | grep -w -i "$login_ip" | tail -n 1)
 
 	if [[ $count -eq $login_max_num && ( "$3" == "web_failed_counts" || "$3" == "ssh_failed_counts" ) ]]; then
-		add_ip_black ${login_ip}
-		unset login_counts["$login_ip"]
-		[ "$3" == "web_failed_counts" ] && echo "${login_ip} ${login_time}" >> ${dir}web_failed
-		[ "$3" == "ssh_failed_counts" ] && echo "${login_ip} ${login_time}" >> ${dir}ssh_failed
+		add_ip_black ${login_ip} && {
+			unset login_counts["$login_ip"]
+			[ "$3" == "web_failed_counts" ] && echo "${login_ip} ${login_time}" >> ${dir}web_failed
+			[ "$3" == "ssh_failed_counts" ] && echo "${login_ip} ${login_time}" >> ${dir}ssh_failed
+		}
 	fi
 
 	if [[ "$3" == "web_login_counts" || "$3" == "ssh_login_counts" ]]; then
 		add_ip_white ${login_ip}
+		del_ip_black ${login_ip} # 白名单已经优先于黑名单，但白名单集合有超时限制，防止下次修改代码忘记，上保险
 		unset web_failed_counts["$login_ip"]
 		unset ssh_failed_counts["$login_ip"]
 		unset login_counts["$login_ip"]
@@ -1820,6 +1818,11 @@ while [ "$enable" -eq "1" ]; do
 
 	# 登录提醒通知
 	#[ ! -f "${dir}send_enable.lock" ] && login_send
+	# 因修改为实时推送，白名单设备并不会再更新时间，暂时性修复
+	tmp_ip_list=`echo "$login_ip_white_list"|grep -v "^$"|sort -u`
+	while IFS= read -r tmp_ip; do
+		[ -n "$tmp_ip" ] && add_ip_white "$tmp_ip" "0"
+	done <<< "$tmp_ip_list"
 
 	# 推送
 	if [ ! -f "${dir}send_enable.lock" ] && [ ! -z "$title" ] && [ ! -z "$content" ]; then
