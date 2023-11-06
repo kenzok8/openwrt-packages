@@ -974,11 +974,11 @@ function down(){
 	else
 		local tmp_name=`cat ${dir}ipAddress|grep -w ${1}|awk '{print $3}'|grep -v "^$"|sort -u|head -n1`
 		local tmp_mac=`cat ${dir}ipAddress|grep -w ${1}|awk '{print $2}'|grep -v "^$"|sort -u|head -n1`
-		if [ ${ip_name// /_} != ${tmp_name} ] || [ ${ip_mac} != ${tmp_mac} ]; then
+		if [ "${ip_name// /_}" != "${tmp_name}" ] || [ "${ip_mac}" != "${tmp_mac}" ]; then
 			LockFile lock
 			olduptime=$(cat ${dir}ipAddress|grep -w ${1}|awk '{print $4}'|grep -v "^$"|sort -u|head -n1)
 			sed -i "/^${1} /d" ${dir}ipAddress
-			[ ${ip_mac} != ${tmp_mac} ] && ip_name="unknown" # MAC 变化时应删除主机名重新获取
+			[ "${ip_mac}" != "${tmp_mac}" ] && ip_name="unknown" # MAC 变化时应删除主机名重新获取
 			echo "$1  ${ip_mac} ${ip_name// /_} ${olduptime} ${ip_interface}" >> ${dir}ipAddress
 			LockFile unlock
 		fi
@@ -1071,12 +1071,12 @@ function cpu_load(){
 			title="CPU 温度过高！"
 			temperaturecd_time=`date +%s`
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text} CPU 温 度过高: ${cpu_temp}" >> ${logfile}
-			content="${content}${str_splitline}${str_title_start} CPU 温度过高${str_title_end}${str_linefeed}${str_tab}CPU 温度已连续五分钟超过预设${str_linefeed}${str_tab}接下来一小 时不再提示${str_linefeed}${str_tab}当前温度：${cpu_temp}℃"
+			content="${content}${str_splitline}${str_title_start} CPU 温度过高${str_title_end}${str_linefeed}${str_tab}CPU 温度已连续 $(time_for_humans $cpu_load_threshold) 超过预设${str_linefeed}${str_tab}接下来 $(time_for_humans $cpu_notification_delay) 不再提示${str_linefeed}${str_tab}当前温度：${cpu_temp}℃"
 		elif [ ! -z "$temperaturecd_time" ] && [ "$((`date +%s`-$temperaturecd_time))" -ge "$cpu_notification_delay" ] ;then
 			unset temperaturecd_time
 		fi
 	fi
-
+$(time_for_humans $cpu_notification_delay)
 	if [ -n "$notification_load" ] && [ -n "$cpu_load_threshold" ]; then
 		[ -z "$cpu_last_overload_time" ] && cpu_last_overload_time=`date +%s`
 		local cpu_fuzai=`cat /proc/loadavg|awk '{print $1}'` 2>/dev/null
@@ -1097,7 +1097,7 @@ function cpu_load(){
 			fi
 			cpucd_time=`date +%s`
 			echo "`date "+%Y-%m-%d %H:%M:%S"` ${disturb_text} CPU 负 载过高: ${cpu_fuzai}" >> ${logfile}
-			content="${content}${str_splitline}${str_title_start} CPU 负载过高${str_title_end}${str_linefeed}${str_tab}CPU 负载已连续五分钟超过预设${str_linefeed}${str_tab}接下来一小 时不再提示${str_linefeed}${str_tab}当前负载：${cpu_fuzai}"
+			content="${content}${str_splitline}${str_title_start} CPU 负载过高${str_title_end}${str_linefeed}${str_tab}CPU 负载已连续 $(time_for_humans $cpu_load_threshold) 超过预设${str_linefeed}${str_tab}接下来 $(time_for_humans $cpu_notification_delay) 不再提示${str_linefeed}${str_tab}当前负载：${cpu_fuzai}"
 			cputop
 		elif [ ! -z "$cpucd_time" ] && [ "$((`date +%s`-$cpucd_time))" -ge "$cpu_notification_delay" ] ;then
 			unset cpucd_time
@@ -1203,7 +1203,7 @@ function get_disk() {
 			[[ -n $disk_time && $disk_time != null ]] && printf "${str_linefeed}${str_tab}通电时间：${disk_time}h" >> "$output_dir/get_disk"
 			# 空间使用
 			disk_use=$(eval ${tmp_command} lsblk -o NAME,FSUSE%,TYPE 2>/dev/null | awk -v part_name="${tmp_name}" '$NF == "part" && $1 ~ part_name && NF > 2 {sub(".*" part_name, part_name, $1); printf "%s: %s  ", $1, $2} END {print ""}')
-			[ -z "$disk_use" ] && disk_use=$(eval ${tmp_command} df -h 2>/dev/null | awk -v part_name="${tmp_name}" '$1 ~ "^/dev/"part_name && NF > 1 {sub("/dev/", "", $1); sub(/[0-9]+$/, "", $1); printf "%s: %s  ", $1, $5} END {print ""}')
+			[ -z "$disk_use" ] && disk_use=$(eval ${tmp_command} df -h 2>/dev/null | awk -v part_name="${tmp_name}" '$1 ~ "^/dev/"part_name && NF > 1 {sub("/dev/", "", $1); if (!seen[$1]) { printf "%s: %s  ", $1, $5; seen[$1] = 1; }} END {print ""}')
 			[ -n "$disk_use" ] && [ -n "${disk_use// }" ] && echo -e -n "${str_linefeed}${str_tab}空间使用：${disk_use}" >> "$output_dir/get_disk"
 			# 寿命使用
 			disk_health=$(jq -r .nvme_smart_health_information_log.percentage_used ${file_path})
