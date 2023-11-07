@@ -48,6 +48,7 @@ o = s:taboption("basic", Flag, "redirect", translate("DNS Forward"), translate("
 o.default = true
 
 o = s:taboption("basic", Flag, "prefer_ipv4", translate("Remote DNS prefer IPv4"), translate("IPv4 is preferred for remote DNS resolution of dual-stack addresses, and is not affected when the destination is IPv6 only"))
+o:depends( "configfile", "/etc/mosdns/config.yaml")
 o.default = true
 
 o = s:taboption("basic", Flag, "custom_local_dns", translate("Custom China DNS"), translate("Follow WAN interface DNS if not enabled"))
