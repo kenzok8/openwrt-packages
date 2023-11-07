@@ -49,6 +49,7 @@ get_config() {
     config_get maximum_ttl_custom $1 maximum_ttl 0
     config_get minimal_ttl_custom $1 minimal_ttl 0
     config_get redirect $1 redirect 0
+    config_get prefer_ipv4 $1 prefer_ipv4 0
     config_get remote_dns $1 remote_dns "tls://8.8.8.8 tls://1.1.1.1"
     config_get custom_local_dns $1 custom_local_dns 0
     config_get apple_optimization $1 apple_optimization 0
@@ -111,6 +112,8 @@ init_yaml() {
     sed -i -e '/- addr: local_dns/{r '$TMPDIR/local_dns.txt -e';d};/- addr: remote_dns/{r '$TMPDIR/remote_dns.txt -e';d}' $CONF
     # Convert HTTP/3 prefix format
     sed -i 's/h3:\/\//https:\/\//g' $CONF
+    # Prefer IPv4
+    [ $prefer_ipv4 -ne 1 ] && sed -i "/prefer_ipv4/d" $CONF
     # Cache dump
     [ "$dump_file" -eq 1 ] && sed -i "/lazy_cache_ttl/a\      dump_file: $DUMP_FILE\n      dump_interval: $dump_interval" $CONF
     [ "$dump_file" -eq 1 ] && [ ! -f $DUMP_FILE ] && cp -a $DUMP_FILE_DEFAULT $DUMP_FILE

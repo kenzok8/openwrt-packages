@@ -160,6 +160,12 @@ msgstr "自定义"
 msgid "Log File"
 msgstr "日志文件"
 
+msgid "Remote DNS prefer IPv4"
+msgstr "远程 DNS 首选 IPv4"
+
+msgid "IPv4 is preferred for remote DNS resolution of dual-stack addresses, and is not affected when the destination is IPv6 only"
+msgstr "远程 DNS 解析双栈地址时首选 IPv4，目标仅 IPv6 时不受影响"
+
 msgid "Custom China DNS"
 msgstr "自定义国内 DNS"
 
