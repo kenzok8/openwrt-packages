@@ -184,10 +184,37 @@ msgstr "启用IPV6服务器。"
 msgid "Enable TCP DNS Server"
 msgstr "启用TCP服务器。"
 
-msgid "Enable daily auto update."
-msgstr "启用每日自动更新"
+msgid "Enable daily(week) auto update."
+msgstr "启用每天（每周）自动更新"
 
-msgid "Update time (every day)"
+msgid "Update Time (Every Week)"
+msgstr "更新时间(每周)"
+
+msgid "Every Day"
+msgstr "每天"
+
+msgid "Every Monday"
+msgstr "每周一"
+
+msgid "Every Tuesday"
+msgstr "每周二"
+
+msgid "Every Wednesday"
+msgstr "每周三"
+
+msgid "Every Thursday"
+msgstr "每周四"
+
+msgid "Every Friday"
+msgstr "每周五"
+
+msgid "Every Saturday"
+msgstr "每周六"
+
+msgid "Every Sunday"
+msgstr "每周日"
+
+msgid "Update Time (Every Day)"
 msgstr "更新时间(每天)"
 
 msgid "Enable domain prefetch, accelerate domain response speed."

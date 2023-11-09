@@ -671,12 +671,23 @@ s = m:section(TypedSection, "smartdns", translate("Download Files Setting"), tra
 s.anonymous = true
 
 ---- download Files Settings
-o = s:option(Flag, "enable_auto_update", translate("Enable Auto Update"), translate("Enable daily auto update."))
+o = s:option(Flag, "enable_auto_update", translate("Enable Auto Update"), translate("Enable daily(week) auto update."))
 o.rmempty = true
 o.default = o.disabled
 o.rempty = true
 
-o = s:option(ListValue, "auto_update_day_time", translate("Update time (every day)"))
+o = s:option(ListValue, "auto_update_week_time", translate("Update Time (Every Week)"))
+o:value("*", translate("Every Day"))
+o:value("1", translate("Every Monday"))
+o:value("2", translate("Every Tuesday"))
+o:value("3", translate("Every Wednesday"))
+o:value("4", translate("Every Thursday"))
+o:value("5", translate("Every Friday"))
+o:value("6", translate("Every Saturday"))
+o:value("0", translate("Every Sunday"))
+o.default = "*"
+
+o = s:option(ListValue, "auto_update_day_time", translate("Update Time (Every Day)"))
 for i = 0, 23 do o:value(i, i .. ":00") end
 o.default = 5
 
