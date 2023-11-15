@@ -62,6 +62,7 @@ adlist_update() {
     for url in $ad_source;
     do
         if [ "$url" != "geosite.dat" ] && [ $(echo "$url" | grep -c -E "^file://") -eq 0 ]; then
+            has_update=1
             echo "$url" >> /etc/mosdns/rule/.ad_source
             filename=$(basename $url)
             if echo "$url" | grep -Eq "^https://raw.githubusercontent.com" ; then
@@ -69,7 +70,6 @@ adlist_update() {
             fi
             echo -e "\e[1;32mDownloading $mirror$url\e[0m"
             curl --connect-timeout 5 -m 90 --ipv4 -kfSLo "$AD_TMPDIR/$filename" "$mirror$url"
-            has_update=1
         fi
     done
     if [ $? -ne 0 ]; then
@@ -81,9 +81,9 @@ adlist_update() {
             mkdir -p /etc/mosdns/rule/adlist
             rm -rf /etc/mosdns/rule/adlist/*
             \cp $AD_TMPDIR/* /etc/mosdns/rule/adlist
-            rm -rf "$AD_TMPDIR"
         }
     fi
+    rm -rf "$AD_TMPDIR"
 }
 
 geodat_update() (
