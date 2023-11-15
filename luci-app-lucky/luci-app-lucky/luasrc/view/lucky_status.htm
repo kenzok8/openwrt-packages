@@ -1,26 +1,45 @@
+<%
+protocol="http://"
 
+%>
 
 <script type="text/javascript">//<![CDATA[
+var URL = ""
+var URLSAFE = ""
+function Luckyconfig() {
+		XHR.get('<%=url([[admin]], [[services]], [[lucky_config]])%>', null,
+			function (x, d) {
+				if (d) {
+					URL = "http://" + window.location.hostname + ":" + d.BaseConfigure.AdminWebListenPort;
+					URLSAFE = "http://" + window.location.hostname + ":" + d.BaseConfigure.AdminWebListenPort;
+					if (d.BaseConfigure.SafeURL != undefined) {
+						URL += d.BaseConfigure.SafeURL;
+					}
+				}
+			}
+		);
+}		
 
-
-	XHR.poll(3, '<%=url([[admin]], [[services]], [[lucky_status]])%>', null,
+	    XHR.poll(3, '<%=url([[admin]], [[services]], [[lucky_status]])%>', null,
 		function(x, d) {
 			var tb = document.getElementById('lucky_status');
 			if (d && tb)
 			{
-				if (d.running)
+				if (d.status)
 				{
-				var luckyAdminURL = ""+ window.location.protocol + "//" + window.location.hostname +":"+ d.port+d.safeurl+"";
+					Luckyconfig()
 					tb.innerHTML = '<em><b style=\"color:green\"><%:The Lucky service is running.%></b></em>';
-					tb.innerHTML +='<em> <br/><br/>' + ' <b > <%:Click the new page to open Lucky%>  <a href="' +luckyAdminURL+'"'+' target="_blank">' + luckyAdminURL + ' </a><br/> </em>';
+					tb.innerHTML +='<em> <br/><br/><%:Click the new page to open Lucky%> </em>';
+					tb.innerHTML += "<input class=\"cbi-button cbi-button-reload \" type=\"button\" value=\" "+ URLSAFE+ "\" onclick=\"window.open('"+URL+"')\"/>";
 				}
 				else
 				{
-					tb.innerHTML = '<em><b style=\"color:red\"><%:The Lucky service is not running.%></b></em>';
+					tb.innerHTML = '<em style=\"color:red\"><%:The Lucky service is not running.%></em><br/>';
 				}
 			}
 		}
 	);
+
 //]]></script>
 <style>.mar-10 {margin-left: 50px; margin-right: 10px;}</style>
 <fieldset class="cbi-section">

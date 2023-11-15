@@ -6,6 +6,6 @@ uci -q batch <<-EOF >/dev/null
         set ucitrack.@lucky[-1].init=lucky
         commit ucitrack
 EOF
-
+[[ -f /etc/config/lucky ]] || echo "config lucky 'lucky' " > /etc/config/lucky
 rm -rf /tmp/luci*
 exit 0
