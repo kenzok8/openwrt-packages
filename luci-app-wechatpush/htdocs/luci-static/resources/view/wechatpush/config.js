@@ -181,7 +181,6 @@ return view.extend({
 		o.description = _('Supports JPG and PNG formats within 2MB <br> Optimal size: 900383 or 2.35:1');
 
 		o = s.taboption('basic', form.Value, 'proxy_ip', _('Trusted IP address'));
-		o.rmempty = false;
 		o.depends('jsonpath', '/usr/share/wechatpush/api/qywx_mpnews.json');
 		o.depends('jsonpath', '/usr/share/wechatpush/api/qywx_markdown.json');
 		o.description = _('If the application was created after June 20, 2022, you need to set the trusted IP. This option should be used in conjunction with a proxy server.');
@@ -192,12 +191,10 @@ return view.extend({
 		o.depends('jsonpath', '/usr/share/wechatpush/api/wxpusher.json');
 
 		o = s.taboption('basic', form.Value, 'wxpusher_uids', _('uids'));
-		o.rmempty = false;
 		o.depends('jsonpath', '/usr/share/wechatpush/api/wxpusher.json');
 
 		o = s.taboption('basic', form.Value, 'wxpusher_topicIds', _('topicIds(Mass sending)'));
 		o.description = _('Get Instructions') + ' <a href="https://wxpusher.zjiecode.com/docs/#/?id=%e5%8f%91%e9%80%81%e6%b6%88%e6%81%af-1" target="_blank">' + _('Click here') + '</a>';
-		o.rmempty = false;
 		o.depends('jsonpath', '/usr/share/wechatpush/api/wxpusher.json');
 
 		o = s.taboption('basic', form.Value, 'pushplus_token', _('pushplus_token'));
