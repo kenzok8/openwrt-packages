@@ -54,6 +54,14 @@ case $MYDEVICE_NAME in
 		fi
 			SOC="zcube1 max"
 		;;
+	"JP TVbox 3566")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3566-jp-tvbox.dtb"
+		fi
+			SOC="jp-tvbox"
+		;;
 	"Radxa CM3 RPI CM4 IO")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
