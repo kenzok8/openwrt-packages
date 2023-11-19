@@ -1167,6 +1167,9 @@ msgstr "Yacd 控制面板"
 msgid "Dashboard Control Panel"
 msgstr "Dashboard 控制面板"
 
+msgid "Metacubexd Control Panel"
+msgstr "Metacubexd 控制面板"
+
 msgid "Control Panel Login IP"
 msgstr "控制面板登录 IP"
 
@@ -1226,9 +1229,6 @@ msgstr "兼容"
 
 msgid "Mix"
 msgstr "混合"
-
-msgid "Open Panel"
-msgstr "打开控制面板"
 
 msgid "Close All Connections"
 msgstr "重置所有链接"
@@ -2976,6 +2976,9 @@ msgstr "注意: 游戏代理请使用 Vmess 以外的节点"
 msgid "Note: If the connection is abnormal, please follow the steps on this page to check first"
 msgstr "注意: 连接异常时请按照此页步骤先进行检查"
 
+msgid "Note: If you need to perform client access control in Fake-ip mode, please change the DNS hijacking mode to firewall forwarding"
+msgstr "注意: Fake-ip 模式下如需要进行客户端访问控制，请将DNS劫持模式改为防火墙转发"
+
 msgid "Click to the page"
 msgstr "点击前往"
 
@@ -3036,8 +3039,8 @@ msgstr "指定接口"
 msgid "DNS Lookup Only Through The Specific Interface"
 msgstr "DNS 仅通过特定接口进行查询"
 
-msgid "Specific Group"
-msgstr "指定策略组"
+msgid "Specific Group (Support Regex)"
+msgstr "指定策略组（支持正则匹配）"
 
 msgid "Group Use For Proxy The DNS"
 msgstr "用于代理此 DNS 的策略组"
@@ -3105,8 +3108,17 @@ msgstr "切换（更新） Dashboard 版本"
 msgid "Switch(Update) Yacd Version"
 msgstr "切换（更新） Yacd 版本"
 
+msgid "Update Metacubexd Version"
+msgstr "更新 Metacubexd 版本"
+
 msgid "Downloading File..."
 msgstr "文件下载中..."
+
+msgid "Update Failed"
+msgstr "更新失败"
+
+msgid "Update Successful"
+msgstr "更新成功"
 
 msgid "Switch Failed"
 msgstr "切换失败"
@@ -3432,8 +3444,17 @@ msgstr "警告：跳过核心不支持的 nameserver-policy 规则"
 msgid "Enable Unified Delay"
 msgstr "*启用统一延迟"
 
-msgid "Change the delay calculation method to remove extra delays such as handshaking"
+msgid "Change The Delay Calculation Method To Remove Extra Delays Such as Handshaking"
 msgstr "更换延迟计算方式，通过去除握手等额外开销来降低延迟数值"
 
 msgid "Tip: If the download fails, try setting the CDN in Overwrite Settings - General Settings - Github Address Modify Options"
 msgstr "提示：如果下载失败，您可以尝试在覆写设置 - 常规设置 - Github地址修改选项中设置CDN"
+
+msgid "Change The TCP Keep-alive Interval, Selecting a Larger Value Avoids Abnormal Resource Consumption"
+msgstr "更改 TCP Keep-alive 间隔，选择较大数值可以避免异常的资源消耗"
+
+msgid "TCP Keep-alive Interval(s)"
+msgstr "TCP Keep-alive 间隔（s）"
+
+msgid "Used for Downloading Subscriptions, Defaults to Clash"
+msgstr "用于下载订阅时指定 UA，默认为 Clash"

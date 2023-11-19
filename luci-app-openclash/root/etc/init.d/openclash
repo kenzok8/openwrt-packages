@@ -25,7 +25,7 @@ CACHE_PATH_OLD="/etc/openclash/.cache"
 CACHE_PATH="/etc/openclash/cache.db"
 LOG_FILE="/tmp/openclash.log"
 START_LOG="/tmp/openclash_start.log"
-LOCK_FILE=/tmp/lock/openclash.lock
+LOCK_FILE="/tmp/lock/openclash.lock"
 PROXY_FWMARK="0x162"
 PROXY_ROUTE_TABLE="0x162"
 
@@ -942,14 +942,23 @@ upnp_exclude()
          if [ -n "$line" ]; then
             upnp_ip=$(echo "$line" |awk -F ':' '{print $3}')
             upnp_dp=$(echo "$line" |awk -F ':' '{print $4}')
+            upnp_type=$(echo "$line" |awk -F ':' '{print $1}')
             if [ -n "$upnp_ip" ] && [ -n "$upnp_dp" ]; then
                if [ -n "$FW4" ]; then
                   if [ -z "$(nft list chain inet fw4 openclash_upnp |grep "$upnp_ip" |grep "$upnp_dp")" ]; then
-                     nft add rule inet fw4 openclash_upnp ip saddr { "$upnp_ip" } udp sport "$upnp_dp" counter return 2>/dev/null
+                     if [ "$upnp_type" == "UDP" ]; then
+                        nft add rule inet fw4 openclash_upnp ip saddr { "$upnp_ip" } udp sport "$upnp_dp" counter return 2>/dev/null
+                     else
+                        nft add rule inet fw4 openclash_upnp ip saddr { "$upnp_ip" } tcp sport "$upnp_dp" counter return 2>/dev/null
+                     fi
                   fi
                else
                   if [ -z "$(iptables -t mangle -nL openclash_upnp |grep "$upnp_ip" |grep "$upnp_dp")" ]; then
-                     iptables -t mangle -A openclash_upnp -p udp -s "$upnp_ip" --sport "$upnp_dp" -j RETURN 2>/dev/null
+                     if [ "$upnp_type" == "UDP" ]; then
+                        iptables -t mangle -A openclash_upnp -p udp -s "$upnp_ip" --sport "$upnp_dp" -j RETURN 2>/dev/null
+                     else
+                        iptables -t mangle -A openclash_upnp -p tcp -s "$upnp_ip" --sport "$upnp_dp" -j RETURN 2>/dev/null
+                     fi
                   fi
                fi
             fi
@@ -2502,7 +2511,6 @@ if [ -z "$FW4" ]; then
       #TUN模式
       #启动TUN
       set_tun_tap
-
       #设置防火墙
       if [ "$router_self_proxy" = "1" ] || ([ "$enable_redirect_dns" != "2" ] && [ "$en_mode" = "fake-ip" ]); then
          if [ "$en_mode" = "fake-ip" ]; then
@@ -2960,17 +2968,9 @@ revert_firewall()
    #TUN
    ip route del default dev utun table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
    ip rule del fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
-   route delete -net "$fakeip_range" dev utun >/dev/null 2>&1
-   ip link set dev utun down >/dev/null 2>&1
-   ip tuntap del utun mode tun >/dev/null 2>&1
 
    ip -6 route del default dev utun table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
    ip -6 rule del fwmark "$PROXY_FWMARK" table "$PROXY_ROUTE_TABLE" >/dev/null 2>&1
-   ip -6 rule del oif utun table 2022 >/dev/null 2>&1
-   ip -6 route del default dev utun table 2022 >/dev/null 2>&1
-   ip -6 route del fdfe:dcba:9876::/126 dev utun proto kernel metric 256 >/dev/null 2>&1
-   ip -6 link set dev utun down >/dev/null 2>&1
-   ip -6 tuntap del utun mode tun >/dev/null 2>&1
 
    if [ -n "$FW4" ]; then
       for nft in "input" "forward" "dstnat" "srcnat" "nat_output" "mangle_prerouting" "mangle_output"; do
@@ -3099,6 +3099,7 @@ get_config()
    upnp_lease_file=$(uci -q get upnpd.config.upnp_lease_file)
    global_client_fingerprint=$(uci -q get openclash.config.global_client_fingerprint || echo "0")
    enable_unified_delay=$(uci -q get openclash.config.enable_unified_delay || echo "0")
+   keep_alive_interval=$(uci -q get openclash.config.keep_alive_interval || echo "0")
    [ -z "$dns_port" ] && dns_port=7874 && uci -q set openclash.config.dns_port=7874
    uci -q set openclash.config.restricted_mode=0 && uci -q commit openclash
 }
@@ -3126,7 +3127,7 @@ start()
    if ! $quick_start; then
       LOG_OUT "Step 3: Modify The Config File..."
       config_check
-      /usr/share/openclash/yml_change.sh 2>/dev/null "$en_mode" "$da_password" "$cn_port" "$proxy_port" "$TMP_CONFIG_FILE" "$ipv6_enable" "$http_port" "$socks_port" "$log_level" "$proxy_mode" "$en_mode_tun" "$stack_type" "$dns_port" "$mixed_port" "$tproxy_port" "$ipv6_dns" "$store_fakeip" "$stream_domains_prefetch" "$enable_meta_core" "$enable_meta_sniffer" "$enable_geoip_dat" "$geodata_loader" "$enable_meta_sniffer_custom" "$interface_name" "$enable_tcp_concurrent" "$core_type" "$append_default_dns" "$enable_meta_sniffer_pure_ip" "$find_process_mode" "$fakeip_range" "$global_client_fingerprint" "$ipv6_mode" "$stack_type_v6" "$enable_unified_delay"
+      /usr/share/openclash/yml_change.sh 2>/dev/null "$en_mode" "$da_password" "$cn_port" "$proxy_port" "$TMP_CONFIG_FILE" "$ipv6_enable" "$http_port" "$socks_port" "$log_level" "$proxy_mode" "$en_mode_tun" "$stack_type" "$dns_port" "$mixed_port" "$tproxy_port" "$ipv6_dns" "$store_fakeip" "$stream_domains_prefetch" "$enable_meta_core" "$enable_meta_sniffer" "$enable_geoip_dat" "$geodata_loader" "$enable_meta_sniffer_custom" "$interface_name" "$enable_tcp_concurrent" "$core_type" "$append_default_dns" "$enable_meta_sniffer_pure_ip" "$find_process_mode" "$fakeip_range" "$global_client_fingerprint" "$ipv6_mode" "$stack_type_v6" "$enable_unified_delay" "$keep_alive_interval"
       /usr/share/openclash/yml_rules_change.sh 2>/dev/null "$rule_source" "$enable_custom_clash_rules" "$TMP_CONFIG_FILE" "$enable_rule_proxy" "$CONFIG_NAME" "$router_self_proxy" "$lan_ip" "$proxy_port" "$tproxy_port" "$enable_meta_core" "$enable_redirect_dns" "$fakeip_range" "$en_mode"
       /usr/share/openclash/openclash_custom_domain_dns.sh >/dev/null 2>&1
       #Custom overwrite
@@ -3265,10 +3266,11 @@ restart()
 
 reload()
 {
+   [ -f "$LOCK_FILE" ] && exit 0
    enable=$(uci -q get openclash.config.enable)
    if pidof clash >/dev/null && [ "$enable" == "1" ] && [ "$1" == "firewall" ]; then
-      LOG_OUT "Reload OpenClash Firewall Rules..."
       set_lock
+      LOG_OUT "Reload OpenClash Firewall Rules..."
       revert_firewall 2>/dev/null
       do_run_mode 2>/dev/null
       get_config 2>/dev/null
