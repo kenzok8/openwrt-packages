@@ -130,6 +130,56 @@ o.cfgvalue    = function(...)
     return Flag.cfgvalue(...) or "1"
 end
 
+---- Enable DOT server;
+o = s:taboption("advanced", Flag, "tls_server", translate("DOT Server"), translate("Enable DOT DNS Server"))
+o.rmempty = false
+o.default = o.disabled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "1"
+end
+
+o = s:taboption("advanced", Value, "tls_server_port", translate("DOT Server Port"), translate("Smartdns DOT server port."))
+o.placeholder = 853
+o.default = 853
+o.datatype = "port"
+o.rempty = false
+o:depends('tls_server', '1')
+
+---- Enable DOH server;
+o = s:taboption("advanced", Flag, "doh_server", translate("DOH Server"), translate("Enable DOH DNS Server"))
+o.rmempty = false
+o.default = o.disabled
+o.cfgvalue    = function(...)
+    return Flag.cfgvalue(...) or "1"
+end
+
+o = s:taboption("advanced", Value, "doh_server_port", translate("DOH Server Port"), translate("Smartdns DOH server port."))
+o.placeholder = 843
+o.default = 843
+o.datatype = "port"
+o.rempty = false
+o:depends('doh_server', '1')
+
+o = s:taboption("advanced", Value, "bind_cert", translate("Server Cert"), translate("Server certificate file path."))
+o.datatype = "string"
+o.placeholder = "/var/etc/smartdns/smartdns/smartdns-cert.pem"
+o.rempty = true
+o:depends('tls_server', '1')
+o:depends('doh_server', '1')
+
+o = s:taboption("advanced", Value, "bind_cert_key", translate("Server Cert Key"), translate("Server certificate key file path."))
+o.datatype = "string"
+o.placeholder = "/var/etc/smartdns/smartdns/smartdns-key.pem"
+o.rempty = false
+o:depends('tls_server', '1')
+o:depends('doh_server', '1')
+
+o = s:taboption("advanced", Value, "bind_cert_key_pass", translate("Server Cert Key Pass"), translate("Server certificate key file password."))
+o.datatype = "string"
+o.rempty = false
+o:depends('tls_server', '1')
+o:depends('doh_server', '1')
+
 ---- Support IPV6
 o = s:taboption("advanced", Flag, "ipv6_server", translate("IPV6 Server"), translate("Enable IPV6 DNS Server"))
 o.rmempty     = false
