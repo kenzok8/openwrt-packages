@@ -14,36 +14,35 @@ STOP=15
 CONF="lucky"
 PROG=/usr/bin/lucky
 DEFAULT_DIR='/etc/config/lucky.daji/'
+SET_TZ=""
 
 get_tz()
 {
-	SET_TZ=""
-
 	[ -e "/etc/localtime" ] && return
-
 	for tzfile in /etc/TZ /var/etc/TZ
 	do
 		[ -e "$tzfile" ] || continue
 		tz="$(cat $tzfile 2>/dev/null)"
 	done
-
 	[ -z "$tz" ] && return
-
 	SET_TZ=$tz
 }
 
 get_config() {
   config_get_bool enabled $1 enabled 1
   config_get_bool logger $1 logger 1
+  config_get port $1 port 16601
+  config_get SafeURL $1 safe 
   config_get configdir $1 configdir $DEFAULT_DIR
 }
 
 start_service() {
 	config_load "$CONF"
 	config_foreach get_config "$CONF"
-
 	[ "x$enabled" = "x1" ] || return 1
 	[ ! -d $configdir ] && mkdir -p $configdir 2>/dev/null
+	[ $port != 16601 ] && $(which lucky) -setconf -key AdminWebListenPort -value $port -cd $configdir
+	[ $SafeURL ] && $(which lucky) -setconf -key SafeURL -value $SafeURL -cd $configdir
 	procd_open_instance
 	get_tz
 	[[ -z "$SET_TZ" ]] || procd_set_param env TZ="$SET_TZ"

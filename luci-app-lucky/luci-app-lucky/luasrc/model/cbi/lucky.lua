@@ -19,6 +19,8 @@ o = s:option(Value, "port",translate("Set the Lucky access port"))
 o.datatype = "uinteger"
 o.default = 16601
 
+o = s:option(Value, "safe",translate("Safe entrance"),translate("The panel management portal can only be set to log in to the panel through the specified security portal, such as:/lucky"))
+
 o = s:option( Value, "configdir", translate("Config dir path"),translate("The path to store the config file"))
 o.placeholder = "/etc/lucky"
 o.default="/etc/lucky"
