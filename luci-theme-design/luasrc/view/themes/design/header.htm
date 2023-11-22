@@ -119,7 +119,7 @@
 	-- Custom settings
 	local mode = 'normal'
 	local navbar = 'display'
-	local navbar_proxy = 'openclash'
+	local navbar_proxy = 'shadowsocksr'
 	if fs.access('/etc/config/design') then
 		mode = uci:get_first('design', 'global', 'mode')
 		navbar = uci:get_first('design', 'global', 'navbar')
