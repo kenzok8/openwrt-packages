@@ -891,3 +891,36 @@ input,
 
 
 }
+[data-page="admin-dashboard"] {
+    .main-right > #maincontent {
+        .Dashboard {
+            color: #ccc !important;
+
+            h3 {
+                color: #ccc;
+            }
+
+            hr {
+                border-top: 1px solid rgba(255, 255, 255, 1);
+            }
+
+            .dashboard-bg {
+                background-color: #333333;
+            }
+        }
+
+        .router-status-info .title img,
+        .lan-info .title img,
+        .wifi-info .title img {
+            filter: invert(90%);
+        }
+
+        tr {
+            border-top: thin solid #4d4d4d;
+
+            &:last-child {
+                border-bottom: thin solid #4d4d4d;
+            }
+        }
+    }
+}

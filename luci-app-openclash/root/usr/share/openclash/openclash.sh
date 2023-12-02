@@ -89,15 +89,12 @@ config_download()
 {
 if [ -n "$subscribe_url_param" ]; then
    if [ -n "$c_address" ]; then
-      curl -SsL --connect-timeout 30 -m 60 --speed-time 30 --speed-limit 1 --retry 2 -H 'User-Agent: ${sub_ua}' "$c_address""$subscribe_url_param" -o "$CFG_FILE" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$CFG_FILE" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+      curl -SsL --connect-timeout 30 -m 60 --speed-time 30 --speed-limit 1 --retry 2 -H "$sub_ua" "$c_address""$subscribe_url_param" -o "$CFG_FILE" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$CFG_FILE" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
    else
-      curl -SsL --connect-timeout 30 -m 60 --speed-time 30 --speed-limit 1 --retry 2 -H 'User-Agent: ${sub_ua}' https://api.dler.io/sub"$subscribe_url_param" -o "$CFG_FILE" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$CFG_FILE" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
-      if [ "$?" -ne 0 ]; then
-         curl -SsL --connect-timeout 30 -m 60 --speed-time 30 --speed-limit 1 --retry 2 -H 'User-Agent: ${sub_ua}' https://subconverter.herokuapp.com/sub"$subscribe_url_param" -o "$CFG_FILE" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$CFG_FILE" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
-      fi
+      curl -SsL --connect-timeout 30 -m 60 --speed-time 30 --speed-limit 1 --retry 2 -H "$sub_ua" https://api.dler.io/sub"$subscribe_url_param" -o "$CFG_FILE" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$CFG_FILE" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
    fi
 else
-   curl -SsL --connect-timeout 30 -m 60 --speed-time 30 --speed-limit 1 --retry 2 -H 'User-Agent: ${sub_ua}' "$subscribe_url" -o "$CFG_FILE" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$CFG_FILE" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
+   curl -SsL --connect-timeout 30 -m 60 --speed-time 30 --speed-limit 1 --retry 2 -H "$sub_ua" "$subscribe_url" -o "$CFG_FILE" 2>&1 | awk -v time="$(date "+%Y-%m-%d %H:%M:%S")" -v file="$CFG_FILE" '{print time "【" file "】Download Failed:【"$0"】"}' >> "$LOG_FILE"
 fi
 }
 
@@ -578,6 +575,10 @@ sub_info_get()
    else
       udp=""
    fi
+
+   if [ -n "$sub_ua" ]; then
+      sub_ua="User-Agent: $sub_ua"
+   fi
    
    if [ "$rule_provider" == "true" ]; then
       rule_provider="&expand=false&classic=true"
@@ -628,8 +629,8 @@ sub_info_get()
       fi
       if [ -n "$template_path" ]; then
          template_path_encode=$(urlencode "$template_path")
-         [ -n "$key_match_param" ] && key_match_param="(?i)$(urlencode "$key_match_param")"
-         [ -n "$key_ex_match_param" ] && key_ex_match_param="(?i)$(urlencode "$key_ex_match_param")"
+         [ -n "$key_match_param" ] && key_match_param="$(urlencode "$key_match_param")"
+         [ -n "$key_ex_match_param" ] && key_ex_match_param="$(urlencode "$key_ex_match_param")"
          subscribe_url_param="?target=clash&new_name=true&url=$subscribe_url&config=$template_path_encode&include=$key_match_param&exclude=$key_ex_match_param&emoji=$emoji&list=false&sort=$sort$udp&scv=$skip_cert_verify&append_type=$node_type&fdn=true$rule_provider"
          c_address="$convert_address"
       else
