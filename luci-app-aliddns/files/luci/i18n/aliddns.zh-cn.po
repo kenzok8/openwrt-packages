@@ -10,6 +10,9 @@ msgstr "启用"
 msgid "Clean Before Update"
 msgstr "清除所有同名记录"
 
+msgid "Enabled IPv4"
+msgstr "启用 IPv4"
+
 msgid "Enabled IPv6"
 msgstr "启用 IPv6"
 

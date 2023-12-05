@@ -242,6 +242,8 @@ clean_log() {
  exit 1
 }
 
+ipv4=$(uci_get_by_name   base ipv4)
+ipv6=$(uci_get_by_name   base ipv6)
 ak_id=$(uci_get_by_name   base app_key)
 ak_sec=$(uci_get_by_name  base app_secret)
 rrid=$(uci_get_by_name    base record_id)
@@ -269,10 +271,13 @@ DATE=$(date +'%Y-%m-%d %H:%M:%S')
 timestamp=$(date -u "+%Y-%m-%dT%H%%3A%M%%3A%SZ")
 
 clean_log
-check_aliddns || do_ddns_record
+# uci_bool_by_name base ipv4 && check_aliddns || do_ddns_record
+if [ $ipv4 -eq 1 ]; then
+	check_aliddns || do_ddns_record
+fi
 
 # exit if ipv6 not-enabled
-uci_bool_by_name base ipv6 || exit 0
+# uci_bool_by_name base ipv6 || exit 0
 
 iface6=$(uci_get_by_name base interface6)
 if [ "Z$iface6" == "Zinternet" -o "Z$iface6" == "Z" ]; then
@@ -282,5 +287,8 @@ else
 fi
 ip6_escape=`urlencode "$ip6"`
 
-clean_log
-check_aliddns6 || do_ddns_record6
+# clean_log
+# uci_bool_by_name base ipv6 && check_aliddns6 || do_ddns_record6
+if [ $ipv6 -eq 1 ]; then
+	check_aliddns6 || do_ddns_record6
+fi

@@ -15,6 +15,9 @@ enable.rmempty = false
 enable = e:option(Flag, "clean", translate("Clean Before Update"))
 enable.rmempty = false
 
+ipv4 = e:option(Flag,"ipv4",translate("Enabled IPv4"))
+ipv4.rmempty=false
+
 ipv6 = e:option(Flag,"ipv6",translate("Enabled IPv6"))
 ipv6.rmempty=false
 
@@ -33,6 +36,7 @@ iface6:value("",translate("Select WAN6-IP Source"))
 iface6:value("internet")
 iface6:value("wan")
 iface6:value("wan6")
+iface6:value("wan_6")
 iface6.rmempty = true
 
 main = e:option(Value, "main_domain", translate("Main Domain"), translate("For example: test.github.com -> github.com"))
