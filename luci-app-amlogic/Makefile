@@ -16,7 +16,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-amlogic
-PKG_VERSION:=3.1.211
+PKG_VERSION:=3.1.213
 PKG_RELEASE:=1
 
 PKG_LICENSE:=GPL-2.0 License
@@ -25,7 +25,7 @@ PKG_MAINTAINER:=ophub <https://github.com/ophub/luci-app-amlogic>
 LUCI_TITLE:=LuCI support for Amlogic, Allwinner and Rockchip related boxs
 LUCI_PKGARCH:=all
 LUCI_DEPENDS:= \
-	@(aarch64||arm) +luci +luci-lib-nixio +block-mount +blkid +parted \
+	@(aarch64||arm) +luci +luci-lib-nixio +block-mount +blkid +parted +curl \
 	+dosfstools +e2fsprogs +jq +lsblk +pv +losetup +uuidgen +bash +perl +fdisk
 
 define Package/$(PKG_NAME)/conffiles

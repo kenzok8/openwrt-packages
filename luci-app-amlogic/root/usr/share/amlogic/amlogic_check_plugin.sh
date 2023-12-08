@@ -126,7 +126,7 @@ else
     language_file="${download_repo}/${latest_version}/luci-i18n-amlogic-zh-cn_${latest_version}_all.ipk"
 
     # Download the plug-in's i18n file
-    wget "${language_file}" -q -P "${TMP_CHECK_DIR}"
+    curl -fsSL "${language_file}" -o "${TMP_CHECK_DIR}/luci-i18n-amlogic-zh-cn_${latest_version}_all.ipk"
     if [[ "${?}" -eq "0" ]]; then
         tolog "02.04 Language pack downloaded successfully."
     else
@@ -134,7 +134,7 @@ else
     fi
 
     # Download the plug-in's ipk file
-    wget "${plugin_file}" -q -P "${TMP_CHECK_DIR}"
+    curl -fsSL "${plugin_file}" -o "${TMP_CHECK_DIR}/luci-app-amlogic_${latest_version}_all.ipk"
     if [[ "${?}" -eq "0" ]]; then
         tolog "02.05 Plugin downloaded successfully."
     else

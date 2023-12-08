@@ -259,7 +259,7 @@ download_firmware() {
 
     # Download to OpenWrt file
     firmware_download_name="openwrt_${BOARD}_k${main_line_version}_github${firmware_suffix}"
-    wget "${latest_url}" -q -O "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}"
+    curl -fsSL "${latest_url}" -o "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}"
     if [[ "$?" -eq "0" && -s "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}" ]]; then
         tolog "03.01 OpenWrt downloaded successfully."
     else
@@ -267,7 +267,7 @@ download_firmware() {
     fi
 
     # Download sha256sums file
-    if wget "${latest_url}.sha" -q -O "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
+    if curl -fsSL "${latest_url}.sha" -o "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
         tolog "03.03 sha file downloaded successfully."
 
         # If there is a sha256sum file, compare it

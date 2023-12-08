@@ -178,7 +178,7 @@ download_kernel() {
     rm -rf ${KERNEL_DOWNLOAD_PATH}/${download_version}*
 
     kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kernel_tag}/${download_version}.tar.gz"
-    wget "${kernel_down_from}" -q -P "${KERNEL_DOWNLOAD_PATH}"
+    curl -fsSL "${kernel_down_from}" -o ${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz
     [[ "${?}" -ne "0" ]] && tolog "03.03 The kernel download failed." "1"
 
     tar -xf ${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz -C ${KERNEL_DOWNLOAD_PATH}

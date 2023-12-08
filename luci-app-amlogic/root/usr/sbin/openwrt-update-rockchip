@@ -36,7 +36,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3328-l1pro-1296mhz.dtb"
 		fi
-			SOC="l1pro"
+		SOC="l1pro"
 		;;
 	"BeikeYun")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -44,7 +44,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3328-beikeyun-1296mhz.dtb"
 		fi
-			SOC="beikeyun"
+		SOC="beikeyun"
 		;;
 	"ZCuble1 Max")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -52,7 +52,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3399-zcube1-max.dtb"
 		fi
-			SOC="zcube1 max"
+		SOC="zcube1 max"
 		;;
 	"JP TVbox 3566")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -60,7 +60,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3566-jp-tvbox.dtb"
 		fi
-			SOC="jp-tvbox"
+		SOC="jp-tvbox"
 		;;
 	"Radxa CM3 RPI CM4 IO")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -68,7 +68,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3566-radxa-cm3-rpi-cm4-io.dtb"
 		fi
-			SOC="radxa-cm3-rpi-cm4-io"
+		SOC="radxa-cm3-rpi-cm4-io"
 		;;
 	"FastRhino R66S")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -76,7 +76,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-fastrhino-r66s.dtb"
 		fi
-			SOC="r66s"
+		SOC="r66s"
 		;;
 	"FastRhino R68S")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -84,7 +84,15 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
 		fi
-			SOC="r68s"
+		SOC="r68s"
+		;;
+	"RK3568 EC-X")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3568-ec-x.dtb"
+		fi
+		SOC="ec-x"
 		;;
 	"HINLINK OPC-H66K Board"|"Hlink H66K")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h66k.dtb" ];then
@@ -92,7 +100,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-hlink-h66k.dtb"
 		fi
-			SOC="h66k"
+		SOC="h66k"
 		;;
 	"HINLINK OPC-H68K Board"|"Hlink H68K")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h68k.dtb" ];then
@@ -100,7 +108,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-hlink-h68k.dtb"
 		fi
-			SOC="h68k"
+		SOC="h68k"
 		;;
 	"HINLINK OPC-H69K Board"|"Hlink H69K")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h69k.dtb" ];then
@@ -108,7 +116,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-hlink-h69k.dtb"
 		fi
-			SOC="h69k"
+		SOC="h69k"
 		;;
 	"Radxa E25")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -116,7 +124,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-radxa-e25.dtb"
 		fi
-			SOC="e25"
+		SOC="e25"
 		;;
 	"HINLINK OWL H88K-V3 Board"|"Hlink H88K-V3")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k-v3.dtb" ];then
@@ -124,7 +132,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3588-hlink-h88k-v3.dtb"
 		fi
-			SOC="h88k-v3"
+		SOC="h88k-v3"
 		;;
 	"HINLINK OWL H88K Board"|"Hlink H88K")
 		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k.dtb" ];then
@@ -132,7 +140,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3588-hlink-h88k.dtb"
 		fi
-			SOC="ak88/h88k"
+		SOC="ak88/h88k"
 		;;
 	"Hlink H28K")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -140,7 +148,15 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3528-hlink-h28k.dtb"
 		fi
-			SOC="h28k"
+		SOC="h28k"
+		;;
+	"Hlink HT2")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3528-hlink-ht2.dtb"
+		fi
+		SOC="ht2"
 		;;
 	"Ariaboard Photonicat")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -148,7 +164,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-photonicat.dtb"
 		fi
-			SOC="photonicat"
+		SOC="photonicat"
 		;;
 	"NLnet Watermelon Pi V3")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -156,7 +172,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-watermelon-pi-v3.dtb"
 		fi
-			SOC="watermelon-pi-v3"
+		SOC="watermelon-pi-v3"
 		;;
 	"NLnet Watermelon Pi")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -164,7 +180,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3568-watermelon-pi.dtb"
 		fi
-			SOC="watermelon-pi"
+		SOC="watermelon-pi"
 		;;
 	"Radxa ROCK 5B")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
@@ -172,7 +188,7 @@ case $MYDEVICE_NAME in
 		else
 			MYDTB_FDTFILE="rk3588-rock-5b.dtb"
 		fi
-			SOC="rock5b"
+		SOC="rock5b"
 		;;
 	*)	#default
 		if [ -f "/etc/flippy-openwrt-release" ]; then
@@ -647,7 +663,7 @@ cat >>./etc/crontabs/root <<EOF
 EOF
 
 sed -e 's/ttyAMA0/ttyS2/' -i ./etc/inittab
-[ "${SOC}" != "h28k" ] && sed -e 's/ttyS0/tty1/' -i ./etc/inittab
+[ "${SOC}" != "h28k" ] && [ "${SOC}" != "ht2" ] && sed -e 's/ttyS0/tty1/' -i ./etc/inittab
 sss=$(date +%s)
 ddd=$((sss / 86400))
 sed -e "s/:0:0:99999:7:::/:${ddd}:0:99999:7:::/" -i ./etc/shadow
