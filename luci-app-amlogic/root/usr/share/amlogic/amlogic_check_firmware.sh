@@ -142,7 +142,7 @@ check_updated() {
                 firmware_tags_array+=("${firmware_tags_name}")
             fi
         done < <(
-            curl -fsSL \
+            curl -fsSL -m 10 \
                 https://github.com/${server_firmware_url}/releases?page=${i} |
                 grep -oE 'releases/tag/([^" ]+)'
         )
@@ -173,7 +173,7 @@ check_updated() {
 
     # Retrieve the HTML code of the tags list page
     html_code="$(
-        curl -fsSL \
+        curl -fsSL -m 10 \
             https://github.com/${server_firmware_url}/releases/expanded_assets/${firmware_releases_tag}
     )"
 

@@ -102,7 +102,7 @@ tolog "02. Start querying plugin version..."
 
 # Get the latest version
 latest_version="$(
-    curl -fsSL \
+    curl -fsSL -m 10 \
         https://github.com/ophub/luci-app-amlogic/releases |
         grep -oE 'expanded_assets/[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?' | sed 's|expanded_assets/||' |
         sort -urV | head -n 1
