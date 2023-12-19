@@ -416,6 +416,12 @@ msgstr "设置文件系统类型："
 msgid "[Default ext4] Set the file system type of the shared partition (/mnt/mmcblk*p4) when install OpenWrt."
 msgstr "[默认 ext4] 设置安装 OpenWrt 时共享分区 (/mnt/mmcblk*p4) 的文件系统类型。"
 
+msgid "Set the proxy:"
+msgstr "设置代理:"
+
+msgid "[Default ''] Set up a github.com proxy for faster firmware and kernel downloads."
+msgstr "[默认 ''] 设置 github.com 代理以加快固件和内核下载速度。"
+
 msgid "Save Config:"
 msgstr "保存配置："
 
