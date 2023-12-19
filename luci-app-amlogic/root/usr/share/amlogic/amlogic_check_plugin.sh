@@ -87,8 +87,6 @@ if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATF
     tolog "Missing [ PLATFORM ] value in ${AMLOGIC_SOC_FILE} file." "1"
 fi
 
-github_proxy="$(uci get amlogic.config.amlogic_github_proxy 2>/dev/null)"
-
 tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
 sleep 2
 
@@ -123,11 +121,7 @@ else
     tolog "02.03 Start downloading the latest plugin..."
 
     # Set the plugin download path
-    if [[ -n "${github_proxy}" ]]; then
-        download_repo="${github_proxy}/https://github.com/ophub/luci-app-amlogic/releases/download"
-    else
-        download_repo="https://github.com/ophub/luci-app-amlogic/releases/download"
-    fi
+    download_repo="https://github.com/ophub/luci-app-amlogic/releases/download"
 
     plugin_file="${download_repo}/${latest_version}/luci-app-amlogic_${latest_version}_all.ipk"
     language_file="${download_repo}/${latest_version}/luci-i18n-amlogic-zh-cn_${latest_version}_all.ipk"

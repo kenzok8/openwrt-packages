@@ -103,9 +103,6 @@ if [[ "${kernel_repo}" == "opt/kernel" ]]; then
     kernel_repo="${firmware_repo}"
 fi
 
-github_proxy="$(uci get amlogic.config.amlogic_github_proxy 2>/dev/null)"
-
-
 # Convert kernel repo to api format
 [[ "${kernel_repo}" =~ ^https: ]] && kernel_repo="$(echo ${kernel_repo} | awk -F'/' '{print $4"/"$5}')"
 kernel_api="https://github.com/${kernel_repo}"
@@ -180,12 +177,8 @@ download_kernel() {
     rm -f ${KERNEL_DOWNLOAD_PATH}/sha256sums
     rm -rf ${KERNEL_DOWNLOAD_PATH}/${download_version}*
 
-    if [[ -n "${github_proxy}" ]]; then
-        kernel_down_from="${kernel_repo}/https://github.com/${kernel_repo}/releases/download/kernel_${kernel_tag}/${download_version}.tar.gz"
-    else
-        kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kernel_tag}/${download_version}.tar.gz"
-    fi
-    
+    kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kernel_tag}/${download_version}.tar.gz"
+
     curl -fsSL "${kernel_down_from}" -o ${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz
     [[ "${?}" -ne "0" ]] && tolog "03.03 The kernel download failed." "1"
 

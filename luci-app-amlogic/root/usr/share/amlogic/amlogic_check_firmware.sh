@@ -116,7 +116,6 @@ if [[ "${server_kernel_branch}" != "${main_line_version}" ]]; then
     tolog "01.02 Select branch: ${main_line_version}"
     sleep 2
 fi
-github_proxy="$(uci get amlogic.config.amlogic_github_proxy 2>/dev/null)"
 
 # 01.03. Download server version documentation
 server_firmware_url="$(uci get amlogic.config.amlogic_firmware_repo 2>/dev/null)"
@@ -256,12 +255,7 @@ download_firmware() {
     opfile_path="$(echo ${download_version} | awk -F'@' '{print $2}')"
     # Restore converted characters in file names(%2B to +)
     firmware_download_oldname="${opfile_path//%2B/+}"
-
-    if [[ -n "${github_proxy}" ]]; then
-        latest_url="${github_proxy}/https://github.com/${server_firmware_url}/releases/download/${firmware_download_oldname}"
-    else
-        latest_url="https://github.com/${server_firmware_url}/releases/download/${firmware_download_oldname}"
-    fi
+    latest_url="https://github.com/${server_firmware_url}/releases/download/${firmware_download_oldname}"
 
     # Download to OpenWrt file
     firmware_download_name="openwrt_${BOARD}_k${main_line_version}_github${firmware_suffix}"
