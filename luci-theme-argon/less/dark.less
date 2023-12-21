@@ -186,9 +186,8 @@ abbr {
     color: var(--dark-primary) !important;
 }
 
-a:-webkit-any-link {
-    color: #483d8b;
-    color: var(--dark-primary);
+a:link, a:visited, a:active {
+    color: #a5b2ff;
 }
 
 
@@ -489,6 +488,7 @@ select {
 .cbi-input-textarea {
     background-color: #1e1e1e;
     color: #ccc;
+    border: 1px solid #3c3c3c !important;
 }
 
 textarea {
@@ -509,6 +509,10 @@ textarea {
 
 }
 
+.cbi-tooltip {
+    background-color: var(--primary);
+    color: #fff;
+}
 
 .ifacebox {
     background-color: transparent !important;
@@ -516,7 +520,8 @@ textarea {
 }
 
 .ifacebox-head {
-    color: #666;
+    color: #ccc;
+    background: #666;
 }
 
 .ifacebox-body {
@@ -922,5 +927,50 @@ input,
                 border-bottom: thin solid #4d4d4d;
             }
         }
+    }
+}
+
+[data-page="admin-system-fileassistant"] {
+    .fb-container .panel-container {
+        border-bottom-color: #3c3c3c !important;
+    }
+}
+
+[data-page^="admin-services-openclash"] {
+    .cbi-tabmenu::-webkit-scrollbar-thumb {
+        background-color: #5b5b5b;
+    }
+
+    .cbi-tabmenu::-webkit-scrollbar-track {
+        background-color: rgba(60, 60, 60, 0.75);
+    }
+
+    #tab {
+        border-color: #3c3c3c;
+    }
+
+    #diag-rc-output > pre,
+    #dns-rc-output > pre{
+        color: #ccc;
+        border: 1px solid #3c3c3c !important;
+        background-color: #1e1e1e;
+    }
+}
+
+[data-page="admin-network-diagnostics"] {
+    .cbi-section {
+        background: #252526 !important;
+    }
+
+    textarea {
+        background: transparent;
+        border-radius: 0.25rem;
+        font-family: inherit !important;
+        color: #ccc;
+        border: 1px solid #3c3c3c !important;
+    }
+
+    .tr > .td {
+        background-color: #252526 !important;
     }
 }
