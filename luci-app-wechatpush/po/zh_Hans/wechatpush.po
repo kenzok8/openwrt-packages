@@ -401,7 +401,7 @@ msgid "Load alert threshold"
 msgstr "负载报警阈值"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:451
-msgid "In general, when the load value is lower than the number of logical cores, you typically don\'t need to pay much attention to it"
+msgid "In general, when the load value is lower than the number of logical cores, you typically don't need to pay much attention to it"
 msgstr "通常情况下，负载值低于逻辑核心数量时，你不需要关注它"
 
 #: applications/luci-app-wechatpush/htdocs/luci-static/resources/view/wechatpush/config.js:433
