@@ -56,7 +56,7 @@ It also supports automatic and manual switching between light and dark modes.
 [Contributors](#contributors) •
 [Credits](#credits)
 
-<img src="https://raw.githubusercontent.com/jerrykuku/staff/master/argon4.gif">
+<img src="https://raw.githubusercontent.com/jerrykuku/staff/master/argon2.gif">
 </div>
 
 ## Key Features

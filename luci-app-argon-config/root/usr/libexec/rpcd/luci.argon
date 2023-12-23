@@ -54,6 +54,7 @@ case "$1" in
 		fi
 
 		if mv "$tmp_path" "$bg_path/$newname" 2>"/dev/null"; then
+			chmod 0644 "$bg_path/$newname"
 			echo '{ "result": 0 }'
 		else
 			echo '{ "result": 1 }'

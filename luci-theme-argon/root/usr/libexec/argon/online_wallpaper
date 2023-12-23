@@ -4,6 +4,11 @@
 # the script will be excuted when `argon.@global[0].bing_background == '1'`
 # defaults to 'bing' to be compatible with old config
 WEB_PIC_SRC=$(uci -q get argon.@global[0].online_wallpaper || echo 'bing')
+# For now, the next two variables are used for wallhaven.cc with specified Tag ID
+# API_KEY if user has an account with wallhaven and want to use their apikey to allow for more images
+# EXACT_RESO is used for exact resolution by default, if not use 'atleast' instead of 'resolutions'
+API_KEY=$(uci -q get argon.@global[0].use_api_key)
+EXACT_RESO=$(uci -q get argon.@global[0].use_exact_resolution || echo '1')
 CACHE=/var/run/argon_${WEB_PIC_SRC}.url
 WRLOCK=/var/lock/argon_${WEB_PIC_SRC}.lock
 
@@ -16,19 +21,41 @@ fetch_pic_url() {
         [ -n "${picpath}" ] && echo "//www.bing.com${picpath}"
         ;;
     unsplash)
-        curl -fks --max-time 3 \
-            "https://source.unsplash.com/1920x1080/daily?wallpapers" |
-            sed -E 's#^.*href="([^?]+)\?.*$#\1?fm=jpg\&fit=crop\&w=1920\&h=1080#'
+        if [ -z "$API_KEY" ]; then
+            curl -fks --max-time 3 \
+                "https://source.unsplash.com/1920x1080/daily?wallpapers" |
+                sed -E 's#^.*href="([^?]+)\?.*$#\1?fm=jpg\&fit=crop\&w=1920\&h=1080#'
+        else
+            curl -fks --max-time 3 \
+                "https://api.unsplash.com/photos/random?client_id=${API_KEY}" |
+                jsonfilter -qe '@["urls"]["regular"]'
+        fi
         ;;
     unsplash_*)
         local collection_id=${WEB_PIC_SRC#unsplash_}
-        curl -fks --max-time 3 \
-            "https://source.unsplash.com/collection/${collection_id}/1920x1080" |
-            sed -E 's#^.*href="([^?]+)\?.*$#\1?fm=jpg\&fit=crop\&w=1920\&h=1080#'
+        if [ -z "$API_KEY" ]; then
+            curl -fks --max-time 3 \
+                "https://source.unsplash.com/collection/${collection_id}/1920x1080" |
+                sed -E 's#^.*href="([^?]+)\?.*$#\1?fm=jpg\&fit=crop\&w=1920\&h=1080#'
+        else
+            curl -fks --max-time 3 \
+                "https://api.unsplash.com/photos/random?client_id=${API_KEY}&collections=${collection_id}" |
+                jsonfilter -qe '@["urls"]["regular"]'
+        fi
         ;;
     wallhaven)
         curl -fks --max-time 3 \
             "https://wallhaven.cc/api/v1/search?resolutions=1920x1080&sorting=random" |
+            jsonfilter -qe '@.data[0].path'
+        ;;
+    wallhaven_*)
+        local tag_id=${WEB_PIC_SRC#wallhaven_}
+        local has_api_key=""
+        [ -n "$API_KEY" ] && has_api_key="apikey=$API_KEY&" || has_api_key=""
+        local use_reso="resolutions"
+        [ "$EXACT_RESO" -eq "1" ] && use_reso='resolutions' || use_reso='atleast'
+        curl -fks --max-time 3 \
+            "https://wallhaven.cc/api/v1/search?${has_api_key}q=id%3A${tag_id}&${use_reso}=1920x1080&sorting=random" |
             jsonfilter -qe '@.data[0].path'
         ;;
     esac
@@ -40,6 +67,9 @@ try_update() {
 
     if flock -n 200 >/dev/null 2>&1; then
         local picurl=$(fetch_pic_url)
+        if [[ "$WEB_PIC_SRC" == wallhave* ]] ; then
+            curl -fks --max-time 3 --url "${picurl}" > /dev/null
+        fi
         if [ -n "$picurl" ]; then
             echo "${picurl}" | tee "$CACHE"
         else
