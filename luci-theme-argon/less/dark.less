@@ -675,6 +675,96 @@ td > .ifacebadge,
     border: 0;
 }
 
+.alert, .alert-message {
+    background-color: #333;
+}
+
+.alert-message.warning {
+    background-color: #986400 !important;
+}
+
+.alert.error, .alert-message.error {
+    background-color: #784f00;
+}
+
+.alert h4, .alert-message h4 {
+    background-color: #784f00;
+    color: #ffbf00;
+}
+
+.alert-message [class="btn"] {
+    background-color: #777777;
+    color: #ccc;
+}
+
+.uci-dialog {
+    .cbi-section {
+
+        .uci-change-legend {
+
+            .uci-change-legend-label {
+
+                > ins {
+                    border-color: #00ad00;
+                    background-color: #688668;
+                }
+
+                > del {
+                    border-color: #c60000;
+                    background-color: #896565;
+                }
+
+                > var {
+                    background-color: #333;
+                    border-color: #666;
+
+                    ins {
+                        background-color: #688668;
+                    }
+
+                    del {
+                        background-color: #896565;
+                    }
+                }
+            }
+        }
+
+        .uci-change-list {
+            > var {
+                background-color: #333;
+                border-color: #666;
+
+                del {
+                    background-color: #896565;
+                }
+
+                ins {
+                    background-color: #688668;
+                }
+            }
+
+            > ins {
+                border-color: #00ad00;
+                background-color: #688668;
+            }
+
+            > del {
+                border-color: #c60000;
+                background-color: #896565;
+            }
+        }
+
+        .uci-change-list + .right {
+            .btn {
+                color: #ccc;
+            }
+
+            .cbi-button {
+                border: 1px solid #3c3c3c !important;
+            }
+        }
+    }
+}
 
 .btn.danger,
 .cbi-section-remove > .cbi-button,
@@ -993,6 +1083,10 @@ input,
     .ifacebox-head[style*="--zone-color-rgb: 240, 144, 144;"] {
         background-color: rgb(156, 79, 79) !important;
         color: #ccc !important;
+    }
+
+    .ifacebox-head[style*="--zone-color-rgb: 238, 238, 238;"] {
+        background-color: #666 !important;
     }
 }
 

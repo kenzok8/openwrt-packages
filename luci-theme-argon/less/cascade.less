@@ -3078,6 +3078,67 @@ td > .ifacebadge,
     padding: .5rem;
 }
 
+.uci-dialog {
+    .cbi-section {
+        padding: 0.5rem;
+
+        .uci-change-legend {
+            line-height: 15px;
+            padding: 10px 20px 0 20px;
+
+            .uci-change-legend-label {
+                padding: 0;
+                margin: 0;
+                position: relative;
+                float: none;
+                display: inline-block;
+                width: 25%;
+
+                > ins,
+                > del {
+                    width: 14px;
+                    height: 14px;
+                }
+
+                > var {
+                    position: relative;
+                    width: 14px;
+                    height: 14px;
+
+                    ins,
+                    del {
+                        position: absolute;
+                        left: 2px;
+                        top: 2px;
+                        right: 2px;
+                        bottom: 2px;
+                    }
+                }
+            }
+        }
+
+        .uci-change-list {
+            overflow: auto;
+        }
+
+        .uci-change-list + .right {
+            .btn {
+                color: #333;
+            }
+
+            .cbi-dropdown ul:not(.dropdown) {
+                li {
+                    color: #fff;
+                }
+            }
+
+            .cbi-button {
+                padding: .45rem .8rem;
+            }
+        }
+    }
+}
+
 /* other fix */
 #iwsvg,
 #iwsvg2,
@@ -3416,6 +3477,19 @@ div[style*="display:grid;grid-template-columns:repeat"] {
         background: #fb6340 !important;
         border-color: #fb6340 !important;
         margin-left: 0 !important;
+    }
+
+    #view > h2:first-child + p {
+        margin-bottom: 1rem;
+    }
+}
+
+[data-page="admin-system-poweroff"] {
+    .container {
+        h2 + br + p {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
     }
 }
 
