@@ -141,7 +141,7 @@ opkg install luci-app-argon-config*.ipk
 ## Contributors
 
 <a href="https://github.com/jerrykuku/luci-theme-argon/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=jerrykuku/luci-theme-argon" />
+  <img src="https://contrib.rocks/image?repo=jerrykuku/luci-theme-argon&v=2" />
 </a>
 
 Made with [contrib.rocks](https://contrib.rocks).
