@@ -1064,7 +1064,6 @@ input,
     textarea {
         background: transparent;
         border-radius: 0.25rem;
-        font-family: inherit !important;
         color: #ccc;
         border: 1px solid #3c3c3c !important;
     }
@@ -1106,6 +1105,10 @@ input,
             em {
                 color: #ccc !important;
             }
+        }
+
+        > table > .cbi-section-table-row[data-title]::before {
+            background-color: #252526 !important;
         }
     }
 }

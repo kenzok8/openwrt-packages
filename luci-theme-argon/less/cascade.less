@@ -2983,6 +2983,7 @@ td > .ifacebadge,
 
 #syslog {
     font-size: small;
+    font-family: 'argon';
     line-height: 1.25;
     overflow-y: hidden;
     width: 100%;
@@ -3397,7 +3398,7 @@ label[data-index][data-depends] {
     textarea {
         background: transparent;
         border-radius: 0.25rem;
-        font-family: inherit !important;
+        font-family: 'argon' !important;
         color: #8898aa;
         border: 1px solid #dee2e6;
         padding: 0.5rem;
@@ -3426,7 +3427,7 @@ div[style*="display:grid;grid-template-columns:repeat"] {
     justify-content: space-evenly !important;
     padding-bottom: 1rem;
     flex-wrap: wrap;
-    font-family: 'argon', 'Consolas', 'sans-serif';
+    font-family: 'argon';
 
     .ifacebox {
         text-align: center;
@@ -4017,12 +4018,17 @@ pre.command-output {
         border: 1px solid #dee2e6;
         background-color: transparent;
         border-radius: 0.25rem;
-        font-family: inherit;
+        font-family: 'argon' !important;
         box-shadow: none;
+    }
+
+    #debug-rc-output > textarea {
+        font-family: 'argon' !important;
     }
 
     .CodeMirror {
         font-size: inherit;
+        font-family: 'argon' !important;
     }
 
     .cbi-button-up, .cbi-button-down {
