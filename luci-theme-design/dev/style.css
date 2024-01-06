@@ -1383,16 +1383,16 @@ p#shadowsocksr_status {
   transform: rotate(90deg);
 }
 
-.main > .main-left > .nav > .slide > a[data-title="QuickStart"]:before {
-    content: "\e67e";
-}
-
 .main > .main-left > .nav > .slide > a[data-title="Status"]:before {
     content: "\e6b8";
 }
 
 .main > .main-left > .nav > .slide > a[data-title="System"]:before {
     content: "\e645";
+}
+
+.main>.main-left>.nav>.slide>a[data-title=Modem]:before {
+    content: "\e67e"
 }
 
 .main > .main-left > .nav > .slide > a[data-title="Services"]:before {
@@ -1430,6 +1430,7 @@ p#shadowsocksr_status {
   content: "\e7dd";
 }
 
+.main > .main-left > .nav > .slide > a[data-title="QuickStart"]:before,
 .main > .main-left > .nav > li > a[data-title="Inital Setup"]:before,
 .main > .main-left > .nav > li > a[data-title="NetworkGuide"]:before,
 .main > .main-left > .nav > li > a[href="/cgi-bin/luci//admin/wizard"]:before {
