@@ -1,3 +1,6 @@
+## 无法下载证书声明：
+目前因为openwrt的openssl升级为3.0了。导致ikoolproxy无法下载证书。lean大佬的lede可以回退。openwrt则不行。
+
 ## 整理声明：
 iKoolProxy是 [Beginner-Go](https://github.com/Beginner-Go) 大神基于koolproxyR重新整理而来的。主要参考：
 
