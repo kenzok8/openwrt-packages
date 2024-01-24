@@ -1,0 +1,6 @@
+TODO:
+- Subscription page slow response with a large number of nodes
+- Refactor nft rules
+- Support Clash selector, urltest etc.
+- Move ACL settings to a dedicated page
+- Any other improvements
