@@ -216,9 +216,12 @@ sleep 3
 
 # Find the partition where root is located
 ROOT_PTNAME=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
-if [ "${ROOT_PTNAME}" == "" ]; then
-    echo "Cannot find the partition corresponding to the root file system!"
-    exit 1
+if [[ -z "${ROOT_PTNAME}" ]]; then
+    ROOT_PTNAME="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
+    if [[ -z "${ROOT_PTNAME}" ]]; then
+        echo "Cannot find the partition corresponding to the root file system!"
+        exit 1
+    fi
 fi
 
 # Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
@@ -319,6 +322,9 @@ BOOT_UUID=$(echo ${BOOT_PART_MSG} | awk '{print $4}')
 
 # find root partition
 ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/$/ {print $0}')
+if [[ -z "${ROOT_PART_MSG}" ]]; then
+    ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/overlay$/ {print $0}')
+fi
 ROOT_NAME=$(echo ${ROOT_PART_MSG} | awk '{print $1}')
 ROOT_PATH=$(echo ${ROOT_PART_MSG} | awk '{print $2}')
 ROOT_UUID=$(echo ${ROOT_PART_MSG} | awk '{print $4}')

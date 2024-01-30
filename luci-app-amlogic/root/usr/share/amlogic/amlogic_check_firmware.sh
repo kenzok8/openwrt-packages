@@ -52,7 +52,10 @@ fi
 # Find the partition where root is located
 ROOT_PTNAME="$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
 if [[ -z "${ROOT_PTNAME}" ]]; then
-    tolog "Cannot find the partition corresponding to the root file system!" "1"
+    ROOT_PTNAME="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
+    if [[ -z "${ROOT_PTNAME}" ]]; then
+        tolog "Cannot find the partition corresponding to the root file system!" "1"
+    fi
 fi
 
 # Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats

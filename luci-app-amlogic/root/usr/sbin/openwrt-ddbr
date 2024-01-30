@@ -53,6 +53,9 @@ do_checkemmc() {
 
 	# Find the partition where root is located
 	root_ptname="$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
+	if [[ -z "${root_ptname}" ]]; then
+		root_ptname="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
+	fi
 	[[ -z "${root_ptname}" ]] && error_msg "Cannot find the partition corresponding to the root file system!"
 
 	# Find the EMMC drive
@@ -136,7 +139,7 @@ do_checkemmc
 echo -ne "${OPT} Do you want to backup or restore? Backup=(b) Restore=(r): "
 read br
 case "${br}" in
-	b | B | backup)  do_backup ;;
-	r | R | restore) do_restore ;;
-	*)               exit 0 ;;
+b | B | backup) do_backup ;;
+r | R | restore) do_restore ;;
+*) exit 0 ;;
 esac

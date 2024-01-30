@@ -16,7 +16,7 @@ backup_list_conf="/etc/amlogic_backup_list.conf"
 if [[ -s "${backup_list_conf}" ]]; then
     while IFS= read -r line; do
         BACKUP_LIST+="${line} "
-    done < "${backup_list_conf}"
+    done <"${backup_list_conf}"
 else
     BACKUP_LIST='./etc/AdGuardHome.yaml \
 ./etc/amlogic_backup_list.conf \
@@ -118,9 +118,12 @@ backup() {
 restore() {
     # Find the partition where root is located
     ROOT_PTNAME=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
-    if [ "${ROOT_PTNAME}" == "" ]; then
-        echo "Cannot find the partition corresponding to the root file system!"
-        exit 1
+    if [[ -z "${ROOT_PTNAME}" ]]; then
+        ROOT_PTNAME="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
+        if [[ -z "${ROOT_PTNAME}" ]]; then
+            echo "Cannot find the partition corresponding to the root file system!"
+            exit 1
+        fi
     fi
 
     # Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
@@ -164,9 +167,12 @@ restore() {
 gen_fstab() {
     # Find the partition where root is located
     ROOT_PTNAME=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
-    if [ "${ROOT_PTNAME}" == "" ]; then
-        echo "Cannot find the partition corresponding to the root file system!"
-        exit 1
+    if [[ -z "${ROOT_PTNAME}" ]]; then
+        ROOT_PTNAME="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
+        if [[ -z "${ROOT_PTNAME}" ]]; then
+            echo "Cannot find the partition corresponding to the root file system!"
+            exit 1
+        fi
     fi
 
     # Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
@@ -186,9 +192,12 @@ gen_fstab() {
     esac
 
     ROOT_MSG=$(lsblk -l -o NAME,PATH,MOUNTPOINT,UUID,FSTYPE,LABEL | awk '$3 ~ /^\/$/ {print $0}')
-    if [ "$ROOT_MSG" == "" ]; then
-        echo "Get rootfs message failed!"
-        exit 1
+    if [[ -z "${ROOT_MSG}" ]]; then
+        ROOT_MSG=$(lsblk -l -o NAME,PATH,MOUNTPOINT,UUID,FSTYPE,LABEL | awk '$3 ~ /^\/overlay$/ {print $0}')
+        if [[ -z "${ROOT_MSG}" ]]; then
+            echo "Get rootfs message failed!"
+            exit 1
+        fi
     fi
 
     ROOT_NAME=$(echo $ROOT_MSG | awk '{print $1}')
@@ -380,10 +389,13 @@ delete_snapshot() {
 
 migrate_snapshot() {
     cur_rootdev=$(lsblk -l -o NAME,MOUNTPOINT | awk '$2~/^\/$/ {print $1}')
-    if [ "${cur_rootdev}" == "" ]; then
-        echo "The disk device corresponding to the current rootfs cannot be found!"
-        read -p "Press [ enter ] to return." q
-        return
+    if [[ -z "${cur_rootdev}" ]]; then
+        cur_rootdev=$(lsblk -l -o NAME,MOUNTPOINT | awk '$2~/^\/overlay$/ {print $1}')
+        if [[ -z "${cur_rootdev}" ]]; then
+            echo "The disk device corresponding to the current rootfs cannot be found!"
+            read -p "Press [ enter ] to return." q
+            return
+        fi
     fi
     dev_pre=$(echo "${cur_rootdev}" | awk '{print substr($1, 1, length($1)-1);}')
     rootdev_idx=$(echo "${cur_rootdev}" | awk '{print substr($1, length($1),1);}')
