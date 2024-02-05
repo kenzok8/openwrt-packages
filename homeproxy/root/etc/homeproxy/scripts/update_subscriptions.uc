@@ -368,7 +368,7 @@ function parse_uri(uri) {
 				return null;
 			}
 
-			if (uri.v !== '2') {
+			if (uri.v != '2') {
 				log(sprintf('Skipping unsupported %s format.', 'VMess'));
 				return null;
 			/* Unsupported protocol */
