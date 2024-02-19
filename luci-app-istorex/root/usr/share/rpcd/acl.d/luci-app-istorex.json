@@ -1,0 +1,11 @@
+{
+	"luci-app-istorex": {
+		"description": "Grant UCI access for luci-app-istorex",
+		"read": {
+			"uci": [ "istorex" ]
+		},
+		"write": {
+			"uci": [ "istorex" ]
+		}
+	}
+}

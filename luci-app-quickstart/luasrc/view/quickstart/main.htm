@@ -1,0 +1,49 @@
+<%+header%>
+<%
+  local jsonc = require "luci.jsonc"
+  local features = { "_lua_force_array_" }
+  local configs = {}
+  if luci.sys.call("which ota >/dev/null 2>&1 && ota >/dev/null 2>&1") == 0 then
+      features[#features+1] = "ota"
+  end
+  if luci.sys.call("[ -d /ext_overlay ] >/dev/null 2>&1") == 0 then
+      features[#features+1] = "sandbox"
+  end
+  if luci.sys.call("[ -e /etc/init.d/dockerd ] >/dev/null 2>&1") == 0 then
+      features[#features+1] = "dockerd"
+  end
+  if luci.sys.call("[ -e /etc/init.d/unishare ] >/dev/null 2>&1") == 0 then
+      features[#features+1] = "unishare"
+  end
+  if luci.sys.call("/etc/init.d/ttyd running >/dev/null 2>&1") == 0 then
+      features[#features+1] = "ttyd"
+      local uci  = require "luci.model.uci".cursor()
+      local port = uci:get_first("ttyd", "ttyd", "port") or "7681"
+      local ssl  = uci:get_first("ttyd", "ttyd", "ssl") or "0"
+      configs["ttyd"] = {
+        port = tonumber(port),
+        ssl = ssl == "1"
+      }
+  end
+-%>
+<script>
+    (function(){
+      window.token = "<%=token%>";
+      var vue_prefix="<%=prefix%>";
+      window.vue_base = vue_prefix + '/';
+      window.quickstart_features = <%=jsonc.stringify(features)%>;
+      window.quickstart_configs = <%=jsonc.stringify(configs)%>;
+      if (location.pathname != vue_prefix && !location.pathname.startsWith(window.vue_base)) {
+        if (window.history && window.history.replaceState) {
+          window.history.replaceState({}, null, vue_prefix);
+        } else {
+          location.href = vue_prefix;
+        }
+      }
+    })();
+</script>
+<div id="app">
+</div>
+<script type="module" crossorigin src="/luci-static/quickstart/index.js<%# ?v=PKG_VERSION %>"></script>
+<link rel="stylesheet" href="/luci-static/quickstart/style.css<%# ?v=PKG_VERSION %>">
+<%+footer%>
