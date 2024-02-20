@@ -94,7 +94,7 @@ start_service() {
 			fi
 			;;
 		"proxy_mainland_china")
-			sed -r -e "s/full://g" -e "/:/d" -e "s/(.*)/server=\/\1\/127.0.0.1#$dns_port/g" \
+			sed -r -e "s/(.*)/server=\/\1\/127.0.0.1#$dns_port/g" \
 				"$HP_DIR/resources/china_list.txt" > "$DNSMASQ_DIR/china_list.conf"
 			;;
 		"custom"|"global")
@@ -192,11 +192,13 @@ start_service() {
 			procd_append_param command --trust-dns "127.0.0.1#$dns_port"
 			procd_append_param command --ipset-name4 "inet@fw4@homeproxy_mainland_addr_v4"
 			procd_append_param command --ipset-name6 "inet@fw4@homeproxy_mainland_addr_v6"
+			procd_append_param command --chnlist-file "$HP_DIR/resources/china_list.txt"
 			procd_append_param command --gfwlist-file "$HP_DIR/resources/gfw_list.txt"
 			[ "$ipv6_support" -eq "1" ] || procd_append_param command --no-ipv6=tC
 
 			if [ -x "/sbin/ujail" ]; then
 				procd_add_jail "chinadns-ng" log
+				procd_add_jail_mount "$HP_DIR/resources/china_list.txt"
 				procd_add_jail_mount "$HP_DIR/resources/gfw_list.txt"
 				procd_set_param capabilities "/etc/capabilities/homeproxy.json"
 				procd_set_param no_new_privs 1
