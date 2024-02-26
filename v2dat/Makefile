@@ -36,7 +36,7 @@ define Package/v2dat
   DEPENDS:=$(GO_ARCH_DEPENDS)
 endef
 
-GO_PKG_TARGET_VARS:=$(filter-out CGO_ENABLED=%,$(GO_PKG_TARGET_VARS)) CGO_ENABLED=0
+GO_PKG_TARGET_VARS:=$(filter-out CGO_ENABLED=%,$(GO_PKG_TARGET_VARS)) CGO_ENABLED=1
 
 define Package/v2dat/install
 	$(call GoPackage/Package/Install/Bin,$(1))
