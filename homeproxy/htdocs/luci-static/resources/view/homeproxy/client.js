@@ -198,7 +198,7 @@ return view.extend({
 					var ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
 
 					if (dns_servers.length > 2)
-						return _('You can only have 2 servers set at maximum.');
+						return _('You can only have two servers set at maximum.');
 
 					for (var i of dns_servers)
 						if (!stubValidator.apply((ipv6_support === '1') ? 'ipaddr' : 'ip4addr', i))

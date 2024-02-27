@@ -2375,17 +2375,14 @@ msgstr "信风公共 DNS（114.114.114.114）"
 msgid "Xudp (Xray-core)"
 msgstr "Xudp (Xray-core)"
 
-#: htdocs/luci-static/resources/view/homeproxy/client.js:201
-msgid "You can only have 2 servers set at maximum."
-msgstr "您最多只能设置两个服务器。"
-
 #: htdocs/luci-static/resources/view/homeproxy/client.js:159
 msgid "You can only have one server set. It MUST support TCP query."
 msgstr "您只能设置一个服务器。它必须支持 TCP 查询。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:186
+#: htdocs/luci-static/resources/view/homeproxy/client.js:201
 msgid "You can only have two servers set at maximum."
-msgstr ""
+msgstr "您最多只能设置两个服务器。"
 
 #: htdocs/luci-static/resources/homeproxy.js:228
 msgid "Your %s was successfully uploaded. Size: %sB."
