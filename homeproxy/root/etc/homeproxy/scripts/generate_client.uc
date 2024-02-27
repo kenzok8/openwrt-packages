@@ -222,7 +222,7 @@ function generate_outbound(node) {
 			max_version: node.tls_max_version,
 			cipher_suites: node.tls_cipher_suites,
 			certificate_path: node.tls_cert_path,
-			ech: (node.enable_ech === '1') ? {
+			ech: (node.tls_ech === '1') ? {
 				enabled: true,
 				dynamic_record_sizing_disabled: (node.tls_ech_tls_disable_drs === '1'),
 				pq_signature_schemes_enabled: (node.tls_ech_enable_pqss === '1'),

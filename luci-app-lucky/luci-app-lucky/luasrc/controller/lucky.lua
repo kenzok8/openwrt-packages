@@ -9,7 +9,7 @@ function index()
 	e.dependent=false
 	e.acl_depends={ "luci-app-lucky" }
 	entry({"admin", "services", "lucky", "setting"}, cbi("lucky"), _("Base Setting"), 20).leaf=true
-	entry({"admin", "services", "lucky", "lucky"}, template("lucky"), _("Lucky"), 30).leaf = true
+	entry({"admin", "services", "lucky", "lucky"}, template("lucky"), _("Lucky Control panel"), 30).leaf = true
 	entry({"admin", "services", "lucky_status"}, call("lucky_status"))
 	entry({"admin", "services", "lucky_config"}, call("lucky_config"))
 end

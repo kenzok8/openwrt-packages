@@ -1154,7 +1154,7 @@ return view.extend({
 			so.default = so.disabled;
 			so.modalonly = true;
 
-			so = ss.option(form.Value, 'tls_ech_config', _('ECH config'));
+			so = ss.option(form.DynamicList, 'tls_ech_config', _('ECH config'));
 			so.depends('tls_ech', '1');
 			so.modalonly = true;
 		}

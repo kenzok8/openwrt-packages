@@ -7,8 +7,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-lucky
-PKG_VERSION:=1.1.2
-PKG_RELEASE:=7
+PKG_VERSION:=1.2.0
+PKG_RELEASE:=8
 
 LUCI_TITLE:=LuCI Support for Dynamic lucky Client
 LUCI_DEPENDS:=+lucky

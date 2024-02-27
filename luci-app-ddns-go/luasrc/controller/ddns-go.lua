@@ -12,7 +12,7 @@ function index()
 	e.dependent=false
 	e.acl_depends={ "luci-app-ddns-go" }
 	entry({"admin", "services", "ddns-go", "setting"}, cbi("ddns-go"), _("Base Setting"), 20).leaf=true
-	entry({"admin",  "services", "ddns-go", "ddns-go"}, template("ddns-go"), _("DDNS-GO"), 30).leaf = true
+	entry({"admin",  "services", "ddns-go", "ddns-go"}, template("ddns-go"), _("DDNS-GO Control panel"), 30).leaf = true
 	entry({"admin", "services", "ddnsgo_status"}, call("act_status"))
 end
 

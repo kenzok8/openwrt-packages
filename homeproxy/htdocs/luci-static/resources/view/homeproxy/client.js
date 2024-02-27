@@ -170,7 +170,7 @@ return view.extend({
 		o.depends({'routing_mode': 'custom', '!reverse': true});
 		o.validate = function(section_id, value) {
 			if (section_id && !['wan'].includes(value)) {
-				let ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
+				var ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
 
 				if (!value)
 					return _('Expecting: %s').format(_('non-empty value'));
@@ -183,7 +183,7 @@ return view.extend({
 
 		if (features.hp_has_chinadns_ng) {
 			o = s.taboption('routing', form.Value, 'china_dns_server', _('China DNS server'),
-				_('You can only have one server set.'));
+				_('You can only have two servers set at maximum.'));
 			o.value('', _('Disable'));
 			o.value('wan', _('Use DNS server from WAN'));
 			o.value('wan_114', _('Use DNS server from WAN + 114DNS'));
@@ -194,10 +194,15 @@ return view.extend({
 			o.depends('routing_mode', 'bypass_mainland_china');
 			o.validate = function(section_id, value) {
 				if (section_id && value && !['wan', 'wan_114'].includes(value)) {
-					let ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
+					var dns_servers = value.split(',');
+					var ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
 
-					if (!stubValidator.apply((ipv6_support === '1') ? 'ipaddr' : 'ip4addr', value))
-						return _('Expecting: %s').format(_('valid IP address'));
+					if (dns_servers.length > 2)
+						return _('You can only have 2 servers set at maximum.');
+
+					for (var i of dns_servers)
+						if (!stubValidator.apply((ipv6_support === '1') ? 'ipaddr' : 'ip4addr', i))
+							return _('Expecting: %s').format(_('valid IP address'));
 				}
 
 				return true;

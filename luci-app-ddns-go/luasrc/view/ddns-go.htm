@@ -1,13 +1,16 @@
 <%#
- Copyright 2021-2022 sirpdboy Wich <sirpdboy@qq.com>
+ Copyright 2008-2024 by sirpdboy <herboy2008@gmail.com>
  https://github.com/sirpdboy/luci-app-ddns-go
  Licensed to the public under the Apache License 2.0.
 -%>
-
+<%
+	local running = luci.sys.exec("pidof ddns-go | awk -F ' ' '{print $1}'")
+%>
 <%+header%>
 <div class="cbi-map">
 
-<iframe  id="ddnsgo" style="width: 100%; min-height: 780px; border: none; border-radius: .375rem;box-shadow: rgba(0, 0, 0, 0.75) 0px 0px 15px -5px;"><br/><em style=\"color:red\">
+<% if tonumber(running) ~= nil then %>
+<iframe  id="ddnsgo" style="width: 100%; min-height: 580px; border: none; border-radius: .375rem;box-shadow: rgba(0, 0, 0, 0.75) 0px 0px 15px -5px;"><br/><em style=\"color:red\">
 <p ><em><%:The DDNS-GO service is not running.%></em></p>
 </iframe>
 
@@ -19,4 +22,13 @@
             document.getElementById("ddnsgo").height = document.documentElement.clientHeight;
         }
 </script>
+<% else %>
+	<style>.running{text-align: center;} .running>h1{font-size: 25px; color: #333; margin: 1rem;} .running>p{ font-size: 1.2rem; color: #8391a2; margin: 1rem;}</style>
+	<div class="running">
+	<img src="data:image/svg+xml;base64,PCEtLSBHZW5lcmF0ZWQgYnkgSWNvTW9vbi5pbyAtLT4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMjQiIGhlaWdodD0iMTAyNCIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCI+Cjx0aXRsZT48L3RpdGxlPgo8ZyBpZD0iaWNvbW9vbi1pZ25vcmUiPgo8L2c+CjxwYXRoIGZpbGw9IiNkZjAwMDAiIGQ9Ik05NDIuNDIxIDIzNC42MjRsODAuODExLTgwLjgxMS0xNTMuMDQ1LTE1My4wNDUtODAuODExIDgwLjgxMWMtNzkuOTU3LTUxLjYyNy0xNzUuMTQ3LTgxLjU3OS0yNzcuMzc2LTgxLjU3OS0yODIuNzUyIDAtNTEyIDIyOS4yNDgtNTEyIDUxMiAwIDEwMi4yMjkgMjkuOTUyIDE5Ny40MTkgODEuNTc5IDI3Ny4zNzZsLTgwLjgxMSA4MC44MTEgMTUzLjA0NSAxNTMuMDQ1IDgwLjgxMS04MC44MTFjNzkuOTU3IDUxLjYyNyAxNzUuMTQ3IDgxLjU3OSAyNzcuMzc2IDgxLjU3OSAyODIuNzUyIDAgNTEyLTIyOS4yNDggNTEyLTUxMiAwLTEwMi4yMjktMjkuOTUyLTE5Ny40MTktODEuNTc5LTI3Ny4zNzZ6TTE5NC45NDQgNTEyYzAtMTc1LjEwNCAxNDEuOTUyLTMxNy4wNTYgMzE3LjA1Ni0zMTcuMDU2IDQ4IDAgOTMuNDgzIDEwLjY2NyAxMzQuMjI5IDI5Ljc4MWwtNDIxLjU0NyA0MjEuNTQ3Yy0xOS4wNzItNDAuNzg5LTI5LjczOS04Ni4yNzItMjkuNzM5LTEzNC4yNzJ6TTUxMiA4MjkuMDU2Yy00OCAwLTkzLjQ4My0xMC42NjctMTM0LjIyOS0yOS43ODFsNDIxLjU0Ny00MjEuNTQ3YzE5LjA3MiA0MC43ODkgMjkuNzgxIDg2LjI3MiAyOS43ODEgMTM0LjIyOS0wLjA0MyAxNzUuMTQ3LTE0MS45OTUgMzE3LjA5OS0zMTcuMDk5IDMxNy4wOTl6Ij48L3BhdGg+Cjwvc3ZnPgo=" height="100">
+		<h1><font color="color:red"><%:The DDNS-GO service is not running.%></font></h1>
+		<p><%:Please enable the DDNS-GO service%></p>
+    </div>
+<% end -%>
+</div>
 <%+footer%>

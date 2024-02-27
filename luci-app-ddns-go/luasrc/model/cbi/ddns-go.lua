@@ -28,7 +28,7 @@ o.default=5
 o = s:option(Flag,"skipverify",translate("Skip verifying certificates"))
 o.default = 0
 
-o = s:option(Value, "dns",translate("Specify DNS resolution server"))
+o = s:option(ListValue, "dns",translate("Specify DNS resolution server"))
 o:value("223.5.5.5", ""..translate("Ali").." DNS (223.5.5.5)")
 o:value("223.6.6.6", ""..translate("Ali").." DNS (223.6.6.6)")
 o:value("119.29.29.29", ""..translate("Tencent").." DNS (119.29.29.29)")
