@@ -53,7 +53,7 @@ get_adlist() (
 )
 
 adlist_update() {
-    [ "$(uci -q get mosdns.config.adblock)" != 1 ] && exit 0
+    [ "$(uci -q get mosdns.config.adblock)" != 1 ] && return 0
     lock_file=/var/lock/mosdns_ad_update.lock
     ad_source=$(uci -q get mosdns.config.ad_source)
     AD_TMPDIR=$(mktemp -d) || exit 1
