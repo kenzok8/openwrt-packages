@@ -36,11 +36,13 @@ function index()
 	entry({ "admin", "system", "amlogic", "start_check_firmware" }, call("action_start_check_firmware")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_check_plugin" }, call("action_start_check_plugin")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_check_kernel" }, call("action_start_check_kernel")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_check_rescue" }, call("action_start_check_rescue")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_check_upfiles" }, call("action_start_check_upfiles")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_amlogic_install" }, call("action_start_amlogic_install")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_amlogic_update" }, call("action_start_amlogic_update")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_amlogic_kernel" }, call("action_start_amlogic_kernel")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_amlogic_plugin" }, call("action_start_amlogic_plugin")).leaf = true
+	entry({ "admin", "system", "amlogic", "start_amlogic_rescue" }, call("action_start_amlogic_rescue")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_snapshot_delete" }, call("action_start_snapshot_delete")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_snapshot_restore" }, call("action_start_snapshot_restore")).leaf = true
 	entry({ "admin", "system", "amlogic", "start_snapshot_list" }, call("action_check_snapshot")).leaf = true
@@ -129,6 +131,7 @@ function action_refresh_log()
 		luci.sys.exec("echo '' > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
 		luci.sys.exec("echo '' > /tmp/amlogic/amlogic_check_kernel.log && sync >/dev/null 2>&1")
 		luci.sys.exec("echo '' > /tmp/amlogic/amlogic_check_firmware.log && sync >/dev/null 2>&1")
+		luci.sys.exec("echo '' > /tmp/amlogic/amlogic_check_rescue.log && sync >/dev/null 2>&1")
 		luci.sys.exec("echo '' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
 	end
 	luci.http.prepare_content("text/plain; charset=utf-8")
@@ -147,16 +150,17 @@ function action_del_log()
 	luci.sys.exec(": > /tmp/amlogic/amlogic_check_plugin.log")
 	luci.sys.exec(": > /tmp/amlogic/amlogic_check_kernel.log")
 	luci.sys.exec(": > /tmp/amlogic/amlogic_check_firmware.log")
+	luci.sys.exec(": > /tmp/amlogic/amlogic_check_rescue.log")
 	luci.sys.exec(": > /tmp/amlogic/amlogic_running_script.log")
 end
 
 --Upgrade luci-app-amlogic plugin
 function start_amlogic_plugin()
 	luci.sys.call("echo '1@Plugin update in progress, try again later!' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
-	local ipk_state = luci.sys.call("[ -f /etc/config/amlogic ] && cp -vf /etc/config/amlogic /etc/config/amlogic_bak > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
-	local ipk_state = luci.sys.call("opkg --force-reinstall install /tmp/amlogic/*.ipk > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
-	local ipk_state = luci.sys.call("[ -f /etc/config/amlogic_bak ] && cp -vf /etc/config/amlogic_bak /etc/config/amlogic > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
-	local ipk_state = luci.sys.call("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* /etc/config/amlogic_bak >/dev/null 2>&1")
+	luci.sys.call("[ -f /etc/config/amlogic ] && cp -vf /etc/config/amlogic /etc/config/amlogic_bak > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
+	luci.sys.call("opkg --force-reinstall install /tmp/amlogic/*.ipk > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
+	luci.sys.call("[ -f /etc/config/amlogic_bak ] && cp -vf /etc/config/amlogic_bak /etc/config/amlogic > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
+	luci.sys.call("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* /etc/config/amlogic_bak >/dev/null 2>&1")
 	luci.sys.call("echo '' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
 	local state = luci.sys.call("echo 'Successful Update' > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
 	return state
@@ -181,6 +185,15 @@ function start_amlogic_update()
 	local update_write_path = res[3] or "/tmp"
 	luci.sys.call("echo " .. update_firmware_updated .. " > " .. update_write_path .. "/.luci-app-amlogic/op_release_code 2>/dev/null && sync")
 	local state = luci.sys.call("/usr/sbin/" .. device_update_script .. " " .. update_firmware_name .. " " .. auto_write_bootloader .. " " .. update_restore_config .. " > /tmp/amlogic/amlogic_check_firmware.log && sync 2>/dev/null")
+	return state
+end
+
+--Read rescue kernel log
+local function start_amlogic_rescue()
+	luci.sys.call("echo '4@Kernel rescue in progress, try again later!' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
+	luci.sys.call("chmod +x /usr/sbin/" .. device_kernel_script .. " >/dev/null 2>&1")
+	local state = luci.sys.call("/usr/sbin/" .. device_kernel_script .. " -s > /tmp/amlogic/amlogic_check_rescue.log && sync >/dev/null 2>&1")
+	luci.sys.call("echo '' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
 	return state
 end
 
@@ -280,6 +293,11 @@ local function start_check_firmware()
 	return luci.sys.exec("sed -n '$p' /tmp/amlogic/amlogic_check_firmware.log 2>/dev/null")
 end
 
+--Read rescue kernel log
+local function start_check_rescue()
+	return luci.sys.exec("sed -n '$p' /tmp/amlogic/amlogic_check_rescue.log 2>/dev/null")
+end
+
 --Read openwrt install log
 local function start_check_install()
 	return luci.sys.exec("sed -n '$p' /tmp/amlogic/amlogic_check_install.log 2>/dev/null")
@@ -306,6 +324,14 @@ function action_start_check_firmware()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
 		start_check_firmware = start_check_firmware();
+	})
+end
+
+--Return online check rescue kernel result
+function action_start_check_rescue()
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+		start_check_rescue = start_check_rescue();
 	})
 end
 
@@ -362,6 +388,14 @@ function action_start_amlogic_plugin()
 	luci.http.prepare_content("application/json")
 	luci.http.write_json({
 		rule_plugin_status = start_amlogic_plugin();
+	})
+end
+
+--Return rescue kernel result
+function action_start_amlogic_rescue()
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+		start_amlogic_rescue = start_amlogic_rescue();
 	})
 end
 

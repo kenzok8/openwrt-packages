@@ -449,6 +449,18 @@ msgstr "当前版本"
 msgid "Latest Version"
 msgstr "最新版本"
 
+msgid "Rescue Kernel"
+msgstr "救援内核"
+
+msgid "When a kernel update fails and causes the OpenWrt system to be unbootable, the kernel can be restored by mutual recovery from eMMC/NVMe/sdX."
+msgstr "当内核更新失败造成 OpenWrt 系统无法启动时，可以从 eMMC/NVME/sdX 相互恢复内核。"
+
+msgid "Rescue the original system kernel"
+msgstr "救援原系统内核"
+
+msgid "Rescuing..."
+msgstr "正在救援..."
+
 msgid "Current Device:"
 msgstr "当前设备："
 

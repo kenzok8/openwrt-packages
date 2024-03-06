@@ -215,7 +215,7 @@
 		_current_firmware_version.innerHTML = status.current_firmware_version ? "<font color=green><%:Current Version%> [ "+status.current_firmware_version+" ] </font>" : "<font color=red>"+"<%:Invalid value.%>"+"</font>";
 		_current_plugin_version.innerHTML = status.current_plugin_version ? "<font color=green><%:Current Version%> [ "+status.current_plugin_version+" ] </font>" : "<font color=red>"+"<%:Invalid value.%>"+"</font>";
 		_current_kernel_version.innerHTML = status.current_kernel_version ? "<font color=green><%:Current Version%> [ "+status.current_kernel_version+" ] </font>" : "<font color=red>"+"<%:Invalid value.%>"+"</font>";
-		_openwrt_mainline_version.innerHTML = status.current_kernel_branch ? " [ "+status.current_kernel_branch+".*** ] " : "[ "+"<%:Invalid value.%>"+" ]";
+		_openwrt_mainline_version.innerHTML = status.current_kernel_branch ? " [ "+status.current_kernel_branch+".y ] " : "[ "+"<%:Invalid value.%>"+" ]";
 	}
 	});
 
