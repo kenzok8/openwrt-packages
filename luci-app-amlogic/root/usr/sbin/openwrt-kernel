@@ -29,6 +29,14 @@ AUTO_MAINLINE_UBOOT="no"
 # Set the release check file
 release_file="/etc/flippy-openwrt-release"
 #
+# Set font color
+STEPS="[\033[95m STEPS \033[0m]"
+INFO="[\033[94m INFO \033[0m]"
+SUCCESS="[\033[92m SUCCESS \033[0m]"
+FINISH="[\033[93m FINISH \033[0m]"
+PROMPT="[\033[93m PROMPT \033[0m]"
+ERROR="[\033[91m ERROR \033[0m]"
+#
 #====================================================================================
 
 # Encountered a serious error, abort the script execution
@@ -113,7 +121,7 @@ init_var() {
     # Current device model
     MYDEVICE_NAME="$(cat /proc/device-tree/model | tr -d '\000')"
     [[ "${PLATFORM}" == "qemu-aarch64" ]] && MYDEVICE_NAME="KVM Virtual Machine"
-    echo -e "Current device: ${MYDEVICE_NAME} [ ${PLATFORM} ], Use in [ ${EMMC_NAME} ]"
+    echo -e "${INFO} Current device: ${MYDEVICE_NAME} [ ${PLATFORM} ], Use in [ ${EMMC_NAME} ]"
     sync && echo ""
 }
 
@@ -344,20 +352,138 @@ update_uboot() {
     sync && echo ""
 }
 
-echo -e "Start update the openwrt kernel."
+# Rescue the kernel
+sos_kernel() {
+    echo -e "${STEPS} Start rescuing kernel..."
+
+    # Supports specifying disks, such as: [ openwrt-kernel -s mmcblk1 ]
+    box_disk="${2}"
+
+    if [[ -n "${box_disk}" ]]; then
+        # Format the disk names
+        box_disk="${box_disk//\/dev\//}"
+
+        # Check if the disk exists
+        [[ -b "/dev/${box_disk}" ]] || error_msg "The specified disk [ ${box_disk} ] does not exist."
+
+        # Check if the disk is the same as the current system disk
+        [[ "${box_disk}" == "${EMMC_NAME}" ]] && error_msg "The specified disk [ ${box_disk} ] is the same as the current system disk [ ${EMMC_NAME} ]."
+
+        echo -e "${INFO} The device name of the specified disk: [ ${box_disk} ]"
+    else
+        # Find emmc disk, first find emmc containing boot0 partition
+        box_disk="$(lsblk -l -o NAME | grep -oE '(mmcblk[0-9]?|nvme[0-9]?n[0-9]?|[hsv]d[a-z])' | grep -vE ^${EMMC_NAME} | sort -u | head -n 1)"
+
+        # Check if disk exists
+        [[ -z "${box_disk}" ]] && error_msg "Unable to locate the storage requiring rescue."
+
+        echo -e "${INFO} The device name of the target disk: [ ${box_disk} ]"
+    fi
+
+    rescue_disk="/dev/${box_disk}"
+    echo -e "${INFO} The current OpenWrt is running on [ /dev/${EMMC_NAME} ], and the target disk for restoration is [ ${rescue_disk} ]."
+
+    # Create a temporary mount directory
+    umount ${P4_PATH}/bootfs 2>/dev/null
+    umount ${P4_PATH}/rootfs 2>/dev/null
+    rm -rf ${P4_PATH}/bootfs ${P4_PATH}/rootfs 2>/dev/null
+    mkdir -p ${P4_PATH}/{bootfs/,rootfs/} && sync
+    [[ "${?}" -ne "0" ]] && error_msg "Failed to create temporary mount directory [ ${P4_PATH} ]"
+
+    # Mount target bootfs partition
+    [[ "${box_disk}" =~ ^([hsv]d[a-z]) ]] && rescue_disk_partition_name="" || rescue_disk_partition_name="p"
+    mount ${rescue_disk}${rescue_disk_partition_name}1 ${P4_PATH}/bootfs
+    [[ "${?}" -ne "0" ]] && error_msg "mount ${rescue_disk}${PARTITION_NAME}1 failed!"
+    echo -e "${INFO} The [ ${rescue_disk}${rescue_disk_partition_name}1 ] partition is mounted on [ ${P4_PATH}/bootfs ]."
+
+    # Search uuid file
+    if [[ -f "${P4_PATH}/bootfs/uEnv.txt" ]]; then
+        search_file="uEnv.txt"
+    elif [[ -f "${P4_PATH}/bootfs/armbianEnv.txt" ]]; then
+        search_file="armbianEnv.txt"
+    elif [[ -f "${P4_PATH}/bootfs/extlinux/extlinux.conf" ]]; then
+        search_file="extlinux/extlinux.conf"
+    else
+        error_msg "The [ uEnv.txt, armbianEnv.txt, extlinux/extlinux.conf ] file does not exist, stop rescuing."
+    fi
+
+    # Get the target partition uuid and rootfs
+    target_parttion_uuid="$(grep '=UUID=' ${P4_PATH}/bootfs/${search_file} | sed -n 's/.*=UUID=\([a-f0-9-]*\).*/\1/p')"
+    [[ -z "${target_parttion_uuid}" ]] && error_msg "The [ ${search_file} ] file does not contain the UUID value."
+    target_rootfs="$(blkid | grep ${target_parttion_uuid} | awk -F':' '{print $1;}')"
+    [[ -z "${target_rootfs}" ]] && error_msg "The [ ${target_parttion_uuid} ] UUID does not exist in the system."
+
+    # Mount target rootfs partition
+    mount ${target_rootfs} ${P4_PATH}/rootfs
+    [[ "${?}" -ne "0" ]] && error_msg "mount ${rescue_disk}${PARTITION_NAME}2 failed!"
+    echo -e "${INFO} The [ ${target_rootfs} ] partition is mounted on [ ${P4_PATH}/rootfs ]."
+
+    # Identify the current kernel files
+    kernel_signature="$(uname -r)"
+
+    # 01. For /boot files
+    [[ -d "${P4_PATH}/bootfs" ]] && {
+        cd ${P4_PATH}/bootfs
+        rm -rf config-* initrd.img-* System.map-* vmlinuz-* uInitrd* *Image dtb* u-boot.ext u-boot.emmc
+        [[ -f "/boot/u-boot.ext" ]] && {
+            cp -f /boot/u-boot.ext .
+            cp -f /boot/u-boot.ext u-boot.emmc
+            chmod +x u-boot.ext u-boot.emmc
+        }
+        cp -rf /boot/{*-${kernel_signature},uInitrd,*Image,dtb} .
+        [[ "${?}" -ne "0" ]] && error_msg "(1/2) [ boot ] kernel files rescue failed."
+        echo -e "${INFO} (1/2) [ boot ] kernel files rescue succeeded."
+    } || error_msg "(1/2) The [ ${P4_PATH}/bootfs ] folder does not exist, stop rescuing."
+
+    # 02. For /lib/modules/${kernel_signature}
+    [[ -d "${P4_PATH}/rootfs/lib/modules" ]] && {
+        cd ${P4_PATH}/rootfs/lib/modules
+        rm -rf *
+        cp -rf /lib/modules/${kernel_signature} .
+        [[ "${?}" -ne "0" ]] && error_msg "(2/2) [ modules ] kernel files rescue failed."
+        echo -e "${INFO} (2/2) [ modules ] kernel files rescue succeeded."
+    } || error_msg "(2/2) The [ ${P4_PATH}/rootfs/lib/modules ] folder does not exist, stop rescuing."
+
+    # Unmount the emmc partition
+    cd ${P4_PATH}
+    umount -f ${P4_PATH}/bootfs
+    [[ "${?}" -ne "0" ]] && error_msg "Failed to umount [ ${P4_PATH}/bootfs ]"
+    umount -f ${P4_PATH}/rootfs
+    [[ "${?}" -ne "0" ]] && error_msg "Failed to umount [ ${P4_PATH}/rootfs ]"
+    # Remove the temporary mount directory
+    rm -rf ${P4_PATH}/bootfs ${P4_PATH}/rootfs
+
+    sync && echo ""
+}
+
+echo -e "${STEPS} Welcome to the OpenWrt Kernel Management Tool."
 # Operation environment check
 [[ -x "/usr/sbin/openwrt-kernel" ]] || error_msg "Please grant execution permission: chmod +x /usr/sbin/openwrt-kernel"
-#
-# Initialize all variables
-init_var "${@}"
-# Check kernel files list
-check_kernel
-# Update the kernel
-update_kernel
-# Update the uboot
-update_uboot
-#
-sync && sleep 3
-echo "Successfully updated, automatic restarting..."
-reboot
-exit 0
+
+# Execute relevant functions based on the options
+if [[ "${@}" =~ ^-s(\s)* ]]; then
+    # Initialize all variables
+    init_var "${@}"
+    # Start rescuing the kernel
+    sos_kernel "${@}"
+
+    # Kernel restore successful
+    sync && sleep 3
+    echo -e "${SUCCESS} Kernel rescue successful, please remove the disk and restart the OpenWrt system."
+    exit 0
+else
+    # Initialize all variables
+    init_var "${@}"
+    # Check kernel files list
+    check_kernel
+    # Update the kernel
+    update_kernel
+    # Update the uboot
+    update_uboot
+
+    # Kernel update successful
+    sync && sleep 3
+    echo "Successfully updated, automatic restarting..."
+    reboot
+    exit 0
+fi
