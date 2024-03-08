@@ -114,7 +114,13 @@ kernel_api="https://github.com/${kernel_repo}"
 if [[ -n "${KERNEL_TAGS}" ]]; then
     kernel_tag="${KERNEL_TAGS}"
 else
-    [[ "${SOC}" == "rk3588" ]] && kernel_tag="rk3588" || kernel_tag="stable"
+    if [[ "${SOC}" == "rk3588" ]]; then
+        kernel_tag="rk3588"
+    elif [[ "${SOC}" == "rk3528" ]]; then
+        kernel_tag="rk35xx"
+    else
+        kernel_tag="stable"
+    fi
 fi
 kernel_tag="${kernel_tag/kernel_/}"
 
