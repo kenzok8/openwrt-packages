@@ -425,6 +425,11 @@ sos_kernel() {
         cp -rf /boot/{*-${kernel_signature},uInitrd,*Image,dtb} .
         [[ "${?}" -ne "0" ]] && error_msg "(1/2) [ boot ] kernel files rescue failed."
         echo -e "(1/2) [ boot ] kernel files rescue succeeded."
+
+        [[ -f "/boot/emmc_autoscript.cmd" ]] && cp -f /boot/emmc_autoscript.cmd .
+        [[ -f "/boot/emmc_autoscript" ]] && cp -f /boot/emmc_autoscript .
+        [[ -f "/boot/s905_autoscript.cmd" ]] && cp -f /boot/s905_autoscript.cmd .
+        [[ -f "/boot/s905_autoscript" ]] && cp -f /boot/s905_autoscript .
     } || error_msg "(1/2) The [ ${P4_PATH}/bootfs ] folder does not exist, stop rescuing."
 
     # 02. For /lib/modules/${kernel_signature}
