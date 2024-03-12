@@ -70,7 +70,7 @@ case $MYDEVICE_NAME in
 		fi
 		SOC="radxa-cm3-rpi-cm4-io"
 		;;
-	"FastRhino R66S")
+	"FastRhino R66S"|"Lunzn FastRhino R66S")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
 		else
@@ -78,7 +78,7 @@ case $MYDEVICE_NAME in
 		fi
 		SOC="r66s"
 		;;
-	"FastRhino R68S")
+	"FastRhino R68S"|"Lunzn FastRhino R68S")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
 		else
@@ -118,7 +118,7 @@ case $MYDEVICE_NAME in
 		fi
 		SOC="h69k"
 		;;
-	"Radxa E25")
+	"Radxa E25"|"Radxa E25 Carrier Board")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
 		else
@@ -182,7 +182,7 @@ case $MYDEVICE_NAME in
 		fi
 		SOC="watermelon-pi"
 		;;
-	"Radxa ROCK 5B")
+	"Radxa ROCK 5B"|"Radxa ROCK 5 Model B")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
 		else
