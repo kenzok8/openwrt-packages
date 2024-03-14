@@ -139,6 +139,7 @@ start_service() {
 			config_get tun_mark "infra" "tun_mark" "102"
 
 			ip tuntap add mode tun user root name "$tun_name"
+			sleep 1s
 			ip link set "$tun_name" up
 
 			ip route replace default dev "$tun_name" table "$table_mark"
@@ -306,9 +307,6 @@ stop_service() {
 	ip -6 route del local ::/0 dev lo table "$table_mark" 2>"/dev/null"
 
 	# TUN
-	ip link set "$tun_name" down 2>"/dev/null"
-	ip tuntap del mode tun name "$tun_name" 2>"/dev/null"
-
 	ip route del default dev "$tun_name" table "$table_mark" 2>"/dev/null"
 	ip rule del fwmark "$tun_mark" table "$table_mark" 2>"/dev/null"
 
@@ -347,6 +345,17 @@ stop_service() {
 		"$RUN_DIR/sing-box-s.json" "$RUN_DIR/sing-box-s.log"
 
 	log "Service stopped."
+}
+
+service_stopped() {
+	# Load config
+	config_load "$CONF"
+	local tun_name
+	config_get tun_name "infra" "tun_name" "singtun0"
+
+	# TUN
+	ip link set "$tun_name" down 2>"/dev/null"
+	ip tuntap del mode tun name "$tun_name" 2>"/dev/null"
 }
 
 reload_service() {
