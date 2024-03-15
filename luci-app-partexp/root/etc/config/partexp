@@ -1,5 +1,5 @@
-config global
+config global 'global'
 	option target_function '/overlay'
 	option target_disk ''
-	option keep_config '1'
-	option auto_format '1'
+	option keep_config '0'
+	option auto_format '0'

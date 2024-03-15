@@ -1,5 +1,11 @@
 #!/bin/sh
 chmod +x /etc/init.d/partexp  >/dev/null 2>&1
-
+[  `uci -q get partexp.global` ]  || uci set partexp.global=global
+LOGD=/etc/partexp
+LOG=$LOGD/partexp.log
+LOGPOS=$LOGD/lucilogpos
+[ -d "$LOGD" ] || mkdir -p $LOGD
+[ ! -f "$LOG" ] && echo "start" > $LOG
+[ ! -f "$LOGPOS" ] && echo 'start' > $LOGPOS
 rm -rf /tmp/luci-modulecache /tmp/luci-indexcache*
 exit 0

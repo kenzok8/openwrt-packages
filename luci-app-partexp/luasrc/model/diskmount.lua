@@ -1,6 +1,6 @@
 --[[
 LuCI - Lua Configuration Interface
- Copyright (C) 2022  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/luci-app-partexp
+ Copyright (C) 2022  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/partexp
 ]]--
 
 local fs   = require "nixio.fs"
