@@ -188,8 +188,17 @@ local start_stop_remove = function(m, cmd)
 	end
 end
 
+local c_color
+if container_info.State.Status == 'running' then
+	c_color = 'green'
+elseif container_info.State.Status == 'restarting' then
+	c_color = 'yellow'
+else
+	c_color = 'red'
+end
+
 m=SimpleForm("docker",
-	translatef("Docker - Container (%s)", container_info.Name:sub(2)),
+	translatef("Docker - Container (<font color='%s'>%s</font>)", c_color, container_info.Name:sub(2)),
 	translate("On this page, the selected container can be managed."))
 m.redirect = luci.dispatcher.build_url("admin/docker/containers")
 
