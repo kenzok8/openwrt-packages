@@ -41,7 +41,7 @@ define Build/Compile
 endef
 
 define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR)  $(1)/usr/share/$(PKG_NAME)
+	$(INSTALL_DIR) $(1)/usr/share/$(PKG_NAME)
 	$(CP) $(PKG_BUILD_DIR)/$(PKG_NAME)/* $(1)/usr/share/$(PKG_NAME)
 endef
 

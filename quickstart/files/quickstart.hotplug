@@ -1,3 +1,0 @@
-if [ "$ACTION" = "add" -o "$ACTION" = "remove" ]; then
-    quickstart blockChange
-fi
