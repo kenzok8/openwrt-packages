@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ "$PKG_UPGRADE" = 1 ]; then
+    /etc/init.d/quickstart enable
+    /etc/init.d/quickstart start
+fi
+
+exit 0
