@@ -65,12 +65,8 @@ define Build/Prepare
 	if [ -d "$(BUILD_DIR)/AdGuardHome-$(PKG_VERSION)" ]; then \
 		mv "$(BUILD_DIR)/AdGuardHome-$(PKG_VERSION)/"* "$(BUILD_DIR)/adguardhome-$(PKG_VERSION)/"; \
 	fi
-	if [ -d "$(BUILD_DIR)/AdGuardHome-$(PKG_VERSION)" ]; then \
-		mv "$(BUILD_DIR)/AdGuardHome-$(PKG_VERSION)/"* "$(BUILD_DIR)/adguardhome-$(PKG_VERSION)/"; \
-	fi
 
 	gzip -dc $(DL_DIR)/$(FRONTEND_FILE) | $(HOST_TAR) -C $(PKG_BUILD_DIR)/ $(TAR_OPTIONS)
-	( cd "$(BUILD_DIR)/adguardhome-$(PKG_VERSION)"; go mod tidy )
 	( cd "$(BUILD_DIR)/adguardhome-$(PKG_VERSION)"; go mod tidy )
 endef
 
