@@ -45,7 +45,7 @@ define Package/$(PKG_NAME)
   CATEGORY:=Network
   SUBMENU:=Web Servers/Proxies
   TITLE:=A file list program that supports multiple storage
-  URL:=https://alist-doc.nn.ci/
+  URL:=https://alist.nn.ci/
   DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
 endef
 
