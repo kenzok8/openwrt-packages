@@ -757,9 +757,6 @@ echo "done"
 echo
 
 echo -n "Update boot args ... "
-if [ -f /tmp/armbianEnv.txt ]; then
-    cp /tmp/armbianEnv.txt .
-fi
 sed -e '/fdtfile=/d' -i armbianEnv.txt
 sed -e '/rootdev=/d' -i armbianEnv.txt
 sed -e '/rootfstype=/d' -i armbianEnv.txt
