@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 LUCI_TITLE:=Atmaterial_new kenzo
 LUCI_DEPENDS:=
 PKG_VERSION:=1.2
-PKG_RELEASE:=02-20200209
+PKG_RELEASE:=2
 
 include $(TOPDIR)/feeds/luci/luci.mk
 

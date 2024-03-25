@@ -757,6 +757,16 @@ echo "done"
 echo
 
 echo -n "Update boot args ... "
+
+if [ -f /tmp/armbianEnv.txt ];then
+    ORIG_OVERLAYS=$(grep '^overlays=' /tmp/armbianEnv.txt)
+    ORIG_USER_OVERLAYS=$(grep '^user_overlays=' /tmp/armbianEnv.txt)
+    sed -e '/user_overlays=/d' -i armbianEnv.txt
+    sed -e '/overlays=/d' -i armbianEnv.txt
+    echo "$ORIG_OVERLAYS" >> armbianEnv.txt
+    echo "$ORIG_USER_OVERLAYS" >> armbianEnv.txt
+fi
+
 sed -e '/fdtfile=/d' -i armbianEnv.txt
 sed -e '/rootdev=/d' -i armbianEnv.txt
 sed -e '/rootfstype=/d' -i armbianEnv.txt
