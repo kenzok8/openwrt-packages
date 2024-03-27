@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=alist
 PKG_VERSION:=3.33.0
 PKG_WEB_VERSION:=3.33.0
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/alist-org/alist/tar.gz/v$(PKG_VERSION)?
@@ -49,6 +49,11 @@ define Package/$(PKG_NAME)
   DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
 endef
 
+define Package/$(PKG_NAME)/conffiles
+/etc/alist
+/etc/config/alist
+endef
+
 define Package/$(PKG_NAME)/description
   A file list program that supports multiple storage, powered by Gin and Solidjs.
 endef
@@ -61,13 +66,16 @@ define Build/Prepare
 	$(call Build/Prepare/Default)
 	$(eval $(call Download,$(PKG_NAME)-web))
 	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/public/dist -xzf $(DL_DIR)/$(PKG_NAME)-web-$(PKG_WEB_VERSION).tar.gz
-	$(CP) ./files/assets/. $(PKG_BUILD_DIR)/public/dist/assets/
 endef
 
 define Package/$(PKG_NAME)/install
 	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/alist $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/etc/config $(1)/etc/init.d $(1)/etc/alist
+	$(INSTALL_CONF) $(CURDIR)/files/alist.config $(1)/etc/config/alist
+	$(INSTALL_BIN) $(CURDIR)/files/alist.init $(1)/etc/init.d/alist.init
+	$(INSTALL_DATA) $(CURDIR)/files/data.db $(1)/etc/alist/data.db
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

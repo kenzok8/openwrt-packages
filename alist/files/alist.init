@@ -1,0 +1,204 @@
+#!/bin/sh /etc/rc.common
+
+. /usr/share/libubox/jshn.sh
+
+START=99
+USE_PROCD=1
+PROG=/usr/bin/alist
+
+get_config() {
+	config_get_bool enabled $1 enabled 1
+	config_get port $1 port 5244
+	config_get log $1 log 1
+	config_get site_url $1 site_url ""
+	config_get data_dir $1 data_dir "/etc/alist"
+	config_get temp_dir $1 temp_dir "/tmp/alist"
+	config_get ssl $1 ssl 0
+	config_get ssl_cert $1 ssl_cert ""
+	config_get ssl_key $1 ssl_key ""
+	config_get token_expires_in $1 token_expires_in 48
+	config_get allow_wan $1 allow_wan 0
+	config_get max_connections $1 max_connections 0
+	config_get delayed_start $1 delayed_start 0
+
+	# mysql
+	config_get mysql $1 mysql 0
+	config_get mysql_host $1 mysql_host ""
+	config_get mysql_port $1 mysql_port "3306"
+	config_get mysql_username $1 mysql_username ""
+	config_get mysql_password $1 mysql_password ""
+	config_get mysql_database $1 mysql_database ""
+
+	config_load network
+	config_get lan_addr lan ipaddr "0.0.0.0"
+	if echo "${lan_addr}" | grep -Fq ' '; then
+		lan_addr="0.0.0.0"
+	else
+		lan_addr=${lan_addr%%/*}
+	fi
+}
+
+set_firewall() {
+	if [ "$external_access" = "allow" ]; then
+		uci -q delete firewall.alist
+		uci set firewall.alist=rule
+		uci set firewall.alist.name="alist"
+		uci set firewall.alist.target="ACCEPT"
+		uci set firewall.alist.src="wan"
+		uci set firewall.alist.proto="tcp"
+		uci set firewall.alist.dest_port="$port"
+		uci set firewall.alist.enabled="1"
+		uci commit firewall
+		/etc/init.d/firewall reload >/dev/null 2>&1
+	elif [ "$external_access" = "deny" ]; then
+		uci -q delete firewall.alist
+		uci commit firewall
+		/etc/init.d/firewall reload >/dev/null 2>&1
+	fi
+}
+
+start_service() {
+	config_load alist
+	config_foreach get_config alist
+	[ $enabled -ne 1 ] && return 1
+	mkdir -p $temp_dir $data_dir
+	[ "$ssl" -eq 1 ] && https_port=$port http_port="-1" || https_port="-1" http_port=$port
+	if [ -e /proc/uptime ]; then
+		[ $(awk -F. '{print $1}' /proc/uptime) -lt "120" ] && delayed_start=$delayed_start || delayed_start=0
+	else
+		delayed_start=$delayed_start
+	fi
+	if [ "$allow_wan" -eq "1" ]; then
+		listen_addr="0.0.0.0"
+		external_access="allow"
+	else
+		listen_addr=$lan_addr
+		external_access="deny"
+	fi
+
+	# mysql
+	[ "$mysql" -eq 1 ] && database=mysql || database=sqlite3
+
+	set_firewall
+	true > $temp_dir/alist.log
+
+	# init config
+	json_init
+	json_add_boolean "force" "1"
+	json_add_string "site_url" "$site_url"
+	json_add_string "cdn" ""
+	json_add_string "jwt_secret" ""
+	json_add_int "token_expires_in" "$token_expires_in"
+
+	# database
+	json_add_object 'database'
+		json_add_string "type" "$database"
+		json_add_string "host" "$mysql_host"
+		json_add_int "port" "$mysql_port"
+		json_add_string "user" "$mysql_username"
+		json_add_string "password" "$mysql_password"
+		json_add_string "name" "$mysql_database"
+		json_add_string "db_file" "$data_dir/data.db"
+		json_add_string "table_prefix" "x_"
+		json_add_string "ssl_mode" ""
+		json_add_string "dsn" ""
+	json_close_object
+
+	# meilisearch
+	json_add_object "meilisearch"
+		json_add_string "host" "http://localhost:7700"
+		json_add_string "api_key" ""
+		json_add_string "index_prefix" ""
+	json_close_object
+
+	# scheme
+	json_add_object "scheme"
+		json_add_string "address" "$listen_addr"
+		json_add_int "http_port" "$http_port"
+		json_add_int "https_port" "$https_port"
+		json_add_boolean "force_https" "0"
+		json_add_string "cert_file" "$ssl_cert"
+		json_add_string "key_file" "$ssl_key"
+		json_add_string "unix_file" "/var/run/alist.sock"
+		json_add_string "unix_file_perm" ""
+	json_close_object
+
+	json_add_string "temp_dir" "$temp_dir"
+	json_add_string "bleve_dir" "$data_dir/bleve"
+	json_add_string "dist_dir" ""
+
+	# log
+	json_add_object "log"
+		json_add_boolean "enable" "$log"
+		json_add_string "name" "$temp_dir/alist.log"
+		json_add_int "max_size" "10"
+		json_add_int "max_backups" "5"
+		json_add_int "max_age" "28"
+		json_add_boolean "compress" "0"
+	json_close_object
+
+	json_add_int "delayed_start" "$delayed_start"
+	json_add_int "max_connections" "$max_connections"
+	json_add_boolean "tls_insecure_skip_verify" "1"
+
+	# tasks
+	json_add_object "tasks"
+		json_add_object "download"
+			json_add_int "workers" "5"
+			json_add_int "max_retry" "1"
+		json_close_object
+		json_add_object "transfer"
+			json_add_int "workers" "5"
+			json_add_int "max_retry" "2"
+		json_close_object
+			json_add_object "upload"
+			json_add_int "workers" "5"
+			json_add_int "max_retry" "0"
+		json_close_object
+		json_add_object "copy"
+			json_add_int "workers" "5"
+			json_add_int "max_retry" "2"
+		json_close_object
+	json_close_object
+
+	# cors
+	json_add_object "cors"
+		json_add_array "allow_origins"
+		json_add_string "" "*"
+		json_close_array
+		json_add_array "allow_methods"
+		json_add_string "" "*"
+		json_close_array
+		json_add_array "allow_headers"
+		json_add_string "" "*"
+		json_close_array
+	json_close_object
+
+	# s3
+	json_add_object "s3"
+		json_add_boolean "enable" "0"
+		json_add_int "port" "5246"
+		json_add_boolean "ssl" "0"
+	json_close_object
+
+	json_dump > $data_dir/config.json
+
+	procd_open_instance
+	procd_set_param command $PROG
+	procd_append_param command server --data $data_dir
+	procd_set_param stdout 0
+	procd_set_param stderr 0
+	procd_set_param respawn
+	procd_set_param limits core="unlimited"
+	procd_set_param limits nofile="200000 200000"
+	procd_close_instance
+}
+
+service_triggers() {
+	procd_add_reload_trigger "alist"
+}
+
+stop_service() {
+	external_access="deny"
+	set_firewall
+}
