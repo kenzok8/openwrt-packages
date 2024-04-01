@@ -122,7 +122,11 @@ else
         kernel_tag="stable"
     fi
 fi
+
+# Remove the kernel_ prefix
 kernel_tag="${kernel_tag/kernel_/}"
+# If the kernel tag is a number, it is converted to a stable branch
+[[ "${kernel_tag}" =~ ^[1-9]+ ]] && kernel_tag="stable"
 
 # Step 2: Check if there is the latest kernel version
 check_kernel() {
