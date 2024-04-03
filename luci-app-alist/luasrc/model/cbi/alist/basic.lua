@@ -31,28 +31,48 @@ o = s:option(Value,"ssl_key", translate("SSL key"), translate("SSL key file path
 o.datatype = "file"
 o:depends("ssl", "1")
 
-o = s:option(Flag, "mysql", translate("Enable MySQL"))
+o = s:option(Flag, "mysql", translate("Enable Database"))
 o.rmempty=false
 
-o = s:option(Value,"mysql_host", translate("MySQL Host"))
+o = s:option(ListValue, "mysql_type", translate("Database Type"))
+o.datatype = "string"
+o:value("mysql", translate("MySQL"))
+o:value("postgres", translate("PostgreSQL"))
+o.default = "mysql"
+o:depends("mysql", "1")
+
+o = s:option(Value,"mysql_host", translate("Database Host"))
 o.datatype = "string"
 o:depends("mysql", "1")
 
-o = s:option(Value,"mysql_port", translate("MySQL Port"))
+o = s:option(Value,"mysql_port", translate("Database Port"))
 o.datatype = "and(port,min(1))"
 o.default = "3306"
 o:depends("mysql", "1")
 
-o = s:option(Value,"mysql_username", translate("MySQL Username"))
+o = s:option(Value,"mysql_username", translate("Database Username"))
 o.datatype = "string"
 o:depends("mysql", "1")
 
-o = s:option(Value,"mysql_password", translate("MySQL Password"))
+o = s:option(Value,"mysql_password", translate("Database Password"))
 o.datatype = "string"
 o.password = true
 o:depends("mysql", "1")
 
 o = s:option(Value,"mysql_database", translate("Database Name"))
+o.datatype = "string"
+o:depends("mysql", "1")
+
+o = s:option(Value,"mysql_table_prefix", translate("Database Table Prefix"))
+o.datatype = "string"
+o.default = "x_"
+o:depends("mysql", "1")
+
+o = s:option(Value,"mysql_ssl_mode", translate("Database SSL Mode"))
+o.datatype = "string"
+o:depends("mysql", "1")
+
+o = s:option(Value,"mysql_dsn", translate("Database DSN"))
 o.datatype = "string"
 o:depends("mysql", "1")
 

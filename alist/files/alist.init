@@ -23,11 +23,15 @@ get_config() {
 
 	# mysql
 	config_get mysql $1 mysql 0
+	config_get mysql_type $1 mysql_type "mysql"
 	config_get mysql_host $1 mysql_host ""
 	config_get mysql_port $1 mysql_port "3306"
 	config_get mysql_username $1 mysql_username ""
 	config_get mysql_password $1 mysql_password ""
 	config_get mysql_database $1 mysql_database ""
+	config_get mysql_table_prefix $1 mysql_table_prefix "x_"
+	config_get mysql_ssl_mode $1 mysql_ssl_mode ""
+	config_get mysql_dsn $1 mysql_dsn ""
 
 	config_load network
 	config_get lan_addr lan ipaddr "0.0.0.0"
@@ -77,7 +81,7 @@ start_service() {
 	fi
 
 	# mysql
-	[ "$mysql" -eq 1 ] && database=mysql || database=sqlite3
+	[ "$mysql" -eq 1 ] && database=$mysql_type || database=sqlite3
 
 	set_firewall
 	true > $temp_dir/alist.log
@@ -99,9 +103,9 @@ start_service() {
 		json_add_string "password" "$mysql_password"
 		json_add_string "name" "$mysql_database"
 		json_add_string "db_file" "$data_dir/data.db"
-		json_add_string "table_prefix" "x_"
-		json_add_string "ssl_mode" ""
-		json_add_string "dsn" ""
+		json_add_string "table_prefix" "$mysql_table_prefix"
+		json_add_string "ssl_mode" "$mysql_ssl_mode"
+		json_add_string "dsn" "$mysql_dsn"
 	json_close_object
 
 	# meilisearch
