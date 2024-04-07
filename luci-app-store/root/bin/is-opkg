@@ -58,11 +58,13 @@ update() {
         return 1
     fi
 
-    fcurl -o ${OPKG_CONF_DIR}/meta.conf "${FEEDS_SERVER}/all/meta.conf" && \
-      fcurl -o ${OPKG_CONF_DIR}/all.conf "${FEEDS_SERVER}/all/isfeeds.conf" && \
-      fcurl -o ${OPKG_CONF_DIR}/arch.conf "${FEEDS_SERVER}/${ARCH}/isfeeds.conf" || \
+    echo "Fetch feed list for ${ARCH}"
+    fcurl --no-progress-meter -o ${OPKG_CONF_DIR}/meta.conf "${FEEDS_SERVER}/all/meta.conf" && \
+      fcurl --no-progress-meter -o ${OPKG_CONF_DIR}/all.conf "${FEEDS_SERVER}/all/isfeeds.conf" && \
+      fcurl --no-progress-meter -o ${OPKG_CONF_DIR}/arch.conf "${FEEDS_SERVER}/${ARCH}/isfeeds.conf" || \
       return 1
 
+    echo "Update feeds index"
     opkg -f ${IS_ROOT}/etc/opkg_o.conf --offline-root ${IS_ROOT} update
 
     return 0
