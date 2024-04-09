@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=alist
 PKG_VERSION:=3.33.0
 PKG_WEB_VERSION:=3.33.0
-PKG_RELEASE:=5
+PKG_RELEASE:=6
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/alist-org/alist/tar.gz/v$(PKG_VERSION)?
@@ -57,6 +57,14 @@ endef
 define Package/$(PKG_NAME)/description
   A file list program that supports multiple storage, powered by Gin and Solidjs.
 endef
+
+ifeq ($(ARCH),arm)
+  ARM_CPU_FEATURES:=$(word 2,$(subst +,$(space),$(call qstrip,$(CONFIG_CPU_TYPE))))
+  ifeq ($(ARM_CPU_FEATURES),)
+    TARGET_CFLAGS:=
+    TARGET_LDFLAGS:=
+  endif
+endif
 
 ifneq ($(CONFIG_USE_MUSL),)
   TARGET_CFLAGS += -D_LARGEFILE64_SOURCE
