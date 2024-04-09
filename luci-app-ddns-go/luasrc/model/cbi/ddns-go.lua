@@ -28,15 +28,21 @@ o.default=5
 o = s:option(Flag,"skipverify",translate("Skip verifying certificates"))
 o.default = 0
 
-o = s:option(ListValue, "dns",translate("Specify DNS resolution server"))
+o = s:option(Value, "dns",translate("Specify DNS resolution server"))
 o:value("223.5.5.5", ""..translate("Ali").." DNS (223.5.5.5)")
 o:value("223.6.6.6", ""..translate("Ali").." DNS (223.6.6.6)")
 o:value("119.29.29.29", ""..translate("Tencent").." DNS (119.29.29.29)")
 o:value("1.1.1.1", translate("CloudFlare DNS(1.1.1.1)"))
+o:value("8.8.4.4", ""..translate("Google").." DNS(8.8.4.4)")
+o:value("8.8.8.8", ""..translate("Google").." DNS(8.8.8.8)")
 o.default = "223.5.5.5"
 
 o = s:option(Flag,"noweb",translate("Do not start web services"))
 o.default = 0
+
+o = s:option(Value, "delay", translate("Delayed Start (seconds)"))
+o.datatype = "and(uinteger,min(0))"
+o.default = "60"
 
 m.apply_on_parse = true
 m.on_after_apply = function(self,map)

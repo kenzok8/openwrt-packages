@@ -55,3 +55,5 @@ msgstr "指定DNS解析服务器"
 msgid "Do not start web services"
 msgstr "不启动web服务"
 
+msgid "Delayed Start (seconds)"
+msgstr "开机延时启动（秒）"
