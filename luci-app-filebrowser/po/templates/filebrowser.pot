@@ -1,51 +1,11 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:62
-msgid "Collecting data..."
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:81
-msgid "Disable Command Runner feature"
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:68
-msgid "Enable"
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:31
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:33
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:48
+#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/system/filebrowser.js:16
 #: applications/luci-app-filebrowser/root/usr/share/luci/menu.d/luci-app-filebrowser.json:3
-msgid "FileBrowser"
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:49
-msgid ""
-"FileBrowser provides a file managing interface within a specified directory "
-"and it can be used to upload, delete, preview, rename and edit your files.."
+msgid "File Browser"
 msgstr ""
 
 #: applications/luci-app-filebrowser/root/usr/share/rpcd/acl.d/luci-app-filebrowser.json:3
-msgid "Grant UCI access for luci-app-filebrowser"
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:72
-msgid "Listen port"
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:33
-msgid "NOT RUNNING"
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:30
-msgid "Open Web Interface"
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:31
-msgid "RUNNING"
-msgstr ""
-
-#: applications/luci-app-filebrowser/htdocs/luci-static/resources/view/filebrowser.js:77
-msgid "Root directory"
+msgid "Grant access to File Browser"
 msgstr ""

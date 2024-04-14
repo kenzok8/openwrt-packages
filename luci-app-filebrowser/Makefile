@@ -1,12 +1,14 @@
-# SPDX-License-Identifier: Apache-2.0
-#
-# Copyright (C) 2023 ImmortalWrt.org
+# This is free software, licensed under the Apache License, Version 2.0 .
 
 include $(TOPDIR)/rules.mk
 
-LUCI_TITLE:=LuCI app for FileBrowser
-LUCI_PKGARCH:=all
-LUCI_DEPENDS:=+filebrowser
+LUCI_TITLE:=LuCI File Browser module
+LUCI_DEPENDS:=+luci-base
+
+PKG_LICENSE:=Apache-2.0
+PKG_VERSION:=1.1.0
+PKG_RELEASE:=1
+PKG_MAINTAINER:=Sergey Ponomarev <stokito@gmail.com>
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
