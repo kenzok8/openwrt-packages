@@ -123,7 +123,7 @@ start_service() {
 		json_add_boolean "force_https" "0"
 		json_add_string "cert_file" "$ssl_cert"
 		json_add_string "key_file" "$ssl_key"
-		json_add_string "unix_file" "/var/run/alist.sock"
+		json_add_string "unix_file" ""
 		json_add_string "unix_file_perm" ""
 	json_close_object
 
