@@ -1,8 +1,8 @@
-local a = require"luci.sys"
+local a = require("luci.sys")
 local e = luci.model.uci.cursor()
-local e = require"nixio.fs"
+local e = require("nixio.fs")
 require("luci.sys")
-local t, e ,o
+local t, e, o
 
 t = Map("aliddns", translate("AliDDNS"))
 
@@ -15,25 +15,35 @@ enable.rmempty = false
 enable = e:option(Flag, "clean", translate("Clean Before Update"))
 enable.rmempty = false
 
-ipv4 = e:option(Flag,"ipv4",translate("Enabled IPv4"))
-ipv4.rmempty=false
+ipv4 = e:option(Flag, "ipv4", translate("Enabled IPv4"))
+ipv4.rmempty = false
 
-ipv6 = e:option(Flag,"ipv6",translate("Enabled IPv6"))
-ipv6.rmempty=false
+ipv6 = e:option(Flag, "ipv6", translate("Enabled IPv6"))
+ipv6.rmempty = false
 
 token = e:option(Value, "app_key", translate("Access Key ID"))
 
 email = e:option(Value, "app_secret", translate("Access Key Secret"))
 
-iface = e:option(ListValue, "interface", translate("WAN-IP Source"), translate("Select the WAN-IP Source for AliDDNS, like wan/internet"))
+iface = e:option(
+	ListValue,
+	"interface",
+	translate("WAN-IP Source"),
+	translate("Select the WAN-IP Source for AliDDNS, like wan/internet")
+)
 iface:value("", translate("Select WAN-IP Source"))
-iface:value("internet")
+iface:value("internet", translate("Internet"))
 iface:value("wan")
 iface.rmempty = false
 
-iface6 = e:option(ListValue, "interface6", translate("WAN6-IP Source"),translate("Select the WAN6-IP Source for AliDDNS, like wan6/internet"))
-iface6:value("",translate("Select WAN6-IP Source"))
-iface6:value("internet")
+iface6 = e:option(
+	ListValue,
+	"interface6",
+	translate("WAN6-IP Source"),
+	translate("Select the WAN6-IP Source for AliDDNS, like wan6/internet")
+)
+iface6:value("", translate("Select WAN6-IP Source"))
+iface6:value("internet", translate("Internet"))
 iface6:value("wan")
 iface6:value("wan6")
 iface6:value("wan_6")
@@ -51,21 +61,20 @@ time.rmempty = false
 e = t:section(TypedSection, "base", translate("Update Log"))
 e.anonymous = true
 local a = "/var/log/aliddns.log"
-tvlog = e:option(TextValue,"sylogtext")
+tvlog = e:option(TextValue, "sylogtext")
 tvlog.rows = 16
 tvlog.readonly = "readonly"
 tvlog.wrap = "off"
 
-function tvlog.cfgvalue(e,e)
+function tvlog.cfgvalue(e, e)
 	sylogtext = ""
 	if a and nixio.fs.access(a) then
-		sylogtext = luci.sys.exec("tail -n 100 %s"%a)
+		sylogtext = luci.sys.exec("tail -n 100 %s" % a)
 	end
 	return sylogtext
 end
 
-tvlog.write = function(e,e,e)
-end
+tvlog.write = function(e, e, e) end
 
 local e = luci.http.formvalue("cbi.apply")
 if e then

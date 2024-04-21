@@ -53,7 +53,7 @@ tar axvf lede-sdk-17.01.*-ar71xx-generic_gcc-5.4.0_musl-1.1.16.Linux-x86_64.tar.
 cd lede-sdk-17.01.*-ar71xx-*
 # Clone 项目
 mkdir -p package/feeds
-git clone https://github.com/chenhw2/luci-app-aliddns.git package/feeds/luci-app-aliddns
+git clone https://github.com/honwen/luci-app-aliddns.git package/feeds/luci-app-aliddns
 # 编译 po2lmo (如果有po2lmo可跳过)
 pushd package/feeds/luci-app-aliddns/tools/po2lmo
 make && sudo make install

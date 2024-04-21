@@ -19,6 +19,9 @@ msgstr "启用 IPv6"
 msgid "Base"
 msgstr "基本设置"
 
+msgid "Internet"
+msgstr "Internet(ip-api.com)"
+
 msgid "WAN-IP Source"
 msgstr "WAN-IP来源"
 

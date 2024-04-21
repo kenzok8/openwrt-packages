@@ -10,35 +10,38 @@ uci_get_by_name() {
 
 uci_bool_by_name() {
 	case "$(uci_get_by_name $1 $2)" in
-		1|on|true|yes|enabled) return 0;;
+	1 | on | true | yes | enabled) return 0 ;;
 	esac
 	return 1
 }
 
 intelnetip() {
-	tmp_ip=`curl -sL --connect-timeout 3 members.3322.org/dyndns/getip`
+	tmp_ip=$(curl -sL --connect-timeout 3 members.3322.org/dyndns/getip)
 	if [ "Z$tmp_ip" == "Z" ]; then
-		tmp_ip=`curl -sL --connect-timeout 3   api-ipv4.ip.sb/ip`
+		tmp_ip=$(curl -sL --connect-timeout 3 api-ipv4.ip.sb/ip)
 	fi
 	if [ "Z$tmp_ip" == "Z" ]; then
-		tmp_ip=`curl -sL --connect-timeout 3 v4.myip.la`
+		tmp_ip=$(curl -sL --connect-timeout 3 v4.myip.la)
 	fi
 	if [ "Z$tmp_ip" == "Z" ]; then
-		tmp_ip=`curl -sL --connect-timeout 3 whatismyip.akamai.com`
+		tmp_ip=$(curl -sL --connect-timeout 3 whatismyip.akamai.com)
 	fi
 	echo -n $tmp_ip
 }
 
 intelnetip6() {
-	tmp_ip6=`curl -sL --connect-timeout 3   ipv6.whatismyip.akamai.com`
+	tmp_ip6=$(curl -sL --connect-timeout 3 ipv6.testipv6.cn/ip | sed 's+"+\n+g' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}$|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})' | head -n1)
 	if [ "Z$tmp_ip6" == "Z" ]; then
-		tmp_ip6=`curl -sL --connect-timeout 3 speed.neu6.edu.cn/getIP.php`
+		tmp_ip6=$(curl -sL --connect-timeout 3 ip6only.me/api | sed 's+,+\n+g' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}$|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})' | head -n1)
 	fi
 	if [ "Z$tmp_ip6" == "Z" ]; then
-		tmp_ip6=`curl -sL --connect-timeout 3 v6.ident.me`
+		tmp_ip6=$(curl -sL --connect-timeout 3 speed.neu6.edu.cn/getIP.php)
 	fi
 	if [ "Z$tmp_ip6" == "Z" ]; then
-		tmp_ip6=`curl -sL --connect-timeout 3 api-ipv6.ip.sb/ip`
+		tmp_ip6=$(curl -sL --connect-timeout 3 v6.ident.me)
+	fi
+	if [ "Z$tmp_ip6" == "Z" ]; then
+		tmp_ip6=$(curl -sL --connect-timeout 3 api-ipv6.ip.sb/ip)
 	fi
 	echo -n $tmp_ip6
 }
@@ -46,15 +49,15 @@ intelnetip6() {
 resolve2ip() {
 	# resolve2ip domain<string>
 	domain=$1
-	tmp_ip=`nslookup $domain ns1.alidns.com 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -n1`
+	tmp_ip=$(nslookup $domain ns1.alidns.com 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -n1)
 	if [ "Z$tmp_ip" == "Z" ]; then
-		tmp_ip=`nslookup $domain ns2.alidns.com  2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -n1`
+		tmp_ip=$(nslookup $domain ns2.alidns.com 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -n1)
 	fi
 	if [ "Z$tmp_ip" == "Z" ]; then
-		tmp_ip=`nslookup $domain 114.114.115.115 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -n1`
+		tmp_ip=$(nslookup $domain 114.114.115.115 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -n1)
 	fi
 	if [ "Z$tmp_ip" == "Z" ]; then
-		tmp_ip=`curl -sL --connect-timeout 3 "119.29.29.29/d?dn=$domain"`
+		tmp_ip=$(curl -sL --connect-timeout 3 "119.29.29.29/d?dn=$domain")
 	fi
 	echo -n $tmp_ip
 }
@@ -62,15 +65,15 @@ resolve2ip() {
 resolve2ip6() {
 	# resolve2ip6 domain<string>
 	domain=$1
-	tmp_ip6=`nslookup $domain ns1.alidns.com 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}$|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})' | tail -n1`
+	tmp_ip6=$(nslookup $domain ns1.alidns.com 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}$|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})' | tail -n1)
 	if [ "Z$tmp_ip6" == "Z" ]; then
-		tmp_ip6=`nslookup $domain ns2.alidns.com  2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}$|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})' | tail -n1`
+		tmp_ip6=$(nslookup $domain ns2.alidns.com 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}$|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})' | tail -n1)
 	fi
 	if [ "Z$tmp_ip6" == "Z" ]; then
-		tmp_ip6=`nslookup $domain 114.114.115.115 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}$|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})' | tail -n1`
+		tmp_ip6=$(nslookup $domain 114.114.115.115 2>/dev/null | sed '/^Server/d; /#53$/d' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}$|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4})' | tail -n1)
 	fi
 	if [ "Z$tmp_ip6" == "Z" ]; then
-		tmp_ip6=`curl -sL --connect-timeout 3 "119.29.29.29/d?dn=$domain&type=AAAA"`
+		tmp_ip6=$(curl -sL --connect-timeout 3 "119.29.29.29/d?dn=$domain&type=AAAA")
 	fi
 	echo -n $tmp_ip6
 }
@@ -91,6 +94,7 @@ check_aliddns() {
 		return 0
 	else
 		echo "$DATE UPDATING..."
+		ip6_escape=$(urlencode "$current_ip")
 		return 1
 	fi
 }
@@ -102,14 +106,12 @@ check_aliddns6() {
 		return 0
 	fi
 	current_ip6=$(resolve2ip6 "$dm_real")
+	echo "$DATE DOMAIN-IP6: ${current_ip6}"
 
-    #urlencode current_ip6
-    current_ip6_urlencode=$(urlencode "$current_ip6")
-	if [ "Z$current_ip6_urlencode" == "Z" ]; then
+	if [ "Z$current_ip6" == "Z" ]; then
 		rrid6='' # NO Resolve IP Means new Record_ID
 	fi
-	echo "$DATE DOMAIN-IP6: ${current_ip6_urlencode}"
-	if [ "Z$ip6" == "Z$current_ip6_urlencode" ]; then
+	if [ "Z$ip6" == "Z$current_ip6" ]; then
 		echo "$DATE IPv6 dont need UPDATE..."
 		return 0
 	else
@@ -118,14 +120,13 @@ check_aliddns6() {
 	fi
 }
 
-
 urlencode() {
 	# urlencode url<string>
 	out=''
 	for c in $(echo -n $1 | sed 's/[^\n]/&\n/g'); do
 		case $c in
-			[a-zA-Z0-9._-]) out="$out$c" ;;
-			*) out="$out$(printf '%%%02X' "'$c")" ;;
+		[a-zA-Z0-9._-]) out="$out$c" ;;
+		*) out="$out$(printf '%%%02X' "'$c")" ;;
 		esac
 	done
 	echo -n $out
@@ -171,7 +172,7 @@ del_record() {
 }
 
 do_ddns_record() {
-	if uci_bool_by_name base clean ; then
+	if uci_bool_by_name base clean; then
 		query_recordid | get_recordid | while read rr; do
 			echo "$DATE Clean record $dm_show: $rr"
 			del_record $rr >/dev/null
@@ -180,10 +181,10 @@ do_ddns_record() {
 		rrid=''
 	fi
 	if [ "Z$rrid" == "Z" ]; then
-		rrid=`query_recordid | get_recordid`
+		rrid=$(query_recordid | get_recordid)
 	fi
 	if [ "Z$rrid" == "Z" ]; then
-		rrid=`add_record | get_recordid`
+		rrid=$(add_record | get_recordid)
 		echo "$DATE ADD record $rrid"
 	else
 		update_record $rrid >/dev/null 2>&1
@@ -201,7 +202,7 @@ do_ddns_record() {
 }
 
 do_ddns_record6() {
-	if uci_bool_by_name base clean ; then
+	if uci_bool_by_name base clean; then
 		query_recordid6 | get_recordid | while read rr; do
 			echo "$DATE Clean record $dm_show: $rr"
 			del_record $rr >/dev/null
@@ -210,10 +211,10 @@ do_ddns_record6() {
 		rrid6=''
 	fi
 	if [ "Z$rrid6" == "Z" ]; then
-		rrid6=`query_recordid6 | get_recordid`
+		rrid6=$(query_recordid6 | get_recordid)
 	fi
 	if [ "Z$rrid6" == "Z" ]; then
-		rrid6=`add_record6 | get_recordid`
+		rrid6=$(add_record6 | get_recordid)
 		echo "$DATE ADD record $rrid6"
 	else
 		update_record6 $rrid6 >/dev/null 2>&1
@@ -231,25 +232,25 @@ do_ddns_record6() {
 }
 
 clean_log() {
-	if [ $(cat $log_file 2>/dev/null | wc -l) -ge 16 ]; then
+	if [ $(cat $log_file 2>/dev/null | wc -l) -ge 240 ]; then
 		rm -f $log_file && touch $log_file
 		echo "$DATE Log Cleaned"
 	fi
 }
 
 [ -x /usr/bin/openssl -a -x /usr/bin/curl -a -x /bin/sed ] || {
- echo "Need [ openssl + curl + sed ]"
- exit 1
+	echo "Need [ openssl + curl + sed ]"
+	exit 1
 }
 
-ipv4=$(uci_get_by_name   base ipv4)
-ipv6=$(uci_get_by_name   base ipv6)
-ak_id=$(uci_get_by_name   base app_key)
-ak_sec=$(uci_get_by_name  base app_secret)
-rrid=$(uci_get_by_name    base record_id)
-rrid6=$(uci_get_by_name   base record_id6)
+ipv4=$(uci_get_by_name base ipv4)
+ipv6=$(uci_get_by_name base ipv6)
+ak_id=$(uci_get_by_name base app_key)
+ak_sec=$(uci_get_by_name base app_secret)
+rrid=$(uci_get_by_name base record_id)
+rrid6=$(uci_get_by_name base record_id6)
 main_dm=$(uci_get_by_name base main_domain)
-sub_dm=$(uci_get_by_name  base sub_domain)
+sub_dm=$(uci_get_by_name base sub_domain)
 
 if [ "Z$sub_dm" == "Z@" -o "Z$sub_dm" == "Z" ]; then
 	dm_real="$main_dm"
@@ -257,9 +258,10 @@ else
 	dm_real="$sub_dm.$main_dm"
 fi
 dm_show="$sub_dm.$main_dm"
-dm_escape=`urlencode "$sub_dm.$main_dm"`
-sub_dm_escape=`urlencode "$sub_dm"`
+dm_escape=$(urlencode "$sub_dm.$main_dm")
+sub_dm_escape=$(urlencode "$sub_dm")
 
+# ================================================== ddns v4 ==================================================
 iface=$(uci_get_by_name base interface)
 if [ "Z$iface" == "Zinternet" -o "Z$iface" == "Z" ]; then
 	ip=$(intelnetip)
@@ -270,14 +272,13 @@ fi
 DATE=$(date +'%Y-%m-%d %H:%M:%S')
 timestamp=$(date -u "+%Y-%m-%dT%H%%3A%M%%3A%SZ")
 
-clean_log
 # uci_bool_by_name base ipv4 && check_aliddns || do_ddns_record
 if [ $ipv4 -eq 1 ]; then
 	check_aliddns || do_ddns_record
 fi
+# ================================================== ddns v4 ==================================================
 
-# exit if ipv6 not-enabled
-# uci_bool_by_name base ipv6 || exit 0
+# ================================================== ddns v6 ==================================================
 
 iface6=$(uci_get_by_name base interface6)
 if [ "Z$iface6" == "Zinternet" -o "Z$iface6" == "Z" ]; then
@@ -285,10 +286,12 @@ if [ "Z$iface6" == "Zinternet" -o "Z$iface6" == "Z" ]; then
 else
 	ip6=$(ubus call network.interface.$iface6 status | grep '"address"' | grep -oE '([0-9A-Fa-f]{0,4}:){2,7}([0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){4})' | head -1)
 fi
-ip6_escape=`urlencode "$ip6"`
+ip6_escape=$(urlencode "$ip6")
 
-# clean_log
 # uci_bool_by_name base ipv6 && check_aliddns6 || do_ddns_record6
 if [ $ipv6 -eq 1 ]; then
 	check_aliddns6 || do_ddns_record6
 fi
+# ================================================== ddns v6 ==================================================
+
+clean_log
