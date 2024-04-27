@@ -192,7 +192,7 @@ fdiskB(){
 			    fi
 			    log "保留数据根目录扩展/dev/$b成功！"
 
-			    seelp 5
+			    sleep 5
 			    log "设备重启才能生效"
 			    expquit 2
 
@@ -222,7 +222,7 @@ fdiskB(){
 			    uci set fstab.@global[0].delay_root="15"
 			    uci commit fstab
 			    log "保留数据overlay扩展/dev/$b成功！"
-			    seelp 5
+			    sleep 5
 			    log "设备重启才能生效"
 			    expquit 2
 
@@ -250,7 +250,7 @@ fdiskB(){
 			    uci commit fstab
 			    log "不保留数据overlay扩展/dev/$b成功！"
 			    
-			    seelp 5
+			    sleep 5
 			    log "设备重启才能生效"
 			    expquit 2
 
