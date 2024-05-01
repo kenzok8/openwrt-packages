@@ -1,0 +1,96 @@
+<%#
+	Alpha os is made from me for all .. especially for indo wrt members and fan of OpenWrt or DBAI Community
+	luci-theme-alpha
+	Copyright 2022 derisamedia <facebook.com/derisamedia>
+	Have a bug? Please create an issue here on GitHub!
+	
+	luci-theme-material
+	Copyright 2015-2017 Lutty Yang <lutty@wcan.in>
+
+	luci-theme-bootstrap:
+	Copyright 2008 Steven Barth <steven@midlink.org>
+	Copyright 2008-2016 Jo-Philipp Wich <jow@openwrt.org>
+	Copyright 2012 David Menting <david@nut-bolt.nl>
+
+	MUI:
+	https://github.com/muicss/mui
+
+	Licensed to the public under the Apache License 2.0
+-%>
+
+<%
+	local sys  = require "luci.sys"
+	local util = require "luci.util"
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+	local ver  = require "luci.version"
+
+	local boardinfo = util.ubus("system", "board") or { }
+
+	local node = disp.context.dispatched
+	local path = table.concat(disp.context.path, "-")
+
+	http.prepare_content("text/html; charset=UTF-8")
+-%>
+<!DOCTYPE html>
+<html lang="<%=luci.i18n.context.lang%>">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#09c">
+<meta name="msapplication-tap-highlight" content="no">
+<meta name="msapplication-TileColor" content="#09c">
+<meta name="application-name" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+<meta name="apple-mobile-web-app-title" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+<link rel="stylesheet" href="<%=media%>/gaya/gaya.css">
+<link rel="shortcut icon" href="<%=media%>/favicon.ico">
+<% if node and node.css then %>
+<link rel="stylesheet" href="<%=resource%>/<%=node.css%>">
+<% end -%>
+<script src="<%=url('admin/translations', luci.i18n.context.lang)%>?v=git-21.295.66888-fc702bc"></script>
+<script src="<%=resource%>/cbi.js?v=git-21.295.66888-fc702bc"></script>
+<title><%=striptags( (boardinfo.hostname or "?") .. ( (node and node.title) and ' - ' .. translate(node.title) or '')) %> - LuCI</title>
+<% if css then %><style title="text/css">
+<%= css %>
+</style>
+<% end -%>
+</head>
+<body class="lang_<%=luci.i18n.context.lang%> <% if luci.dispatcher.context.authsession then %>logged-in<% end %> <% if not (path == "") then %>node-<%= path %><% else %>node-main-login<% end %>" data-page="<%= pcdata(path) %>" style="background-image:url('/luci-static/alpha/background/dashboard.png')">
+<header>
+	<div class="fill">
+		<div class="container">
+		<a id="logo" href="<% if luci.dispatcher.context.authsession then %><%=url('admin/status/overview')%><% else %>#<% end %>">
+			<img src="<%=media%>/brand.png" alt="OpenWrt">
+		</a>
+		<div class="status" id="indicators"></div>
+		<div class="logout" >  
+			<a href="/cgi-bin/luci/admin/logout" data-title="Logout">Keluar</a>
+			</div>
+		<div class="showSide">
+			<img src="<%=media%>/gaya/icon/menu_icon.svg" alt="">
+		  </div>
+		</div>
+	</div>
+</header>
+<div class="main">
+	<div style="" class="loading"><span><div class="loading-img"></div></span></div>
+	<div class="main-left" id="mainmenu" style="display:none"></div>
+	<div class="main-right">
+		<div class="modemenu-buttons" style="display:none">
+			<ul id="modemenu"></ul>
+		</div>
+		<div class="darkMask"></div>
+		<div id="maincontent">
+			<div class="container">
+				<%- if luci.sys.process.info("uid") == 0 and luci.sys.user.getuser("root") and not luci.sys.user.getpasswd("root") and path ~= "admin-system-admin-password" then -%>
+				<%- end -%>
+
+				<noscript>
+					<div class="alert-message warning">
+						<h4><%:JavaScript required!%></h4>
+						<p><%:You must enable JavaScript in your browser or LuCI will not work properly.%></p>
+					</div>
+				</noscript>
+				<div id="tabmenu" style="display:none"></div>

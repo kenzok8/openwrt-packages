@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
+<html lang="en">
+		<head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#09c">
+<meta name="msapplication-tap-highlight" content="no">
+<meta name="msapplication-TileColor" content="#09c">
+<meta name="application-name" content="Alpha - LuCI">
+<meta name="apple-mobile-web-app-title" content="Alpha - LuCI">
+<link rel="stylesheet" href="/luci-static/alpha/style/style.css">
+<link rel="shortcut icon" href="luci-static/alpha/favicon.ico">
+<script src="/cgi-bin/luci/admin/translations/en?v=git-22.339.35089-7af4a64"></script>
+<script src="/luci-static/resources/cbi.js?v=git-22.339.35089-7af4a64"></script>
+
+
+<title>Alpha - Login Dulu</title>
+</head>
+		
+<body class="lang_en  node-main-login" data-page="" style="background-image:url('/luci-static/alpha/background/dashboard.png')">
+	<header>
+		<div class="fill">
+			<div class="container">
+				<span class="showSide"></span>
+				<img class="tengah" src="/luci-static/alpha/style/brand.png" />
+				<img class="bawah" src="/luci-static/alpha/style/indo-wrt.png" />
+				<span class="status" id="indicators"></span>
+			</div>
+		</div>
+	</header>
+
+		<script type="text/javascript" src="/luci-static/resources/promis.min.js?v=git-22.361.69894-438c598"></script>
+		<script type="text/javascript" src="/luci-static/resources/luci.js?v=git-22.361.69894-438c598"></script>
+		<script type="text/javascript">
+				L = new LuCI({"apply_rollback":90,"resource":"\/luci-static\/resources","media":"\/luci-static\/material","documentroot":"\/www","pollinterval":5,"apply_display":1.5,"requestpath":[],"ubuspath":"\/ubus\/","scriptname":"\/cgi-bin\/luci","dispatchpath":[],"apply_timeout":5,"apply_holdoff":4,"nodespec":{"satisfied":true,"action":{"type":"template","path":"admin_status\/index"},"order":1,"depends":{"acl":["luci-mod-status-index"]},"title":"Overview"}});
+		</script>
+<form method="post" action="/cgi-bin/luci"><div class="cbi-map"></div>
+<div class='box'>
+		<div class='box-form'>
+			<!-- <div class='box-login-tab'></div>
+			<div class='box-login-title'>
+				<div class='i i-login'></div><h2><div class="cbi-map-descr"></div>LOGIN</h2>
+			</div> -->
+			
+			<div class='box-login'>
+				<label class='checkbox'>
+				<form method="post" action="<%=pcdata(FULL_REQUEST_URI)%>">
+					<%- if fuser then %>
+						<div class="alert-message warning">
+							<p><%:Sandi gagal,silahkan ulangi.%></p>
+						</div>
+					<% end -%>
+				</label>
+				<div class='fieldset-body' id='login_form'>
+							<p class='field'>
+						<label for='user'>
+							<label class="cbi-value-title" for="luci_username">Username</label>
+								<input type="text" name="luci_username" id="luci_username" autocomplete="username" value="root" />
+							</div></label>
+						<span id='valida' class='i i-warning'></span>
+					</p>
+							<p class='field'>
+						<label for='pass'>
+							<label class="cbi-value-title" for="luci_password">Password</label>
+							<div class="cbi-value-field">
+								<input type="password" name="luci_password" id="luci_password" autocomplete="current-password"/>
+							</div></label>
+						<span id='valida' class='i i-close'></span>
+					</p>
+	
+						<label class='checkbox'>
+								Please Enter Username & Password.
+						</label>
+	
+							<input type='submit' id='do_login' value='LOGIN' title='Login' />
+				</div>
+			</div>
+		</div>
+		
+
+		
+</body>
+</html>

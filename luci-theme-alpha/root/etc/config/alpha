@@ -1,0 +1,10 @@
+
+config alpha 'config'
+	option nav_01 '/cgi-bin/luci/admin/status/overview'
+	option nav_02 '/cgi-bin/luci/admin/services/ttyd'
+	option nav_03 '/cgi-bin/luci/admin/services/openclash'
+	option nav_04 '/cgi-bin/luci/admin/nas/tinyfm'
+	option nav_05 '/cgi-bin/luci/admin/modem/main'
+	option nav_06 '/cgi-bin/luci/admin/network/network'
+	option blur '20'
+	option color '#2222359a'

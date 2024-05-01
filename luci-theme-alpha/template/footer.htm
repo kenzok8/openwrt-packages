@@ -1,0 +1,108 @@
+<%#
+	Alpha os is made from me for all .. especially for indo wrt members and fan of OpenWrt or DBAI Community
+	luci-theme-alpha
+	Copyright 2024 derisamedia <facebook.com/derisamedia>
+	Have a bug? Please create an issue here on GitHub!
+
+	luci-theme-material
+	Copyright 2015 Lutty Yang <lutty@wcan.in>
+
+	luci-theme-bootstrap:
+	Copyright 2008 Steven Barth <steven@midlink.org>
+	Copyright 2008 Jo-Philipp Wich <jow@openwrt.org>
+	Copyright 2012 David Menting <david@nut-bolt.nl>
+
+	MUI:
+	https://github.com/muicss/mui
+
+	Licensed to the public under the Apache License 2.0
+-%>
+<% 
+local ver = require "luci.version"
+local uci = require "luci.model.uci".cursor()
+local config = uci:get_all("alpha", "config")
+local icon = {
+	['/cgi-bin/luci/admin/status/overview'] = '/gaya/icon/navbar/status.png',
+	['/cgi-bin/luci/admin/services/ttyd'] = '/gaya/icon/navbar/terminal.png',
+	['/cgi-bin/luci/admin/services/openclash'] = '/gaya/icon/navbar/oc.png',
+	['/cgi-bin/luci/admin/nas/tinyfm'] = '/gaya/icon/navbar/nas.png',
+	['/cgi-bin/luci/admin/modem/main'] = '/gaya/icon/navbar/modem.png',
+	['/cgi-bin/luci/admin/network/network'] = '/gaya/icon/navbar/interface.png',
+	['/cgi-bin/luci/admin/services/neko'] = '/gaya/icon/navbar/neko.png'
+}
+
+local function getLink(nav)
+	local link = config[nav]
+	return (link and link ~= "none") and link or nil
+end
+
+local num_links = 0
+for i = 1, 6 do
+	local nav_key = 'nav_0' .. i
+	local link = getLink(nav_key)
+	if link then
+		num_links = num_links + 1
+	end
+end
+
+local link_width = string.format("calc(100%% / %d)", num_links)
+local blur_value = tonumber(config.blur)
+local link_blur = string.format("blur(%dpx)", blur_value)
+local background_color = config.color
+%>
+
+<style>
+.main>.main-left, .cbi-section, .cbi-section-error, #iptables, .Firewall form, #cbi-network>.cbi-section-node, #cbi-wireless>.cbi-section-node, #cbi-wireless>#wifi_assoclist_table, [data-tab-title], [data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear), [data-page="admin-system-opkg"] #maincontent>.container, .tabs, .cbi-tabmenu, .cbi-tooltip {
+	background-color: <%=background_color%>;
+	backdrop-filter: <%=link_blur%>;
+	-webkit-backdrop-filter: <%=link_blur%>;
+}
+
+@media screen and (max-width: 720px) {
+	.navbar a {
+		width: <%=link_width%>;
+	}
+}
+</style>
+
+</div>
+<footer class="mobile">
+	<a href="https://github.com/derisamedia/luci-theme-alpha"><%=ver.luciname%> | <%=ver.luciversion%> | Alpha OS Theme v3.9</a>
+</footer>
+</div>
+<div class="navbar active">
+	<div class="dropdown">
+		<% for i = 1, 6 do 
+			local nav_key = 'nav_0' .. i
+			local link = getLink(nav_key)
+			if link then %>
+				<a href="<%=link%>">
+					<img src="<%=media%><%=icon[link]%>" />
+				</a>
+			<% end
+		end %>
+	</div>
+	<label class="toggler">
+		<img src="<%=media%>/gaya/icon/arrow.svg">
+	</label>
+</div>
+<script>
+{
+	const nav = document.querySelector(".navbar");
+	let lastScrollY = window.scrollY;
+	window.addEventListener("scroll", () => {
+		if (lastScrollY < window.scrollY) {
+			nav.classList.add("navbar--hidden");
+		} 
+		else {
+			nav.classList.remove("navbar--hidden");
+		}
+		lastScrollY = window.scrollY;
+	});
+}
+</script>
+</div>
+<script type="text/javascript">L.require('menu-alpha')</script>
+<script src="<%=media%>/app.js"></script>
+</body>
+</html>
