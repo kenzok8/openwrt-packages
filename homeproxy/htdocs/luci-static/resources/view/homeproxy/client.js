@@ -156,8 +156,8 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.taboption('routing', form.Value, 'dns_server', _('DNS server'),
-			_('You can only have one server set. It MUST support TCP query.'));
-		o.value('wan', _('Use DNS server from WAN'));
+			_('It MUST support TCP query.'));
+		o.value('wan', _('WAN DNS (read from interface)'));
 		o.value('1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
 		o.value('208.67.222.222', _('Cisco Public DNS (208.67.222.222)'));
 		o.value('8.8.8.8', _('Google Public DNS (8.8.8.8)'));
@@ -182,27 +182,37 @@ return view.extend({
 		}
 
 		if (features.hp_has_chinadns_ng) {
-			o = s.taboption('routing', form.Value, 'china_dns_server', _('China DNS server'),
-				_('You can only have two servers set at maximum.'));
-			o.value('', _('Disable'));
-			o.value('wan', _('Use DNS server from WAN'));
-			o.value('wan_114', _('Use DNS server from WAN + 114DNS'));
+			o = s.taboption('routing', form.DynamicList, 'china_dns_server', _('China DNS server'));
+			o.value('wan', _('WAN DNS (read from interface)'));
 			o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
 			o.value('210.2.4.8', _('CNNIC Public DNS (210.2.4.8)'));
 			o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
 			o.value('114.114.114.114', _('Xinfeng Public DNS (114.114.114.114)'));
 			o.depends('routing_mode', 'bypass_mainland_china');
-			o.validate = function(section_id, value) {
-				if (section_id && value && !['wan', 'wan_114'].includes(value)) {
-					var dns_servers = value.split(',');
-					var ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
+			o.validate = function(section_id) {
+				if (section_id) {
+					var value = this.map.lookupOption('china_dns_server', section_id)[0].formvalue(section_id);
+					if (value.length < 1)
+						return true;
 
-					if (dns_servers.length > 2)
+					if (!features.hp_has_chinadns_ng_v2 && value.length > 2)
 						return _('You can only have two servers set at maximum.');
 
-					for (var i of dns_servers)
-						if (!stubValidator.apply((ipv6_support === '1') ? 'ipaddr' : 'ip4addr', i))
-							return _('Expecting: %s').format(_('valid IP address'));
+					for (var dns of value) {
+						var ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
+						if (dns === 'wan') {
+							continue;
+						} else {
+							var err = _('Expecting: %s').format(_('valid address#port'));
+							dns = dns.split('#');
+							if (dns.length > 2)
+								return err;
+							if (!stubValidator.apply((ipv6_support === '1') ? 'ipaddr' : 'ip4addr', dns[0]))
+								return err;
+							if (dns[1] && !stubValidator.apply('port', dns[1]))
+								return err;
+						}
+					}
 				}
 
 				return true;
@@ -299,6 +309,7 @@ return view.extend({
 		so = ss.option(form.Flag, 'endpoint_independent_nat', _('Enable endpoint-independent NAT'),
 			_('Performance may degrade slightly, so it is not recommended to enable on when it is not needed.'));
 		so.default = so.enabled;
+		so.depends('tcpip_stack', 'mixed');
 		so.depends('tcpip_stack', 'gvisor');
 		so.rmempty = false;
 

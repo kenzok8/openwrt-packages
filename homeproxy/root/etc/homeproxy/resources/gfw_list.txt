@@ -338,6 +338,7 @@ appdownloader.net
 appledaily.com
 appledaily.com.hk
 appledaily.com.tw
+apps.evozi.com
 appshopper.com
 appsocks.net
 appspot.com
@@ -347,6 +348,7 @@ ar.hao123.com
 archive.fo
 archive.is
 archive.li
+archive.md
 archive.org
 archive.ph
 archive.today
@@ -634,7 +636,6 @@ blogger.com
 blogimg.jp
 bloglines.com
 bloglovin.com
-blogs.icerocket.com
 blogs.libraryinformationtechnology.com
 blogs.tampabay.com
 blogs.yahoo.co.jp
@@ -817,6 +818,7 @@ c-span.org
 c-spanvideo.org
 c100tibet.org
 c2cx.com
+cableav.tv
 cablegatesearch.net
 cachinese.com
 cacnw.com
@@ -896,6 +898,7 @@ cdn-images.mailchimp.com
 cdn-telegram.org
 cdn.assets.lfpcontent.com
 cdn.helixstudios.net
+cdn.jwplayer.com
 cdn.printfriendly.com
 cdn.seatguru.com
 cdn.softlayer.net
@@ -1045,6 +1048,7 @@ chubold.com
 chubun.com
 churchinhongkong.org
 chushigangdrug.ch
+ciciai.com
 cienen.com
 cineastentreff.de
 cipfg.org
@@ -1174,6 +1178,7 @@ costco.com
 cotweet.com
 counter.social
 coursehero.com
+coze.com
 cpj.org
 cq99.us
 crackle.com
@@ -1607,6 +1612,7 @@ etaa.org.au
 etadult.com
 etaiwannews.com
 etherdelta.com
+ethermine.org
 etherscan.io
 etizer.org
 etokki.com
@@ -1643,6 +1649,7 @@ eyny.com
 ezpc.tk
 ezpeer.com
 ezua.com
+f2pool.com
 f8.com
 fa.gov.tw
 facebook.br
@@ -2649,6 +2656,7 @@ hrcchina.org
 hrcir.com
 hrea.org
 hrichina.org
+hrntt.org
 hrtsea.com
 hrw.org
 hrweb.org
@@ -2734,6 +2742,7 @@ ibros.org
 ibvpn.com
 icams.com
 ice.audionow.com
+icedrive.net
 icij.org
 icl-fi.org
 icoco.com
@@ -3655,6 +3664,7 @@ newlandmagazine.com.au
 newmitbbs.com
 newnews.ca
 news.cnyes.com
+news.ebc.net.tw
 news.hk.msn.com
 news.msn.com.tw
 news.nationalgeographic.com
@@ -3753,6 +3763,7 @@ noxinfluencer.com
 noypf.com
 npa.go.jp
 npa.gov.tw
+npm.gov.tw
 npnt.me
 nps.gov
 npsboost.com
@@ -4131,6 +4142,7 @@ postimg.org
 posts.careerengine.us
 potato.im
 potvpn.com
+pourquoi.tw
 power.com
 powerapple.com
 powercx.com
@@ -4369,6 +4381,7 @@ ronjoneswriter.com
 roodo.com
 rosechina.net
 rotten.com
+rou.video
 rsdlmonitor.com
 rsf-chinese.org
 rsf.org
@@ -6080,6 +6093,7 @@ yzzk.com
 z-lib.org
 zacebook.com
 zalmos.com
+zamimg.com
 zannel.com
 zaobao.com
 zaobao.com.sg
