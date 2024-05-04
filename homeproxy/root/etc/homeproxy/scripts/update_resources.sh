@@ -95,8 +95,8 @@ case "$1" in
 	check_list_update "$1" "Loyalsoldier/v2ray-rules-dat" "release" "gfw.txt"
 	;;
 "china_list")
-	check_list_update "$1" "Loyalsoldier/v2ray-rules-dat" "release" "direct-list.txt"
-	sed -i -e "s/full://g" -e "/:/d" "$RESOURCES_DIR/china_list.txt"
+	check_list_update "$1" "Loyalsoldier/v2ray-rules-dat" "release" "direct-list.txt" && \
+		sed -i -e "s/full://g" -e "/:/d" "$RESOURCES_DIR/china_list.txt"
 	;;
 *)
 	echo -e "Usage: $0 <china_ip4 / china_ip6 / gfw_list / china_list>"
