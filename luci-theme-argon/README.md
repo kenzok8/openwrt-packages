@@ -15,7 +15,7 @@
 [issues]: https://github.com/jerrykuku/luci-theme-argon/issues/new
 [issues-badge]: https://img.shields.io/badge/Issues-welcome-brightgreen.svg?style=flat-square
 [release]: https://github.com/jerrykuku/luci-theme-argon/releases
-[release-badge]: https://img.shields.io/github/v/release/jerrykuku/luci-theme-argon?include_prereleases&style=flat-square
+[release-badge]: https://img.shields.io/github/v/release/jerrykuku/luci-theme-argon?style=flat-square
 [download]: https://github.com/jerrykuku/luci-theme-argon/releases
 [download-badge]: https://img.shields.io/github/downloads/jerrykuku/luci-theme-argon/total?style=flat-square
 [contact]: https://t.me/jerryk6
