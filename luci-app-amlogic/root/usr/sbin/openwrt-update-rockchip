@@ -158,6 +158,14 @@ case $MYDEVICE_NAME in
 		fi
 		SOC="ht2"
 		;;
+	"Radxa E20C")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3528-radxa-e20c.dtb"
+		fi
+		SOC="e20c"
+		;;
 	"Ariaboard Photonicat")
 		if [ -n "${CURRENT_FDTFILE}" ]; then
 			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
