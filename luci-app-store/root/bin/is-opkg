@@ -7,7 +7,10 @@ DL_DIR=${IS_ROOT}/tmp/dl
 LISTS_DIR_O=/tmp/opkg-lists
 LISTS_DIR=${IS_ROOT}${LISTS_DIR_O}
 OPKG_CONF_DIR=${IS_ROOT}/etc/opkg
+OPKG_CONF_DIR_M=${IS_ROOT}/etc/opkg_m
 FEEDS_SERVER=https://istore.linkease.com/repo
+FEEDS_SERVER_MIRRORS="https://repo.istoreos.com/repo"
+DISABLE_MIRROR=false
 ARCH=`sed -n -e 's/^Architecture: *\([^ ]\+\) *$/\1/p' /rom/usr/lib/opkg/info/libc.control /usr/lib/opkg/info/libc.control 2>/dev/null | head -1`
 
 # for istore self upgrade
@@ -39,9 +42,32 @@ opkg_wrap() {
     OPKG_CONF_DIR=${OPKG_CONF_DIR} opkg -f ${IS_ROOT}/etc/opkg.conf "$@"
 }
 
-fcurl() {
-    curl --fail --show-error "$@"
+opkg_wrap_mirrors() {
+    local server
+    local file
+    if ! $DISABLE_MIRROR; then
+        for server in $FEEDS_SERVER_MIRRORS ; do
+            rm -rf "${OPKG_CONF_DIR_M}" 2>/dev/null
+            mkdir -p "${OPKG_CONF_DIR_M}" 2>/dev/null
+            ls "${OPKG_CONF_DIR}/" | while read; do
+                file="$REPLY"
+                if [ -f "${OPKG_CONF_DIR}/$file" -a "${file: -5}" = ".conf" ]; then
+                    sed "s#$FEEDS_SERVER/#$server/#g" "${OPKG_CONF_DIR}/$file" >"${OPKG_CONF_DIR_M}/$file"
+                    touch -r "${OPKG_CONF_DIR}/$file" "${OPKG_CONF_DIR_M}/$file" 2>/dev/null
+                else
+                    cp -a "${OPKG_CONF_DIR}/$file" "${OPKG_CONF_DIR_M}/"
+                fi
+            done
+            echo "Try mirror server $server"
+            OPKG_CONF_DIR=${OPKG_CONF_DIR_M} opkg -f ${IS_ROOT}/etc/opkg.conf "$@" && return 0
+        done
+        DISABLE_MIRROR=true
+    fi
+    echo "Try origin server $FEEDS_SERVER"
+    OPKG_CONF_DIR=${OPKG_CONF_DIR} opkg -f ${IS_ROOT}/etc/opkg.conf "$@"
 }
+
+alias fcurl='curl -L --fail --show-error'
 
 check_space() {
     local free="$((`stat -c '%a * %S'  -f /` >> 20 ))"
@@ -140,10 +166,10 @@ step_upgrade() {
         fi
     done
     if [ -n "$pkgs" ]; then
-        opkg_wrap upgrade $pkgs || return 1
+        opkg_wrap_mirrors upgrade $pkgs || return 1
     fi
     if [ -n "$metapkg" ]; then
-        opkg_wrap upgrade $metapkg || return 1
+        opkg_wrap_mirrors upgrade $metapkg || return 1
     fi
     return 0
 }
@@ -186,7 +212,7 @@ case $action in
     ;;
     "install")
         check_space
-        wrapped_in_update opkg_wrap install "$@"
+        wrapped_in_update opkg_wrap_mirrors install "$@"
     ;;
     "upgrade")
         new_upgrade "$@"
