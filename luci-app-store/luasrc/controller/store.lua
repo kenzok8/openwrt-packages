@@ -25,6 +25,7 @@ function index()
     entry({"admin", "store", "check_self_upgrade"}, call("check_self_upgrade"))
     entry({"admin", "store", "do_self_upgrade"}, post("do_self_upgrade"))
     entry({"admin", "store", "toggle_docker"}, post("toggle_docker"))
+    entry({"admin", "store", "toggle_arch"}, post("toggle_arch"))
 
     for _, action in ipairs({"update", "install", "upgrade", "remove"}) do
         store_api(action, true)
@@ -73,6 +74,8 @@ local function user_config()
 
     local data = {
         hide_docker = uci:get("istore", "istore", "hide_docker") == "1",
+        ignore_arch = uci:get("istore", "istore", "ignore_arch") == "1",
+        super_arch = uci:get("istore", "istore", "super_arch"),
         channel = uci:get("istore", "istore", "channel")
     }
     return data
@@ -753,6 +756,15 @@ function toggle_docker()
     local uci  = require "luci.model.uci".cursor()
     local hide = luci.http.formvalue("hide")
     uci:set("istore", "istore", "hide_docker", hide == "true" and "1" or "0")
+    uci:commit("istore")
+    luci.http.prepare_content("application/json")
+    luci.http.write_json({code = 200, msg = "Success"})
+end
+
+function toggle_arch()
+    local uci  = require "luci.model.uci".cursor()
+    local ignore = luci.http.formvalue("ignore")
+    uci:set("istore", "istore", "ignore_arch", ignore == "true" and "1" or "0")
     uci:commit("istore")
     luci.http.prepare_content("application/json")
     luci.http.write_json({code = 200, msg = "Success"})

@@ -2,4 +2,11 @@
 
 /etc/init.d/istore boot
 
+if [ -z "`uci -q get istore.istore.hide_docker`" ] && ! which docker >/dev/null; then
+    uci -q batch <<-EOF >/dev/null
+        set istore.istore.hide_docker=1
+        commit istore
+EOF
+fi
+
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache

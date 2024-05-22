@@ -1,3 +1,6 @@
 config istore 'istore'
-    option hide_docker '0'
+#    option hide_docker '0'
+#    option ignore_arch '0'
 #    option channel 'istore'
+#    option super_arch 'x86_64'
+#    option super_arch 'aarch64'
