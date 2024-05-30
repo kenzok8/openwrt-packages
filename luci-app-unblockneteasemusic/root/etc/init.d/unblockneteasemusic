@@ -76,7 +76,6 @@ start_service() {
 	local update_time
 	config_get update_time "config" "update_time" "3"
 	sed -i "/$NAME/d" /etc/crontabs/root
-	echo -e "30 2 * * * /etc/init.d/unblockneteasemusic" >> "/etc/crontabs/root"
 	! is_enabled "config" "auto_update" || echo -e "0 ${update_time} * * * $UNM_DIR/update.sh update_core" >> "/etc/crontabs/root"
 	/etc/init.d/cron restart
 
