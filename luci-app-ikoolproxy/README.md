@@ -1,4 +1,5 @@
-## 无法下载证书声明：
+
+## 无法下载证书声明（已经解决，现在已经可以用于openssl3.0）：
 目前因为openwrt的openssl升级为3.0了。导致ikoolproxy无法下载证书。lean大佬的lede可以回退。openwrt则不行。
 
 ## 整理声明：

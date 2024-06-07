@@ -15,7 +15,7 @@ else
 	rm -f serial private/ca.key.pem
 	chmod 700 private
 	echo 1000 > serial
-	openssl genrsa -aes256 -passout pass:koolshare -out private/ca.key.pem 2048
+	openssl genrsa -traditional -aes256 -passout pass:koolshare -out private/ca.key.pem 2048
 	chmod 400 private/ca.key.pem
 	openssl req -config openssl.cnf -passin pass:koolshare \
 		-subj "/C=CN/ST=Beijing/L=KP/O=KoolProxy inc/CN=koolproxy.com" \
@@ -24,6 +24,6 @@ else
 		-out certs/ca.crt
 
 	#step 2, domain rsa key
-	openssl genrsa -aes256 -passout pass:koolshare -out private/base.key.pem 2048
+	openssl genrsa -traditional -aes256 -passout pass:koolshare -out private/base.key.pem 2048
 	echo_date "证书生成完毕..."
 fi
