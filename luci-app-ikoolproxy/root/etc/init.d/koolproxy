@@ -454,7 +454,7 @@ stop_service() {
 reload_service() {
 	logger "koolproxy reload service."
 	NO_RESTART_DNSMASQ=true
-	stop
+	stop=99
 	start
 }
 
@@ -465,7 +465,7 @@ service_triggers() {
 restart() {
 	logger "koolproxy restart service."
 	NO_RESTART_DNSMASQ=true
-	stop
+	stop=99
 	start
 }
 
