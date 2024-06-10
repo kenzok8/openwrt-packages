@@ -9,7 +9,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=alist
 PKG_VERSION:=3.35.0
 PKG_WEB_VERSION:=3.35.0
-PKG_RELEASE:=7
+PKG_RELEASE:=8
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/alist-org/alist/tar.gz/v$(PKG_VERSION)?
@@ -32,10 +32,13 @@ PKG_USE_MIPS16:=0
 PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/alist-org/alist
-GO_PKG_LDFLAGS:=-w -s
-GO_PKG_LDFLAGS_X:= \
-	$(GO_PKG)/v3/internal/conf.Version=v$(PKG_VERSION)-$(ARCH) \
-	$(GO_PKG)/v3/internal/conf.WebVersion=$(PKG_WEB_VERSION)
+GO_PKG_LDFLAGS:= \
+	-X '$(GO_PKG)/v3/internal/conf.BuiltAt=$(shell date '+%Y-%m-%d %H:%M:%S %z')' \
+	-X '$(GO_PKG)/v3/internal/conf.GoVersion=$(shell $(STAGING_DIR_HOSTPKG)/bin/go version | sed 's/go version //')' \
+	-X '$(GO_PKG)/v3/internal/conf.GitAuthor=Xhofe <i@nn.ci>' \
+	-X '$(GO_PKG)/v3/internal/conf.GitCommit=tarball/$(shell echo $(PKG_HASH) | cut -c 1-7)' \
+	-X '$(GO_PKG)/v3/internal/conf.Version=v$(PKG_VERSION) (OpenWrt $(ARCH_PACKAGES))' \
+	-X '$(GO_PKG)/v3/internal/conf.WebVersion=$(PKG_WEB_VERSION)'
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
@@ -72,10 +75,10 @@ endif
 
 define Build/Prepare
 	$(call Build/Prepare/Default)
-	$(eval $(call Download,$(PKG_NAME)-web))
 	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/public/dist -xzf $(DL_DIR)/$(PKG_NAME)-web-$(PKG_WEB_VERSION).tar.gz
+	$(SED) 's_https://jsd.nn.ci/gh/alist-org/logo@main/logo.png_/assets/logo.png_g' $(PKG_BUILD_DIR)/public/dist/index.html
 ifneq ($(CONFIG_ARCH_64BIT),y)
-	$(RM) -rf $(PKG_BUILD_DIR)/{drivers/lark.go,drivers/lark}
+	$(RM) -rf $(PKG_BUILD_DIR)/drivers/{lark,lark.go}
 endif
 endef
 
@@ -89,4 +92,5 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DATA) $(CURDIR)/files/data.db $(1)/etc/alist/data.db
 endef
 
+$(eval $(call Download,$(PKG_NAME)-web))
 $(eval $(call BuildPackage,$(PKG_NAME)))
