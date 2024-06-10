@@ -8,6 +8,7 @@
 #
 
 START=99
+STOP=99
 USE_PROCD=1
 
 CONFIG=koolproxy
@@ -454,7 +455,7 @@ stop_service() {
 reload_service() {
 	logger "koolproxy reload service."
 	NO_RESTART_DNSMASQ=true
-	stop=99
+	stop
 	start
 }
 
@@ -465,7 +466,7 @@ service_triggers() {
 restart() {
 	logger "koolproxy restart service."
 	NO_RESTART_DNSMASQ=true
-	stop=99
+	stop
 	start
 }
 
