@@ -10,7 +10,7 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/pymumu/smartdns/tar.gz/Release$(PKG_VERSION)?
-PKG_MIRROR_HASH:=6594d21c0e354b67d4b5918e11eff21e6314e247b9e6e28be1ece4168c368fc1
+PKG_HASH:=6594d21c0e354b67d4b5918e11eff21e6314e247b9e6e28be1ece4168c368fc1
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-Release$(PKG_VERSION)
 
 PKG_MAINTAINER:=Nick Peng <pymumu@gmail.com>
