@@ -8,6 +8,7 @@
 #
 
 START=99
+STOP=99
 USE_PROCD=1
 
 CONFIG=koolproxy

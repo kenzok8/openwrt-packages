@@ -1,7 +1,6 @@
 ## 更新：2024年6月10日：
 1、修复openssl3.0无法下载证书问题，感谢[Black-Steel](https://github.com/Black-Steel)
 2、修复init.d目录下的脚本有stop实现，但是没定义停止编号。会导致一些异常。感谢[lnc1995](https://github.com/lnc1995)
-3、重新移动目录，方便编译ipk。
 
 ## 更新：2024年1月24日：
 1、支持5.10以及以上内核。但是因为openssl升级可能会导致证书无法下载。目前lean的openssl可以回退到老的版本即可。
