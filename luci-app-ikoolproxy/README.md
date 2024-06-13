@@ -64,7 +64,7 @@ CONFIG_PACKAGE_ca-bundle=y
 
 CONFIG_PACKAGE_ca-certificates=y
 
-CONFIG_PACKAGE_libustream-openssl=n  
+CONFIG_PACKAGE_libustream-openssl=y
 
 CONFIG_PACKAGE_lua-openssl=y
 
