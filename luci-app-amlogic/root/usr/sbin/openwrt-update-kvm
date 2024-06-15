@@ -23,7 +23,7 @@ WORK_DIR="${4}"
 DEPENDS="lsblk uuidgen grep awk btrfs mkfs.fat mkfs.btrfs md5sum fatlabel jq"
 echo "Check the necessary dependencies..."
 for dep in ${DEPENDS}; do
-    WITCH=$(which ${dep})
+    WITCH=$(busybox which ${dep})
     if [ "${WITCH}" == "" ]; then
         echo "Dependent command: ${dep} does not exist, upgrade cannot be performed!"
         exit 1
