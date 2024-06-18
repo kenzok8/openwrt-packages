@@ -2767,7 +2767,7 @@
  }
 
  .cbi-rowstyle-2 {
- 	/*background-color: 0px;*/
+ 	background-color: ;
  }
 
  .pull-right,
@@ -3573,7 +3573,14 @@
  .cbi-value-field .cbi-input-select,
  .cbi-value input[type="text"],
  .node-system-packages>.main .cbi-value .cbi-value-field input {
- 	color: #fff;
+    width: 100%;
+    display: flex;
+    color: #fff;
+    flex-direction: column-reverse;
+    flex-wrap: wrap;
+    align-content: stretch;
+    align-items: flex-start;
+}
  }
 
  .cbi-page-actions>div>input,
