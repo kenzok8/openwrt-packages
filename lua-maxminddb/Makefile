@@ -7,17 +7,16 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lua-maxminddb
 PKG_VERSION:=0.2
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_RELEASE:=2
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/fabled/lua-maxminddb.git
 PKG_SOURCE_DATE:=2019-03-14
 PKG_SOURCE_VERSION:=93da9f4e6c814c3a23044dd2cdd22d4a6b4f665b
-PKG_MIRROR_HASH:=b99ef18516b705b3e73b15a9d5ddc99add359299b52639fe3c81dd761591d9d9
+PKG_MIRROR_HASH:=e70dd8843c3688b58f66fff5320a93d5789b79114bcb36a94d5b554664439f04
 
 PKG_LICENSE:=MIT
-PKG_LICENSE_FILE:=LICENSE
-PKG_MAINTAINER:=fabled
+PKG_LICENSE_FILES:=LICENSE
 
 PKG_BUILD_PARALLEL:=1
 
@@ -28,7 +27,7 @@ define Package/lua-maxminddb
   SECTION:=lang
   CATEGORY:=Languages
   TITLE:=libmaxminddb bindings for lua
-  URL:=https://github.com/jerrykuku/lua-maxminddb
+  URL:=https://github.com/fabled/lua-maxminddb
   DEPENDS:=+lua +libmaxminddb
 endef
 
