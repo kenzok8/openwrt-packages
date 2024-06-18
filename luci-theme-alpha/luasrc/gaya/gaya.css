@@ -825,6 +825,7 @@
  	user-select: none;
  }
 
+ .main>.main-left>.nav>li>[data-title="Log out"],
  .main>.main-left>.nav>li>[data-title="Logout"] {
  	display: flex;
  	padding: 0.5rem 1rem;
@@ -835,6 +836,7 @@
  	color: #cbcbcb;
  }
 
+ .main>.main-left>.nav>li>[data-title="Log out"],
  .main>.main-left>.nav>li>[data-title="Logout"],
  .main>.main-left>.nav>li>[data-title="iStore"] {
  	font-size: 1rem;
@@ -1042,7 +1044,8 @@
  	transition: transform 0.2s ease-in-out;
  }
 
- .main>.main-left>.nav>li>[data-title="Logout"]::before {
+ .main>.main-left>.nav>li>[data-title="Logout"]::before,
+ .main>.main-left>.nav>li>[data-title="Log out"]::before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -1073,6 +1076,7 @@
  .main>.main-left>.nav>.slide>.menu,
  .main>.main-left>.nav>.slide>.slide-menu>li,
  .main>.main-left>.nav>li>[data-title="Logout"],
+ .main>.main-left>.nav>li>[data-title="Log out"],
  .main>.main-left>.nav>li>[data-title="iStore"] {
  	position: relative;
  	overflow: hidden;
@@ -1082,6 +1086,7 @@
  .main>.main-left>.nav>.slide>.menu::after,
  .main>.main-left>.nav>.slide>.slide-menu>li::after,
  .main>.main-left>.nav>li>[data-title="Logout"]::after,
+ .main>.main-left>.nav>li>[data-title="Log out"]::after,
  .main>.main-left>.nav>li>[data-title="iStore"]::after {
  	position: absolute;
  	top: 0;
@@ -1102,6 +1107,7 @@
  .main>.main-left>.nav>.slide>.menu:active::after,
  .main>.main-left>.nav>.slide>.slide-menu>li:active::after,
  .main>.main-left>.nav>li>[data-title="Logout"]:active::after,
+ .main>.main-left>.nav>li>[data-title="Log out"]:active::after,
  .main>.main-left>.nav>li>[data-title="iStore"]:active::after {
  	transition: 0s;
  	transform: scale(0, 0);
@@ -1858,7 +1864,7 @@
  	min-height: 20px;
  	white-space: nowrap;
  	text-overflow: ellipsis;
- 	padding: 0.3rem;
+     padding: 0.3rem 1rem 0.3rem 1rem;
  }
 
  .cbi-dropdown>ul>li[display]:not([display="0"]) {
@@ -2091,6 +2097,7 @@
 
  .spinning {
  	position: relative;
+	align-items: center;
  	padding-left: 32px !important;
  	color: #fff;
  }
@@ -2100,8 +2107,8 @@
  	font-size: medium;
  	font-style: "Quicksand-Bold";
  	left: 8px;
- 	width: 20px;
- 	height: 20px;
+ 	width: 16px;
+ 	height: 16px;
  	content: "";
  	animation: anim-rotate 2s infinite cubic-bezier(0.18, 0.89, 0.32, 1.28);
  	background: url(./icon/loading.svg) no-repeat center;
@@ -2311,6 +2318,7 @@
  	align-content: center;
  	justify-content: flex-start;
  	align-items: center;
+	color: #fff;
  }
 
  div.ifacebox-head {
@@ -3132,6 +3140,7 @@
  	.main>.main-left>.nav>li a,
  	.main>.main-left>.nav>.slide>.menu,
  	.main>.main-left>.nav>li>[data-title="Logout"],
+	.main>.main-left>.nav>li>[data-title="Logout"],
   .main>.main-left>.nav>li>[data-title="iStore"] {
  		font-size: 1rem;
  		color: #fff;
@@ -3405,6 +3414,7 @@
 
  .main>.main-left>.nav>.slide>.menu,
  .main>.main-left>.nav>li>[data-title="Logout"],
+ .main>.main-left>.nav>li>[data-title="Log out"],
  .main>.main-left>.nav>li>[data-title="iStore"] {
  	font-size: 1.1rem;
  }
@@ -3564,7 +3574,7 @@
  .cbi-value-field .cbi-input-select,
  .cbi-value input[type="text"],
  .node-system-packages>.main .cbi-value .cbi-value-field input {
- 	width: 30%;
+ 	width: 5rem;
  	color: #fff;
  }
 
@@ -3583,6 +3593,7 @@
  input {
  	font-size: 0.9rem;
  }
+
 
  @media screen and (min-width: 600px) {
  	::-webkit-scrollbar {

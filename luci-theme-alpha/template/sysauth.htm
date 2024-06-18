@@ -17,7 +17,7 @@
 <script src="/luci-static/resources/cbi.js?v=git-22.339.35089-7af4a64"></script>
 
 
-<title>Alpha - Login Dulu</title>
+<title>Alpha - Login</title>
 </head>
 		
 <body class="lang_en  node-main-login" data-page="" style="background-image:url('/luci-static/alpha/background/dashboard.png')">
@@ -26,7 +26,7 @@
 			<div class="container">
 				<span class="showSide"></span>
 				<img class="tengah" src="/luci-static/alpha/style/brand.png" />
-				<img class="bawah" src="/luci-static/alpha/style/indo-wrt.png" />
+				<img class="bawah" src="/luci-static/alpha/style/openwrt20thanniversary.png" />
 				<span class="status" id="indicators"></span>
 			</div>
 		</div>
@@ -50,7 +50,7 @@
 				<form method="post" action="<%=pcdata(FULL_REQUEST_URI)%>">
 					<%- if fuser then %>
 						<div class="alert-message warning">
-							<p><%:Sandi gagal,silahkan ulangi.%></p>
+							<p><%:Wrong Password. Try Again.%></p>
 						</div>
 					<% end -%>
 				</label>
