@@ -77,7 +77,7 @@
         container.querySelector(".dialog-icon-close").hidden = true;
         term.write(content);
     };
-    const show_log = function(task_id, nohide) {
+    const show_log = function(task_id, nohide, onExit) {
         let showing = true;
         let running = true;
         const dialog = create_dialog({title:task_id, nohide, onhide:function(){showing=false;}});
@@ -113,6 +113,7 @@
                     if (data.exit_code) {
                         container.classList.add('tasks_failed');
                     }
+                    onExit && onExit(data.exit_code);
                 }
                 // last pull
                 return showing;

@@ -26,6 +26,9 @@ function index()
     entry({"admin", "store", "do_self_upgrade"}, post("do_self_upgrade"))
     entry({"admin", "store", "toggle_docker"}, post("toggle_docker"))
     entry({"admin", "store", "toggle_arch"}, post("toggle_arch"))
+    entry({"admin", "store", "get_block_devices"}, call("get_block_devices"))
+
+    entry({"admin", "store", "configured"}, call("configured"))
 
     for _, action in ipairs({"update", "install", "upgrade", "remove"}) do
         store_api(action, true)
@@ -45,7 +48,6 @@ function index()
         entry({"admin", "store", "get_available_backup_file_list"}, call("get_available_backup_file_list"))
         entry({"admin", "store", "set_local_backup_dir_path"}, post("set_local_backup_dir_path"))
         entry({"admin", "store", "get_local_backup_dir_path"}, call("get_local_backup_dir_path"))
-        entry({"admin", "store", "get_block_devices"}, call("get_block_devices"))
     end
 end
 
@@ -69,7 +71,7 @@ local function user_id()
     return id
 end
 
-local function user_config() 
+local function user_config()
     local uci  = require "luci.model.uci".cursor()
 
     local data = {
@@ -213,6 +215,10 @@ local function _action(exe, cmd, ...)
     return is_exec(c, true)
 end
 
+function validate_pkgname(val)
+	return (val ~= nil and val:match("^[a-zA-Z0-9_]+$") ~= nil)
+end
+
 function store_action(param)
     local metadir = "/usr/lib/opkg/meta"
     local metapkgpre = "app-meta-"
@@ -225,6 +231,10 @@ function store_action(param)
 
     if action == "status" then
         local pkg = luci.http.formvalue("package")
+        if not validate_pkgname(pkg) then
+            luci.http.status(400, "Bad Request")
+            return
+        end
         local metapkg = metapkgpre .. pkg
         local meta = {}
         local metadata = fs.readfile(metadir .. "/" .. pkg .. ".json")
@@ -277,10 +287,25 @@ function store_action(param)
         ret = data
     else
         local pkg = luci.http.formvalue("package")
+        if not validate_pkgname(pkg) then
+            luci.http.status(400, "Bad Request")
+            return
+        end
         local metapkg = pkg and (metapkgpre .. pkg) or ""
         if action == "update" or pkg then
             if action == "update" or action == "install" then
-                code, out, err = _action(myopkg, action, metapkg)
+                if action == "install" and "1" == luci.http.formvalue("autoconf") then
+                    local autoenv = "AUTOCONF=" .. pkg
+                    local autopath = luci.http.formvalue("path")
+                    local autoenable = luci.http.formvalue("enable")
+                    if autopath ~= nil then
+                        autoenv = autoenv .. " path=" .. luci.util.shellquote(autopath)
+                    end
+                    autoenv = autoenv .. " enable=" .. autoenable
+                    code, out, err = _action(myopkg, luci.util.shellquote(autoenv), action, metapkg)
+                else
+                    code, out, err = _action(myopkg, action, metapkg)
+                end
             else
                 local meta = json_parse(fs.readfile(metadir .. "/" .. pkg .. ".json"))
                 local pkgs = {}
@@ -366,6 +391,17 @@ function store_upload()
     }
     luci.http.prepare_content("application/json")
     luci.http.write_json(ret)
+end
+
+function configured()
+    local uci = luci.http.formvalue("uci")
+    if not validate_pkgname(uci) then
+        luci.http.status(400, "Bad Request")
+        return
+    end
+    local configured = nixio.fs.access("/etc/config/" .. uci)
+    luci.http.prepare_content("application/json")
+    luci.http.write_json({code=200, configured=configured})
 end
 
 local function split(str,reps)
@@ -467,7 +503,7 @@ local function update_local_backup_path(path)
         local f=io.open("/etc/config/istore","a+")
         f:write("config istore \'istore\'\n\toption local_backup_path \'\'")
         f:flush()
-        f:close()        
+        f:close()
     end
 
     if path ~= local_backup_path then
@@ -626,7 +662,7 @@ function get_available_backup_file_list()
     if path ~= "" then
         -- update local backup path
         update_local_backup_path(path)
-        r,o,e = is_exec(is_backup .. " get_available_backup_file_list " .. path)
+        r,o,e = is_exec(is_backup .. " get_available_backup_file_list " .. luci.util.shellquote(path))
         if r ~= 0 then
             error_ret.msg = e
             luci.http.prepare_content("application/json")

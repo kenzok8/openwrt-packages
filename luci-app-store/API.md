@@ -37,8 +37,9 @@
 2. 安装软件
    ```
    POST /cgi-bin/luci/admin/store/install
-   token=xxx&package=upnp
+   token=xxx&package=upnp&autoconf=1&path=/mnt/nvme&enable=1
 
+   autoconf=1&path=/mnt/nvme&enable=1 是可选参数，表示安装完以后是否自动配置插件
 
    {"code":0, "stdout":"", "stderr":""}
    ```
@@ -147,4 +148,14 @@
 
    {"code":500, "msg":"Unable to execute block utility"}
    {"code":200, "data":{"sda1":{"dev":"\/dev\/sda1","uuid":"f54566dd-ec58-4e24-9451-bbf75834add3","version":"1.0","type":"ext4","size":"238.46 GB"},"mmcblk0p2":{"dev":"\/dev\/mmcblk0p2","uuid":"dba3d0dc-f072-4e81-a0ac-ac35197fb286","version":"1.0","label":"etc","mount":"\/overlay","type":"ext4","size":"6.87 GB"},"mmcblk0p1":{"dev":"\/dev\/mmcblk0p1","uuid":"8f9564a1-68006e25-c4c26df6-de88ef16","version":"4.0","mount":"\/rom","type":"squashfs","size":"127.99 MB"}}}
+   ```
+
+3. 检查插件是否已经配置过
+   ```
+   GET /cgi-bin/luci/admin/store/configured?uci=ddnsto
+
+   uci参数是uci配置文件的名称，不是包名，不过大部分情况下都是一致的。
+
+   {"code":200}
+   {"code":200, "configured":true}
    ```

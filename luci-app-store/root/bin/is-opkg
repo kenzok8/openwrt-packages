@@ -2,6 +2,13 @@
 # this script MUST supports executting without luci-app-store installed,
 # so we can use this script to install luci-app-store itself
 
+action=${1}
+shift
+if [ "${action:0:9}" = "AUTOCONF=" ]; then
+    export "ISTORE_${action}"
+    exec "$0" "$@"
+fi
+
 IS_ROOT=/tmp/is-root
 DL_DIR=${IS_ROOT}/tmp/dl
 LISTS_DIR_O=/tmp/opkg-lists
@@ -17,9 +24,6 @@ ARCH=`sed -n -e 's/^Architecture: *\([^ ]\+\) *$/\1/p' /rom/usr/lib/opkg/info/li
 ISTORE_PKG=luci-app-store
 ISTORE_DEP_PKGS="luci-lib-taskd luci-lib-xterm taskd"
 ISTORE_INDEX=https://istore.linkease.com/repo/all/store/Packages.gz
-
-action=${1}
-shift
 
 is_init() {
     mkdir -p ${DL_DIR} ${LISTS_DIR} ${IS_ROOT}/etc ${IS_ROOT}/var
@@ -189,6 +193,35 @@ remove() {
     opkg_wrap --autoremove --force-removal-of-dependent-packages remove "$@"
 }
 
+autoconf_to_env() {
+    local autoconf path enable
+    eval "local autoconf=$ISTORE_AUTOCONF"
+    export -n ISTORE_AUTOCONF
+    export -n ISTORE_DONT_START
+    export -n ISTORE_CONF_DIR
+    export -n ISTORE_CACHE_DIR
+    export -n ISTORE_PUBLIC_DIR
+    export -n ISTORE_DL_DIR
+
+    ISTORE_AUTOCONF=$autoconf
+
+    if [ -n "$path" ]; then
+        export ISTORE_CONF_DIR="$path/Configs"
+        export ISTORE_CACHE_DIR="$path/Caches"
+        export ISTORE_PUBLIC_DIR="$path/Public"
+        export ISTORE_DL_DIR="$ISTORE_PUBLIC_DIR/Downloads"
+    fi
+    [ "$enable" = 0 ] && export ISTORE_DONT_START="1"
+}
+
+try_autoconf() {
+    [ -n "$ISTORE_AUTOCONF" ] || return 0
+    autoconf_to_env
+    [ -n "$ISTORE_AUTOCONF" ] || return 1
+    echo "Auto configure $ISTORE_AUTOCONF"
+    /usr/libexec/istorea/${ISTORE_AUTOCONF}.sh
+}
+
 usage() {
     echo "usage: is-opkg sub-command [arguments...]"
     echo "where sub-command is one of:"
@@ -212,7 +245,7 @@ case $action in
     ;;
     "install")
         check_space
-        wrapped_in_update opkg_wrap_mirrors install "$@"
+        wrapped_in_update opkg_wrap_mirrors install "$@" && try_autoconf
     ;;
     "upgrade")
         new_upgrade "$@"
