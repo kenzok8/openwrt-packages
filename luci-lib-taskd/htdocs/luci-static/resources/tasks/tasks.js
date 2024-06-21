@@ -24,7 +24,7 @@
                 if (oReq.status == 403) {
                     alert($gettext("Lost login status"));
                     location.href = location.href;
-                } else if (oReq.status == 404) {
+                } else if (oReq.status >= 400) {
                     reject(oEvent);
                 } else {
                     resolve(oReq);
@@ -155,7 +155,7 @@
                 }
             }).catch(err => {
                 if (showing) {
-                    if (err.target.status == 0) {
+                    if (err.target.status == 0 || err.target.status == 502) {
                         title_view.innerText = task_id + ' (' + $gettext("Fetch log failed, retrying...") + ')';
                         setTimeout(()=>pulllog(true), 1000);
                     } else if (err.target.status == 403 || err.target.status == 404) {
@@ -183,23 +183,23 @@
     // compat
     if (typeof(window.findParent) !== 'function') {
         const elem = function(e) {
-			return (e != null && typeof(e) == 'object' && 'nodeType' in e);
-		};
+            return (e != null && typeof(e) == 'object' && 'nodeType' in e);
+        };
         const matches = function(node, selector) {
-			var m = elem(node) ? node.matches || node.msMatchesSelector : null;
-			return m ? m.call(node, selector) : false;
-		};
+            var m = elem(node) ? node.matches || node.msMatchesSelector : null;
+            return m ? m.call(node, selector) : false;
+        };
         window.findParent = function (node, selector) {
-	        if (elem(node) && node.closest)
-				return node.closest(selector);
+            if (elem(node) && node.closest)
+                return node.closest(selector);
 
-			while (elem(node))
-				if (matches(node, selector))
-					return node;
-				else
-					node = node.parentNode;
+            while (elem(node))
+                if (matches(node, selector))
+                    return node;
+                else
+                    node = node.parentNode;
 
-			return null;
+            return null;
         };
     }
     if (typeof(window.cbi_submit) !== 'function') {
