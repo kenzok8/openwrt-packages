@@ -156,8 +156,8 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.taboption('routing', form.Value, 'dns_server', _('DNS server'),
-			_('You can only have one server set. It MUST support TCP query.'));
-		o.value('wan', _('Use DNS server from WAN'));
+			_('It MUST support TCP query.'));
+		o.value('wan', _('WAN DNS (read from interface)'));
 		o.value('1.1.1.1', _('CloudFlare Public DNS (1.1.1.1)'));
 		o.value('208.67.222.222', _('Cisco Public DNS (208.67.222.222)'));
 		o.value('8.8.8.8', _('Google Public DNS (8.8.8.8)'));
@@ -182,27 +182,37 @@ return view.extend({
 		}
 
 		if (features.hp_has_chinadns_ng) {
-			o = s.taboption('routing', form.Value, 'china_dns_server', _('China DNS server'),
-				_('You can only have two servers set at maximum.'));
-			o.value('', _('Disable'));
-			o.value('wan', _('Use DNS server from WAN'));
-			o.value('wan_114', _('Use DNS server from WAN + 114DNS'));
+			o = s.taboption('routing', form.DynamicList, 'china_dns_server', _('China DNS server'));
+			o.value('wan', _('WAN DNS (read from interface)'));
 			o.value('223.5.5.5', _('Aliyun Public DNS (223.5.5.5)'));
 			o.value('210.2.4.8', _('CNNIC Public DNS (210.2.4.8)'));
 			o.value('119.29.29.29', _('Tencent Public DNS (119.29.29.29)'));
 			o.value('114.114.114.114', _('Xinfeng Public DNS (114.114.114.114)'));
 			o.depends('routing_mode', 'bypass_mainland_china');
-			o.validate = function(section_id, value) {
-				if (section_id && value && !['wan', 'wan_114'].includes(value)) {
-					var dns_servers = value.split(',');
-					var ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
+			o.validate = function(section_id) {
+				if (section_id) {
+					var value = this.map.lookupOption('china_dns_server', section_id)[0].formvalue(section_id);
+					if (value.length < 1)
+						return true;
 
-					if (dns_servers.length > 2)
+					if (!features.hp_has_chinadns_ng_v2 && value.length > 2)
 						return _('You can only have two servers set at maximum.');
 
-					for (var i of dns_servers)
-						if (!stubValidator.apply((ipv6_support === '1') ? 'ipaddr' : 'ip4addr', i))
-							return _('Expecting: %s').format(_('valid IP address'));
+					for (var dns of value) {
+						var ipv6_support = this.map.lookupOption('ipv6_support', section_id)[0].formvalue(section_id);
+						if (dns === 'wan') {
+							continue;
+						} else {
+							var err = _('Expecting: %s').format(_('valid address#port'));
+							dns = dns.split('#');
+							if (dns.length > 2)
+								return err;
+							if (!stubValidator.apply((ipv6_support === '1') ? 'ipaddr' : 'ip4addr', dns[0]))
+								return err;
+							if (dns[1] && !stubValidator.apply('port', dns[1]))
+								return err;
+						}
+					}
 				}
 
 				return true;
@@ -299,6 +309,7 @@ return view.extend({
 		so = ss.option(form.Flag, 'endpoint_independent_nat', _('Enable endpoint-independent NAT'),
 			_('Performance may degrade slightly, so it is not recommended to enable on when it is not needed.'));
 		so.default = so.enabled;
+		so.depends('tcpip_stack', 'mixed');
 		so.depends('tcpip_stack', 'gvisor');
 		so.rmempty = false;
 
@@ -437,7 +448,8 @@ return view.extend({
 			'<code>(port || port_range)</code> &&<br/>' +
 			'<code>(source_ip_cidr || source_ip_is_private)</code> &&<br/>' +
 			'<code>(source_port || source_port_range)</code> &&<br/>' +
-			'<code>other fields</code>.'));
+			'<code>other fields</code>.<br/>' +
+			'Additionally, included rule sets can be considered merged rather than as a single rule sub-item.'));
 		so.value('default', _('Default'));
 		so.default = 'default';
 		so.rmempty = false;
@@ -619,6 +631,22 @@ return view.extend({
 			_('Make each DNS server\'s cache independent for special purposes. If enabled, will slightly degrade performance.'));
 		so.default = so.disabled;
 		so.depends('disable_cache', '0');
+
+		so = ss.option(form.Value, 'client_subnet', _('EDNS Client subnet'),
+			_('Append a <code>edns0-subnet</code> OPT extra record with the specified IP prefix to every query by default.<br/>' +
+			'If value is an IP address instead of prefix, <code>/32</code> or <code>/128</code> will be appended automatically.'));
+		so.datatype = 'or(cidr, ipaddr)';
+
+		so = ss.option(form.Flag, 'cache_file_store_rdrc', _('Store RDRC'),
+			_('Store rejected DNS response cache.<br/>' +
+			'The check results of <code>Address filter DNS rule items</code> will be cached until expiration.'));
+		so.ucisection = 'experimental';
+		so.default = so.disabled;
+
+		so = ss.option(form.Value, 'cache_file_rdrc_timeout', _('RDRC timeout'),
+			_('Timeout of rejected DNS response cache. <code>7d</code> is used by default.'));
+		so.ucisection = 'experimental';
+		so.depends('cache_file_store_rdrc', '1');
 		/* DNS settings end */
 
 		/* DNS servers start */
@@ -709,6 +737,12 @@ return view.extend({
 		so.default = 'direct-out';
 		so.rmempty = false;
 		so.editable = true;
+
+		so = ss.option(form.Value, 'client_subnet', _('EDNS Client subnet'),
+			_('Append a <code>edns0-subnet</code> OPT extra record with the specified IP prefix to every query by default.<br/>' +
+			'If value is an IP address instead of prefix, <code>/32</code> or <code>/128</code> will be appended automatically.<br/>' +
+			'Can be overrides by <code>rules.[].client_subnet</code>. Will overrides <code>dns.client_subnet</code>.'));
+		so.datatype = 'or(cidr, ipaddr)';
 		/* DNS servers end */
 
 		/* DNS rules start */
@@ -741,7 +775,8 @@ return view.extend({
 			'<code>(port || port_range)</code> &&<br/>' +
 			'<code>(source_ip_cidr || source_ip_is_private)</code> &&<br/>' +
 			'<code>(source_port || source_port_range)</code> &&<br/>' +
-			'<code>other fields</code>.'));
+			'<code>other fields</code>.<br/>' +
+			'Additionally, included rule sets can be considered merged rather than as a single rule sub-item.'));
 		so.value('default', _('Default'));
 		so.default = 'default';
 		so.rmempty = false;
@@ -805,7 +840,16 @@ return view.extend({
 		so = ss.option(form.Flag, 'source_ip_is_private', _('Private source IP'),
 			_('Match private source IP.'));
 		so.default = so.disabled;
-		so.rmempty = false;
+		so.modalonly = true;
+
+		so = ss.option(form.DynamicList, 'ip_cidr', _('IP CIDR'),
+			_('Match IP CIDR with query response.'));
+		so.datatype = 'or(cidr, ipaddr)';
+		so.modalonly = true;
+
+		so = ss.option(form.Flag, 'ip_is_private', _('Private IP'),
+			_('Match private IP with query response.'));
+		so.default = so.disabled;
 		so.modalonly = true;
 
 		so = ss.option(form.DynamicList, 'source_port', _('Source port'),
@@ -844,6 +888,11 @@ return view.extend({
 
 			return this.super('load', section_id);
 		}
+		so.modalonly = true;
+
+		so = ss.option(form.Flag, 'rule_set_ipcidr_match_source', _('Rule set IP CIDR as source IP'),
+			_('Make <code>ipcidr</code> in rule sets match the source IP.'));
+		so.default = so.disabled;
 		so.modalonly = true;
 
 		so = ss.option(form.Flag, 'invert', _('Invert'),
@@ -897,6 +946,12 @@ return view.extend({
 			_('Rewrite TTL in DNS responses.'));
 		so.datatype = 'uinteger';
 		so.modalonly = true;
+
+		so = ss.option(form.Value, 'client_subnet', _('EDNS Client subnet'),
+			_('Append a <code>edns0-subnet</code> OPT extra record with the specified IP prefix to every query by default.<br/>' +
+			'If value is an IP address instead of prefix, <code>/32</code> or <code>/128</code> will be appended automatically.<br/>' +
+			'Will overrides <code>dns.client_subnet</code> and <code>servers.[].client_subnet</code>.'));
+		so.datatype = 'or(cidr, ipaddr)';
 		/* DNS rules end */
 		/* Custom routing settings end */
 

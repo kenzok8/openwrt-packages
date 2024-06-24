@@ -173,6 +173,8 @@ const methods = {
 			}
 
 			features.hp_has_chinadns_ng = access('/usr/bin/chinadns-ng');
+			if (features.hp_has_chinadns_ng)
+				features.hp_has_chinadns_ng_v2 = (system('/usr/bin/chinadns-ng --version | grep -q "target:"') === 0);
 			features.hp_has_ip_full = access('/usr/libexec/ip-full');
 			features.hp_has_tcp_brutal = hasKernelModule('brutal.ko');
 			features.hp_has_tproxy = hasKernelModule('nft_tproxy.ko') || access('/etc/modules.d/nft-tproxy');
