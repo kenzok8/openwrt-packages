@@ -1,0 +1,327 @@
+swagger: "2.0"
+info:
+  description: Store API V1
+  title: Store API V1
+  version: 3.0.0
+paths:
+  /cgi-bin/luci/admin/store/token:
+    get:
+      tags:
+        - token
+      summary: 获取csrfToken（用于POST请求）
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStoreToken"
+  /cgi-bin/luci/admin/store/installed:
+    get:
+      tags:
+        - installed
+      summary: 获取已安装的插件
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStoreInstalled"
+  /cgi-bin/luci/admin/store/install:
+    post:
+      tags:
+        - install
+      summary: 安装插件
+      parameters:
+        - in: "query"
+          name: "token"
+          type: string
+          required: true
+        - in: "query"
+          name: "package"
+          type: string
+          required: true
+        - in: "query"
+          name: "autoconf"
+          type: string
+          description: "可选参数,表示安装完以后是否自动配置插件"
+        - in: "query"
+          name: "path"
+          type: string
+          description: "可选参数,表示安装完以后是否自动配置插件"
+        - in: "query"
+          name: "enable"
+          type: string
+          description: "可选参数,表示安装完以后是否自动配置插件"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
+  /cgi-bin/luci/admin/store/remove:
+    post:
+      tags:
+        - remove
+      summary: 卸载插件
+      parameters:
+        - in: "query"
+          name: "token"
+          type: string
+          required: true
+        - in: "query"
+          name: "package"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
+  /cgi-bin/luci/admin/store/upgrade:
+    post:
+      tags:
+        - upgrade
+      summary: 更新插件
+      parameters:
+        - in: "query"
+          name: "token"
+          type: string
+          required: true
+        - in: "query"
+          name: "package"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
+  /cgi-bin/luci/admin/store/upload:
+    post:
+      tags:
+        - upload
+      summary: 上传插件
+      description: "(文件上传表单，支持文件扩展名 .ipk,.run )"
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: file
+          type: file
+          description: The file to upload.
+        - in: "query"
+          name: "token"
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
+  /cgi-bin/luci/admin/store/update:
+    post:
+      tags:
+        - update
+      summary: 刷新可用软件列表
+      parameters:
+        - in: "query"
+          name: "token"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
+  /cgi-bin/luci/admin/store/status:
+    get:
+      tags:
+        - status
+      summary: 查询特定软件状态
+      parameters:
+        - in: "query"
+          name: "package"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStoreStatus"
+  /cgi-bin/luci/admin/store/log:
+    get:
+      tags:
+        - log
+      summary: 任务日志
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
+  /cgi-bin/luci/admin/store/check_self_upgrade:
+    get:
+      tags:
+        - check_self_upgrade
+      summary: 检查iStore自身更新
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStoreCheckSelfUpgrade"
+  /cgi-bin/luci/admin/store/do_self_upgrade:
+    post:
+      tags:
+        - do_self_upgrade
+      summary: 更新iStore自身
+      parameters:
+        - in: "query"
+          name: "token"
+          type: string
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
+  /cgi-bin/luci/admin/store/get_block_devices:
+    get:
+      tags:
+        - get_block_devices
+      summary: 枚举块设备
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStoreCheckSelfUpgrade"
+  /cgi-bin/luci/admin/store/configured:
+    get:
+      tags:
+        - configured
+      summary: 检查插件是否已经配置过
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStoreConfigured"
+  
+definitions:
+  ResponseStoreToken:
+   type: object
+   properties:
+    token:
+     type: string
+  StoreInstalledApp:
+    type: object
+    properties:
+      tutorial:
+        type: string
+        description: "教程"
+      arch:
+        type: array
+        description: "适用的架构平台"
+        items:
+          type: string
+      entry:
+        type: string
+        description: "对于的页面地址"
+      author:
+        type: string
+        description: "作者"
+      depends:
+        type: array
+        description: "关联的依赖"
+        items:
+          type: string
+      time:
+        type: integer
+        description: "更新日期"
+      tags:
+        type: array
+        description: "标签"
+        items:
+          type: string
+      description_en:
+        type: string
+        description: "简介，英文"
+      description:
+        type: string
+        description: "简介，英文"
+      title:
+        type: string
+        description: "标题"
+      release:
+        type: integer
+        description: "发布"
+      website:
+        type: string
+        description: "官网"
+      version:
+        type: string
+        description: "版本号"
+      name:
+        type: string
+        description: "名称"
+  ResponseStoreInstalled:
+    type: array
+    items:
+      $ref: "#/definitions/StoreInstalledApp"
+  ResponseStore:
+    type: object
+    properties:
+      code:
+        type: integer
+      stdout:
+        type: string
+      stderr:
+        type: string
+  ResponseStoreStatus:
+    type: object
+    allOf:
+      - $ref: "#/definitions/StoreInstalledApp"
+    properties:
+      installed:
+        type: boolean
+  ResponseStoreCheckSelfUpgrade:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: "为200时,msg会显示版本号"
+      msg:
+        type: string
+        description: "内容"
+  GetBlockDevice:
+    type: object
+    properties:
+      dev:
+        type: string
+      uuid:
+        type: string
+      version:
+        type: string
+      label:
+        type: string
+      mount:
+        type: string
+      type:
+        type: string
+      size:
+        type: string
+  ResponseStoreGetBlockDevices:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: "为200时"
+      msg:
+        type: string
+        description: "内容"
+      data:
+        type: object
+        additionalProperties:
+          $ref: "#/definitions/GetBlockDevice"
+  ResponseStoreConfigured:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: "为200时"
+      configured:
+        type: boolean
+  

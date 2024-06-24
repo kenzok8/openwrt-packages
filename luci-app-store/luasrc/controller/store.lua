@@ -216,7 +216,7 @@ local function _action(exe, cmd, ...)
 end
 
 function validate_pkgname(val)
-	return (val ~= nil and val:match("^[a-zA-Z0-9_]+$") ~= nil)
+	return (val ~= nil and val:match("^[a-zA-Z0-9_-]+$") ~= nil)
 end
 
 function store_action(param)
