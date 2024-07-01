@@ -77,6 +77,7 @@ local function user_config()
     local data = {
         hide_docker = uci:get("istore", "istore", "hide_docker") == "1",
         ignore_arch = uci:get("istore", "istore", "ignore_arch") == "1",
+        last_path = uci:get("istore", "istore", "last_path"),
         super_arch = uci:get("istore", "istore", "super_arch"),
         channel = uci:get("istore", "istore", "channel")
     }
@@ -300,6 +301,9 @@ function store_action(param)
                     local autoenable = luci.http.formvalue("enable")
                     if autopath ~= nil then
                         autoenv = autoenv .. " path=" .. luci.util.shellquote(autopath)
+                        local uci  = require "luci.model.uci".cursor()
+                        uci:set("istore", "istore", "last_path", autopath)
+                        uci:commit("istore")
                     end
                     autoenv = autoenv .. " enable=" .. autoenable
                     code, out, err = _action(myopkg, luci.util.shellquote(autoenv), action, metapkg)
