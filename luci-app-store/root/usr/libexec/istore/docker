@@ -1,0 +1,114 @@
+#!/bin/sh
+
+handle_part() {
+    case "$MOUNT" in
+        "/overlay")
+            return 1
+        ;;
+    esac
+    return 0
+}
+
+check_dir() {
+    local data_root=$(uci -q get dockerd.globals.data_root)
+    [ -n "$data_root" ] || return 0
+    local block_dev=$(findmnt -T "$data_root" -v -o SOURCE | sed -n 2p)
+    [ -n "$block_dev" ] || return 0
+    [ "overlayfs:/overlay" = "$block_dev" ] && return 1
+    local line=$(block info "$block_dev" 2>/dev/null)
+    [ -n "$line" ] || return 0
+    eval "${line##*: } handle_part ${line%%: *}"
+}
+
+migrate_check(){
+    local dest="$1"
+    [ -n "$dest" ] || {
+        echo "dest dir not specified!" >&2
+        return 1
+    }
+    local data_root="$2"
+    [ -n "$data_root" ] || data_root=$(uci -q get dockerd.globals.data_root)
+    [ -n "$data_root" ] || {
+        echo "get docker data_root failed!" >&2
+        return 1
+    }
+
+    [ "$data_root" = "/" ] || data_root="${data_root%%/}"
+    [ "$dest" = "/" ] || dest="${dest%%/}"
+
+    [ "$data_root" = "$dest" ] && {
+        echo "dest dir is the same as data_root!" >&2
+        return 1
+    }
+
+    [ 1 = "$FORCE" ] && return 0
+    [ -e "$dest" ] || return 0
+    [ -d "$dest" ] || {
+        echo "$dest is existed and it's not a dir, use FORCE=1 to overwrite it" >&2
+        return 2
+    }
+    [ 0 = "$(ls -A "$dest" | head -1 | wc -l)" ] || {
+        echo "$dest is existed and it's not empty, use FORCE=1 to overwrite it" >&2
+        return 2
+    }
+    return 0
+}
+
+migrate() {
+    local dest="$1"
+    local data_root=$(uci -q get dockerd.globals.data_root)
+    [ -n "$data_root" ] || {
+        echo "get docker data_root failed!" >&2
+        return 1
+    }
+    [ "$data_root" = "/" ] || data_root="${data_root%%/}"
+    [ "$dest" = "/" ] || dest="${dest%%/}"
+
+    FORCE=1 migrate_check "$dest" "$data_root"
+    local check_result=$?
+    [ 0 = $check_result ] || return $check_result
+
+    if [ "$UCI_ONLY" != 1 ]; then
+        rm -rf "$dest"
+        mkdir -p "$dest"
+        echo "Copy $data_root to $dest ..."
+        cp -a "$data_root/." "$dest/" || return 1
+    fi
+
+    echo "Change dockerd data_root to $dest and restart"
+    uci set dockerd.globals.data_root="$dest"
+    uci commit dockerd
+    /etc/init.d/dockerd restart
+
+    echo "Done"
+}
+
+action=${1}
+shift
+
+usage() {
+    echo "usage: $1 sub-command [arguments...]"
+    echo "where sub-command is one of:"
+    echo "      check_dir                    Check docker data_root is on extrnal disk"
+    echo "      migrate_check {target_dir}   Check target_dir is valid for migration, return 2 if target_dir existed and not empty"
+    echo "      migrate {target_dir}         Migrate docker data_root to target_dir"
+    echo "      change_dir {target_dir}      Migrate docker data_root to target_dir but change dir only (no data copy)"
+}
+
+case $action in
+    "check_dir")
+        check_dir
+    ;;
+    "migrate")
+        migrate "$@"
+    ;;
+    "migrate_check")
+        migrate_check "$@"
+    ;;
+    "change_dir")
+        UCI_ONLY=1 migrate "$@"
+    ;;
+    *)
+        usage "$0"
+    ;;
+esac

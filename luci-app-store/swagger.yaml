@@ -28,7 +28,7 @@ paths:
     post:
       tags:
         - install
-      summary: 安装插件
+      summary: 安装插件。安装过程中使用taskd接口获取日志
       parameters:
         - in: "query"
           name: "token"
@@ -50,6 +50,33 @@ paths:
           name: "enable"
           type: string
           description: "可选参数,表示安装完以后是否自动配置插件"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
+  /cgi-bin/luci/admin/store/autoconf:
+    post:
+      tags:
+        - install
+      summary: 自动配置插件
+      parameters:
+        - in: "query"
+          name: "token"
+          type: string
+          required: true
+        - in: "query"
+          name: "package"
+          type: string
+          required: true
+        - in: "query"
+          name: "path"
+          type: string
+          description: "可选参数"
+        - in: "query"
+          name: "enable"
+          type: string
+          description: "可选参数"
       responses:
         "200":
           description: OK
@@ -148,7 +175,7 @@ paths:
     get:
       tags:
         - log
-      summary: 任务日志
+      summary: 任务日志，已废弃
       responses:
         "200":
           description: OK
@@ -194,11 +221,94 @@ paths:
       tags:
         - configured
       summary: 检查插件是否已经配置过
+      parameters:
+        - in: "query"
+          name: "uci"
+          type: string
+          required: true
+          description: "要检查的uci配置文件名称"
       responses:
         "200":
           description: OK
           schema:
             $ref: "#/definitions/ResponseStoreConfigured"
+  /cgi-bin/luci/admin/store/entrysh:
+    post:
+      tags:
+        - entrysh
+      summary: 查询插件运行状态，主要为了获取入口信息。
+      description: 调用前应该检查meta数据中autoconf数组包含entrysh，注意如果是安装插件则检查服务器端的autoconf，如果是调用已安装插件则检查路由器端的autoconf。
+      parameters:
+        - in: "query"
+          name: "token"
+          type: string
+          required: true
+        - in: "query"
+          name: "package"
+          type: string
+          required: true
+          description: "包名，例如aria2"
+        - in: "query"
+          name: "hostname"
+          type: string
+          required: true
+          description: "主机名，不包含端口。前端应该使用location.hostname获取"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStoreEntrysh"
+  /cgi-bin/luci/admin/store/docker_check_dir:
+    get:
+      tags:
+        - docker_check_dir
+      summary: 检查docker目录是否在系统盘
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseDockerCheckDir"
+  /cgi-bin/luci/admin/store/docker_check_migrate:
+    get:
+      tags:
+        - docker_check_migrate
+      summary: 检查docker迁移目标目录是否有效
+      parameters:
+        - in: "query"
+          name: "path"
+          type: string
+          required: true
+          description: "完整目标路径"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseDockerCheckMigrate"
+  /cgi-bin/luci/admin/store/docker_migrate:
+    post:
+      tags:
+        - docker_migrate
+      summary: docker迁移到目标目录，异步
+      description: 当返回code为0的时候，可以使用taskd接口展示日志，跟安装插件时一样
+      parameters:
+        - in: "query"
+          name: "token"
+          type: string
+          required: true
+        - in: "query"
+          name: "path"
+          type: string
+          required: true
+          description: "完整目标路径"
+        - in: "query"
+          name: "overwrite"
+          type: string
+          description: "如果docker_check_migrate返回的result是existed，使用此参数指定解决方案：‘true’表示覆盖目标目录；‘chdir’表示只修改路径不复制文件"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ResponseStore"
   
 definitions:
   ResponseStoreToken:
@@ -324,4 +434,54 @@ definitions:
         description: "为200时"
       configured:
         type: boolean
+  ResponseDockerCheckDir:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: "为200时"
+      docker_on_system:
+        type: boolean
+        description: "docker数据在系统盘"
+  ResponseDockerCheckMigrate:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: "为200时"
+      result:
+        type: string
+        description: "检查结果。可能值‘good’，‘bad’，‘existed’"
+      error:
+        type: string
+        description: "当result为bad时，此处返回错误日志"
+  ResponseStoreEntrysh:
+    type: object
+    properties:
+      code:
+        type: integer
+        description: "为200时"
+      msg:
+        type: string
+        description: "code不为200时显示错误信息"
+      status:
+        type: object
+        description: "状态和入口信息，不同插件可能有些不一样，仅列出常用公共参数"
+        properties:
+          app:
+            type: string
+            description: "插件名称，跟请求的包名一致"
+          docker:
+            type: boolean
+            description: "如果是docker插件"
+          running:
+            type: boolean
+            description: "是否运行中"
+          deployed:
+            type: boolean
+            description: "如果是docker插件且未运行，则是否已经部署"
+          web:
+            type: string
+            description: "web端跳转url"
   
+

@@ -247,6 +247,9 @@ case $action in
         check_space
         wrapped_in_update opkg_wrap_mirrors install "$@" && try_autoconf
     ;;
+    "autoconf")
+        try_autoconf
+    ;;
     "upgrade")
         new_upgrade "$@"
     ;;

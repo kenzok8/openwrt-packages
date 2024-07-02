@@ -97,7 +97,7 @@
 
     {"installed":false}
    ```
-7. 任务状态（日志）
+7. 任务状态（日志），已废弃，使用luci-lib-taskd提供的封装
    ```
    GET /cgi-bin/luci/admin/store/log
 
