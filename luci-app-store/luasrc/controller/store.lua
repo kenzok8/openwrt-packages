@@ -459,33 +459,71 @@ end
 
 function entrysh()
     local package = luci.http.formvalue("package")
+    local update = luci.http.formvalue("update")
     local hostname = luci.http.formvalue("hostname")
-    if hostname == nil or hostname == "" or not validate_pkgname(package) then
+    if hostname == nil or hostname == "" or not hostname:match("^[a-zA-Z0-9_%[][a-zA-Z0-9_%-%.%:%]]*$") then
         luci.http.status(400, "Bad Request")
         return
     end
+    local nixio = require "nixio"
+    local fs   = require "nixio.fs"
+    local hostnameq = luci.util.shellquote(hostname)
+    local cachedir = "/tmp/cache/istore/entrysh/" .. hostname
+    fs.mkdirr(cachedir)
 
-    local result
-    local entryfile = "/usr/libexec/istoree/" .. package .. ".sh"
-    if nixio.fs.access(entryfile) then
-        local o = luci.util.exec(entryfile .. " status " .. luci.util.shellquote(hostname))
-        if o == nil or o == "" then
-            result = {code=500, msg="entrysh execute failed"}
-        else
-            local jsonc = require "luci.jsonc"
-            local json_parse = jsonc.parse
-            local status = json_parse(o)
-            if status == nil then
-                result = {code=500, msg="json parse failed: " .. o}
+    local jsonc = require "luci.jsonc"
+    local results = {}
+    local errors = {}
+    local force = update == "1"
+    local candidate = nil
+    if package ~= nil and package ~= "" then
+        candidate = luci.util.split(package, ",")
+    end
+    local installed  = get_installed_and_cache()
+    local lock, msg = flock("/var/lock/istore-entrysh.lock", "lock")
+    local meta
+    for _, meta in ipairs(installed) do
+        if meta.autoconf ~= nil and meta.uci ~= nil and luci.util.contains(meta.autoconf, "entrysh")
+            and (candidate == nil or luci.util.contains(candidate, meta.name)) then
+            local entryfile = "/usr/libexec/istoree/" .. meta.name .. ".sh"
+            local ucifile = "/etc/config/" .. meta.uci
+            local cachefile = cachedir .. "/" .. meta.name .. ".json"
+            local status = nil
+            if not force then
+                local us = fs.stat(ucifile)
+                local cs = fs.stat(cachefile)
+                if cs ~= nil and us["mtime"] <= cs["mtime"] then
+                    status = jsonc.parse(fs.readfile(cachefile) or "")
+                end
+            end
+            if status ~= nil then
+                results[#results+1] = status
+            elseif fs.access(entryfile) then
+                local o = luci.util.exec(entryfile .. " status " .. hostnameq)
+                if o == nil or o == "" then
+                    errors[#errors+1] = {app=meta.name, code=500, msg="entrysh execute failed"}
+                else
+                    status = jsonc.parse(o)
+                    if status == nil then
+                        errors[#errors+1] = {app=meta.name, code=500, msg="json parse failed: " .. o}
+                    else
+                        results[#results+1] = status
+                        local oflags = nixio.open_flags("rdwr", "creat")
+                        local mfile, code, msg = nixio.open(cachefile, oflags)
+                        mfile:writeall(jsonc.stringify(status))
+                        mfile:close()
+                    end
+                end
             else
-                result = {code=200, status=status}
+                errors[#errors+1] = {app=meta.name, code=404, msg="entrysh of this package not found"}
             end
         end
-    else
-        result = {code=404, msg="entrysh of this package not found"}
     end
+    lock:lock("ulock")
+    lock:close()
+
     luci.http.prepare_content("application/json")
-    luci.http.write_json(result)
+    luci.http.write_json({code=200, status=results, errors=errors})
 end
 
 function docker_check_dir()

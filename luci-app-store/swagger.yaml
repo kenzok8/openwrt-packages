@@ -246,18 +246,23 @@ paths:
         - in: "query"
           name: "package"
           type: string
-          required: true
-          description: "包名，例如aria2"
+          description: "包名，例如aria2。支持英文逗号分隔多个包名。如果未提供，则返回所有支持entrysh的包"
         - in: "query"
           name: "hostname"
           type: string
           required: true
           description: "主机名，不包含端口。前端应该使用location.hostname获取"
+        - in: "query"
+          name: "update"
+          type: integer
+          description: "如果为1则强制更新缓存"
       responses:
         "200":
           description: OK
           schema:
             $ref: "#/definitions/ResponseStoreEntrysh"
+        "400":
+          description: Bad Request。hostname不合法
   /cgi-bin/luci/admin/store/docker_check_dir:
     get:
       tags:
@@ -461,27 +466,45 @@ definitions:
       code:
         type: integer
         description: "为200时"
-      msg:
-        type: string
-        description: "code不为200时显示错误信息"
       status:
-        type: object
-        description: "状态和入口信息，不同插件可能有些不一样，仅列出常用公共参数"
-        properties:
-          app:
-            type: string
-            description: "插件名称，跟请求的包名一致"
-          docker:
-            type: boolean
-            description: "如果是docker插件"
-          running:
-            type: boolean
-            description: "是否运行中"
-          deployed:
-            type: boolean
-            description: "如果是docker插件且未运行，则是否已经部署"
-          web:
-            type: string
-            description: "web端跳转url"
-  
+        description: "处理成功的结果集"
+        type: array
+        items:
+          type: object
+          description: "状态和入口信息，不同插件可能有些不一样，仅列出常用公共参数"
+          properties:
+            app:
+              type: string
+              description: "插件名称"
+            docker:
+              type: boolean
+              description: "如果是docker插件"
+            running:
+              type: boolean
+              description: "是否运行中"
+            deployed:
+              type: boolean
+              description: "如果是docker插件且未运行，则是否已经部署"
+            web:
+              type: string
+              description: "url"
+            href:
+              type: string
+              description: "web端直接跳转url"
+      errors:
+        description: "处理失败的结果集"
+        type: array
+        items:
+          type: object
+          description: "失败信息"
+          properties:
+            app:
+              type: string
+              description: "插件名称"
+            code:
+              type: integer
+              description: "404或500"
+            msg:
+              type: string
+              description: "错误信息"
 
