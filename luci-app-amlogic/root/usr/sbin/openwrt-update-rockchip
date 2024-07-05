@@ -206,6 +206,14 @@ case $MYDEVICE_NAME in
 		fi
 		SOC="rock5c"
 		;;
+	"Radxa E52C")
+		if [ -n "${CURRENT_FDTFILE}" ]; then
+			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+		else
+			MYDTB_FDTFILE="rk3588s-radxa-e52c.dtb"
+		fi
+		SOC="e52c"
+		;;
 	*)	#default
 		if [ -f "/etc/flippy-openwrt-release" ]; then
 			source /etc/flippy-openwrt-release 2>/dev/null
