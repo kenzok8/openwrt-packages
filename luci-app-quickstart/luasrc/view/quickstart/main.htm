@@ -31,6 +31,8 @@
       window.token = "<%=token%>";
       var vue_prefix="<%=prefix%>";
       window.vue_base = vue_prefix + '/';
+      window.vue_lang_data = '/luci-static/quickstart/i18n/<%=lang%>.json<%# ?v=PKG_VERSION %>';
+      window.vue_lang = '<%=lang%>';
       window.quickstart_features = <%=jsonc.stringify(features)%>;
       window.quickstart_configs = <%=jsonc.stringify(configs)%>;
       if (location.pathname != vue_prefix && !location.pathname.startsWith(window.vue_base)) {

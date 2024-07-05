@@ -9,3 +9,6 @@ msgstr "磁盘阵列"
 
 msgid "NetworkPort"
 msgstr "网口配置"
+
+msgid "quickstart_vue_lang"
+msgstr "zh-cn"

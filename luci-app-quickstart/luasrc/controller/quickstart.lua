@@ -30,12 +30,21 @@ function redirect_fallback()
     luci.http.redirect(luci.dispatcher.build_url("admin", "status"))
 end
 
+local function vue_lang()
+    local i18n = require("luci.i18n")
+    local lang = i18n.translate("quickstart_vue_lang")
+    if lang == "quickstart_vue_lang" or lang == "" then
+        lang = "en"
+    end
+    return lang
+end
+
 function quickstart_index(param)
-    luci.template.render("quickstart/main", {prefix=luci.dispatcher.build_url(unpack(param.index))})
+    luci.template.render("quickstart/main", {prefix=luci.dispatcher.build_url(unpack(param.index)),lang=vue_lang()})
 end
 
 function quickstart_dev(param)
-    luci.template.render("quickstart/main_dev", {prefix=luci.dispatcher.build_url(unpack(param.index))})
+    luci.template.render("quickstart/main_dev", {prefix=luci.dispatcher.build_url(unpack(param.index)),lang=vue_lang()})
 end
 
 function auto_setup()
