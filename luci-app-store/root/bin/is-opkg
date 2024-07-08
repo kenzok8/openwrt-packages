@@ -222,6 +222,15 @@ try_autoconf() {
     /usr/libexec/istorea/${ISTORE_AUTOCONF}.sh
 }
 
+try_upgrade_depends() {
+    local pkg="$1"
+    if [[ $pkg == app-meta-* ]]; then
+        local deps=$(grep '^Depends: ' /usr/lib/opkg/info/$pkg.control | busybox sed -e 's/^Depends: //' -e 's/,/\n/g' -e 's/ //g' | grep -vFw libc | xargs echo)
+        [ -z "$deps" ] || opkg_wrap_mirrors install $deps
+    fi
+    return 0
+}
+
 usage() {
     echo "usage: is-opkg sub-command [arguments...]"
     echo "where sub-command is one of:"
@@ -245,7 +254,7 @@ case $action in
     ;;
     "install")
         check_space
-        wrapped_in_update opkg_wrap_mirrors install "$@" && try_autoconf
+        wrapped_in_update opkg_wrap_mirrors install "$@" && try_upgrade_depends "$1" && try_autoconf
     ;;
     "autoconf")
         try_autoconf

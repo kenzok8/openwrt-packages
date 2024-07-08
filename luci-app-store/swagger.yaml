@@ -215,7 +215,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/ResponseStoreCheckSelfUpgrade"
+            $ref: "#/definitions/ResponseStoreGetBlockDevices"
   /cgi-bin/luci/admin/store/configured:
     get:
       tags:
@@ -460,6 +460,29 @@ definitions:
       error:
         type: string
         description: "当result为bad时，此处返回错误日志"
+  StoreEntrysh:
+    type: object
+    description: "状态和入口信息，不同插件可能有些不一样，仅列出常用公共参数"
+    properties:
+      app:
+        type: string
+        description: "插件名称"
+      docker:
+        type: boolean
+        description: "如果是docker插件"
+      running:
+        type: boolean
+        description: "是否运行中"
+      deployed:
+        type: boolean
+        description: "如果是docker插件且未运行，则是否已经部署"
+      web:
+        type: string
+        description: "url"
+      href:
+        type: string
+        description: "web端直接跳转url"
+    
   ResponseStoreEntrysh:
     type: object
     properties:
@@ -470,27 +493,7 @@ definitions:
         description: "处理成功的结果集"
         type: array
         items:
-          type: object
-          description: "状态和入口信息，不同插件可能有些不一样，仅列出常用公共参数"
-          properties:
-            app:
-              type: string
-              description: "插件名称"
-            docker:
-              type: boolean
-              description: "如果是docker插件"
-            running:
-              type: boolean
-              description: "是否运行中"
-            deployed:
-              type: boolean
-              description: "如果是docker插件且未运行，则是否已经部署"
-            web:
-              type: string
-              description: "url"
-            href:
-              type: string
-              description: "web端直接跳转url"
+          $ref: "#/definitions/StoreEntrysh"
       errors:
         description: "处理失败的结果集"
         type: array
