@@ -37,6 +37,20 @@ error_msg() {
     exit 1
 }
 
+# Get the partition name of the root file system
+get_root_partition_name() {
+    local paths=("/" "/overlay" "/rom")
+    local partition_name
+
+    for path in "${paths[@]}"; do
+        partition_name=$(df "${path}" | awk 'NR==2 {print $1}' | awk -F '/' '{print $3}')
+        [[ -n "${partition_name}" ]] && break
+    done
+
+    [[ -z "${partition_name}" ]] && error_msg "Cannot find the root partition!"
+    echo "${partition_name}"
+}
+
 # Get kernel TEXT_OFFSET, For u-boot.ext and u-boot.emmc
 get_textoffset() {
     boot_tgz_file="${1}"
@@ -82,11 +96,7 @@ init_var() {
     [[ -n "${MYBOOT_VMLINUZ}" ]] || error_msg "Failed to get Image name: [ ${MYBOOT_VMLINUZ} ]"
 
     # Find the partition where root is located
-    ROOT_PTNAME="$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
-    if [[ -z "${ROOT_PTNAME}" ]]; then
-        ROOT_PTNAME="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
-    fi
-    [[ -n "${ROOT_PTNAME}" ]] || error_msg "Cannot find the partition corresponding to the root file system!"
+    ROOT_PTNAME="$(get_root_partition_name)"
 
     # Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
     case "${ROOT_PTNAME}" in

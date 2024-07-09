@@ -4,7 +4,7 @@
 # Copyright (C) 2020-- https://github.com/unifreq/openwrt_packit
 # Copyright (C) 2021-- https://github.com/ophub/luci-app-amlogic
 #======================================================================================
-
+#
 # The script supports directly setting parameters for update, skipping interactive selection
 # openwrt-update-rockchip ${OPENWRT_FILE} ${AUTO_MAINLINE_UBOOT} ${RESTORE_CONFIG}
 # E.g: openwrt-update-rockchip openwrt_s905d.img.gz yes restore
@@ -12,6 +12,42 @@
 
 # You can also execute the script directly, and interactively select related functions
 # E.g: openwrt-update-rockchip
+#
+#======================================================================================
+
+# Encountered a serious error, abort the script execution
+error_msg() {
+    echo -e "[ERROR] ${1}"
+    exit 1
+}
+
+# Get the partition name of the root file system
+get_root_partition_name() {
+    local paths=("/" "/overlay" "/rom")
+    local partition_name
+
+    for path in "${paths[@]}"; do
+        partition_name=$(df "${path}" | awk 'NR==2 {print $1}' | awk -F '/' '{print $3}')
+        [[ -n "${partition_name}" ]] && break
+    done
+
+    [[ -z "${partition_name}" ]] && error_msg "Cannot find the root partition!"
+    echo "${partition_name}"
+}
+
+# Get the partition message of the root file system
+get_root_partition_msg() {
+    local paths=("/" "/overlay" "/rom")
+    local partition_name
+
+    for path in "${paths[@]}"; do
+        partition_msg=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ "^" "'"${path}"'" "$" {print $0}')
+        [[ -n "${partition_msg}" ]] && break
+    done
+
+    [[ -z "${partition_msg}" ]] && error_msg "Cannot find the root partition message!"
+    echo "${partition_msg}"
+}
 
 # Receive one-key command related parameters
 IMG_NAME="${1}"
@@ -25,228 +61,218 @@ if [ -f /boot/armbianEnv.txt ]; then
 fi
 MYDEVICE_NAME=$(cat /proc/device-tree/model | tr -d '\000')
 case $MYDEVICE_NAME in
-	"")
-		echo "The device name is empty and cannot be recognized."
-			exit 1
-		;;
+"")
+    error_msg "The device name is empty and cannot be recognized."
+    ;;
 
-	"Chainedbox L1 Pro")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3328-l1pro-1296mhz.dtb"
-		fi
-		SOC="l1pro"
-		;;
-	"BeikeYun")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3328-beikeyun-1296mhz.dtb"
-		fi
-		SOC="beikeyun"
-		;;
-	"ZCuble1 Max")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3399-zcube1-max.dtb"
-		fi
-		SOC="zcube1 max"
-		;;
-	"JP TVbox 3566")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3566-jp-tvbox.dtb"
-		fi
-		SOC="jp-tvbox"
-		;;
-	"Radxa CM3 RPI CM4 IO")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3566-radxa-cm3-rpi-cm4-io.dtb"
-		fi
-		SOC="radxa-cm3-rpi-cm4-io"
-		;;
-	"FastRhino R66S"|"Lunzn FastRhino R66S")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-fastrhino-r66s.dtb"
-		fi
-		SOC="r66s"
-		;;
-	"FastRhino R68S"|"Lunzn FastRhino R68S")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
-		fi
-		SOC="r68s"
-		;;
-	"RK3568 EC-X")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-ec-x.dtb"
-		fi
-		SOC="ec-x"
-		;;
-	"HINLINK OPC-H66K Board"|"Hlink H66K")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h66k.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-hlink-h66k.dtb"
-		fi
-		SOC="h66k"
-		;;
-	"HINLINK OPC-H68K Board"|"Hlink H68K")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h68k.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-hlink-h68k.dtb"
-		fi
-		SOC="h68k"
-		;;
-	"HINLINK OPC-H69K Board"|"Hlink H69K")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h69k.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-hlink-h69k.dtb"
-		fi
-		SOC="h69k"
-		;;
-	"Radxa E25"|"Radxa E25 Carrier Board")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-radxa-e25.dtb"
-		fi
-		SOC="e25"
-		;;
-	"HINLINK OWL H88K-V3 Board"|"Hlink H88K-V3")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k-v3.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3588-hlink-h88k-v3.dtb"
-		fi
-		SOC="h88k-v3"
-		;;
-	"HINLINK OWL H88K Board"|"Hlink H88K")
-		if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k.dtb" ];then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3588-hlink-h88k.dtb"
-		fi
-		SOC="ak88/h88k"
-		;;
-	"Hlink H28K")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3528-hlink-h28k.dtb"
-		fi
-		SOC="h28k"
-		;;
-	"Hlink HT2")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3528-hlink-ht2.dtb"
-		fi
-		SOC="ht2"
-		;;
-	"Radxa E20C")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3528-radxa-e20c.dtb"
-		fi
-		SOC="e20c"
-		;;
-	"Ariaboard Photonicat")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-photonicat.dtb"
-		fi
-		SOC="photonicat"
-		;;
-	"NLnet Watermelon Pi V3")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-watermelon-pi-v3.dtb"
-		fi
-		SOC="watermelon-pi-v3"
-		;;
-	"NLnet Watermelon Pi")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3568-watermelon-pi.dtb"
-		fi
-		SOC="watermelon-pi"
-		;;
-	"Radxa ROCK 5B"|"Radxa ROCK 5 Model B")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3588-rock-5b.dtb"
-		fi
-		SOC="rock5b"
-		;;
-	"Radxa ROCK 5C"|"Radxa ROCK 5 Model C")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3588s-rock-5c.dtb"
-		fi
-		SOC="rock5c"
-		;;
-	"Radxa E52C")
-		if [ -n "${CURRENT_FDTFILE}" ]; then
-			MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-		else
-			MYDTB_FDTFILE="rk3588s-radxa-e52c.dtb"
-		fi
-		SOC="e52c"
-		;;
-	*)	#default
-		if [ -f "/etc/flippy-openwrt-release" ]; then
-			source /etc/flippy-openwrt-release 2>/dev/null
-			if [ -n "${CURRENT_FDTFILE}" ]; then
-				MYDTB_FDTFILE="${CURRENT_FDTFILE}"
-			else
-				MYDTB_FDTFILE="${FDTFILE}"
-			fi
-			SOC="${SOC}"
-		else
-			echo "Unknown device: [ ${MYDEVICE_NAME} ], Not supported."
-			exit 1
-		fi
-		;;
+"Chainedbox L1 Pro")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3328-l1pro-1296mhz.dtb"
+    fi
+    SOC="l1pro"
+    ;;
+"BeikeYun")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3328-beikeyun-1296mhz.dtb"
+    fi
+    SOC="beikeyun"
+    ;;
+"ZCuble1 Max")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3399-zcube1-max.dtb"
+    fi
+    SOC="zcube1 max"
+    ;;
+"JP TVbox 3566")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3566-jp-tvbox.dtb"
+    fi
+    SOC="jp-tvbox"
+    ;;
+"Radxa CM3 RPI CM4 IO")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3566-radxa-cm3-rpi-cm4-io.dtb"
+    fi
+    SOC="radxa-cm3-rpi-cm4-io"
+    ;;
+"FastRhino R66S" | "Lunzn FastRhino R66S")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-fastrhino-r66s.dtb"
+    fi
+    SOC="r66s"
+    ;;
+"FastRhino R68S" | "Lunzn FastRhino R68S")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-fastrhino-r68s.dtb"
+    fi
+    SOC="r68s"
+    ;;
+"RK3568 EC-X")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-ec-x.dtb"
+    fi
+    SOC="ec-x"
+    ;;
+"HINLINK OPC-H66K Board" | "Hlink H66K")
+    if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h66k.dtb" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-hlink-h66k.dtb"
+    fi
+    SOC="h66k"
+    ;;
+"HINLINK OPC-H68K Board" | "Hlink H68K")
+    if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h68k.dtb" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-hlink-h68k.dtb"
+    fi
+    SOC="h68k"
+    ;;
+"HINLINK OPC-H69K Board" | "Hlink H69K")
+    if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-opc-h69k.dtb" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-hlink-h69k.dtb"
+    fi
+    SOC="h69k"
+    ;;
+"Radxa E25" | "Radxa E25 Carrier Board")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-radxa-e25.dtb"
+    fi
+    SOC="e25"
+    ;;
+"HINLINK OWL H88K-V3 Board" | "Hlink H88K-V3")
+    if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k-v3.dtb" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3588-hlink-h88k-v3.dtb"
+    fi
+    SOC="h88k-v3"
+    ;;
+"HINLINK OWL H88K Board" | "Hlink H88K")
+    if [ -n "${CURRENT_FDTFILE}" ] && [ "${CURRENT_FDTFILE}" != "rk3568-hinlink-h88k.dtb" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3588-hlink-h88k.dtb"
+    fi
+    SOC="ak88/h88k"
+    ;;
+"Hlink H28K")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3528-hlink-h28k.dtb"
+    fi
+    SOC="h28k"
+    ;;
+"Hlink HT2")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3528-hlink-ht2.dtb"
+    fi
+    SOC="ht2"
+    ;;
+"Radxa E20C")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3528-radxa-e20c.dtb"
+    fi
+    SOC="e20c"
+    ;;
+"Ariaboard Photonicat")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-photonicat.dtb"
+    fi
+    SOC="photonicat"
+    ;;
+"NLnet Watermelon Pi V3")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-watermelon-pi-v3.dtb"
+    fi
+    SOC="watermelon-pi-v3"
+    ;;
+"NLnet Watermelon Pi")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3568-watermelon-pi.dtb"
+    fi
+    SOC="watermelon-pi"
+    ;;
+"Radxa ROCK 5B" | "Radxa ROCK 5 Model B")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3588-rock-5b.dtb"
+    fi
+    SOC="rock5b"
+    ;;
+"Radxa ROCK 5C" | "Radxa ROCK 5 Model C")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3588s-rock-5c.dtb"
+    fi
+    SOC="rock5c"
+    ;;
+"Radxa E52C")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3588s-radxa-e52c.dtb"
+    fi
+    SOC="e52c"
+    ;;
+*) #default
+    if [ -f "/etc/flippy-openwrt-release" ]; then
+        source /etc/flippy-openwrt-release 2>/dev/null
+        if [ -n "${CURRENT_FDTFILE}" ]; then
+            MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+        else
+            MYDTB_FDTFILE="${FDTFILE}"
+        fi
+        SOC="${SOC}"
+    else
+        error_msg "Unknown device: [ ${MYDEVICE_NAME} ], Not supported."
+    fi
+    ;;
 esac
 
 [[ -z "${MYDTB_FDTFILE}" || -z "${SOC}" ]] && {
-    echo "Invalid FDTFILE or SOC: [ ${MYDTB_FDTFILE} / ${SOC} ]"
-    exit 1
+    error_msg "Invalid FDTFILE or SOC: [ ${MYDTB_FDTFILE} / ${SOC} ]"
 }
 
 echo -e "Current device: ${MYDEVICE_NAME} [ ${SOC} ]"
 sleep 3
 
 # Find the partition where root is located
-ROOT_PTNAME=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
-if [[ -z "${ROOT_PTNAME}" ]]; then
-    ROOT_PTNAME="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
-    if [[ -z "${ROOT_PTNAME}" ]]; then
-        echo "Cannot find the partition corresponding to the root file system!"
-        exit 1
-    fi
-fi
+ROOT_PTNAME="$(get_root_partition_name)"
 
 # Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
 case ${ROOT_PTNAME} in
@@ -266,8 +292,7 @@ nvme?n?p?)
     LB_PRE="USB_"
     ;;
 *)
-    echo "Unable to recognize the disk type of ${ROOT_PTNAME}!"
-    exit 1
+    error_msg "Unable to recognize the disk type of ${ROOT_PTNAME}!"
     ;;
 esac
 
@@ -312,8 +337,7 @@ sync
 
 # check file
 if [ ! -f "${IMG_NAME}" ]; then
-    echo "No update file found."
-    exit 1
+    error_msg "No update file found."
 else
     echo "Start update from [ ${IMG_NAME} ]"
 fi
@@ -321,8 +345,7 @@ fi
 # find boot partition
 BOOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/boot$/ {print $0}')
 if [ "${BOOT_PART_MSG}" == "" ]; then
-    echo "The boot partition is not exists or not mounted, so it cannot be upgraded with this script!"
-    exit 1
+    error_msg "The boot partition is not exists or not mounted, so it cannot be upgraded with this script!"
 fi
 
 BR_FLAG=1
@@ -345,10 +368,7 @@ BOOT_PATH=$(echo ${BOOT_PART_MSG} | awk '{print $2}')
 BOOT_UUID=$(echo ${BOOT_PART_MSG} | awk '{print $4}')
 
 # find root partition
-ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/$/ {print $0}')
-if [[ -z "${ROOT_PART_MSG}" ]]; then
-    ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/overlay$/ {print $0}')
-fi
+ROOT_PART_MSG="$(get_root_partition_msg)"
 ROOT_NAME=$(echo ${ROOT_PART_MSG} | awk '{print $1}')
 ROOT_PATH=$(echo ${ROOT_PART_MSG} | awk '{print $2}')
 ROOT_UUID=$(echo ${ROOT_PART_MSG} | awk '{print $4}')
@@ -362,16 +382,14 @@ ${EMMC_NAME}${PARTITION_NAME}3)
     NEW_ROOT_LABEL="${LB_PRE}ROOTFS1"
     ;;
 *)
-    echo "The root partition location is invalid, so it cannot be upgraded with this script!"
-    exit 1
+    error_msg "The root partition location is invalid, so it cannot be upgraded with this script!"
     ;;
 esac
 
 # find new root partition
 NEW_ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | grep "${NEW_ROOT_NAME}" | awk '$3 ~ /^part$/ && $5 !~ /^\/$/ && $5 !~ /^\/boot$/ {print $0}')
 if [ "${NEW_ROOT_PART_MSG}" == "" ]; then
-    echo "The new root partition is not exists, so it cannot be upgraded with this script!"
-    exit 1
+    error_msg "The new root partition is not exists, so it cannot be upgraded with this script!"
 fi
 NEW_ROOT_NAME=$(echo ${NEW_ROOT_PART_MSG} | awk '{print $1}')
 NEW_ROOT_PATH=$(echo ${NEW_ROOT_PART_MSG} | awk '{print $2}')
@@ -383,12 +401,10 @@ losetup -f -P ${IMG_NAME}
 if [[ "${?}" -eq "0" ]]; then
     LOOP_DEV=$(losetup | grep "${IMG_NAME}" | awk '{print $1}')
     if [ "$LOOP_DEV" == "" ]; then
-        echo "loop device not found!"
-        exit 1
+        error_msg "loop device not found!"
     fi
 else
-    echo "losetup ${IMG_FILE} failed!"
-    exit 1
+    error_msg "losetup ${IMG_FILE} failed!"
 fi
 
 # fix loopdev issue in kernel 5.19
@@ -616,7 +632,7 @@ config global
         option check_fs '0'
 
 config mount
-        option target '/overlay'
+        option target '/rom'
         option uuid '${NEW_ROOT_UUID}'
         option enabled '1'
         option enabled_fsck '1'
@@ -782,13 +798,13 @@ echo
 
 echo -n "Update boot args ... "
 
-if [ -f /tmp/armbianEnv.txt ];then
+if [ -f /tmp/armbianEnv.txt ]; then
     ORIG_OVERLAYS=$(grep '^overlays=' /tmp/armbianEnv.txt)
     ORIG_USER_OVERLAYS=$(grep '^user_overlays=' /tmp/armbianEnv.txt)
     sed -e '/user_overlays=/d' -i armbianEnv.txt
     sed -e '/overlays=/d' -i armbianEnv.txt
-    echo "$ORIG_OVERLAYS" >> armbianEnv.txt
-    echo "$ORIG_USER_OVERLAYS" >> armbianEnv.txt
+    echo "$ORIG_OVERLAYS" >>armbianEnv.txt
+    echo "$ORIG_USER_OVERLAYS" >>armbianEnv.txt
 fi
 
 sed -e '/fdtfile=/d' -i armbianEnv.txt
@@ -797,11 +813,11 @@ sed -e '/rootfstype=/d' -i armbianEnv.txt
 sed -e '/rootflags=/d' -i armbianEnv.txt
 case $SOC in
 l1pro | beikeyun)
-	echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-	;;
+    echo "fdtfile=/dtb/rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+    ;;
 *)
-	echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
-	;;
+    echo "fdtfile=rockchip/${MYDTB_FDTFILE}" >>armbianEnv.txt
+    ;;
 esac
 cat >>armbianEnv.txt <<EOF
 rootdev=UUID=${NEW_ROOT_UUID}
@@ -810,9 +826,9 @@ rootflags=compress=zstd:${ZSTD_LEVEL}
 EOF
 
 # 如果新的dtb文件不存在,则用旧的代替
-if [ ! -f "dtb/rockchip/${MYDTB_FDTFILE}" ];then
-	echo "The new dtb file does not exist, replace it with the old one."
-	cp -v /tmp/${CURRENT_FDTFILE} dtb/rockchip/${MYDTB_FDTFILE}
+if [ ! -f "dtb/rockchip/${MYDTB_FDTFILE}" ]; then
+    echo "The new dtb file does not exist, replace it with the old one."
+    cp -v /tmp/${CURRENT_FDTFILE} dtb/rockchip/${MYDTB_FDTFILE}
 fi
 sync
 

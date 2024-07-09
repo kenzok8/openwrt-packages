@@ -45,6 +45,20 @@ error_msg() {
 	exit 1
 }
 
+# Get the partition name of the root file system
+get_root_partition_name() {
+	local paths=("/" "/overlay" "/rom")
+	local partition_name
+
+	for path in "${paths[@]}"; do
+		partition_name=$(df "${path}" | awk 'NR==2 {print $1}' | awk -F '/' '{print $3}')
+		[[ -n "${partition_name}" ]] && break
+	done
+
+	[[ -z "${partition_name}" ]] && error_msg "Cannot find the root partition!"
+	echo "${partition_name}"
+}
+
 # Check emmc
 do_checkemmc() {
 	# Get device name
@@ -52,11 +66,7 @@ do_checkemmc() {
 	echo -e "${INFO} The device name: [ ${mydevice_name} ]"
 
 	# Find the partition where root is located
-	root_ptname="$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
-	if [[ -z "${root_ptname}" ]]; then
-		root_ptname="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
-	fi
-	[[ -z "${root_ptname}" ]] && error_msg "Cannot find the partition corresponding to the root file system!"
+	root_ptname="$(get_root_partition_name)"
 
 	# Find the EMMC drive
 	emmc="$(lsblk -l -o NAME | grep -oE "mmcblk[0-9]boot0" | sort | uniq | sed "s/boot0//g")"
@@ -92,7 +102,7 @@ do_checkemmc() {
 	# Set check parameters
 	out_path="/mnt/${disk_name}${link_ptname}4"
 	dev_intsize="$(fdisk -s /dev/${emmc})"
-	[[ -z "$(echo "${dev_intsize}" | sed -n "/^[0-9]\+$/p")" ]] && error_msg "Unable to get EMMC size." && exit 1
+	[[ -z "$(echo "${dev_intsize}" | sed -n "/^[0-9]\+$/p")" ]] && error_msg "Unable to get EMMC size."
 	echo -e "${INFO} The device EMMC size: [ $(($dev_intsize / 1024 / 1024))GB ]"
 
 	# check directory
@@ -124,7 +134,7 @@ do_backup() {
 # Restore the emmc system
 do_restore() {
 	echo -e "${STEPS} Start to restore the system in emmc."
-	[[ ! -f ${out_path}/${ddbr_image} ]] && error_msg "The [ ${out_path}/${ddbr_image} ] File not found." && exit 1
+	[[ ! -f ${out_path}/${ddbr_image} ]] && error_msg "The [ ${out_path}/${ddbr_image} ] File not found."
 	echo -e "Restoring [ ${out_path}/${ddbr_image} ] to [ /dev/${emmc} ], Please wait..."
 	gunzip -c ${out_path}/${ddbr_image} | pv -s ${dev_intsize}"K" | dd of=/dev/${emmc}
 	[[ "${?}" -eq "0" ]] && sync && echo -e "${SUCCESS} Restore is complete."

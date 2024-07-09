@@ -4,7 +4,7 @@
 # Copyright (C) 2022-- https://github.com/unifreq/openwrt_packit
 # Copyright (C) 2022-- https://github.com/ophub
 #======================================================================================
-
+#
 # The script supports directly setting parameters for update, skipping interactive selection
 # openwrt-update-amlogic ${OPENWRT_FILE} ${AUTO_MAINLINE_UBOOT} ${RESTORE_CONFIG} ${WORK_DIR}
 # E.g: openwrt-update-kvm openwrt_qemu-aarch64.img.gz no restore /mnt/vda4
@@ -12,6 +12,42 @@
 
 # You can also execute the script directly, and interactively select related functions
 # E.g: openwrt-update-kvm
+#
+#======================================================================================
+
+# Encountered a serious error, abort the script execution
+error_msg() {
+    echo -e "[ERROR] ${1}"
+    exit 1
+}
+
+# Get the partition name of the root file system
+get_root_partition_name() {
+    local paths=("/" "/overlay" "/rom")
+    local partition_name
+
+    for path in "${paths[@]}"; do
+        partition_name=$(df "${path}" | awk 'NR==2 {print $1}' | awk -F '/' '{print $3}')
+        [[ -n "${partition_name}" ]] && break
+    done
+
+    [[ -z "${partition_name}" ]] && error_msg "Cannot find the root partition!"
+    echo "${partition_name}"
+}
+
+# Get the partition message of the root file system
+get_root_partition_msg() {
+    local paths=("/" "/overlay" "/rom")
+    local partition_name
+
+    for path in "${paths[@]}"; do
+        partition_msg=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ "^" "'"${path}"'" "$" {print $0}')
+        [[ -n "${partition_msg}" ]] && break
+    done
+
+    [[ -z "${partition_msg}" ]] && error_msg "Cannot find the root partition message!"
+    echo "${partition_msg}"
+}
 
 # Receive one-key command related parameters
 IMG_NAME="${1}"
@@ -25,8 +61,7 @@ echo "Check the necessary dependencies..."
 for dep in ${DEPENDS}; do
     WITCH=$(busybox which ${dep})
     if [ "${WITCH}" == "" ]; then
-        echo "Dependent command: ${dep} does not exist, upgrade cannot be performed!"
-        exit 1
+        error_msg "Dependent command: ${dep} does not exist, upgrade cannot be performed!"
     else
         echo "${dep} path: ${WITCH}"
     fi
@@ -36,11 +71,9 @@ echo "Check passed"
 # Current device model
 source /etc/flippy-openwrt-release
 if [[ -z "${PLATFORM}" ]]; then
-    echo "The platform is empty."
-    exit 1
+    error_msg "The platform is empty."
 elif [[ "${PLATFORM}" != "qemu-aarch64" ]]; then
-    echo "The platform is missing, only support qemu-aarch64."
-    exit 1
+    error_msg "The platform is missing, only support qemu-aarch64."
 else
     echo -e "Current platform: [ ${PLATFORM} ]"
     sleep 3
@@ -48,14 +81,7 @@ fi
 
 # Find the partition where root is located
 # vda2 or vda3
-ROOT_PTNAME=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
-if [[ -z "${ROOT_PTNAME}" ]]; then
-    ROOT_PTNAME="$(df /overlay | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')"
-    if [[ -z "${ROOT_PTNAME}" ]]; then
-        echo "Cannot find the partition corresponding to the root file system!"
-        exit 1
-    fi
-fi
+ROOT_PTNAME="$(get_root_partition_name)"
 
 # Find the disk where the partition is located, only supports sd?? hd?? vd??
 case ${ROOT_PTNAME} in
@@ -65,8 +91,7 @@ case ${ROOT_PTNAME} in
     LABEL_PRESTR=""
     ;;
 *)
-    echo "Unable to recognize the disk type of ${ROOT_PTNAME}!"
-    exit 1
+    error_msg "Unable to recognize the disk type of ${ROOT_PTNAME}!"
     ;;
 esac
 
@@ -86,16 +111,14 @@ if [[ -z "${WORK_DIR}" ]]; then
     WORK_DIR="/mnt/${DISK_NAME}${PART_PRESTR}4/"
 fi
 if [[ ! -d "${WORK_DIR}" ]]; then
-    echo "the work directory is not exists. [ ${WORK_DIR} ]"
-    exit 1
+    error_msg "the work directory is not exists. [ ${WORK_DIR} ]"
 fi
 
 cd "${WORK_DIR}"
 if [[ -d "/tmp/upload" ]] && [[ -f "/tmp/upload/*img*" ]]; then
     mv -f /tmp/upload/*img* .
     if [[ $? -ne 0 ]]; then
-        echo "move file failed."
-        exit 1
+        error_msg "move file failed."
     fi
 fi
 sync
@@ -138,8 +161,7 @@ sync
 
 # check file
 if [ ! -f "${IMG_NAME}" ]; then
-    echo "No update file found."
-    exit 1
+    error_msg "No update file found."
 else
     echo "Start update from [ ${IMG_NAME} ]"
 fi
@@ -147,8 +169,7 @@ fi
 # find efi partition
 EFI_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/boot\/efi$/ {print $0}')
 if [ "${EFI_PART_MSG}" == "" ]; then
-    echo "The EFI partition does not exist, so the update cannot be continued!"
-    exit 1
+    error_msg "The EFI partition does not exist, so the update cannot be continued!"
 fi
 EFI_NAME=$(echo $EFI_PART_MSG | awk '{print $1}')
 EFI_DEV=$(echo $EFI_PART_MSG | awk '{print $2}')
@@ -168,10 +189,7 @@ else
 fi
 
 # find root partition
-ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/$/ {print $0}')
-if [[ -z "${ROOT_PART_MSG}" ]]; then
-    ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | awk '$3~/^part$/ && $5 ~ /^\/overlay$/ {print $0}')
-fi
+ROOT_PART_MSG="$(get_root_partition_msg)"
 ROOT_NAME=$(echo ${ROOT_PART_MSG} | awk '{print $1}')
 ROOT_DEV=$(echo ${ROOT_PART_MSG} | awk '{print $2}')
 ROOT_UUID=$(echo ${ROOT_PART_MSG} | awk '{print $4}')
@@ -186,8 +204,7 @@ ${DISK_NAME}${PART_PRESTR}3)
     NEW_ROOT_LABEL="${LABEL_PRESTR}ROOTFS1"
     ;;
 *)
-    echo "ROOTFS The partition location is incorrect, so the update cannot continue!"
-    exit 1
+    error_msg "ROOTFS The partition location is incorrect, so the update cannot continue!"
     ;;
 esac
 echo "NEW_ROOT_NAME: [ ${NEW_ROOT_NAME} ]"
@@ -195,8 +212,7 @@ echo "NEW_ROOT_NAME: [ ${NEW_ROOT_NAME} ]"
 # find new root partition
 NEW_ROOT_PART_MSG=$(lsblk -l -o NAME,PATH,TYPE,UUID,MOUNTPOINT | grep "${NEW_ROOT_NAME}" | awk '$3 ~ /^part$/ && $5 !~ /^\/$/ && $5 !~ /^\/boot$/ {print $0}')
 if [ "${NEW_ROOT_PART_MSG}" == "" ]; then
-    echo "The new ROOTFS partition does not exist, so the update cannot continue!"
-    exit 1
+    error_msg "The new ROOTFS partition does not exist, so the update cannot continue!"
 fi
 NEW_ROOT_NAME=$(echo $NEW_ROOT_PART_MSG | awk '{print $1}')
 NEW_ROOT_DEV=$(echo $NEW_ROOT_PART_MSG | awk '{print $2}')
@@ -209,12 +225,10 @@ losetup -f -P $IMG_NAME
 if [ $? -eq 0 ]; then
     LOOP_DEV=$(losetup | grep "$IMG_NAME" | awk '{print $1}')
     if [ "$LOOP_DEV" == "" ]; then
-        echo "loop device not found!"
-        exit 1
+        error_msg "loop device not found!"
     fi
 else
-    echo "losetup [ $IMG_FILE ] failed!"
-    exit 1
+    error_msg "losetup [ $IMG_FILE ] failed!"
 fi
 
 # fix loopdev issue in kernel 5.19
@@ -381,8 +395,7 @@ for entry in $ENTRYS; do
     echo "Remove old [ $entry ] ... "
     rm -rf $entry
     if [ $? -ne 0 ]; then
-        echo "failed."
-        exit 1
+        error_msg "failed."
     fi
 done
 
@@ -437,7 +450,7 @@ config  global
         option check_fs '0'
 
 config  mount
-        option target '/overlay'
+        option target '/rom'
         option uuid '${NEW_ROOT_UUID}'
         option enabled '1'
         option enabled_fsck '1'
