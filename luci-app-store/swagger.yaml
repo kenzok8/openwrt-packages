@@ -237,7 +237,7 @@ paths:
       tags:
         - entrysh
       summary: 查询插件运行状态，主要为了获取入口信息。
-      description: 调用前应该检查meta数据中autoconf数组包含entrysh，注意如果是安装插件则检查服务器端的autoconf，如果是调用已安装插件则检查路由器端的autoconf。
+      description: 调用前应该检查meta数据中flags数组包含entrysh，注意如果是安装插件则检查服务器端的flags，如果是调用已安装插件则检查路由器端的flags。
       parameters:
         - in: "query"
           name: "token"

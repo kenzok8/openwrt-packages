@@ -483,7 +483,7 @@ function entrysh()
     local lock, msg = flock("/var/lock/istore-entrysh.lock", "lock")
     local meta
     for _, meta in ipairs(installed) do
-        if meta.autoconf ~= nil and meta.uci ~= nil and luci.util.contains(meta.autoconf, "entrysh")
+        if meta.flags ~= nil and meta.uci ~= nil and luci.util.contains(meta.flags, "entrysh")
             and (candidate == nil or luci.util.contains(candidate, meta.name)) then
             local entryfile = "/usr/libexec/istoree/" .. meta.name .. ".sh"
             local ucifile = "/etc/config/" .. meta.uci
