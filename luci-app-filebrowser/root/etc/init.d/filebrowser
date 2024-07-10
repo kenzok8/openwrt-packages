@@ -1,0 +1,48 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2018-2020 Lienol <lawlienol@gmail.com>
+# Improve by xiaozhuai <xiaozhuai7@gmail.com>
+
+START=99
+
+LOG_PATH="/var/log/filebrowser.log"
+
+echolog() {
+	echo -e "$(date "+%Y-%m-%d %H:%M:%S"): $1" >> $LOG_PATH
+}
+
+config_t_get() {
+	local index=0
+	[ -n "$4" ] && index=$4
+	local ret=$(uci get filebrowser.@$1[$index].$2 2>/dev/null)
+	echo ${ret:=$3}
+}
+start() {
+	ENABLED=$(config_t_get global enable 0)
+	[ "$ENABLED" = "0" ] && return
+	ADDRESS=$(config_t_get global address 0.0.0.0)
+	PORT=$(config_t_get global port 8088)
+	DATABASE=$(config_t_get global database /etc/filebrowser.db)
+	USERNAME=$(config_t_get global username admin)
+	PASSWORD=$(config_t_get global password admin)
+	SSL_CERT=$(config_t_get global ssl_cert)
+	SSL_KEY=$(config_t_get global ssl_key)
+	ROOT_PATH=$(config_t_get global root_path /root)
+	executable_directory=$(config_t_get global executable_directory /tmp)
+	[ ! -f "$executable_directory/filebrowser" ] && echolog "$executable_directory/filebrowser not exists, please download first" && exit
+	
+	SSL_PARAMS=""
+	[ -n "$SSL_CERT" ] && [ -n "$SSL_KEY" ] && SSL_PARAMS="-t $SSL_CERT -k $SSL_KEY"
+	PASSWORD="$($executable_directory/filebrowser hash "$PASSWORD")"
+	$executable_directory/filebrowser -a $ADDRESS -p $PORT -r $ROOT_PATH -d "$DATABASE" --username $USERNAME --password $PASSWORD $SSL_PARAMS -l $LOG_PATH >/dev/null 2>&1 &
+}
+
+stop() {
+	ps -w | grep -v "grep" | grep "$executable_directory/filebrowser -a" | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1 &
+	rm -rf $LOG_PATH
+}
+
+restart() {
+	stop
+	sleep 1
+	start
+}
