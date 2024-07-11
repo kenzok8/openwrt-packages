@@ -1,2 +1,11 @@
-
-<% luci.template.render("quickstart/main", {prefix=luci.dispatcher.build_url("admin", "quickstart")}) %>
+<%
+local function vue_lang()
+    local i18n = require("luci.i18n")
+    local lang = i18n.translate("quickstart_vue_lang")
+    if lang == "quickstart_vue_lang" or lang == "" then
+        lang = "en"
+    end
+    return lang
+end
+-%>
+<% luci.template.render("quickstart/main", {prefix=luci.dispatcher.build_url("admin", "quickstart"),lang=vue_lang()}) %>

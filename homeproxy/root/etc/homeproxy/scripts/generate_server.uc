@@ -146,7 +146,7 @@ uci.foreach(uciconfig, uciserver, (cfg) => {
 				max_time_difference: cfg.tls_reality_max_time_difference ? (cfg.max_time_difference + 's') : null,
 				handshake: {
 					server: cfg.tls_reality_server_addr,
-					server_port: cfg.tls_reality_server_port
+					server_port: strToInt(cfg.tls_reality_server_port)
 					}
 			} : null
 		} : null,
