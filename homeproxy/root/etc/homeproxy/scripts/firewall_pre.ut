@@ -40,14 +40,15 @@ chain input {
 	iifname {{ tun_name }} counter accept comment "!{{ cfgname }}: accept tun input"
 	{% endif %}
 {%
-	uci.foreach(cfgname, 'server', (s) => {
-		if (s.enabled !== '1')
-			return;
+	if (auto_firewall === '1')
+		uci.foreach(cfgname, 'server', (s) => {
+			if (s.enabled !== '1')
+				return;
 
-		let proto = s.network || '{ tcp, udp }';
-		printf('	meta l4proto %s th dport %s counter accept comment "!%s: accept server %s"\n',
-			proto, s.port, cfgname, s['.name']);
-	});
+			let proto = s.network || '{ tcp, udp }';
+			printf('	meta l4proto %s th dport %s counter accept comment "!%s: accept server %s"\n',
+				proto, s.port, cfgname, s['.name']);
+		});
 %}
 }
 {% endif %}
