@@ -5,8 +5,6 @@
 -%>
 
 <%
-	local ver = require "luci.version"
-
 	if not luci.dispatcher.context.template_header_sent then
 		include("themes/" .. theme .. "/header_login")
 		luci.dispatcher.context.template_header_sent = true
