@@ -409,7 +409,7 @@ end
 
 --Return the current openwrt firmware version
 local function current_firmware_version()
-	return luci.sys.exec("ls /lib/modules/ 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}.[0-9]+'") or "Invalid value."
+	return luci.sys.exec("uname -r 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}.[0-9]+'") or "Invalid value."
 end
 
 --Return the current plugin version
@@ -419,12 +419,12 @@ end
 
 --Return the current kernel version
 local function current_kernel_version()
-	return luci.sys.exec("ls /lib/modules/ 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}.[0-9]+'") or "Invalid value."
+	return luci.sys.exec("uname -r 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}.[0-9]+'") or "Invalid value."
 end
 
 --Return the current kernel branch
 local function current_kernel_branch()
-	local default_kernel_branch = luci.sys.exec("ls /lib/modules/ 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}'")
+	local default_kernel_branch = luci.sys.exec("uname -r 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}'")
 	local amlogic_kernel_branch = luci.sys.exec("uci get amlogic.config.amlogic_kernel_branch 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}'") or ""
 	if trim(amlogic_kernel_branch) == "" then
 		return default_kernel_branch
