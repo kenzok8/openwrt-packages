@@ -51,7 +51,7 @@ const dns_port = uci.get(uciconfig, uciinfra, 'dns_port') || '5333';
 
 let main_node, main_udp_node, dedicated_udp_node, default_outbound, sniff_override = '1',
     dns_server, dns_default_strategy, dns_default_server, dns_disable_cache, dns_disable_cache_expire,
-    dns_independent_cache, dns_client_subnet, direct_domain_list;
+    dns_independent_cache, dns_client_subnet, direct_domain_list, proxy_domain_list;
 
 if (routing_mode !== 'custom') {
 	main_node = uci.get(uciconfig, ucimain, 'main_node') || 'nil';
@@ -65,6 +65,10 @@ if (routing_mode !== 'custom') {
 	direct_domain_list = trim(readfile(HP_DIR + '/resources/direct_list.txt'));
 	if (direct_domain_list)
 		direct_domain_list = split(direct_domain_list, /[\r\n]/);
+
+	proxy_domain_list = trim(readfile(HP_DIR + '/resources/proxy_list.txt'));
+	if (proxy_domain_list)
+		proxy_domain_list = split(proxy_domain_list, /[\r\n]/);
 } else {
 	/* DNS settings */
 	dns_default_strategy = uci.get(uciconfig, ucidnssetting, 'default_strategy');
@@ -375,6 +379,14 @@ if (!isEmpty(main_node)) {
 		push(config.dns.rules, {
 			domain_keyword: direct_domain_list,
 			server: 'default-dns'
+		});
+
+	/* Filter out SVCB/HTTPS queries for "exquisite" Apple devices */
+	if (routing_mode === 'gfwlist' || proxy_domain_list)
+		push(config.dns.rules, {
+			domain_keyword: (routing_mode !== 'gfwlist') ? proxy_domain_list : null,
+			query_type: [64, 65],
+			server: 'block-dns'
 		});
 
 	if (isEmpty(config.dns.rules))

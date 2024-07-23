@@ -194,13 +194,15 @@ start_service() {
 				procd_append_param command --ipset-name6 "inet@fw4@homeproxy_mainland_addr_v6"
 				procd_append_param command --chnlist-file "$HP_DIR/resources/china_list.txt"
 				procd_append_param command --gfwlist-file "$HP_DIR/resources/gfw_list.txt"
-				[ "$ipv6_support" -eq "1" ] || procd_append_param command --no-ipv6=tC
 				procd_append_param command --reuse-port
 
 				if chinadns-ng --version | grep -q "target:"; then
 					procd_append_param command --cache 10000
 					procd_append_param command --cache-stale 3600
 					procd_append_param command --verdict-cache 10000
+					[ "$ipv6_support" -eq "1" ] || procd_append_param command --no-ipv6=ip:non_china
+				else
+					[ "$ipv6_support" -eq "1" ] || procd_append_param command --no-ipv6=tC
 				fi
 
 				if [ -x "/sbin/ujail" ]; then
