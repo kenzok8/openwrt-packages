@@ -389,7 +389,7 @@ return view.extend({
 		ss.handleLinkImport = function() {
 			var textarea = new ui.Textarea();
 			ui.showModal(_('Import share links'), [
-				E('p', _('Support Hysteria, Shadowsocks(R), Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.')),
+				E('p', _('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.')),
 				textarea.render(),
 				E('div', { class: 'right' }, [
 					E('button', {
@@ -1260,7 +1260,7 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.taboption('subscription', form.DynamicList, 'subscription_url', _('Subscription URL-s'),
-			_('Support Hysteria, Shadowsocks(R), Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.'));
+			_('Support Hysteria, Shadowsocks, Trojan, v2rayN (VMess), and XTLS (VLESS) online configuration delivery standard.'));
 		o.validate = function(section_id, value) {
 			if (section_id && value) {
 				try {
