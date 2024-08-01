@@ -869,7 +869,7 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:436
 #: htdocs/luci-static/resources/view/homeproxy/client.js:768
-msgid "Host Fields"
+msgid "Host fields"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:709
@@ -1391,7 +1391,7 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:435
 #: htdocs/luci-static/resources/view/homeproxy/client.js:767
-msgid "Other Fields"
+msgid "Other fields"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:389
@@ -1488,7 +1488,7 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:437
 #: htdocs/luci-static/resources/view/homeproxy/client.js:769
-msgid "Port Fields"
+msgid "Port fields"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:537
@@ -1756,12 +1756,12 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:438
 #: htdocs/luci-static/resources/view/homeproxy/client.js:770
-msgid "SRC-IP Fields"
+msgid "SRC-IP fields"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:439
 #: htdocs/luci-static/resources/view/homeproxy/client.js:771
-msgid "SRC-Port Fields"
+msgid "SRC-Port fields"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:515
