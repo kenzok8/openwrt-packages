@@ -13,7 +13,7 @@
 
 <br>中文 | [English](README_en.md)
 
-* 仓库里luci-theme-argon 与 luci-app-homeproxy 适配23.05 
+* 仓库里luci-theme-argon 与 luci-app-homeproxy 适配23.05 不适配18.06，切记！
 
 * 把openwrt-packages与small仓库重新归类，ssr、passwall、vssr以及依赖合并small
 
