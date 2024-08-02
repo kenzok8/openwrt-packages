@@ -2,7 +2,7 @@
 	Argon is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI and Argon Template
 
 	luci-theme-argon
-	Copyright 2021 Jerryk <jerrykuku@gmail.com>
+	Copyright 2020 Jerryk <jerrykuku@gmail.com>
 
 	Have a bug? Please create an issue here on GitHub!
 	https://github.com/jerrykuku/luci-theme-argon/issues
@@ -21,7 +21,7 @@
 	Licensed to the public under the Apache License 2.0
 -%>
 
-<%+header_login%>
+<%+themes/argon/out_header_login%>
 <%
 	local util		= require "luci.util"
 	local fs		= require "nixio.fs"
@@ -67,7 +67,7 @@
 		return backgroundTable, backgroundCount
 	end
 	local function selectBackground(themeDir)
-		local bgUrl				= media .. "/img/bg1.jpg"
+		local bgUrl			= media .. "/img/bg1.jpg"
 		local backgroundType	= "Image"
 		local mimeType			= ""
 
@@ -129,8 +129,9 @@
 	<div class="login-container">
 		<div class="login-form">
 			<!-- Logo Start -->
-			<a class="brand" href="/"><img src="<%=media%>/img/argon.svg" class="icon"></a>
-			<span class="brand-text"><%=striptags( (boardinfo.hostname or "?") ) %></span>
+			<a class="brand" href="/"><img src="<%=media%>/img/argon.svg" class="icon">
+				<span class="brand-text"><%=striptags( (boardinfo.hostname or "?") ) %></span>
+			</a>
 			<!-- Logo End -->
 			<!-- Login Form Start -->
 			<form class="form-login" method="post" action="<%=pcdata(luci.http.getenv("REQUEST_URI"))%>">
@@ -150,7 +151,7 @@
 					</div>
 				</div>
 				<div>
-					<input type="submit" value="<%:Login%>" class="cbi-button cbi-button-apply" />
+					<input type="submit" value="<%:Log in%>" class="cbi-button cbi-button-apply" />
 				</div>
 			</form>
 			<!-- Login Form End -->
@@ -159,28 +160,4 @@
 				if (input)
 					input.focus();
 			//]]></script>
-			<%
-			local uci  = require "luci.model.uci".cursor()
-			local fs  = require "nixio.fs"
-			local https_key = uci:get("uhttpd", "main", "key")
-			local https_port = uci:get("uhttpd", "main", "listen_https")
-			if type(https_port) == "table" then
-				https_port = https_port[1]
-			end
-
-			if https_port and fs.access(https_key) then
-				https_port = https_port:match("(%d+)$")
-			%>
-			<script type="text/javascript">//<![CDATA[
-				if (document.location.protocol != 'https:') {
-					var url = 'https://' + window.location.hostname + ':' + '<%=https_port%>' + window.location.pathname;
-					var img = new Image;
-					img.onload = function () { window.location = url };
-					img.src = 'https://' + window.location.hostname + ':' + '<%=https_port%>' + '<%=resource%>/cbi/up.gif?' + Math.random();;
-					setTimeout(function () {
-						img.src = ''
-					}, 5000);
-				}
-			//]]></script>
-			<% end %>
-<%+footer%>
+<%+themes/argon/footer_login%>
