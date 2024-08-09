@@ -432,11 +432,11 @@ return view.extend({
 		ss.sectiontitle = L.bind(hp.loadDefaultLabel, this, data[0]);
 		ss.renderSectionAdd = L.bind(hp.renderSectionAdd, this, ss);
 
-		ss.tab('field_other', _('Other Fields'));
-		ss.tab('field_host', _('Host Fields'));
-		ss.tab('field_port', _('Port Fields'));
-		ss.tab('field_source_ip', _('SRC-IP Fields'));
-		ss.tab('field_source_port', _('SRC-Port Fields'));
+		ss.tab('field_other', _('Other fields'));
+		ss.tab('field_host', _('Host fields'));
+		ss.tab('field_port', _('Port fields'));
+		ss.tab('field_source_ip', _('SRC-IP fields'));
+		ss.tab('field_source_port', _('SRC-Port fields'));
 
 		so = ss.taboption('field_other', form.Value, 'label', _('Label'));
 		so.load = L.bind(hp.loadDefaultLabel, this, data[0]);
@@ -764,11 +764,11 @@ return view.extend({
 		ss.sectiontitle = L.bind(hp.loadDefaultLabel, this, data[0]);
 		ss.renderSectionAdd = L.bind(hp.renderSectionAdd, this, ss);
 
-		ss.tab('field_other', _('Other Fields'));
-		ss.tab('field_host', _('Host Fields'));
-		ss.tab('field_port', _('Port Fields'));
-		ss.tab('field_source_ip', _('SRC-IP Fields'));
-		ss.tab('field_source_port', _('SRC-Port Fields'));
+		ss.tab('field_other', _('Other fields'));
+		ss.tab('field_host', _('Host fields'));
+		ss.tab('field_port', _('Port fields'));
+		ss.tab('field_source_ip', _('SRC-IP fields'));
+		ss.tab('field_source_port', _('SRC-Port fields'));
 
 		so = ss.taboption('field_other', form.Value, 'label', _('Label'));
 		so.load = L.bind(hp.loadDefaultLabel, this, data[0]);

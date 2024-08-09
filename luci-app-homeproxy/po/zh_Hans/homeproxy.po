@@ -890,7 +890,7 @@ msgstr "主机名"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:436
 #: htdocs/luci-static/resources/view/homeproxy/client.js:768
-msgid "Host Fields"
+msgid "Host fields"
 msgstr "主机字段"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:709
@@ -1419,7 +1419,7 @@ msgstr "仅代理中国大陆"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:435
 #: htdocs/luci-static/resources/view/homeproxy/client.js:767
-msgid "Other Fields"
+msgid "Other fields"
 msgstr "其他字段"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:389
@@ -1516,7 +1516,7 @@ msgstr "端口 %s 已存在！"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:437
 #: htdocs/luci-static/resources/view/homeproxy/client.js:769
-msgid "Port Fields"
+msgid "Port fields"
 msgstr "端口字段"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:537
@@ -1784,13 +1784,13 @@ msgstr "规则集 URL"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:438
 #: htdocs/luci-static/resources/view/homeproxy/client.js:770
-msgid "SRC-IP Fields"
+msgid "SRC-IP fields"
 msgstr "源 IP 字段"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:439
 #: htdocs/luci-static/resources/view/homeproxy/client.js:771
-msgid "SRC-Port Fields"
-msgstr "源端口 字段"
+msgid "SRC-Port fields"
+msgstr "源端口字段"
 
 #: htdocs/luci-static/resources/view/homeproxy/node.js:515
 msgid "SSH"

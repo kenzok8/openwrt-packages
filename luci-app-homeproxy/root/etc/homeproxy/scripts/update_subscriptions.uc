@@ -453,6 +453,7 @@ function main() {
 	}
 
 	for (let url in subscription_urls) {
+		url = replace(url, /#.*$/, '');
 		const groupHash = calcStringMD5(url);
 		node_cache[groupHash] = {};
 
