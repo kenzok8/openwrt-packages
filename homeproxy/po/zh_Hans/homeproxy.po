@@ -1137,6 +1137,10 @@ msgstr "独立缓存每个 DNS 服务器的结果以供特殊用途。启用后�
 msgid "Masquerade"
 msgstr "伪装"
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js:915
+msgid "Match <code>.outbounds[].server</code> domains."
+msgstr "匹配 <code>.outbounds[].server</code> 域名。"
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:857
 msgid "Match IP CIDR with query response."
 msgstr "使用查询响应匹配 IP CIDR。"
@@ -1164,10 +1168,6 @@ msgstr "使用正则表达式匹配域名。"
 #: htdocs/luci-static/resources/view/homeproxy/client.js:820
 msgid "Match full domain."
 msgstr "匹配完整域名。"
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:915
-msgid "Match outbound."
-msgstr "匹配出站。"
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:538
 #: htdocs/luci-static/resources/view/homeproxy/client.js:842
@@ -2619,3 +2619,6 @@ msgstr "有效端口值"
 #: htdocs/luci-static/resources/homeproxy.js:268
 msgid "valid uuid"
 msgstr "有效 uuid"
+
+#~ msgid "Match outbound."
+#~ msgstr "匹配出站。"

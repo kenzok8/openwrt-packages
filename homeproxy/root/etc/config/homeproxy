@@ -63,3 +63,10 @@ config homeproxy 'server'
 	option enabled '0'
 	option auto_firewall '0'
 
+config dns_rule 'nodes_domain'
+	option label 'NodesDomain'
+	option enabled '1'
+	option mode 'default'
+	list outbound 'any-out'
+	option server 'default-dns'
+

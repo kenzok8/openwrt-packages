@@ -1111,6 +1111,10 @@ msgstr ""
 msgid "Masquerade"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/homeproxy/client.js:915
+msgid "Match <code>.outbounds[].server</code> domains."
+msgstr ""
+
 #: htdocs/luci-static/resources/view/homeproxy/client.js:857
 msgid "Match IP CIDR with query response."
 msgstr ""
@@ -1137,10 +1141,6 @@ msgstr ""
 #: htdocs/luci-static/resources/view/homeproxy/client.js:484
 #: htdocs/luci-static/resources/view/homeproxy/client.js:820
 msgid "Match full domain."
-msgstr ""
-
-#: htdocs/luci-static/resources/view/homeproxy/client.js:915
-msgid "Match outbound."
 msgstr ""
 
 #: htdocs/luci-static/resources/view/homeproxy/client.js:538
