@@ -67,14 +67,17 @@ msgstr "清空日志"
 msgid "Reset Password"
 msgstr "重置密码"
 
-msgid "Reset"
-msgstr "重置"
+msgid "Generate a new random password."
+msgstr "随机生成一个新密码。"
 
 msgid "Username:"
 msgstr "用户名："
 
-msgid "Password:"
-msgstr "密码："
+msgstr "New Password:"
+msgstr "新密码："
+
+msgstr "New password has been copied to clipboard."
+msgstr "新密码已复制到剪贴板。"
 
 msgid "Login Validity Period (hours)"
 msgstr "登录有效期（小时）"

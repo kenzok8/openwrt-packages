@@ -1,0 +1,36 @@
+{
+	"admin/nas": {
+		"title": "NAS",
+		"order": 44,
+		"action": {
+			"type": "firstchild"
+		}
+	},
+	"admin/nas/alist": {
+		"title": "Alist",
+		"order": 20,
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-alist" ],
+			"uci": { "alist": true }
+		}
+	},
+	"admin/nas/alist/basic": {
+		"title": "Basic Setting",
+		"order": 30,
+		"action": {
+			"type": "view",
+			"path": "alist/basic"
+		}
+	},
+	"admin/nas/alist/logs": {
+		"title": "Logs",
+		"order": 40,
+		"action": {
+			"type": "view",
+			"path": "alist/logs"
+		}
+	}
+}

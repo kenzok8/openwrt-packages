@@ -6,19 +6,11 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-alist
-PKG_VERSION:=1.0.13
+PKG_VERSION:=1.1.0
 PKG_RELEASE:=1
 
 LUCI_TITLE:=LuCI support for alist
-LUCI_DEPENDS:=+alist +luci-compat
-
-define Package/$(PKG_NAME)/postinst
-#!/bin/sh
-[ -n "${IPKG_INSTROOT}" ] || {
-	( . /etc/uci-defaults/50-luci-alist ) && rm -f /etc/uci-defaults/50-luci-alist
-	exit 0
-}
-endef
+LUCI_DEPENDS:=+alist
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
