@@ -95,7 +95,7 @@ return view.extend({
 			]);
 		}
 
-		s = m.section(form.TypedSection);
+		s = m.section(form.NamedSection, '@alist[0]', 'alist');
 
 		o = s.option(form.Flag, 'enabled', _('Enabled'));
 		o.default = o.disabled;

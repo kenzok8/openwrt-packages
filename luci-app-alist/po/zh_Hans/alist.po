@@ -73,10 +73,10 @@ msgstr "随机生成一个新密码。"
 msgid "Username:"
 msgstr "用户名："
 
-msgstr "New Password:"
+msgid "New Password:"
 msgstr "新密码："
 
-msgstr "New password has been copied to clipboard."
+msgid "New password has been copied to clipboard."
 msgstr "新密码已复制到剪贴板。"
 
 msgid "Login Validity Period (hours)"
