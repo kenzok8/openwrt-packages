@@ -678,9 +678,9 @@ function rand_geturl(){
 		echo `curl -k -s -w "%{http_code}" -m 5 ${url_str} -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36 Edg/112.0.1722.58" -o /dev/null`
 	}
 	local check=`getcheck`
-	while [ -z "$check" ] || [[ $check -ne 200 && $check -ne 301 && $check -ne 302 ]]; do
+	while [ -z "$check" ] || [[ $check -ne 200 && $check -ne 202 && $check -ne 301 && $check -ne 302 ]]; do
 		local check=`getcheck`
-		if [ ! -z "$check" ] && [[ $check -eq 200 || $check -eq 301 || $check -eq 302 ]]; then
+		if [ ! -z "$check" ] && [[ $check -eq 200 || $check -eq 202 || $check -eq 301 || $check -eq 302 ]]; then
 			[ ! -z "$network_enable" ] && [ "$network_enable" -eq "404" ] && echo "`date "+%Y-%m-%d %H:%M:%S"` 【网络状态】网络恢复正常.." >> ${logfile}
 			local network_enable="200"
 		else

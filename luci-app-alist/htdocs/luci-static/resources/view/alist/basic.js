@@ -17,18 +17,18 @@ function getServiceStatus() {
 	return L.resolveDefault(callServiceList('alist'), {}).then(function (res) {
 		var isRunning = false;
 		try {
-			isRunning = res['alist']['instances']['instance1']['running'];
+			isRunning = res['alist']['instances']['alist']['running'];
 		} catch (e) { }
 		return isRunning;
 	});
 }
 
-function renderStatus(isRunning, webport) {
+function renderStatus(isRunning, protocol, webport) {
 	var spanTemp = '<em><span style="color:%s"><strong>%s %s</strong></span></em>';
 	var renderHTML;
 	if (isRunning) {
-		var button = String.format('<input class="cbi-button-reload" type="button" style="margin-left: 50px" value="%s" onclick="window.open(\'//%s:%s/\')">',
-			_('Open Web Interface'), window.location.hostname, webport);
+		var button = String.format('<input class="cbi-button-reload" type="button" style="margin-left: 50px" value="%s" onclick="window.open(\'%s//%s:%s/\')">',
+			_('Open Web Interface'), protocol, window.location.hostname, webport);
 		renderHTML = spanTemp.format('green', 'Alist', _('RUNNING')) + button;
 	} else {
 		renderHTML = spanTemp.format('red', 'Alist', _('NOT RUNNING'));
@@ -64,6 +64,13 @@ return view.extend({
 	render: function (data) {
 		var m, s, o;
 		var webport = uci.get(data[0], '@alist[0]', 'port') || '5244';
+		var ssl = uci.get(data[0], '@alist[0]', 'ssl') || '0';
+		var protocol;
+		if (ssl === '0') {
+			protocol = 'http:';
+		} else if (ssl === '1') {
+			protocol = 'https:';
+		}
 
 		m = new form.Map('alist', _('Alist'),
 			_('A file list program that supports multiple storage.') +
@@ -79,7 +86,7 @@ return view.extend({
 			poll.add(function () {
 				return L.resolveDefault(getServiceStatus()).then(function (res) {
 					var view = document.getElementById('service_status');
-					view.innerHTML = renderStatus(res, webport);
+					view.innerHTML = renderStatus(res, protocol, webport);
 				});
 			});
 
@@ -108,10 +115,12 @@ return view.extend({
 
 		o = s.option(form.Value, 'ssl_cert', _('SSL cert'),
 			_('SSL certificate file path'));
+		o.rmempty = false;
 		o.depends('ssl', '1');
 
 		o = s.option(form.Value, 'ssl_key', _('SSL key'),
 			_('SSL key file path'));
+		o.rmempty = false;
 		o.depends('ssl', '1');
 
 		o = s.option(form.Flag, 'mysql', _('Enable Database'));
