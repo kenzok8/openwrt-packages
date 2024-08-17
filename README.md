@@ -13,7 +13,7 @@
 
 <br>中文 | [English](README_en.md)
 
-* 仓库里luci-theme-argon 与 luci-app-homeproxy 适配23.05 不适配18.06，切记！
+* 仓库里luci-theme-argon 适配23.05 不适配18.06，切记！
 
 * 把openwrt-packages与small仓库重新归类，ssr、passwall、vssr以及依赖合并small
 
@@ -69,7 +69,6 @@ make menuconfig
 | luci-theme-mcat              | Modify topic name          |   mcat主题        |
 | luci-app-mosdns              | mosdns dns offload            |DNS 国内外分流解析与广告过滤        |
 | luci-app-unblockneteasemusic | Unlock NetEase Cloud Music         | 解锁网易云音乐   |
-| luci-app-homeproxy           | homeproxy  proxy        | homeproxy 代理   |
 
 ![暗黄主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-9.jpg)
 ![暗黄主题](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/sshot-10.jpg)
