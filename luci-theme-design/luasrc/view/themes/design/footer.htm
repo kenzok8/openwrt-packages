@@ -1,0 +1,69 @@
+<%#
+    Material is a clean HTML5 theme for LuCI. It is based on luci-theme-bootstrap and MUI
+
+    luci-theme-material
+        Copyright 2015 Lutty Yang <lutty@wcan.in>
+            
+    luci-theme-neobird
+    Copyright 2021 2smile <thinktip@gmail.com>
+
+    luci-theme-design
+    Copyright 2023 gngpp <gngppz@gmail.com>
+
+    Have a bug? Please create an issue here on GitHub!
+        https://github.com/LuttyYang/luci-theme-material/issues
+
+    luci-theme-bootstrap:
+    Copyright 2008 Steven Barth <steven@midlink.org>
+    Copyright 2008 Jo-Philipp Wich <jow@openwrt.org>
+    Copyright 2012 David Menting <david@nut-bolt.nl>
+
+    MUI:
+    https://github.com/muicss/mui
+
+    Licensed to the public under the Apache License 2.0
+-%>
+
+<%
+	local ver = require "luci.version"
+	local disp = require "luci.dispatcher"
+	local request  = disp.context.path
+	local category = request[1]
+	local tree = disp.node()
+	local categories = disp.node_childs(tree)
+%>
+                </div>
+                <footer class="footer" style="text-align:center">
+                    <a href="https://github.com/openwrt/luci">Powered by <%= ver.luciname %></a> |
+                    <a href="https://www.lede-project.org/"><%= ver.distversion %></a>
+                    <br />
+                    © 2021-2022 2smile. All Rights Reserved.
+                    <% if #categories > 1 then %>
+                    <ul class="breadcrumb pull-right" id="modemenu">
+                        <% for i, r in ipairs(categories) do %>
+                        <li<% if category == r then %> class="active"<%end%>><a href="<%=controller%>/<%=r%>/"><%=striptags(translate(tree.nodes[r].title))%></a> <span class="divider">|</span></li>
+                        <% end %>
+                    </ul>
+                    <% end %>
+                </footer>
+            </div>
+        </div>
+
+    <script>
+            $(".cbi-button-up").val("");
+            $(".cbi-button-down").val("");
+        	// fix legend position
+			$("legend").each(function () {
+        		var that = $(this);
+        		that.after("<span class='panel-title'>" + that.text() + "</span>");
+    		});
+            // Fixed openclash plugin causing env(safe-area-inset-bottom) to be 0 under
+            if (/(iPhone|iPad|iPod|iOS)/i.test(navigator.userAgent) && self.location.pathname.indexOf("openclash") != -1) {
+                var oMeta = document.createElement('meta');
+                oMeta.content = 'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover';
+                oMeta.name = 'viewport';
+                document.querySelector('head').appendChild(oMeta);
+            }
+    </script>  
+</body>
+</html>

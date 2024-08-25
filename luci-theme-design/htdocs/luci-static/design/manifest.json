@@ -1,0 +1,25 @@
+{
+"name":"Design",
+"short_name":"Design",
+"description":"Design for OpenWRT by gngpp.",
+"start_url":"/",
+"scope": "/",
+"orientation":"portrait",
+"display":"standalone",
+"prompt_message":"在主屏幕添加图标，以便快速访问 Design",
+"icons":[
+{
+"src":"images/icon.png",
+"sizes":"144x144",
+"type":"image/png"
+},
+{
+"src":"images/icon.png",
+"sizes":"192x192",
+"type":"image/png"
+}
+],
+"gcm_sender_id":"524223308106",
+"gcm_user_visible_only":true,
+"status":"ok"
+}
