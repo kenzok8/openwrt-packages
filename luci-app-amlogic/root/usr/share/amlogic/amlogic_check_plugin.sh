@@ -79,7 +79,7 @@ tolog "02. Start querying plugin version..."
 latest_version="$(
     curl -fsSL -m 10 \
         https://github.com/ophub/luci-app-amlogic/releases |
-        grep -oE 'expanded_assets/[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?' | sed 's|expanded_assets/||' |
+        grep -oE 'expanded_assets/[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?' | sed 's|expanded_assets/||g' |
         sort -urV | head -n 1
 )"
 if [[ -z "${latest_version}" ]]; then
