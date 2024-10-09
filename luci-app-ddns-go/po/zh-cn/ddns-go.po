@@ -16,6 +16,9 @@ msgstr "运行状态"
 msgid "DDNS-GO Control panel"
 msgstr "DDNS-GO操作台"
 
+msgid "Log"
+msgstr "日志"
+
 msgid "The DDNS-GO service is running."
 msgstr "DDNS-GO服务已启动"
 

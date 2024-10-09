@@ -1,0 +1,90 @@
+<%+header%>
+    <div>
+        <input class="btn cbi-button-action" type="button" onclick="clearLog()" value="清空日志">
+        <input class="btn cbi-button-action" type="button" onclick="toggleRefresh()" value="停止刷新">
+    </div>
+    <pre id="logContent">
+<%
+local fs = require "nixio.fs"
+local log_file_path = "/var/log/ddns-go.log"
+local raw_log_content = fs.readfile(log_file_path) or "No Log."
+local log_lines = {}
+for line in raw_log_content:gmatch("[^\r\n]+") do
+    table.insert(log_lines, line)
+end
+for i=1, math.floor(#log_lines / 2) do
+    log_lines[i], log_lines[#log_lines - i + 1] = log_lines[#log_lines - i + 1], log_lines[i]
+end
+local log_content = table.concat(log_lines, "\n")
+%>
+<%=log_content%>
+</pre>
+    <%+footer%>
+        <style>
+            #logContent {
+                background-color: #ffffff;
+                border: 1px solid #ddd;
+                padding: 15px;
+                padding-top: 0px;
+                margin-top: 5px;
+                border-radius: 5px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                white-space: pre-wrap;
+                height: 100vh;
+                overflow-y: auto;
+            }
+        </style>
+        <script>
+            var refreshInterval = null;
+
+            function fetchLog() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '/cgi-bin/luci/admin/services/ddns-go/fetch_log', true);
+                xhr.onload = function () {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        var logLines = xhr.responseText.split("\n").reverse().join("\n");
+                        document.getElementById('logContent').textContent = logLines;
+                    } else {
+                        document.getElementById('logContent').textContent = 'Failed to load log.';
+                    }
+                };
+                xhr.onerror = function () {
+                    document.getElementById('logContent').textContent = 'Error loading log.';
+                };
+                xhr.send();
+            }
+
+            function clearLog() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '/cgi-bin/luci/admin/services/ddns-go/clear_log', true);
+                xhr.onload = function () {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        fetchLog();  // 刷新日志内容
+                    } else {
+                        alert('Failed to clear log.');
+                    }
+                };
+                xhr.onerror = function () {
+                    alert('Error clearing log.');
+                };
+                xhr.send();
+            }
+
+            function toggleRefresh() {
+                var refreshButton = document.querySelector("input[onclick='toggleRefresh()']");
+                if (refreshInterval) {
+                    clearInterval(refreshInterval);
+                    refreshInterval = null;
+                    refreshButton.value = '开始刷新';
+                } else {
+                    fetchLog();  // 立即获取一次日志
+                    refreshInterval = setInterval(fetchLog, 1000);
+                    refreshButton.value = '停止刷新';
+                }
+            }
+
+            // 页面加载完成后开始刷新日志
+            document.addEventListener('DOMContentLoaded', function () {
+                toggleRefresh();
+            });
+        </script>

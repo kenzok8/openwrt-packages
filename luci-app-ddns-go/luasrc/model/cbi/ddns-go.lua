@@ -6,7 +6,7 @@ m = Map("ddns-go")
 m.title = translate("DDNS-GO")
 m.description = translate("DDNS-GO automatically obtains your public IPv4 or IPv6 address and resolves it to the corresponding domain name service.")..translate("</br>For specific usage, see:")..translate("<a href=\'https://github.com/sirpdboy/luci-app-ddns-go.git' target=\'_blank\'>GitHub @sirpdboy/luci-app-ddns-go </a>")
 
-m:section(SimpleSection).template = "ddns-go_status"
+m:section(SimpleSection).template = "ddns-go/ddns-go_status"
 
 s = m:section(TypedSection, "basic", translate("Global Settings"))
 s.addremove = false
