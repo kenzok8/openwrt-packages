@@ -5,7 +5,6 @@
 START=99
 USE_PROCD=1
 PROG=/usr/bin/alist
-LOG_FILE=/var/log/alist.log
 
 get_config() {
 	config_get_bool enabled $1 enabled 1
@@ -25,6 +24,7 @@ get_config() {
 
 	# log
 	config_get log $1 log 1
+	config_get log_path $1 log_path '/var/log/alist.log'
 	config_get log_max_size $1 log_max_size 10
 	config_get log_max_backups $1 log_max_backups 5
 	config_get log_max_age $1 log_max_age 28
@@ -67,14 +67,6 @@ get_config() {
 	config_get s3_port $1 s3_port 5246
 	config_get s3_ssl $1 s3_ssl 0
 
-	config_load network
-	config_get lan_addr lan ipaddr "0.0.0.0"
-	if echo "${lan_addr}" | grep -Fq ' '; then
-		lan_addr="0.0.0.0"
-	else
-		lan_addr=${lan_addr%%/*}
-	fi
-
 	# init jwt_secret
 	[ -z "$jwt_secret" ] && jwt_secret=$(tr -cd "a-zA-Z0-9" < "/dev/urandom" | head -c16)
 	uci -q set alist.@alist[0].jwt_secret="$jwt_secret"
@@ -111,16 +103,11 @@ start_service() {
 	else
 		delayed_start=$delayed_start
 	fi
-	if [ "$allow_wan" -eq "1" ]; then
-		listen_addr="0.0.0.0"
-		external_access="allow"
-	else
-		listen_addr=$lan_addr
-		external_access="deny"
-	fi
+
+	[ "$allow_wan" -eq "1" ] && external_access="allow" || external_access="deny"
 
 	set_firewall
-	> $LOG_FILE
+	> "$log_path"
 
 	# init config
 	json_init
@@ -153,7 +140,7 @@ start_service() {
 
 	# scheme
 	json_add_object "scheme"
-		json_add_string "address" "$listen_addr"
+		json_add_string "address" "0.0.0.0"
 		json_add_int "http_port" "$http_port"
 		json_add_int "https_port" "$https_port"
 		json_add_boolean "force_https" "$force_https"
@@ -170,7 +157,7 @@ start_service() {
 	# log
 	json_add_object "log"
 		json_add_boolean "enable" "$log"
-		json_add_string "name" "$LOG_FILE"
+		json_add_string "name" "$log_path"
 		json_add_int "max_size" "$log_max_size"
 		json_add_int "max_backups" "$log_max_backups"
 		json_add_int "max_age" "$log_max_age"

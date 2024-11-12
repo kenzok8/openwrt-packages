@@ -15,7 +15,7 @@ LISTS_DIR_O=/tmp/opkg-lists
 LISTS_DIR=${IS_ROOT}${LISTS_DIR_O}
 OPKG_CONF_DIR=${IS_ROOT}/etc/opkg
 OPKG_CONF_DIR_M=${IS_ROOT}/etc/opkg_m
-FEEDS_SERVER=https://istore.linkease.com/repo
+FEEDS_SERVER=https://istore.istoreos.com/repo
 FEEDS_SERVER_MIRRORS="https://repo.istoreos.com/repo"
 DISABLE_MIRROR=false
 ARCH=`sed -n -e 's/^Architecture: *\([^ ]\+\) *$/\1/p' /rom/usr/lib/opkg/info/libc.control /usr/lib/opkg/info/libc.control 2>/dev/null | head -1`
@@ -23,7 +23,7 @@ ARCH=`sed -n -e 's/^Architecture: *\([^ ]\+\) *$/\1/p' /rom/usr/lib/opkg/info/li
 # for istore self upgrade
 ISTORE_PKG=luci-app-store
 ISTORE_DEP_PKGS="luci-lib-taskd luci-lib-xterm taskd"
-ISTORE_INDEX=https://istore.linkease.com/repo/all/store/Packages.gz
+ISTORE_INDEX=https://istore.istoreos.com/repo/all/store/Packages.gz
 
 is_init() {
     mkdir -p ${DL_DIR} ${LISTS_DIR} ${IS_ROOT}/etc ${IS_ROOT}/var
