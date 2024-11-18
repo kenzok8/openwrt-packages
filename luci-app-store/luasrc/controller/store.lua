@@ -354,7 +354,9 @@ function store_action(param)
                         uci:set("istore", "istore", "last_path", autopath)
                         uci:commit("istore")
                     end
-                    autoenv = autoenv .. " enable=" .. autoenable
+                    if autoenable ~= nil then
+                        autoenv = autoenv .. " enable=" .. autoenable
+                    end
                     code, out, err = _action(myopkg, luci.util.shellquote(autoenv), action, metapkg)
                 else
                     code, out, err = _action(myopkg, action, metapkg)
