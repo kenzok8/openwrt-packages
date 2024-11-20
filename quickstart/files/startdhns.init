@@ -1,0 +1,13 @@
+#!/bin/sh /etc/rc.common
+
+START=93
+USE_PROCD=1
+
+start_service() {
+	/usr/sbin/quickstart uciChange
+}
+
+service_triggers()
+{
+	procd_add_reload_trigger network
+}

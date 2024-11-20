@@ -1,0 +1,9 @@
+[ "$INTERFACE" = "planb" -o "$INTERFACE" = "wan" ] || exit 0
+
+if [ "$ACTION" = "ifup" -o "$ACTION" = "ifupdate" ]; then
+    /usr/sbin/quickstart ifaceEvent up "$INTERFACE"
+fi
+
+if [ "$ACTION" = "ifdown" ]; then
+    /usr/sbin/quickstart ifaceEvent down "$INTERFACE"
+fi

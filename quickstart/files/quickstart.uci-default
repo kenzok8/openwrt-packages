@@ -3,6 +3,8 @@
 if [ "$PKG_UPGRADE" = 1 ]; then
     /etc/init.d/quickstart enable
     /etc/init.d/quickstart start
+    /etc/init.d/startdhns enable
+    /etc/init.d/startdhns boot
 fi
 
 exit 0
