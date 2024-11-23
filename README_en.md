@@ -13,7 +13,7 @@
 <br>English | [简体中文](README.md)
 
 ##### illustrate
-
+Данный форк содержит пакеты типо ss,xray,clash для Openwrt версий 19-21 
 * If you like to follow new ones, you can download small-package, the warehouse is automatically updated every day
 
 * [small-package warehouse address](https://github.com/kenzok8/small-package)
