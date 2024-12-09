@@ -599,10 +599,10 @@ EOF
 
         # change data_root value in /etc/config/dockerd
         if [[ -f "/etc/init.d/dockerman" ]] && [[ -f "/etc/config/dockerd" ]]; then
-            sed -i "s|option data_root.*|option data_root '/mnt/${EMMC_NAME}p4/docker/'|g" /etc/config/dockerd
+            sed -i "s|option data_root.*|option data_root '/mnt/${EMMC_NAME}p4/docker/'|g" etc/config/dockerd
         fi
-        rm -rf /opt/docker && ln -sf /mnt/${EMMC_NAME}p4/docker/ /opt/docker >/dev/null
-        rm -rf /usr/bin/AdGuardHome && ln -sf /mnt/${EMMC_NAME}p4/AdGuardHome /usr/bin/ >/dev/null
+        rm -rf opt/docker && ln -sf /mnt/${EMMC_NAME}p4/docker/ opt/docker >/dev/null
+        rm -rf usr/bin/AdGuardHome && ln -sf /mnt/${EMMC_NAME}p4/AdGuardHome usr/bin/ >/dev/null
 
         echo "Edit configuration file ..."
         #cd /mnt/${EMMC_NAME}p2/usr/bin/
