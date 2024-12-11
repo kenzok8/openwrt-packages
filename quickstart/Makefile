@@ -47,6 +47,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 		chmod 755 /etc/uci-defaults/09-quickstart
 		/etc/uci-defaults/09-quickstart && rm -f /etc/uci-defaults/09-quickstart
 	fi
+	exit 0
 fi
 endef
 
