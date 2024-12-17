@@ -74,7 +74,7 @@ opkg_wrap_mirrors() {
 alias fcurl='curl -L --fail --show-error'
 
 check_space() {
-    local free="$((`df -k / | awk 'NR==2 {print $4}'` >> 10 ))"
+    local free="$((`df -kP / | awk 'NR==2 {print $4}'` >> 10 ))"
     if [ "$free" -lt 1 ]; then
         echo "Root disk full!" >&2
         exit 1
