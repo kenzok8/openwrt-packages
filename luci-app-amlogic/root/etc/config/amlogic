@@ -1,10 +1,10 @@
 
 config amlogic 'config'
 	option enable '1'
-	option amlogic_firmware_repo 'https://github.com/breakings/OpenWrt'
+	option amlogic_firmware_repo 'https://github.com/breakingbadboy/OpenWrt'
 	option amlogic_firmware_tag 'ARMv8'
 	option amlogic_firmware_suffix '.img.gz'
-	option amlogic_kernel_path 'https://github.com/breakings/OpenWrt'
+	option amlogic_kernel_path 'https://github.com/breakingbadboy/OpenWrt'
 	option amlogic_kernel_branch ''
 	option amlogic_firmware_config '1'
 	option amlogic_write_bootloader '0'
