@@ -71,6 +71,9 @@ DBAI (Device Berbasis Arm Indonesia)
 this theme using bootstrap framework + vanilla css
 icons made by me + flaticons
 
+### Attention 
+This theme required luci-theme-alpha-config installed
+
 donate
 buy me a padang rice or coffee
 https://saweria.co/derisamedia
