@@ -32,7 +32,8 @@ Luci theme for Official Openwrt and Alpha OS build ,based on bootstrap framework
 and material luCi theme refferences,
 Thanks To Komunitas Device Berbasis ARM Indonesia (DBAI) for support this theme.
 This official 1'st theme in Indo-Wrt Community in indonesia. Not the result of modification from anyone, this is purely made by us
-©Derisamedia
+### ©Derisamedia
+https://derisamedia.github.io/
 <summary>Preview Screenshoot</summary>
 <p>
   
