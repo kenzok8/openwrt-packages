@@ -45,6 +45,7 @@
     overflow: hidden;
 }
 .dialog-content {
+    position: relative;
     max-height: 500px;
     overflow-y: scroll;
     margin-right: -10px;
@@ -107,6 +108,44 @@
 
 .tasks_unknown #tasks_dialog {
     border-color: darkorange;
+}
+
+#tasks_result_mask {
+    display: none;
+    background-color: #000d;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+    height: 100%;
+
+    cursor: default;
+    user-select: none;
+
+    font-size: small;
+}
+
+.tasks_stopped #tasks_result_mask {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.tasks_result_success, .tasks_stopped.tasks_failed .tasks_result_success, .tasks_result_failed {
+    display: none;
+    font-size: xx-large;
+}
+
+.tasks_stopped .tasks_result_success {
+    display: initial;
+    color: #27c840;
+}
+
+.tasks_failed .tasks_result_failed {
+    display: initial;
+    color: darkorange;
 }
 
 @keyframes border-blink { 50% { border-color:#fff ; }  }

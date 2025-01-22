@@ -39,3 +39,12 @@ msgstr "点此查看运行中的任务"
 
 msgid "Task Running"
 msgstr "任务执行中"
+
+msgid "Task execution successful !"
+msgstr "任务执行成功！"
+
+msgid "Task execution failed !"
+msgstr "任务执行失败！"
+
+msgid "Click the button in the upper right corner of the dialog box to close it, or click here to view the log"
+msgstr "点击对话框右上角按钮关闭，或者点此查看日志"

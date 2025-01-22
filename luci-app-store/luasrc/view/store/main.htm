@@ -36,6 +36,7 @@
 <script>
     (function() {
         let beforeunloadRegistered = false;
+        taskd.show_mask_on_stopped = true;
         window.istore_log = function(flush_menu_onclose, onExit) {
             if (flush_menu_onclose && !beforeunloadRegistered) {
                 beforeunloadRegistered = true;

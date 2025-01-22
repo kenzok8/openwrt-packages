@@ -66,6 +66,14 @@
                 return false;
             };
         }
+        const tasks_result_mask = container.querySelector("#tasks_result_mask");
+        if (taskd.show_mask_on_stopped) {
+            tasks_result_mask.onclick = function(){
+                tasks_result_mask.hidden=true;
+            };
+        } else {
+            tasks_result_mask.hidden=true;
+        }
         term.open(document.getElementById("tasks_xterm_log"));
 
         return {term,container};
