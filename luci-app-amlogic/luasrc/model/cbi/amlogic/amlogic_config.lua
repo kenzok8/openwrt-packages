@@ -31,7 +31,7 @@ mydevice.rmempty = false
 --2.Set OpenWrt Firmware Repository
 firmware_repo = o:option(Value, "amlogic_firmware_repo", translate("Download repository of OpenWrt:"))
 firmware_repo.description = translate("Set the download repository of the OpenWrt files on github.com in [Online Download Update].")
-firmware_repo.default = "https://github.com/breakings/OpenWrt"
+firmware_repo.default = "https://github.com/breakingbadboy/OpenWrt"
 firmware_repo.rmempty = false
 
 --3.Set OpenWrt Releases's Tag Keywords
@@ -53,9 +53,9 @@ firmware_suffix.rmempty = false
 --5.Set OpenWrt Kernel DownLoad Path
 kernel_path = o:option(Value, "amlogic_kernel_path", translate("Download path of OpenWrt kernel:"))
 kernel_path.description = translate("Set the download path of the kernel in the github.com repository in [Online Download Update].")
-kernel_path:value("https://github.com/breakings/OpenWrt")
+kernel_path:value("https://github.com/breakingbadboy/OpenWrt")
 kernel_path:value("https://github.com/ophub/kernel")
-kernel_path.default = "https://github.com/breakings/OpenWrt"
+kernel_path.default = "https://github.com/breakingbadboy/OpenWrt"
 kernel_path.rmempty = false
 
 --6.Set kernel version branch
