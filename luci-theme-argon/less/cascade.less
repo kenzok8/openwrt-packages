@@ -8,7 +8,7 @@
  *  Have a bug? Please create an issue here on GitHub!
  *      https://github.com/jerrykuku/luci-theme-argon/issues
  *
- *  luci-theme-material: 
+ *  luci-theme-material:
  *      Copyright 2015 Lutty Yang <lutty@wcan.in>
  *      https://github.com/LuttyYang/luci-theme-material/
  *
@@ -1602,6 +1602,20 @@ tr > th,
       vertical-align: middle;
     }
   }
+
+  div[data-name="_gen_server_keypair"],
+  div[data-name="_gen_peer_keypair"],
+  div[data-name="_gen_psk"]{
+    .cbi-value-title {
+      height: 2.4rem;
+    }
+  }
+
+  #modal_overlay > .modal.cbi-modal > div > p > textarea{
+    height: 20em!important;
+    border: 1px solid #dee2e6!important;
+    border-radius: 4px;
+  }
 }
 
 #cbi-network .tr:first-child > .td {
@@ -2845,7 +2859,7 @@ body.modal-overlay-active #modal_overlay {
 }
 
 #view {
-  border-radius: 0.25rem; 
+  border-radius: 0.25rem;
 
   & > .spinning {
     position: fixed;
@@ -4080,6 +4094,23 @@ pre.command-output {
     }
   }
 }
+
+[data-page="admin-services-npc"] {
+  div[id="cbid.npc.config.vkey"] {
+    white-space: normal;
+
+    input[id="widget.cbid.npc.config.vkey"][type="password"] {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    .cbi-button {
+      margin: 0;
+      border: none;
+    }
+  }
+}
+
 
 /* IE hacks */
 @media all and (-ms-high-contrast: none) {

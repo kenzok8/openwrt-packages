@@ -807,7 +807,9 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#fff"] {
 [data-page="admin-system-flash"] {
     .modal {
         label > input[type="checkbox"] {
-            top: -0.35rem;
+            vertical-align: text-top;
+            top: auto;
+            border-color: #fff !important;
         }
 
         .btn {
@@ -1086,6 +1088,16 @@ input,
 
     .ifacebox-head[style*="--zone-color-rgb: 238, 238, 238;"] {
         background-color: #666 !important;
+    }
+
+    #modal_overlay > .modal.cbi-modal > div > p > textarea {
+        border: 1px solid #3c3c3c !important;
+        background-color: transparent !important;
+    }
+
+    #modal_overlay div[data-tab="peers"] div[data-name="_peers"] .ifacebadge code {
+        color: #fff !important;
+        background-color: transparent !important;
     }
 }
 
