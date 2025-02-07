@@ -69,6 +69,10 @@ It also supports automatic and manual switching between light and dark modes.
 - Automatically switch between light and dark modes with the system, and can also be set to a fixed mode.
 - Settings plugin with extensions [luci-app-argon-config][config-link]
 
+> **Upcoming Version **
+>
+> "The current theme uses Less for CSS construction, and the method for switching between light and dark modes is relatively primitive. Meanwhile, the official theme has already switched to the UT template. I am exploring a way to build the theme template using modern front-end development tools, initially settling on a solution using Vite + UnoCSS. This approach will utilize a proxy server for debugging and also support HMR (Hot Module Replacement), significantly improving development speed. Currently, the basic development framework has been set up, but due to a busy schedule, I still need some time to migrate the existing styles. Stay tuned!"
+
 ## Branch Introduction
 
 There are currently two main branches that are adapted to different versions of the **OpenWrt** source code.  
@@ -77,7 +81,7 @@ The table below will provide a detailed introduction:
 | Branch | Version | Description                        | Matching source                                           |
 | ------ | ------- | ---------------------------------- | --------------------------------------------------------- |
 | master | v2.x.x  | Support the latest version of LuCI | [Official OpenWrt][official] • [ImmortalWrt][immortalwrt] |
-| 18.06  | v1.x.x  | Support the 18.06 version of LuCI  | [Lean's LEDE][lede]                                         |
+| 18.06 (deprecated) | v1.x.x  | Support the 18.06 version of LuCI   | [Lean's LEDE][lede]                                         |
 
 ## Version History
 
@@ -85,7 +89,7 @@ The latest version is v2.3.1 [Click here][en-us-release-log] to view the full ve
 
 ## Getting started
 
-### Build for Lean's LEDE project
+### Build for Lean's LEDE project (deprecated)
 
 ```bash
 cd lede/package/lean
@@ -116,7 +120,7 @@ opkg install luci-theme-argon*.ipk
 ```bash
 opkg install luci-compat
 opkg install luci-lib-ipkg
-wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.3.1/luci-theme-argon_2.3.1_all.ipk
+wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.3.2/luci-theme-argon-2.3.2-r20250207.apk
 opkg install luci-theme-argon*.ipk
 ```
 
