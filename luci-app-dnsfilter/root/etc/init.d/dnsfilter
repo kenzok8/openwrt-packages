@@ -9,6 +9,15 @@ L=/etc/dnsfilter
 P=/usr/share/dnsfilter
 T=/tmp/dnsfilter
 STATUS=Y
+	DEFAULT_DNSMASQ_CFGID="$(uci -q show "dhcp.@dnsmasq[0]" | awk 'NR==1 {split($0, conf, /[.=]/); print conf[2]}')"
+	if [ -f "/tmp/etc/dnsmasq.conf.$DEFAULT_DNSMASQ_CFGID" ]; then
+		DNSMASQ_CONF_DIR="$(awk -F '=' '/^conf-dir=/ {print $2}' "/tmp/etc/dnsmasq.conf.$DEFAULT_DNSMASQ_CFGID")"
+		if [ -n "$DNSMASQ_CONF_DIR" ]; then
+			DNSMASQ_CONF_DIR=${DNSMASQ_CONF_DIR%*/}
+		else
+			DNSMASQ_CONF_DIR="/tmp/dnsmasq.d"
+		fi
+	fi
 TAG="_DNSFILTER_RULE_"
 FWI=$(uci -q get firewall.dnsfilter.path)
 enable=$(uci -q get dnsfilter.@dnsfilter[0].enable)
@@ -24,8 +33,8 @@ get_config(){
 }
 
 add_dns(){
-	mkdir -p /tmp/dnsmasq.d $D
-	echo conf-dir=$D > /tmp/dnsmasq.d/dnsfilter.conf
+	mkdir -p $DNSMASQ_CONF_DIR $D
+	echo conf-dir=$D > $DNSMASQ_CONF_DIR/dnsfilter.conf
 	if [ -n "$url" -a ! -s /tmp/dnsfilter/failed ];then
 		mkdir -p $T
 		if [ $flash = 1 ];then
@@ -408,7 +417,7 @@ stop(){
 	kill -9 $(ps -w | grep grep $P/addown | grep -v grep | awk '{print$1}') 2>/dev/null
 	kill -9 $(ps -w | grep ad_new.conf | grep -v grep | awk '{print$1}') 2>/dev/null
 	echo "`eval $E` [Stop DNSFilter]"
-	rm -rf /tmp/dnsmasq.d/dnsfilter.conf $D /var/lock/dnsfilter.lock
+	rm -rf $DNSMASQ_CONF_DIR/dnsfilter.conf $D /var/lock/dnsfilter.lock
 	if [ "$(echo $url | sed 's/ /\n/g' | sort -u)" != "$(cat $T/url 2>/dev/null)" ];then
 		rm -rf $T
 		[ -d $L/rules ] && rm -rf $L/rules
@@ -433,6 +442,10 @@ restart(){
 	else
 		stop
 	fi
+}
+
+service_triggers() {
+	procd_add_reload_trigger "dnsfilter"
 }
 
 boot(){
