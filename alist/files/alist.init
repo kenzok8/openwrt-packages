@@ -20,6 +20,7 @@ get_config() {
 	config_get temp_dir $1 temp_dir "/tmp/alist"
 	config_get token_expires_in $1 token_expires_in 48
 	config_get max_connections $1 max_connections 0
+	config_get max_concurrency $1 max_concurrency 64
 	config_get tls_insecure_skip_verify $1 tls_insecure_skip_verify 1
 
 	# log
@@ -67,6 +68,22 @@ get_config() {
 	config_get s3_port $1 s3_port 5246
 	config_get s3_ssl $1 s3_ssl 0
 
+	# ftp
+	config_get ftp $1 ftp 0
+	config_get ftp_port $1 ftp_port 5221
+	config_get find_pasv_port_attempts $1 find_pasv_port_attempts 50
+	config_get active_transfer_port_non_20 $1 active_transfer_port_non_20 0
+	config_get idle_timeout $1 idle_timeout 900
+	config_get connection_timeout $1 connection_timeout 30
+	config_get disable_active_mode $1 disable_active_mode 0
+	config_get default_transfer_binary $1 default_transfer_binary 0
+	config_get enable_active_conn_ip_check $1 enable_active_conn_ip_check 1
+	config_get enable_pasv_conn_ip_check $1 enable_pasv_conn_ip_check 1
+
+	# sftp
+	config_get sftp $1 sftp 0
+	config_get sftp_port $1 sftp_port 5222
+
 	# init jwt_secret
 	[ -z "$jwt_secret" ] && jwt_secret=$(tr -cd "a-zA-Z0-9" < "/dev/urandom" | head -c16)
 	uci -q set alist.@alist[0].jwt_secret="$jwt_secret"
@@ -81,7 +98,7 @@ set_firewall() {
 		uci set firewall.alist.target="ACCEPT"
 		uci set firewall.alist.src="wan"
 		uci set firewall.alist.proto="tcp"
-		uci set firewall.alist.dest_port="$port"
+		uci set firewall.alist.dest_port="$port $ftp_port $sftp_port"
 		uci set firewall.alist.enabled="1"
 		uci commit firewall
 		/etc/init.d/firewall reload >/dev/null 2>&1
@@ -95,6 +112,10 @@ set_firewall() {
 start_service() {
 	config_load alist
 	config_foreach get_config alist
+
+	# Remove firewall rules when stopping alist process via uci
+	external_access="deny" set_firewall
+
 	[ $enabled -ne 1 ] && return 1
 	mkdir -p "$temp_dir" "$data_dir"
 	[ "$ssl" -eq 1 ] && https_port=$port http_port="-1" || https_port="-1" http_port=$port
@@ -166,6 +187,7 @@ start_service() {
 
 	json_add_int "delayed_start" "$delayed_start"
 	json_add_int "max_connections" "$max_connections"
+	json_add_int "max_concurrency" "$max_concurrency"
 	json_add_boolean "tls_insecure_skip_verify" "$tls_insecure_skip_verify"
 
 	# tasks
@@ -206,6 +228,26 @@ start_service() {
 		json_add_boolean "enable" "$s3"
 		json_add_int "port" "$s3_port"
 		json_add_boolean "ssl" "$s3_ssl"
+	json_close_object
+
+	# ftp
+	json_add_object "ftp"
+		json_add_boolean "enable" "$ftp"
+		json_add_string "listen" ":$ftp_port"
+		json_add_int "find_pasv_port_attempts" "$find_pasv_port_attempts"
+		json_add_boolean "active_transfer_port_non_20" "$active_transfer_port_non_20"
+		json_add_int "idle_timeout" "$idle_timeout"
+		json_add_int "connection_timeout" "$connection_timeout"
+		json_add_boolean "disable_active_mode" "$disable_active_mode"
+		json_add_boolean "default_transfer_binary" "$default_transfer_binary"
+		json_add_boolean "enable_active_conn_ip_check" "$enable_active_conn_ip_check"
+		json_add_boolean "enable_pasv_conn_ip_check" "$enable_pasv_conn_ip_check"
+	json_close_object
+
+	# sftp
+	json_add_object "sftp"
+		json_add_boolean "enable" "$sftp"
+		json_add_string "listen" ":$sftp_port"
 	json_close_object
 
 	json_dump > "$data_dir/config.json"
