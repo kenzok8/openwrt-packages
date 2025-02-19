@@ -1,0 +1,275 @@
+From c5d9bc890798046d4cace4cf6b9c85506ad21458 Mon Sep 17 00:00:00 2001
+From: guoguangwu <guoguangwu@magic-shield.com>
+Date: Mon, 19 Jun 2023 19:27:03 +0800
+Subject: [PATCH] chore: remove refs to deprecated io/ioutil
+
+---
+ cmd/gost/cfg.go  |  3 +--
+ cmd/gost/peer.go |  3 +--
+ common_test.go   |  5 ++---
+ dns.go           |  3 +--
+ http2.go         |  3 +--
+ http2_test.go    | 10 +++++-----
+ http_test.go     |  8 ++++----
+ resolver.go      |  3 +--
+ sni_test.go      |  4 ++--
+ ssh.go           |  6 +++---
+ 10 files changed, 21 insertions(+), 27 deletions(-)
+
+--- a/cmd/gost/cfg.go
++++ b/cmd/gost/cfg.go
+@@ -6,7 +6,6 @@ import (
+ 	"crypto/x509"
+ 	"encoding/json"
+ 	"errors"
+-	"io/ioutil"
+ 	"net"
+ 	"net/url"
+ 	"os"
+@@ -71,7 +70,7 @@ func loadCA(caFile string) (cp *x509.Cer
+ 		return
+ 	}
+ 	cp = x509.NewCertPool()
+-	data, err := ioutil.ReadFile(caFile)
++	data, err := os.ReadFile(caFile)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+--- a/cmd/gost/peer.go
++++ b/cmd/gost/peer.go
+@@ -5,7 +5,6 @@ import (
+ 	"bytes"
+ 	"encoding/json"
+ 	"io"
+-	"io/ioutil"
+ 	"strconv"
+ 	"strings"
+ 	"time"
+@@ -83,7 +82,7 @@ func (cfg *peerConfig) Reload(r io.Reade
+ }
+ 
+ func (cfg *peerConfig) parse(r io.Reader) error {
+-	data, err := ioutil.ReadAll(r)
++	data, err := io.ReadAll(r)
+ 	if err != nil {
+ 		return err
+ 	}
+--- a/common_test.go
++++ b/common_test.go
+@@ -7,7 +7,6 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"io"
+-	"io/ioutil"
+ 	"net"
+ 	"net/http"
+ 	"net/url"
+@@ -36,7 +35,7 @@ func init() {
+ 
+ var (
+ 	httpTestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+-		data, _ := ioutil.ReadAll(r.Body)
++		data, _ := io.ReadAll(r.Body)
+ 		if len(data) == 0 {
+ 			data = []byte("Hello World!")
+ 		}
+@@ -87,7 +86,7 @@ func httpRoundtrip(conn net.Conn, target
+ 		return errors.New(resp.Status)
+ 	}
+ 
+-	recv, err := ioutil.ReadAll(resp.Body)
++	recv, err := io.ReadAll(resp.Body)
+ 	if err != nil {
+ 		return
+ 	}
+--- a/dns.go
++++ b/dns.go
+@@ -7,7 +7,6 @@ import (
+ 	"encoding/base64"
+ 	"errors"
+ 	"io"
+-	"io/ioutil"
+ 	"net"
+ 	"net/http"
+ 	"strconv"
+@@ -267,7 +266,7 @@ func (l *dnsListener) ServeHTTP(w http.R
+ 			return
+ 		}
+ 
+-		buf, err = ioutil.ReadAll(r.Body)
++		buf, err = io.ReadAll(r.Body)
+ 		if err != nil {
+ 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+ 			return
+--- a/http2.go
++++ b/http2.go
+@@ -9,7 +9,6 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"io"
+-	"io/ioutil"
+ 	"net"
+ 	"net/http"
+ 	"net/http/httputil"
+@@ -389,7 +388,7 @@ func (h *http2Handler) roundTrip(w http.
+ 		ProtoMajor: 2,
+ 		ProtoMinor: 0,
+ 		Header:     http.Header{},
+-		Body:       ioutil.NopCloser(bytes.NewReader([]byte{})),
++		Body:       io.NopCloser(bytes.NewReader([]byte{})),
+ 	}
+ 
+ 	if !h.authenticate(w, r, resp) {
+--- a/http2_test.go
++++ b/http2_test.go
+@@ -5,7 +5,7 @@ import (
+ 	"crypto/rand"
+ 	"crypto/tls"
+ 	"fmt"
+-	"io/ioutil"
++	"io"
+ 	"net"
+ 	"net/http"
+ 	"net/http/httptest"
+@@ -997,7 +997,7 @@ func TestHTTP2ProxyWithWebProbeResist(t
+ 	if err != nil {
+ 		t.Error(err)
+ 	}
+-	recv, _ := ioutil.ReadAll(conn)
++	recv, _ := io.ReadAll(conn)
+ 	if !bytes.Equal(recv, []byte("Hello World!")) {
+ 		t.Error("data not equal")
+ 	}
+@@ -1053,7 +1053,7 @@ func TestHTTP2ProxyWithHostProbeResist(t
+ 		Proto:         "HTTP/2.0",
+ 		ProtoMajor:    2,
+ 		ProtoMinor:    0,
+-		Body:          ioutil.NopCloser(bytes.NewReader(sendData)),
++		Body:          io.NopCloser(bytes.NewReader(sendData)),
+ 		Host:          "github.com:443",
+ 		ContentLength: int64(len(sendData)),
+ 	}
+@@ -1068,7 +1068,7 @@ func TestHTTP2ProxyWithHostProbeResist(t
+ 		t.Error("got non-200 status:", resp.Status)
+ 	}
+ 
+-	recv, _ := ioutil.ReadAll(resp.Body)
++	recv, _ := io.ReadAll(resp.Body)
+ 	if !bytes.Equal(sendData, recv) {
+ 		t.Error("data not equal")
+ 	}
+@@ -1105,7 +1105,7 @@ func TestHTTP2ProxyWithFileProbeResist(t
+ 	if err != nil {
+ 		t.Error(err)
+ 	}
+-	recv, _ := ioutil.ReadAll(conn)
++	recv, _ := io.ReadAll(conn)
+ 	if !bytes.Equal(recv, []byte("Hello World!")) {
+ 		t.Error("data not equal")
+ 	}
+--- a/http_test.go
++++ b/http_test.go
+@@ -4,7 +4,7 @@ import (
+ 	"bytes"
+ 	"crypto/rand"
+ 	"fmt"
+-	"io/ioutil"
++	"io"
+ 	"net"
+ 	"net/http"
+ 	"net/http/httptest"
+@@ -249,7 +249,7 @@ func TestHTTPProxyWithWebProbeResist(t *
+ 		t.Error("got status:", resp.Status)
+ 	}
+ 
+-	recv, _ := ioutil.ReadAll(resp.Body)
++	recv, _ := io.ReadAll(resp.Body)
+ 	if !bytes.Equal(recv, []byte("Hello World!")) {
+ 		t.Error("data not equal")
+ 	}
+@@ -296,7 +296,7 @@ func TestHTTPProxyWithHostProbeResist(t
+ 		t.Error("got status:", resp.Status)
+ 	}
+ 
+-	recv, _ := ioutil.ReadAll(resp.Body)
++	recv, _ := io.ReadAll(resp.Body)
+ 	if !bytes.Equal(sendData, recv) {
+ 		t.Error("data not equal")
+ 	}
+@@ -332,7 +332,7 @@ func TestHTTPProxyWithFileProbeResist(t
+ 		t.Error("got status:", resp.Status)
+ 	}
+ 
+-	recv, _ := ioutil.ReadAll(resp.Body)
++	recv, _ := io.ReadAll(resp.Body)
+ 	if !bytes.Equal(recv, []byte("Hello World!")) {
+ 		t.Error("data not equal, got:", string(recv))
+ 	}
+--- a/resolver.go
++++ b/resolver.go
+@@ -8,7 +8,6 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"io"
+-	"io/ioutil"
+ 	"net"
+ 	"net/http"
+ 	"net/url"
+@@ -915,7 +914,7 @@ func (ex *dohExchanger) Exchange(ctx con
+ 	}
+ 
+ 	// Read wireformat response from the body
+-	buf, err := ioutil.ReadAll(resp.Body)
++	buf, err := io.ReadAll(resp.Body)
+ 	if err != nil {
+ 		return nil, fmt.Errorf("failed to read the response body: %s", err)
+ 	}
+--- a/sni_test.go
++++ b/sni_test.go
+@@ -7,7 +7,7 @@ import (
+ 	"crypto/tls"
+ 	"errors"
+ 	"fmt"
+-	"io/ioutil"
++	"io"
+ 	"net/http"
+ 	"net/http/httptest"
+ 	"net/url"
+@@ -69,7 +69,7 @@ func sniRoundtrip(client *Client, server
+ 		return errors.New(resp.Status)
+ 	}
+ 
+-	recv, err := ioutil.ReadAll(resp.Body)
++	recv, err := io.ReadAll(resp.Body)
+ 	if err != nil {
+ 		return
+ 	}
+--- a/ssh.go
++++ b/ssh.go
+@@ -6,7 +6,7 @@ import (
+ 	"encoding/binary"
+ 	"errors"
+ 	"fmt"
+-	"io/ioutil"
++	"os"
+ 	"net"
+ 	"strconv"
+ 	"strings"
+@@ -33,7 +33,7 @@ var (
+ 
+ // ParseSSHKeyFile parses ssh key file.
+ func ParseSSHKeyFile(fp string) (ssh.Signer, error) {
+-	key, err := ioutil.ReadFile(fp)
++	key, err := os.ReadFile(fp)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+@@ -42,7 +42,7 @@ func ParseSSHKeyFile(fp string) (ssh.Sig
+ 
+ // ParseSSHAuthorizedKeysFile parses ssh Authorized Keys file.
+ func ParseSSHAuthorizedKeysFile(fp string) (map[string]bool, error) {
+-	authorizedKeysBytes, err := ioutil.ReadFile(fp)
++	authorizedKeysBytes, err := os.ReadFile(fp)
+ 	if err != nil {
+ 		return nil, err
+ 	}
