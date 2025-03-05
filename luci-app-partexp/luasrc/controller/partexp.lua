@@ -1,6 +1,6 @@
 --[[
 LuCI - Lua Configuration Partition Expansion
- Copyright (C) 2022  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/partexp
+ Copyright (C) 2022-2024  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/partexp
 ]]--
 
 local fs = require "nixio.fs"
@@ -21,12 +21,12 @@ end
 function act_check()
 
 	http.prepare_content("text/plain; charset=utf-8")
-	local f=io.open("/etc/partexp/partexp.log", "r+")
-	local fdp=fs.readfile("/etc/partexp/lucilogpos") or 0
+	local f=io.open("/tmp/partexp.log", "r+")
+	local fdp=fs.readfile("/tmp/lucilogpos") or 0
 	f:seek("set",fdp)
 	local a=f:read(2048000) or ""
 	fdp=f:seek()
-	fs.writefile("/etc/partexp/lucilogpos",tostring(fdp))
+	fs.writefile("/tmp/lucilogpos",tostring(fdp))
 	f:close()
 	http.write(a)
 end
@@ -42,8 +42,8 @@ function partexprun()
 	uci:set(name, 'global', 'auto_format', aformat)
 	uci:set(name, 'global', 'keep_config', kconfig)
 	uci:commit(name)
-	fs.writefile("/etc/partexp/lucilogpos","0")
+	fs.writefile("/tmp/lucilogpos","0")
 	http.prepare_content("application/json")
 	http.write('')
-	luci.sys.exec("/etc/init.d/partexp autopart > /etc/partexp/partexp.log 2>&1 &")
+	luci.sys.exec("/etc/init.d/partexp autopart > /tmp/partexp.log 2>&1 &")
 end

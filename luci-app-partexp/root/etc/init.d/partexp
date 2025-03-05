@@ -51,8 +51,9 @@ get_config() {
 }
 
 nfdisk(){
+
 #Start partition
-		fdisk /dev/$a << EOF >/dev/null 2> /dev/null
+fdisk $1 << EOF >/dev/null 2> /dev/null
 n
 p
 
@@ -62,7 +63,6 @@ wq
 EOF
 
 }
-
 usamba(){
 s=$1
 s2=$2
@@ -90,7 +90,7 @@ fdiskB(){
 	sleep 2
 	isfdisk=0
 	if [ ! "$isP" ];then
-		nfdisk
+		nfdisk /dev/$a
 		sleep 2
 		isfdisk=1
 		
@@ -98,10 +98,10 @@ fdiskB(){
 		isfdisk=2
 	fi
 
-	isP=`fdisk -l /dev/$a |grep -v "bytes" | grep "/dev/$b"`
-	if [ "$isP" -a "$isfdisk" = 1 ] ;then
+	isP=`fdisk -l /dev/$a |grep -v "bytes" | grep "/dev/$b"| wc -l`
+	if [ "$isP" == 1 -a "$isfdisk" = 1 ] ;then
 	   log "分区$b建立成功！"
-	elif  [ "$isP" -a "$isfdisk" = 2 ] ;then
+	elif  [ "$isP" == 1  -a "$isfdisk" = 2 ] ;then
 	    log "检测目标分区$b已存在."
 	else
 	   log "分区$b建立失败，没有足够的空间操作失败！"
@@ -133,11 +133,13 @@ fdiskB(){
 	#isD=`block info /dev/$b | awk -F 'TYPE=' '{print $2}'| sed 's,\",,g' ` 
 	TYPE='';eval $(block info "/dev/$b" | grep -o -e "TYPE=\S*")
 	if [ "$target_function" = "/" -o "$target_function" = "/overlay" ] ; then 
+	    log  "正在将/dev/$b格式化为EXT4文件系统..."
 	    mkfs.ext4 -L extroot /dev/$b  >/dev/null 2> /dev/null 
-	    log  "设备/dev/$b格式化成功！"
+	    log  "设备/dev/$b格式化EXT4成功！"
 	elif [ "$auto_format" = "1" -o "$isfdisk" = "1" ] ; then
+	    log  "正在将/dev/$b格式化为EXT4文件系统..."
 	    mkfs.ext4 -F /dev/$b  >/dev/null 2> /dev/null
-	    log  "设备/dev/$b格式化成功！"
+	    log  "设备/dev/$b格式化EXT4成功！"
 	elif [ "$TYPE" ];then
 	    log  "设备/dev/$b无需格式化！"
 	else
@@ -250,7 +252,7 @@ fdiskB(){
 			    uci commit fstab
 			    log "不保留数据overlay扩展/dev/$b成功！"
 			    
-			    sleep 5
+			    sleep 3
 			    log "设备重启才能生效"
 			    expquit 2
 
@@ -329,6 +331,10 @@ autopart() {
     		fi
     		log  "检测到操作目标设备:/dev/$target_disk$isb!"
 		case "$target_disk" in
+		vd*)
+		        [ "$isB" = "/dev/${target_disk}1" -a "$target_function" = "/overlay" ] && fdiskB $target_disk 3 || fdiskB $target_disk $isb
+			;;
+
 		sd*)
 		        [ "$isB" = "/dev/${target_disk}1" -a "$target_function" = "/overlay" ] && fdiskB $target_disk 3 || fdiskB $target_disk $isb
 			;;
