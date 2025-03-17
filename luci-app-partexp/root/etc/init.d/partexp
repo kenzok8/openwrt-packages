@@ -185,7 +185,7 @@ fdiskB(){
 		usamba samba4 $MOUNT
 		usamba samba $MOUNT
 		sleep 5
-		umount $MOUNT || block umount /dev/$b
+		umount $MOUNT || block umount /dev/$b   >/dev/null 2> /dev/null 
 		sleep 5
 		MOUNT='';eval $(block info "/dev/$b" | grep -o -e "MOUNT=\S*")
 		if [ "x$MOUNT" != 'x'  ] ;then
@@ -215,7 +215,7 @@ fdiskB(){
 	[ -d "/mnt/$b" ] || mkdir -p /mnt/$b
 	MOUNT='';eval $(block info "/dev/$b" | grep -o -e "MOUNT=\S*") 
 	if [  "x$MOUNT" != 'x'  ] ;then
-	     umount /mnt/$b || block umount /dev/$b
+	     umount /mnt/$b || block umount /dev/$b   >/dev/null 2> /dev/null 
 	     MOUNT='';eval $(block info "/dev/$b" | grep -o -e "MOUNT=\S*") 
 	     if [ "$MOUNT" ] ; then
 	     	log "检测设备/dev/$b被占用,请检查设备硬件或中止其他插件等占用权限再重试！" 
@@ -249,7 +249,7 @@ fdiskB(){
 			    mount --bind / /tmp/introot
 			    tar -C /tmp/introot -cvf - . | tar -C /mnt/$b -xf -
 			    umount /tmp/introot || block umount /tmp/introot
-			    umount /mnt/$b || block umount /dev/$b
+			    umount /mnt/$b || block umount /dev/$b   >/dev/null 2> /dev/null 
 			    block detect > /etc/config/fstab
 			    OVERLAY=`uci -q get fstab.@mount[0].target `
 			    if [ "$OVERLAY" == "/overlay" -o "$OVERLAY" == "/dev/loop0" ] ;then
@@ -268,7 +268,7 @@ fdiskB(){
 		
 			    # cp -a -f /overlay/*  /mnt/$b/  || cp -a -f /rom/overlay/*  /mnt/$b/
 			    tar -C /overlay -cvf - . | tar -C /mnt/$b/ -xf -  || tar -C /rom/overlay -cvf - . | tar -C /mnt/$b/ -xf - 
-			    umount /mnt/$b || block umount /dev/$b
+			    umount /mnt/$b || block umount /dev/$b  >/dev/null 2> /dev/null 
 			    block detect > /etc/config/fstab
 			    OVERLAY=`uci -q get fstab.@mount[0].target `
 			    if [ "$OVERLAY" == "/overlay" -o "$OVERLAY" == "/dev/loop0" ] ;then
@@ -295,7 +295,7 @@ fdiskB(){
 
 		else
 			    
-			    umount /mnt/$b || block umount /dev/$b
+			    umount /mnt/$b || block umount /dev/$b  >/dev/null 2> /dev/null 
 			    block detect > /etc/config/fstab
 			    OVERLAY=`uci -q get fstab.@mount[0].target `
 			    if [ "$OVERLAY" == "/overlay" -o "$OVERLAY" == "/dev/loop0" ] ;then
@@ -323,7 +323,7 @@ fdiskB(){
 
 		fi
 	elif [ "$target_function" = "/lnoverlay" ] ; then
-		umount /mnt/$b || block umount /dev/$b
+		umount /mnt/$b || block umount /dev/$b    >/dev/null 2> /dev/null 
 		
 		block detect > /etc/config/fstab
 		mkdir -p $target_function
@@ -343,7 +343,7 @@ fdiskB(){
 		log "设备重启才能生效"
 		expquit 2
 	else 
-		umount /mnt/$b || block umount /dev/$b
+		umount /mnt/$b || block umount /dev/$b  >/dev/null 2> /dev/null 
 		
 		block detect > /etc/config/fstab
 		mkdir -p $target_function
@@ -374,7 +374,7 @@ get_system_disk() {
 }
 
 get_all_disks() {
-    DISKS=`fdisk -l 2>/dev/null | grep -E '^Disk /dev/' | awk -F ',' '{print $1}'`
+    DISKS=`find /dev -regex '.*/\(sd[a-z]\|mmcblk[0-9]\+\|sata[a-z]\|nvme[0-9]\+n[0-9]\+\|vd[a-z]\)$'`
     echo "$DISKS"
 }
 
@@ -388,7 +388,7 @@ check_free_space() {
 # 定义函数：获取下一个新的可用的分区号
 get_next_partition_number() {
     DISK=$1
-    PARTITIONS=$(fdisk -l /dev/$DISK 2>/dev/null | grep -v boot  | grep -E "^/dev/$DISK" | awk '{print $1}' | sed 's/\/dev\/[a-z]*//g')
+    PARTITIONS=$(fdisk -l /dev/$DISK 2>/dev/null | grep -v boot  | grep -E "^/dev/$DISK" | awk '{print $1}' | sed 's/\/dev\/[a-z]*//g' | awk -F '[^0-9]+' '{print $NF}')
     MAX_PARTITION=$(echo "$PARTITIONS" | sort -n | tail -n 1)
     NEXT_PARTITION=$(awk -v n="$MAX_PARTITION" 'BEGIN { print n + 1 }')
     #NEXT_PARTITION=$((MAX_PARTITION + 1))
@@ -398,7 +398,7 @@ get_next_partition_number() {
 # 定义函数：获取最后一个可用的分区号
 get_last_partition_number() {
     DISK=$1
-    PARTITIONS=$(fdisk -l /dev/$DISK 2>/dev/null | grep -v boot  | grep -E "^/dev/$DISK" | awk '{print $1}' | sed 's/\/dev\/[a-z]*//g')
+    PARTITIONS=$(fdisk -l /dev/$DISK 2>/dev/null | grep -v boot  | grep -E "^/dev/$DISK" | awk '{print $1}' | sed 's/\/dev\/[a-z]*//g' | awk -F '[^0-9]+' '{print $NF}')
     MAX_PARTITION=$(echo "$PARTITIONS" | sort -n | tail -n 1)
     echo "$MAX_PARTITION"
 }
@@ -465,7 +465,7 @@ autopart() {
 
     		log  "定位到操作目标设备分区:/dev/$DISK$NEXTPART"
 		case "$DISK" in
-		vd*|sd*) fdiskB $DISK $NEXTPART;;
+		vd*) fdiskB $DISK $NEXTPART;;
 
 		sd*) fdiskB $DISK $NEXTPART;;
 		nvme*)  fdiskB $DISK p$NEXTPART;;

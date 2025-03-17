@@ -45,6 +45,9 @@ msgstr "选择需要操作的硬盘设备"
 msgid "Select function"
 msgstr "选择功能"
 
+msgid "Select the function to be performed"
+msgstr "选择要执行的功能"
+
 msgid "Click to execute"
 msgstr "点击执行"
 
