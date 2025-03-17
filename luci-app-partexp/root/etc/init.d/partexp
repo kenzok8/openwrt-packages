@@ -21,7 +21,7 @@ limit_log() {
 	local sc=100
 	[ -n "$2" ] && sc=$2
 	local count=$(grep -c "" $logf)
-	if [ $count -gt $sc ];then
+	if [[ $count -gt $sc ]];then
 		let count=count-$sc
 		sed -i "1,$count d" $logf
 	fi
@@ -50,19 +50,54 @@ get_config() {
 	config_get_bool auto_format $1 auto_format 1
 }
 
-nfdisk(){
+# 定义函数：检查硬盘是否已挂载
+is_disk_mounted() {
+    DISK=$1
+    # 检查是否已挂载
+    if mount | grep -q "^/dev/$DISK"; then
+        return 0  # 已挂载
+    else
+        return 1  # 未挂载
+    fi
+}
 
-#Start partition
-fdisk $1 << EOF >/dev/null 2> /dev/null
-n
-p
-
-
-
-wq
-EOF
+# 定义函数：取消挂载硬盘
+unmount_disk() {
+    DISK=$1
+    # log "正在取消挂载 /dev/$DISK..."
+    MOUNT='';eval $(block info "/dev/$DISK" | grep -o -e "MOUNT=\S*") 
+    if [ "$MOUNT" ] ; then
+         umount /dev/$DISK 2>/dev/null
+	 if [ $? -eq 0 ]; then
+                  log "取消挂载成功: /dev/$DISK"
+         else
+                 log  "取消挂载失败: /dev/$DISK"
+         fi
+    fi  
 
 }
+
+# 定义函数：检查是否有共享挂载（如 Samba 或 NFS）
+check_shared_mount() {
+    DISK=$1
+    if [ -f /etc/config/samba ]; then
+        SHARED=$(grep -q "/dev/$DISK" /etc/config/samba)
+        if [ $? -eq 0 ]; then
+            log "检测到 Samba 共享挂载: /dev/$DISK"
+            return 0
+        fi
+    fi
+    # 检查是否有 NFS 共享
+    if [ -f /etc/exports ]; then
+        SHARED=$(grep -q "/dev/$DISK" /etc/exports)
+        if [ $? -eq 0 ]; then
+            log "检测到 NFS 共享挂载: /dev/$DISK"
+            return 0
+        fi
+    fi
+    return 1
+}
+
 usamba(){
 s=$1
 s2=$2
@@ -75,33 +110,63 @@ s2=$2
 					uci delete $s.@sambashare[$i] 
 					uci commit $s
 					log "分区/dev/$b被挂载$MOUNT共享使用，删除$s共享成功！"  
-					sleep 5
-					/etc/init.d/$s restart
+					sleep 1
 			}
 	done
 	}
+    # 取消 Samba 共享
+    if [ -f /etc/config/$s ]; then
+        sed -i "/\/dev\/$b/d" /etc/config/$s
+        /etc/init.d/$s restart
+    fi
+    # 取消 NFS 共享
+    if [ -f /etc/exports ]; then
+        sed -i "/\/dev\/$b/d" /etc/exports
+        /etc/init.d/nfs restart
+    fi
+}
+
+
+is_disk_partitioned() {
+    PARTITION_COUNT=$(fdisk -l /dev/$1 2>/dev/null | grep -E "^/dev/$2" | wc -l)
+    if [[ "$PARTITION_COUNT" -gt 0 ]]; then
+        echo 1 
+    else
+        echo 0 
+    fi
+}
+
+partednew(){
+    DISK=$1
+    parted -s /dev/$DISK mklabel gpt
+    parted -s /dev/$DISK mkpart primary ext4 1MiB -1
+}
+
+fdisknew(){
+    echo -e "n\np\n\n\n\nw" | fdisk /dev/$1   >/dev/null 2> /dev/null
+}
+
+fdisksave(){
+    echo -e "n\w" | fdisk /dev/$1    >/dev/null 2> /dev/null
 }
 
 fdiskB(){
 	a=$1
 	b=$1$2
-	log "检测$a是否分区..."
-	isP=`fdisk -l /dev/$a |grep -v "bytes"|grep "/dev/$b" `
-	sleep 2
+	log "检测$a是否分区$b..."
 	isfdisk=0
-	if [ ! "$isP" ];then
-		nfdisk /dev/$a
+	isP=$(is_disk_partitioned $a $b)
+	if [ "$isP" == '0' ] ;then
+ 		fdisksave $a
+ 		fdisknew $a
 		sleep 2
 		isfdisk=1
-		
-	else
-		isfdisk=2
 	fi
 
-	isP=`fdisk -l /dev/$a |grep -v "bytes" | grep "/dev/$b"| wc -l`
-	if [ "$isP" == 1 -a "$isfdisk" = 1 ] ;then
+	isP=$(is_disk_partitioned $a $b)
+	if [ $isP == '1'  -a "$isfdisk" == 1 ] ;then
 	   log "分区$b建立成功！"
-	elif  [ "$isP" == 1  -a "$isfdisk" = 2 ] ;then
+	elif  [ $isP == '1'  -a "$isfdisk" = 0 ] ;then
 	    log "检测目标分区$b已存在."
 	else
 	   log "分区$b建立失败，没有足够的空间操作失败！"
@@ -109,6 +174,7 @@ fdiskB(){
 	fi
 	sleep 1
 	[ -e "/etc/config/dockerd" ] && /etc/init.d/dockerd stop  >/dev/null 2> /dev/null 
+	
 	block detect > /etc/config/fstab
 	isD=` block info "/dev/$b" `
 	if [ "$isD" ];then
@@ -137,7 +203,6 @@ fdiskB(){
 	    mkfs.ext4 -L extroot /dev/$b  >/dev/null 2> /dev/null 
 	    log  "设备/dev/$b格式化EXT4成功！"
 	elif [ "$auto_format" = "1" -o "$isfdisk" = "1" ] ; then
-	    log  "正在将/dev/$b格式化为EXT4文件系统..."
 	    mkfs.ext4 -F /dev/$b  >/dev/null 2> /dev/null
 	    log  "设备/dev/$b格式化EXT4成功！"
 	elif [ "$TYPE" ];then
@@ -158,8 +223,8 @@ fdiskB(){
 	     fi
 	fi
 	TYPE='';eval $(block info "/dev/$b" | grep -o -e "TYPE=\S*") 
-	log "检测设备/dev/$b分区是$TYPE格式！" 
 	if [ "$TYPE" = "ntfs" ];then
+	   log "检测设备/dev/$b分区是$TYPE格式！" 
 	   if [ `which ntfs-3g ` ] ;then
 	     mount -t ntfs-3g /dev/$b /mnt/$b   >/dev/null 2> /dev/null
 	   elif  [ `which ntfs3 ` ]  ;then
@@ -169,7 +234,7 @@ fdiskB(){
 	     expquit 1
 	   fi
 	else
-	   mount /dev/$b  /mnt/$b  >/dev/null 2> /dev/null
+	   /usr/bin/mount /dev/$b  /mnt/$b  >/dev/null 2> /dev/null
 	fi
 	UUID='';eval $(block info /dev/$b | grep -o -e "UUID=\S*")
 	if [ ! "$UUID" ] ; then 
@@ -302,55 +367,115 @@ fdiskB(){
 	fi
 }
 
+get_system_disk() {
+    SYSTEM_DISK=$(mount | grep 'on /overlay' | awk '{print $1}' | sed 's/[0-9]*$//' |head -1)
+    [ -z ${SYSTEM_DISK} ]  &&  SYSTEM_DISK=$( df -h | grep boot |awk -F ' ' '{print $1}' |head -1)
+    echo "$SYSTEM_DISK"
+}
+
+get_all_disks() {
+    DISKS=`fdisk -l 2>/dev/null | grep -E '^Disk /dev/' | awk -F ',' '{print $1}'`
+    echo "$DISKS"
+}
+
+check_free_space() {
+    DISK=$1 
+    PARTED_OUTPUT=$(parted /dev/$DISK unit GB print free 2>/dev/null)
+    FREE_SPACE=$(echo "$PARTED_OUTPUT" | grep "Free Space" | awk '{print $3}' )
+    echo $FREE_SPACE |awk -F '.' '{print $1}'
+}
+
+# 定义函数：获取下一个新的可用的分区号
+get_next_partition_number() {
+    DISK=$1
+    PARTITIONS=$(fdisk -l /dev/$DISK 2>/dev/null | grep -v boot  | grep -E "^/dev/$DISK" | awk '{print $1}' | sed 's/\/dev\/[a-z]*//g')
+    MAX_PARTITION=$(echo "$PARTITIONS" | sort -n | tail -n 1)
+    NEXT_PARTITION=$(awk -v n="$MAX_PARTITION" 'BEGIN { print n + 1 }')
+    #NEXT_PARTITION=$((MAX_PARTITION + 1))
+    echo "$NEXT_PARTITION"
+}
+
+# 定义函数：获取最后一个可用的分区号
+get_last_partition_number() {
+    DISK=$1
+    PARTITIONS=$(fdisk -l /dev/$DISK 2>/dev/null | grep -v boot  | grep -E "^/dev/$DISK" | awk '{print $1}' | sed 's/\/dev\/[a-z]*//g')
+    MAX_PARTITION=$(echo "$PARTITIONS" | sort -n | tail -n 1)
+    echo "$MAX_PARTITION"
+}
+
+
+# 定义函数：获取硬盘分区数
+get_partition_number() {
+    DISK=$1
+    PARTITIONS=$(fdisk -l /dev/$DISK 2>/dev/null | grep -v boot  | grep -E "^/dev/$DISK" | awk '{print $1}' | sed 's/\/dev\/[a-z]*//g' | wc -l)
+    echo "$PARTITIONS"
+}
+
 autopart() {
-    # [ -f $LOCK ] && exit
     config_load partexp
     config_foreach get_config global
     init_env
-    # touch $LOCK
     gen_log
-    log "此次执行操作功能：$target_function ，目标盘：/dev/$target_disk"
-    isP=`fdisk -l /dev/$target_disk |grep "Disk /dev/$target_disk"`
-    if [ "$isP" = "" ];then
-         log "没有检测到/dev/$target_disk目标设备！操作失败！" 
-	 expquit 1
-    else
-    		isB="$(sed -n -e "\|\s/boot\s.*$|{s///p;q}" /etc/mtab)"
-    		isb=`fdisk -l | grep /dev/$target_disk | grep -v "bytes" | wc -l`
-    		if [ "$isb" = 0 -o "$isb" = 1 ] ;then
-    		     isb=1
-		     
-    		     log "检测到设备/dev/$target_disk分区数为$isb个！" 
-    		elif [ "$isb" = 3 -o "$isb" = 4 ] ;then
-    		      isb=3
-		      
-    		     log "检测到设备/dev/$target_disk分区数为$isb个！" 
-    		else
-    		     log "检测到设备/dev/$target_disk分区数$isb个,请备份数据后删除分区重新操作！" 
-    		     expquit 1
-    		fi
-    		log  "检测到操作目标设备:/dev/$target_disk$isb!"
-		case "$target_disk" in
-		vd*)
-		        [ "$isB" = "/dev/${target_disk}1" -a "$target_function" = "/overlay" ] && fdiskB $target_disk 3 || fdiskB $target_disk $isb
-			;;
+    NEXTPART=1  #目标分区
+    DISK=$target_disk   #目标硬盘
+    DISKSALL=$(get_all_disks)  #硬盘名列表
+    DISK_COUNT=$(echo "$DISKSALL" | wc -l)  #所有硬盘数量
+    log "系统中检测到的硬盘数量: $DISK_COUNT"
+    log "硬盘信息列表:" $DISKSALL
+    SYSTEM_DISK=$(get_system_disk)
+    log "系统盘: "$SYSTEM_DISK
+    if [ "/dev/$DISK" == "$SYSTEM_DISK" ] ;then
+        fdisksave /dev/$DISK
+        log "此次执行操作功能：$target_function ，目标盘是系统盘：/dev/$DISK"
+	PARTITIONSUM=$(get_partition_number $DISK)
+	log "目标盘 $DISK 一共有分区数: $PARTITIONSUM个"
+	if  [[ "$PARTITIONSUM" -gt 3 ]];then
+	         FREE_SPACE=$(check_free_space $(basename $DISK))
+	         log "目标盘 $DISK 有剩余空间: $FREE_SPACE Gb"
+	         if [[ "$FREE_SPACE" -gt 2 ]]; then
+		        NEXTPART=$(get_next_partition_number $DISK)
+	         else
+		        NEXTPART=$(get_last_partition_number  $DISK)
+		 fi
+	else 
+		 FREE_SPACE=$(check_free_space $(basename $DISK))
+	         log "目标盘 $DISK 有剩余空间: $FREE_SPACE Gb"
+	         if [[ "$FREE_SPACE" -gt 2 ]]; then
+		        NEXTPART=$(get_next_partition_number $DISK)
+		 else
 
-		sd*)
-		        [ "$isB" = "/dev/${target_disk}1" -a "$target_function" = "/overlay" ] && fdiskB $target_disk 3 || fdiskB $target_disk $isb
-			;;
-		nvme*)
-			[ "$isB" = "/dev/${target_disk}p1" -a "$target_function" = "/overlay" ] && fdiskB $target_disk p3 || fdiskB $target_disk p$isb
-			;;
-		mmc*)
-			[ "$isB" = "/dev/${target_disk}p1" -a "$target_function" = "/overlay" ] && fdiskB $target_disk p3 || fdiskB $target_disk p$isb
-			;;
+		        log "目标盘 $SYSTEM_DISK 没有足够的剩余空间！"
+			expquit 1
+		 fi
+	fi
+    else
+        log "此次执行操作功能：$target_function ，目标盘是：/dev/$DISK"
+	PARTITIONSUM=$(get_partition_number $DISK)
+	log "目标盘 $DISK 一共有分区数: $PARTITIONSUM个"
+	if  [[ "$PARTITIONSUM" -gt 1 ]];then
+	         FREE_SPACE=$(check_free_space $(basename $DISK))
+	         log "目标盘 $DISK 有剩余空间: $FREE_SPACE Gb"
+		 
+	         [[ $FREE_SPACE -gt 2 ]] && NEXTPART=$(get_next_partition_number $DISK) || NEXTPART=$(get_last_partition_number  $DISK)
+	else 
+		        NEXTPART=1
+	fi
+	            
+    fi
+
+    		log  "定位到操作目标设备分区:/dev/$DISK$NEXTPART"
+		case "$DISK" in
+		vd*|sd*) fdiskB $DISK $NEXTPART;;
+
+		sd*) fdiskB $DISK $NEXTPART;;
+		nvme*)  fdiskB $DISK p$NEXTPART;;
+		mmc*)  fdiskB $DISK p$NEXTPART;;
 		*)
 			log "目标设备/dev/$target_disk暂不支持！请联系作者sirpdboy！"
 			expquit 1
 			;;
 		esac
 		
-    fi
     rm -f $LOCK
 }
 

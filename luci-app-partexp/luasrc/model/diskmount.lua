@@ -17,6 +17,7 @@ local d.list_disks = function()
       or dev:match("^mmcblk%d+$")
       or dev:match("^sata[a-z]$")
       or dev:match("^nvme%d+n%d+$")
+      or dev:match("^vd[a-z]$")
       then
       table.insert(target_devnames, dev)
     end
