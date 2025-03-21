@@ -245,6 +245,8 @@ fdiskB(){
 	fi
 
 	if [ "$target_function" = "/" ] ; then
+	
+	 	if [ "$keep_config" = "1" ] ; then
 			    mkdir -p /tmp/introot
 			    mount --bind / /tmp/introot
 			    tar -C /tmp/introot -cvf - . | tar -C /mnt/$b -xf -
@@ -262,7 +264,25 @@ fdiskB(){
 			    sleep 5
 			    log "设备重启才能生效"
 			    expquit 2
+		else
+			    mkdir -p /tmp/introot
+			    mount --bind / /tmp/introot
+			    umount /tmp/introot || block umount /tmp/introot
+			    umount /mnt/$b || block umount /dev/$b   >/dev/null 2> /dev/null 
+			    block detect > /etc/config/fstab
+			    OVERLAY=`uci -q get fstab.@mount[0].target `
+			    if [ "$OVERLAY" == "/overlay" -o "$OVERLAY" == "/dev/loop0" ] ;then
+			         uci -q set fstab.@mount[0].uuid="${UUID}"
+			         uci -q set fstab.@mount[0].target='/'
+			         uci -q set fstab.@mount[0].enabled='1'
+			    fi
+			    log "保留数据根目录扩展/dev/$b成功！"
 
+			    sleep 5
+			    log "设备重启才能生效"
+			    expquit 2
+
+		fi
 	elif [ "$target_function" = "/overlay" ] ; then
 	 	if [ "$keep_config" = "1" ] ; then
 		

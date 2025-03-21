@@ -18,8 +18,8 @@ msgstr "稍等，努力执行中"
 msgid "Expand application space overlay (/overlay)"
 msgstr "用于overlay软件空间 (/overlay)"
 
-msgid "Use as root filesystem (/)"
-msgstr "用作根文件系统（/）"
+msgid "Used to expand to EXT4 root directory(Ext4 /)"
+msgstr "用于扩展为EXT4根目录(Ext4 /)"
 
 msgid "Used as Docker data disk (/opt)"
 msgstr "用作Docker数据盘 (/opt)"
