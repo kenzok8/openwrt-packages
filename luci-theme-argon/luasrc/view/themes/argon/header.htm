@@ -124,7 +124,7 @@
 
 <body
 	class="lang_<%=luci.i18n.context.lang%> <% if node then %><%= striptags( node.title ) %><% end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %>"
-	data-page="<%= table.concat(disp.context.requestpath, "-") %>">
+	data-page="<%= pcdata(table.concat(disp.context.requestpath, "-")) %>">
 
 	<div class="main">
 		<div class="main-left" id="mainmenu" style="display:none">
