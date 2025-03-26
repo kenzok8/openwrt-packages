@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Copyright (C) 2022-2024 sirpdboy  herboy2008@gmail.com  https://github.com/sirpdboy/luci-app-partexp"
+"Copyright (C) 2022-2025 sirpdboy  herboy2008@gmail.com  https://github.com/sirpdboy/luci-app-partexp"
 "This is free software, licensed under the GNU General Public License v3."
 
 msgid "Partition Expansion"
@@ -18,14 +18,14 @@ msgstr "稍等，努力执行中"
 msgid "Expand application space overlay (/overlay)"
 msgstr "用于overlay软件空间 (/overlay)"
 
-msgid "Used to expand to EXT4 root directory(Ext4 /)"
-msgstr "用于扩展为EXT4根目录(Ext4 /)"
+msgid "Used to extend to the root directory of EXT4 firmware(Ext4 /)"
+msgstr "用于扩展为EXT4固件根目录(Ext4 /)"
 
 msgid "Used as Docker data disk (/opt)"
 msgstr "用作Docker数据盘 (/opt)"
 
-msgid "Normal mount and use by device name(/dev/x1)"
-msgstr "按设备名普通挂载使用(/dev/x1)"
+msgid "Normal mount and use by device name(/mnt/x1)"
+msgstr "按设备名普通挂载使用(/mnt/x1)"
 
 msgid "Soft chain partition expansion(/overlay)"
 msgstr "分区软链扩容(/overlay)"
@@ -36,8 +36,20 @@ msgstr "目标硬盘"
 msgid "Keep configuration"
 msgstr "保留配置"
 
-msgid "Format before use"
-msgstr "使用前格式化"
+msgid "Format system type"
+msgstr "格式化系统类型"
+
+msgid "No formatting required"
+msgstr "不需要格式化"
+
+msgid "Linux system partition(EXT4)"
+msgstr "Linux系统分区(EXT4)"
+
+msgid "Large capacity storage devices(Btrfs)"
+msgstr "大容量存储设备(Btrfs)"
+
+msgid "Windows system partition(NTFS)"
+msgstr "Windows系统分区(NTFS)"
 
 msgid "Select the hard disk device to operate"
 msgstr "选择需要操作的硬盘设备"

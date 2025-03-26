@@ -1,6 +1,6 @@
 --[[
 LuCI - Lua Configuration Partition Expansion
- Copyright (C) 2022-2024  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/partexp
+ Copyright (C) 2022-2025  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/partexp
 ]]--
 
 local fs = require "nixio.fs"
@@ -34,12 +34,12 @@ end
 
 function partexprun()
 	local kconfig = http.formvalue('kconfig')
-	local aformat = http.formvalue('aformat')
+	local eformat = http.formvalue('eformat')
 	local targetf = http.formvalue('targetf')
 	local targetd = http.formvalue('targetd')
 	uci:set(name, 'global', 'target_disk', targetd)
 	uci:set(name, 'global', 'target_function', targetf)
-	uci:set(name, 'global', 'auto_format', aformat)
+	uci:set(name, 'global', 'format_type', eformat)
 	uci:set(name, 'global', 'keep_config', kconfig)
 	uci:commit(name)
 	fs.writefile("/tmp/lucilogpos","0")

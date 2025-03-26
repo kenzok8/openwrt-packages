@@ -1,6 +1,6 @@
 --[[
 LuCI - Lua Configuration Interface
- Copyright (C) 2022  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/luci-app-partexp
+ Copyright (C) 2022-2025  sirpdboy <herboy2008@gmail.com> https://github.com/sirpdboy/luci-app-partexp
 ]]--
 local fs   = require "nixio.fs"
 local util = require "nixio.util"
@@ -39,10 +39,10 @@ t=m:section(TypedSection,"global")
 t.anonymous=true
 
 e=t:option(ListValue,"target_function", translate("Select function"),translate("Select the function to be performed"))
-e:value("/", translate("Used to expand to EXT4 root directory(Ext4 /)"))
+e:value("/", translate("Used to extend to the root directory of EXT4 firmware(Ext4 /)"))
 e:value("/overlay", translate("Expand application space overlay (/overlay)"))
 e:value("/opt", translate("Used as Docker data disk (/opt)"))
-e:value("/dev", translate("Normal mount and use by device name(/dev/x1)"))
+e:value("/dev", translate("Normal mount and use by device name(/mnt/x1)"))
 e.default="/opt"
 
 e=t:option(ListValue,"target_disk", translate("Destination hard disk"),translate("Select the hard disk device to operate"))
@@ -59,10 +59,14 @@ e:depends("target_function", "/overlay")
 e:depends("target_function", "/")
 e.default=0
 
-e=t:option(Flag,'auto_format', translate('Format before use'),translate("Ticking indicates formatting"))
+e=t:option(ListValue,'format_type', translate('Format system type'))
 e:depends("target_function", "/opt")
 e:depends("target_function", "/dev")
-e.default=0
+e:value("0", translate("No formatting required"))
+e:value("ext4", translate("Linux system partition(EXT4)"))
+e:value("btrfs", translate("Large capacity storage devices(Btrfs)"))
+e:value("ntfs", translate("Windows system partition(NTFS)"))
+e.default="0"
 
 e=t:option(Button, "restart", translate("Perform operation"))
 e.inputtitle=translate("Click to execute")

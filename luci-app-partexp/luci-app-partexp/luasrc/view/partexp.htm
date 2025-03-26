@@ -74,11 +74,10 @@ function apply_run(btn){
 
     var targetf=opt.get("target_function").value;
     var targetd=opt.get("target_disk").value;
-	if (opt.get("auto_format")) 
-
-	var aformat = opt.get("auto_format").checked ? 1 : 0;
+    if (opt.get("format_type")) 
+        var eformat=opt.get("format_type").value;
     else
-	var aformat = 0;
+	var aformat = "0";
 	if (opt.get("keep_config")) 
 	var kconfig = opt.get("keep_config").checked ? 1 : 0;
     else
@@ -89,7 +88,7 @@ function apply_run(btn){
             targetf: targetf,
             kconfig: kconfig,
             targetd: targetd,
-			aformat: aformat
+			eformat: eformat
 			},function(x){});
 	poll_check();
 	return
