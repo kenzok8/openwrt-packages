@@ -1,6 +1,7 @@
 <%+header%>
 <%
   local jsonc = require "luci.jsonc"
+  local uci = require "luci.model.uci".cursor()
   local features = { "_lua_force_array_" }
   local configs = {}
   if luci.sys.call("which ota >/dev/null 2>&1 && ota >/dev/null 2>&1") == 0 then
@@ -17,12 +18,16 @@
   end
   if luci.sys.call("/etc/init.d/ttyd running >/dev/null 2>&1") == 0 then
       features[#features+1] = "ttyd"
-      local uci  = require "luci.model.uci".cursor()
       local port = uci:get_first("ttyd", "ttyd", "port") or "7681"
       local ssl  = uci:get_first("ttyd", "ttyd", "ssl") or "0"
       configs["ttyd"] = {
         port = tonumber(port),
         ssl = ssl == "1"
+      }
+  end
+  if uci:get("quickstart", "main", "disable_update_check") == "1" then
+      configs["update"] = {
+        disable = true
       }
   end
 -%>
