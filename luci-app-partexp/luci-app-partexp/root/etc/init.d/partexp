@@ -276,17 +276,30 @@ fdiskB(){
 	local b=$a$1
 	log "开始检测目标$a信息"
    	log "检测/dev/$b是否需要分区和格式化$format_type"
-	[ -e "/etc/config/dockerd" ] && /etc/init.d/dockerd stop   >/dev/null 2> /dev/null
+
+	   if [ $target_function = '/opt' ] ;then
+		/etc/init.d/dockerd stop   >/dev/null 2> /dev/null
+		amount=`mount |grep /opt | awk '{print $1}'`
+		if [ -n $amount ] ;then
+		        umount $amount   >/dev/null 2> /dev/null
+         		log "取消/opt之前的挂载$amount成功！"
+		fi
+		 for OPT in $(mount |grep /opt | awk '{print $3}');do
+		    umount $OPT   >/dev/null 2> /dev/null
+		    log "取消/opt之前的挂载$OPT成功！"
+		done
+	   fi
 	[ -e "/etc/config/fstab" ] || block detect > /etc/config/fstab
 	[ -d "/mnt/$b" ] || mkdir -p /mnt/$b
 	if is_disk_mounted "/dev/$b"; then
  	   log "设备 /dev/$b 已挂载，尝试取消挂载..."
-	   if check_shared_mount $b; then
-	   	   usamba samba4 $MOUNT
-	  	   usamba samba $MOUNT
-	  	   sleep 5
-	   fi
- 	   umount_disk "/dev/$b" || umount_disk "/mnt/$b"
+
+	   	   if check_shared_mount $b; then
+	   	      usamba samba4 $MOUNT
+	  	      usamba samba $MOUNT
+	  	      sleep 5
+	           fi
+ 	           umount_disk "/dev/$b" || umount_disk "/mnt/$b"
 	else
   	   log "设备/dev/$b未挂载"
 	   isfdisk=0
@@ -412,10 +425,7 @@ fdiskB(){
 		umount /dev/$b  >/dev/null 2> /dev/null 
 		[ $? -ne 0 ] && umount /mnt/$b  >/dev/null 2> /dev/null 
 		[ $? -ne 0 ] && block umount /dev/$b   >/dev/null 2> /dev/null 
-		for OPT in $(mount |grep /opt | awk '{print $1}');do
-		    umount $OPT   >/dev/null 2> /dev/null
-		    log "取消/opt之前的挂载$OPT成功！"
-		done
+
 		block detect > /etc/config/fstab
 		mkdir -p $target_function
 		msum=$(grep -c "'mount'" /etc/config/fstab)
@@ -524,9 +534,10 @@ get_all_disks() {
 
 check_free_space() {
     DISK=$1 
-    PARTED_OUTPUT=$(parted /dev/$DISK unit GB print free 2>/dev/null)
+    PARTED_OUTPUT=$(echo i | parted /dev/$DISK unit GB print free 2>/dev/null)
     FREE_SPACE=$(echo "$PARTED_OUTPUT" | grep "Free Space" | awk '{print $3}' )
-    echo $FREE_SPACE |awk -F '.' '{print $1}'
+    echo $FREE_SPACE |awk -F '.' '{print $1}' | sed 's/[A-Za-z]//g'
+
 }
 
 # 获取下一个新的可用的分区号
@@ -579,7 +590,7 @@ autopart() {
     log "硬盘信息列表:" $DISKSALL
     SYSTEM_DISK=$(get_system_disk)
     log "系统盘: "$SYSTEM_DISK
-    if [ "/dev/$DISK" == "$SYSTEM_DISK" ] ;then
+    if [[ $SYSTEM_DISK =~ ^/dev/$DISK ]] ;then
         fdisksave /dev/$DISK
         log "此次执行操作功能：$target_function ，目标盘是系统盘：/dev/$DISK"
 	PARTITIONSUM=$(get_partition_number $DISK)
