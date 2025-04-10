@@ -2022,6 +2022,7 @@ td > table > tbody > tr > td,
     padding: 0.5rem 0rem;
     border-bottom: 0.18751rem solid rgba(0, 0, 0, 0);
     margin: 0 0.2rem;
+    position: relative;
 
     a {
       text-decoration: none;
@@ -4649,4 +4650,23 @@ pre.command-output {
   }
 
 
+}
+
+.cbi-tab-disabled[data-errors]::after {
+    content: attr(data-errors);
+    background-color: #f5365c;
+    background-color: var(--red);
+    color: #fff;
+    height: 1em;
+    min-width: 1em;
+    border-radius: 1em;
+    text-align: center;
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: .8em;
+    padding: 2px;
+    position: absolute;
+    top: 0;
+    right: 0;
 }
