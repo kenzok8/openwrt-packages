@@ -209,6 +209,14 @@ case $MYDEVICE_NAME in
     fi
     SOC="e20c"
     ;;
+"Radxa E24C")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3528-radxa-e24c.dtb"
+    fi
+    SOC="e24c"
+    ;;
 "Ariaboard Photonicat")
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
@@ -256,6 +264,14 @@ case $MYDEVICE_NAME in
         MYDTB_FDTFILE="rk3588s-radxa-e52c.dtb"
     fi
     SOC="e52c"
+    ;;
+"Radxa E54C")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3588s-radxa-e54c.dtb"
+    fi
+    SOC="e54c"
     ;;
 *) #default
     if [ -f "/etc/flippy-openwrt-release" ]; then
@@ -717,7 +733,14 @@ cat >>./etc/crontabs/root <<EOF
 EOF
 
 sed -e 's/ttyAMA0/ttyS2/' -i ./etc/inittab
-[ "${SOC}" != "h28k" ] && [ "${SOC}" != "ht2" ] && sed -e 's/ttyS0/tty1/' -i ./etc/inittab
+
+[ "${SOC}" != "h28k" ] && \
+[ "${SOC}" != "h29k" ] && \
+[ "${SOC}" != "ht2" ] && \
+[ "${SOC}" != "e20c" ] && \
+[ "${SOC}" != "e24c" ] && \
+	sed -e 's/ttyS0/tty1/' -i ./etc/inittab
+
 sss=$(date +%s)
 ddd=$((sss / 86400))
 sed -e "s/:0:0:99999:7:::/:${ddd}:0:99999:7:::/" -i ./etc/shadow
