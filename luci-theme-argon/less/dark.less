@@ -1034,6 +1034,18 @@ input,
     .fb-container td[class$="-icon"]::before {
         filter: invert(0.7);
     }
+
+    div#list-content {
+        table.cbi-section-table {
+            tbody {
+                tr:nth-child(1) {
+                    td.parent-icon {
+                        background: #1e1e1e !important;
+                    }
+                }
+            }
+        }
+    }
 }
 
 [data-page^="admin-services-openclash"] {
