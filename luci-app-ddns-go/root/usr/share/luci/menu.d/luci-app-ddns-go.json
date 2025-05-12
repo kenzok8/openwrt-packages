@@ -1,0 +1,41 @@
+{
+    "admin/services/ddns-go": {
+		"title": "DDNS-GO",
+		"order": 58,
+		"action": {
+		     "type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-ddns-go" ],
+			"uci": { "ddns-go": true }
+		}
+    },
+
+    "admin/services/ddns-go/config": {
+             "title": "Base Setting",
+             "order": 10,
+             "action": {
+               "type": "view",
+               "path": "ddns-go/config"
+             }
+    },
+
+    "admin/services/ddns-go/ddns-go": {
+         "title": "DDNS-GO Control panel",
+         "order": 20,
+         "action": {
+               "type": "view",
+               "path": "ddns-go/ddns-go"
+             }
+    },
+    
+    "admin/services/ddns-go/log": {
+		"title": "Log",
+             "order": 30,
+             "action": {
+               "type": "view",
+               "path": "ddns-go/log"
+             }
+    }
+
+}

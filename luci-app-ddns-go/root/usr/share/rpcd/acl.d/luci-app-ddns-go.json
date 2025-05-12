@@ -2,10 +2,13 @@
 	"luci-app-ddns-go": {
 		"description": "Grant UCI access for luci-app-ddns-go",
 		"read": {
-			"uci": [ "ddns-go" ]
+			"ubus": {
+				"service": [ "list" ]
+			},
+			"uci": [ "ddns-go" ,"ddns-go" ]
 		},
 		"write": {
-			"uci": [ "ddns-go" ]
+			"uci": [ "ddns-go" ,"ddns-go" ]
 		}
 	}
 }
