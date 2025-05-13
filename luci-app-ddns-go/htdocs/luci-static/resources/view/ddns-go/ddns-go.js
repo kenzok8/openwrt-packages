@@ -9,9 +9,9 @@
 'require poll';
 
 return view.extend({
-	handleSaveApply: null,
-	handleSave: null,
-	handleReset: null,
+	//handleSaveApply: null,
+	//handleSave: null,
+	//handleReset: null,
     load: function() {
         return uci.load('ddns-go');
     },

@@ -109,9 +109,9 @@ return view.extend({
 
 
 		]);
-	},
+	}
 
-	handleSaveApply: null,
-	handleSave: null,
-	handleReset: null
+	//handleSaveApply: null,
+	//handleSave: null,
+	//handleReset: null
 });
