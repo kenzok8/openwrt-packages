@@ -170,7 +170,7 @@ backup() {
         ipk_build ${pkg_name} $BACKUP_PATH/backup_istore_$date
     done
 
-    # 5. create tar.gz file,and remove fir
+    # 5. create tar.gz file,and remove dir
     cd $BACKUP_PATH
     echo "write backup file to $BACKUP_PATH/backup_istore_$date.backup.tar.gz"
     tar -czf $BACKUP_PATH/backup_istore_$date.backup.tar.gz backup_istore_$date
@@ -246,10 +246,10 @@ get_backup_app_list() {
 }
 
 get_available_backup_file_list() {
+    local backup_file
     if [ -n "$1" ]; then
-        for backup_file in `ls $1/*.backup.tar.gz`; do
-            filename=${backup_file##*/}
-            echo "${filename}"
+        for backup_file in `cd $1 && ls backup_istore_*.backup.tar.gz`; do
+            echo "${backup_file}"
         done
     else
         echo "input backup path is null"

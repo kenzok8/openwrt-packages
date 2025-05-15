@@ -1,0 +1,177 @@
+#!/bin/sh
+
+TMP_SELF_COPY=/var/run/cloned-overlay-backup
+
+action=${1}
+shift
+
+has_overlay() {
+    [ -d "/overlay/upper" ] || return 1
+    [ "overlay" = "$(/bin/mount | awk '($3 ~ /^\/$/) && ($5 !~ /rootfs/) { print $5 }')" ] || return 1
+
+    return 0
+}
+
+has_ext_overlay() {
+    [ -d "/ext_overlay/upper" ] || return 1
+    grep '^overlayfs:/overlay / ' /proc/mounts | grep -Fq 'upperdir=/ext_overlay/upper' || return 1
+
+    return 0
+}
+
+backup() {
+    if ! has_overlay; then
+        echo "only supports squashfs firmware"
+        exit 1
+    fi
+    if [ -z "$1" ]; then
+        echo "input backup path is null"
+        exit 1
+    fi
+    local BACKUP_PATH="$1"
+
+    if echo "$BACKUP_PATH" | grep -q -e '^/overlay/upper' -e '^/ext_overlay/upper' ; then
+        echo "can not backup to /overlay/upper, /ext_overlay/upper"
+        exit 1
+    fi
+
+    if [ ! -d "${BACKUP_PATH}" ] && ! mkdir -p "${BACKUP_PATH}" ; then
+        echo "backup path does not exist and can not be create"
+        exit 1
+    fi
+
+    local realpath="$(cd "${BACKUP_PATH}"; pwd -P)"
+    if [ -z "$realpath" ]; then
+        echo "cannot get absolute path of ${BACKUP_PATH}"
+        exit 1
+    fi
+
+    local mountpoint=$(findmnt -T $realpath -o TARGET | sed -n 2p)
+    # while read -r; do
+    #     if [[ "x$realpath" == "x$REPLY" || "x${realpath#$REPLY/}" != "x$realpath" ]]; then
+    #         mountpoint="$REPLY"
+    #         break
+    #     fi
+    # done < <(
+    #     cat /proc/mounts | grep -v '^overlay ' | awk 'NR>1 {print $2}' | grep -v '^/$' | \
+    #         sort -u | \
+    #         while read -r; do printf "%b\n" "$REPLY" ; done | \
+    #         awk '{print length, $0}' | sort -nr | cut -d' ' -f2-
+    # )
+
+    if [ "/" = "$mountpoint" ]; then
+        echo "can not backup to /"
+        exit 1
+    else
+        echo "found mount point $mountpoint"
+    fi
+
+    local tar_extra_args=
+    if has_ext_overlay; then
+        tar_extra_args="$tar_extra_args ext_overlay/upper"
+    fi
+
+    local hostname=$(cat /proc/sys/kernel/hostname)
+    local fwver=$(. /etc/openwrt_release; echo $DISTRIB_ID-$DISTRIB_RELEASE)
+
+    local date=$(date +%Y-%m%d-%H%M)
+    local backup_name="backup_overlay_${hostname}_${fwver}_${date}.overlay.tar.gz"
+    local backup_full_path="$BACKUP_PATH/$backup_name"
+    echo "writing backup to $backup_full_path"
+    if tar -C / -cz overlay/upper $tar_extra_args > "$backup_full_path" ; then
+        sync "$BACKUP_PATH"
+        echo "backup success"
+        return 0
+    else
+        rm -f "$backup_full_path"
+        echo "backup failed"
+        exit 1
+    fi
+}
+
+restore() {
+    if ! has_overlay; then
+        echo "only supports squashfs firmware"
+        exit 1
+    fi
+    if [ -z "$1" ]; then
+        echo "input backup path is null"
+        exit 1
+    fi
+    local BACKUP_PATH_FILE="$1"
+
+    if [ ! -f "${BACKUP_PATH_FILE}" ]; then
+        echo "invalid backup file, can not restore"
+        exit 1
+    fi
+
+    local tar_extra_args=
+    if has_ext_overlay; then
+        tar_extra_args="$tar_extra_args ext_overlay/upper"
+    fi
+
+    sync /
+    echo "restoring from ${BACKUP_PATH_FILE}"
+    if tar -C / -xz overlay/upper $tar_extra_args < "${BACKUP_PATH_FILE}" ; then
+        sync /overlay /ext_overlay
+        echo "restore success"
+        echo "schedule to restart after 5 seconds!"
+        /etc/init.d/tasks task_add reboot 'reboot -d 5'
+        return 0
+    else
+        echo "restore failed"
+        exit 1
+    fi
+}
+
+supports_overlay_backup() {
+    has_overlay || return 1
+    echo "overlay"
+    has_ext_overlay && echo "ext_overlay"
+    return 0
+}
+
+get_backup_file_list() {
+    local backup_file
+    if [ -n "$1" ]; then
+        for backup_file in `cd $1 && ls backup_overlay_*.overlay.tar.gz`; do
+            echo "${backup_file}"
+        done
+    else
+        echo "input backup path is null"
+        exit 1
+    fi
+}
+
+usage() {
+    echo "usage: overlay-backup sub-command [arguments...]"
+    echo "where sub-command is one of:"
+    echo "      backup [dir]                    Backup all installed package(s) to [directory]"
+    echo "      restore [dir]                   Restore package(s) by [directory]"
+    echo "      supports_overlay_backup         check system supports overlay backup"
+    echo "      get_backup_file_list [dir]      get local available backup file list in [dir]"
+}
+
+case $action in
+    "supports_overlay_backup")
+        supports_overlay_backup
+    ;;
+    "backup")
+        backup "$@"
+    ;;
+    "restore")
+        if [ "$0" = "$TMP_SELF_COPY" ]; then
+            restore "$@"
+        else
+            echo "copy self $0 to $TMP_SELF_COPY when restore"
+            cp -af "$0" "$TMP_SELF_COPY"
+            exec "$TMP_SELF_COPY" restore "$@"
+        fi
+    ;;
+    "get_available_backup_file_list")
+        get_backup_file_list "$@"
+    ;;
+    *)
+        usage
+    ;;
+esac

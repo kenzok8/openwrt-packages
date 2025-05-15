@@ -2,6 +2,7 @@ module("luci.controller.store", package.seeall)
 
 local myopkg = "is-opkg"
 local is_backup = "/usr/libexec/istore/backup"
+local is_overlay_backup = "/usr/libexec/istore/overlay-backup"
 local page_index = {"admin", "store", "pages"}
 
 function index()
@@ -44,16 +45,18 @@ function index()
         store_api(action, false)
     end
 
-    -- backup
+    -- istore backup
     if nixio.fs.access("/usr/libexec/istore/backup") then
         entry({"admin", "store", "get_support_backup_features"}, call("get_support_backup_features"))
         entry({"admin", "store", "light_backup"}, post("light_backup"))
         entry({"admin", "store", "get_light_backup_file"}, call("get_light_backup_file"))
-        entry({"admin", "store", "local_backup"}, post("local_backup"))
         entry({"admin", "store", "light_restore"}, post("light_restore"))
-        entry({"admin", "store", "local_restore"}, post("local_restore"))
         entry({"admin", "store", "get_backup_app_list_file_path"}, call("get_backup_app_list_file_path"))
         entry({"admin", "store", "get_backup_app_list"}, call("get_backup_app_list"))
+    end
+    if nixio.fs.access("/usr/libexec/istore/backup") or nixio.fs.access("/usr/libexec/istore/overlay-backup") then
+        entry({"admin", "store", "local_backup"}, post("local_backup"))
+        entry({"admin", "store", "local_restore"}, post("local_restore"))
         entry({"admin", "store", "get_available_backup_file_list"}, call("get_available_backup_file_list"))
         entry({"admin", "store", "set_local_backup_dir_path"}, post("set_local_backup_dir_path"))
         entry({"admin", "store", "get_local_backup_dir_path"}, call("get_local_backup_dir_path"))
@@ -159,6 +162,9 @@ function store_index()
     local features = { "_lua_force_array_" }
     if fs.access("/usr/libexec/istore/backup") then
         features[#features+1] = "backup"
+    end
+    if luci.sys.call(is_overlay_backup .. " supports_overlay_backup >/dev/null 2>&1") == 0 then
+        features[#features+1] = "overlay"
     end
     if luci.sys.call("which docker >/dev/null 2>&1") == 0 then
         features[#features+1] = "docker"
@@ -682,18 +688,27 @@ function local_backup()
     local code, out, err, ret
     local error_ret
     local path = luci.http.formvalue("path")
+    local type = luci.http.formvalue("type") or "istore"
     if path ~= "" then
         -- judge path
+        local fs   = require "nixio.fs"
+        fs.mkdirr(path)
         code,out,err = is_exec("findmnt -T " .. path .. " -o TARGET|sed -n 2p")
-        if out:gsub("[\r\n]", "") == "/" or out:gsub("[\r\n]", "") == "/tmp" then
+        local mp = out:gsub("[\r\n]", "")
+        if mp == "/" or mp == "/tmp" then
             -- error
             error_ret = {code = 500, stderr = "Path Error,Can not be / or tmp."}
             luci.http.prepare_content("application/json")
-            luci.http.write_json(error_ret)            
+            luci.http.write_json(error_ret)
+        elseif type == "overlay" and ( mp == "/overlay" or mp == "/ext_overlay" ) then
+            -- error
+            error_ret = {code = 500, stderr = "Path Error,Can not be /overlay or /ext_overlay."}
+            luci.http.prepare_content("application/json")
+            luci.http.write_json(error_ret)
         else
             -- update local backup path
             update_local_backup_path(path)
-            code,out,err = _action(is_backup, "backup", path)
+            code,out,err = _action(type == "overlay" and is_overlay_backup or is_backup, "backup", path)
             ret = {
                 code = code,
                 stdout = out,
@@ -761,9 +776,10 @@ end
 -- post local_restore
 function local_restore()
     local path = luci.http.formvalue("path")
+    local type = luci.http.formvalue("type") or "istore"
     local code, out, err, ret
     if path ~= "" then
-        code,out,err = _action(is_backup, "restore", path)
+        code,out,err = _action(type == "overlay" and is_overlay_backup or is_backup, "restore", path)
         ret = {
             code = code,
             stdout = out,
@@ -821,12 +837,13 @@ function get_available_backup_file_list()
     local error_ret = {code = 500, msg = "Unknown"}
     local success_ret = {code = 200,msg = "Unknown"}
     local path = luci.http.formvalue("path")
+    local type = luci.http.formvalue("type") or "istore"
     local r,o,e
 
     if path ~= "" then
         -- update local backup path
         update_local_backup_path(path)
-        r,o,e = is_exec(is_backup .. " get_available_backup_file_list " .. luci.util.shellquote(path))
+        r,o,e = is_exec((type == "overlay" and is_overlay_backup or is_backup) .. " get_available_backup_file_list " .. luci.util.shellquote(path))
         if r ~= 0 then
             error_ret.msg = e
             luci.http.prepare_content("application/json")
