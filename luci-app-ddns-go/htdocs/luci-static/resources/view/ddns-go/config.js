@@ -7,17 +7,33 @@
 'require form';
 'require poll';
 
-function checkProcess() {
-    return fs.exec('/bin/pidof', ['ddns-go']).then(function(res) {
-        return {
-            running: res.code === 0,
-            pid: res.code === 0 ? res.stdout.trim() : null
-        };
-    }).catch(function() {
-        return { running: false, pid: null };
-    });
-}
 
+ async function checkProcess() {
+    // 先尝试用 pidof
+    try {
+        const pidofRes = await fs.exec('/bin/pidof', ['ddns-go']);
+        if (pidofRes.code === 0) {
+            return {
+                running: true,
+                pid: pidofRes.stdout.trim()
+            };
+        }
+    } catch (err) {
+        // pidof 失败，继续尝试 ps
+    }
+
+    // 回退到 ps
+    try {
+        const psRes = await fs.exec('/bin/ps', ['-C', 'ddns-go', '-o', 'pid=']);
+        const pid = psRes.stdout.trim();
+        return {
+            running: pid !== '',
+            pid: pid || null
+        };
+    } catch (err) {
+        return { running: false, pid: null };
+    }
+   }
 function renderStatus(isRunning, listen_port, noweb) {
     var statusText = isRunning ? _('RUNNING') : _('NOT RUNNING');
     var color = isRunning ? 'green' : 'red';
@@ -52,8 +68,8 @@ return view.extend({
 
     render: function(data) {
         var m, s, o;
-        var listen_port = (uci.get(data[0], 'basic', 'port') || '[::]:9876').split(':').slice(-1)[0];
-        var noweb = uci.get(data[0], 'basic', 'noweb') || '0';
+        var listen_port = (uci.get('ddns-go', 'config', 'port') || '[::]:9876').split(':').slice(-1)[0];
+        var noweb = uci.get('ddns-go', 'config', 'noweb') || '0';
 
         m = new form.Map('ddns-go', _('DDNS-GO'),
             _('DDNS-GO automatically obtains your public IPv4 or IPv6 address and resolves it to the corresponding domain name service.'));
@@ -63,7 +79,7 @@ return view.extend({
         s.anonymous = true;
         s.render = function() {
             var statusView = E('p', { id: 'control_status' }, 
-                '<span class="spinning">⏳</span> ' + _('Checking status...'));
+                '<span class="spinning"></span> ' + _('Checking status...'));
             
             var pollInterval = poll.add(function() {
                 return checkProcess()
@@ -122,6 +138,7 @@ return view.extend({
 
 		o = s.option(form.Flag, 'noweb', _('Do not start web services'));
 		o.default = '0';
+		o.rmempty = false;
 
 		o = s.option(form.Value, 'delay', _('Delayed Start (seconds)'));
 		o.default = '60';

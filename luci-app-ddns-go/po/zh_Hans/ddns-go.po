@@ -43,8 +43,8 @@ msgstr "运行中"
 msgid "DDNS-GO Service Not Running"
 msgstr "DDNS-GO服务未启用"
 
-msgid "Please enable the DDNS-GO service"
-msgstr "请将DDNS-GO服务启用"
+msgid "DDNS-GO Web Interface Disabled"
+msgstr "DDNS-GO WEB服务禁用"
 
 msgid "Open Web Interface"
 msgstr "打开Web界面"
