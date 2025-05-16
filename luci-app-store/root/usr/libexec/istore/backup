@@ -15,13 +15,15 @@ is_init() {
 }
 
 opkg_list_installed_packages() {
-    target=$1
+    local target=$1
+    local dir
+    local OPKG_INFO_DIR
     case $target in
         "preinstalled")
             OPKG_INFO_DIR="/rom/usr/lib/opkg/info"
         ;;
         "userinstalled")
-            OPKG_INFO_DIR="/overlay/upper/usr/lib/opkg/info"
+            OPKG_INFO_DIR="/overlay/upper/usr/lib/opkg/info /ext_overlay/upper/usr/lib/opkg/info"
         ;;
         "allinstalled")
             OPKG_INFO_DIR="/usr/lib/opkg/info"
@@ -31,7 +33,10 @@ opkg_list_installed_packages() {
             exit
         ;;
     esac
-    (cd $OPKG_INFO_DIR && find . -depth -maxdepth 1 -name "*.list" -type f | sed 's#^\./\(.*\)\.list$#\1#g')
+    for dir in $OPKG_INFO_DIR ; do
+        [ -d "$dir" ] || continue
+        (cd "$dir" && find . -depth -maxdepth 1 -name "*.list" -type f | sed 's#^\./\(.*\)\.list$#\1#g')
+    done
 }
 
 ipk_build() {
@@ -40,7 +45,7 @@ ipk_build() {
 
     UCI_BAK_DIR="/etc/istore/uci-defaults_bak/"
     UCI_DEF_DIR="etc/uci-defaults"
-    OPKG_INFO_DIR="/usr/lib/opkg/info/"
+    local OPKG_INFO_DIR="/usr/lib/opkg/info/"
 
     [ -n "${PKG_NAME_TEMP}" ] || exit 1
     #get real pkg name in opkg

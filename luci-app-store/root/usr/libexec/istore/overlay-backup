@@ -66,16 +66,18 @@ backup() {
         echo "found mount point $mountpoint"
     fi
 
+    local filename_suffix=
     local tar_extra_args=
     if has_ext_overlay; then
         tar_extra_args="$tar_extra_args ext_overlay/upper"
+        filename_suffix="${filename_suffix}.s"
     fi
 
     local hostname=$(cat /proc/sys/kernel/hostname)
     local fwver=$(. /etc/openwrt_release; echo $DISTRIB_ID-$DISTRIB_RELEASE)
 
     local date=$(date +%Y-%m%d-%H%M)
-    local backup_name="backup_overlay_${hostname}_${fwver}_${date}.overlay.tar.gz"
+    local backup_name="backup_overlay_${hostname}_${fwver}_${date}${filename_suffix}.overlay.tar.gz"
     local backup_full_path="$BACKUP_PATH/$backup_name"
     echo "writing backup to $backup_full_path"
     if tar -C / -cz overlay/upper $tar_extra_args > "$backup_full_path" ; then
@@ -87,6 +89,30 @@ backup() {
         echo "backup failed"
         exit 1
     fi
+}
+
+patch_sandbox_device() {
+    local overlay="$1"
+    local ucidir="$overlay/upper/etc/config"
+    local uci_section=$(uci -c "$ucidir" -q show fstab | grep '^fstab\.@mount\[[0-9]*\]\.target='"'/overlay'\$" | head -1 | grep -o '^fstab\.@mount\[[0-9]*\]')
+    if [ -n "$uci_section" ]; then
+        if [ "x1" = "x$(uci -c "$ucidir" get "$uci_section.enabled")" ]; then
+            uci -c "$ucidir" -q delete "$uci_section.uuid"
+            uci -c "$ucidir" -q delete "$uci_section.label"
+            uci -c "$ucidir" -q delete "$uci_section.device"
+            if [ -n "$SANDBOX_UUID" ]; then
+                uci -c "$ucidir" set "$uci_section.uuid=$SANDBOX_UUID"
+            elif [ -n "$SANDBOX_LABEL" ]; then
+                uci -c "$ucidir" set "$uci_section.label=$SANDBOX_LABEL"
+            else
+                uci -c "$ucidir" set "$uci_section.device=$SANDBOX_DEVICE"
+            fi
+            uci -c "$ucidir" commit fstab
+            echo "found and patched $overlay"
+            return 0
+        fi
+    fi
+    return 1
 }
 
 restore() {
@@ -105,14 +131,31 @@ restore() {
         exit 1
     fi
 
-    local tar_extra_args=
+    # prevent uci cache
+    rm -rf /var/run/uci
+
+    local tar_extra_args=overlay/upper
     if has_ext_overlay; then
-        tar_extra_args="$tar_extra_args ext_overlay/upper"
+        tar_extra_args=
+        local uuid label device line
+        local uci_section=$(uci -c /overlay/upper/etc/config show fstab | grep '^fstab\.@mount\[[0-9]*\]\.target='"'/overlay'\$" | head -1 | grep -o '^fstab\.@mount\[[0-9]*\]')
+        while read line; do
+            export -n "$line"
+        done < <(
+            uci -c /overlay/upper/etc/config show "$uci_section" | sed -e '/^fstab\.[^\.]*=/d' -e 's/^fstab\.[^\.]*\.//g' | grep -e '^uuid=' -e '^label=' -e '^device=' | sed "s/'//g"
+        )
+        SANDBOX_UUID=$uuid
+        SANDBOX_LABEL=$label
+        SANDBOX_DEVICE=$device
     fi
 
     sync /
     echo "restoring from ${BACKUP_PATH_FILE}"
-    if tar -C / -xz overlay/upper $tar_extra_args < "${BACKUP_PATH_FILE}" ; then
+    if tar -C / -xz $tar_extra_args < "${BACKUP_PATH_FILE}" ; then
+        if [ -n "$SANDBOX_UUID" -o -n "$SANDBOX_LABEL" -o -n "$SANDBOX_DEVICE" ]; then
+            echo "patch sandbox device ${SANDBOX_UUID}${SANDBOX_LABEL}${SANDBOX_DEVICE}"
+            patch_sandbox_device /overlay && patch_sandbox_device /ext_overlay
+        fi
         sync /overlay /ext_overlay
         echo "restore success"
         echo "schedule to restart after 5 seconds!"
