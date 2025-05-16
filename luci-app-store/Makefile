@@ -11,13 +11,13 @@ LUCI_DEPENDS:=+curl +opkg +luci-base +tar +libuci-lua +mount-utils +luci-lib-tas
 LUCI_EXTRA_DEPENDS:=luci-lib-taskd (>=1.0.19)
 LUCI_PKGARCH:=all
 
-PKG_VERSION:=0.1.29-3
+PKG_VERSION:=0.1.29-4
 # PKG_RELEASE MUST be empty for luci.mk
 PKG_RELEASE:=
 
 ISTORE_UI_VERSION:=0.1.28
-ISTORE_UI_RELEASE:=1
-PKG_HASH:=c45d7552a4c52fdd2f5a2a9bbc94d14a66c5af187ef8a117a3e08b6a9a4b7dbf
+ISTORE_UI_RELEASE:=2
+PKG_HASH:=c83eb15c65ca0d4368beda8977b29ae6f496afa5c3bd1ad898c9e12abeabdd46
 
 PKG_SOURCE_URL_FILE:=v$(ISTORE_UI_VERSION)-$(ISTORE_UI_RELEASE).tar.gz
 PKG_SOURCE:=istore-ui-$(PKG_SOURCE_URL_FILE)

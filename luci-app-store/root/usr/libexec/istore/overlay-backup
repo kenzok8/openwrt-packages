@@ -134,19 +134,24 @@ restore() {
     # prevent uci cache
     rm -rf /var/run/uci
 
+    SANDBOX_UUID=
+    SANDBOX_LABEL=
+    SANDBOX_DEVICE=
     local tar_extra_args=overlay/upper
     if has_ext_overlay; then
         tar_extra_args=
-        local uuid label device line
-        local uci_section=$(uci -c /overlay/upper/etc/config show fstab | grep '^fstab\.@mount\[[0-9]*\]\.target='"'/overlay'\$" | head -1 | grep -o '^fstab\.@mount\[[0-9]*\]')
-        while read line; do
-            export -n "$line"
-        done < <(
-            uci -c /overlay/upper/etc/config show "$uci_section" | sed -e '/^fstab\.[^\.]*=/d' -e 's/^fstab\.[^\.]*\.//g' | grep -e '^uuid=' -e '^label=' -e '^device=' | sed "s/'//g"
-        )
-        SANDBOX_UUID=$uuid
-        SANDBOX_LABEL=$label
-        SANDBOX_DEVICE=$device
+        if echo "${BACKUP_PATH_FILE}" | grep -q '\.s\.overlay\.tar\.gz$' ; then
+            local uuid label device line
+            local uci_section=$(uci -c /overlay/upper/etc/config show fstab | grep '^fstab\.@mount\[[0-9]*\]\.target='"'/overlay'\$" | head -1 | grep -o '^fstab\.@mount\[[0-9]*\]')
+            while read line; do
+                export -n "$line"
+            done < <(
+                uci -c /overlay/upper/etc/config show "$uci_section" | sed -e '/^fstab\.[^\.]*=/d' -e 's/^fstab\.[^\.]*\.//g' | grep -e '^uuid=' -e '^label=' -e '^device=' | sed "s/'//g"
+            )
+            SANDBOX_UUID=$uuid
+            SANDBOX_LABEL=$label
+            SANDBOX_DEVICE=$device
+        fi
     fi
 
     sync /
@@ -174,12 +179,18 @@ supports_overlay_backup() {
     return 0
 }
 
+filter_backups() {
+    if has_ext_overlay; then
+        cat
+    else
+        # do not support restoring sandbox backup on non sandbox env
+        grep -v '\.s\.overlay\.tar\.gz$'
+    fi
+}
+
 get_backup_file_list() {
-    local backup_file
     if [ -n "$1" ]; then
-        for backup_file in `cd $1 && ls backup_overlay_*.overlay.tar.gz`; do
-            echo "${backup_file}"
-        done
+        ( cd "$1" && ls backup_overlay_*.overlay.tar.gz | filter_backups )
     else
         echo "input backup path is null"
         exit 1
