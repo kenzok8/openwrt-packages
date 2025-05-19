@@ -1404,6 +1404,11 @@ body[class*="node-"] > .main > .main-left > .nav > .slide > .menu.active::before
   display: none;
 }
 
+[data-page="admin-system-autoreboot"] {
+  #cbi-autoreboot {
+    margin-top: 0;
+  }
+}
 
 .cbi-section,
 .cbi-section-error,
@@ -3536,6 +3541,11 @@ div[style*="display:grid;grid-template-columns:repeat"] {
 
     h2 + p {
       margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    button + div {
+      display: none;
     }
   }
 }
