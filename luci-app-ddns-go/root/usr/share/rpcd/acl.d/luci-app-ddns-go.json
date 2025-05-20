@@ -4,7 +4,10 @@
 		"read": {
       			"file": {
         			"/etc/init.d/ddns-go": [ "exec" ],
-        			"/usr/libexec/ddns-go-call": [ "exec" ],  
+        			"/usr/libexec/ddns-go-call": [ "exec" ],
+        			"/bin/pidof": [ "exec" ],
+        			"/bin/ps": [ "exec" ],
+        			"/bin/ash": [ "exec" ],
         			"/etc/ddns-go/ddns-go-config.yaml": [ "read" ],
         			"/var/log/ddns-go.log": [ "read" ]
       			},
