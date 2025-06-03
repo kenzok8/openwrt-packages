@@ -4,9 +4,14 @@ module("luci.controller.quickstart", package.seeall)
 
 function index()
     if luci.sys.call("pgrep quickstart >/dev/null") == 0 then
+        local uci = require "luci.model.uci".cursor()
         entry({"admin", "quickstart"}, template("quickstart/home"), _("QuickStart"), 1).leaf = true
         entry({"admin", "network_guide"}, call("networkguide_index"), _("NetworkGuide"), 2)
         entry({"admin", "network_guide", "pages"}, call("quickstart_index", {index={"admin", "network_guide", "pages"}})).leaf = true
+        if uci:get("quickstart", "main", "wifi_menu") == "1" then
+            entry({"admin", "quickwifi"}, call("quickwifi_index"), _("Wireless"), 3)
+            entry({"admin", "quickwifi", "pages"}, call("quickstart_index", {index={"admin", "quickwifi", "pages"}})).leaf = true
+        end
         if nixio.fs.access("/usr/lib/lua/luci/view/quickstart/main_dev.htm") then
             entry({"admin", "quickstart_dev"}, call("quickstart_dev", {index={"admin", "quickstart_dev"}})).leaf = true
         end
@@ -24,6 +29,10 @@ end
 
 function networkguide_index()
     luci.http.redirect(luci.dispatcher.build_url("admin", "network_guide", "pages", "network"))
+end
+
+function quickwifi_index()
+    luci.http.redirect(luci.dispatcher.build_url("admin", "quickwifi", "pages", "quickwifi"))
 end
 
 function redirect_fallback()
