@@ -18,13 +18,20 @@
 
 <% local ver = require "luci.version" %>
 </div>
-<footer class="mobile-hide">
-	<div>
-		<a class="luci-link" href="https://github.com/openwrt/luci" target="_blank">Powered by <%= ver.luciname %> (<%= ver.luciversion %>)</a> /
-						<a href="https://github.com/jerrykuku/luci-theme-argon" target="_blank">ArgonTheme <%# vPKG_VERSION %></a> /
-						<%= ver.distversion %>
-		<ul class="breadcrumb pull-right" id="modemenu" style="display:none"></ul>
-	</div>
+<footer class="mobile-hide" style="text-wrap: auto">
+  <div class="footer-content" style="display: flex; flex-wrap: wrap; gap: 0.5em; justify-content: end;">
+    <a class="luci-link" href="https://github.com/openwrt/luci" target="_blank">Powered by <%= ver.luciname %> (<%= ver.luciversion %>)</a>
+
+    <span class="footer-separator">|</span>
+
+    <a href="https://github.com/jerrykuku/luci-theme-argon" target="_blank">ArgonTheme <%# vPKG_VERSION %></a>
+
+    <span class="footer-separator">|</span>
+
+    <span><%= ver.distversion %></span>
+
+    <ul class="breadcrumb pull-right" id="modemenu" style="display:none"></ul>
+  </div>
 </footer>
 </div>
 </div>

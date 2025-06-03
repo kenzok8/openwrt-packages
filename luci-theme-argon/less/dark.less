@@ -992,6 +992,7 @@ input,
 
 }
 
+[data-page=""],
 [data-page="admin-dashboard"] {
     .main-right > #maincontent {
         .Dashboard {
@@ -1008,19 +1009,17 @@ input,
             .dashboard-bg {
                 background-color: #333333;
             }
-        }
 
-        .router-status-info .title img,
-        .lan-info .title img,
-        .wifi-info .title img {
-            filter: invert(90%);
-        }
+            img.svgmonochrome {
+                filter: invert(90%);
+            }
 
-        tr {
-            border-top: thin solid #4d4d4d;
-
-            &:last-child {
-                border-bottom: thin solid #4d4d4d;
+            tr {
+                border-top: thin solid #4d4d4d;
+    
+                &:last-child {
+                    border-bottom: thin solid #4d4d4d;
+                }
             }
         }
     }
