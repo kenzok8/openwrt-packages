@@ -48,13 +48,10 @@ function renderStatus(isRunning, listen_port, noweb) {
     }
     
     if (isRunning && noweb !== '1') {
-        html += String.format(
-            '&#160;<a class="btn cbi-button" href="%s:%s" target="_blank">%s</a>',
-            window.location.origin, 
-            listen_port, 
-            _('Open Web Interface')
-        );
-    }
+        const baseUrl = `${window.location.protocol}//${window.location.hostname}`;
+        const fullUrl = `${baseUrl}:${listen_port}`;
+        html += String.format('&#160;<a class="btn cbi-button" href="%s" target="_blank">%s</a>', fullUrl, _('Open Web Interface'));
+     }
     
     return html;
 }
