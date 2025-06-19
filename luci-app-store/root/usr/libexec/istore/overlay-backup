@@ -143,11 +143,16 @@ restore() {
         if echo "${BACKUP_PATH_FILE}" | grep -q '\.s\.overlay\.tar\.gz$' ; then
             local uuid label device line
             local uci_section=$(uci -c /overlay/upper/etc/config show fstab | grep '^fstab\.@mount\[[0-9]*\]\.target='"'/overlay'\$" | head -1 | grep -o '^fstab\.@mount\[[0-9]*\]')
+            if [ -z "$uci_section" ]; then
+                echo "failed to find sandbox config, there is debug info:"
+                uci -c /overlay/upper/etc/config show fstab | grep '^fstab\.[^.]*\.target='"'/overlay'\$"
+                exit 1
+            fi
             while read line; do
                 export -n "$line"
-            done < <(
-                uci -c /overlay/upper/etc/config show "$uci_section" | sed -e '/^fstab\.[^\.]*=/d' -e 's/^fstab\.[^\.]*\.//g' | grep -e '^uuid=' -e '^label=' -e '^device=' | sed "s/'//g"
-            )
+            done <<EOF
+                $(uci -c /overlay/upper/etc/config show "$uci_section" | sed -e '/^fstab\.[^\.]*=/d' -e 's/^fstab\.[^\.]*\.//g' | grep -e '^uuid=' -e '^label=' -e '^device=' | sed "s/'//g")
+EOF
             SANDBOX_UUID=$uuid
             SANDBOX_LABEL=$label
             SANDBOX_DEVICE=$device
@@ -191,6 +196,7 @@ filter_backups() {
 get_backup_file_list() {
     if [ -n "$1" ]; then
         ( cd "$1" && ls backup_overlay_*.overlay.tar.gz | filter_backups )
+        return 0
     else
         echo "input backup path is null"
         exit 1
