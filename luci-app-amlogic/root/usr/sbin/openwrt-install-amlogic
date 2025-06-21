@@ -336,6 +336,13 @@ elif [[ "${AMLOGIC_SOC}" == "s905x3" ]] && [[ "${boxtype}" == "525" || "${boxtyp
     BLANK2="650"
     BLANK3="0"
     BLANK4="0"
+elif [[ "${AMLOGIC_SOC}" == "a311d" ]] && [[ "${boxtype}" == "409" || "${boxtype}" == "49" ]]; then
+    # WXY-OES(A311D)
+    BOOT="512"
+    BLANK1="700"
+    BLANK2="0"
+    BLANK3="0"
+    BLANK4="0"
 else
     BOOT="160"
     BLANK1="68"
