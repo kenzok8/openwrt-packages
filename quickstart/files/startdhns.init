@@ -4,7 +4,12 @@ START=93
 USE_PROCD=1
 
 start_service() {
-	/usr/sbin/quickstart uciChange
+	local seconds
+	for seconds in $(seq 0 2); do
+		/usr/sbin/quickstart uciChange | grep -q -e OK -e code:501 && break
+		sleep 1 && continue
+		break
+	done
 }
 
 service_triggers()
