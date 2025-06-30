@@ -76,6 +76,7 @@ init_var() {
     if [[ -s "${release_file}" ]]; then
         source "${release_file}"
         PLATFORM="${PLATFORM}"
+        MODEL_ID="${MODEL_ID}"
         UBOOT_OVERLOAD="${UBOOT_OVERLOAD}"
         MAINLINE_UBOOT="${MAINLINE_UBOOT}"
         ANDROID_UBOOT="${ANDROID_UBOOT}"
@@ -100,15 +101,15 @@ init_var() {
 
     # Find the disk where the partition is located, only supports mmcblk?p? sd?? hd?? vd?? and other formats
     case "${ROOT_PTNAME}" in
-    mmcblk?p[1-4])
+    mmcblk?p[1-9])
         EMMC_NAME="$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-2)}')"
         PARTITION_NAME="p"
         ;;
-    [hsv]d[a-z][1-4])
+    [hsv]d[a-z][1-9])
         EMMC_NAME="$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-1)}')"
         PARTITION_NAME=""
         ;;
-    nvme?n?p[1-4])
+    nvme?n?p[1-9])
         EMMC_NAME="$(echo ${ROOT_PTNAME} | awk '{print substr($1, 1, length($1)-2)}')"
         PARTITION_NAME="p"
         ;;
@@ -286,6 +287,11 @@ update_kernel() {
             ln -sf uInitrd-${kernel_name} uInitrd
             ln -sf vmlinuz-${kernel_name} ${MYBOOT_VMLINUZ}
         fi
+
+        # wxy-oect: MODEL_ID numbers r304 and r306, require special handling of uInitrd
+        [[ "${MODEL_ID}" == "r304" || "${MODEL_ID}" == "r306" ]] && {
+            rm -f uInitrd && ln -sf initrd.img-${kernel_name} uInitrd
+        }
     )
 
     echo -e "(1/3) Unpacking [ boot-${kernel_name}.tar.gz ] done."
