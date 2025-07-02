@@ -90,4 +90,9 @@ for tt, policy_name in ipairs(policy_array) do
 
 end
 
+-- Apply the settings to the system
+function mp.on_after_commit(self)
+    luci.sys.exec("(sleep 2 && /etc/init.d/amlogic start) >/dev/null 2>&1 &")
+end
+
 return mp

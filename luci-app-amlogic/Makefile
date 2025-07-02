@@ -16,7 +16,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-amlogic
-PKG_VERSION:=3.1.255
+PKG_VERSION:=3.1.256
 PKG_RELEASE:=1
 
 PKG_LICENSE:=GPL-2.0 License
