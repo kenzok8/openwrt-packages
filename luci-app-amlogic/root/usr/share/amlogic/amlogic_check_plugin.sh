@@ -68,8 +68,27 @@ sleep 2
 # 01. Query local version information
 tolog "01. Query current version information."
 
-current_plugin_v="$(opkg list-installed | grep 'luci-app-amlogic' | awk '{print $3}')"
-tolog "01.01 current version: ${current_plugin_v}"
+# If neither opkg nor apk found, set package_manager to empty
+package_manager=""
+current_plugin_v=""
+
+if command -v opkg >/dev/null 2>&1; then
+    # System has opkg
+    package_manager="opkg"
+    # Important: Add cut to handle versions like X.Y.Z-r1, ensuring consistent output
+    current_plugin_v="$(opkg list-installed | grep '^luci-app-amlogic' | awk '{print $3}' | cut -d'-' -f1)"
+elif command -v apk >/dev/null 2>&1; then
+    # System has apk
+    package_manager="apk"
+    current_plugin_v="$(apk list --installed | grep '^luci-app-amlogic' | awk '{print $1}' | cut -d'-' -f4)"
+fi
+
+# Check if we successfully found the plugin
+if [[ -z "${package_manager}" || -z "${current_plugin_v}" ]]; then
+    tolog "01.01 Plugin 'luci-app-amlogic' not found or package manager unknown." "1"
+else
+    tolog "01.01 Using [${package_manager}]. Current version: ${current_plugin_v}"
+fi
 sleep 2
 
 # 02. Check the version on the server
@@ -93,27 +112,54 @@ fi
 if [[ "${current_plugin_v}" == "${latest_version}" ]]; then
     tolog "02.02 Already the latest version, no need to update." "1"
 else
-    tolog "02.03 Start downloading the latest plugin..."
-
-    # Set the plugin download path
+    tolog "02.03 New version found. Preparing to download for [${package_manager}]..."
     download_repo="https://github.com/ophub/luci-app-amlogic/releases/download"
 
-    plugin_file="${download_repo}/${latest_version}/luci-app-amlogic_${latest_version}_all.ipk"
-    language_file="${download_repo}/${latest_version}/luci-i18n-amlogic-zh-cn_${latest_version}_all.ipk"
+    # Intelligent File Discovery
+    plugin_file_name=""
+    lang_file_name=""
 
-    # Download the plug-in's i18n file
-    curl -fsSL "${language_file}" -o "${TMP_CHECK_DIR}/luci-i18n-amlogic-zh-cn_${latest_version}_all.ipk"
-    if [[ "${?}" -eq "0" ]]; then
-        tolog "02.04 Language pack downloaded successfully."
+    # Method 1: Use GitHub API if 'jq' is installed (Preferred Method)
+    if command -v jq >/dev/null 2>&1; then
+        tolog "Using GitHub API with jq to find package files."
+        api_url="https://api.github.com/repos/ophub/luci-app-amlogic/releases/tags/${latest_version}"
+
+        # Fetch all asset names from the API
+        asset_list="$(curl -fsSL -m 15 "${api_url}" | jq -r '.assets[].name' | xargs)"
+
+        if [[ -n "${asset_list}" ]]; then
+            # Discover exact filenames using regular expressions from the asset list
+            plugin_file_name="$(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-app-amlogic.*${package_manager}$" | head -n 1)"
+            lang_file_name="$(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-i18n-amlogic-zh-cn.*${package_manager}$" | head -n 1)"
+        else
+            tolog "Warning: Failed to fetch data from GitHub API." "1"
+        fi
     else
+        tolog "jq not found, Aborting." "1"
+    fi
+
+    # Validation and Download
+    if [[ -z "${plugin_file_name}" || -z "${lang_file_name}" ]]; then
+        tolog "02.03.2 Could not discover plugin(.${package_manager}) in the release. Aborting." "1"
+    fi
+
+    tolog "Found plugin file: ${plugin_file_name}"
+    tolog "Found language file: ${lang_file_name}"
+
+    plugin_full_url="${download_repo}/${latest_version}/${plugin_file_name}"
+    lang_full_url="${download_repo}/${latest_version}/${lang_file_name}"
+
+    # Download the language pack
+    tolog "02.04 Downloading language pack..."
+    curl -fsSL "${lang_full_url}" -o "${TMP_CHECK_DIR}/${lang_file_name}"
+    if [[ "${?}" -ne "0" ]]; then
         tolog "02.04 Language pack download failed." "1"
     fi
 
-    # Download the plug-in's ipk file
-    curl -fsSL "${plugin_file}" -o "${TMP_CHECK_DIR}/luci-app-amlogic_${latest_version}_all.ipk"
-    if [[ "${?}" -eq "0" ]]; then
-        tolog "02.05 Plugin downloaded successfully."
-    else
+    # Download the main plugin file
+    tolog "02.05 Downloading main plugin..."
+    curl -fsSL "${plugin_full_url}" -o "${TMP_CHECK_DIR}/${plugin_file_name}"
+    if [[ "${?}" -ne "0" ]]; then
         tolog "02.05 Plugin download failed." "1"
     fi
 

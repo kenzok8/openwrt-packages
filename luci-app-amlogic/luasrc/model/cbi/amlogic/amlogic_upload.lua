@@ -232,10 +232,11 @@ function IsConfigFile(name)
 	return config_file == "openwrt_config.tar.gz"
 end
 
-function IsIpkFile(name)
+-- Check if the file is a known package type (.ipk or .apk)
+function IsPackageFile(name)
 	name = name or ""
-	local ext = string.lower(string.sub(name, -4, -1))
-	return ext == ".ipk"
+	local lname = string.lower(name)
+	return string.sub(lname, -4) == ".ipk" or string.sub(lname, -4) == ".apk"
 end
 
 --Add Button for *.ipk
@@ -243,7 +244,7 @@ btnis = tb:option(Button, "ipk", translate("Install"))
 btnis.template = "amlogic/other_button"
 btnis.render = function(self, section, scope)
 	if not inits[section] then return false end
-	if IsIpkFile(inits[section].name) then
+	if IsPackageFile(inits[section].name) then
 		scope.display = ""
 		self.inputtitle = translate("Install")
 	elseif IsConfigFile(inits[section].name) then
@@ -257,14 +258,39 @@ btnis.render = function(self, section, scope)
 	Button.render(self, section, scope)
 end
 btnis.write = function(self, section)
-	if IsIpkFile(inits[section].name) then
-		local r = luci.sys.exec(string.format('opkg --force-reinstall install ' .. upload_path .. '%s', inits[section].name))
-		local x = luci.sys.exec("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* 2>/dev/null")
-		form.description = string.format('<span style="color: red">%s</span>', r)
+	local file_to_install = inits[section].name
+	local full_path = upload_path .. file_to_install
+
+	if IsPackageFile(file_to_install) then
+		local r = ""
+		local install_cmd = ""
+
+		-- Check for opkg first
+		if luci.sys.call("command -v opkg >/dev/null") == 0 then
+			install_cmd = string.format('opkg --force-reinstall install %s', full_path)
+			r = luci.sys.exec(install_cmd)
+		-- If opkg is not found, check for apk
+		elseif luci.sys.call("command -v apk >/dev/null") == 0 then
+			-- NOTE: --allow-untrusted is required for local packages
+			install_cmd = string.format('apk add --force-overwrite --allow-untrusted %s', full_path)
+			r = luci.sys.exec(install_cmd)
+		-- If neither is found
+		else
+			r = "Error: Neither 'opkg' nor 'apk' package manager found on the system."
+		end
+
+		-- Clean LuCI cache after installation
+		luci.sys.exec("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* >/dev/null 2>&1")
+
+		-- Display the result message
+		-- We add a message to prompt the user to refresh the page to see changes.
+		local result_msg = r .. "<br/><b>" .. translate("Please refresh the page to see the changes.") .. "</b>"
+		form.description = string.format('<span style="color: red">%s</span>', result_msg)
+
 	elseif IsConfigFile(inits[section].name) then
 		form.description = ' <span style="color: green"><b> ' .. translate("Tip: The config is being restored, and it will automatically restart after completion.") .. ' </b></span> '
-		local x = luci.sys.exec("chmod +x /usr/sbin/openwrt-backup 2>/dev/null")
-		local r = luci.sys.exec("/usr/sbin/openwrt-backup -r > /tmp/amlogic/amlogic.log && sync 2>/dev/null")
+		luci.sys.exec("chmod +x /usr/sbin/openwrt-backup 2>/dev/null")
+		luci.sys.exec("/usr/sbin/openwrt-backup -r > /tmp/amlogic/amlogic.log && sync 2>/dev/null")
 	end
 end
 

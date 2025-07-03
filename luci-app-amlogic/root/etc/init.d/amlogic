@@ -38,5 +38,25 @@ start() {
         echo $governor >/sys/devices/system/cpu/cpufreq/${policy_name}/scaling_governor
         echo $minfreq >/sys/devices/system/cpu/cpufreq/${policy_name}/scaling_min_freq
         echo $maxfreq >/sys/devices/system/cpu/cpufreq/${policy_name}/scaling_max_freq
+
+        # If the governor is ondemand, configure its specific parameters.
+        if [ "$governor" = "ondemand" ]; then
+            local ondemand_dir="/sys/devices/system/cpu/cpufreq/${policy_name}/ondemand"
+            # Check if the per-policy ondemand directory exists.
+            if [ -d "$ondemand_dir" ]; then
+                # Read ondemand parameters from UCI, or use default values (e.g., 80 and 20) if not set.
+                local up_threshold=$(uci_get_by_type settings up_threshold${policy_id} 80)
+                local sampling_down_factor=$(uci_get_by_type settings sampling_down_factor${policy_id} 20)
+
+                # Write the values to the system files.
+                echo $up_threshold > "${ondemand_dir}/up_threshold"
+                echo $sampling_down_factor > "${ondemand_dir}/sampling_down_factor"
+            fi
+        fi
     done
+}
+
+reload() {
+    start
+    return 0
 }

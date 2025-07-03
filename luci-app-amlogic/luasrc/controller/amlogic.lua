@@ -1,5 +1,8 @@
 module("luci.controller.amlogic", package.seeall)
 
+local sys = require "luci.sys"
+local PKG_NAME = "luci-app-amlogic"
+
 function index()
 	if not nixio.fs.access("/etc/config/amlogic") then
 		return
@@ -7,7 +10,7 @@ function index()
 
 	local page = entry({ "admin", "system", "amlogic" }, alias("admin", "system", "amlogic", "info"), _("Amlogic Service"), 88)
 	page.dependent = true
-	page.acl_depends = { "luci-app-amlogic" }
+	page.acl_depends = { PKG_NAME }
 
 	local platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)' | xargs") or "Unknown"
 	local install_menu = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep SHOW_INSTALL_MENU | awk -F'=' '{print $2}' | grep -oE '(yes|no)' | xargs") or "Unknown"
@@ -154,16 +157,52 @@ function action_del_log()
 	luci.sys.exec(": > /tmp/amlogic/amlogic_running_script.log")
 end
 
+
 --Upgrade luci-app-amlogic plugin
 function start_amlogic_plugin()
-	luci.sys.call("echo '1@Plugin update in progress, try again later!' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
-	luci.sys.call("[ -f /etc/config/amlogic ] && cp -vf /etc/config/amlogic /etc/config/amlogic_bak > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
-	luci.sys.call("opkg --force-reinstall install /tmp/amlogic/*.ipk > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
-	luci.sys.call("[ -f /etc/config/amlogic_bak ] && cp -vf /etc/config/amlogic_bak /etc/config/amlogic > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
-	luci.sys.call("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* /etc/config/amlogic_bak >/dev/null 2>&1")
-	luci.sys.call("echo '' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
-	local state = luci.sys.call("echo 'Successful Update' > /tmp/amlogic/amlogic_check_plugin.log && sync >/dev/null 2>&1")
-	return state
+	local log_file = "/tmp/amlogic/amlogic_check_plugin.log"
+	local running_lock = "/tmp/amlogic/amlogic_running_script.log"
+	local config_file = "/etc/config/amlogic"
+	local config_bak = "/etc/config/amlogic_bak"
+
+	-- 1. Create a running lock and clear previous log
+	luci.sys.call("echo '1@Plugin update in progress, try again later!' > " .. running_lock .. " && > " .. log_file)
+
+	-- 2. Backup config file
+	luci.sys.call(string.format("[ -f %s ] && cp -vf %s %s >> %s 2>&1", config_file, config_file, config_bak, log_file))
+
+	-- 3. Detect and install
+	local install_status = 1
+	if luci.sys.call("command -v opkg >/dev/null") == 0 then
+		luci.sys.call("echo 'System uses opkg. Attempting to install .ipk package...' >> " .. log_file)
+		local install_cmd = string.format("opkg --force-reinstall install /tmp/amlogic/*.ipk >> %s 2>&1", log_file)
+		install_status = luci.sys.call(install_cmd)
+	elseif luci.sys.call("command -v apk >/dev/null") == 0 then
+		luci.sys.call("echo 'System uses apk. Attempting to install .apk package...' >> " .. log_file)
+		local install_cmd = string.format("apk add --force-overwrite --allow-untrusted /tmp/amlogic/*.apk >> %s 2>&1", log_file)
+		install_status = luci.sys.call(install_cmd)
+	else
+		luci.sys.call("echo 'Error: Neither opkg nor apk found. Aborting.' >> " .. log_file)
+	end
+
+	-- 4. Check result and finalize
+	if install_status == 0 then
+		-- SUCCESS
+		luci.sys.call("echo 'Installation successful. Finalizing...' >> " .. log_file)
+		luci.sys.call(string.format("[ -f %s ] && cp -vf %s %s >> %s 2>&1", config_bak, config_bak, config_file, log_file))
+		luci.sys.call("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* " .. config_bak)
+		luci.sys.call("echo '' > " .. running_lock)
+		luci.sys.call("echo 'Successful Update' > " .. log_file)
+		return 0
+	else
+		-- FAILURE
+		luci.sys.call("echo '--- INSTALLATION FAILED! ---' >> " .. log_file)
+		luci.sys.call("echo 'Restoring configuration and aborting.' >> " .. log_file)
+		luci.sys.call(string.format("[ -f %s ] && cp -vf %s %s >> %s 2>&1", config_bak, config_bak, config_file, log_file))
+		luci.sys.call("rm -f " .. config_bak)
+		luci.sys.call("echo '' > " .. running_lock)
+		return install_status
+	end
 end
 
 --Upgrade the kernel
@@ -414,7 +453,25 @@ end
 
 --Return the current plugin version
 local function current_plugin_version()
-	return luci.sys.exec("opkg list-installed | grep 'luci-app-amlogic' | awk '{print $3}'") or "Invalid value."
+    local version_str = ""
+
+    -- Check if opkg command exists
+    if sys.call("command -v opkg >/dev/null") == 0 then
+        local opkg_cmd = string.format("opkg list-installed | grep '^%s' | awk '{print $3}' | cut -d'-' -f1", PKG_NAME)
+        version_str = trim(sys.exec(opkg_cmd))
+    end
+
+    -- If opkg failed or not found, check if apk command exists
+    if version_str == "" and sys.call("command -v apk >/dev/null") == 0 then
+        local apk_cmd = string.format("apk list --installed 2>/dev/null | grep '^%s' | awk '{print $1}' | cut -d'-' -f4", PKG_NAME)
+        version_str = trim(sys.exec(apk_cmd))
+    end
+
+    if version_str ~= "" then
+        return version_str
+    else
+        return "Invalid value."
+    end
 end
 
 --Return the current kernel version
