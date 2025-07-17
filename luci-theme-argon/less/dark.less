@@ -1016,7 +1016,7 @@ input,
 
             tr {
                 border-top: thin solid #4d4d4d;
-    
+
                 &:last-child {
                     border-bottom: thin solid #4d4d4d;
                 }
@@ -1048,6 +1048,19 @@ input,
 }
 
 [data-page^="admin-services-openclash"] {
+    .oc {
+        --bg-light: #1e1e1e !important;
+        --bg-gray: #1e1e1e !important;
+
+        .developer-container {
+            background: transparent !important;
+        }
+    }
+
+    .config-upload-content{
+        background: #1e1e1e !important;
+    }
+
     .cbi-tabmenu::-webkit-scrollbar-thumb {
         background-color: #5b5b5b;
     }

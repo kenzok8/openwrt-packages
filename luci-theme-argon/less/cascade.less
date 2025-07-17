@@ -1595,6 +1595,13 @@ tr > th,
   line-height: 1.3rem;
 }
 
+[data-page="admin-services-ddns"] {
+  #syslog {
+    overflow: auto;
+    font-size: 12px!important;
+  }
+}
+
 [data-page="admin-network-network"] {
   .cbi-value-field {
     .cbi-dynlist {
@@ -3041,6 +3048,10 @@ td > .ifacebadge,
   outline: 0;
 }
 
+#cbi-ddns #syslog {
+  overflow: auto;
+}
+
 /* config changes */
 .uci-change-list {
   font-family: inherit;
@@ -4044,6 +4055,10 @@ pre.command-output {
 }
 
 [data-page="admin-system-fileassistant"] {
+  #upload-toggle {
+    display: none !important;
+  }
+
   .fb-container .panel-title {
     padding: .5rem .75rem !important;
   }
@@ -4066,7 +4081,7 @@ pre.command-output {
 
     div#list-content {
       table.cbi-section-table {
-        thead {
+        thead, tbody {
           td.cbi-section-table-cell {
             width: 232px;
           }
@@ -4113,6 +4128,92 @@ pre.command-output {
 }
 
 [data-page^="admin-services-openclash"] {
+  .oc {
+    --bg-light: #fff;
+    --bg-gray: #fff;
+    border-radius: 8px;
+
+    .developer-container {
+      background: transparent;
+    }
+  }
+
+  #cbi-openclash > fieldset {
+    background: none;
+    padding: 0;
+
+    > table > tbody > tr > td {
+      border: none;
+      padding: 0;
+    }
+
+    .main-card {
+      border: none;
+      box-shadow: none;
+      padding: 0 10px 10px 10px;
+      background: transparent;
+    }
+
+    .myip-main-card {
+      margin: 0;
+      padding: 10px;
+      border: none;
+      background: transparent;
+
+      .myip-section-title {
+        margin: 0;
+        border-width: 1px;
+      }
+    }
+  }
+
+  .sub-card .card-title {
+    margin-top: 5px;
+  }
+
+  .oc .main-cards-container {
+    margin: 0 !important;
+    gap: 0 !important;
+  }
+
+  .oc .config-file-bottom {
+    margin-bottom: 5px;
+
+    .card-actions {
+      margin-bottom: 2px !important;
+    }
+  }
+
+  .oc .card-content {
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .oc .card-controls {
+    align-self: center;
+  }
+
+  .oc .core-main-controls {
+    justify-content: center !important;
+  }
+
+  .oc .plugin-toggle-container {
+    margin-left: inherit !important;
+  }
+
+  .oc .core-status-toggle {
+    flex: 0 !important;
+    min-width: auto !important;
+  }
+
+  .oc .config-upload-content {
+    background: #fff !important;
+  }
+
+  .oc .subscription-info-container {
+    background: transparent !important;
+  }
+
   .cbi-tabmenu > li {
     border-right: none !important;
     margin: 0 0.4rem 0 0 !important;
@@ -4167,12 +4268,6 @@ pre.command-output {
   select#RELEASE_BRANCH {
     width: auto;
   }
-
-  [id="container.openclash.config.version_update"] {
-    table tr:nth-of-type(n+1) {
-
-    }
-  }
 }
 
 [data-page="admin-services-npc"] {
@@ -4188,6 +4283,19 @@ pre.command-output {
       margin: 0;
       border: none;
     }
+  }
+
+  div[id^="cbid.npc."][id$=".server_addr"]:not([id="cbid.npc.config.server_addr"]),
+  div[id^="cbid.npc."][id$=".vkey"]:not([id="cbid.npc.config.vkey"]),
+  div[id^="cbid.npc."][id$=".protocol"]:not([id="cbid.npc.config.protocol"]),
+  div[id^="cbid.npc."][id$=".dns"]:not([id="cbid.npc.config.dns"]) {
+    + br {
+      display: none;
+    }
+  }
+
+  div.cbi-value.nowrap {
+    white-space: normal;
   }
 }
 
