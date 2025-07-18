@@ -624,6 +624,11 @@ EOF
     rm -f uEnv.txt
 }
 
+# Replace the UUID for extlinux/extlinux.conf if it exists
+[[ -f "extlinux/extlinux.conf" ]] && {
+    sed -i -E "s|UUID=[^ ]*|UUID=${NEW_ROOT_UUID}|" extlinux/extlinux.conf 2>/dev/null
+}
+
 sync
 echo "done"
 echo

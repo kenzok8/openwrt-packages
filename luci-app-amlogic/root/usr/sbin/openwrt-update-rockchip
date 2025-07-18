@@ -864,6 +864,11 @@ rootfstype=btrfs
 rootflags=compress=zstd:${ZSTD_LEVEL}
 EOF
 
+# Replace the UUID for extlinux/extlinux.conf if it exists
+[[ -f "extlinux/extlinux.conf" ]] && {
+    sed -i -E "s|UUID=[^ ]*|UUID=${NEW_ROOT_UUID}|" extlinux/extlinux.conf 2>/dev/null
+}
+
 # 如果新的dtb文件不存在,则用旧的代替
 if [ ! -f "dtb/rockchip/${MYDTB_FDTFILE}" ]; then
     echo "The new dtb file does not exist, replace it with the old one."

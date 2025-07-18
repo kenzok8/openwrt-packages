@@ -336,8 +336,8 @@ elif [[ "${AMLOGIC_SOC}" == "s905x3" ]] && [[ "${boxtype}" == "525" || "${boxtyp
     BLANK2="650"
     BLANK3="0"
     BLANK4="0"
-elif [[ "${AMLOGIC_SOC}" == "a311d" ]] && [[ "${boxtype}" == "409" || "${boxtype}" == "49" ]]; then
-    # WXY-OES(A311D)
+elif [[ "${boxtype}" =~ ^(409|410|49|4a)$ ]]; then
+    # WXY-OES(A311D):409/49, WXY-OES-PLUS(S922X):410/4a
     BOOT="512"
     BLANK1="700"
     BLANK2="0"
@@ -529,6 +529,11 @@ INITRD=/uInitrd
 FDT=/dtb/amlogic/${FDTFILE}
 APPEND=root=UUID=${ROOTFS1_UUID} rootfstype=btrfs rootflags=compress=zstd:${ZSTD_LEVEL} console=ttyAML0,115200n8 console=tty0 no_console_suspend consoleblank=0 fsck.fix=yes fsck.repair=yes net.ifnames=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1
 EOF
+
+        # Replace the UUID for extlinux/extlinux.conf if it exists
+        [[ -f "extlinux/extlinux.conf" ]] && {
+            sed -i -E "s|UUID=[^ ]*|UUID=${ROOTFS1_UUID}|" extlinux/extlinux.conf 2>/dev/null
+        }
 
         rm -f s905_autoscript* aml_autoscript*
 

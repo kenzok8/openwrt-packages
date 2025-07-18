@@ -824,6 +824,11 @@ EOF
 fi
 sync
 
+# Replace the UUID for extlinux/extlinux.conf if it exists
+[[ -f "extlinux/extlinux.conf" ]] && {
+    sed -i -E "s|UUID=[^ ]*|UUID=${NEW_ROOT_UUID}|" extlinux/extlinux.conf 2>/dev/null
+}
+
 cd $WORK_DIR
 umount -f ${P1} ${P2} 2>/dev/null
 losetup -D 2>/dev/null
