@@ -34,7 +34,7 @@
 	-- send as HTML5
 	http.prepare_content("text/html")
 
-	math.randomseed(os.time())
+	math.randomseed(tonumber(tostring(os.time()):reverse():sub(1, 9)))
 
 	-- Custom settings
 	local mode = 'normal'
