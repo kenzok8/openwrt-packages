@@ -2869,7 +2869,7 @@ body.modal-overlay-active #modal_overlay {
   left: .2em;
   width: 32px;
   content: "";
-  background: url(/luci-static/resources/icons/loading.gif) no-repeat center;
+  background: url(/luci-static/resources/icons/loading.svg) no-repeat center;
   background-size: 16px;
 }
 
@@ -4299,6 +4299,28 @@ pre.command-output {
   }
 }
 
+/* luci-app-dockerman */
+#cbi-dockerd {
+  .cbi-section {
+    box-sizing: border-box;
+    padding: 16px;
+  }
+  .cbi-section.cbi-tblsection {
+    padding: 0;
+  }
+
+}
+
+
+#cbi-docker {
+  .cbi-section {
+    .cbi-section-node {
+      box-sizing: border-box;
+      padding: 16px;
+    }
+  }
+}
+
 [data-page="admin-system-package-manager"] {
   .controls {
     div:nth-child(5) {
@@ -4771,6 +4793,8 @@ pre.command-output {
   [data-page="admin-system-admin-password"] .cbi-value-field {
     display: table-cell !important;
   }
+
+
 
   .modal.cbi-modal {
     max-width: 100%;

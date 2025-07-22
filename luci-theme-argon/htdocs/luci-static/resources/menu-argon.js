@@ -2,157 +2,447 @@
 'require baseclass';
 'require ui';
 
+/**
+ * Native JavaScript slide animation utilities
+ * Replaces jQuery slideUp/slideDown functionality with better performance
+ */
+const SlideAnimations = {
+	/**
+	 * Animation durations in milliseconds
+	 */
+	durations: {
+		fast: 200,
+		normal: 400,
+		slow: 600
+	},
+
+	/**
+	 * Map to track running animations and their cleanup functions
+	 */
+	runningAnimations: new WeakMap(),
+
+	/**
+	 * Slide element down (show) with animation
+	 * @param {Element} element - DOM element to animate
+	 * @param {string|number} duration - Animation duration ('fast', 'normal', 'slow' or milliseconds)
+	 * @param {function} callback - Optional callback function when animation completes
+	 */
+	slideDown: function(element, duration, callback) {
+		if (!element) {
+			console.warn('SlideAnimations.slideDown: No element provided');
+			return;
+		}
+		
+		// Stop any existing animation on this element
+		this.stop(element);
+		
+		// Convert duration string to milliseconds
+		const animDuration = typeof duration === 'string' ? 
+			this.durations[duration] || this.durations.normal : 
+			(duration || this.durations.normal);
+		
+		// Store original styles
+		const originalStyles = {
+			display: element.style.display,
+			overflow: element.style.overflow,
+			height: element.style.height,
+			transition: element.style.transition
+		};
+		
+		// Set initial state for animation
+		element.style.display = 'block';
+		element.style.overflow = 'hidden';
+		element.style.height = '0px';
+		element.style.transition = `height ${animDuration}ms ease-out`;
+		
+		// Force reflow to ensure initial state is applied
+		element.offsetHeight;
+		
+		// Get the target height
+		const targetHeight = element.scrollHeight;
+		
+		// Animate to full height
+		element.style.height = targetHeight + 'px';
+		
+		// Set up cleanup function
+		const cleanup = () => {
+			element.style.height = originalStyles.height || '';
+			element.style.overflow = originalStyles.overflow || '';
+			element.style.transition = originalStyles.transition || '';
+			
+			// Remove from running animations map
+			this.runningAnimations.delete(element);
+			
+			if (callback && typeof callback === 'function') {
+				try {
+					callback.call(element);
+				} catch (e) {
+					console.error('SlideAnimations callback error:', e);
+				}
+			}
+		};
+		
+		// Store cleanup function for potential cancellation
+		const timeoutId = setTimeout(cleanup, animDuration);
+		this.runningAnimations.set(element, { timeoutId, cleanup });
+	},
+
+	/**
+	 * Slide element up (hide) with animation
+	 * @param {Element} element - DOM element to animate
+	 * @param {string|number} duration - Animation duration ('fast', 'normal', 'slow' or milliseconds)
+	 * @param {function} callback - Optional callback function when animation completes
+	 */
+	slideUp: function(element, duration, callback) {
+		if (!element) {
+			console.warn('SlideAnimations.slideUp: No element provided');
+			return;
+		}
+		
+		// Stop any existing animation on this element
+		this.stop(element);
+		
+		// Convert duration string to milliseconds
+		const animDuration = typeof duration === 'string' ? 
+			this.durations[duration] || this.durations.normal : 
+			(duration || this.durations.normal);
+		
+		// Store original styles
+		const originalStyles = {
+			display: element.style.display,
+			overflow: element.style.overflow,
+			height: element.style.height,
+			transition: element.style.transition
+		};
+		
+		// Get current height before hiding
+		const currentHeight = element.scrollHeight;
+		
+		// Set initial state for animation
+		element.style.overflow = 'hidden';
+		element.style.height = currentHeight + 'px';
+		element.style.transition = `height ${animDuration}ms ease-out`;
+		
+		// Force reflow to ensure initial state is applied
+		element.offsetHeight;
+		
+		// Animate to zero height
+		element.style.height = '0px';
+		
+		// Set up cleanup function
+		const cleanup = () => {
+			element.style.display = 'none';
+			element.style.height = originalStyles.height || '';
+			element.style.overflow = originalStyles.overflow || '';
+			element.style.transition = originalStyles.transition || '';
+			
+			// Remove from running animations map
+			this.runningAnimations.delete(element);
+			
+			if (callback && typeof callback === 'function') {
+				try {
+					callback.call(element);
+				} catch (e) {
+					console.error('SlideAnimations callback error:', e);
+				}
+			}
+		};
+		
+		// Store cleanup function for potential cancellation
+		const timeoutId = setTimeout(cleanup, animDuration);
+		this.runningAnimations.set(element, { timeoutId, cleanup });
+	},
+
+	/**
+	 * Stop all running animations on an element
+	 * @param {Element} element - DOM element to stop animations on
+	 */
+	stop: function(element) {
+		if (!element) return;
+		
+		const animationData = this.runningAnimations.get(element);
+		if (animationData) {
+			// Clear the timeout
+			clearTimeout(animationData.timeoutId);
+			
+			// Run cleanup immediately
+			animationData.cleanup();
+		}
+		
+		// Clear transition to immediately stop any CSS animation
+		element.style.transition = '';
+		
+		// Force reflow to apply changes immediately
+		element.offsetHeight;
+	},
+
+	/**
+	 * Check if element has running animation
+	 * @param {Element} element - DOM element to check
+	 * @returns {boolean} - True if element has running animation
+	 */
+	isAnimating: function(element) {
+		return this.runningAnimations.has(element);
+	}
+};
+
+/**
+ * Argon Theme Menu Module
+ * Handles rendering and interaction of the main navigation menu and sidebar
+ */
 return baseclass.extend({
+	/**
+	 * Initialize the menu module
+	 * Load menu data and trigger rendering
+	 */
 	__init__: function () {
 		ui.menu.load().then(L.bind(this.render, this));
 	},
 
+	/**
+	 * Main render function for the menu system
+	 * @param {Object} tree - Menu tree structure from LuCI
+	 */
 	render: function (tree) {
 		var node = tree,
 			url = '',
 			children = ui.menu.getChildren(tree);
 
+		// Find and render the active main menu item
 		for (var i = 0; i < children.length; i++) {
 			var isActive = (L.env.requestpath.length ? children[i].name == L.env.requestpath[0] : i == 0);
 
-			if (isActive)
+			if (isActive) {
 				this.renderMainMenu(children[i], children[i].name);
+			}
 		}
 
+		// Render tab menu if we're deep enough in the navigation hierarchy
 		if (L.env.dispatchpath.length >= 3) {
 			for (var i = 0; i < 3 && node; i++) {
 				node = node.children[L.env.dispatchpath[i]];
 				url = url + (url ? '/' : '') + L.env.dispatchpath[i];
 			}
 
-			if (node)
+			if (node) {
 				this.renderTabMenu(node, url);
+			}
 		}
 
-		document.querySelector('a.showSide')
-			.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
-		document.querySelector('.darkMask')
-			.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
+		// Attach event listeners for sidebar toggle functionality
+		var sidebarToggle = document.querySelector('a.showSide');
+		var darkMask = document.querySelector('.darkMask');
+		
+		if (sidebarToggle) {
+			sidebarToggle.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
+		}
+		if (darkMask) {
+			darkMask.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
+		}
 	},
 
+	/**
+	 * Handle menu expand/collapse functionality
+	 * Manages the sliding animation and active states of menu items
+	 * @param {Event} ev - Click event from menu item
+	 */
 	handleMenuExpand: function (ev) {
-		var a = ev.target, slide = a.parentNode, slide_menu = a.nextElementSibling;
-		var collapse = false;
+		var target = ev.target;
+		var slide = target.parentNode;
+		var slideMenu = target.nextElementSibling;
+		var shouldCollapse = false;
 
-		document.querySelectorAll('.main .main-left .nav > li >ul.active').forEach(function (ul) {
-			$(ul).stop(true).slideUp("fast", function () {
-				ul.classList.remove('active');
-				ul.previousElementSibling.classList.remove('active');
-			});
-			if (!collapse && ul === slide_menu) {
-				collapse = true;
+		// Close all currently active submenus
+		var activeMenus = document.querySelectorAll('.main .main-left .nav > li > ul.active');
+		activeMenus.forEach(function (ul) {
+			// Stop any running animations and slide up
+			SlideAnimations.stop(ul);
+			// Remove active classes immediately when starting slideUp animation
+			ul.classList.remove('active');
+			ul.previousElementSibling.classList.remove('active');
+			SlideAnimations.slideUp(ul, 'fast');
+			
+			// Check if we're clicking on an already open menu (should collapse it)
+			if (!shouldCollapse && ul === slideMenu) {
+				shouldCollapse = true;
 			}
-
 		});
 
-		if (!slide_menu)
+		// Exit if there's no submenu to show
+		if (!slideMenu) {
 			return;
-		
-		
-		if (!collapse) {
-			$(slide).find(".slide-menu").slideDown("fast",function(){
-				slide_menu.classList.add('active');
-				a.classList.add('active');
-			});
-			a.blur();
 		}
+
+		// Open the submenu if it's not already open
+		if (!shouldCollapse) {
+			// Find the slide menu within the slide element
+			var slideMenuElement = slide.querySelector(".slide-menu");
+			if (slideMenuElement) {
+				// Add active classes immediately when starting slideDown animation
+				slideMenu.classList.add('active');
+				target.classList.add('active');
+				SlideAnimations.slideDown(slideMenuElement, 'fast');
+			}
+			target.blur(); // Remove focus from the clicked element
+		}
+		
+		// Prevent default link behavior and event bubbling
 		ev.preventDefault();
 		ev.stopPropagation();
 	},
 
+	/**
+	 * Render the main navigation menu
+	 * Creates hierarchical menu structure with active states and click handlers
+	 * @param {Object} tree - Menu tree node to render
+	 * @param {string} url - Base URL for menu items
+	 * @param {number} level - Current nesting level (0-based)
+	 * @returns {Element} - Generated menu element
+	 */
 	renderMainMenu: function (tree, url, level) {
-		var l = (level || 0) + 1,
-			ul = E('ul', { 'class': level ? 'slide-menu' : 'nav' }),
-			children = ui.menu.getChildren(tree);
+		var currentLevel = (level || 0) + 1;
+		var menuContainer = E('ul', { 'class': level ? 'slide-menu' : 'nav' });
+		var children = ui.menu.getChildren(tree);
 
-		if (children.length == 0 || l > 2)
+		// Don't render empty menus or menus deeper than 2 levels
+		if (children.length === 0 || currentLevel > 2) {
 			return E([]);
+		}
 
+		// Generate menu items for each child
 		for (var i = 0; i < children.length; i++) {
-			var isActive = ((L.env.dispatchpath[l] == children[i].name) && (L.env.dispatchpath[l - 1] == tree.name)),
-				submenu = this.renderMainMenu(children[i], url + '/' + children[i].name, l),
-				hasChildren = submenu.children.length,
-				slideClass = hasChildren ? 'slide' : null,
-				menuClass = hasChildren ? 'menu' : 'food';
+			var child = children[i];
+			var isActive = (
+				(L.env.dispatchpath[currentLevel] === child.name) && 
+				(L.env.dispatchpath[currentLevel - 1] === tree.name)
+			);
+			
+			// Recursively render submenu
+			var submenu = this.renderMainMenu(child, url + '/' + child.name, currentLevel);
+			var hasChildren = submenu.children.length > 0;
+			
+			// Determine CSS classes based on state
+			var slideClass = hasChildren ? 'slide' : null;
+			var menuClass = hasChildren ? 'menu' : 'food';
+			
 			if (isActive) {
-				ul.classList.add('active');
+				menuContainer.classList.add('active');
 				slideClass += " active";
 				menuClass += " active";
 			}
 
-			ul.appendChild(E('li', { 'class': slideClass }, [
+			// Create menu item with link and submenu
+			var menuItem = E('li', { 'class': slideClass }, [
 				E('a', {
-					'href': L.url(url, children[i].name),
-					'click': (l == 1) ? ui.createHandlerFn(this, 'handleMenuExpand') : null,
+					'href': L.url(url, child.name),
+					'click': (currentLevel === 1) ? ui.createHandlerFn(this, 'handleMenuExpand') : null,
 					'class': menuClass,
-					'data-title': hasChildren ? children[i].title.replace(" ", "_") : children[i].title.replace(" ", "_"),
-				}, [_(children[i].title)]),
+					'data-title': child.title.replace(/ /g, "_"), // More robust space replacement
+				}, [_(child.title)]),
 				submenu
-			]));
+			]);
+			
+			menuContainer.appendChild(menuItem);
 		}
 
-		if (l == 1) {
-			document.querySelector('#mainmenu').appendChild(ul);
-			document.querySelector('#mainmenu').style.display = '';
-
+		// Append to main menu container if this is the top level
+		if (currentLevel === 1) {
+			var mainMenuElement = document.querySelector('#mainmenu');
+			if (mainMenuElement) {
+				mainMenuElement.appendChild(menuContainer);
+				mainMenuElement.style.display = '';
+			}
 		}
-		return ul;
+		
+		return menuContainer;
 	},
 
+	/**
+	 * Render tab navigation menu
+	 * Creates horizontal tab menu for deeper navigation levels
+	 * @param {Object} tree - Menu tree node to render
+	 * @param {string} url - Base URL for tab items
+	 * @param {number} level - Current nesting level (0-based)
+	 * @returns {Element} - Generated tab menu element
+	 */
 	renderTabMenu: function (tree, url, level) {
-		var container = document.querySelector('#tabmenu'),
-			l = (level || 0) + 1,
-			ul = E('ul', { 'class': 'tabs' }),
-			children = ui.menu.getChildren(tree),
-			activeNode = null;
+		var container = document.querySelector('#tabmenu');
+		var currentLevel = (level || 0) + 1;
+		var tabContainer = E('ul', { 'class': 'tabs' });
+		var children = ui.menu.getChildren(tree);
+		var activeNode = null;
 
-		if (children.length == 0)
+		// Don't render empty tab menus
+		if (children.length === 0) {
 			return E([]);
-
-		for (var i = 0; i < children.length; i++) {
-			var isActive = (L.env.dispatchpath[l + 2] == children[i].name),
-				activeClass = isActive ? ' active' : '',
-				className = 'tabmenu-item-%s %s'.format(children[i].name, activeClass);
-
-			ul.appendChild(E('li', { 'class': className }, [
-				E('a', { 'href': L.url(url, children[i].name) }, [_(children[i].title)])
-			]));
-
-			if (isActive)
-				activeNode = children[i];
 		}
 
-		container.appendChild(ul);
-		container.style.display = '';
+		// Generate tab items for each child
+		for (var i = 0; i < children.length; i++) {
+			var child = children[i];
+			var isActive = (L.env.dispatchpath[currentLevel + 2] === child.name);
+			var activeClass = isActive ? ' active' : '';
+			var className = 'tabmenu-item-%s %s'.format(child.name, activeClass);
 
-		if (activeNode)
-			container.appendChild(this.renderTabMenu(activeNode, url + '/' + activeNode.name, l));
+			var tabItem = E('li', { 'class': className }, [
+				E('a', { 'href': L.url(url, child.name) }, [_(child.title)])
+			]);
+			
+			tabContainer.appendChild(tabItem);
 
-		return ul;
+			// Store reference to active node for recursive rendering
+			if (isActive) {
+				activeNode = child;
+			}
+		}
+
+		// Append tab container to main tab menu element
+		if (container) {
+			container.appendChild(tabContainer);
+			container.style.display = '';
+
+			// Recursively render nested tab menus if there's an active node
+			if (activeNode) {
+				var nestedTabs = this.renderTabMenu(activeNode, url + '/' + activeNode.name, currentLevel);
+				if (nestedTabs.children.length > 0) {
+					container.appendChild(nestedTabs);
+				}
+			}
+		}
+
+		return tabContainer;
 	},
 
+	/**
+	 * Handle sidebar toggle functionality
+	 * Toggles the mobile/responsive sidebar menu visibility
+	 * @param {Event} ev - Click event from sidebar toggle button or dark mask
+	 */
 	handleSidebarToggle: function (ev) {
-		var showside = document.querySelector('a.showSide'),
-			sidebar = document.querySelector('#mainmenu'),
-			darkmask = document.querySelector('.darkMask'),
-			scrollbar = document.querySelector('.main-right');
+		var showSideButton = document.querySelector('a.showSide');
+		var sidebar = document.querySelector('#mainmenu');
+		var darkMask = document.querySelector('.darkMask');
+		var scrollbarArea = document.querySelector('.main-right');
 
-		if (showside.classList.contains('active')) {
-			showside.classList.remove('active');
-			sidebar.classList.remove('active');
-			scrollbar.classList.remove('active');
-			darkmask.classList.remove('active');
+		// Check if any required elements are missing
+		if (!showSideButton || !sidebar || !darkMask || !scrollbarArea) {
+			console.warn('Sidebar toggle elements not found');
+			return;
 		}
-		else {
-			showside.classList.add('active');
+
+		// Toggle sidebar visibility and related states
+		if (showSideButton.classList.contains('active')) {
+			// Close sidebar
+			showSideButton.classList.remove('active');
+			sidebar.classList.remove('active');
+			scrollbarArea.classList.remove('active');
+			darkMask.classList.remove('active');
+		} else {
+			// Open sidebar
+			showSideButton.classList.add('active');
 			sidebar.classList.add('active');
-			scrollbar.classList.add('active');
-			darkmask.classList.add('active');
+			scrollbarArea.classList.add('active');
+			darkMask.classList.add('active');
 		}
 	}
 });
