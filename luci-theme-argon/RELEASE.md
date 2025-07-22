@@ -1,5 +1,20 @@
 # Update log for master branch
 
+## v2.4.3 [ 2025.07.22 ]
+
+- **Refactor**: Remove jQuery dependency, fully replace with vanilla JavaScript
+- **Modernize**: Upgrade HTML meta tags for better security and compatibility
+- **Security**: Add security-related HTTP headers (CSP, XSS protection, clickjacking protection, etc.)
+- **Font System**: Modernize font system with Google Sans font support
+- **Font Optimization**: Replace legacy font formats (eot/svg/ttf) with woff2 for better performance
+- **CSS Upgrade**: Upgrade Pure CSS to v3.0.0
+- **Menu Enhancement**: Improve menu animations, remove jQuery dependency and sync animation timing
+- **Style Improvement**: Add dockerman related style support
+- **Mobile Optimization**: Optimize mobile and PWA related meta tag configurations
+- **Icon Organization**: Reorganize website icon links following modern standards
+- **Accessibility**: Improve web accessibility by allowing user scaling
+- **Code Structure**: Optimize code structure with logical grouping comments
+
 ## v2.3.1 [ 2023.04.20 ]
 
 - Fixed the issue where the dropdown menu was being clipped.

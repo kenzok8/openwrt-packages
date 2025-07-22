@@ -60,32 +60,42 @@
 
 <head>
 	<meta charset="utf-8">
-	<title>
-		<%=striptags( (boardinfo.hostname or "?") .. ( (node and node.title) and ' - ' .. translate(node.title) or '')) %>
-		- LuCI</title>
-	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport" />
-	<meta name="format-detection" content="telephone=no, email=no" />
-	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title><%=striptags( (boardinfo.hostname or "?") .. ( (node and node.title) and ' - ' .. translate(node.title) or '')) %> - LuCI</title>
+	
+	<!-- SEO and Description -->
+	<meta name="robots" content="noindex, nofollow">
+	
+	<!-- Security -->
+	<meta http-equiv="X-Content-Type-Options" content="nosniff">
+	<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+	<meta http-equiv="X-XSS-Protection" content="1; mode=block">
+	<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+	
+	<!-- Mobile and PWA -->
+	<meta name="format-detection" content="telephone=no, email=no">
 	<meta name="mobile-web-app-capable" content="yes">
-	<meta name="x5-fullscreen" content="true">
-	<meta name="full-screen" content="yes">
-	<meta name="x5-page-mode" content="app">
-	<meta name="browsermode" content="application">
-	<meta name="msapplication-tap-highlight" content="no">
-	<meta name="msapplication-TileColor" content="<%=bar_color%>">
-	<meta name="application-name" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 	<meta name="apple-mobile-web-app-title" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+	
+	<!-- Theme and Colors -->
+	<meta name="theme-color" content="<%=bar_color%>">
+	<meta name="msapplication-TileColor" content="<%=bar_color%>">
+	<meta name="msapplication-TileImage" content="<%=media%>/icon/ms-icon-144x144.png">
+	<meta name="application-name" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+	
+	<!-- Icons and Manifest -->
+	<link rel="icon" type="image/x-icon" href="<%=media%>/favicon.ico">
+	<link rel="icon" type="image/png" sizes="16x16" href="<%=media%>/icon/favicon-16x16.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="<%=media%>/icon/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="<%=media%>/icon/favicon-96x96.png">
+	<link rel="icon" type="image/png" sizes="192x192" href="<%=media%>/icon/android-icon-192x192.png">
 	<link rel="apple-touch-icon" sizes="60x60" href="<%=media%>/icon/apple-icon-60x60.png">
 	<link rel="apple-touch-icon" sizes="72x72" href="<%=media%>/icon/apple-icon-72x72.png">
 	<link rel="apple-touch-icon" sizes="144x144" href="<%=media%>/icon/apple-icon-144x144.png">
-	<link rel="icon" type="image/png" sizes="192x192" href="<%=media%>/icon/android-icon-192x192.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="<%=media%>/icon/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="96x96" href="<%=media%>/icon/favicon-96x96.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="<%=media%>/icon/favicon-16x16.png">
-	<link rel="manifest" href="<%=media%>/icon/manifest.json"  crossorigin="use-credentials">
-	<meta name="msapplication-TileColor" content="<%=bar_color%>">
-	<meta name="msapplication-TileImage" content="<%=media%>/icon/ms-icon-144x144.png">
-	<meta name="theme-color" content="<%=bar_color%>">
+	<link rel="manifest" href="<%=media%>/icon/manifest.json" crossorigin="use-credentials">
+	
 	<link rel="stylesheet" href="<%=media%>/css/cascade.css<%# ?v=PKG_VERSION %>">
 	<style title="text/css">
         <% if mode == 'normal' then %>
@@ -106,7 +116,8 @@
         }
         <% end -%>
         </style>
-	<link rel="shortcut icon" href="<%=media%>/favicon.ico">
+	
+	<!-- Stylesheets -->
 	<% if node and node.css then %>
 	<link rel="stylesheet" href="<%=resource%>/<%=node.css%>">
 	<% end -%>
@@ -115,11 +126,9 @@
 		<%=css %>
 	</style>
 	<% end -%>
-	<script src="<%=media%>/js/polyfill.min.js"></script>
 	<script src="<%=url('admin/translations', luci.i18n.context.lang)%>?v=<%=ver.luciversion%>"></script>
 	<script src="<%=resource%>/cbi.js?v=<%=ver.luciversion%>"></script>
 	<script src="<%=resource%>/luci.js?v=<%=ver.luciversion%>"></script>
-	<script src="<%=media%>/js/jquery.min.js?v=3.5.1"></script>
 </head>
 
 <body

@@ -31,15 +31,18 @@
 <script>
 	// thanks for Jo-Philipp Wich <jow@openwrt.org>
 	var luciLocation = <%= luci.http.write_json(luci.dispatcher.context.path) %>;
-	var winHeight = $(window).height();
-	$(window).resize(function () {
-		var winWidth = $(window).width()
+	var winHeight = window.innerHeight;
+	window.addEventListener('resize', function () {
+		var winWidth = window.innerWidth;
 		if(winWidth < 600){
-			var newHeight = $(this).height();
+			var newHeight = window.innerHeight;
 			var keyboradHeight = newHeight - winHeight;
-			$(".ftc").css("bottom", keyboradHeight + 30);
+			var ftcElement = document.querySelector(".ftc");
+			if (ftcElement) {
+				ftcElement.style.bottom = (keyboradHeight + 30) + "px";
+			}
 		}
-	})
+	});
 </script>
 </body>
 </html>
