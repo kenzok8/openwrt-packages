@@ -15,6 +15,7 @@ o.rmempty = false
 o = s:option(Value, "music_source", translate("音源接口"))
 o:value("default", translate("默认"))
 o:value("bilibili", translate("Bilibili音乐"))
+o:value("bilivideo", translate("Bilibili音乐（bilivideo）"))
 o:value("joox", translate("JOOX音乐"))
 o:value("kugou", translate("酷狗音乐"))
 o:value("kuwo", translate("酷我音乐"))
