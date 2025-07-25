@@ -2361,6 +2361,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
       transition: box-shadow 0.15s ease;
       overflow: hidden;
       text-overflow: ellipsis;
+      user-select: text;
 
       white-space: nowrap;
       word-break: break-word;
@@ -2456,6 +2457,10 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   }
 }
 
+.cbi-dynlist>.item.drag-over, .cbi-dynlist>.add-item:has(.drag-over) {
+	border-top: 1px solid var(--red);
+	margin-top: -1px;
+}
 
 .cbi-dynlist[name="sshkeys"] > .item {
   max-width: none;
