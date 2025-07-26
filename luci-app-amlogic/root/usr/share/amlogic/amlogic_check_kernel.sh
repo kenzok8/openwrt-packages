@@ -173,7 +173,7 @@ check_kernel() {
     latest_version="$(
         curl -fsSL -m 10 \
             ${kernel_api}/releases/expanded_assets/kernel_${kernel_tag} |
-            grep -oE "${main_line_version}.[0-9]+.*.tar.gz" | sed 's/.tar.gz//' |
+            grep -oE "${main_line_version}\.[0-9]+.*\.tar\.gz" | sed 's/.tar.gz//' |
             sort -urV | head -n 1
     )"
     [[ -n "${latest_version}" ]] || tolog "02.03 No kernel available, please use another kernel branch." "1"
