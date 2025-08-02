@@ -74,7 +74,7 @@ current_plugin_v=""
 
 if command -v opkg >/dev/null 2>&1; then
     # System has opkg
-    package_manager="opkg"
+    package_manager="ipk"
     # Important: Add cut to handle versions like X.Y.Z-r1, ensuring consistent output
     current_plugin_v="$(opkg list-installed | grep '^luci-app-amlogic' | awk '{print $3}' | cut -d'-' -f1)"
 elif command -v apk >/dev/null 2>&1; then
