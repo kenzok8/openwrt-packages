@@ -188,39 +188,21 @@ check_updated() {
             https://github.com/${server_firmware_url}/releases/expanded_assets/${firmware_releases_tag}
     )"
 
-    # Define regular expressions to match firmware download links and release dates
-    regex_href='href="([^"]+)"'
-    regex_datetime='datetime="([^"]+)"'
-    link_date_results=()
-    while [[ "${html_code}" =~ ${regex_href} ]]; do
-        href="${BASH_REMATCH[1]##*/}"
-        html_code="${html_code#*"${BASH_REMATCH[1]}"}"
-        if [[ "${html_code}" =~ $regex_datetime ]]; then
-            datetime="${BASH_REMATCH[1]}"
+    # Set the regular expression for the OpenWrt filename
+    op_file_pattern=".*_${BOARD}_.*k${main_line_version}\..*${firmware_suffix}"
+    # Find the <li> list item where the OpenWrt file is located
+    li_block=$(awk -v pattern="${op_file_pattern}" -v RS='</li>' '$0 ~ pattern { print $0 "</li>"; exit }' <<<"${html_code}")
+    [[ -z "${li_block}" ]] && tolog "02.03.01 No matching download links found." "1"
 
-            # Search for firmware download links that meet the criteria
-            if [[ "${href}" =~ .*_${BOARD}_.*${main_line_version}\.[0-9]+.*${firmware_suffix} ]] &&
-                [[ ! "${href}" =~ \.sha ]]; then
-                link_date_results+=("${href}@${datetime}")
-            fi
-
-        fi
-    done
-
-    if [[ "${#link_date_results[*]}" -eq "0" ]]; then
-        tolog "02.01 No matching download links found." "1"
-    fi
-
-    # Get the latest version
-    latest_url_date="$(echo "${link_date_results[*]}" | tr ' ' '\n' | sort -urV | head -n 1)"
-    if [[ -n "${latest_url_date}" ]]; then
-        latest_url="$(echo "${latest_url_date}" | awk -F '@' '{print $1}')"
-        latest_updated_at="$(echo "${latest_url_date}" | awk -F '@' '{print $2}')"
-        # Convert to readable date format
-        date_display_format="$(echo ${latest_updated_at} | tr 'T' '(' | tr 'Z' ')')"
-    else
-        tolog "02.02 The search results for releases are empty." "1"
-    fi
+    # Find the OpenWrt filename
+    latest_url=$(echo "${li_block}" | grep -o "/[^\"]*_${BOARD}_.*k${main_line_version}\.[^\"']*${firmware_suffix}" | sort -urV | head -n 1 | xargs basename 2>/dev/null)
+    tolog "02.03.02 OpenWrt file: ${latest_url}"
+    # Find the date of the latest update
+    latest_updated_at=$(echo "${li_block}" | grep -o 'datetime="[^"]*"' | sed 's/datetime="//; s/"//')
+    tolog "02.03.03 Latest updated at: ${latest_updated_at}"
+    # Format the date for display
+    date_display_format="$(echo ${latest_updated_at} | tr 'T' '(' | tr 'Z' ')')"
+    [[ -z "${latest_url}" || -z "${latest_updated_at}" ]] && tolog "02.03.04 The download URL or date is invalid." "1"
 
     # Check the firmware update code
     down_check_code="${latest_updated_at}.${main_line_version}"
@@ -228,7 +210,7 @@ check_updated() {
     if [[ -s "${op_release_code}" ]]; then
         update_check_code="$(cat ${op_release_code} | xargs)"
         if [[ -n "${update_check_code}" && "${update_check_code}" == "${down_check_code}" ]]; then
-            tolog "02.02 Already the latest version, no need to update." "1"
+            tolog "02.03.05 Already the latest version, no need to update." "1"
         fi
     fi
 
@@ -236,7 +218,7 @@ check_updated() {
     if [[ -n "${latest_url}" ]]; then
         tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_firmware(this, '"'download_${latest_updated_at}@${firmware_releases_tag}/${latest_url}'"')"/> Latest updated: '${date_display_format}'' "1"
     else
-        tolog "02.03 No OpenWrt available, please use another kernel branch." "1"
+        tolog "02.04 No OpenWrt available, please use another kernel branch." "1"
     fi
 
     exit 0
