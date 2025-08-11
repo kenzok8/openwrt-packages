@@ -27,7 +27,6 @@
 	local fs		= require "nixio.fs"
 	local nutil		= require "nixio.util"
 	local json		= require "luci.jsonc"
-	local sys		= require "luci.sys"
 	local uci		= require 'luci.model.uci'.cursor()
 
 	-- Fetch Local Background Media
@@ -74,9 +73,9 @@
 		if fs.access("/etc/config/argon") then
 			local online_wallpaper = uci:get_first('argon', 'global', 'online_wallpaper') or (uci:get_first('argon', 'global', 'bing_background') == '1' and 'bing')
 			if (online_wallpaper and online_wallpaper ~= "none") then
-				local picurl = sys.exec("/usr/libexec/argon/online_wallpaper")
-				if (picurl and picurl ~= '') then
-					return picurl, "Image", ""
+				local picurl = util.ubus("luci.argon_wallpaper", "get_url") or {}
+				if (picurl.url and picurl.url ~= '') then
+					return picurl.url, "Image", ""
 				end
 			end
 		end
