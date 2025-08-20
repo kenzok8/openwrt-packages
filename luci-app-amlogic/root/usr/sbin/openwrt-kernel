@@ -268,7 +268,8 @@ update_kernel() {
         rm -f /boot/uInitrd*
     else
         valid_files="vmlinuz-${kernel_name} uInitrd-${kernel_name} config-${kernel_name} System.map-${kernel_name}"
-        rm -f /boot/initrd.img*
+        # wxy-oect: MODEL_ID numbers r304 and r306, require special handling of uInitrd
+        [[ "${MODEL_ID}" =~ ^(r304|r306)$ ]] || rm -f /boot/initrd.img*
     fi
     for f in ${valid_files}; do [[ -f "/boot/${f}" ]] || restore_kernel; done
 
@@ -289,9 +290,7 @@ update_kernel() {
         fi
 
         # wxy-oect: MODEL_ID numbers r304 and r306, require special handling of uInitrd
-        [[ "${MODEL_ID}" == "r304" || "${MODEL_ID}" == "r306" ]] && {
-            rm -f uInitrd && ln -sf initrd.img-${kernel_name} uInitrd
-        }
+        [[ "${MODEL_ID}" =~ ^(r304|r306)$ ]] && ln -sf initrd.img-${kernel_name} uInitrd
     )
 
     echo -e "(1/3) Unpacking [ boot-${kernel_name}.tar.gz ] done."
