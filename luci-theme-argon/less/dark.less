@@ -38,8 +38,8 @@ body {
 
     .login-form {
         background-color: #1e1e1e;
-        -webkit-backdrop-filter: blur(var(--blur-radius-dark));
-        backdrop-filter: blur(var(--blur-radius-dark));
+        -webkit-backdrop-filter: blur(var(--blur-radius-dark)) brightness(0);
+        backdrop-filter: blur(var(--blur-radius-dark)) brightness(0);
         background-color: rgba(0, 0, 0, var(--blur-opacity-dark));
 
         .brand {
@@ -289,6 +289,11 @@ table > tfoot > tr > th,
 table > thead > tr > th {
     background-color: #252526;
     border-bottom: black 1px solid !important;
+}
+
+.tr[data-title]::before,
+.tr.cbi-section-table-titles.named::before {
+  background-color: #252526;
 }
 
 tr > td,
