@@ -1,0 +1,10 @@
+#!/bin/sh
+
+grep -q "config gost$" "/etc/config/gost" || exit 0
+
+sed -e "s,config gost,config gost 'config'," \
+    -e "s,option enable ,option enabled ," \
+    -e "s,option run_command,list arguments," \
+	-i "/etc/config/gost"
+
+exit 0
