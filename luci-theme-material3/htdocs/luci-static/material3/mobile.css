@@ -1,0 +1,592 @@
+header .brand,
+header h3 a {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	width: auto;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 1.6rem
+}
+
+@media screen and (max-width:854px) {
+
+	.menu-btn,
+	.table,
+	.tr,
+	header .nav {
+		display: flex
+	}
+
+	.td.cbi-value-field,
+	.td[data-title]~.td.cbi-section-actions {
+		align-self: flex-start
+	}
+
+	.td[data-title]::before,
+	[data-name=bridge-vlan] .td[data-title]::before {
+		content: attr(data-title)
+	}
+
+	.dropdown-menu>li>a {
+		padding: .8rem 1.5rem .8rem 3rem
+	}
+
+	body {
+		grid-template-areas: "header" "main" "footer";
+		grid-template-columns: 1fr
+	}
+
+	#maincontent {
+		margin-left: 0
+	}
+
+	footer {
+		padding-left: 1rem;
+		padding-right: 1rem
+	}
+
+	.modal {
+		margin: 1.5em auto;
+		/* margin-top: 160px; */
+	}
+
+	.modal.login {
+		margin-top: 160px;
+	}
+
+	h3 {
+		font-size: 1.2em;
+		margin: 0
+	}
+
+	.cbi-tabmenu,
+	.tabs {
+		margin: 1px 1px 10px;
+		border-radius: 1rem
+	}
+
+	.cbi-tabmenu>li,
+	.tabs>li {
+		height: 32px
+	}
+
+	.cbi-tabmenu>li>a,
+	.tabs>li>a {
+		line-height: 30px;
+		border-radius: 1rem
+	}
+
+	.table {
+		flex-direction: column;
+		width: 100%;
+		padding: 5px 0
+	}
+
+	.tr {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		border-top: 0 solid var(--border-color-medium);
+		padding: 5px;
+		margin: 0 -3px
+	}
+
+	.table .td,
+	.table .th,
+	.table .tr::before {
+		flex: 1 1 50%;
+		align-self: flex-start;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		word-wrap: break-word;
+		display: inline-block;
+		border-top: none;
+		padding: 3px;
+		box-sizing: border-box
+	}
+
+	.table .td.cbi-dropdown-open {
+		overflow: visible
+	}
+
+	.col-1 {
+		flex: 1 1 30px !important;
+		-webkit-flex: 1 1 30px !important
+	}
+
+	.col-2 {
+		flex: 2 2 60px !important;
+		-webkit-flex: 2 2 60px !important
+	}
+
+	.col-3 {
+		flex: 3 3 90px !important;
+		-webkit-flex: 3 3 90px !important
+	}
+
+	.col-4 {
+		flex: 4 4 120px !important;
+		-webkit-flex: 4 4 120px !important
+	}
+
+	.col-5 {
+		flex: 5 5 150px !important;
+		-webkit-flex: 5 5 150px !important
+	}
+
+	.col-6 {
+		flex: 6 6 180px !important;
+		-webkit-flex: 6 6 180px !important
+	}
+
+	.col-7 {
+		flex: 7 7 210px !important;
+		-webkit-flex: 7 7 210px !important
+	}
+
+	.col-8 {
+		flex: 8 8 240px !important;
+		-webkit-flex: 8 8 240px !important
+	}
+
+	.col-9 {
+		flex: 9 9 270px !important;
+		-webkit-flex: 9 9 270px !important
+	}
+
+	.col-10 {
+		flex: 10 10 300px !important;
+		-webkit-flex: 10 10 300px !important
+	}
+
+	.td select {
+		word-wrap: normal
+	}
+
+	.td[data-widget=button],
+	.td[data-widget=fvalue] {
+		flex: 1 1 17%;
+		text-align: left
+	}
+
+	.td.cbi-value-field {
+		flex-basis: 100%;
+		margin-bottom: .3em
+	}
+
+	.td.cbi-value-field .cbi-button {
+		width: 100%
+	}
+
+	.table.cbi-section-table {
+		border: none;
+		/* background: 0 0; */
+		margin: 0
+	}
+
+	.cbi-section-table-descr,
+	.cbi-section-table-titles,
+	.cbi-value.hidden,
+	.tr.table-titles,
+	[data-page=admin-status-processes] .td[data-widget=button]::before,
+	[data-page=admin-system-fstab] .td[data-widget=button]::before,
+	[data-page=admin-system-startup] .td[data-widget=button]::before {
+		display: none
+	}
+
+	.cbi-section-table-row {
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		margin: 0 0 .5em
+	}
+
+	.cbi-section-table+.cbi-section-create {
+		/* padding-top: 0; */
+	}
+
+	.tr[data-title]::before {
+		display: block;
+		flex: 1 1 100%;
+		background: var(--background-color-low) !important;
+		font-size: 16px;
+		border-bottom: 1px solid var(--border-color-medium)
+	}
+
+	.td[data-title]::before {
+		font-weight: 700;
+		display: block;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: pre-line
+	}
+
+	.td[data-description]::after {
+		display: block
+	}
+
+	.td.cbi-section-actions {
+		overflow: initial;
+		max-width: 100%;
+		padding: 3px 2px;
+		flex-basis: 100%
+	}
+
+	.hide-sm,
+	.hide-xs {
+		display: none !important
+	}
+
+	.td.cbi-value-field[data-widget="CBI.Button"],
+	.td.cbi-value-field[data-widget="CBI.DummyValue"],
+	.td.cbi-value-field[data-widget="CBI.FlagValue"],
+	.td.cbi-value-field[data-widget=button],
+	.td.cbi-value-field[data-widget=dvalue],
+	.td.cbi-value-field[data-widget=fvalue] {
+		flex-basis: 50%;
+		text-align: left
+	}
+
+	.cbi-section-table .tr:hover .td,
+	.cbi-section-table .tr:hover .th,
+	.cbi-section-table .tr:hover::before {
+		background-color: transparent
+	}
+
+	.cbi-tab-descr {
+		margin: 0 0 .5em
+	}
+
+	.cbi-value {
+		padding-bottom: .5em;
+		border-bottom: 1px solid var(--border-color-high);
+		margin-bottom: .5em;
+		display: block
+	}
+
+	.cbi-value .cbi-value:last-child {
+		border-bottom: none;
+		padding-bottom: inherit;
+		margin-bottom: inherit
+	}
+
+	.cbi-value label.cbi-value-title {
+		font-weight: 700
+	}
+
+	.cbi-dropdown:not(.btn):not(.cbi-button),
+	.cbi-dynlist,
+	.cbi-select,
+	.cbi-value-field {
+		width: 100%;
+		margin: 0
+	}
+
+	.cbi-dynlist>.item {
+		min-height: 30px;
+		display: flex;
+		align-items: center
+	}
+
+	.cbi-dropdown>ul>li,
+	input,
+	select,
+	textarea {
+		font-size: 16px !important;
+		height: auto
+	}
+
+	.cbi-dropdown>ul>li input[type=text] {
+		line-height: 28px
+	}
+
+	.cbi-dropdown>ul>li input[type=text],
+	.cbi-value-field .control-group,
+	input[type=password],
+	input[type=text],
+	select {
+		width: 100%;
+		height: 30px
+	}
+
+	input.cbi-input-password {
+		width: calc(100% - 25px)
+	}
+
+	input[type=password]+.cbi-button,
+	input[type=text]+.cbi-button,
+	select+.cbi-button {
+		text-overflow: ellipsis
+	}
+
+	.cbi-value-field input[type=checkbox],
+	.cbi-value-field input[type=radio] {
+		margin: 0
+	}
+
+	.btn,
+	.cbi-button,
+	button {
+		font-size: 14px !important;
+		padding: 0 8px
+	}
+
+	.actions,
+	.cbi-page-actions {
+		border-top: none;
+		padding: 8px
+	}
+
+	[data-name=bridge-vlan] .td[data-title],
+	[data-page=admin-status-overview] .td[width="33%"] {
+		flex-basis: 33%
+	}
+
+	header .pull-right .label {
+		white-space: normal;
+		display: inline-block;
+		text-align: center;
+		line-height: 12px;
+		margin: 1px 0
+	}
+
+	header>.fill {
+		padding: 1px
+	}
+
+	header>.fill>.container {
+		display: flex;
+		flex-direction: row
+	}
+
+	header .nav {
+		flex: 3 3 80%;
+		margin: 2px 5px 2px 0;
+		flex-wrap: wrap;
+		justify-content: flex-start
+	}
+
+	header .nav a {
+		padding: 2px 6px
+	}
+
+	header .pull-right {
+		padding: 0 8px;
+		margin: .2em 0 .2em auto;
+		position: relative;
+		z-index: 1
+	}
+
+	.dropdown-menu,
+	.menu-dropdown {
+		top: 23px
+	}
+
+	.cbi-optionals,
+	.cbi-section-create {
+		padding: 7px 0;
+	}
+
+	header .menu-btn {
+		position: relative;
+		border-radius: 50%;
+		z-index: 1
+	}
+
+	header .menu-btn:hover {
+		background: rgba(0, 0, 0, .05);
+		transition: .3s
+	}
+
+	.sidebar {
+		transform: translateX(-100%);
+		z-index: 900;
+		border-radius: 0 1rem 1rem 0
+	}
+
+	.sidebar.active {
+		transform: translateX(0)
+	}
+
+	.sidebar.active::after {
+		content: '';
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: -1
+	}
+
+	#cbi-network-switch_vlan .td,
+	#cbi-network-switch_vlan .th {
+		flex-basis: 12%
+	}
+
+	#cbi-network-switch_vlan .td.cbi-section-actions>* {
+		width: auto;
+		display: block
+	}
+
+	#wifi_assoclist_table .td,
+	[data-page=admin-status-processes] .td {
+		flex-basis: 50% !important
+	}
+
+	[data-page=admin-status-processes] .td[data-widget=button] {
+		flex-basis: 33% !important
+	}
+
+	[data-page=admin-status-processes] .td[data-name=PID],
+	[data-page=admin-status-processes] .td[data-name=USER] {
+		flex-basis: 25% !important
+	}
+
+	[data-name=bridge-vlan]>div {
+		overflow: visible !important
+	}
+
+	[data-page=admin-network-network] .td[data-name="_ifacebox"] {
+		flex-basis: 40%
+	}
+
+	[data-page=admin-network-network] .td[data-name="_ifacestat"] {
+		flex-basis: 60%
+	}
+
+	[data-page^=admin-services-openclash] .cbi-value {
+		overflow-x: auto
+	}
+
+	/* [data-page^=admin-services-openclash] div#cbi-openclash {
+		overflow-x: scroll
+	} */
+
+	.sidebar-overlay {
+		opacity: 0;
+		visibility: hidden
+	}
+
+	.sidebar-overlay.active {
+		opacity: 1;
+		visibility: visible
+	}
+
+	header.with-shadow {
+		background: var(--md-sys-color-card-translucent);
+		box-shadow: 0 .5px 1.5px 0 rgba(0, 0, 0, 19%), 0 0 1px 0 rgba(0, 0, 0, 3.9%)
+	}
+
+	header [data-indicator] {
+		width: 32px;
+		height: 32px;
+		padding: 0;
+		margin: 0 4px;
+		font-size: 0;
+		border-radius: 50%;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		position: relative
+	}
+
+	header [data-indicator="poll-status"]::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		width: 24px;
+		height: 24px;
+	}
+
+	header [data-indicator="uci-changes"]::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		margin: auto;
+		width: 20px;
+		height: 20px;
+	}
+}
+
+@media screen and (max-width:330px) {
+
+	.cbi-page-actions button,
+	.cbi-section-actions .cbi-button {
+		overflow: hidden;
+		text-overflow: ellipsis
+	}
+
+	.cbi-page-actions {
+		display: flex;
+		justify-content: space-between;
+		margin: 0 -1px;
+		padding: 0
+	}
+
+	.cbi-page-actions .cbi-button {
+		flex: 1;
+		margin: 1px !important;
+		line-height: 2em
+	}
+
+	.cbi-page-actions .cbi-button-apply,
+	.cbi-page-actions .cbi-button-negative,
+	.cbi-page-actions .cbi-button-primary {
+		flex: 3
+	}
+
+	.cbi-section-actions .cbi-button {
+		margin: 1px !important
+	}
+
+	body[data-page=admin-network-wireless] .td[data-name="_badge"] {
+		max-width: 50px;
+		align-self: center
+	}
+
+	body[data-page=admin-network-wireless] .td[data-name="_badge"] .ifacebadge {
+		display: flex;
+		align-items: center;
+		flex-direction: column
+	}
+
+	body[data-page=admin-network-wireless] .td[data-name="_stat"] {
+		flex-basis: 60%
+	}
+
+	body[data-page=admin-network-network] .td.cbi-section-actions::before,
+	body[data-page=admin-network-wireless] .td.cbi-section-actions::before {
+		content: none !important
+	}
+
+	[data-page=admin-network-network] .td[data-name="_ifacebox"],
+	[data-page=admin-network-network] .td[data-name="_ifacestat"] {
+		flex-basis: 100%
+	}
+
+	.td .ifacebox {
+		width: 100%;
+		margin: 0 !important;
+		flex-direction: row
+	}
+
+	.td .ifacebox .ifacebox-head {
+		min-width: 25%;
+		justify-content: space-around;
+		border-radius: 1rem;
+	}
+
+	.td .ifacebox .ifacebox-body,
+	.td .ifacebox .ifacebox-head {
+		display: flex;
+		border-bottom: none;
+		align-items: center
+	}
+
+	.ifacebox .ifacebox-body>*,
+	.td .ifacebox .ifacebox-head>* {
+		margin: .125em
+	}
+}

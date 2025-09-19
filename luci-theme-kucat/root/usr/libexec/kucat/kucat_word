@@ -1,0 +1,96 @@
+#!/bin/sh
+
+
+#   luci-theme-kucat
+#   Copyright (C) 2019-2024 The Sirpdboy Team <herboy2008@gmail.com> 
+# 
+#   Have a bug? Please create an issue here on GitHub!
+#       https://github.com/sirpdboy/luci-theme-kucat/issues
+# 
+# Licensed to the public under the Apache License 2.0
+LANG=`uci get luci.main.lang`
+WORDDATETMP="/var/dayword_kucatword_date.tmp"
+LOCK="/var/lock/dayword_kucatword.lock"
+WORDTMP="/var/dayword_kucatword_$LANG.tmp"
+test_url() {
+	url=$1
+	status="$(/usr/bin/curl -I -o /dev/null -skL --connect-timeout 1 --retry 1 -w %{http_code} "$url")"
+	case "$status" in
+		204|\
+		200)
+			echo '1'
+		;;
+	esac
+}
+
+get_word() {
+	kucat='kucat'
+	[ -s "/etc/config/advancedplus" ] &&kucat='advancedplus'
+	dayword="$(uci -q get $kucat.@basic[0].dayword || echo '0')"
+	case "$dayword" in
+	1)
+		[ "X$LANG" == "Xen" ] && gwordjson=`curl -s 'https://open.iciba.com/dsapi/' | jsonfilter -qe '@.content'` ||  gwordjson=`curl -s 'https://open.iciba.com/dsapi/' | jsonfilter -qe '@.note'`
+		[ -n "${gwordjson}" ] && echo "$gwordjson"
+		;;
+	2)
+	# form iciba : https://api.vvhan.com/api/en
+		[ "X$LANG" == "Xen" ] && gwordjson=`curl -s 'https://api.vvhan.com/api/en?type=sj'| jsonfilter -qe '@.data.zh'` || gwordjson=`curl -s 'https://api.vvhan.com/api/en?type=sj'| jsonfilter -qe '@.data.en'` 
+		[ -n "${gwordjson}" ] && echo "$gwordjson"
+		;;
+	3)
+		local gwordjson=`curl -s 'https://api.yixiangzhilv.com/yiyan/sentence/get/'` 
+		local gword=`echo $gwordjson | jsonfilter -qe '@.content'`
+		local gfrom=`echo $gwordjson | jsonfilter -qe '@.author'`
+		[ -n "${gfrom}" ] && gfrom=$(echo "         ---- $gfrom")|| gfrom=''
+		[ -n "${gword}" ] && echo "$gword       $gfrom"
+		;;
+	4)
+		local gwordjson=`curl -s 'https://yijuzhan.com/api/word.php?m=json'` 
+		local gword=`echo $gwordjson | jsonfilter -qe '@.content'`
+		local gfrom=`echo $gwordjson | jsonfilter -qe '@.source'`
+		[ -n "${gfrom}" ] && gfrom=$(echo "    ---- $gfrom")|| gfrom=''
+		[ -n "${gword}" ] && echo "$gword     $gfrom"
+		;;
+	5)
+		local gword=`curl -s https://v.api.aa1.cn/api/api-wenan-dujitang/index.php?aa1=json | sed 's/\[//g' | sed 's/\]//g'| jsonfilter -qe '@.dujitang'` 
+		[ -n "${gword}" ] && echo "$gword"
+		;;
+	
+	*)
+		local gwordjson=`curl -s 'https://v1.hitokoto.cn'` 
+		local gword=`echo $gwordjson | jsonfilter -qe '@.hitokoto'`
+		local gfrom=`echo $gwordjson | jsonfilter -qe '@.from_who'`
+		[ -n "${gfrom}" ] && gfrom=$(echo "    ---- $gfrom")|| gfrom=''
+		[ -n "${gword}" ] &&   echo "$gword     $gfrom"
+		;;
+	esac
+}
+
+kucatword() {
+	lock="$LOCK"
+	exec 200>"$lock"
+	if flock -n 200 >"/dev/null" 2>&1; then
+		local localword="$(get_word)"
+		if [ -n "$localword" ]; then
+			echo "$localword" >$WORDTMP 
+			date +%Y%m%d > $WORDDATETMP
+		fi
+		flock -u 200 >"/dev/null" 2>&1
+	fi
+	[ -s "$WORDTMP" ] && cat $WORDTMP || echo -ne "Acquisition failed ,Please Issues:github@sirpdboy"
+}
+check_url() {
+if [ -f "$WORDDATETMP" ]; then
+		localtime=`cat $WORDDATETMP | grep $(date +%Y%m%d) `
+		if [ $localtime ]; then
+		    [ -s "$WORDTMP" ] && cat $WORDTMP && return
+		fi
+	fi
+local checknet=`ping -c 1 -W 1 223.5.5.5 > /dev/null 2>&1 &&echo 1 || echo 2`
+if [ "x$checknet" == "x1" ]; then 
+	kucatword
+else
+    	echo -ne "No internet connection, no information."
+fi
+}
+check_url
