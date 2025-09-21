@@ -1,0 +1,16 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+USE_PROCD=1
+
+reload_service() {
+    wifi reload
+}
+
+service_triggers() {
+    procd_add_reload_trigger "wireless"
+}
+
+start_service() {
+    reload_service
+}

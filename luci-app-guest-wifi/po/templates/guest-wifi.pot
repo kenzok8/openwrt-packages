@@ -1,0 +1,44 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+msgid "Guest WiFi"
+msgstr ""
+
+msgid "Guest WiFi Settings"
+msgstr ""
+
+msgid "Guest WiFi provides a separate wireless network for guest access with isolated permissions."
+msgstr ""
+
+msgid "Enable"
+msgstr ""
+
+msgid "Enable guest WiFi network"
+msgstr ""
+
+msgid "Network Name (SSID)"
+msgstr ""
+
+msgid "Encryption"
+msgstr ""
+
+msgid "No Encryption"
+msgstr ""
+
+msgid "WPA2-PSK"
+msgstr ""
+
+msgid "WPA3-SAE"
+msgstr ""
+
+msgid "WPA2/WPA3-Mixed"
+msgstr ""
+
+msgid "Password"
+msgstr ""
+
+msgid "AP Isolation"
+msgstr ""
+
+msgid "Prevents wireless clients from communicating with each other"
+msgstr ""

@@ -1,0 +1,14 @@
+{
+    "admin/network/guest-wifi": {
+        "title": "Guest WiFi",
+        "order": 60,
+        "action": {
+            "type": "view",
+            "path": "guest-wifi/wifi"
+        },
+        "depends": {
+            "acl": [ "luci-app-guest-wifi" ],
+            "uci": { "wireless": true }
+        }
+    }
+}

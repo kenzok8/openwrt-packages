@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# 检查无线配置
+check_wireless() {
+    local enabled
+    config_load wireless
+    config_get enabled guest_wifi enabled 0
+    
+    if [ "$enabled" = "1" ]; then
+        # 应用guest wifi配置
+        wifi reload
+    fi
+}
+
+# 主循环
+while true; do
+    check_wireless
+    sleep 300
+done

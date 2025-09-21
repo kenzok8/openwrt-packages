@@ -1,0 +1,21 @@
+{
+	"luci-app-openlist2": {
+		"description": "Grant UCI access for luci-app-openlist2",
+		"read": {
+			"file": {
+				"/usr/bin/openlist2": [ "exec" ],
+				"/*": [ "read" ]
+			},
+			"ubus": {
+				"service": [ "list" ]
+			},
+			"uci": [ "openlist2" ]
+		},
+		"write": {
+			"file": {
+				"/*": [ "write" ]
+			},
+			"uci": [ "openlist2" ]
+		}
+	}
+}

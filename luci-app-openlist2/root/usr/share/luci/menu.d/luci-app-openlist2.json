@@ -1,0 +1,28 @@
+{
+	"admin/services/openlist2": {
+		"title": "OpenList",
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-openlist2" ],
+			"uci": { "openlist2": true }
+		}
+	},
+	"admin/services/openlist2/basic": {
+		"title": "Setting",
+		"order": 10,
+		"action": {
+			"type": "view",
+			"path": "openlist2/basic"
+		}
+	},
+	"admin/services/openlist2/logs": {
+		"title": "Logs",
+		"order": 20,
+		"action": {
+			"type": "view",
+			"path": "openlist2/logs"
+		}
+	}
+}

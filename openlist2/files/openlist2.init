@@ -1,0 +1,276 @@
+#!/bin/sh /etc/rc.common
+
+. /usr/share/libubox/jshn.sh
+
+START=99
+USE_PROCD=1
+PROG=/usr/bin/openlist2
+
+get_config() {
+	config_get_bool enabled $1 enabled 1
+	config_get port $1 port 5244
+	config_get allow_wan $1 allow_wan 0
+	config_get delayed_start $1 delayed_start 0
+
+	config_get force $1 force 1
+	config_get site_url $1 site_url ""
+	config_get cdn $1 cdn ""
+	config_get jwt_secret $1 jwt_secret ""
+	config_get data_dir $1 data_dir "/etc/openlist2"
+	config_get temp_dir $1 temp_dir "/tmp/openlist2"
+	config_get token_expires_in $1 token_expires_in 48
+	config_get max_connections $1 max_connections 0
+	config_get max_concurrency $1 max_concurrency 64
+	config_get tls_insecure_skip_verify $1 tls_insecure_skip_verify 1
+
+	# log
+	config_get log $1 log 1
+	config_get log_path $1 log_path '/var/log/openlist2.log'
+	config_get log_max_size $1 log_max_size 10
+	config_get log_max_backups $1 log_max_backups 5
+	config_get log_max_age $1 log_max_age 28
+	config_get log_compress $1 log_compress 0
+
+	# scheme
+	config_get ssl $1 ssl 0
+	config_get force_https $1 force_https 0
+	config_get ssl_cert $1 ssl_cert ""
+	config_get ssl_key $1 ssl_key ""
+
+	# database
+	config_get database_type $1 database_type "sqlite3"
+	config_get mysql_host $1 mysql_host ""
+	config_get mysql_port $1 mysql_port "3306"
+	config_get mysql_username $1 mysql_username ""
+	config_get mysql_password $1 mysql_password ""
+	config_get mysql_database $1 mysql_database ""
+	config_get mysql_table_prefix $1 mysql_table_prefix "x_"
+	config_get mysql_ssl_mode $1 mysql_ssl_mode ""
+	config_get mysql_dsn $1 mysql_dsn ""
+
+	# tasks
+	config_get download_workers $1 download_workers 5
+	config_get download_max_retry $1 download_max_retry 1
+	config_get transfer_workers $1 transfer_workers 5
+	config_get transfer_max_retry $1 transfer_max_retry 2
+	config_get upload_workers $1 upload_workers 5
+	config_get upload_max_retry $1 upload_max_retry 0
+	config_get copy_workers $1 copy_workers 5
+	config_get copy_max_retry $1 copy_max_retry 2
+
+	# cors
+	config_get cors_allow_origins $1 cors_allow_origins '*'
+	config_get cors_allow_methods $1 cors_allow_methods '*'
+	config_get cors_allow_headers $1 cors_allow_headers '*'
+
+	# s3
+	config_get s3 $1 s3 0
+	config_get s3_port $1 s3_port 5246
+	config_get s3_ssl $1 s3_ssl 0
+
+	# ftp
+	config_get ftp $1 ftp 0
+	config_get ftp_port $1 ftp_port 5221
+	config_get find_pasv_port_attempts $1 find_pasv_port_attempts 50
+	config_get active_transfer_port_non_20 $1 active_transfer_port_non_20 0
+	config_get idle_timeout $1 idle_timeout 900
+	config_get connection_timeout $1 connection_timeout 30
+	config_get disable_active_mode $1 disable_active_mode 0
+	config_get default_transfer_binary $1 default_transfer_binary 0
+	config_get enable_active_conn_ip_check $1 enable_active_conn_ip_check 1
+	config_get enable_pasv_conn_ip_check $1 enable_pasv_conn_ip_check 1
+
+	# sftp
+	config_get sftp $1 sftp 0
+	config_get sftp_port $1 sftp_port 5222
+
+	# init jwt_secret
+	[ -z "$jwt_secret" ] && jwt_secret=$(tr -cd "a-zA-Z0-9" < "/dev/urandom" | head -c16)
+	uci -q set openlist2.@openlist2[0].jwt_secret="$jwt_secret"
+	uci commit openlist2
+}
+
+set_firewall() {
+	if [ "$external_access" = "allow" ]; then
+		uci -q delete firewall.openlist
+		uci set firewall.openlist=rule
+		uci set firewall.openlist.name="openlist"
+		uci set firewall.openlist.target="ACCEPT"
+		uci set firewall.openlist.src="wan"
+		uci set firewall.openlist.proto="tcp"
+		uci set firewall.openlist.dest_port="$port $ftp_port $sftp_port"
+		uci set firewall.openlist.enabled="1"
+		uci commit firewall
+		/etc/init.d/firewall reload >/dev/null 2>&1
+	elif [ "$external_access" = "deny" ]; then
+		uci -q delete firewall.openlist
+		uci commit firewall
+		/etc/init.d/firewall reload >/dev/null 2>&1
+	fi
+}
+
+start_service() {
+	config_load openlist2
+	config_foreach get_config openlist2
+
+	# Remove firewall rules when stopping openlist process via uci
+	external_access="deny" set_firewall
+
+	[ $enabled -ne 1 ] && return 1
+	mkdir -p "$temp_dir" "$data_dir"
+	[ "$ssl" -eq 1 ] && https_port=$port http_port="-1" || https_port="-1" http_port=$port
+	if [ -e /proc/uptime ]; then
+		[ $(awk -F. '{print $1}' /proc/uptime) -lt "120" ] && delayed_start=$delayed_start || delayed_start=0
+	else
+		delayed_start=$delayed_start
+	fi
+
+	[ "$allow_wan" -eq "1" ] && external_access="allow" || external_access="deny"
+
+	set_firewall
+	> "$log_path"
+
+	# init config
+	json_init
+	json_add_boolean "force" "$force"
+	json_add_string "site_url" "$site_url"
+	json_add_string "cdn" "$cdn"
+	json_add_string "jwt_secret" "$jwt_secret"
+	json_add_int "token_expires_in" "$token_expires_in"
+
+	# database
+	json_add_object 'database'
+		json_add_string "type" "$database_type"
+		json_add_string "host" "$mysql_host"
+		json_add_int "port" "$mysql_port"
+		json_add_string "user" "$mysql_username"
+		json_add_string "password" "$mysql_password"
+		json_add_string "name" "$mysql_database"
+		json_add_string "db_file" "$data_dir/data.db"
+		json_add_string "table_prefix" "$mysql_table_prefix"
+		json_add_string "ssl_mode" "$mysql_ssl_mode"
+		json_add_string "dsn" "$mysql_dsn"
+	json_close_object
+
+	# meilisearch
+	json_add_object "meilisearch"
+		json_add_string "host" "http://localhost:7700"
+		json_add_string "api_key" ""
+		json_add_string "index_prefix" ""
+	json_close_object
+
+	# scheme
+	json_add_object "scheme"
+		json_add_string "address" "0.0.0.0"
+		json_add_int "http_port" "$http_port"
+		json_add_int "https_port" "$https_port"
+		json_add_boolean "force_https" "$force_https"
+		json_add_string "cert_file" "$ssl_cert"
+		json_add_string "key_file" "$ssl_key"
+		json_add_string "unix_file" ""
+		json_add_string "unix_file_perm" ""
+	json_close_object
+
+	json_add_string "temp_dir" "$temp_dir"
+	json_add_string "bleve_dir" "$data_dir/bleve"
+	json_add_string "dist_dir" ""
+
+	# log
+	json_add_object "log"
+		json_add_boolean "enable" "$log"
+		json_add_string "name" "$log_path"
+		json_add_int "max_size" "$log_max_size"
+		json_add_int "max_backups" "$log_max_backups"
+		json_add_int "max_age" "$log_max_age"
+		json_add_boolean "compress" "$log_compress"
+	json_close_object
+
+	json_add_int "delayed_start" "$delayed_start"
+	json_add_int "max_connections" "$max_connections"
+	json_add_int "max_concurrency" "$max_concurrency"
+	json_add_boolean "tls_insecure_skip_verify" "$tls_insecure_skip_verify"
+
+	# tasks
+	json_add_object "tasks"
+		json_add_object "download"
+			json_add_int "workers" "$download_workers"
+			json_add_int "max_retry" "$download_max_retry"
+		json_close_object
+		json_add_object "transfer"
+			json_add_int "workers" "$transfer_workers"
+			json_add_int "max_retry" "$transfer_max_retry"
+		json_close_object
+			json_add_object "upload"
+			json_add_int "workers" "$upload_workers"
+			json_add_int "max_retry" "$upload_max_retry"
+		json_close_object
+		json_add_object "copy"
+			json_add_int "workers" "$copy_workers"
+			json_add_int "max_retry" "$copy_max_retry"
+		json_close_object
+	json_close_object
+
+	# cors
+	json_add_object "cors"
+		json_add_array "allow_origins"
+		json_add_string "" "$cors_allow_origins"
+		json_close_array
+		json_add_array "allow_methods"
+		json_add_string "" "$cors_allow_methods"
+		json_close_array
+		json_add_array "allow_headers"
+		json_add_string "" "$cors_allow_headers"
+		json_close_array
+	json_close_object
+
+	# s3
+	json_add_object "s3"
+		json_add_boolean "enable" "$s3"
+		json_add_int "port" "$s3_port"
+		json_add_boolean "ssl" "$s3_ssl"
+	json_close_object
+
+	# ftp
+	json_add_object "ftp"
+		json_add_boolean "enable" "$ftp"
+		json_add_string "listen" ":$ftp_port"
+		json_add_int "find_pasv_port_attempts" "$find_pasv_port_attempts"
+		json_add_boolean "active_transfer_port_non_20" "$active_transfer_port_non_20"
+		json_add_int "idle_timeout" "$idle_timeout"
+		json_add_int "connection_timeout" "$connection_timeout"
+		json_add_boolean "disable_active_mode" "$disable_active_mode"
+		json_add_boolean "default_transfer_binary" "$default_transfer_binary"
+		json_add_boolean "enable_active_conn_ip_check" "$enable_active_conn_ip_check"
+		json_add_boolean "enable_pasv_conn_ip_check" "$enable_pasv_conn_ip_check"
+	json_close_object
+
+	# sftp
+	json_add_object "sftp"
+		json_add_boolean "enable" "$sftp"
+		json_add_string "listen" ":$sftp_port"
+	json_close_object
+
+	json_dump > "$data_dir/config.json"
+
+	procd_open_instance openlist2
+	procd_set_param env OPENLIST_ADMIN_PASSWORD=admin
+	procd_set_param command $PROG
+	procd_append_param command server
+	procd_append_param command --data "$data_dir"
+	procd_set_param file "$data_dir/config.json"
+	procd_set_param stdout 0
+	procd_set_param stderr 0
+	procd_set_param respawn
+	procd_set_param limits core="unlimited"
+	procd_set_param limits nofile="200000 200000"
+	procd_close_instance openlist2
+}
+
+service_triggers() {
+	procd_add_reload_trigger "openlist2"
+}
+
+stop_service() {
+	external_access="deny"
+	set_firewall
+}

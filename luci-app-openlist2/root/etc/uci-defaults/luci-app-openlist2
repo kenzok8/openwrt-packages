@@ -1,0 +1,13 @@
+#!/bin/sh
+
+[ -f "/etc/config/ucitrack" ] && {
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@openlist2[-1]
+	add ucitrack openlist2
+	set ucitrack.@openlist2[-1].init=openlist2
+	commit ucitrack
+EOF
+}
+
+rm -rf /tmp/luci-*
+exit 0
