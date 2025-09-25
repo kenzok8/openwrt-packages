@@ -1415,15 +1415,12 @@ footer > a {
   margin-left: 0;
   margin-right: 0;
   margin-top: 0rem;
-}
-
-.container .alert,
-.container .alert-message.error {
   position: relative;
   top: 0;
   transform:translate(-50%, 0);
   width: 100%;
 }
+
 .lg {
   margin: 0;
   padding: 0 !important;
@@ -2574,7 +2571,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   padding: 0.5rem;
   cursor: auto;
   white-space: pre-wrap;
-  color: var(--gray-dark);
+  color: var(--dark-primary);
   outline: 0;
   border-radius: 0.25rem;
   border: 1px solid var(--lighter);
@@ -3467,6 +3464,7 @@ pre.command-output {
   background: #fb6340 !important;
   border-color: #fb6340 !important;
   margin-left: 0 !important;
+  width: 82px !important;
 }
 /* applyreboot fix */
 #applyreboot-container {
