@@ -18,7 +18,7 @@ echo -e "uclient-fetch info:"
 opkg info uclient-fetch
 opkg info libustream-*
 opkg info wget-ssl
-wget -O- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jsonfilter -e '@[0].sha' || echo -e "Failed to connect to GitHub with uclient-fetch."
+wget -T10 -O- 'https://api.github.com/repos/UnblockNeteaseMusic/server/commits?sha=enhanced&path=precompiled' | jsonfilter -e '@[0].sha' || echo -e "Failed to connect to GitHub with uclient-fetch."
 echo -e "\n"
 
 echo -e "Node.js info:"
