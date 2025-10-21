@@ -258,7 +258,7 @@ EOF
 
 EOF
     echo "/etc/config/fstab generated."
-    echo "please reboot"
+    echo "Please reboot before continuing."
     exit 0
 }
 

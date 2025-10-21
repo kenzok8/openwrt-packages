@@ -37,6 +37,16 @@ error_msg() {
     exit 1
 }
 
+# Get the partition name of the /boot file system
+get_boot_partition_name() {
+    local paths="/boot"
+    local partition_name
+
+    partition_name=$(df "${paths}" | awk 'NR==2 {print $1}' | awk -F '/' '{print $3}')
+
+    echo "${partition_name}"
+}
+
 # Get the partition name of the root file system
 get_root_partition_name() {
     local paths=("/" "/overlay" "/rom")
@@ -47,7 +57,6 @@ get_root_partition_name() {
         [[ -n "${partition_name}" ]] && break
     done
 
-    [[ -z "${partition_name}" ]] && error_msg "Cannot find the root partition!"
     echo "${partition_name}"
 }
 
@@ -90,6 +99,12 @@ init_var() {
     # Define supported platforms
     support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
     [[ -n "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" ]] || error_msg "[ ${PLATFORM} ] is not supported."
+
+    # Check and repair partition mount points
+    [[ -z "$(get_boot_partition_name)" || -z "$(get_root_partition_name)" ]] && {
+        echo -e "Partition mount point error, start repairing..."
+        openwrt-backup -g
+    }
 
     # Set /boot/vmlinuz-* replication names for different SoCs
     MYBOOT_VMLINUZ="$(ls -l /boot/*Image 2>/dev/null | awk '{print $9}' | head -n 1)"
@@ -268,8 +283,8 @@ update_kernel() {
         rm -f /boot/uInitrd*
     else
         valid_files="vmlinuz-${kernel_name} uInitrd-${kernel_name} config-${kernel_name} System.map-${kernel_name}"
-        # wxy-oect: MODEL_ID numbers r304 and r306, require special handling of uInitrd
-        [[ "${MODEL_ID}" =~ ^(r304|r306)$ ]] || rm -f /boot/initrd.img*
+        # wxy-oect: MODEL_ID numbers r304,r306 and w[0-9]{3}, require special handling of uInitrd
+        [[ "${MODEL_ID}" =~ ^(r304|r306|w[0-9]{3})$ ]] || rm -f /boot/initrd.img*
     fi
     for f in ${valid_files}; do [[ -f "/boot/${f}" ]] || restore_kernel; done
 

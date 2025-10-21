@@ -21,6 +21,16 @@ error_msg() {
     exit 1
 }
 
+# Get the partition name of the /boot file system
+get_boot_partition_name() {
+    local paths="/boot"
+    local partition_name
+
+    partition_name=$(df "${paths}" | awk 'NR==2 {print $1}' | awk -F '/' '{print $3}')
+
+    echo "${partition_name}"
+}
+
 # Get the partition name of the root file system
 get_root_partition_name() {
     local paths=("/" "/overlay" "/rom")
@@ -31,7 +41,6 @@ get_root_partition_name() {
         [[ -n "${partition_name}" ]] && break
     done
 
-    [[ -z "${partition_name}" ]] && error_msg "Cannot find the root partition!"
     echo "${partition_name}"
 }
 
@@ -78,6 +87,12 @@ else
     echo -e "Current platform: [ ${PLATFORM} ]"
     sleep 3
 fi
+
+# Check and repair partition mount points
+[[ -z "$(get_boot_partition_name)" || -z "$(get_root_partition_name)" ]] && {
+    echo -e "Partition mount point error, start repairing..."
+    openwrt-backup -g
+}
 
 # Find the partition where root is located
 # vda2 or vda3
