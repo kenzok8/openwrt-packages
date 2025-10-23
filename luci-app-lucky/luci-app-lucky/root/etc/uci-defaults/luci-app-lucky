@@ -1,0 +1,17 @@
+#!/bin/sh
+
+[ -f "/etc/config/ucitrack" ] && {
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@lucky[-1]
+	add ucitrack lucky
+	set ucitrack.@lucky[-1].init=lucky
+	commit ucitrack
+EOF
+}
+
+rm -f /tmp/luci-indexcache* 2>/dev/null
+rm -f /tmp/luci-modulecache/* 2>/dev/null  # OpenWrt 21.02
+rm -f /tmp/luci-indexcache
+
+rm -rf /tmp/luci-*
+exit 0

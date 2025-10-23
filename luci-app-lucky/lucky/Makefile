@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
-# Copyright (C) 2021-2022  sirpdboy  <herboy2008@gmail.com>
+# Copyright (C) 2021-2025  sirpdboy  <herboy2008@gmail.com>
 # 
 # This is free software, licensed under the Apache License, Version 2.0 .
 #
@@ -11,6 +11,7 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=lucky
 PKG_VERSION:=2.19.5
 PKG_RELEASE:=1
+PKGARCH:=all 
 
 ifeq ($(ARCH),mipsel)
 	LUCKY_ARCH:=mipsle_softfloat
@@ -70,12 +71,21 @@ define Build/Prepare
 	tar -xzvf $(PKG_BUILD_DIR)/$(PKG_NAME)_$(PKG_VERSION)_Linux_$(LUCKY_ARCH).tar.gz -C $(PKG_BUILD_DIR)
 endef
 
+define Package/$(PKG_NAME)/conffiles
+/etc/config/lucky
+/etc/lucky/*
+endef
 define Build/Compile
 endef
 
 define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin/
+	$(INSTALL_DIR) $(1)/etc/init.d/
+	$(INSTALL_DIR) $(1)/etc/config/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lucky $(1)/usr/bin/lucky
+	$(INSTALL_BIN) $(CURDIR)/files/luckyarch.bin $(1)/usr/bin/luckyarch
+	$(INSTALL_BIN) ./files/lucky.init $(1)/etc/init.d/lucky
+	$(INSTALL_CONF) $(CURDIR)/files/lucky.config $(1)/etc/config/lucky
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

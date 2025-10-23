@@ -1,11 +1,29 @@
 {
-	"luci-app-lucky": {
-		"description": "Grant UCI access for luci-app-lucky",
-		"read": {
-			"uci": [ "lucky" ]
-		},
-		"write": {
-			"uci": [ "lucky" ]
-		}
-	}
+    "luci-app-lucky": {
+	"description": "Grant UCI access for luci-app-lucky",
+        "read": {
+            "uci": [ "lucky" ],
+            "file": {
+                "/etc/init.d/lucky": [ "exec" ],
+                "/usr/bin/lucky": [ "exec" ],
+                "/bin/pidof": [ "exec" ],
+                "/bin/ps": [ "exec" ],
+                "/bin/ash": [ "exec" ]
+      	    },
+            "ubus": {
+                "rc": [ "*" ],
+                "service": ["list"],
+                "luci.lucky": [ "*" ]
+            }
+        },
+        "write": {
+            "ubus": {
+                "luci.lucky": [ "*" ]
+            },
+            "file": {
+                "/etc/lucky/*.lkcf": ["write"]
+	    },
+            "uci": ["lucky"]
+        }
+    }
 }
