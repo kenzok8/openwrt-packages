@@ -41,13 +41,21 @@ start_instance() {
     enabled=$(uci -q get $CONF.$CONF.enabled ) || enabled="0"
     logger=$(uci -q get $CONF.$CONF.logger ) || logger="1"
     port=$(uci -q get $CONF.$CONF.port ) || port="16601"
-    SafeURL=$(uci -q get $CONF.$CONF.safe ) || SafeURL=""
+    SafeURL=$(uci -q get $CONF.$CONF.safe ) || SafeURL=" "
     delay=$(uci -q get $CONF.$CONF.delay ) || delay="5"
+    SafeURL="${SafeURL##*( )}"
+    SafeURL="${SafeURL%%*( )}"
+    
     init_confdir
     [  x$enabled = x1 ] || return 1
-    [ $(awk -F. '{print $1}' /proc/uptime) -lt "120" ] && sleep $delay
+    [ $(awk -F. '{print $1}' /proc/uptime) -lt "120" ] && sleep $delay 
     $(which lucky) -setconf -key AdminWebListenPort -value $port -cd $CONFDIR
-    $(which lucky) -setconf -key SafeURL -value $SafeURL -cd $CONFDIR
+    if [ -z "$SafeURL" ] ; then
+        $(which lucky) -rCancelSafeURL
+    else
+        $(which lucky) -setconf -key SafeURL -value "$SafeURL" -cd $CONFDIR
+    fi
+    
     procd_open_instance
     procd_set_param command $PROG 
     procd_append_param command -cd $CONFDIR

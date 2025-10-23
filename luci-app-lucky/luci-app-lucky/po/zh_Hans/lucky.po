@@ -2,7 +2,7 @@ msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
 msgid "Lucky Configuration"
-msgstr "Lucky参数配置"
+msgstr "Lucky配置"
 
 msgid "Lucky"
 msgstr "Lucky大吉"
