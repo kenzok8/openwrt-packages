@@ -1,8 +1,9 @@
 {
-	"luci-app-ddns-go": {
+    "luci-app-ddns-go": {
 		"description": "Grant UCI access for luci-app-ddns-go",
-		"read": {
-      			"file": {
+        "read": {
+            "uci": [ "ddns-go" ],
+            "file": {
         			"/etc/init.d/ddns-go": [ "exec" ],
         			"/usr/libexec/ddns-go-call": [ "exec" ],
         			"/bin/pidof": [ "exec" ],
@@ -10,14 +11,21 @@
         			"/bin/ash": [ "exec" ],
         			"/etc/ddns-go/ddns-go-config.yaml": [ "read" ],
         			"/var/log/ddns-go.log": [ "read" ]
-      			},
-		"ubus": {
-		     "service": [ "list" ]
-		},
-		"uci": [ "ddns-go" ,"ddns-go" ]
-		},
-		"write": {
-			"uci": [ "ddns-go" ,"ddns-go" ]
-		}
-	}
+      	    },
+            "ubus": {
+                "rc": [ "*" ],
+                "service": ["list"],
+                "luci.ddns-go": [ "*" ]
+            }
+        },
+        "write": {
+            "ubus": {
+                "luci.ddns-go": [ "*" ]
+            },
+            "file": {
+                "/etc/ddns-go/ddns-go-config.yaml": ["write"]
+	    },
+            "uci": ["ddns-go"]
+        }
+    }
 }

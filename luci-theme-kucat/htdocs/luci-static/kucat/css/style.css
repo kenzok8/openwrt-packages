@@ -474,12 +474,12 @@
   -moz-border-radius: var(--radius0);
   border-radius: var(--radius0);
   background-clip: content-box;
-  background: rgba(50,50,50,0.9);
-  border: 1px solid rgba(var(--primary-rgbm),1)
+  background: rgba(var(--primary-rgbbody), 0.9);
+  border: 1px solid rgba(var(--primary-rgbm), 0.6);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(var(--primary-rgbm),1)
+  background-color: rgba(var(--primary-rgbm),0.9)
 }
 
 ::selection {
@@ -1433,7 +1433,7 @@ h4 {
   padding: 0.75rem 1.25rem;
   font-weight: 600;
   font-size: var(--font-z);
-  color: var(--primary-title-color);
+  color: var(--primary-title-color) !important;
   padding-bottom: 10px
 }
 
@@ -1869,7 +1869,8 @@ button:hover,.btn:hover,.cbi-button:hover {
   border-left: 0.18751rem solid var(--menu-item-titlebg-color) !important;
   border-right: 0.18751rem solid var(--menu-item-titlebg-color) !important;
   border-radius: var(--radius2);
-  padding: 0.5rem 0rem;
+  padding: 0.5rem 0.2rem;
+  line-height: 1.5;
   box-shadow: 0 0.5rem 1rem var(--input-boxcolor);
   background: var(--menu-item-titlebg-color);
   margin: 0.2rem 0rem 0.2rem 0.4rem !important
@@ -1954,7 +1955,7 @@ button:hover,.btn:hover,.cbi-button:hover {
 .cbi-value {
   display: inline-block;
   width: 100%;
-  padding: 0 0.3rem;
+  padding: 0.1rem 0.3rem;
   line-height: 2.3rem
 }
 
@@ -3861,7 +3862,9 @@ body.lang_pl.node-main-login .cbi-value-title {
 .chat_window>.mainContent>.top_menu {
   background-color: rgba(var(--primary-rgbm), 0.12)!important
 }
-
+.showVoiceCls, .showVoiceCls .markdown-body {
+    background: var(--inputbg-color) !important;
+}
 #chatlog .response {
   background-color: rgba(255,255,255,0.2) !important
 }
@@ -4009,12 +4012,14 @@ pre.command-output {
   border-bottom-color: #dee2e6
 }
 
+/* openclash */
 [data-page^="admin-services-openclash"] .cbi-tabmenu>li:last-child {
   margin-right: 0 !important
 }
+
 [data-page^="admin-services-openclash"]  .select-popup-header,
 [data-page^="admin-services-openclash"]  .oc,
-[data-page^="admin-services-openclash"]  .oc .main-cards-container   {
+.oc .main-cards-container   {
    background-color: rgba(255,255,255,0) !important;
 }
 
@@ -4026,40 +4031,40 @@ pre.command-output {
    background-color: rgba(255,255,255,0) !important;
    padding: 0 20px 0 10px!important;
 }
+
 [data-page^="admin-services-openclash"] .oc .version-display,
 [data-page^="admin-services-openclash"] .oc .value-indicator,
 [data-page^="admin-services-openclash"] .oc .cbi-button-group{
-border: 0px solid rgba(255,255,255,0.3) !important;
- /* background-color: var(--input-bgcolor) !important; */
-}
-[data-page^="admin-services-openclash"]  .oc .myip-ip-item, .oc .myip-check-item {
-   background-color: rgba(255,255,255,0.1) !important;
-   background-color: rgba(var(--primary-rgbbody),0.2) !important;
-   border: 1px solid rgba(255, 255, 255, 0.15) !important;
-   border: 1px solid rgba(var(--primary-rgbm),0.1) !important;
+border: 0px solid #ddd !important;
 }
 
-[data-page^="admin-services-openclash"]  .oc .developer-container,
-[data-page^="admin-services-openclash"]  .oc .myip-main-card,
-[data-page^="admin-services-openclash"]  .oc .sub-card  {
-  background-color: rgba(255,255,255,0.1) !important;
-  background-color: rgba(var(--primary-rgbm),0.2) !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
-  border: 1px solid rgba(var(--primary-rgbm),0.1) !important;
+[data-page^="admin-services-openclash"] .oc .myip-ip-item, 
+[data-page^="admin-services-openclash"] .oc .myip-check-item,
+[data-page^="admin-services-openclash"] .oc .developer-container,
+[data-page^="admin-services-openclash"] .oc .sub-card  {
+  background-color: rgba(var(--primary-rgbm),0.02) !important;
+  border: 1px solid rgba(var(--primary-rgbm),0.2) ;
 }
 
-[data-page^="admin-services-openclash"]  .oc .main-card {
-  background-color: rgba(255,255,255,0) !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
-  border: 1px solid rgba(var(--primary-rgbm),0.1) !important;
+[data-page^="admin-services-openclash"] .oc>div>div,
+[data-page^="admin-services-openclash"] .oc .myip-main-card,
+[data-page^="admin-services-openclash"] .oc .myip-content-grid,
+[data-page^="admin-services-openclash"] .oc .main-card,
+[data-page^="admin-services-openclash"] .oc .announcement-card
+ {
+  background-color: rgba(255, 255, 255, 0) !important;
+  border: 0px solid #ddd !important;
+  box-shadow: none !important;
 }
 
-[data-page^="admin-services-openclash"]  .oc .ip-result,.oc .ip-geo,
-[data-page^="admin-services-openclash"]  .oc .ip-title, .oc .ip-state_title,
-[data-page^="admin-services-openclash"]  .oc .myip-section-title,
-[data-page^="admin-services-openclash"]  .oc .card-title
+
+[data-page^="admin-services-openclash"] .oc .ip-result,.oc .ip-geo,
+[data-page^="admin-services-openclash"] .oc .ip-title, .oc .ip-state_title,
+[data-page^="admin-services-openclash"] .oc .myip-section-title,
+.oc .card-title
 {
   color: var(--primary-title-color)!important;
+  border: 0px solid #ddd !important;
 }
 
 #tool_label .tool_label_span {
@@ -4150,63 +4155,67 @@ border: 0px solid rgba(255,255,255,0.3) !important;
 }
 
 /* bandix */
+.bandix-connection-container,
 .bandix-container {
    padding: 5px!important; 
    background-color: rgba(255,255,255,0) !important;
    color: var(--primary-title-color)!important;
 }
 
-.bandix-container .bandix-badge
+.bandix-badge
 {
   color: var(--primary-title-color)!important;
   background-color: var(--inputbg-color)!important;
-  border: 1px solid var(--input-boxcolor);
+  border: 1px solid var(--input-boxcolor)!important;
 }
 
-.bandix-container .action-button {
-  background-color: rgba(var(--primary-rgbm), 0.9);
+.action-button {
+  background-color: rgba(var(--primary-rgbm), 0.9)!important;
 }
-.bandix-container .history-tooltip>div,
-.bandix-container .history-tooltip>div>span,
+
+.stats-card-title ,
+.stats-card>div ,
+.history-tooltip>div,
+.history-tooltip>div>span,
 .bandix-container .form-label ,
-.bandix-container .bandix-card-title,
-.bandix-container .bandix-card>div,
-.bandix-container .stats-title,
-.bandix-container .bandix-title  {
-  color: var(--primary-title-color);
+.bandix-card-title,
+.bandix-card>div,
+.stats-title,
+.bandix-title  {
+  color: var(--primary-title-color)!important;
+}
+.bandix-card-body {
+   padding: 0!important;
+}
+.history-tooltip
+{
+  background-color: rgba(var(--primary-rgbbody),1)!important;
+  color: var(--body-color) !important;
+  border: 1px solid var(--input-boxcolor)!important;
+  width: 300px!important;
 }
 
-.bandix-container .history-tooltip
+.bandix-card ,
+.stats-card
 {
-  background-color: rgba(var(--primary-rgbbody),1) ;
-  color: var(--body-color) ;
-  border: 1px solid var(--input-boxcolor);
-  width: 300px;
+  background-color: rgba(var(--primary-rgbm), 0.1)!important;
+  border-radius: 0 !important;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0) !important;
+  margin-bottom: 0 !important;
+  border: 0px solid #333!important;
+  border-bottom: 0px solid var(--input-boxcolor)!important;
+  overflow: auto!important;
 }
 
-.bandix-container .bandix-card ,
-.bandix-container .stats-card
+.bandix-card .bandix-card-header.history-header
 {
-  background-color: rgba(var(--primary-rgbm), 0.1);
-  background-color: rgba(0, 0, 0, 0) ;
-  border-radius: 0 ;
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0) ;
-  margin-bottom: 0 ;
-  border: 0px solid #3333331c;
-  border-bottom: 1px solid var(--input-boxcolor);
-  overflow: auto;
-}
-
-.bandix-container .bandix-card .bandix-card-header.history-header
-{
-  border-bottom: 1px solid var(--input-boxcolor);
-  background-color: rgba(0, 0, 0, 0) ;
-  padding: 0;
+  border-bottom: 1px solid var(--input-boxcolor)!important;
+  background-color: rgba(0, 0, 0, 0) !important;
 }
 
 .modal-header,
 .device-summary,
-.bandix-container .bandix-card .history-controls
+.bandix-card .history-controls
 {
 
   border: 0px solid var(--input-boxcolor)!important;
@@ -4220,18 +4229,19 @@ border: 0px solid rgba(255,255,255,0.3) !important;
 .device-summary>div,
 .bandix-container .device-name,
 .bandix-container .legend-item,
-.stats-card>div>div>span,
-.bandix-container .bandix-container .stats-card>div>div>span  {
+.stats-card>div>div>span{
   color: var(--primary-title-color)!important;
 }
-.bandix-container .bandix-table
+
+.bandix-table
 {
-  table-layout: auto;
+  table-layout: auto!important;
 }
 
-.bandix-container .bandix-table td ,.bandix-table th
+.bandix-table td ,.bandix-table th
 {
-padding: 10px 15px;
+padding: 10px 15px!important;
+border-bottom: 0px solid #f1f5f9!important;
 }
 
 .form-input
@@ -4254,18 +4264,8 @@ padding: 10px 15px;
 
   background-color: rgba(255, 255, 255, 0) !important;
   color: var(--body-color) !important;
+  border-top: 1px solid var(--inputborder-color)!important;
 }
-
-.bandix-table tbody tr:nth-child(odd) 
-{
-  background-color: rgba(0,0,0,0.1) !important;
-}
-
-.bandix-table tbody tr:nth-child(even)
-{
-  background-color: rgba(0, 0, 0, 0.04) !important;
-}
-
 
 [data-page="admin-services-adguardhome"]>.main .cbi-value .cbi-input-textarea {
   width: 100% !important;
@@ -4324,7 +4324,6 @@ select,input,.cbi-dropdown,.btn,button,.cbi-button,.item::after {
 
 #cbi-appfilter>div>div {
   overflow: auto;
-  /* background-color: rgba(var(--primary-rgbbody),1) !important */
 }
 
 #cbi-appfilter>div>div>button {
@@ -4334,40 +4333,27 @@ select,input,.cbi-dropdown,.btn,button,.cbi-button,.item::after {
   height: auto !important
 }
 
-#cbi-appfilter>div>div>ul {
-  border-bottom: 0px solid #ccc !important
-}
-
-#cbi-appfilter>div>div>ul>li {
-  background-color: rgba(var(--primary-rgbm),0.2) !important
-}
-
-#cbi-appfilter>div>div>ul>li.active {
-  background-color: rgba(var(--primary-rgbm),0.7) !important;
-  color: var(--menu-hover-color) !important
-}
 
 #cbi-appfilter>div>div>ul>li:hover {
   background-color: rgba(var(--primary-rgbm),0.7) !important;
   color: var(--menu-hover-color) !important
 }
 
-#cbi-appfilter #detailsModal .tab-body {
-  overflow: auto;
-  background-color: rgba(248,248,248,0.9) !important
-}
-
-#cbi-appfilter>div>div span {
-  /* color: var(--body-color) !important*/
-}
-
-#cbi-appfilter>div>div input {
-  /* background-color: rgba(248,248,248,0.2) !important;
-  color: var(--body-color) !important*/
-}
 
 #cbi-appfilter #user_status_table th.th:nth-child(1) {
   width: 150px !important;
+}
+
+.oaf-container>div{
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: var(--body-color) !important;
+  border-bottom: 0px solid #ddd!important;
+}
+
+.traffic-info>div>span,
+.device-details>div,
+.oaf-container>div span{
+  color: var(--body-color)!important;
 }
 
 .CodeMirror.cm-s-dracula.CodeMirror-wrap {
@@ -4980,8 +4966,35 @@ div#file-manager-container #status-bar #status-info {
   [data-page="admin-network-dhcp"] [data-tab-active="true"] {
     padding: 0 !important
   }
-
-
+  .cbi-value:first-child {
+   padding-top: 0
+  }
+  .cbi-value {
+  padding: 0;
+  line-height: 2rem;
+  }
+  .history-card-body {
+    padding: 0 !important
+  }
+  /* Bandix  */
+  .stats-detail-row>span {
+    display: none!important
+  }
+  .bandix-card .bandix-card-header.history-header {
+    padding: 0 !important; 
+  }
+  
+  .main-right,
+  .main-left{
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .main-right::-webkit-scrollbar,
+  .main-left::-webkit-scrollbar
+  {
+    display: none;
+  }
   #file-manager-container .file-manager-header {
     flex-wrap: wrap
   }

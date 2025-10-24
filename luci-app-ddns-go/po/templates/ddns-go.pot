@@ -43,7 +43,7 @@ msgstr ""
 msgid "DDNS-GO Service Not Running"
 msgstr ""
 
-msgid "Please enable the DDNS-GO service"
+msgid "DDNS-GO Web Interface Disabled"
 msgstr ""
 
 msgid "Open Web Interface"
@@ -71,4 +71,34 @@ msgid "Do not start web services"
 msgstr ""
 
 msgid "Delayed Start (seconds)"
+msgstr ""
+
+msgid "Update Program"
+msgstr ""
+
+msgid "Check and update DDNS-Go to the latest version"
+msgstr ""
+
+msgid "Check Update"
+msgstr ""
+
+msgid "Updating, please wait..."
+msgstr ""
+
+msgid "Update failed"
+msgstr ""
+
+msgid "Update status unknown"
+msgstr ""
+
+msgid "Reset account password"
+msgstr ""
+
+msgid "ResetPassword"
+msgstr ""
+
+msgid "SUCCESS:"
+msgstr ""
+
+msgid "Reset admin password successfully to admin12345"
 msgstr ""
