@@ -95,6 +95,16 @@ return view.extend({
         ]);
     },
 
+    handleResetUser: async function () {
+    try {
+        // 检查文件权限
+        const stat = await fs.stat('/usr/bin/lucky');
+        const result = await fs.exec('/usr/bin/lucky', ['-rResetUser', '-cd', '/etc/lucky']);
+        if (result.code === 0) {
+            alert(_('SUCCESS:') + '\n' + _('Username and password reset successfully to 666'));
+        } 
+    } catch (error) { }
+    },
     render: function(data) {
         let m, s, o;
         let webport = uci.get('lucky', 'lucky', 'port') || '16601';
@@ -160,17 +170,23 @@ return view.extend({
             return true;
         };
 
-        o = s.option(form.Value, 'safe', _('Safe entrance')); 
+        o = s.option(form.Value, 'safe', _('Safe entrance'),_('Set an installation access path, eg:sirpdboy'));
         o.default = '';
         o.datatype = 'string';
 
-        o = s.option(form.Flag, 'ssl', _('Enable SSL'));
+        o = s.option(form.Flag, 'ssl', _('Enable SSL'),_('Encrypt access using HTTPS'));
         o.default = '0';
         o.rmempty = false;
         
         o = s.option(form.Value, 'delay', _('Delayed Start (seconds)'));
         o.default = '60';
 	
+	o = s.option(form.Button, '_newpassword', _('ResetUser'),
+			_('Reset account and password to initial values'));
+	o.inputtitle = _('ResetUser');
+	o.inputstyle = 'apply';
+	o.onclick = L.bind(this.handleResetUser, this, data);
+
         return m.render();
     }
 });

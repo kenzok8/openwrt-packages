@@ -1,9 +1,6 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
-msgid "Lucky Configuration"
-msgstr "Lucky配置"
-
 msgid "Lucky"
 msgstr "Lucky大吉"
 
@@ -13,17 +10,8 @@ msgstr "Lucky操作台"
 msgid "ipv4/ipv6 portforward,ddns,reverseproxy proxy,wake on lan,IOT and more,Default username and password 666"
 msgstr "IPv4/IPv6端口转发,动态域名服务,http/https反向代理，默认用户名密码666.."
 
-msgid "Running state"
-msgstr "运行状态"
-
 msgid "Enable SSL"
 msgstr "开启SSL"
-
-msgid "Lucky Service Not Running"
-msgstr "大吉服务未启动"
-
-msgid "Lucky Status"
-msgstr "大吉服务状态"
 
 msgid "Collecting data..."
 msgstr "收集数据..."
@@ -52,6 +40,20 @@ msgstr "未运行"
 msgid "Delayed Start (seconds)"
 msgstr "开机延时启动（秒）"
 
-msgid ""
-msgstr ""
+msgid "Username and password reset successfully to 666"
+msgstr "重置用户名和密码为666"
 
+msgid "SUCCESS:"
+msgstr "执行完成："
+
+msgid "ResetUser"
+msgstr "重置用户密码"
+
+msgid "Reset account and password to initial values"
+msgstr "重置帐号和密码为初始值"
+
+msgid "Encrypt access using HTTPS"
+msgstr "使用https加密访问"
+
+msgid "Set an installation access path, eg:sirpdboy"
+msgstr "设置一个安装访问路径，如:sirpdboy"
