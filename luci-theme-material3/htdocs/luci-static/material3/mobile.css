@@ -474,7 +474,7 @@ header h3 a {
 	}
 
 	header.with-shadow {
-		background: var(--md-sys-color-card-translucent);
+		background: var(--md-sys-color-card);
 		box-shadow: 0 .5px 1.5px 0 rgba(0, 0, 0, 19%), 0 0 1px 0 rgba(0, 0, 0, 3.9%)
 	}
 

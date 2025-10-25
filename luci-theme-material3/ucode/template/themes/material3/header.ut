@@ -9,7 +9,7 @@
 	import { getuid, getspnam } from 'luci.core';
 
 	const boardinfo = ubus.call('system', 'board');
-	const darkpref = 'false';
+	const darkpref = uci.get('luci', 'main', 'darkmode') || 'auto';
 	let themepref = null;
 	switch (theme) {
 		case 'material3-blue': themepref = 'blue'; break;
@@ -21,20 +21,10 @@
 -%}
 
 <!DOCTYPE html>
-<html lang="{{ dispatcher.lang }}" {{ darkpref ? `data-darkmode="${darkpref}"` : '' }} {{ themepref ? `data-theme="${themepref}"` : '' }}>
+<html lang="{{ dispatcher.lang }}" data-darkmode="{{ darkpref }}" {{ themepref ? `data-theme="${themepref}"` : '' }}>
 	<head>
 		<meta charset="utf-8">
 		<title>{{ striptags(`${boardinfo.hostname ?? '?'}${node ? ` - ${node.title}` : ''}`) }} - LuCI</title>
-		{% if (!darkpref): %}
-			<script>
-				var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)'),
-				    rootElement = document.querySelector(':root'),
-				    setDarkMode = function(match) { rootElement.setAttribute('data-darkmode', match.matches) };
-
-				mediaQuery.addEventListener('change', setDarkMode);
-				setDarkMode(mediaQuery);
-			</script>
-		{% endif %}
 		<meta name="viewport" content="initial-scale=1.0">
 		<link rel="stylesheet" href="{{ media }}/cascade.css">
 		<link rel="stylesheet" media="screen and (max-width: 854px)" href="{{ media }}/mobile.css" />
@@ -47,6 +37,159 @@
 		{% endif %}
 		<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}"></script>
 		<script src="{{ resource }}/cbi.js"></script>
+
+
+		<style title="darkmode-support">
+			/* Dark mode toggle styles */
+			:root {
+				--transition-duration: 0.3s;
+				--theme-switch-size: 42px;
+				--theme-switch-height: 24px;
+				--theme-switch-handle-size: 16px;
+			}
+
+			.theme-switch-container {
+				display: flex;
+				align-items: center;
+				position: relative;
+			}
+
+			.header-controls {
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				margin-left: auto;
+				padding: 0 8px;
+			}
+
+			@media (max-width: 768px) {
+				.header-controls {
+					gap: 12px;
+				}
+			}
+
+			.theme-switch {
+				position: relative;
+				display: inline-block;
+				width: var(--theme-switch-size);
+				height: var(--theme-switch-height);
+				cursor: pointer;
+			}
+
+			.theme-switch input {
+				opacity: 0;
+				width: 0;
+				height: 0;
+			}
+
+			.slider {
+				position: absolute;
+				cursor: pointer;
+				inset: 0;
+				background-color: var(--switch-bg, #ccc);
+				transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+				border-radius: var(--theme-switch-height);
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			}
+
+			.slider:before {
+				position: absolute;
+				content: "";
+				height: var(--theme-switch-handle-size);
+				width: var(--theme-switch-handle-size);
+				left: 4px;
+				bottom: 4px;
+				background-color: var(--switch-handle, white);
+				transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+				border-radius: 50%;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+			}
+
+			input:checked + .slider {
+				background-color: var(--primary);
+			}
+
+			input:checked + .slider:before {
+				transform: translateX(18px);
+			}
+
+			/* Theme transition */
+			html {
+				transition: background-color var(--transition-duration) ease,
+							color var(--transition-duration) ease;
+			}
+
+			/* Theme toggle icon styles */
+			.theme-toggle {
+				position: relative;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+				transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+				background: transparent;
+			}
+
+			.theme-toggle:hover {
+				background-color: var(--md-sys-color-surface-variant);
+			}
+
+			.theme-toggle .icon {
+				position: absolute;
+				transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+				fill: var(--md-sys-color-refresh-button);
+				width: 20px;
+				height: 20px;
+			}
+
+			.theme-toggle .moon-icon {
+				opacity: 1;
+				transform: scale(1) rotate(0);
+			}
+
+			.theme-toggle .sun-icon {
+				opacity: 0;
+				transform: scale(0.5) rotate(90deg);
+			}
+
+			html[data-darkmode="true"] .theme-toggle .moon-icon {
+				opacity: 0;
+				transform: scale(0.5) rotate(-90deg);
+			}
+
+			html[data-darkmode="true"] .theme-toggle .sun-icon {
+				opacity: 1;
+				transform: scale(1) rotate(0);
+			}
+
+			.theme-toggle:hover .icon {
+				transform: rotate(15deg) scale(1.1);
+			}
+
+			html[data-darkmode="true"] .theme-toggle:hover .icon {
+				transform: rotate(-15deg) scale(1.1);
+			}
+
+			/* 添加点击效果 */
+			.theme-toggle:active .icon {
+				transform: scale(0.95);
+			}
+
+			/* System preference detection */
+			@media (prefers-color-scheme: dark) {
+				html[data-darkmode="auto"] {
+					--primary: #bb86fc;
+					--surface-1: #121212;
+					--surface-2: #1e1e1e;
+					--on-surface: #ffffff;
+					--on-surface-variant: rgba(255, 255, 255, 0.7);
+				}
+			}
+		</style>
+
+
 	</head>
 
 	<body class="lang_{{ dispatcher.lang }} {{ entityencode(striptags(node?.title ?? ''), true) }}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
@@ -55,11 +198,113 @@
 			<div class="menu-btn">
 				<span aria-label="{{ _('Toggle navigation menu') }}"></span>
 			</div>
-			
-			<a class="brand" href="/">{{ striptags(boardinfo.hostname ?? '?') }}</a>
-			<div id="indicators" class="pull-right"></div>
-		</header>
 
+			<a class="brand" href="/">{{ striptags(boardinfo.hostname ?? '?') }}</a>
+
+			<div class="header-controls">
+				<a href="#" class="header-icon theme-toggle" id="theme-toggle" title="{{ _('Toggle dark mode') }}">
+					<svg class="icon moon-icon" width="20" height="25" viewBox="0 0 24 24">
+						<path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/>
+					</svg>
+					<svg class="icon sun-icon" width="20" height="25" viewBox="0 0 24 24">
+						<path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/>
+					</svg>
+				</a>
+
+				<div id="indicators" class="pull-right"></div>
+			</div>
+		</header>
+		<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const toggle = document.getElementById('theme-toggle');
+			const html = document.documentElement;
+			const transitionDuration = 300; // ms
+
+			// 初始化主题（自动检测+记忆手动设置）
+			function initTheme() {
+				const manualMode = localStorage.getItem('luci-theme-manual');
+				const autoMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'true' : 'false';
+				const initMode = manualMode || autoMode;
+				
+				// 添加过渡类
+				html.classList.add('theme-transition');
+				html.setAttribute('data-darkmode', initMode);
+				updateToggleState(initMode);
+				
+				// 移除过渡类
+				setTimeout(() => {
+					html.classList.remove('theme-transition');
+				}, transitionDuration);
+			}
+
+			// 更新开关状态
+			function updateToggleState(isDark) {
+				if (toggle) {
+					toggle.checked = isDark === 'true';
+					// 添加切换动画
+					toggle.classList.add('theme-switching');
+					setTimeout(() => {
+						toggle.classList.remove('theme-switching');
+					}, transitionDuration);
+				}
+			}
+
+			// 切换主题（单次点击）
+			function toggleTheme() {
+				const current = html.getAttribute('data-darkmode');
+				const newMode = current === 'true' ? 'false' : 'true';
+
+				// 添加过渡类
+				html.classList.add('theme-transition');
+				
+				// 更新状态
+				html.setAttribute('data-darkmode', newMode);
+				localStorage.setItem('luci-theme-manual', newMode);
+				updateToggleState(newMode);
+
+				// 移除过渡类
+				setTimeout(() => {
+					html.classList.remove('theme-transition');
+				}, transitionDuration);
+
+				// 同步到服务端
+				fetch('<%=url("admin/system/set-darkmode")%>', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						mode: newMode,
+						source: 'manual'
+					})
+				}).catch(error => {
+					console.error('Failed to sync theme preference:', error);
+				});
+			}
+
+			// 监听系统主题变化
+			window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+				if (!localStorage.getItem('luci-theme-manual')) {
+					const newMode = e.matches ? 'true' : 'false';
+					html.classList.add('theme-transition');
+					html.setAttribute('data-darkmode', newMode);
+					updateToggleState(newMode);
+					setTimeout(() => {
+						html.classList.remove('theme-transition');
+					}, transitionDuration);
+				}
+			});
+
+			// 初始化
+			initTheme();
+
+			// 点击事件
+			if (toggle) {
+				toggle.addEventListener('click', function(e) {
+					e.preventDefault();
+					toggleTheme();
+				});
+			}
+		});
+		</script>
 		<aside class="sidebar">
 			<ul class="nav" id="topmenu" style="display:none"></ul>
 		</aside>

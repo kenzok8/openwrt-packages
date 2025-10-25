@@ -28,6 +28,5 @@
 	    },
             "uci": ["ddns-go"]
         }
-    },
-    { "user": "ddns-go", "access": { "network.interface.*": { "methods": [ "status" ] } } }
+    }
 }

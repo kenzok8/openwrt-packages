@@ -108,7 +108,7 @@ return baseclass.extend({
 				className = 'tabmenu-item-%s %s'.format(children[i].name, activeClass);
 
 			ul.appendChild(E('li', { 'class': className }, [
-				E('a', { 'href': L.url(url, children[i].name) }, [_(children[i].title)])]));
+				E('a', { 'href': L.url(url, children[i].name) }, [children[i].name === 'nas' ? 'NAS' : _(children[i].title)])]));
 
 			if (isActive)
 				activeNode = children[i];
@@ -196,7 +196,7 @@ return baseclass.extend({
 							location.href = targetUrl;
 						}
 					}).bind(null, submenu, !!submenu.firstElementChild, linkurl)
-				}, [_(children[i].title)]),
+				}, [children[i].name === 'nas' ? 'NAS' : _(children[i].title)]),
 				submenu
 			]);
 
@@ -216,7 +216,7 @@ return baseclass.extend({
 			var isActive = (L.env.requestpath.length ? children[i].name == L.env.requestpath[0] : i == 0);
 
 			ul.appendChild(E('li', { 'class': isActive ? 'active' : null }, [
-				E('a', { 'href': L.url(children[i].name) }, [_(children[i].title)])
+				E('a', { 'href': L.url(children[i].name) }, [children[i].name === 'nas' ? 'NAS' : _(children[i].title)])
 			]));
 
 			if (isActive)
