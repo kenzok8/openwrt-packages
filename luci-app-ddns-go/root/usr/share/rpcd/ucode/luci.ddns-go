@@ -1,0 +1,135 @@
+#!/usr/bin/ucode
+/*
+ * SPDX-License-Identifier: GPL-2.0-only
+ *
+ * Copyright (C) 2021-2025  sirpdboy  <herboy2008@gmail.com> https://github.com/sirpdboy/luci-app-ddns-go 
+ */
+
+'use strict';
+
+import { access, error, lstat, popen, readfile, writefile } from 'fs';
+
+/* Kanged from ucode/luci */
+function shellquote(s) {
+	return `'${replace(s, "'", "'\\''")}'`;
+}
+function get_current_version() {
+	if (!access('/usr/bin/ddns-go'))
+		return null;
+	
+	const fd = popen('/usr/bin/ddns-go -v');
+	if (fd) {
+		let version_output = fd.read('all');
+		fd.close();
+		
+		if (!version_output || length(version_output) === 0)
+			return null;
+		
+		try {
+			// 去除开头的 'v' 字符
+			version_output = replace(trim(version_output), /^v/, '');
+			return version_output;
+		} catch(e) {
+			return null;
+		}
+	}
+	return null;
+}
+
+const methods = {
+	get_ver: {
+		call: function() {
+			let current_version = get_current_version();
+			if (!current_version)
+				return { ver: {}, error: 'ddns-go not found or version check failed' };
+			
+			return { ver: { version: current_version } };
+		}
+	},
+
+	last_update: {
+		call: function() {
+			if (!access('/usr/bin/ddns-go'))
+				return { update: {}, error: 'ddns-go not found' };
+			let version_before = get_current_version();
+			
+			const fd = popen('/usr/bin/ddns-go -u');
+			if (fd) {
+				let output = fd.read('all');
+				fd.close();
+				
+				if (!output || length(output) === 0)
+					return { update: {}, error: 'empty response' };
+				
+				try {
+					output = trim(output);
+					let update_info = {
+						raw_output: output,
+						version_before: version_before,
+						version_after: null,
+						has_update: false,
+						update_successful: false,
+						current_version: '',
+						latest_version: '',
+						status: 'unknown',
+						message: output
+					};
+					
+					update_info.version_after = get_current_version();
+					
+					if (version_before && update_info.version_after && version_before !== update_info.version_after) {
+						update_info.update_successful = true;
+						update_info.has_update = false; // 已经更新完成，所以没有待更新了
+						update_info.status = 'updated';
+						update_info.message = `更新成功: ${version_before} → ${update_info.version_after}`;
+					}
+					else if (match(output, /Current version.*is the latest/)) {
+						update_info.status = 'latest';
+						update_info.has_update = false;
+						let version_match = match(output, /v[\d.]+/);
+						if (version_match) {
+							update_info.current_version = replace(version_match[0], /^v/, '');
+							update_info.latest_version = update_info.current_version;
+						}
+						update_info.message = '已是最新版本 ' + (update_info.current_version || '');
+						
+					} else if (match(output, /new version.*available/)) {
+						update_info.status = 'update_available';
+						update_info.has_update = true;
+						
+						let versions = match(output, /v[\d.]+/, 'g');
+						if (versions && length(versions) >= 2) {
+							update_info.current_version = replace(versions[0], /^v/, '');
+							update_info.latest_version = replace(versions[1], /^v/, '');
+						} else if (version_before) {
+							update_info.current_version = version_before;
+						}
+						update_info.message = '有新版本可用: ' + (update_info.latest_version || '');
+						
+					} else if (match(output, /download.*failed/)) {
+						update_info.status = 'download_failed';
+						update_info.has_update = false;
+						update_info.message = '下载更新失败';
+						
+					} else if (match(output, /check.*failed/)) {
+						update_info.status = 'check_failed';
+						update_info.has_update = false;
+						update_info.message = '检查更新失败';
+						
+					} else {
+						update_info.status = 'unknown';
+						update_info.message = output;
+					}
+					
+					return { update: update_info };
+				} catch(e) {
+					return { update: {}, error: 'Parse error: ' + e };
+				}
+			} else {
+				return { update: {}, error: 'failed to execute ddns-go command' };
+			}
+		}
+	}
+};
+
+return { 'luci.ddns-go': methods };

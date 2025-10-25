@@ -73,7 +73,7 @@ msgstr ""
 msgid "Delayed Start (seconds)"
 msgstr ""
 
-msgid "Update Program"
+msgid "Update kernel"
 msgstr ""
 
 msgid "Check and update DDNS-Go to the latest version"
@@ -100,5 +100,23 @@ msgstr ""
 msgid "SUCCESS:"
 msgstr ""
 
-msgid "Reset admin password successfully to admin12345"
+msgid "Password reset successfully to admin12345"
+msgstr ""
+
+msgid "Password Reset Successful"
+msgstr ""
+
+msgid "User password has been reset to: admin12345"
+msgstr ""
+
+msgid "You need to restart DDNS-Go service for the changes to take effect."
+msgstr ""
+
+msgid "Restart Service Now"
+msgstr ""
+
+msgid "Restart Later"
+msgstr ""
+
+msgid ""
 msgstr ""

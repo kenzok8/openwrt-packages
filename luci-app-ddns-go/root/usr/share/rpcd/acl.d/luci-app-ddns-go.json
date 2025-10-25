@@ -6,6 +6,7 @@
             "file": {
         			"/etc/init.d/ddns-go": [ "exec" ],
         			"/usr/libexec/ddns-go-call": [ "exec" ],
+        			"/usr/share/rpcd/ucode/luci.ddns-go": [ "exec" ],
         			"/bin/pidof": [ "exec" ],
         			"/bin/ps": [ "exec" ],
         			"/bin/ash": [ "exec" ],
@@ -27,5 +28,6 @@
 	    },
             "uci": ["ddns-go"]
         }
-    }
+    },
+    { "user": "ddns-go", "access": { "network.interface.*": { "methods": [ "status" ] } } }
 }
