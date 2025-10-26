@@ -178,14 +178,23 @@ check_kernel() {
     )"
     [[ -n "${latest_version}" ]] || tolog "02.03 No kernel available, please use another kernel branch." "1"
 
-    tolog "02.03 current version: ${current_kernel_v}, Latest version: ${latest_version}"
+    tolog "02.04 current version: ${current_kernel_v}, Latest version: ${latest_version}"
     sleep 2
 
+    # Get the sha256 value of the latest version
+    latest_kernel_sha256="$(
+        curl -fsSL -m 10 \
+            ${kernel_api}/releases/expanded_assets/kernel_${kernel_tag} |
+            awk -v pattern="${latest_version}.tar.gz" -v RS='</li>' '$0 ~ pattern { print $0 "</li>"; exit }' |
+            grep -o 'value="sha256:[^"]*' | sed 's/value="sha256://'
+    )"
+    [[ -n "${latest_kernel_sha256}" ]] && tolog "02.05 Kernel sha256: ${latest_kernel_sha256}"
+
     if [[ "${latest_version}" == "${current_kernel_v}" ]]; then
-        tolog "02.04 Already the latest version, no need to update." "1"
+        tolog "02.06 Already the latest version, no need to update." "1"
         sleep 2
     else
-        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_kernel(this, '"'download_${latest_version}'"')"/> Latest version: '${latest_version}'' "1"
+        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_kernel(this, '"'download_${latest_version}_${latest_kernel_sha256}'"')"/> Latest version: '${latest_version}'' "1"
     fi
 
     exit 0
@@ -193,34 +202,52 @@ check_kernel() {
 
 # Step 3: Download the latest kernel version
 download_kernel() {
-    tolog "03. Start download the kernels."
+    tolog "03. Start download the kernel."
     if [[ "${download_version}" == "download_"* ]]; then
-        download_version="$(echo "${download_version}" | cut -d '_' -f2)"
-        tolog "03.01 The kernel version: ${download_version}, downloading..."
+        tolog "03.01 Start downloading..."
     else
-        tolog "03.02 Invalid parameter" "1"
+        tolog "03.01 Invalid parameter" "1"
     fi
+
+    # Get the kernel file name
+    kernel_file_name="$(echo "${download_version}" | cut -d '_' -f2)"
+    # Get the sha256 value
+    kernel_file_sha256="$(echo "${download_version}" | cut -d '_' -f3)"
 
     # Delete other residual kernel files
     rm -f ${KERNEL_DOWNLOAD_PATH}/*.tar.gz
     rm -f ${KERNEL_DOWNLOAD_PATH}/sha256sums
-    rm -rf ${KERNEL_DOWNLOAD_PATH}/${download_version}*
+    rm -rf ${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}*
 
-    kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kernel_tag}/${download_version}.tar.gz"
+    kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kernel_tag}/${kernel_file_name}.tar.gz"
 
-    curl -fsSL "${kernel_down_from}" -o ${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz
-    [[ "${?}" -ne "0" ]] && tolog "03.03 The kernel download failed." "1"
+    curl -fsSL "${kernel_down_from}" -o ${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}.tar.gz
+    [[ "${?}" -ne "0" ]] && tolog "03.02 The kernel download failed." "1"
 
-    tar -xf ${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz -C ${KERNEL_DOWNLOAD_PATH}
-    [[ "${?}" -ne "0" ]] && tolog "03.04 Kernel decompression failed." "1"
-    mv -f ${KERNEL_DOWNLOAD_PATH}/${download_version}/* ${KERNEL_DOWNLOAD_PATH}/
+    # Verify sha256
+    if [[ -n "${kernel_file_sha256}" ]]; then
+        tolog "03.03 Perform sha256 checksum verification."
+
+        download_kernel_sha256sums="$(sha256sum ${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}.tar.gz | awk '{print $1}')"
+        if [[ "${kernel_file_sha256}" != "${download_kernel_sha256sums}" ]]; then
+            tolog "03.03.01 sha256sum verification mismatched." "1"
+        else
+            tolog "03.03.02 sha256sum verification succeeded."
+        fi
+    fi
+
+    # Decompress the kernel package
+    tolog "03.04 Start decompressing the kernel package..."
+    tar -xf ${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}.tar.gz -C ${KERNEL_DOWNLOAD_PATH}
+    [[ "${?}" -ne "0" ]] && tolog "03.05 Kernel decompression failed." "1"
+    mv -f ${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}/* ${KERNEL_DOWNLOAD_PATH}/
 
     sync && sleep 3
     # Delete the downloaded kernel file
-    rm -f ${KERNEL_DOWNLOAD_PATH}/${download_version}.tar.gz
-    rm -rf ${KERNEL_DOWNLOAD_PATH}/${download_version}
+    rm -f ${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}.tar.gz
+    rm -rf ${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}
 
-    tolog "03.05 The kernel is ready, you can update."
+    tolog "03.06 The kernel is ready, you can update."
     sleep 2
 
     #echo '<a href="javascript:;" onclick="return amlogic_kernel(this)">Update</a>' >$START_LOG

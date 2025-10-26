@@ -207,7 +207,7 @@ check_updated() {
 
     # Find the firmware sha256 value
     latest_firmware_sha256="$(echo "${li_block}" | grep -o 'value="sha256:[^"]*' | sed 's/value="sha256://')"
-    tolog "02.03.05 Sha256: ${latest_firmware_sha256}"
+    tolog "02.03.05 OpenWrt sha256: ${latest_firmware_sha256}"
 
     # Check the firmware update code
     down_check_code="${latest_updated_at}.${main_line_version}"
@@ -215,7 +215,7 @@ check_updated() {
     if [[ -s "${op_release_code}" ]]; then
         update_check_code="$(cat ${op_release_code} | xargs)"
         if [[ -n "${update_check_code}" && "${update_check_code}" == "${down_check_code}" ]]; then
-            tolog "02.03.06 Already the latest version, no need to update." "1"
+            tolog "02.04 Already the latest version, no need to update." "1"
         fi
     fi
 
@@ -223,21 +223,21 @@ check_updated() {
     if [[ -n "${latest_url}" ]]; then
         tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_firmware(this, '"'download_${latest_updated_at}@${firmware_releases_tag}/${latest_url}@${latest_firmware_sha256}'"')"/> Latest updated: '${date_display_format}'' "1"
     else
-        tolog "02.04 No OpenWrt available, please use another kernel branch." "1"
+        tolog "02.05 No OpenWrt available, please use another kernel branch." "1"
     fi
 
     exit 0
 }
 
-# 03. Download Openwrt firmware
+# 03. Download Openwrt
 download_firmware() {
-    tolog "03. Download Openwrt firmware..."
+    tolog "03. Start download the Openwrt..."
 
     # Get the openwrt firmware download path
     if [[ "${download_version}" == "download_"* ]]; then
         tolog "03.01 Start downloading..."
     else
-        tolog "03.02 Invalid parameter." "1"
+        tolog "03.01 Invalid parameter." "1"
     fi
 
     # Delete other residual firmware files
@@ -262,7 +262,7 @@ download_firmware() {
     firmware_download_name="openwrt_${BOARD}_k${main_line_version}_github${firmware_suffix}"
     curl -fsSL "${latest_url}" -o "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}"
     if [[ "$?" -eq "0" && -s "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}" ]]; then
-        tolog "03.01 OpenWrt downloaded successfully."
+        tolog "03.02 OpenWrt downloaded successfully."
     else
         tolog "03.02 OpenWrt download failed." "1"
     fi
@@ -274,9 +274,9 @@ download_firmware() {
         # If there is a sha256sum file, compare it
         download_firmware_sha256sums="$(sha256sum ${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name} | awk '{print $1}')"
         if [[ "${releases_firmware_sha256sums}" != "${download_firmware_sha256sums}" ]]; then
-            tolog "03.04 sha256sum verification mismatched." "1"
+            tolog "03.03.01 sha256sum verification mismatched." "1"
         else
-            tolog "03.05 sha256sum verification succeeded."
+            tolog "03.03.02 sha256sum verification succeeded."
         fi
     fi
 

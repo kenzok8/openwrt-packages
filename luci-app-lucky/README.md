@@ -3,7 +3,7 @@
 
 欢迎来到sirpdboy的源码仓库！
 =
-# Lucky(大吉)
+# Lucky
 
 本项目是 ([Lucky](https://github.com/gdy666/lucky)) 在 OpenWrt 上的移植。
 
@@ -11,7 +11,7 @@ luci-app-lucky 动态域名ddns-go服务,替代socat主要用于公网IPv6 tcp/u
 
 [![若部分图片无法正常显示，请挂上机场浏览或点这里到末尾看修复教程](https://visitor-badge.glitch.me/badge?page_id=sirpdboy-visitor-badge)](#解决-github-网页上图片显示失败的问题) [![](https://img.shields.io/badge/TG群-点击加入-FFFFFF.svg)](https://t.me/joinchat/AAAAAEpRF88NfOK5vBXGBQ)
 
-[luci-app-lucky Lucky(大吉)](https://github.com/sirpdboy/luci-app-lucky)
+[luci-app-lucky Lucky](https://github.com/sirpdboy/luci-app-lucky)
 ======================
 
 
@@ -19,7 +19,7 @@ luci-app-lucky 动态域名ddns-go服务,替代socat主要用于公网IPv6 tcp/u
 
 ## 功能说明：
 
-### Lucky(大吉)
+### Lucky
 
 #### 动态域名ddns-go服务,替代socat主要用于公网IPv6 tcp/udp转内网ipv4,http/https反向代理
 
