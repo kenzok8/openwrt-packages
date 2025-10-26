@@ -104,7 +104,7 @@ tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
 sleep 2
 
 # Step 1. Set the kernel query api
-tolog "01. Start checking the kernel version."
+tolog "01. Start checking the kernel repository."
 firmware_repo="$(uci get amlogic.config.amlogic_firmware_repo 2>/dev/null)"
 [[ -n "${firmware_repo}" ]] || tolog "01.01 The custom kernel download repo is invalid." "1"
 kernel_repo="$(uci get amlogic.config.amlogic_kernel_path 2>/dev/null)"
@@ -173,7 +173,7 @@ check_kernel() {
     latest_version="$(
         curl -fsSL -m 10 \
             ${kernel_api}/releases/expanded_assets/kernel_${kernel_tag} |
-            grep -oE "${main_line_version}\.[0-9]+\.tar\.gz" | sed 's/.tar.gz//' |
+            grep -oE "${main_line_version}\.[0-9]+[^\"]*\.tar\.gz" | sed 's/.tar.gz//' |
             sort -urV | head -n 1
     )"
     [[ -n "${latest_version}" ]] || tolog "02.03 No kernel available, please use another kernel branch." "1"
@@ -185,7 +185,7 @@ check_kernel() {
     latest_kernel_sha256="$(
         curl -fsSL -m 10 \
             ${kernel_api}/releases/expanded_assets/kernel_${kernel_tag} |
-            awk -v pattern="${latest_version}.tar.gz" -v RS='</li>' '$0 ~ pattern { print $0 "</li>"; exit }' |
+            awk -v pattern="${latest_version}\.tar\.gz" -v RS='</li>' '$0 ~ pattern { print $0 "</li>"; exit }' |
             grep -o 'value="sha256:[^"]*' | sed 's/value="sha256://'
     )"
     [[ -n "${latest_kernel_sha256}" ]] && tolog "02.05 Kernel sha256: ${latest_kernel_sha256}"
@@ -202,7 +202,7 @@ check_kernel() {
 
 # Step 3: Download the latest kernel version
 download_kernel() {
-    tolog "03. Start download the kernel."
+    tolog "03. Start download the kernel file."
     if [[ "${download_version}" == "download_"* ]]; then
         tolog "03.01 Start downloading..."
     else
@@ -211,6 +211,8 @@ download_kernel() {
 
     # Get the kernel file name
     kernel_file_name="$(echo "${download_version}" | cut -d '_' -f2)"
+    # Restore converted characters in file names(%2B to +)
+    kernel_file_name="${kernel_file_name//%2B/+}"
     # Get the sha256 value
     kernel_file_sha256="$(echo "${download_version}" | cut -d '_' -f3)"
 

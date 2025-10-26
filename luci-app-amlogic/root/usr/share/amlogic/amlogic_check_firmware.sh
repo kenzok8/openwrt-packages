@@ -189,13 +189,13 @@ check_updated() {
     )"
 
     # Set the regular expression for the OpenWrt filename
-    op_file_pattern=".*_${BOARD}_.*k${main_line_version}\..*${firmware_suffix}"
+    op_file_pattern=".*_${BOARD}_.*k${main_line_version}\.[0-9]+.*${firmware_suffix}"
     # Find the <li> list item where the OpenWrt file is located
     li_block=$(awk -v pattern="${op_file_pattern}" -v RS='</li>' '$0 ~ pattern { print $0 "</li>"; exit }' <<<"${html_code}")
     [[ -z "${li_block}" ]] && tolog "02.03.01 No matching download links found." "1"
 
     # Find the OpenWrt filename
-    latest_url=$(echo "${li_block}" | grep -o "/[^\"]*_${BOARD}_.*k${main_line_version}\.[^\"']*${firmware_suffix}" | sort -urV | head -n 1 | xargs basename 2>/dev/null)
+    latest_url=$(echo "${li_block}" | grep -oE "/[^\"]*_${BOARD}_.*k${main_line_version}\.[0-9]+[^\"]*${firmware_suffix}" | sort -urV | head -n 1 | xargs basename 2>/dev/null)
     tolog "02.03.02 OpenWrt file: ${latest_url}"
 
     # Find the date of the latest update
