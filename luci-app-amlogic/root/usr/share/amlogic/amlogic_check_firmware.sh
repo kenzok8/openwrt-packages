@@ -197,6 +197,7 @@ check_updated() {
     # Find the OpenWrt filename
     latest_url=$(echo "${li_block}" | grep -o "/[^\"]*_${BOARD}_.*k${main_line_version}\.[^\"']*${firmware_suffix}" | sort -urV | head -n 1 | xargs basename 2>/dev/null)
     tolog "02.03.02 OpenWrt file: ${latest_url}"
+
     # Find the date of the latest update
     latest_updated_at=$(echo "${li_block}" | grep -o 'datetime="[^"]*"' | sed 's/datetime="//; s/"//')
     tolog "02.03.03 Latest updated at: ${latest_updated_at}"
@@ -204,19 +205,23 @@ check_updated() {
     date_display_format="$(echo ${latest_updated_at} | tr 'T' '(' | tr 'Z' ')')"
     [[ -z "${latest_url}" || -z "${latest_updated_at}" ]] && tolog "02.03.04 The download URL or date is invalid." "1"
 
+    # Find the firmware sha256 value
+    latest_firmware_sha256="$(echo "${li_block}" | grep -o 'value="sha256:[^"]*' | sed 's/value="sha256://')"
+    tolog "02.03.05 Sha256: ${latest_firmware_sha256}"
+
     # Check the firmware update code
     down_check_code="${latest_updated_at}.${main_line_version}"
     op_release_code="${FIRMWARE_DOWNLOAD_PATH}/.luci-app-amlogic/op_release_code"
     if [[ -s "${op_release_code}" ]]; then
         update_check_code="$(cat ${op_release_code} | xargs)"
         if [[ -n "${update_check_code}" && "${update_check_code}" == "${down_check_code}" ]]; then
-            tolog "02.03.05 Already the latest version, no need to update." "1"
+            tolog "02.03.06 Already the latest version, no need to update." "1"
         fi
     fi
 
     # Prompt to update
     if [[ -n "${latest_url}" ]]; then
-        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_firmware(this, '"'download_${latest_updated_at}@${firmware_releases_tag}/${latest_url}'"')"/> Latest updated: '${date_display_format}'' "1"
+        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_firmware(this, '"'download_${latest_updated_at}@${firmware_releases_tag}/${latest_url}@${latest_firmware_sha256}'"')"/> Latest updated: '${date_display_format}'' "1"
     else
         tolog "02.04 No OpenWrt available, please use another kernel branch." "1"
     fi
@@ -250,6 +255,9 @@ download_firmware() {
     firmware_download_oldname="${opfile_path//%2B/+}"
     latest_url="https://github.com/${server_firmware_url}/releases/download/${firmware_download_oldname}"
 
+    # Find the firmware sha256 value
+    releases_firmware_sha256sums="$(echo ${download_version} | awk -F'@' '{print $3}')"
+
     # Download to OpenWrt file
     firmware_download_name="openwrt_${BOARD}_k${main_line_version}_github${firmware_suffix}"
     curl -fsSL "${latest_url}" -o "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}"
@@ -259,14 +267,13 @@ download_firmware() {
         tolog "03.02 OpenWrt download failed." "1"
     fi
 
-    # Download sha256sums file
-    if curl -fsSL "${latest_url}.sha" -o "${FIRMWARE_DOWNLOAD_PATH}/sha256sums" 2>/dev/null; then
-        tolog "03.03 sha file downloaded successfully."
+    # Verify sha256sums if available
+    if [[ -n "${releases_firmware_sha256sums}" ]]; then
+        tolog "03.03 Perform sha256 checksum verification."
 
         # If there is a sha256sum file, compare it
-        releases_firmware_sha256sums="$(cat ${FIRMWARE_DOWNLOAD_PATH}/sha256sums | grep ${firmware_download_oldname##*/} | awk '{print $1}')"
         download_firmware_sha256sums="$(sha256sum ${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name} | awk '{print $1}')"
-        if [[ -n "${releases_firmware_sha256sums}" && "${releases_firmware_sha256sums}" != "${download_firmware_sha256sums}" ]]; then
+        if [[ "${releases_firmware_sha256sums}" != "${download_firmware_sha256sums}" ]]; then
             tolog "03.04 sha256sum verification mismatched." "1"
         else
             tolog "03.05 sha256sum verification succeeded."
