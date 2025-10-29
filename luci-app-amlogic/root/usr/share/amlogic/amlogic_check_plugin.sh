@@ -54,15 +54,14 @@ fi
 if [[ -s "${AMLOGIC_SOC_FILE}" ]]; then
     source "${AMLOGIC_SOC_FILE}" 2>/dev/null
     PLATFORM="${PLATFORM}"
-    SOC="${SOC}"
 else
     tolog "${AMLOGIC_SOC_FILE} file is missing!" "1"
 fi
-if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${SOC}" ]]; then
+if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" ]]; then
     tolog "Missing [ PLATFORM ] value in ${AMLOGIC_SOC_FILE} file." "1"
 fi
 
-tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ]"
+tolog "PLATFORM: [ ${PLATFORM} ]"
 sleep 2
 
 # 01. Query local version information

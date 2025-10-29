@@ -93,13 +93,12 @@ FIRMWARE_DOWNLOAD_PATH="/mnt/${EMMC_NAME}${PARTITION_NAME}4"
 if [[ -s "${AMLOGIC_SOC_FILE}" ]]; then
     source "${AMLOGIC_SOC_FILE}" 2>/dev/null
     PLATFORM="${PLATFORM}"
-    SOC="${SOC}"
     BOARD="${BOARD}"
 else
     tolog "${AMLOGIC_SOC_FILE} file is missing!" "1"
 fi
-if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${SOC}" || -z "${BOARD}" ]]; then
-    tolog "Missing [ PLATFORM / SOC / BOARD ] value in ${AMLOGIC_SOC_FILE} file." "1"
+if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${BOARD}" ]]; then
+    tolog "Missing [ PLATFORM / BOARD ] value in ${AMLOGIC_SOC_FILE} file." "1"
 fi
 
 tolog "PLATFORM: [ ${PLATFORM} ], BOARD: [ ${BOARD} ], Use in [ ${EMMC_NAME} ]"

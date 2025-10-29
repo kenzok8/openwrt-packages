@@ -91,16 +91,14 @@ KERNEL_DOWNLOAD_PATH="/mnt/${EMMC_NAME}${PARTITION_NAME}4"
 if [[ -s "${AMLOGIC_SOC_FILE}" ]]; then
     source "${AMLOGIC_SOC_FILE}" 2>/dev/null
     PLATFORM="${PLATFORM}"
-    SOC="${SOC}"
-    KERNEL_TAGS="${KERNEL_TAGS}"
 else
     tolog "${AMLOGIC_SOC_FILE} file is missing!" "1"
 fi
-if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" || -z "${SOC}" ]]; then
+if [[ -z "${PLATFORM}" || -z "$(echo "${support_platform[@]}" | grep -w "${PLATFORM}")" ]]; then
     tolog "Missing [ PLATFORM ] value in ${AMLOGIC_SOC_FILE} file." "1"
 fi
 
-tolog "PLATFORM: [ ${PLATFORM} ], SOC: [ ${SOC} ], Use in [ ${EMMC_NAME} ]"
+tolog "PLATFORM: [ ${PLATFORM} ], Use in [ ${EMMC_NAME} ]"
 sleep 2
 
 # Step 1. Set the kernel query api
@@ -119,40 +117,48 @@ fi
 # Convert kernel repo to api format
 [[ "${kernel_repo}" =~ ^https: ]] && kernel_repo="$(echo ${kernel_repo} | awk -F'/' '{print $4"/"$5}')"
 kernel_api="https://github.com/${kernel_repo}"
-if [[ -n "${KERNEL_TAGS}" ]]; then
-    kernel_tag="${KERNEL_TAGS}"
+tolog "01.03 Kernel repo: ${kernel_repo}"
+# Get the current kernel uname
+kernel_uname="$(uname -r 2>/dev/null)"
+tolog "01.04 Current kernel uname: ${kernel_uname}"
+
+# Get the kernel tag from uci config
+op_kernel_tags="$(uci get amlogic.config.amlogic_kernel_tags 2>/dev/null)"
+# Determine the kernel tag
+if [[ -n "${op_kernel_tags}" ]]; then
+    kernel_tag="${op_kernel_tags/kernel_/}"
 else
-    if [[ "${SOC}" == "rk3588" ]]; then
+    # Determine the kernel tag based on the current kernel uname
+    if [[ "${kernel_uname}" =~ -rk3588 ]]; then
         kernel_tag="rk3588"
-    elif [[ "${SOC}" == "rk3528" ]]; then
+    elif [[ "${kernel_uname}" =~ -rk35xx ]]; then
         kernel_tag="rk35xx"
+    elif [[ "${kernel_uname}" =~ -h6|-zicai ]]; then
+        kernel_tag="h6"
     else
         kernel_tag="stable"
     fi
-fi
 
-# Remove the kernel_ prefix
-kernel_tag="${kernel_tag/kernel_/}"
-# If the kernel tag is a number, it is converted to a stable branch
-[[ "${kernel_tag}" =~ ^[1-9]+ ]] && kernel_tag="stable"
+    # Save the kernel tag to uci config
+    uci set amlogic.config.amlogic_kernel_tags="kernel_${kernel_tag}" 2>/dev/null
+    uci commit amlogic 2>/dev/null
+fi
+tolog "01.05 Kernel tag: kernel_${kernel_tag}"
+sleep 2
 
 # Step 2: Check if there is the latest kernel version
 check_kernel() {
     # 02. Query local version information
     tolog "02. Start checking the kernel version."
 
-    # 02.01 Query the current version
-    if [[ "${kernel_tag}" == "rk3588" || "${kernel_tag}" == "rk35xx" ]]; then
-        current_kernel_v=$(uname -r 2>/dev/null)
-    else
-        current_kernel_v=$(uname -r 2>/dev/null | grep -oE '^[1-9]\.[0-9]{1,2}\.[0-9]+')
-    fi
-    [[ -n "${current_kernel_v}" ]] || tolog "02.01 The current kernel version is not detected." "1"
-    tolog "02.01 current version: ${current_kernel_v}"
+    # 02.01 Get current kernel version
+    [[ ! "${kernel_tag}" =~ ^(rk3588|rk35xx)$ ]] && kernel_uname="$(echo "${kernel_uname}" | cut -d'-' -f1)"
+    [[ -n "${kernel_uname}" ]] || tolog "02.01 The current kernel version is not detected." "1"
+    tolog "02.01 current version: ${kernel_uname}"
     sleep 2
 
     # 02.02 Version comparison
-    main_line_version="$(echo ${current_kernel_v} | awk -F '.' '{print $1"."$2}')"
+    main_line_version="$(echo ${kernel_uname} | awk -F '.' '{print $1"."$2}')"
 
     # 02.03 Query the selected branch in the settings
     server_kernel_branch="$(uci get amlogic.config.amlogic_kernel_branch 2>/dev/null | grep -oE '^[1-9].[0-9]{1,3}')"
@@ -178,7 +184,7 @@ check_kernel() {
     )"
     [[ -n "${latest_version}" ]] || tolog "02.03 No kernel available, please use another kernel branch." "1"
 
-    tolog "02.04 current version: ${current_kernel_v}, Latest version: ${latest_version}"
+    tolog "02.04 current version: ${kernel_uname}, Latest version: ${latest_version}"
     sleep 2
 
     # Get the sha256 value of the latest version
@@ -190,7 +196,7 @@ check_kernel() {
     )"
     [[ -n "${latest_kernel_sha256}" ]] && tolog "02.05 Kernel sha256: ${latest_kernel_sha256}"
 
-    if [[ "${latest_version}" == "${current_kernel_v}" ]]; then
+    if [[ "${latest_version}" == "${kernel_uname}" ]]; then
         tolog "02.06 Already the latest version, no need to update." "1"
         sleep 2
     else
