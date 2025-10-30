@@ -89,3 +89,8 @@ msgstr "打勾选择表示格式化"
 
 msgid "Tick means to retain the settings"
 msgstr "打勾选择表示保留设置"
+
+msgid "reverse"
+msgstr "逆序"
+
+

@@ -14,7 +14,7 @@ function index()
 	local e = entry({"admin","system","partexp"},alias("admin", "system", "partexp", "global"),_("Partition Expansion"), 54)
 	e.dependent = false
 	e.acl_depends = { "luci-app-partexp" }
-	entry({"admin", "system", "partexp", "global"}, cbi('partexp/global', {hideapplybtn = true, hidesavebtn = true, hideresetbtn = true}), _('Partition Expansion'), 10).leaf = true 
+        entry({"admin","system","partexp","global"}, cbi('partexp/global', {hideapplybtn = true, hidesavebtn = true, hideresetbtn = true}), _('Partition Expansion'), 10).leaf = true 
 	entry({"admin", "system", "partexp","partexprun"}, call("partexprun"))
 	entry({"admin", "system", "partexp", "check"}, call("act_check"))
 end
@@ -30,6 +30,7 @@ function act_check()
 	f:close()
 	http.write(a)
 end
+
 
 
 function partexprun()

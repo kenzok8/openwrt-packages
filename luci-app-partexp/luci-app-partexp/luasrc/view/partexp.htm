@@ -3,9 +3,9 @@ Copyright (C)  2022-2024  sirpdboy  <herboy2008@gmail.com> https://github.com/si
 -%>
 <%+cbi/valueheader%>
 <%local fs=require"nixio.fs"%>
-<input type="button" class="btn cbi-button cbi-button-apply" id="apply_run_button" value="<%:Click to execute%>" onclick="return confirmAndRun(this)"/>
+<input type="button" class="btn cbi-button cbi-button-apply" id="apply_run_button" value="<%:Click to execute%>" onclick=" return apply_run(this) "/>
 <div id="logview" style="display:none">
-<input type="checkbox" id="reversetag" value="reverse" onclick="return reverselog()" style="vertical-align:middle;height: auto;"><%:reverse%></input>
+<input type="checkbox" id="reversetag" value="reverse" onclick=" return reverselog()" style="vertical-align:middle;height: auto;"><%:reverse%></input>
 <textarea id="cbid.logview.1.conf" class="cbi-input-textarea" style="width: 100%;display:block;" data-update="change" rows="20" cols="80" readonly="readonly" > </textarea>
 </div>
 <script type="text/javascript">//<![CDATA[
@@ -17,117 +17,114 @@ var checkbtn = document.getElementById('apply_run_button');
 
 var islogreverse = false;
 function reverselog(){
-    var lv = document.getElementById('cbid.logview.1.conf');
-    lv.innerHTML=lv.innerHTML.split('\n').reverse().join('\n')
-    if (islogreverse){
-    islogreverse=false;
-    }else{
-    islogreverse=true;
-    }
-    return
+	var lv = document.getElementById('cbid.logview.1.conf');
+	lv.innerHTML=lv.innerHTML.split('\n').reverse().join('\n')
+	if (islogreverse){
+	islogreverse=false;
+	}else{
+	islogreverse=true;
+	}
+	return
 }
-
-function confirmAndRun(btn) {
-    if (confirm("确定要执行此操作吗？此操作不可撤销！")) {
-        apply_run(btn);
-        return true;
-    } else {
-        return false;
-    }
-}
-
 function apply_run(btn){
-    var sid='global'
-    var opt={
-        base:"cbid.partexp."+sid,
-        get:function(opt){
-            var id=this.base+'.'+opt;
-            var obj=document.getElementsByName(id)[0] || document.getElementsByClassName(id)[0] || document.getElementById(id)
-            if (obj){
-                return obj;
-            }else{
-                return null;
-            }
-        },
-        getlist:function(opt){
-            var id=this.base+'.'+opt;
-            var objs=document.getElementsByName(id) || document.getElementsByClassName(id);
-            var ret=[];
-            if (objs){
-                for (var i=0;i < objs.length;i++){
-                    ret[i]=objs[i].value;
-                }
-            }else{
-                alert("<%:Fatal on get option,please help in debug%>:"+opt);
-            }
-            return ret;
-        },
-        query:function(param,src,tval="1",fval="0"){
-            var ret="&"+param+"=";
-            var obj=this.get(src);
-            if (obj){
-                if (obj.type=="checkbox"){
-                    return ret+(obj.checked==true ? tval:fval);
-                }else{
-                    return ret+encodeURIComponent(obj.value);
-                }
-            }
-            return ''
-        }
-    }
 
-    btn.value='<%:Waiting,(executing)...%>';
-    btn.disabled=true;
+	var sid='global'
+	var opt={
+		base:"cbid.partexp."+sid,
+		get:function(opt){
+			var id=this.base+'.'+opt;
+			var obj=document.getElementsByName(id)[0] || document.getElementsByClassName(id)[0] || document.getElementById(id)
+			if (obj){
+				return obj;
+			}else{
+				return null;
+			}
+		},
+		getlist:function(opt){
+			var id=this.base+'.'+opt;
+			var objs=document.getElementsByName(id) || document.getElementsByClassName(id);
+			var ret=[];
+			if (objs){
+				for (var i=0;i < objs.length;i++){
+					ret[i]=objs[i].value;
+				}
+			}else{
+				alert("<%:Fatal on get option,please help in debug%>:"+opt);
+			}
+			return ret;
+		},
+		query:function(param,src,tval="1",fval="0"){
+			var ret="&"+param+"=";
+			var obj=this.get(src);
+			if (obj){
+				if (obj.type=="checkbox"){
+					return ret+(obj.checked==true ? tval:fval);
+				}else{
+					return ret+encodeURIComponent(obj.value);
+				}
+			}
+			return ''
+		}
+	}
+
+
+	btn.value='<%:Waiting,(executing)...%>';
+	btn.disabled=true;
+	
 
     var targetf=opt.get("target_function").value;
-    var targetd=opt.get("target_disk").value;
+     if (opt.get("target_disk")) 
+	     var targetd=opt.get("target_disk").value;
+	 else
+	     var targetd="/";
     if (opt.get("format_type")) 
         var eformat=opt.get("format_type").value;
     else
-    var aformat = "0";
-    if (opt.get("keep_config")) 
-    var kconfig = opt.get("keep_config").checked ? 1 : 0;
+        var eformat = "0";
+	if (opt.get("keep_config")) 
+	var kconfig = opt.get("keep_config").checked ? 1 : 0;
     else
-    var kconfig = 0;
-    console.log(kconfig);
+	var kconfig = 0;
+	console.log(eformat);
 
-    XHR.get('<%=url([[admin]], [[system]], [[partexp]], [[partexprun]])%>',{
+	XHR.get('<%=url([[admin]], [[system]], [[partexp]], [[partexprun]])%>',{
             targetf: targetf,
             kconfig: kconfig,
             targetd: targetd,
-            eformat: eformat
-            },function(x){});
-    poll_check();
-    return
+			eformat: eformat
+			},function(x){});
+	poll_check();
+	return
 }
 
 function poll_check(){
 var tag = document.getElementById('logview');
 tag.style.display="block"
 XHR.poll(3, '<%=url([[admin]], [[system]], [[partexp]], [[check]])%>', null,
-    function(x, data) {
-        var lv = document.getElementById('cbid.logview.1.conf');
-        if (x.responseText && lv) {
-            if (x.responseText=="\u0000"){
-                for(j = 0,len=this.XHR._q.length; j < len; j++) {
-                    if (this.XHR._q[j].url == '<%=url([[admin]], [[system]], [[partexp]], [[check]])%>'){
-                        this.XHR._q.splice(j,1);
-                        checkbtn.disabled = false;
-                        checkbtn.value    = '<%:Click to execute%>';
-                        break;
-                    }
-                }
-                return    
-            }
-            if (islogreverse){
-                lv.innerHTML = x.responseText.split('\n').reverse().join('\n')+lv.innerHTML;
-            }else{
-                lv.innerHTML += x.responseText;
-            }
-        }
-    }
+	function(x, data) {
+		var lv = document.getElementById('cbid.logview.1.conf');
+		if (x.responseText && lv) {
+			if (x.responseText=="\u0000"){
+				for(j = 0,len=this.XHR._q.length; j < len; j++) {
+					if (this.XHR._q[j].url == '<%=url([[admin]], [[system]], [[partexp]], [[check]])%>'){
+						this.XHR._q.splice(j,1);
+						checkbtn.disabled = false;
+						checkbtn.value    = '<%:Click to execute%>';
+						break;
+					}
+				}
+				return	
+			}
+			if (islogreverse){
+				lv.innerHTML = x.responseText.split('\n').reverse().join('\n')+lv.innerHTML;
+			}else{
+				lv.innerHTML += x.responseText;
+			}
+		}
+	}
 );}
 
+   
 //]]>
 </script>
 <%+cbi/valuefooter%>
