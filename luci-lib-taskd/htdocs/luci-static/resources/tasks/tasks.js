@@ -23,7 +23,7 @@
             oReq.onload = function (oEvent) {
                 if (oReq.status == 403) {
                     alert($gettext("Lost login status"));
-                    location.href = location.href;
+                    location.href = location.href.replace(/#.*$/,'');
                 } else if (oReq.status >= 400) {
                     reject(oEvent);
                 } else {
@@ -98,7 +98,7 @@
                 running=false;
                 showing=false;
                 del_task(task_id).then(()=>{
-                    location.href = location.href;
+                    location.href = location.href.replace(/#.*$/,'');
                 });
             }
             return false;
