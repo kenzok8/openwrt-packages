@@ -118,5 +118,5 @@ msgstr "立刻重启服务"
 msgid "Restart Later"
 msgstr "稍后重启"
 
-msgid ""
-msgstr ""
+msgid "Due to browser security policies, the DDNS-GO interface https cannot be embedded directly."
+msgstr "由于浏览器安全策略，DDNS-GO接口https不能直接嵌入。"

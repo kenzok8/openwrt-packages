@@ -77,8 +77,8 @@ function renderStatus(isRunning, listen_port, noweb, version) {
     );
     
     if (isRunning) {
-        html += String.format('&#160;<a class="btn cbi-button" href="%s//%s:%s" target="_blank">%s</a>', 
-            window.location.protocol, window.location.hostname, listen_port, _('Open Web Interface'));
+        html += String.format('&#160;<a class="btn cbi-button" href="http://%s:%s" target="_blank">%s</a>', 
+             window.location.hostname, listen_port, _('Open Web Interface'));
     }
     
     return html;

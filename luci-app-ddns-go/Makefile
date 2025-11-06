@@ -7,8 +7,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-ddns-go
-PKG_VERSION:=1.6.3
-PKG_RELEASE:=20251025
+PKG_VERSION:=1.6.4
+PKG_RELEASE:=20251106
 
 PKG_MAINTAINER:=sirpdboy  <herboy2008@gmail.com>
 PKG_CONFIG_DEPENDS:=
