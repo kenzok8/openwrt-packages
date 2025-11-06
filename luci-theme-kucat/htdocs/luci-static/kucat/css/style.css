@@ -869,7 +869,7 @@ small {
 .main-right>#maincontent {
   position: relative;
   background-color: rgba(var(--primary-rgbbody),var(--primary-rgbm-ts));
-  padding: 0.2rem 0.2rem 3rem 0.2rem;
+  padding: 0.2rem 0.2rem 3rem 0.5rem;
   z-index: 50
 }
 
@@ -960,7 +960,51 @@ header .fill .status span {
   flex-wrap: nowrap
 }
 
-span[data-indicator="uci-changes"],span[data-indicator="poll-status"] {
+span[data-indicator="poll-status"] {
+  font-size: 0 !important;
+  cursor: pointer;
+  background-repeat: no-repeat;
+  background-position: center;
+  color: transparent !important;
+  -webkit-appearance: none;
+  display: flex;
+  background-color: rgba(255, 255, 255, 0);
+  -moz-appearance: none;
+  padding: 1rem;
+  transition: all .3s
+}
+
+span[data-indicator="poll-status"]:not([data-style="inactive"]):before {
+  font-size: 1.5rem !important;
+  font-family: 'kucat' !important;
+  content: "\e20b";
+  color: var(--body-color);
+  text-decoration: none
+}
+
+span[data-indicator="poll-status"]:not([data-style="active"]):before {
+  font-size: 1.5rem !important;
+  font-family: 'kucat' !important;
+  content: "\e20a";
+  color: var(--body-color);
+  text-decoration: none
+}
+
+#indicators span[data-indicator="poll-status"],{
+  line-height: 1;
+  padding: 1rem;
+  cursor: pointer !important;
+  font-weight: normal !important;
+  margin: 0;
+  display: inline-block
+}
+
+#indicators span[data-indicator="poll-status"]:hover {
+  border-radius: var(--radius1);
+  text-decoration: none
+}
+
+span[data-indicator="uci-changes"],#indicators span[data-indicator="poll-status"] {
   font-size: 0 !important;
   cursor: pointer;
   background-repeat: no-repeat;
@@ -979,7 +1023,7 @@ span[data-indicator="uci-changes"]:before {
   text-decoration: none
 }
 
-span[data-indicator="poll-status"]:not([data-style="inactive"]):before {
+#indicators span[data-indicator="poll-status"]:not([data-style="inactive"]):before {
   font-size: 1.5rem !important;
   font-family: 'kucat' !important;
   content: "\e936";
@@ -987,7 +1031,7 @@ span[data-indicator="poll-status"]:not([data-style="inactive"]):before {
   text-decoration: none
 }
 
-span[data-indicator="poll-status"]:not([data-style="active"]):before {
+#indicators span[data-indicator="poll-status"]:not([data-style="active"]):before {
   font-family: 'kucat' !important;
   font-size: 1.5rem !important;
   content: "\e932";
@@ -995,7 +1039,7 @@ span[data-indicator="poll-status"]:not([data-style="active"]):before {
   text-decoration: none
 }
 .pdboy-dark:hover,.pdboy-light:hover,
-span[data-indicator="uci-changes"]:hover,span[data-indicator="poll-status"]:hover,.pdboy-qlogout:hover,.showSide:hover {
+span[data-indicator="uci-changes"]:hover,#indicators span[data-indicator="poll-status"]:hover,.pdboy-qlogout:hover,.showSide:hover {
   background-color: var(--menu-hover-barbgcolor) !important;
   color: var(--menu-hover-color);
   border-radius: var(--radius1);
@@ -1003,7 +1047,7 @@ span[data-indicator="uci-changes"]:hover,span[data-indicator="poll-status"]:hove
 }
 
 .pdboy-dark,.pdboy-light,
-span[data-indicator="uci-changes"],span[data-indicator="poll-status"],.pdboy-qlogout {
+span[data-indicator="uci-changes"],#indicators span[data-indicator="poll-status"],.pdboy-qlogout {
   line-height: 1;
   padding: 1rem;
   cursor: pointer !important;
@@ -1087,63 +1131,6 @@ span[data-indicator="uci-changes"],span[data-indicator="poll-status"],.pdboy-qlo
   text-transform: none !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale
-}
-
-.danger {
-  background-color: #d9534f !important;
-  color: #eee
-}
-
-.warning {
-  background-color: #b98413 !important;
-  margin: 0 0 0.5rem 0;
-  color: #eee
-}
-
-.success {
-  background-color: #1a8361 !important;
-  color: #eee;
-  width: 14rem !important
-}
-
-#log_textarea {
-  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.16),0 0 1px 0 var(--input-boxcolor)
-}
-
-.error {
-  color: #f00
-}
-
-.alert,.alert-message {
-  padding: 1rem;
-  border: 0;
-  font-weight: normal;
-  font-style: normal;
-  line-height: 1.6em;
-  font-family: inherit;
-  min-width: inherit;
-  overflow: unset;
-  border-radius: var(--radius1);
-  background-color: rgba(var(--primary-rgbbody),var(--primary-rgbm-ts));
-  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16),0 0 2px 0 var(--input-boxcolor)
-}
-
-.alert-message>* {
-  margin: 0;
-  white-space: normal
-}
-
-.alert-message>h4 {
-  margin: 0.5rem;
-  color: red;
-  padding: 0.5rem 1rem;
-  font-weight: bold
-}
-
-.errorbox {
-  color: #f8f8f8;
-  background-color: #f0ad4e;
-  border-color: #eea236
 }
 
 .container .alert,.container .alert-message {
@@ -1420,7 +1407,7 @@ h2 {
 h3 {
   font-size: var(--font-d);
   display: block;
-  margin: 0.5rem 0;
+  margin: 0.5rem 0 0 1rem;
   color: var(--primary-title-color);
   font-weight: bold;
   letter-spacing: 0.1rem;
@@ -1433,7 +1420,7 @@ h4 {
   padding: 0.75rem 1.25rem;
   font-weight: 600;
   font-size: var(--font-z);
-  color: var(--primary-title-color) !important;
+  color: var(--primary-title-color) ;
   padding-bottom: 10px
 }
 
@@ -2529,11 +2516,68 @@ select,input {
   min-width: 270px;
   max-width: 900px;
   min-height: 32px;
+  border-radius: var(--radius2) !important;
+  background-color: rgba(var(--primary-rgbbody), 1)!important;
+  color: var(--primary-title-color)!important;
+  box-shadow: 0 2px 10px 0px rgba(255, 255, 255, .16), 0 0 10px 0 rgba(255, 255, 255, .12);
   margin: 5em auto;
   padding: 1rem;
-  border-radius: var(--radius2) !important;
-  background-color: rgba(var(--primary-rgbbody),1)!important;
-  box-shadow: 0 2px 10px 0px rgba(255,255,255,.16),0 0 10px 0 rgba(255,255,255,.12)
+}
+
+.danger {
+  background-color: #d9534f ;
+  color: #eee
+}
+
+#log_textarea {
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,0.16),0 0 1px 0 var(--input-boxcolor)
+}
+
+.error {
+  color: #f00
+}
+
+.alert,.alert-message {
+  padding: 1rem;
+  border: 0;
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1.6em;
+  font-family: inherit;
+  min-width: inherit;
+  overflow: unset;
+  border-radius: var(--radius1);
+  background-color: rgba(var(--primary-rgbbody),var(--primary-rgbm-ts));
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.16),0 0 2px 0 var(--input-boxcolor)
+}
+
+.alert-message>* {
+  margin: 0;
+  white-space: normal
+}
+
+.alert-message>h4 {
+  margin: 0.5rem;
+  color: red;
+  padding: 0.5rem 1rem;
+  font-weight: bold
+}
+
+.warning {
+  background-color: #b98413 !important;
+  color: #eee!important;
+}
+
+.success {
+  background-color: #1a8361 !important;
+  color: #eee!important;
+  width: 14rem !important
+}
+
+.errorbox {
+  color: #f8f8f8!important;
+  background-color: #f0ad4e!important;
+  border-color: #eea236
 }
 
 #modal_overlay .cbi-section,.modal .cbi-section {
@@ -2599,10 +2643,9 @@ select,input {
 }
 
 .notice {
-  background-color: #b98413 !important;
-  background-color: rgba(var(--primary-rgbm),1) !important;
+  color: var(--primary-title-color);
+  background-color: rgba(var(--primary-rgbbody), 1);
   padding: 2rem 1rem;
-  color: #eee
 }
 .modal>p {
   font-size: var(--font-x);
@@ -2718,9 +2761,8 @@ body.modal-overlay-active #modal_overlay {
   bottom: 0;
   left: .2em;
   width: 32px;
-  color: var(--body-color);
   content: "";
-  
+  color: var(--body-color);
   background: url(../../resources/icons/loading.svg) no-repeat center,
               url(../../resources/icons/loading.gif) no-repeat center;
   background-size: 20px;
@@ -4028,6 +4070,7 @@ pre.command-output {
   --bg-light: rgba(255, 255, 255, 0);
   --bg-gray: rgba(var(--primary-rgbm), 0.02);
   --text-title: var(--primary-title-color);
+  --text-secondary: var(--body-color);
   --border-color: rgba(255, 255, 255, 0);
   --border-light: rgba(255, 255, 255, 0);
   --text-primary: var(--inputtext-color);
@@ -4189,12 +4232,11 @@ pre.command-output {
 .bandix-card ,
 .stats-card
 {
-  background-color: rgba(var(--primary-rgbm), 0.1)!important;
-  border-radius: 0 !important;
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0) !important;
-  margin-bottom: 0 !important;
+  background-color: rgba(var(--primary-rgbm), 0.05)!important;
+  box-shadow: 0 1px 3px 0 var(--input-boxcolor) !important;
   border: 0px solid #333!important;
   border-bottom: 0px solid var(--input-boxcolor)!important;
+  margin-bottom: 0 !important;
   overflow: auto!important;
 }
 
@@ -4282,6 +4324,9 @@ border-bottom: 0px solid #f1f5f9!important;
 
 [data-page="admin-system-package-manager"] .modal>textarea {
   white-space: nowrap
+}
+[data-page="admin-status-overview"]  #view>div {
+  padding: 0rem 0rem 1rem 0.5rem;
 }
 
 .main>.main-left,.cbi-section,[data-tab-title],[data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear),#maincontent>.container>form,#maincontent>.container>form>div,.tabs,.cbi-tabmenu,.cbi-tooltip,#view>p,#view>div,#view>table {
@@ -4392,24 +4437,29 @@ div#add_link_div {
   padding: 0.5rem
 }
 
-div#file-manager-container {
+#file-manager-container {
   margin-left: 0.5rem
 }
 
-div#content-filemanager>div#file-list-container {
-  margin-top: 10px !important
+#content-filemanager>#file-list-container {
+   margin-top: 10px !important;
+  min-width: 800px !important;
+  max-width: 100% !important;
+  width: auto !important;
 }
 
-div#file-manager-container #file-table tr>th {
+#file-manager-container #file-table tr>th {
   background-color: rgba(var(--primary-rgbm),1);
   color: var(--menu-color)
 }
-
-div#file-manager-container #status-bar {
+#file-list-container table>tbody>tr>td span {
+  padding: 0.5rem;
+}
+#file-manager-container #status-bar {
   background-color: rgba(var(--primary-rgbm),0.3)
 }
 
-div#file-manager-container #status-bar #status-info {
+#file-manager-container #status-bar #status-info {
   color: var(--title-color)
 }
 
@@ -4417,6 +4467,9 @@ div#file-manager-container #status-bar #status-info {
   background-color: rgba(var(--primary-rgbm),0.4) !important
 }
 
+#file-list-container table>tbody>tr>td {
+  padding: 0.2rem
+}
 .cbi-tabcontainer-content #editor-container {
   width: 100%;
   border: 1px solid var(--inputborder-color)
@@ -4441,9 +4494,6 @@ div#file-manager-container #status-bar #status-info {
   --clr-header: var(--title-color)
 }
 
-#file-list-container table>tbody>tr>td {
-  padding: 0.2rem
-}
 
 .tr.cbi-section-table-row[id*="wolplus"],.tr.cbi-section-table-row[id*="firewall"] {
   flex-wrap: wrap;
