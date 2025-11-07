@@ -990,20 +990,6 @@ span[data-indicator="poll-status"]:not([data-style="active"]):before {
   text-decoration: none
 }
 
-#indicators span[data-indicator="poll-status"],{
-  line-height: 1;
-  padding: 1rem;
-  cursor: pointer !important;
-  font-weight: normal !important;
-  margin: 0;
-  display: inline-block
-}
-
-#indicators span[data-indicator="poll-status"]:hover {
-  border-radius: var(--radius1);
-  text-decoration: none
-}
-
 span[data-indicator="uci-changes"],#indicators span[data-indicator="poll-status"] {
   font-size: 0 !important;
   cursor: pointer;
