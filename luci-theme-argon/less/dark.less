@@ -34,6 +34,10 @@ body {
     color: #cccccc;
 }
 
+.spinning::before {
+    filter: invert(1);
+}
+
 .login-page .login-container {
 
     .login-form {
@@ -599,6 +603,11 @@ td.cbi-value-field var {
 .notice {
     background-color: #483d8b !important;
     background-color: var(--dark-primary) !important;
+}
+
+.cbi-section.fade-in .cbi-title>div:last-child span {
+  background: none!important;
+  color: #ced4da;
 }
 
 .cbi-input-find,

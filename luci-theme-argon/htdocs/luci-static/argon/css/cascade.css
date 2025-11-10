@@ -1377,16 +1377,6 @@ footer > a {
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.16), 0 0 2px 0 rgba(0, 0, 0, 0.12);
   text-shadow: none;
 }
-.modal.alert-message {
-  position: static;
-  width: 90%;
-  min-width: 270px;
-  max-width: 600px;
-  left: auto;
-  top: auto;
-  transform: none;
-  margin: 5em auto;
-}
 .alert.error,
 .alert-message.error {
   background-color: var(--warning);
@@ -1399,6 +1389,16 @@ footer > a {
 .alert .btn,
 .alert-message .btn {
   height: auto;
+}
+.modal.alert-message {
+  position: static;
+  width: 90%;
+  min-width: 270px;
+  max-width: 600px;
+  left: auto;
+  top: auto;
+  transform: none;
+  margin: 5em auto;
 }
 .alert-message > h4 {
   font-size: 110%;
@@ -1417,10 +1417,9 @@ footer > a {
   margin-top: 0rem;
   position: relative;
   top: 0;
-  transform:translate(-50%, 0);
+  transform: translate(-50%, 0);
   width: 100%;
 }
-
 .lg {
   margin: 0;
   padding: 0 !important;
@@ -2094,10 +2093,10 @@ td > table > tbody > tr > td,
   max-width: 3rem;
 }
 .cbi-input-file {
-  appearance: none;
+  appearance: auto !important;
 }
 .cbi-input-file::-webkit-file-upload-button {
-  display: none;
+  display: inline-block !important;
 }
 .cbi-input-invalid {
   color: #f5365c !important;
@@ -3464,7 +3463,9 @@ pre.command-output {
   background: #fb6340 !important;
   border-color: #fb6340 !important;
   margin-left: 0 !important;
-  width: 82px !important;
+}
+[data-page="admin-system-reboot"] .cbi-button.cbi-button-action.important {
+  align-self: flex-end;
 }
 /* applyreboot fix */
 #applyreboot-container {
@@ -3479,7 +3480,7 @@ pre.command-output {
   padding-left: 1.5rem;
 }
 [data-page="admin-system-poweroffdevice"] .container h2 {
-  margin: 0 0 1rem 0;
+  margin: 0;
 }
 [data-page="admin-system-poweroffdevice"] .container h2 + p {
   margin-bottom: 1rem;
@@ -3487,6 +3488,9 @@ pre.command-output {
 }
 [data-page="admin-system-poweroffdevice"] .container button + div {
   display: none;
+}
+[data-page="admin-system-poweroffdevice"] .btn.cbi-button.cbi-button-negative {
+  align-self: flex-end;
 }
 [data-page="admin-network-network"] .cbi-value-field .cbi-dynlist {
   padding: 0 !important;
@@ -3581,6 +3585,31 @@ pre.command-output {
 [data-page="admin-network-firewall-custom"] #view .cbi-tabmenu + div,
 [data-page="admin-status-routes"] #view .cbi-tabmenu + div {
   margin-top: -0.5rem;
+}
+.cbi-section.fade-in .cbi-title {
+  position: relative;
+}
+.cbi-section.fade-in .cbi-title > div:last-child {
+  position: absolute;
+  right: 1.25rem;
+  top: 0;
+}
+.cbi-section.fade-in .cbi-title > div:last-child span {
+  font-size: 0;
+  background: none!important;
+  color: #ced4da !important;
+}
+.cbi-section.fade-in .cbi-title > div:last-child span:after {
+  transition: all 0.3s;
+  font-family: 'argon' !important;
+  content: '\e90f';
+  font-size: 1.1rem;
+  padding: 0.8755rem 0;
+  position: absolute;
+  right: 0;
+}
+.cbi-section.fade-in .cbi-title > div:last-child span[data-style=inactive]:after {
+  transform: rotate(90deg);
 }
 [data-page="admin-status"] #view > div:first-child,
 [data-page="admin-status-overview"] #view > div:first-child {
@@ -3723,7 +3752,6 @@ pre.command-output {
 }
 [data-page^="admin-services-openclash"] .cbi-input-file {
   padding: 0.2813rem;
-  box-sizing: content-box;
   width: 15rem !important;
 }
 [data-page^="admin-services-openclash"] [id="container.openclash.config.debug"] fieldset {
@@ -3857,6 +3885,16 @@ div[style*="display:grid;grid-template-columns:repeat"] .ifacebox .ifacebox-body
 [data-page^="command-cfg"] .mobile-hide,
 [data-page^="command-cfg"] .showSide {
   display: none;
+}
+#mwan3-service-status {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#mwan3-service-status > .alert-message {
+  position: static;
+  transform: none;
 }
 /* responsive */
 @media all and (-ms-high-contrast: none) {

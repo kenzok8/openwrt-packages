@@ -362,7 +362,10 @@
         background: #fb6340 !important;
         border-color: #fb6340 !important;
         margin-left: 0 !important;
-        width: 82px !important;
+    }
+
+    .cbi-button.cbi-button-action.important {
+        align-self: flex-end;
     }
 }
 
@@ -388,7 +391,7 @@
 [data-page="admin-system-poweroffdevice"] {
     .container {
         h2 {
-            margin: 0 0 1rem 0;
+            margin: 0;
         }
 
         h2+p {
@@ -399,6 +402,11 @@
         button+div {
             display: none;
         }
+    }
+
+
+    .btn.cbi-button.cbi-button-negative {
+        align-self: flex-end;
     }
 }
 
@@ -539,10 +547,42 @@
 // 3. Status Pages
 // ==========================================================================
 
+.cbi-section.fade-in {
+    .cbi-title {
+        position: relative;
+
+        > div:last-child {
+            position: absolute;
+            right: 1.25rem;
+            top: 0;
+
+            span {
+                font-size: 0;
+                background: none!important;
+                color: #ced4da!important;
+
+                &:after {
+                    transition: all .3s;
+                    font-family: 'argon' !important;
+                    content: '\e90f';
+                    font-size: 1.1rem;
+                    padding: .8755rem 0;
+                    position: absolute;
+                    right: 0;
+                }
+
+                &[data-style=inactive]:after {
+                    transform: rotate(90deg);
+                }
+            }
+        }
+    }
+}
+
 // Status - Overview
 [data-page="admin-status"],
 [data-page="admin-status-overview"] {
-    #view>div:first-child {
+    #view > div:first-child {
         gap: 0 !important;
     }
 }
@@ -757,7 +797,6 @@
 
     .cbi-input-file {
         padding: 0.2813rem;
-        box-sizing: content-box;
         width: 15rem !important;
     }
 
@@ -949,4 +988,17 @@ div[style*="display:grid;grid-template-columns:repeat"] {
 [data-page^="command-cfg"] .mobile-hide,
 [data-page^="command-cfg"] .showSide {
     display: none;
+}
+
+// overview & mwan3
+#mwan3-service-status {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+#mwan3-service-status > .alert-message { 
+    position: static;
+    transform: none;
 }

@@ -1087,11 +1087,10 @@ td>table>tbody>tr>td,
 }
 
 .cbi-input-file {
-  appearance: none;
+  appearance: auto !important;
 
-  // 去掉选择文件按钮
   &::-webkit-file-upload-button {
-    display: none;
+    display: inline-block !important;
   }
 }
 
