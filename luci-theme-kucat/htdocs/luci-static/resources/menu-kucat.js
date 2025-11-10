@@ -1,6 +1,6 @@
 /*
  *  luci-theme-kucat
- *  Copyright (C) 2019-2024 The Sirpdboy Team <herboy2008@gmail.com> 
+ *  Copyright (C) 2019-2025 The Sirpdboy <herboy2008@gmail.com> 
  *
  *  Have a bug? Please create an issue here on GitHub!
  *      https://github.com/sirpdboy/luci-theme-kucat/issues

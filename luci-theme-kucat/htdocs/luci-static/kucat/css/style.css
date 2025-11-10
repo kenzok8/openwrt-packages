@@ -283,44 +283,6 @@
   --menu-hover-barbgcolor: rgba(255,255,255,0.3);
 }
 
-[data-theme='light'] {
-  --primarytextcolor: #677087;
-  --primary-title-color: #4d4d5d;
-  --menu-color: #eee;
-  --menu-hover-color: #fff;
-  --menu-item-titlebg-color: rgba(var(--primary-rgbm),0.22);
-  --title-color: #65656b;
-  --body-color: #65656b;
-  --body-hover-bgcolor: rgba(50,50,50,0.05);
-  --inputbg-color: rgba(248,248,248,0.15);
-  --inputtext-color: #4d5256;
-  --inputborder-color: rgba(0,0,0,0.2);
-  --input-bgcolor: rgba(255,255,255,0.6);
-  --input-boxcolor: rgba(0,0,0,0.12);
-  --input-boxhovercolor: rgba(0,0,0,0.22);
-  --input-checkcolor: rgba(var(--primary-rgbm),1);
-
-}
-
-[data-theme="dark"] {
-  --primarytextcolor: #bbb;
-  --primary-title-color: #ccc;
-  --menu-color: #ddd;
-  --menu-hover-color: #f5f5f5f5;
-  --menu-item-titlebg-color: rgba(var(--primary-rgbm),0.5);
-  --title-color: #ddd;
-  --body-color: #bbb;
-  --body-hover-bgcolor: rgba(255,255,255,0.05);
-  --inputbg-color: rgba(255,255,255,0.11);
-  --inputtext-color: #ccc;
-  --inputborder-color: rgba(255,255,255,0.2);
-  --input-bgcolor: rgba(50,50,50,0.2);
-  --input-boxcolor: rgba(255,255,255,0.15);
-  --input-boxhovercolor: rgba(255,255,255,0.22);
-  --input-checkcolor: rgba(255,255,255,0.7);
-
-}
-
 .tr {
   display: table-row;
   white-space: nowrap
@@ -702,6 +664,28 @@ footer>a {
   background-color: rgba(255, 255, 255, 0);
   display: none;
 }
+#view {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+#view > .spinning {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    padding: 1.5rem;
+    border-radius: 0.25rem;
+    background-color: rgba(var(--primary-rgbbody), 1);
+    color: var(--body-color);
+    box-shadow: 0 .1rem .5rem .2rem var(--input-boxcolor);
+}
+#view > div:first-child {
+  display: flex;
+    color: var(--body-color);
+  flex-direction: column;
+}
+
 small {
   font-size: 90%;
   line-height: 1.42857143;
@@ -737,7 +721,7 @@ small {
   padding: 0;
   border-radius: var(--radius2);
   background-color: rgba(var(--primary-rgbm),1);
-  box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+  box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor);
   background-image: -webkit-linear-gradient(135deg,rgba(255,255,255,0.2) 25%,transparent 25%,transparent 50%,rgba(255,255,255,0.2) 50%,rgba(255,255,255,0.2) 75%,transparent 75%,transparent) !important;
   transition: all .1s ease;
   -moz-osx-font-smoothing: grayscale;
@@ -1065,13 +1049,38 @@ span[data-indicator="uci-changes"],#indicators span[data-indicator="poll-status"
   border-radius: var(--radius1);
 }
 
-
-.theme-switcher .active {
-  display: inline-block;
+.loading-spinner {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid transparent;
+    border-top: 2px solid var(--menu-hover-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-.theme-switcher>span:not(.active) {
-  display: none;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.theme-switcher {
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+    position: relative;
+}
+
+.theme-switcher:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+[data-theme="dark"] .pdboy-light:before {
+    color: #aaa !important;
+}
+
+[data-theme="light"] .pdboy-dark:before {
+    color: #aaa !important;
 }
 
 
@@ -1425,7 +1434,7 @@ h5 {
   font-weight: bold
 }
 
-.cbi-section,.cbi-section-error,#iptables,.Firewall form,#cbi-network>.cbi-section-node,#cbi-wireless>.cbi-section-node,#cbi-wireless>#wifi_assoclist_table,[data-tab-title],[data-page="admin-system-opkg"] #maincontent>.container {
+.cbi-section,.cbi-section-error,#iptables,.Firewall form,#cbi-network>.cbi-section-node,#cbi-wireless>.cbi-section-node,#cbi-wireless>#wifi_assoclist_table,[data-tab-title],[data-page*="admin-system-opkg"] #maincontent>.container {
   font-family: inherit;
   font-weight: normal;
   font-style: normal;
@@ -1563,16 +1572,16 @@ table>tbody>tr:first-child>td,table>tfoot>tr:first-child>td,table>thead>tr:first
   border-top: 0px solid #eee
 }
 
-#cbi-wireless .td,#cbi-network .tr:first-child>.td,.table[width="100%"]>.tr:first-child>.td,[data-page="admin-network-diagnostics"] .tr>.td,.tr.table-titles>.th,.tr.cbi-section-table-titles>.th {
+#cbi-wireless .td,#cbi-network .tr:first-child>.td,.table[width="100%"]>.tr:first-child>.td,[data-page*="admin-network-diagnostics"] .tr>.td,.tr.table-titles>.th,.tr.cbi-section-table-titles>.th {
   border-top: 0 !important;
   line-height: 1.2
 }
 
-[data-page="admin-network-diagnostics"] .tr>.td {
+[data-page*="admin-network-diagnostics"] .tr>.td {
   white-space: normal
 }
 
-[data-page="admin-network-diagnostics"] .cbi-dropdown>ul {
+[data-page*="admin-network-diagnostics"] .cbi-dropdown>ul {
   overflow-y: hidden
 }
 
@@ -1594,7 +1603,7 @@ table>tbody>tr:first-child>td,table>tfoot>tr:first-child>td,table>thead>tr:first
   border: 1px solid var(--inputborder-color)!important;
   transition: box-shadow .25s ease;
   border-radius: var(--radius2);
-  box-shadow: 0 0.3rem 0.8rem var(--input-boxcolor)
+  box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor)
 }
 
 .btn,button,.cbi-button,.item::after {
@@ -1615,7 +1624,7 @@ table>tbody>tr:first-child>td,table>tfoot>tr:first-child>td,table>thead>tr:first
   font-size: var(--font-z);
   color: var(--menu-hover-color);
   background-color: #008b89;
-  box-shadow: 0 0.3rem 0.8rem var(--input-boxcolor);
+  box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor);
   border-radius: var(--radius2);
   background-image: var(--bgqs-image)
 }
@@ -1703,7 +1712,7 @@ table table,.table .table,.cbi-value-field table,.cbi-value-field .table,td>tabl
   align-items: center
 }
 
-[data-page="admin-network-network"] #view .td.cbi-section-actions>*,[data-page="admin-network-network"] #view .td.cbi-section-actions>*>* {
+[data-page*="admin-network-network"] #view .td.cbi-section-actions>*,[data-page*="admin-network-network"] #view .td.cbi-section-actions>*>* {
   display: unset
 }
 
@@ -1718,15 +1727,15 @@ table table,.table .table,.cbi-value-field table,.cbi-value-field .table,td>tabl
 
 .btn:focus,.cbi-button:focus {
   color: var(--menu-hover-color);
-  box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor);
-  -webkit-box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor);
-  -moz-box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor)
+  box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor);
+  -webkit-box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor);
+  -moz-box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor)
 }
 
 button:hover,.btn:hover,.cbi-button:hover {
-  box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor);
-  -webkit-box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor);
-  -moz-box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor)
+  box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor);
+  -webkit-box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor);
+  -moz-box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor)
 }
 
 .btn:active,.cbi-button:active,button:active {
@@ -1802,13 +1811,13 @@ button:hover,.btn:hover,.cbi-button:hover {
 .tabs li[class~="active"] {
   border-right: 0.18751rem solid var(--primary-solid) !important;
   border-left: 0.18751rem solid var(--primary-solid) !important;
-  box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor);
+  box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor);
   background-color: rgba(var(--primary-rgbm),0.7)
 }
 
 .tabs>li:hover {
   background: rgba(var(--primary-rgbm),0.7);
-  box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor)
+  box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor)
 }
 
 .tabs li[class~="active"] a {
@@ -1844,7 +1853,7 @@ button:hover,.btn:hover,.cbi-button:hover {
   border-radius: var(--radius2);
   padding: 0.5rem 0.2rem;
   line-height: 1.5;
-  box-shadow: 0 0.5rem 1rem var(--input-boxcolor);
+  box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor);
   background: var(--menu-item-titlebg-color);
   margin: 0.2rem 0rem 0.2rem 0.4rem !important
 }
@@ -1858,7 +1867,7 @@ button:hover,.btn:hover,.cbi-button:hover {
 .cbi-tabmenu>li:hover {
   color: var(--menu-hover-color);
   background: rgba(var(--primary-rgbm),0.7);
-  box-shadow: 0 0.5rem 1rem var(--input-boxhovercolor);
+  box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor);
   margin-bottom: 0
 }
 
@@ -1869,7 +1878,7 @@ button:hover,.btn:hover,.cbi-button:hover {
 .cbi-tabmenu>li[class~="cbi-tab"] {
   border-right: 0.18751rem solid var(--primary-solid) !important;
   border-left: 0.18751rem solid var(--primary-solid) !important;
-  box-shadow: 0 0.5rem 1rem var(--input-boxcolor);
+  box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor);
   background-color: rgba(var(--primary-rgbm),0.6)
 }
 
@@ -1906,7 +1915,7 @@ button:hover,.btn:hover,.cbi-button:hover {
   display: table-cell
 }
 
-[data-page="admin-network-network"] .cbi-value>.cbi-value-field {
+[data-page*="admin-network-network"] .cbi-value>.cbi-value-field {
   line-height: 1.25
 }
 
@@ -2059,7 +2068,7 @@ button:hover,.btn:hover,.cbi-button:hover {
    display: inline-flex;
   flex-wrap: nowrap;
   position: relative;
-  box-shadow: 0 0.3rem 0.8rem var(--input-boxcolor);
+  box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor);
   width: 100%;
   pointer-events: auto;
   margin-top: 0.2rem;
@@ -2365,7 +2374,7 @@ button:hover,.btn:hover,.cbi-button:hover {
   background-color: rgba(var(--primary-rgbbody), 1);
   color: var(--inputtext-color);
   margin-left: 0 !important;
-  margin-top: 0.25rem;
+  margin-top: 0rem;
   left: 0 !important;
   cursor: pointer;
 }
@@ -2656,11 +2665,11 @@ select,input {
   background-color: #f0ad4e !important
 }
 
-[data-page="admin-system-flash"] .cbi-value,[data-page="admin-system-flash"] .cbi-section-node,[data-page="admin-system-flash"] .cbi-section .cbi-section {
+[data-page*="admin-system-flash"] .cbi-value,[data-page*="admin-system-flash"] .cbi-section-node,[data-page*="admin-system-flash"] .cbi-section .cbi-section {
   padding: 0
 }
 
-[data-page="admin-system-flash"] legend {
+[data-page*="admin-system-flash"] legend {
   display: block !important;
   font-size: 1.2rem;
   width: 100%;
@@ -2675,11 +2684,11 @@ select,input {
   font-weight: bold
 }
 
-[data-page="admin-system-flash"] .cbi-section-descr {
+[data-page*="admin-system-flash"] .cbi-section-descr {
   font-weight: 600
 }
 
-[data-page="admin-system-flash"] .modal label.btn {
+[data-page*="admin-system-flash"] .modal label.btn {
   background-color: rgba(255,255,255,0)
 }
 
@@ -2691,7 +2700,7 @@ select,input {
   margin-left: 0 !important
 }
 
-[data-page="admin-system-flash"] .modal>p>.btn {
+[data-page*="admin-system-flash"] .modal>p>.btn {
   white-space: normal !important;
   font-size: var(--font-x);
   margin: 0;
@@ -2703,11 +2712,11 @@ select,input {
   box-shadow: none
 }
 
-[data-page="admin-system-flash"] .modal>.right,[data-page="admin-system-flash"] .modal>.right::before {
+[data-page*="admin-system-flash"] .modal>.right,[data-page*="admin-system-flash"] .modal>.right::before {
   margin: 3rem 5px 0 5px
 }
 
-[data-page="admin-system-flash"] .modal>.right>.btn {
+[data-page*="admin-system-flash"] .modal>.right>.btn {
   color: #f8f8f8
 }
 
@@ -2799,11 +2808,11 @@ body.modal-overlay-active #modal_overlay {
   display: inline
 }
 
-[data-page="admin-system-system"] .control-group {
+[data-page*="admin-system-system"] .control-group {
   margin-top: 0.5rem
 }
 
-[data-page="admin-control-autotimeset-startuptask"] .cbi-input-textarea,[data-page="admin-control-autotimeset-scheduledtask"] .cbi-input-textarea {
+[data-page*="admin-control-autotimeset"] .cbi-input-textarea,[data-page*="admin-control-autotimeset"] .cbi-input-textarea {
   min-width: 30rem
 }
 
@@ -3007,7 +3016,7 @@ td>.ifacebadge,.td>.ifacebadge {
   overflow: hidden
 }
 
-#iwsvg,[data-page="admin-status-realtime-bandwidth"] #bwsvg {
+#iwsvg,[data-page*="admin-status-realtime-bandwidth"] #bwsvg {
   border-top: 0 !important
 }
 
@@ -3213,7 +3222,7 @@ label[data-index][data-depends] {
   opacity: 0
 }
 
-#diag-rc-output>pre,#command-rc-output>pre,[data-page="admin-services-wol"] .notice code {
+#diag-rc-output>pre,#command-rc-output>pre,[data-page*="admin-services-wol"] .notice code {
   font-size: var(--font-x);
   font-size-adjust: .35;
   line-height: normal;
@@ -3225,10 +3234,10 @@ label[data-index][data-depends] {
   box-shadow: 0 2px 2px 0 rgba(0,0,0,.16),0 0 2px 0 rgba(0,0,0,.12)
 }
 
-[data-page="admin-network-diagnostics"] .table {
+[data-page*="admin-network-diagnostics"] .table {
   box-shadow: none
 }
-[data-page="admin-network-network"] .ifacebox .ifacebox-head {
+[data-page*="admin-network-network"] .ifacebox .ifacebox-head {
   color: #4d4d5d
 }
 
@@ -3351,6 +3360,11 @@ body.lang_pl.node-main-login .cbi-value-title {
 .node-main-login>.main>.main-right #maincontent>.container>form {
   backdrop-filter: none !important; 
   padding: 1rem 1rem 3rem 1rem !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  backdrop-filter: blur(6px) !important;
+  box-shadow: 0 .1rem .4rem .2rem var(--input-boxcolor);
+  background-color: rgba(var(--primary-rgbbody), 0.5) !important;
+  border-radius: var(--radius1);
   border: none;
   width: 100%;
 }
@@ -3359,17 +3373,13 @@ body.lang_pl.node-main-login .cbi-value-title {
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
-  -webkit-backdrop-filter: blur(6px) !important;
-  backdrop-filter: blur(6px) !important;
-  background-color: rgba(var(--primary-rgbbody), 0.5) !important;
+  backdrop-filter: none !important; 
   justify-content: center;
   align-items: center;
 }
 
 .node-main-login>.main .cbi-page-actions {
   padding: 2rem 1rem 3rem 1rem !important;
-  /* box-shadow: 3px 7px 12px rgba(0, 0, 0, 0.22); */
-  border-radius: 0 0 var(--radius0) var(--radius0);
 }
 
 .node-main-login>.main>.main-right #maincontent>.container>form .alert-message {
@@ -3377,8 +3387,6 @@ body.lang_pl.node-main-login .cbi-value-title {
 }
 
 .node-main-login>.main .cbi-map {
-  border-radius: var(--radius0) var(--radius0) 0 0;
-  /* box-shadow: 3px 7px 12px rgba(0, 0, 0, 0.22); */
   padding: 1rem 1rem 1rem 1rem !important
 }
 
@@ -3508,7 +3516,6 @@ body.lang_pl.node-main-login .cbi-value-title {
   position: relative;
   padding: 0rem;
   background-image: none !important;
-  margin-bottom: 1rem;
   border-bottom: 0px solid #222 !important;
   background-color: rgba(255,255,255,0)
 }
@@ -3552,7 +3559,7 @@ body.lang_pl.node-main-login .cbi-value-title {
   text-decoration: none
 }
 
-.node-status-overview>.main fieldset:nth-child(4) .td:nth-child(2),.node-status-processes>.main .table .tr .td:nth-child(3) {
+[data-page*="admin-status-overview "]>.main fieldset:nth-child(4) .td:nth-child(2),[data-page*="admin-status-processes "]>.main .table .tr .td:nth-child(3) {
   white-space: normal
 }
 
@@ -3585,16 +3592,16 @@ body.lang_pl.node-main-login .cbi-value-title {
   gap: 0px
 }
 
-.node-admin-system-opkg .control-group {
+[data-page*="admin-system-opkg"] .control-group {
   display: block
 }
 
-[data-page="admin-system-opkg"] div.btn {
+[data-page*="admin-system-opkg"] div.btn {
   line-height: 1.6;
   display: inline
 }
 
-[data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear) {
+[data-page*="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear) {
   margin-top: 2rem;
   padding-top: .1rem
 }
@@ -3738,11 +3745,11 @@ body.lang_pl.node-main-login .cbi-value-title {
   margin-top: 2px
 }
 
-[data-page^="admin-system-commands"] .panel-title,[data-page^="command-cfg"] .mobile-hide,[data-page^="command-cfg"] .showSide {
+[data-page*="admin-system-commands"] .panel-title,[data-page*="command-cfg"] .mobile-hide,[data-page*="command-cfg"] .showSide {
   display: none
 }
 
-[data-page^="admin-system-commands"] .panel-title,[data-page^="command-cfg"] .mobile-hide,[data-page^="command-cfg"] .showSide {
+[data-page*="admin-system-commands"] .panel-title,[data-page*="command-cfg"] .mobile-hide,[data-page*="command-cfg"] .showSide {
   display: none
 }
 
@@ -3758,7 +3765,7 @@ body.lang_pl.node-main-login .cbi-value-title {
   opacity: 0
 }
 
-.node-admin-status-hnet #maincontent .container>div>div {
+[data-page*="admin-status-hnet"] #maincontent .container>div>div {
   border: none !important
 }
 
@@ -3766,7 +3773,7 @@ body.lang_pl.node-main-login .cbi-value-title {
   margin: 0 1.5rem 1rem 1.5rem
 }
 
-[data-page="admin-status-routes"] #view h3 {
+[data-page*="admin-status-routes"] #view h3 {
   font-size: var(--font-d);
   line-height: 1;
   display: block;
@@ -3780,7 +3787,7 @@ body.lang_pl.node-main-login .cbi-value-title {
   font-weight: bold
 }
 
-[data-page="admin-status-routes"] #view table,[data-page="admin-status-processes"] #view table,.node-admin-status-realtime-connections #view table[id*=connections] {
+[data-page*="admin-status-routes"] #view table,[data-page*="admin-status-processes"] #view table,[data-page*="admin-status-realtime"] #view table[id*=connections] {
   padding: 10px;
   border: 1px;
   font-weight: normal;
@@ -3797,11 +3804,11 @@ body.lang_pl.node-main-login .cbi-value-title {
   margin-top: 5px
 }
 
-.node-admin-status-realtime-connections #view table[id*=connections] {
+[data-page*="admin-status-realtime"] #view table[id*=connections] {
   white-space: nowrap
 }
 
-.node-admin-status-channel_analysis #view>div>div>div>div,.node-admin-status-channel_analysis #view>div>div>div>div>div,.node-admin-status-realtime-wireless #view>div>div>div>div,.node-admin-status-realtime-load #view div,.node-admin-status-realtime-bandwidth #view>div>div>div>div,.node-admin-status-realtime-connections #view div {
+[data-page*="admin-status-channel_analysis"] #view>div>div>div>div,[data-page*="admin-status-channel_analysis"] #view>div>div>div>div>div,[data-page*="admin-status-realtime"] #view>div>div>div>div,[data-page*="admin-status-realtime"] #view div,[data-page*="admin-status-realtime"] #view>div>div>div>div,[data-page*="admin-status-realtime"]#view div {
   border: none !important;
   background-color: rgba(var(--primary-rgbbody),0.5) !important;
   border-radius: var(--radius2);
@@ -3820,20 +3827,20 @@ body.lang_pl.node-main-login .cbi-value-title {
   padding-right: 5px
 }
 
-[data-page="admin-system-ttyd-ttyd"] #view>iframe {
+[data-page*="admin-system-ttyd-ttyd"] #view>iframe {
   border-radius: var(--radius2) !important;
   min-height: 600px !important
 }
 
-[data-page="admin-status-overview"] h3 {
+[data-page*="admin-status-overview"] h3 {
   color: unset !important
 }
 
-[data-page="admin-network-dhcp"] h3 {
+[data-page*="admin-network-dhcp"] h3 {
   margin: -2rem 1.5rem 0.2rem
 }
 
-[data-page="admin-status-iptables"] .right {
+[data-page*="admin-status-iptables"] .right {
   margin-bottom: 0rem !important
 }
 
@@ -3864,23 +3871,23 @@ body.lang_pl.node-main-login .cbi-value-title {
   z-index: 500
 }
 
-.node-admin-nlbw-display .cbi-section ul {
+[data-page*="admin-nlbw-display"] .cbi-section ul {
   padding: 0.875rem 1.5rem
 }
 
-.node-admin-nlbw-backup form {
+[data-page*="admin-nlbw-backup"] form {
   margin-left: 1.5rem
 }
 
-.node-admin-nas-usb_printer em {
+[data-page*="admin-nas-usb_printer"] em {
   display: block
 }
 
-.node-admin-nas-usb_printer em {
+[data-page*="admin-nas-usb_printer"] em {
   display: block
 }
 
-[data-page="admin-system-flashops"] .cbi-section ul {
+[data-page*="admin-system-flash"] .cbi-section ul {
   padding: .875rem 1.5rem;
   font-size: var(--font-x)
 }
@@ -3903,16 +3910,16 @@ body.lang_pl.node-main-login .cbi-value-title {
   background-color: rgba(255,255,255,0.2) !important
 }
 
-[data-page="admin-status-usage-details"] .cbi-value-title {
+[data-page*="admin-status-usage-details"] .cbi-value-title {
   width: 16rem
 }
 
-[data-page="admin-status-processes"] #view td:nth-child(3)>span,.cbi-map>.cbi-section .cbi-value:nth-of-type(4) td:nth-child(2),.Interfaces>.main #view td:nth-child(3),[data-page="admin-network-network"]>.main #view td:nth-child(3),[data-page="admin-status-processes"]>.main #view td:nth-child(3),[data-page="admin-status-overview"]>.main #view td:nth-child(2) {
+[data-page*="admin-status-processes"] #view td:nth-child(3)>span,.cbi-map>.cbi-section .cbi-value:nth-of-type(4) td:nth-child(2),.Interfaces>.main #view td:nth-child(3),[data-page*="admin-network-network"]>.main #view td:nth-child(3),[data-page*="admin-status-processes"]>.main #view td:nth-child(3),[data-page*="admin-status-overview"]>.main #view td:nth-child(2) {
   white-space: normal !important;
   word-break: unset !important
 }
 
-[data-page="admin-status-overview"] #view .cbi-section>div>div {
+[data-page*="admin-status-overview"] #view .cbi-section>div>div {
   justify-items: center !important
 }
 
@@ -3924,66 +3931,56 @@ body.lang_pl.node-main-login .cbi-value-title {
   width: 4rem !important
 }
 
-[data-page="admin-nlbw-usage"]>.main .tr.table-totals,[data-page="admin-nlbw-usage"]>.main .cbi-progressbar {
+[data-page*="admin-nlbw-usage"]>.main .tr.table-totals,[data-page*="admin-nlbw-usage"]>.main .cbi-progressbar {
   background-color: var(--inputbg-color) !important
 }
-
-[data-page="admin-services-vssr"] .ssr-button {
-  margin-left: .3rem
-}
-
-.pure-g .block h4,
-[data-page="admin-services-vssr"] .block h4 {
+.pure-g .block h4 {
   color: var(--body-color)!important;
-  background-image: none!important
+  background-image: none!important;
+  background-color: rgba(255,255,255,0) !important;
+  white-space: nowrap;
+  text-align: center;
+  
+  margin: 1rem 0rem 1rem 0rem;
 }
 
-[data-page="admin-services-vssr"] .status-bar {
-  color: var(--body-color);
-  box-shadow: 0 0 .5rem 0 var(--inputbg-color);
-  background-color: var(--inputbg-color) !important
-}
-
-.pure-g .block,
-[data-page="admin-services-vssr"] .block,
-[data-page="admin-services-shadowsocksr"] >.block,
+[data-page*="admin-services-passwall"] .pure-g .block,
+[data-page*="admin-services-shadowsocksr"] >.block,
 .block,
-[data-page="admin-services-bypass"] >.main .block,
-[data-page="admin-services-vssr"] >.main .block,
+[data-page*="admin-services-bypass"] >.main .block,
 .main .block 
 {
   color: var(--body-color);
-  background-color: var(--input-bgcolor) !important;
-  box-shadow: 0 0 1px var(--inputborder-color);
-  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14),0 3px 1px -2px rgba(0,0,0,0.32),0 1px 5px 0 rgba(0,0,0,0.2)
+  background-color: rgba(var(--primary-rgbbody),0.7) !important;
+  box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor);
 }
 
-[data-page="admin-services-shadowsocksr"]>.block:active,
+[data-page*="admin-services-shadowsocksr"]>.block:active,
 .block:active,
-[data-page="admin-services-bypass"]>.main .block:active,
+[data-page*="admin-services-bypass"]>.main .block:active,
 .main .block:active,
-[data-page="admin-services-shadowsocksr"]>.block:hover,
+[data-page*="admin-services-shadowsocksr"]>.block:hover,
 .block:hover,
-[data-page="admin-services-bypass"]>.main .block:hover,
+[data-page*="admin-services-bypass"]>.main .block:hover,
 .main .block:hover {
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2),0 4px 6px rgba(0,0,0,0.35);
-  background-color: var(--input-boxhovercolor) !important
+  box-shadow: 0 0.3rem 0.5rem var(--input-boxhovercolor);
+  background-color: rgba(var(--primary-rgbbody),0.3) !important;
 }
 
-[data-page="admin-services-samba"]>.main .cbi-tabcontainer:nth-child(3) .cbi-value-title {
+[data-page*="admin-services-samba"]>.main .cbi-tabcontainer:nth-child(3) .cbi-value-title {
   margin-bottom: 1rem;
   width: auto
 }
 
-[data-page="admin-services-samba"]>.main .cbi-tabcontainer:nth-child(3) .cbi-value-field {
+[data-page*="admin-services-samba"]>.main .cbi-tabcontainer:nth-child(3) .cbi-value-field {
   display: list-item
 }
 
-[data-page="admin-services-samba"]>.main .cbi-tabcontainer:nth-child(3) .cbi-value-description {
+[data-page*="admin-services-samba"]>.main .cbi-tabcontainer:nth-child(3) .cbi-value-description {
   padding-top: 1rem
 }
 
-[data-page="admin-services-adguardhome"]>.main .cbi-value-field {
+[data-page*="admin-services-adguardhome"]>.main .cbi-value-field {
   width: 27% !important
 }
 
@@ -4009,49 +4006,49 @@ pre.command-output {
   padding: 1.5rem
 }
 
-[data-page="admin-nlbw-display"] .cbi-section[data-tab="export"] {
+[data-page*="admin-nlbw-display"] .cbi-section[data-tab="export"] {
   padding: 1.5rem !important
 }
 
-[data-page="admin-nlbw-backup"] form {
+[data-page*="admin-nlbw-backup"] form {
   padding-left: 1.5rem
 }
 
-[data-page="admin-status-iptables"] .right {
+[data-page*="admin-status-iptables"] .right {
   margin-bottom: 0 !important
 }
 
-[data-page="admin-services-ttyd"] .container {
+[data-page*="admin-services-ttyd"] .container {
   display: flex;
   flex-direction: column
 }
 
-[data-page="admin-services-ttyd"] #view {
+[data-page*="admin-services-ttyd"] #view {
   flex: 1
 }
 
-[data-page="admin-services-ttyd"] #view iframe {
+[data-page*="admin-services-ttyd"] #view iframe {
   height: 100%
 }
 
-[data-page="admin-system-fileassistant"] .fb-container .panel-title {
+[data-page*="admin-system-fileassistant"] .fb-container .panel-title {
   padding: .5rem .75rem !important
 }
 
-[data-page="admin-system-fileassistant"] .cbi-section.fb-container {
+[data-page*="admin-system-fileassistant"] .cbi-section.fb-container {
   padding: .5rem
 }
 
-[data-page="admin-system-fileassistant"] .fb-container .panel-container {
+[data-page*="admin-system-fileassistant"] .fb-container .panel-container {
   border-bottom-color: #dee2e6
 }
 
 /* openclash */
-[data-page^="admin-services-openclash"] .cbi-tabmenu>li:last-child {
+[data-page*="admin-services-openclash"] .cbi-tabmenu>li:last-child {
   margin-right: 0 !important
 }
 
-[data-page^="admin-services-openclash"] .cbi-section .oc{
+[data-page*="admin-services-openclash"] .cbi-section .oc{
   --bg-white: rgba(var(--primary-rgbbody), 0.4);
   --bg-light: rgba(255, 255, 255, 0);
   --bg-gray: rgba(var(--primary-rgbm), 0.02);
@@ -4061,87 +4058,101 @@ pre.command-output {
   --border-light: rgba(255, 255, 255, 0);
   --text-primary: var(--inputtext-color);
 }
-[data-page^="admin-services-openclash"]  .select-class {
+[data-page*="admin-services-openclash"]  .select-class {
    background-color: rgba(255,255,255,0) !important;
    padding: 0 20px 0 10px!important;
 }
 
-[data-page^="admin-services-openclash"]  .oc .myip-ip-item, 
-[data-page^="admin-services-openclash"] .oc .myip-check-item {
+[data-page*="admin-services-openclash"]  .oc .myip-ip-item, 
+[data-page*="admin-services-openclash"] .oc .myip-check-item {
    background-color: rgba(var(--primary-rgbbody),0.2) !important;
    border: 1px solid rgba(var(--primary-rgbm),0.2);
 }
 
-[data-page^="admin-services-openclash"]  .oc .sub-card  {
+[data-page*="admin-services-openclash"]  .oc .sub-card  {
   border: 1px solid rgba(var(--primary-rgbm),0.2) !important;
 }
 
-[data-page^="admin-services-openclash"]  .oc .main-card {
+[data-page*="admin-services-openclash"]  .oc .main-card {
   border: 0px solid rgba(var(--primary-rgbm),0.1) !important;
 }
 
 
-[data-page^="admin-services-openclash"] #tab-content .dom {
+[data-page*="admin-services-openclash"] #tab-content .dom {
   padding: 0 1rem 1rem 1rem
 }
 
-[data-page^="admin-services-openclash"] .cbi-input-file {
+[data-page*="admin-services-openclash"] .cbi-input-file {
   padding: .2813rem;
   box-sizing: content-box;
   width: 15rem !important
 }
 
-[data-page^="admin-services-openclash"] [id="container.openclash.config.debug"] fieldset {
+[data-page*="admin-services-openclash"] [id="container.openclash.config.debug"] fieldset {
   border: none !important;
   padding: 1rem !important
 }
 
-[data-page^="admin-services-openclash"] #debug-rc-output>textarea {
+[data-page*="admin-services-openclash"] #debug-rc-output>textarea {
   font-family: 'Google Sans' !important
 }
 
-[data-page^="admin-services-openclash"] .CodeMirror {
+[data-page*="admin-services-openclash"] .CodeMirror {
   font-size: inherit;
   background-color: rgba(0,0,0,0.8) !important;
   color: var(--body-color) !important;
   font-family: 'Google Sans' !important
 }
 
-[data-page^="admin-services-openclash"] .cbi-button-up,[data-page^="admin-services-openclash"] .cbi-button-down {
+[data-page*="admin-services-openclash"] .cbi-button-up,[data-page*="admin-services-openclash"] .cbi-button-down {
   padding: .8rem 1.5rem;
   font-size: 0
 }
 
-[data-page^="admin-services-openclash"] select#CORE_VERSION,[data-page^="admin-services-openclash"] select#RELEASE_BRANCH {
+[data-page*="admin-services-openclash"] select#CORE_VERSION,[data-page*="admin-services-openclash"] select#RELEASE_BRANCH {
   width: auto
 }
 
-[data-page^="admin-services-openclash"] .cbi-section>div>ul>li {
+[data-page*="admin-services-openclash"] .cbi-section>div>ul>li {
   width: auto !important;
   padding: 0rem 0.5rem !important
 }
 
-[data-page^="admin-services-openclash"] .CodeMirror-merge,#cbi-openclash .CodeMirror-merge-2pane {
+[data-page*="admin-services-openclash"] .CodeMirror-merge,#cbi-openclash .CodeMirror-merge-2pane {
   height: auto !important;
   border: none !important
 }
 
-[data-page^="admin-services-openclash"] .cm-s-idea span.cm-variable {
+[data-page*="admin-services-openclash"] .cm-s-idea span.cm-variable {
   color: #fd8c73 !important
 }
 
-[data-page^="admin-services-openclash"] .CodeMirror-merge-scrolllock-wrap>.CodeMirror-merge-scrolllock {
+[data-page*="admin-services-openclash"] .CodeMirror-merge-scrolllock-wrap>.CodeMirror-merge-scrolllock {
   color: var(--inputtext-color) !important
 }
 
-[data-page^="admin-services-openclash"] .CodeMirror-merge>.CodeMirror-merge-gap {
+[data-page*="admin-services-openclash"] .CodeMirror-merge>.CodeMirror-merge-gap {
   background-color: rgba(255,255,255,0.12) !important
 }
 
-[data-page^="admin-services-openclash"] .CodeMirror-scroll>.CodeMirror-gutters {
+[data-page*="admin-services-openclash"] .CodeMirror-scroll>.CodeMirror-gutters {
   background-color: rgba(255,255,255,0.1) !important;
   border-right: 1px solid #777 !important
 }
+
+[data-page*="admin-services-openclash"] .cbi-section,
+[data-page*="admin-services-openclash"] .cbi-section>div,
+[data-page*="admin-services-openclash"] .cbi-tabmenu{
+    background-color: rgba(var(--primary-rgbbody), 0.2)  !important;
+    border: 0px solid #ddd !important;
+    box-shadow: none !important;
+}
+
+[data-page*="admin-services-openclash"] #tab {
+  border: 0px solid #ddd !important;
+  box-shadow: none !important;
+}
+
 #cbi-nikki-proxy  .cbi-value-field,
 #cbi-nikki-proxy .cbi-section-table-row>.cbi-value-field .cbi-dropdown,
 #cbi-nikki-proxy .cbi-value-field .cbi-dropdown,
@@ -4286,53 +4297,49 @@ border-bottom: 0px solid #f1f5f9!important;
   border-top: 1px solid var(--inputborder-color)!important;
 }
 
-[data-page="admin-services-adguardhome"]>.main .cbi-value .cbi-input-textarea {
+[data-page*="admin-services-adguardhome"]>.main .cbi-value .cbi-input-textarea {
   width: 100% !important;
   box-shadow: 0 0 1px var(--input-boxcolor) !important
 }
 
-[data-page="admin-system-packages"]>.main .cbi-page-actions {
+[data-page*="admin-system-packages"]>.main .cbi-page-actions {
   padding: 1rem 0
 }
 
-[data-page="admin-system-leds"] .cbi-section em {
+[data-page*="admin-system-leds"] .cbi-section em {
   display: block
 }
 
-[data-page="admin-store-pages"] .cbi-section>.tags-container>.tags-value,[data-page="admin-store-pages"] .cbi-section>.sort-container>.sort-value {
+[data-page*="admin-store-pages"] .cbi-section>.tags-container>.tags-value,[data-page*="admin-store-pages"] .cbi-section>.sort-container>.sort-value {
   flex: none
 }
 
-[data-page="admin-store-pages"] .app-container .app-btns .app-btn {
+[data-page*="admin-store-pages"] .app-container .app-btns .app-btn {
   padding: 0.5rem;
   line-height: 1.4
 }
 
-[data-page="admin-system-package-manager"] .modal>textarea {
+[data-page*="admin-system-package-manager"] .modal>textarea {
   white-space: nowrap
 }
-[data-page="admin-status-overview"]  #view>div {
-  padding: 0rem 0rem 1rem 0.5rem;
-}
 
-.main>.main-left,.cbi-section,[data-tab-title],[data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear),#maincontent>.container>form,#maincontent>.container>form>div,.tabs,.cbi-tabmenu,.cbi-tooltip,#view>p,#view>div,#view>table {
+.main>.main-left,.cbi-section,[data-tab-title],[data-page*="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear),#maincontent>.container>form,#maincontent>.container>form>div,.tabs,.cbi-tabmenu,.cbi-tooltip,#view>p,#view>div,#view>table {
   backdrop-filter: var(--ufilter);
-  padding-bottom: 1rem;
   -webkit-backdrop-filter: var(--ufilter)
 }
 
-#maincontent>.container>#view,[data-page="admin-status-routes"] #view,[data-page="admin-network-diagnostics"] #view,[data-page="admin-status-processes"] #view {
+#maincontent>.container>#view,[data-page*="admin-status-routes"] #view,[data-page*="admin-network-diagnostics"] #view,[data-page*="admin-status-processes"] #view {
   min-width: inherit;
   overflow-x: auto;
   overflow-y: hidden
 }
 
-[data-page="admin-system-poweroff"] #maincontent>.container>#view,
-[data-page="admin-system-reboot"] #maincontent>.container>#view,[data-page="admin-system-poweroffdevice"] #maincontent .container {
+[data-page*="admin-system-poweroff"] #maincontent>.container>#view,
+[data-page*="admin-system-reboot"] #maincontent>.container>#view,[data-page*="admin-system-poweroffdevice"] #maincontent .container {
   padding: 0 1rem 3rem 1rem
 }
 
-[data-page="admin-network-diagnostics"] #view .table {
+[data-page*="admin-network-diagnostics"] #view .table {
   margin-top: 2rem
 }
 
@@ -4492,11 +4499,11 @@ div#add_link_div {
   font-size: var(--font-x)
 }
 
-[data-page="admin-network-firewall-forwards"] .table:not(.cbi-section-table) {
+[data-page*="admin-network-firewall-forwards"] .table:not(.cbi-section-table) {
   display: block
 }
 
-[data-page="admin-network-firewall-forwards"] .table:not(.cbi-section-table),[data-page="admin-network-firewall-rules"] .table:not(.cbi-section-table),[data-page="admin-network-hosts"] .table,[data-page="admin-network-routes"] .table {
+[data-page*="admin-network-firewall-forwards"] .table:not(.cbi-section-table),[data-page*="admin-network-firewall-rules"] .table:not(.cbi-section-table),[data-page*="admin-network-hosts"] .table,[data-page*="admin-network-routes"] .table {
   overflow-y: visible
 }
 
@@ -4504,23 +4511,23 @@ div#add_link_div {
   width: 32% !important
 }
 
-[data-page="admin-network-network"] .cbi-section-table tr,[data-page="admin-network-network"] .cbi-section-table td {
+[data-page*="admin-network-network"] .cbi-section-table tr,[data-page*="admin-network-network"] .cbi-section-table td {
   font-size: var(--font-x) !important
 }
 
-[data-page="admin-network-network"] .cbi-section-node table td:nth-of-type(1) {
+[data-page*="admin-network-network"] .cbi-section-node table td:nth-of-type(1) {
   padding: 5px !important
 }
 
-[data-page="admin-network-network"] .cbi-section-node table td,[data-page="admin-network-wireless"] fieldset .cbi-section-node table td {
+[data-page*="admin-network-network"] .cbi-section-node table td,[data-page*="admin-network-wireless"] fieldset .cbi-section-node table td {
   padding: 10px !important
 }
 
-[data-page="admin-network-network"] .cbi-section-table br {
+[data-page*="admin-network-network"] .cbi-section-table br {
   display: initial
 }
-[data-page="admin-network-network"] .cbi-section-table tr, [data-page="admin-network-network"] .cbi-section-table td,
-[data-page="admin-network-network"] .cbi-network-interface .tr.cbi-section-table-row>.cbi-value-field {
+[data-page*="admin-network-network"] .cbi-section-table tr, [data-page*="admin-network-network"] .cbi-section-table td,
+[data-page*="admin-network-network"] .cbi-network-interface .tr.cbi-section-table-row>.cbi-value-field {
   width: auto;
 }
 
@@ -4553,6 +4560,7 @@ div#add_link_div {
 
 .cbi-dynlist>.add-item:not([ondrop])>input,.cbi-dynlist>.item>span,.cbi-dynlist>.add-item input {
   min-width: 8rem;
+  box-shadow: 0 0.1rem 0.3rem var(--input-boxcolor);
   width: 30rem;
 }
 
@@ -4600,7 +4608,7 @@ div#add_link_div {
     font-size:var(--font-d)
   }
 
-  .node-admin-status-iptables>.main fieldset li>a {
+  [data-page*="admin-status-iptables"]>.main fieldset li>a {
     padding: .3rem .6rem
   }
 
@@ -4616,7 +4624,7 @@ div#add_link_div {
     display: block
   }
 
-  [ data-page="admin-network-firewall-forwards"] .table:not(.cbi-section-table),[data-page="admin-network-firewall-rules"] .table:not(.cbi-section-table),[data-page="admin-network-hosts"] .table,[data-page="admin-network-routes"] .table {
+  [data-page*="admin-network-firewall"] .table:not(.cbi-section-table),[data-page*="admin-network-firewall"] .table:not(.cbi-section-table),[data-page*="admin-network-hosts"] .table,[data-page*="admin-network-routes"] .table {
     overflow-y: visible
   }
 
@@ -4628,9 +4636,6 @@ div#add_link_div {
     min-width: 9rem
   }
 
-  .node-admin-status>.main fieldset li>a {
-    padding: .3rem .6rem
-  }
 
   .tabs>li>a,.cbi-tabmenu>li>a {
     padding: .2rem .5rem
@@ -4672,7 +4677,7 @@ div#add_link_div {
     overflow-y: hidden
   }
 
-  #diag-rc-output>pre,#command-rc-output>pre,[data-page="admin-services-wol"] .notice code {
+  #diag-rc-output>pre,#command-rc-output>pre,[data-page*="admin-services-wol"] .notice code {
     font-size: var(--font-x)
   }
 
@@ -4710,8 +4715,8 @@ div#add_link_div {
     display: none !important
   }
 
-  [data-page="admin-status-overview"] .main #view td:nth-child(1) {
-    width: 6rem
+  [data-page*="admin-status-overview"] .main #view td:nth-child(1) {
+    width: 8rem
   }
 
   .modal .cbi-value-title,.cbi-value-title {
@@ -4723,7 +4728,7 @@ div#add_link_div {
     overflow-x: hidden
   }
 
-  [data-page="admin-status-overview"] .table[width="100%"]>.tr {
+  [data-page*="admin-status-overview"] .table[width="100%"]>.tr {
     flex-wrap: nowrap
   }
 
@@ -4755,7 +4760,7 @@ div#add_link_div {
     flex: 1 1 100%
   }
 
-  [data-page^="admin-status-realtime"] .td[id] {
+  [data-page*="admin-status-realtime"] .td[id] {
     text-align: left
   }
   .cbi-tab-descr {
@@ -4797,19 +4802,6 @@ div#add_link_div {
     font-size: var(--font-x);
     color: var(--body-color);
     padding: 1rem 0.5rem
-  }
-
-  [data-page="admin-services-vssr"] .status-info {
-    font-size: var(--font-x)
-  }
-
-  [data-page="admin-services-vssr"] .icon-con {
-    margin-top: 0.4rem
-  }
-
-  [data-page="admin-services-vssr"] .icon-con img {
-    width: 2.3rem !important;
-    height: auto
   }
 
   #ethinfo td {
@@ -4904,7 +4896,7 @@ div#add_link_div {
     margin: 0.1em auto
   }
 
-  [data-page="admin-status-processes"] .td[data-title="Hang Up"]::before,[data-page="admin-status-processes"] .td[data-title="Terminate"]::before,[data-page="admin-status-processes"] .td[data-title="Kill"]::before {
+  [data-page*="admin-status-processes"] .td[data-title="Hang Up"]::before,[data-page*="admin-status-processes"] .td[data-title="Terminate"]::before,[data-page*="admin-status-processes"] .td[data-title="Kill"]::before {
     display: none
   }
 
@@ -4912,7 +4904,7 @@ div#add_link_div {
     display: none
   }
 
-  [data-page="admin-system-admin-password"] .control-group {
+  [data-page*="admin-system-admin-password"] .control-group {
     flex-wrap: nowrap
   }
 
@@ -4974,7 +4966,7 @@ div#add_link_div {
     line-height: 1
   }
 
-  #diag-rc-output>pre,#command-rc-output>pre,[data-page="admin-services-wol"] .notice code {
+  #diag-rc-output>pre,#command-rc-output>pre,[data-page*="admin-services-wol"] .notice code {
     font-size: var(--font-x) !important
   }
 
@@ -4982,15 +4974,15 @@ div#add_link_div {
     padding: 0.5rem 1rem
   }
 
-  [data-page="admin-system-flash"] legend {
+  [data-page*="admin-system-flash"] legend {
     padding: 1rem 0 1rem 1rem
   }
 
-  [data-page="admin-system-flash"] .cbi-value {
+  [data-page*="admin-system-flash"] .cbi-value {
     padding: 0 0 0 1rem
   }
 
-  [data-page="admin-network-dhcp"] [data-tab-active="true"] {
+  [data-page*="admin-network-dhcp"] [data-tab-active="true"] {
     padding: 0 !important
   }
   .cbi-value:first-child {
@@ -5026,7 +5018,7 @@ div#add_link_div {
     flex-wrap: wrap
   }
 }
-
+ 
 @media (max-width: 600px) {
   .app-item {
     width: 50%!important
@@ -5034,8 +5026,7 @@ div#add_link_div {
 }
 
 @media only screen and (max-width: 480px) {
-  [data-page="admin-status-overview"] .main #view td:nth-child(1) {
-    max-width:8rem;
+  [data-page*="admin-status-overview"] .main #view td:nth-child(1) {
     white-space: normal !important
   }
 

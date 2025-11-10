@@ -7,7 +7,6 @@ uci batch <<-EOF
 	commit luci
 EOF
 fi
-chmod +x /usr/libexec/kucat/kucat*
 
 rm -rf /tmp/luci-*
 exit 0
