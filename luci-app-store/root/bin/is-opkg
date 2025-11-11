@@ -25,6 +25,8 @@ ISTORE_PKG=luci-app-store
 ISTORE_DEP_PKGS="luci-lib-taskd luci-lib-xterm taskd"
 ISTORE_INDEX=https://istore.istoreos.com/repo/all/store/Packages.gz
 
+NEWLINE=$'\n'
+
 is_init() {
     mkdir -p ${DL_DIR} ${LISTS_DIR} ${IS_ROOT}/etc ${IS_ROOT}/var
 
@@ -231,6 +233,87 @@ try_upgrade_depends() {
     return 0
 }
 
+CMD_INSTALLED="opkg list-installed | cut -d' ' -f1 | sort -u"
+dotrun() {
+    local path="$1"
+    [ -f "$path" ] || { echo "file not found: $path" >&2; return 1; }
+    ls -l "$path"
+    local md5=$(md5sum "$path" 2>/dev/null | cut -d' ' -f1)
+    local ts=$(date '+%s')
+    #local date=$(date '+%Y-%m-%d_%H-%M-%S')
+    echo "MD5: $md5"
+    echo "Save installed pkg list before installing"
+    sh -c "$CMD_INSTALLED" > "/tmp/is-root/tmp/pre_$md5.txt"
+    if echo "$path" | grep -q '\.run$'; then
+        echo "Executing .run file"
+        chmod 0755 "$path" && "$path"
+    else
+        echo "Installing .ipk file"
+        opkg install "$path"
+    fi
+    local RET=$?
+    rm -f "$path"
+    if [ -s "/tmp/is-root/tmp/pre_$md5.txt" ]; then
+        echo "Save installed pkg list after installing"
+        sh -c "$CMD_INSTALLED" > "/tmp/is-root/tmp/post_$md5.txt"
+        grep -Fxf "/tmp/is-root/tmp/pre_$md5.txt" -v "/tmp/is-root/tmp/post_$md5.txt" > "/tmp/is-root/tmp/added_$md5.txt"
+        if [ -s "/tmp/is-root/tmp/added_$md5.txt" ]; then
+            echo "The following packages were added:"
+            cat "/tmp/is-root/tmp/added_$md5.txt"
+            mkdir -p /usr/share/istore/run-records
+            path="${path##*/}"
+            path="${path//\\/\\\\}" #\
+            path="${path//\"/\\\"}" #"
+            path="${path//$NEWLINE/\\n}" # \n
+            path="${path//^M/\\r}" # \r
+            echo "{\"id\":\"$ts-$md5\",\"ts\":$ts,\"md5\":\"$md5\",\"file\":\"$path\"}" > /usr/share/istore/run-records/$ts-$md5.txt
+            cat "/tmp/is-root/tmp/added_$md5.txt" >> /usr/share/istore/run-records/$ts-$md5.txt
+        fi
+    fi
+    rm -f "/tmp/is-root/tmp/pre_$md5.txt" "/tmp/is-root/tmp/post_$md5.txt" "/tmp/is-root/tmp/added_$md5.txt"
+    return $RET
+}
+
+run_records() {
+    local record
+    local file
+    echo "["
+    for record in /usr/share/istore/run-records/*.txt; do
+        [ -f "$record" ] || continue
+        echo "`head -1 "$record"`,"
+    done | head -c -2
+    echo ""
+    echo "]"
+}
+
+unrun() {
+    local id="$1"
+    [ -s "/usr/share/istore/run-records/$id.txt" ] || { echo "record not found: $id" >&2; return 1; }
+    echo "The following packages will be removed:"
+    tail -n +2 "/usr/share/istore/run-records/$id.txt" > "/tmp/is-root/tmp/to_unrun_$id.txt"
+    cat "/tmp/is-root/tmp/to_unrun_$id.txt"
+    local round max_round=6
+    for round in `seq 1 $max_round`; do
+        if [ $round == $max_round ]; then
+            opkg --autoremove remove `cat "/tmp/is-root/tmp/to_unrun_$id.txt"`
+        else
+            opkg --autoremove remove `cat "/tmp/is-root/tmp/to_unrun_$id.txt"` 2>/dev/null && break
+        fi
+    done
+    sh -c "$CMD_INSTALLED" > "/tmp/is-root/tmp/post_unrun_$id.txt"
+    grep -Fxf "/tmp/is-root/tmp/post_unrun_$id.txt" "/tmp/is-root/tmp/to_unrun_$id.txt" > "/tmp/is-root/tmp/remain_unrun_$id.txt"
+    if [ -s "/tmp/is-root/tmp/remain_unrun_$id.txt" ]; then
+        echo "The following packages failed to be removed:"
+        cat "/tmp/is-root/tmp/remain_unrun_$id.txt"
+    else
+        echo "All packages removed successfully."
+        rm -f "/usr/share/istore/run-records/$id.txt"
+    fi
+    rm -f "/tmp/is-root/tmp/to_unrun_$id.txt" "/tmp/is-root/tmp/post_unrun_$id.txt" "/tmp/is-root/tmp/remain_unrun_$id.txt"
+    return 0
+}
+
+
 usage() {
     echo "usage: is-opkg sub-command [arguments...]"
     echo "where sub-command is one of:"
@@ -244,6 +327,11 @@ usage() {
     echo "      do_self_upgrade                 Upgrade iStore"
     echo "      arch                            Show libc architecture"
     echo "      opkg                            sys opkg wrap"
+    echo "      dotrun {path}                   install .run/.ipk"
+    echo "      run_records                     list .run/.ipk install records"
+    echo "      del_record {id}                 delete .run/.ipk install record"
+    echo "      unrun {id}                      Remove installed packages by .run/.ipk"
+    exit 1
 }
 
 is_init >/dev/null 2>&1
@@ -284,7 +372,18 @@ case $action in
     "opkg")
         opkg_wrap "$@"
     ;;
-
+    "dotrun")
+        dotrun "$@"
+    ;;
+    "run_records")
+        run_records
+    ;;
+    "del_record")
+        rm -f "/usr/share/istore/run-records/$1.txt"
+    ;;
+    "unrun")
+        unrun "$1"
+    ;;
     *)
         usage
     ;;
