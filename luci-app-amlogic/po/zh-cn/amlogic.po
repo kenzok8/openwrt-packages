@@ -413,9 +413,6 @@ msgstr "kernel_flippy [Flippy 的主线稳定内核]"
 msgid "kernel_h6 [Allwinner H6 Kernel]"
 msgstr "kernel_h6 [Allwinner H6 内核]"
 
-msgid "kernel_dev [Development Kernel]"
-msgstr "kernel_dev [开发版内核]"
-
 msgid "kernel_beta [Beta Kernel]"
 msgstr "kernel_beta [测试版内核]"
 

@@ -76,7 +76,6 @@ local known_tags = {
 local ophub_extra_tags = {
     kernel_flippy = "kernel_flippy [Mainline Stable Kernel by Flippy]",
     kernel_h6 = "kernel_h6 [Allwinner H6 Kernel]",
-    kernel_dev = "kernel_dev [Development Kernel]",
     kernel_beta = "kernel_beta [Beta Kernel]",
 }
 -- Conditionally add the extra tags to the list.
