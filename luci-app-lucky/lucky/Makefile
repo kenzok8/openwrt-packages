@@ -9,7 +9,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=lucky
-PKG_VERSION:=2.19.5
+PKG_VERSION:=2.20.2
 PKG_RELEASE:=1
 PKGARCH:=all 
 
