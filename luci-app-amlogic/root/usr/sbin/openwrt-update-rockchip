@@ -258,6 +258,14 @@ case $MYDEVICE_NAME in
     fi
     SOC="watermelon-pi"
     ;;
+"Rockchip RK3576 DshanPi A1 Board")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3576-100ask-dshanpi-a1.dtb"
+    fi
+    SOC="100ask-dshanpi-a1"
+    ;;
 "Radxa ROCK 5B" | "Radxa ROCK 5 Model B")
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
