@@ -523,16 +523,21 @@ while [ $i -le $max_try ]; do
         sync
 
         echo "Edit uEnv.txt ..."
-        cat >uEnv.txt <<EOF
-LINUX=/zImage
-INITRD=/uInitrd
-FDT=/dtb/amlogic/${FDTFILE}
-APPEND=root=UUID=${ROOTFS1_UUID} rootfstype=btrfs rootflags=compress=zstd:${ZSTD_LEVEL} console=ttyAML0,115200n8 console=tty0 no_console_suspend consoleblank=0 fsck.fix=yes fsck.repair=yes net.ifnames=0 cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory swapaccount=1
-EOF
+        [[ -f "uEnv.txt" ]] && {
+            sed -i -E \
+                -e "s|/dtb/amlogic.*|/dtb/amlogic/${FDTFILE}|" \
+                -e "s|UUID=[^ ]*|UUID=${ROOTFS1_UUID}|" \
+                -e "s|rootflags=compress=zstd:[^ ]*|rootflags=compress=zstd:${ZSTD_LEVEL}|" \
+                uEnv.txt
+        }
 
-        # Replace the UUID for extlinux/extlinux.conf if it exists
+        # Replace the extlinux/extlinux.conf if it exists
         [[ -f "extlinux/extlinux.conf" ]] && {
-            sed -i -E "s|UUID=[^ ]*|UUID=${ROOTFS1_UUID}|" extlinux/extlinux.conf 2>/dev/null
+            sed -i -E \
+                -e "s|/dtb/amlogic.*|/dtb/amlogic/${FDTFILE}|" \
+                -e "s|UUID=[^ ]*|UUID=${ROOTFS1_UUID}|" \
+                -e "s|rootflags=compress=zstd:[^ ]*|rootflags=compress=zstd:${ZSTD_LEVEL}|" \
+                extlinux/extlinux.conf
         }
 
         rm -f s905_autoscript* aml_autoscript*
