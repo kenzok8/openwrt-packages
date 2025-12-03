@@ -264,6 +264,7 @@ local function get_installed_and_cache()
     if not ms then
         result = {}
     elseif not cs or ms["mtime"] > cs["mtime"] then
+        local cacheable = true
         local itr = fs.dir(metadir)
         local data = {}
         if itr then
@@ -287,10 +288,20 @@ local function get_installed_and_cache()
                                 broken = true,
                             }
                         end
+                        local time = nil
                         local metapkg = metapkgpre .. meta.name
                         local status = ipkg.status(metapkg)
                         if next(status) ~= nil then
-                            meta.time = tonumber(status[metapkg]["Installed-Time"])
+                            time = status[metapkg]["Installed-Time"]
+                        else
+                            local istat = fs.stat("/usr/lib/opkg/info/" .. metapkg .. ".list")
+                            if istat ~= nil then
+                                time = istat["mtime"]
+                            end
+                            cacheable = false
+                        end
+                        if time ~= nil then
+                            meta.time = tonumber(time)
                             data[#data+1] = meta
                         end
                     end
@@ -298,11 +309,13 @@ local function get_installed_and_cache()
             end
         end
         result = data
-        fs.mkdirr(cachedir)
-        local oflags = nixio.open_flags("rdwr", "creat")
-        local mfile, code, msg = nixio.open(cachefile, oflags)
-        mfile:writeall(jsonc.stringify(result))
-        mfile:close()
+        if cacheable then
+            fs.mkdirr(cachedir)
+            local oflags = nixio.open_flags("rdwr", "creat")
+            local mfile, code, msg = nixio.open(cachefile, oflags)
+            mfile:writeall(jsonc.stringify(result))
+            mfile:close()
+        end
     else
         result = jsonc.parse(fs.readfile(cachefile) or "")
     end
