@@ -221,7 +221,7 @@ try_autoconf() {
     autoconf_to_env
     [ -n "$ISTORE_AUTOCONF" ] || return 1
     echo "Auto configure $ISTORE_AUTOCONF"
-    /usr/libexec/istorea/${ISTORE_AUTOCONF}.sh
+    PATH="$CLEANPATH" /usr/libexec/istorea/${ISTORE_AUTOCONF}.sh
 }
 
 try_upgrade_depends() {
@@ -335,6 +335,16 @@ usage() {
 }
 
 is_init >/dev/null 2>&1
+
+CLEANPATH="$PATH"
+
+case $action in
+    "update"|"install"|"upgrade"|"opkg"|"check_self_upgrade"|"do_self_upgrade"|"dotrun")
+        if [[ "`uci -q get istore.istore.ipv4`" = "1" ]]; then
+            export PATH="/usr/libexec/istore/ipv4-bin:$CLEANPATH"
+        fi
+    ;;
+esac
 
 case $action in
     "update")

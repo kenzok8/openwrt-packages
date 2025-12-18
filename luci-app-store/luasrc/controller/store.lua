@@ -31,6 +31,7 @@ function index()
     entry({"admin", "store", "do_self_upgrade"}, post("do_self_upgrade"))
     entry({"admin", "store", "toggle_docker"}, post("toggle_docker"))
     entry({"admin", "store", "toggle_arch"}, post("toggle_arch"))
+    entry({"admin", "store", "toggle_ipv4"}, post("toggle_ipv4"))
     entry({"admin", "store", "get_block_devices"}, call("get_block_devices"))
 
     entry({"admin", "store", "configured"}, call("configured"))
@@ -93,6 +94,7 @@ local function user_config()
     local data = {
         hide_docker = uci:get("istore", "istore", "hide_docker") == "1",
         ignore_arch = uci:get("istore", "istore", "ignore_arch") == "1",
+        ipv4 = uci:get("istore", "istore", "ipv4") == "1",
         last_path = uci:get("istore", "istore", "last_path"),
         super_arch = uci:get("istore", "istore", "super_arch"),
         channel = uci:get("istore", "istore", "channel")
@@ -1035,6 +1037,15 @@ function toggle_arch()
     local uci  = require "luci.model.uci".cursor()
     local ignore = luci.http.formvalue("ignore")
     uci:set("istore", "istore", "ignore_arch", ignore == "true" and "1" or "0")
+    uci:commit("istore")
+    luci.http.prepare_content("application/json")
+    luci.http.write_json({code = 200, msg = "Success"})
+end
+
+function toggle_ipv4()
+    local uci  = require "luci.model.uci".cursor()
+    local ipv4 = luci.http.formvalue("ipv4")
+    uci:set("istore", "istore", "ipv4", ipv4 == "true" and "1" or "0")
     uci:commit("istore")
     luci.http.prepare_content("application/json")
     luci.http.write_json({code = 200, msg = "Success"})

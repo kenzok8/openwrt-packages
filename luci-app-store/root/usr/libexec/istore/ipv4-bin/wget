@@ -1,0 +1,8 @@
+#!/bin/sh
+
+newpath=$(echo ":$PATH:" | sed -e 's#:/usr/libexec/istore/ipv4-bin:#:#g' -e 's/^:*//' -e 's/:*$//')
+[ -z "$newpath" ] && newpath="/usr/sbin:/usr/bin:/sbin:/bin"
+
+export PATH="$newpath"
+
+exec wget -4 "$@"
