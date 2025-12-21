@@ -2,22 +2,18 @@
     "luci-app-partexp": {
         "description": "Grant UCI access for luci-app-partexp",
 	"read": {
-            "file": {
-                "/etc/init.d/partexp": [ "exec" ],
-                "/var/partexp": ["read"],
-                "/etc/partexppath": ["read"],
-                "/etc/partexp/": ["read"]
-            },
-            "uci": [ "partexp" ]
+            "ubus": {
+                        "file": ["exec", "list", "stat", "read"],
+                        "uci": [ "*" ],
+                        "partexp": ["*"]
+            }
 	},
 	"write": {
-            "file": {
-                "/var/partexp": ["write"],
-                "/etc/partexppath": ["write"],
-                "/etc/partexp/": ["write"]
-		
-            },
-            "uci": [ "partexp" ]
-        }
+            "ubus": {
+                "partexp": ["*"],
+                "file": ["write"],
+                "uci": ["*"]
+      }
     }
+  }
 }

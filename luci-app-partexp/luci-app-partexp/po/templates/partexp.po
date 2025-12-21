@@ -18,185 +18,182 @@ msgstr ""
 #: JavaScript UI strings
 
 msgid "One click partition expansion mounting tool"
-msgstr "一键分区扩容挂载工具"
-
-msgid "Partition Expansion"
-msgstr "分区扩容"
+msgstr ""  
 
 msgid "Automatically format and mount the target device partition. If there are multiple partitions, it is recommended to manually delete all partitions before using this tool."
-msgstr "自动格式化并挂载目标设备分区。如果有多个分区，建议在使用此工具前手动删除所有分区。"
+msgstr ""  
 
 msgid "For specific usage, see:"
-msgstr "具体用法请参见："
+msgstr ""  
 
 msgid "Select function"
-msgstr "选择功能"
+msgstr ""  
 
 msgid "Used to extend to the root directory of EXT4 firmware(Ext4 /)"
-msgstr "用于扩展到EXT4固件的根目录(Ext4 /)"
+msgstr ""  
 
 msgid "Expand application space overlay (/overlay)"
-msgstr "扩展应用空间overlay (/overlay)"
+msgstr ""  
 
 msgid "Used as Docker data disk (/opt)"
-msgstr "用作Docker数据盘 (/opt)"
+msgstr ""  
 
 msgid "Normal mount and use by device name(/mnt/x1)"
-msgstr "普通挂载并按设备名称使用(/mnt/x1)"
+msgstr ""  
 
 msgid "Select the function to be performed"
-msgstr "选择要执行的功能"
+msgstr ""  
 
 msgid "Destination hard disk"
-msgstr "目标硬盘"
+msgstr ""  
 
 msgid "Loading devices..."
-msgstr "正在加载设备..."
+msgstr ""  
 
 msgid "Select the hard disk device to operate"
-msgstr "选择要操作的硬盘设备"
+msgstr ""  
 
 msgid "Keep configuration"
-msgstr "保留配置"
+msgstr ""  
 
 msgid "Tick means to retain the settings"
-msgstr "勾选表示保留设置"
+msgstr ""  
 
 msgid "Format system type"
-msgstr "格式化系统类型"
+msgstr ""  
 
 msgid "No formatting required"
-msgstr "无需格式化"
+msgstr ""  
 
 msgid "Linux system partition(EXT4)"
-msgstr "Linux系统分区(EXT4)"
+msgstr ""  
 
 msgid "Large capacity storage devices(Btrfs)"
-msgstr "大容量存储设备(Btrfs)"
+msgstr ""  
 
 msgid "Windows system partition(NTFS)"
-msgstr "Windows系统分区(NTFS)"
+msgstr ""  
 
 msgid "Perform operation"
-msgstr "执行操作"
+msgstr ""  
 
 msgid "Click to execute"
-msgstr "点击执行"
+msgstr ""  
 
 msgid "Starting operation..."
-msgstr "正在启动操作..."
+msgstr ""  
 
 msgid "Operation Log"
-msgstr "操作日志"
+msgstr ""  
 
 msgid "Are you sure you want to execute partition expansion?"
-msgstr "确定要执行分区扩容吗？"
+msgstr ""  
 
 msgid "Function:"
-msgstr "功能："
+msgstr ""  
 
 msgid "Disk:"
-msgstr "磁盘："
+msgstr ""  
 
 msgid "Keep config:"
-msgstr "保留配置："
+msgstr ""  
 
 msgid "Format type:"
-msgstr "格式化类型："
+msgstr ""  
 
 msgid "This operation may take several minutes."
-msgstr "此操作可能需要几分钟时间。"
+msgstr ""  
 
 msgid "Executing..."
-msgstr "正在执行..."
+msgstr ""  
 
 msgid "Operation started successfully"
-msgstr "操作启动成功"
+msgstr ""  
 
 msgid "Operation failed"
-msgstr "操作失败"
+msgstr ""  
 
 msgid "Failed to start operation:"
-msgstr "启动操作失败："
+msgstr ""  
 
 msgid "Unknown error"
-msgstr "未知错误"
+msgstr ""  
 
 msgid "Operation in progress..."
-msgstr "操作正在进行中..."
+msgstr ""  
 
 msgid "Operation in progress..."
-msgstr "操作正在进行中..."
+msgstr ""  
 
 msgid "Operation in progress..."
-msgstr "操作正在进行中..."
+msgstr ""  
 
 msgid "Extend to root directory"
-msgstr "扩展到根目录"
+msgstr ""  
 
 msgid "Expand overlay"
-msgstr "扩展overlay"
+msgstr ""  
 
 msgid "Docker data disk"
-msgstr "Docker数据盘"
+msgstr ""  
 
 msgid "Normal mount"
-msgstr "普通挂载"
+msgstr ""  
 
 msgid "No formatting"
-msgstr "不格式化"
+msgstr ""  
 
 msgid "Operation completed"
-msgstr "操作完成"
+msgstr ""  
 
 msgid "Getting device information"
-msgstr "正在获取设备信息"
+msgstr ""  
 
 msgid "Checking partition format"
-msgstr "正在检查分区格式"
+msgstr ""  
 
 msgid "Checking target device"
-msgstr "正在检查目标设备"
+msgstr ""  
 
 msgid "Locating target partition"
-msgstr "正在定位目标分区"
+msgstr ""  
 
 msgid "Checking free space"
-msgstr "正在检查可用空间"
+msgstr ""  
 
 msgid "Starting operation"
-msgstr "正在开始操作"
+msgstr ""  
 
 msgid "Initializing..."
-msgstr "正在初始化..."
+msgstr ""  
 
 msgid "Starting"
-msgstr "开始"
+msgstr ""  
 
 #: Device status messages
 msgid "Loading device list..."
-msgstr "正在加载设备列表..."
+msgstr ""  
 
 msgid "No devices found"
-msgstr "未找到设备"
+msgstr ""  
 
 msgid "Failed to load devices"
-msgstr "加载设备失败"
+msgstr ""  
 
 msgid "Please select a target disk"
-msgstr "请选择目标磁盘"
+msgstr ""  
 
 msgid "Settings saved"
-msgstr "设置已保存"
+msgstr ""  
 
 msgid "Failed to save settings"
-msgstr "保存设置失败"
+msgstr ""  
 
 msgid "Loading saved configuration..."
-msgstr "正在加载保存的配置..."
+msgstr ""  
 
 msgid "Configuration loaded"
-msgstr "配置已加载"
+msgstr ""  
 
 msgid "Failed to load configuration"
-msgstr "加载配置失败"
+msgstr ""  

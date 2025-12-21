@@ -1,0 +1,14 @@
+{
+    "admin/system/partexp": {
+        "title": "Partition Expansion",
+        "order": 54,
+        "action": {
+            "type": "view",
+            "path": "partexp"
+        },
+        "acl": ["luci-app-partexp"],
+        "depends": {
+            "acl": ["luci-app-partexp"]
+        }
+    }
+}

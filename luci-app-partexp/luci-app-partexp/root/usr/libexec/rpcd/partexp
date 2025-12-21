@@ -1,0 +1,228 @@
+#!/bin/sh
+. /usr/share/libubox/jshn.sh
+
+# 分区扩展服务
+case "$1" in
+    list)
+        echo '{
+            "autopart": {
+                "description": "Execute automatic partition expansion"
+            },
+            "get_log": {
+                "description": "Get operation log",
+                "arguments": {
+                    "position": "string"
+                }
+            },
+            "get_devices": {
+                "description": "Get available disk devices"
+            },
+            "get_status": {
+                "description": "Get operation status"
+            },
+            "save_config": {
+                "description": "Save configuration",
+                "arguments": {
+                    "target_function": "string",
+                    "target_disk": "string",
+                    "keep_config": "string",
+                    "format_type": "string"
+                }
+            }
+        }'
+        ;;
+    call)
+        case "$2" in
+            autopart)
+                if [ -f "/var/run/partexp.lock" ]; then
+                    echo '{"error": "Another operation is in progress"}'
+                    return 1
+                fi
+                
+                # 检查配置文件是否存在
+                if [ ! -f "/etc/config/partexp" ]; then
+                    echo '{"error": "Configuration file not found. Please save settings first."}'
+                    return 1
+                fi
+                
+                # 创建锁文件
+                touch /var/run/partexp.lock
+                
+                # 执行分区操作（后台异步执行）
+                {
+                    # 清空日志文件
+                    echo "" > /tmp/partexp.log
+                    
+                    # 调用原 partexp 脚本
+                    /usr/bin/partexp autopart > /tmp/partexp.log 2>&1
+                    
+                    # 清理锁文件
+                    rm -f /var/run/partexp.lock
+                } &
+                
+                echo '{"success": true, "pid": "'$!'", "message": "Partition expansion started"}'
+                ;;
+                
+            get_log)
+                # 获取操作日志
+                read input
+                json_load "$input"
+                json_get_vars position
+                
+                if [ ! -f "/tmp/partexp.log" ]; then
+                    echo '{"log": "", "complete": true}'
+                    return 0
+                fi
+                
+                if [ -z "$position" ] || [ "$position" = "0" ]; then
+                    # 从头读取
+                    log_content=$(cat /tmp/partexp.log 2>/dev/null | tail -c 2048000)
+                    new_position=$(stat -c%s /tmp/partexp.log 2>/dev/null || echo "0")
+                    
+                    json_init
+                    json_add_string "log" "$log_content"
+                    json_add_boolean "complete" false
+                    json_add_string "position" "$new_position"
+                    json_dump
+                else
+                    # 从指定位置读取
+                    position=${position:-0}
+                    file_size=$(stat -c%s /tmp/partexp.log 2>/dev/null || echo 0)
+                    
+                    if [ "$position" -lt "$file_size" ]; then
+                        log_content=$(tail -c +$((position + 1)) /tmp/partexp.log | head -c 2048000)
+                        new_position=$((position + ${#log_content}))
+                        
+                        json_init
+                        json_add_string "log" "$log_content"
+                        json_add_boolean "complete" false
+                        json_add_string "position" "$new_position"
+                        json_dump
+                    else
+                        json_init
+                        json_add_string "log" ""
+                        json_add_boolean "complete" true
+                        json_add_string "position" "$position"
+                        json_dump
+                    fi
+                fi
+                ;;
+                
+            get_devices)
+                # 获取可用设备列表 - 仅磁盘
+                json_init
+                json_add_array "devices"
+                
+                # 所有可能的磁盘设备模式
+                disk_patterns="
+                    ^sd[a-z]$
+                    ^mmcblk[0-9]+$
+                    ^nvme[0-9]+n[0-9]+$
+                    ^vd[a-z]$
+                    ^hd[a-z]$
+                    ^xvd[a-z]$
+                    ^ubd[a-z]+$
+                    ^dasd[a-z]+$
+                    ^cciss[0-9]+$
+                    ^ida[0-9]+$
+                    ^rd[0-9]+$
+                    ^mtdblock[0-9]+$
+                    ^nbd[0-9]+$
+                    ^zram[0-9]+$
+                "
+                
+                for dev in /sys/class/block/*; do
+                    dev_name=$(basename "$dev")
+                    
+                    # 跳过分区、loop、dm 设备
+                    if [ -f "$dev/partition" ] || [ -d "$dev/loop" ] || [ -d "$dev/dm" ]; then
+                        continue
+                    fi
+                    
+                    # 检查是否为磁盘设备
+                    is_disk=0
+                    for pattern in $disk_patterns; do
+                        if echo "$dev_name" | grep -qE "$pattern"; then
+                            is_disk=1
+                            break
+                        fi
+                    done
+                    
+                    if [ $is_disk -eq 1 ]; then
+                        size="0"
+                        if [ -f "$dev/size" ]; then
+                            size_sectors=$(cat "$dev/size")
+                            size=$((size_sectors / 2048))
+                        fi
+                        
+                        json_add_object
+                        json_add_string "name" "$dev_name"
+                        json_add_string "dev" "/dev/$dev_name"
+                        json_add_int "size" "$size"
+                        json_close_object
+                    fi
+                done
+                
+                json_close_array
+                json_dump
+                ;;
+
+                
+            get_status)
+                # 获取操作状态
+                if [ -f "/var/run/partexp.lock" ]; then
+                    echo '{"running": true}'
+                else
+                    echo '{"running": false}'
+                fi
+                ;;
+
+                
+            save_config)
+                # 保存配置
+                read input
+                json_load "$input"
+                json_get_vars target_function target_disk keep_config format_type
+                
+                # 验证参数
+                if [ -z "$target_function" ]; then
+                    echo '{"error": "Missing target_function parameter"}'
+                    return 1
+                fi
+                
+                # 设置默认值
+                target_disk="${target_disk:-}"
+                keep_config="${keep_config:-0}"
+                format_type="${format_type:-0}"
+                
+                # 构建配置内容
+                CONFIG_FILE="/etc/config/partexp"
+                mkdir -p "$(dirname "$CONFIG_FILE")"
+                
+                cat > "$CONFIG_FILE" << EOF
+# Auto-generated by partexp
+
+config global global
+	option target_function '$target_function'
+	option target_disk '$target_disk'
+	option keep_config '$keep_config'
+	option format_type '$format_type'
+EOF
+                
+                if [ $? -eq 0 ]; then
+                    echo '{"success": true, "message": "Configuration saved"}'
+                else
+                    echo '{"error": "Failed to save configuration"}'
+                    return 1
+                fi
+                ;;
+                
+            *)
+                echo '{"error": "Method not found"}'
+                ;;
+        esac
+        ;;
+    *)
+        echo '{"error": "Invalid action"}'
+        ;;
+esac
