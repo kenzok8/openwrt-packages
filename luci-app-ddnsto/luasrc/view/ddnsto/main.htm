@@ -1,19 +1,15 @@
-<%+header%>
 
-<script>
-    (function(){
-    })();
-</script>
-<div id="app">
-</div>
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>DDNSTO Plugin Settings Page</title>
+      <script type="module" crossorigin src="/luci-static/ddnsto/index.js"></script>
+    </head>
 
-<script>
-  window.IstoreosFormConfig = {
-    getApi:"/cgi-bin/luci/admin/services/ddnsto/form/",
-    logApi:"/cgi-bin/luci/admin/services/ddnsto/log",
-    submitApi:"/cgi-bin/luci/admin/services/ddnsto/submit/",
-  }
-</script>
-<script type="module" crossorigin src="/luci-static/ddnsto/index.js?v=<%=math.random(1,100000)%>"></script>
-<link rel="stylesheet" href="/luci-static/ddnsto/style.css?v=<%=math.random(1,100000)%>">
-<%+footer%>
+    <body>
+      <div id="root"></div>
+    </body>
+  </html>
+  

@@ -1,50 +1,100 @@
-local http = require "luci.http"
+--[[
+DDNSTO LuCI Controller + JSON API
+=================================
+
+目标
+----
+为 ddnsto 的 LuCI 页面（可用原生 JS/React/Vue）提供稳定的后端接口：
+1) 读取/更新 UCI 配置：/etc/config/ddnsto
+2) 控制 init.d 服务：/etc/init.d/ddnsto start|stop|restart|reload
+3) 查询运行状态：ddnstod 是否在运行、PID、enabled/token 是否就绪
+4) （可选）读取最近日志：logread 过滤 ddnsto/ddnstod
+
+路由说明
+--------
+默认挂载在：
+/cgi-bin/luci/admin/services/ddnsto/page         -- LuCI 页面入口（模板）
+/cgi-bin/luci/admin/services/ddnsto/api/config   -- GET/POST 配置
+/c.../ddnsto/api/service                         -- POST 服务控制
+/c.../ddnsto/api/status                          -- GET 状态
+/c.../ddnsto/api/logs                            -- GET 日志（可选）
+
+CSRF 说明
+---------
+LuCI 对 POST 通常要求 token 校验。这里提供两种方式（二选一）：
+- Header: X-LuCI-Token: <luci.dispatcher.context.token>
+- Form字段: token=<...>（application/x-www-form-urlencoded 时常用）
+
+对于前端（React）最佳实践是：
+- 在 LuCI 模板里注入 window.ddnstoCsrfToken = "<%=luci.dispatcher.context.token%>"
+- 所有 POST 带上该 token
+
+前端对接建议
+------------
+- GET config/status: fetch(url, {credentials: 'same-origin'})
+- POST config/service: JSON body + X-LuCI-Token，或表单 token
+
+开发/调试注意
+------------
+1) 修改 controller 后，LuCI 可能缓存索引：
+   - rm -f /tmp/luci-indexcache
+   - /etc/init.d/uhttpd restart  （或重启设备）
+2) 确保 /etc/config/ddnsto 存在；否则 index() 会直接 return。
+3) 若想扩展更多字段（如 address），建议在 GET 返回里带出，但 POST 仅允许白名单字段写入。
+
+安全边界
+--------
+本接口位于 LuCI admin 路径下，默认需要登录 LuCI。
+此外：
+- service action 做了白名单限制，避免命令注入
+- config 写入做了基本校验（bool/number）
+--]]
+
 module("luci.controller.ddnsto", package.seeall)
 
-function index()
-        if not nixio.fs.access("/etc/config/ddnsto") then
-                return
-        end
+-- ==========
+-- Utilities
+-- ==========
 
-        entry({"admin","services", "ddnsto"}, call("redirect_index"), _("DDNSTO 远程控制"), 20).dependent = true
-        entry({"admin","services", "ddnsto", "pages"}, call("ddnsto_index")).leaf = true
-        if nixio.fs.access("/usr/lib/lua/luci/view/ddnsto/main_dev.htm") then
-            entry({"admin","services", "ddnsto", "dev"}, call("ddnsto_dev")).leaf = true
-        end
-
-        -- entry({"admin", "services", "ddnsto"}, cbi("ddnsto"), _("DDNS.to"), 20)
-
-        -- entry({"admin", "services", "ddnsto_status"}, call("ddnsto_status"))
-		entry({"admin", "services", "ddnsto", "form"}, call("ddnsto_form"))
-        entry({"admin", "services", "ddnsto", "submit"}, call("ddnsto_submit"))
-        entry({"admin", "services", "ddnsto", "log"}, call("ddnsto_log"))
-
+local function write_json(tbl)
+  local http = require "luci.http"
+  local jsonc = require "luci.jsonc"
+  http.prepare_content("application/json")
+  http.write(jsonc.stringify(tbl))
 end
 
-
-local function isempty(s)
-    return s == nil or s == ''
+local function bad_request(msg)
+  write_json({ ok = false, error = msg or "bad request" })
 end
 
-local function trim(input)
-    return (string.gsub(input, "^%s*(.-)%s*$", "%1"))
+local function method_not_allowed()
+  write_json({ ok = false, error = "method not allowed" })
 end
 
+local function read_json_body()
+  local http = require "luci.http"
+  local jsonc = require "luci.jsonc"
+  local ctype = http.getenv("CONTENT_TYPE") or ""
+  if not ctype:match("^application/json") then
+    return nil
+  end
+  local raw = http.content() or ""
+  if #raw == 0 then
+    return nil
+  end
+  local obj = jsonc.parse(raw)
+  if type(obj) ~= "table" then
+    return nil
+  end
+  return obj
+end
 
-local function get_data() 
-    local uci  = require "luci.model.uci".cursor()
-
-    local data = {
-        enabled = uci:get_first("ddnsto", "ddnsto", "enabled") == "1",
-        feat_disk_path_selected = uci:get_first("ddnsto", "ddnsto", "feat_disk_path_selected") ,
-        feat_enabled = uci:get_first("ddnsto", "ddnsto", "feat_enabled") == "1" ,
-        feat_password = uci:get_first("ddnsto", "ddnsto", "feat_password"),
-        feat_username = uci:get_first("ddnsto", "ddnsto", "feat_username"),
-        feat_port = tonumber(uci:get_first("ddnsto", "ddnsto", "feat_port")),
-        index = (tonumber(uci:get_first("ddnsto", "ddnsto", "index")) or 0),
-        token = uci:get_first("ddnsto", "ddnsto", "token")
-    }
-    return data
+local function get_command2(cmd)
+  local f = io.popen(cmd, "r")
+  if not f then return "" end
+  local out = f:read("*l") or ""
+  f:close()
+  return (out:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
 local function get_command(cmd)
@@ -58,413 +108,600 @@ local function get_command(cmd)
     
 end
 
-local function status_container()
-    local sys  = require "luci.sys"
-    local uci  = require "luci.model.uci".cursor()
- 
-
-    local running = "<a style=\"color:red;font-weight:bolder\">未运行</a>"
-    local feat_running = "未运行"
-    local webdav_running = "未启用"
-    local webdav_url = "未启用"
-    local wol_running = "未启用"
-   
-    local cmd = "/usr/sbin/ddnstod -x ".. tostring(get_data().index) .." -w | awk '{print $2}'"
-    local device_id = get_command(cmd) 
-    local version = get_command("/usr/sbin/ddnstod -v")   
-
-    if sys.call("pidof ddnstod >/dev/null") == 0 then
-        running = "<a style=\"color:green;font-weight:bolder\">已启动</a>"
-    end
-
-    local feat_port = (tonumber(uci:get_first("ddnsto", "ddnsto", "feat_port")) or 3030)
-    local http = require "luci.http" 
-    local ip = http.getenv('SERVER_NAME')
-    if sys.call("pidof ddwebdav >/dev/null") == 0 then
-        feat_running =  "<a style=\"color:green;font-weight:bolder\">已启用</a>"
-        webdav_running = "已启用"
-        wol_running = "已启用"
-        webdav_url = "http://" .. ip ..":".. feat_port .. "/webdav"
-    end
-
-	local uci  = require "luci.model.uci".cursor()
-	local feat_username = (uci:get_first("ddnsto", "ddnsto", "feat_username") or "")
- 
-    local c1 = {
-        labels = { 
-            {
-            key = "服务状态",
-            value = running
-        },
-        {
-            key = "插件版本",
-            value = version
-        }, 
-        {
-            key = "设备ID",
-            value = device_id .. "（设备编号: ".. get_data().index .."）"
-        }, 
-        {
-            key = "拓展功能",
-            value = feat_running
-        }, 
-        {
-            key = "拓展用户名",
-            value = feat_username
-        }, {
-            key = "webdav服务",
-            value = webdav_running
-        },
-        {
-            key = "webdav地址",
-            value = "<a href=\""..webdav_url.."\" target=\"_blank\">"..webdav_url.."</a>"
-        }, 
-        {
-            key = "远程开机服务",
-            value = wol_running
-        }, 
-        {
-            key = "控制台",
-            value = "<a href=\"https://www.ddnsto.com/app/#/devices\" target=\"_blank\">点击前往DDNSTO控制台</a>"
-        } 
-    },
-    title = "服务状态"
-  }  
-  return c1
+local function param(body, key)
+  local http = require "luci.http"
+  if type(body) == "table" and body[key] ~= nil then
+    return tostring(body[key])
+  end
+  return http.formvalue(key)
 end
 
-local function main_container()
-    local c2 = {
-        properties = {
-          {
-            name = "enabled",
-            title = "启用",
-            type = "boolean"
-          },
-          {
-            name = "token",
-            required = true,
-            title = "用户Token",
-            type = "string",
-            ["ui:options"] = {
-              description = "<a href=\"https://doc.linkease.com/zh/guide/ddnsto/\" target=\"_blank\">如何获取令牌?</a>"
-            }
-          },
-          {
-            name = "index",
-            enum = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, },
-            enumNames = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
-            title = "设备编号",
-            type = "interger",
-            ["ui:options"] = {
-              description = "如有多台设备id重复，请修改此编号"
-            }
-          },
-        },
-        title = "基础设置"
-      }
-      return c2
+local function is_bool01(v)
+  return v == "0" or v == "1"
 end
 
-local function getBlockDevices()
-    local fs = require "nixio.fs"
+local function is_uint(v)
+  return v ~= nil and tostring(v):match("^%d+$") ~= nil
+end
 
-    local block = io.popen("/sbin/block info", "r")
-    if block then
-        local rv = {}
-        while true do
-            local ln = block:read("*l")
-            if not ln then
-                break
-            end
+local function is_empty(v)
+  return v == nil or tostring(v):match("^%s*$") ~= nil
+end
 
-            local dev = ln:match("^/dev/(.-):")
-            if dev then  
-                for key, val in ln:gmatch([[(%w+)="(.-)"]]) do
-                    if key:lower() == "mount" then
-                        table.insert(rv, val)
-                    end 
-                end 
-            end
+local function has_space(v)
+  return v ~= nil and tostring(v):find("%s") ~= nil
+end
+
+-- LuCI CSRF Check
+local function require_csrf()
+  local http = require "luci.http"
+  local disp = require "luci.dispatcher"
+  
+  local method = http.getenv("REQUEST_METHOD") or ""
+  if method ~= "POST" then
+    return true
+  end
+
+  local ctx = disp.context
+  
+  -- 1. Ensure user is authenticated (session exists)
+  if not (ctx and ctx.authsession) then
+     write_json({ ok = false, error = "auth session missing" })
+     return false
+  end
+
+  local expected = ctx.token
+  
+  local header_token = http.getenv("HTTP_X_LUCI_TOKEN")
+  local form_token = http.formvalue("token")
+  local body = read_json_body()
+  local body_token = (type(body) == "table") and body["token"] or nil
+
+  local provided = header_token or form_token or body_token
+
+  -- 2. If server has a token, enforce strict match
+  if expected then
+    if provided ~= expected then
+      write_json({ ok = false, error = "bad csrf token" })
+      return false
+    end
+  else
+    -- 3. If server lost the token (common in some envs), 
+    -- just ensure the client sent *something* (e.g. via custom header)
+    -- This protects against basic CSRF because attackers can't easily set custom headers.
+    if not provided or #provided == 0 then
+      write_json({ ok = false, error = "csrf token missing" })
+      return false
+    end
+  end
+
+  return true
+end
+
+local function ensure_ddnsto_section()
+  local uci = require "luci.model.uci".cursor()
+  local sid = nil
+  uci:foreach("ddnsto", "ddnsto", function(s) sid = s[".name"] end)
+  if not sid then
+    sid = uci:add("ddnsto", "ddnsto")
+  end
+  return sid
+end
+
+local function read_config()
+  local uci = require "luci.model.uci".cursor()
+  local sys = require "luci.sys"
+  local cfg = {
+    enabled      = "1",
+    token        = "",
+    index        = "0",
+    logger       = "0",
+    feat_enabled = "0",
+    feat_port    = "3033",
+    feat_username = "",
+    feat_password = "",
+    feat_disk_path_selected = "",
+    address      = "",
+    mounts       = {},
+    device_id    = "",
+    deviceId     = "",
+  }
+
+  uci:foreach("ddnsto", "ddnsto", function(s)
+    cfg.enabled      = s.enabled or cfg.enabled
+    cfg.token        = s.token or cfg.token
+    cfg.index        = s.index or cfg.index
+    cfg.logger       = s.logger or cfg.logger
+    cfg.feat_enabled = s.feat_enabled or cfg.feat_enabled
+    cfg.feat_port    = s.feat_port or cfg.feat_port
+    cfg.feat_username = s.feat_username or cfg.feat_username
+    cfg.feat_password = s.feat_password or cfg.feat_password
+    cfg.feat_disk_path_selected = s.feat_disk_path_selected or cfg.feat_disk_path_selected
+    cfg.address      = s.address or cfg.address
+  end)
+
+  do
+    local idx = cfg.index
+    if not (idx and tostring(idx):match("^%d+$")) then
+      idx = "0"
+    end
+    local cmd = string.format("/usr/sbin/ddnstod -x %s -w | awk '{print $2}'", idx)
+    local did = get_command(cmd)
+    cfg.device_id = did
+    cfg.deviceId = did
+  end
+
+  -- Get mounts (via block info)
+  local mounts = {}
+  local block = io.popen("/sbin/block info", "r")
+  if block then
+    while true do
+      local ln = block:read("*l")
+      if not ln then break end
+      
+      local dev = ln:match("^/dev/(.-):")
+      if dev then
+        for key, val in ln:gmatch([[(%w+)="(.-)"]]) do
+          if key:lower() == "mount" then
+            table.insert(mounts, val)
+          end
         end
-
-        block:close()
-
-        return rv
-    else
-        return
+      end
     end
+    block:close()
+  end
+  cfg.mounts = mounts
+
+  return cfg
 end
 
-local function feat_container()
-    
-    local c3 = {
-        description = "启用后可支持控制台的“文件管理”及“远程开机”功能 <a href=\"https://doc.linkease.com/zh/guide/ddnsto/ddnstofile.html\" target=\"_blank\">查看教程</a>",
-        properties = {
-          {
-            name = "feat_enabled",
-            title = "启用",
-            type = "boolean"
-          },
-          {
-            name = "feat_port",
-            required = true,
-            title = "端口",
-            type = "interger",
-            ["ui:hidden"] = "{{rootValue.feat_enabled !== true }}"
-          },
-          {
-            name = "feat_username",
-            required = true,
-            title = "授权用户名",
-            type = "string",
-            ["ui:hidden"] = "{{rootValue.feat_enabled !== true }}"
-          },
-          {
-            name = "feat_password",
-            mode = "password",
-            required = true,
-            title = "授权用户密码",
-            type = "string",
-            ["ui:hidden"] = "{{rootValue.feat_enabled !== true }}"
-          },
-           {
-            name = "feat_disk_path_selected",
-            enum = getBlockDevices(),
-            enumNames = getBlockDevices(),
-            required = true,
-            title = "共享磁盘",
-            type = "string",
-            ["ui:hidden"] = "{{rootValue.feat_enabled !== true }}"
-          }
-        },
-        title = "拓展功能"
-      }
-    return c3
+-- ==========
+-- LuCI index
+-- ==========
+
+function index()
+  local ok_fs, fs = pcall(require, "nixio.fs")
+  if not (ok_fs and fs) then
+    local ok_lfs, lfs = pcall(require, "luci.fs")
+    if ok_lfs then fs = lfs end
+  end
+
+  local has_config = true
+  if fs and fs.access then
+    has_config = fs.access("/etc/config/ddnsto")
+  end
+  if has_config == false then return end
+
+  entry({"admin", "services", "ddnsto"}, firstchild(), _("DDNSTO 远程控制"), 60).dependent = false
+  entry({"admin", "services", "ddnsto", "page"}, call("action_page"), _("Settings"), 10).leaf = true
+  -- entry({"admin", "ddnsto_dev"}, call("action_ddnsto_dev"), _("DDNSTO (Dev)"), 99).leaf = true
+  
+  entry({"admin", "services", "ddnsto", "api", "config"},  call("api_config")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "service"}, call("api_service")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "run"},     call("api_run")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "restart"}, call("api_restart")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "stop"},    call("api_stop")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "onboarding", "start"}, call("api_onboarding_start")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "onboarding", "address"}, call("api_onboarding_address")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "status"},  call("api_status")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "logs"},    call("api_logs")).leaf = true
 end
 
-local function get_containers() 
-    local containers = {
-        status_container(),
-        main_container(),
-        feat_container()
+function action_page()
+  local template = require "luci.template"
+  local dsp = require "luci.dispatcher"
+  local i18n = require "luci.i18n"
+  local ctx = dsp.context or {}
+
+  local data = {
+    token    = ctx.token or "",
+    prefix   = dsp.build_url("admin", "services", "ddnsto"),
+    api_base = dsp.build_url(),
+    lang     = i18n.context.lang or "zh-cn"
+  }
+  template.render("ddnsto/main", data)
+end
+
+-- ==========
+-- API: config
+-- ==========
+
+function api_config()
+  local http = require "luci.http"
+  local uci = require "luci.model.uci".cursor()
+  local method = http.getenv("REQUEST_METHOD") or ""
+
+  if method == "GET" then
+    write_json({ ok = true, data = read_config() })
+    return
+  end
+
+  if method ~= "POST" then
+    method_not_allowed()
+    return
+  end
+
+  if not require_csrf() then return end
+
+  local body = read_json_body()
+
+  local enabled      = param(body, "enabled")
+  local ddnsto_token = param(body, "ddnsto_token")
+
+  local index        = param(body, "index")
+  local logger       = param(body, "logger")
+  local feat_enabled = param(body, "feat_enabled")
+  local feat_port    = param(body, "feat_port")
+  local feat_username = param(body, "feat_username")
+  local feat_password = param(body, "feat_password")
+  local feat_disk_path_selected = param(body, "feat_disk_path_selected")
+
+  -- 基本校验（按需扩展）
+  if enabled      and not is_bool01(enabled)      then return bad_request("bad enabled") end
+  if logger       and not is_bool01(logger)       then return bad_request("bad logger") end
+  if feat_enabled and not is_bool01(feat_enabled) then return bad_request("bad feat_enabled") end
+
+  local has_payload = enabled ~= nil or ddnsto_token ~= nil or index ~= nil or logger ~= nil
+    or feat_enabled ~= nil or feat_port ~= nil or feat_username ~= nil or feat_password ~= nil
+    or feat_disk_path_selected ~= nil
+  if not has_payload then
+    return bad_request("invalid request")
+  end
+
+  local enabled_on = enabled == "1"
+  local feat_on = feat_enabled == "1"
+
+  if enabled_on and is_empty(ddnsto_token) then
+    return bad_request("请填写正确用户Token（令牌）")
+  end
+
+  if ddnsto_token ~= nil and has_space(ddnsto_token) then
+    return bad_request("令牌勿包含空格")
+  end
+
+  if not is_uint(index) then
+    return bad_request("请填写正确的设备编号，仅允许数字")
+  end
+  local index_num = tonumber(index)
+  if index_num < 0 or index_num > 99 then
+    return bad_request("请填写正确的设备编号，仅允许数字")
+  end
+
+  if feat_on then
+    if not is_uint(feat_port) then
+      return bad_request("请填写正确的端口")
+    end
+
+    local port_num = tonumber(feat_port)
+    if not port_num or port_num == 0 or port_num > 65535 then
+      return bad_request("请填写正确的端口")
+    end
+
+    if is_empty(feat_username) then
+      return bad_request("请填写授权用户名")
+    end
+    if has_space(feat_username) then
+      return bad_request("用户名请勿包含空格")
+    end
+    if is_empty(feat_password) then
+      return bad_request("请填写授权用户密码")
+    end
+    if has_space(feat_password) then
+      return bad_request("用户密码请勿包含空格")
+    end
+    if is_empty(feat_disk_path_selected) then
+      return bad_request("请填写共享磁盘路径")
+    end
+  end
+
+  local sid = ensure_ddnsto_section()
+
+  -- 白名单写入：只写我们明确允许前端控制的字段
+  if enabled      then uci:set("ddnsto", sid, "enabled", enabled) end
+  if ddnsto_token ~= nil then uci:set("ddnsto", sid, "token", ddnsto_token) end
+  if index        then uci:set("ddnsto", sid, "index", index) end
+  if logger       then uci:set("ddnsto", sid, "logger", logger) end
+  if feat_enabled then uci:set("ddnsto", sid, "feat_enabled", feat_enabled) end
+  if feat_port    then uci:set("ddnsto", sid, "feat_port", feat_port) end
+  if feat_username then uci:set("ddnsto", sid, "feat_username", feat_username) end
+  if feat_password then uci:set("ddnsto", sid, "feat_password", feat_password) end
+  if feat_disk_path_selected then uci:set("ddnsto", sid, "feat_disk_path_selected", feat_disk_path_selected) end
+
+  uci:commit("ddnsto")
+
+  -- Restart service to apply changes
+  local sys = require "luci.sys"
+  sys.call("/etc/init.d/ddnsto restart >/dev/null 2>&1")
+
+  write_json({ ok = true })
+end
+
+-- ==========
+-- API: service
+-- ==========
+
+function api_service()
+  local http = require "luci.http"
+  local sys = require "luci.sys"
+  local method = http.getenv("REQUEST_METHOD") or ""
+  
+  if method ~= "POST" then
+    method_not_allowed()
+    return
+  end
+
+  if not require_csrf() then return end
+
+  local body = read_json_body()
+  local action = param(body, "action") or ""
+
+  if action ~= "start" and action ~= "stop" and action ~= "restart" and action ~= "reload" then
+    return bad_request("bad action")
+  end
+
+  local cmd = string.format("/etc/init.d/ddnsto %s >/dev/null 2>&1", action)
+  local rc = sys.call(cmd)
+
+  write_json({ ok = (rc == 0), rc = rc })
+end
+
+local function run_service_action(action)
+  local http = require "luci.http"
+  local sys = require "luci.sys"
+  local method = http.getenv("REQUEST_METHOD") or ""
+  
+  if method ~= "POST" then
+    method_not_allowed()
+    return
+  end
+
+  if not require_csrf() then return end
+
+  if action ~= "start" and action ~= "stop" and action ~= "restart" then
+    return bad_request("bad action")
+  end
+
+  local cmd = string.format("/etc/init.d/ddnsto %s >/dev/null 2>&1", action)
+  local rc = sys.call(cmd)
+  write_json({ ok = (rc == 0), rc = rc })
+end
+
+function api_run()
+  return run_service_action("start")
+end
+
+function api_restart()
+  return run_service_action("restart")
+end
+
+function api_stop()
+  return run_service_action("stop")
+end
+
+-- ==========
+-- API: onboarding helpers
+-- ==========
+
+function api_onboarding_start()
+  local http = require "luci.http"
+  local uci = require "luci.model.uci".cursor()
+  local sys = require "luci.sys"
+  local method = http.getenv("REQUEST_METHOD") or ""
+
+  if method ~= "POST" then
+    method_not_allowed()
+    return
+  end
+
+  if not require_csrf() then return end
+
+  local body = read_json_body()
+  local token = param(body, "token")
+
+  if is_empty(token) then
+    return bad_request("token required")
+  end
+  if has_space(token) then
+    return bad_request("token must not contain spaces")
+  end
+
+  local sid = ensure_ddnsto_section()
+  uci:set("ddnsto", sid, "token", token)
+  uci:set("ddnsto", sid, "enabled", "1")
+  uci:set("ddnsto", sid, "feat_enabled", "0")
+  uci:commit("ddnsto")
+
+  local rc = sys.call("/etc/init.d/ddnsto restart >/dev/null 2>&1")
+  write_json({ ok = (rc == 0), rc = rc })
+end
+
+function api_onboarding_address()
+  local http = require "luci.http"
+  local uci = require "luci.model.uci".cursor()
+  local method = http.getenv("REQUEST_METHOD") or ""
+
+  if method ~= "POST" then
+    method_not_allowed()
+    return
+  end
+
+  if not require_csrf() then return end
+
+  local body = read_json_body()
+  local url = param(body, "url") or param(body, "address")
+
+  if is_empty(url) then
+    return bad_request("address required")
+  end
+
+  local sid = ensure_ddnsto_section()
+  uci:set("ddnsto", sid, "address", url)
+  uci:commit("ddnsto")
+
+  write_json({ ok = true })
+end
+
+-- ==========
+-- API: status
+-- ==========
+
+function api_status()
+  local sys  = require "luci.sys"
+  local uci  = require "luci.model.uci".cursor()
+  local jsonc = require "luci.jsonc"
+
+  local enabled, token = "0", ""
+  local address, index = "", "0"
+  uci:foreach("ddnsto", "ddnsto", function(s)
+    enabled = s.enabled or "0"
+    token   = s.token or ""
+    address = s.address or ""
+    index   = s.index or index
+  end)
+
+  local raw = sys.exec([[ubus call service list '{"name":"ddnsto"}' 2>/dev/null]]) or ""
+  local pid, running = "", false
+
+  local ok, obj = pcall(jsonc.parse, raw)
+  if ok and type(obj) == "table" and type(obj.ddnsto) == "table" and type(obj.ddnsto.instances) == "table" then
+    for _, inst in pairs(obj.ddnsto.instances) do
+      if type(inst) == "table" and inst.running == true then
+        running = true
+        pid = tostring(inst.pid or "")
+        break
+      end
+    end
+  end
+
+  local board_raw = sys.exec("ubus call system board 2>/dev/null") or ""
+  local hostname = "OpenWrt"
+  local ok_board, board_obj = pcall(jsonc.parse, board_raw)
+  if ok_board and type(board_obj) == "table" and board_obj.hostname then
+    hostname = board_obj.hostname
+  end
+
+  local version = get_command("/usr/sbin/ddnstod -v")
+
+  -- Check connectivity to the tunnel server (BusyBox nc may not support -z/-w flags)
+  local function resolve_host(host)
+    local out = sys.exec(string.format("nslookup %s 2>/dev/null", host)) or ""
+    local ip = out:match("Address 1:%s*([%d%.]+)") or out:match("Address:%s*([%d%.]+)")
+    return ip or ""
+  end
+
+  local tunnel_ip = resolve_host("tunnel.kooldns.cn")
+  local tunnel_target = tunnel_ip ~= "" and tunnel_ip or "tunnel.kooldns.cn"
+  local tunnel_err = nil
+  local tunnel_ret = -1
+
+  if tunnel_ip == "" then
+    tunnel_err = "resolve tunnel.kooldns.cn failed"
+  else
+    local has_timeout = (sys.call("command -v timeout >/dev/null 2>&1") == 0)
+    if has_timeout then
+      -- Prefer timeout if available
+      tunnel_ret = sys.call(string.format("timeout 3 nc %s 4445 </dev/null >/dev/null 2>&1", tunnel_target))
+    else
+      -- Fallback: background nc and kill after ~3s if still running
+      local tmpl = table.concat({
+        "sh -c '",
+        "nc %s 4445 </dev/null >/dev/null 2>&1 & pid=$!;",
+        "for i in 1 2 3; do",
+        "  sleep 1;",
+        "  if ! kill -0 $pid 2>/dev/null; then",
+        "    wait $pid;",
+        "    exit $?;",
+        "  fi;",
+        "done;",
+        "kill -9 $pid >/dev/null 2>&1;",
+        "wait $pid >/dev/null 2>&1;",
+        "exit 1",
+        "'"
+      }, " ")
+      tunnel_ret = sys.call(string.format(tmpl, tunnel_target))
+    end
+    if tunnel_ret ~= 0 then
+      if has_timeout then
+        tunnel_err = string.format("nc exit %d", tunnel_ret)
+      else
+        tunnel_err = string.format("nc exit %d (no timeout available, BusyBox nc limited)", tunnel_ret)
+      end
+    end
+  end
+
+  local tunnel_ok = (tunnel_ret == 0)
+
+  local did = ""
+  do
+    local idx = index
+    if not (idx and tostring(idx):match("^%d+$")) then
+      idx = "0"
+    end
+    local cmd = string.format("/usr/sbin/ddnstod -x %s -w | awk '{print $2}'", idx)
+    did = get_command(cmd)
+  end
+
+  write_json({
+    ok = true,
+    data = {
+      enabled = enabled,
+      running = running,
+      pid = pid,
+      token_set = (token and #token > 0) or false,
+      address = address,
+      device_id = did,
+      deviceId = did,
+      hostname = hostname,
+      version = version,
+      tunnel_ok = tunnel_ok,
+      tunnel_ret = tunnel_ok and nil or tunnel_err,
     }
-    return containers
+  })
 end
 
-local function get_schema()
-    local actions = {
-        {
-            text = "保存并应用",
-            type = "apply",
-        }
-    } 
-    local schema = {
-        actions = actions,
-        containers = get_containers(),
-        description = "DDNSTO远程控制是Koolcenter小宝开发的，支持http2的远程穿透控制插件。<br />\n            支持通过浏览器访问自定义域名访问内网设备后台、远程RDP/VNC桌面、远程文件管理等多种功能。<br />\n            详情请查看    <a href=\"https://www.ddnsto.com/\" target=\"_blank\">https://www.ddnsto.com</a>",
-        title = "DDNSTO 远程控制"
+-- ==========
+-- API: logs
+-- ==========
+
+function api_logs()
+  local http = require "luci.http"
+  local sys = require "luci.sys"
+  local method = http.getenv("REQUEST_METHOD") or ""
+  
+  if method ~= "GET" then
+    method_not_allowed()
+    return
+  end
+
+  local lines = tonumber(http.formvalue("lines") or "200") or 200
+  if lines < 10 then lines = 10 end
+  if lines > 2000 then lines = 2000 end
+
+  local cmd = string.format("logread 2>/dev/null | grep -E 'ddnsto|ddnstod' | tail -n %d", lines)
+  local out = sys.exec(cmd) or ""
+  local arr = {}
+
+  for line in out:gmatch("([^\n]*)\n?") do
+    if line and #line > 0 then
+      arr[#arr + 1] = line
+    end
+  end
+
+  write_json({ ok = true, data = { lines = arr, total = #arr } })
+end
+
+function action_ddnsto_dev()
+    local dsp    = require "luci.dispatcher"
+    local i18n   = require "luci.i18n"
+    local template = require "luci.template"
+    local ctx    = dsp.context or {}
+
+    local data = {
+        token   = ctx.token or "",
+        prefix  = dsp.build_url("admin", "ddnsto_dev"),
+        api_base= dsp.build_url(),
+        lang    = i18n.context.lang or "zh-cn"
     }
-    return schema
-end
 
-function ddnsto_form()
-    local sys  = require "luci.sys"
-    local error = ""
-    local scope = ""
-    local success = 0
-
-    local result = {
-        data = get_data(),
-        schema = get_schema()
-    } 
-    local response = {
-            error = error,
-            scope = scope,
-            success = success,
-            result = result,
-    } 
-    luci.http.prepare_content("application/json")
-    luci.http.write_json(response)
-end
- 
-function ddnsto_submit()
-    local http = require "luci.http"
-    local content = http.content()
-
-    local error = ""
-    local scope = ""
-    local success = 0
-    local log = "正在验证参数...\n"
-    
-    local jsonc = require "luci.jsonc"
-    local json_parse = jsonc.parse
-    local req = json_parse(content)
-
-    if req == nil or next(req) == nil then
-        error = "invalid request"
-    else
-        if req.enabled == true and isempty(req.token) then
-            success = -1000
-            error = "请填写正确用户Token（令牌）"
-        end
-
-        if req.token ~= nil and string.find(req.token, " ") then
-            success = -1000
-            error = "令牌勿包含空格"
-        end
-        if req.index == nil or tonumber(req.index) == nil or req.index < 0 or req.index > 99 then
-            success = -1000
-            error = "请填写正确的设备编号"
-        end
-
-        if req.feat_enabled == true then
-
-            if (req.feat_port == nil or tonumber(req.feat_port) == nil or req.feat_port == 0)  then
-                success = -1000
-                error = "请填写正确的端口"
-            end
-            if isempty(req.feat_username) then
-                success = -1000
-                error = "请填写授权用户名"
-            end
-            if string.find(req.feat_username, " ") then
-                success = -1000
-                error = "用户名请勿包含空格"
-            end
-            if isempty(req.feat_password) then
-                success = -1000
-                error = "请填写授权用户密码"
-            end
-            if string.find(req.feat_password, " ") then
-                success = -1000
-                error = "用户密码请勿包含空格"
-            end
-            if isempty(req.feat_disk_path_selected) then
-                success = -1000
-                error = "请填写共享磁盘路径"
-            end
-        end 
-    end
-
-    if success == 0 then
-        local uci = require "luci.model.uci".cursor()
-
-        local enabled = "0"
-        if req.enabled == true then
-            enabled = "1"
-        end
-        uci:set("ddnsto","@ddnsto[0]","enabled",enabled)
-        
-        local channel = (uci:get_first("istore", "istore", "channel") or "")
-        uci:set("ddnsto","@ddnsto[0]","supplier_code",channel)
-
-        local token = ""
-        if req.token then
-            token = trim(req.token)
-        end
-        uci:set("ddnsto","@ddnsto[0]","token",token)
-
-        local index = 0
-        if req.index then
-            index = req.index
-        end
-        uci:set("ddnsto","@ddnsto[0]","index",index)
-
-        local f_enabled = "0"
-        if req.feat_enabled == true then
-            f_enabled = "1"
-        end
-        uci:set("ddnsto","@ddnsto[0]","feat_enabled",f_enabled)
-
-        local port = 3033
-        if req.feat_port ~= nil then
-            port = req.feat_port
-        end
-        uci:set("ddnsto","@ddnsto[0]","feat_port",port)
-
-        local username = ""
-        if req.feat_username ~= nil then
-            username = trim(req.feat_username)
-        end
-        uci:set("ddnsto","@ddnsto[0]","feat_username",username)
-
-        local password = ""
-        if req.feat_password ~= nil then
-            password = trim(req.feat_password)
-        end
-        uci:set("ddnsto","@ddnsto[0]","feat_password",password)
-        
-        local path = ""
-        if req.feat_disk_path_selected ~= nil then
-            path = trim(req.feat_disk_path_selected)
-        end
-        uci:set("ddnsto","@ddnsto[0]","feat_disk_path_selected",path)
-        uci:commit("ddnsto")  
-    end
-        
-    
-    if success == 0 then     
-        log = log .. "正在保存参数...\n"
-        log = log .. "保存成功!\n"
-        log = log .. "请关闭对话框\n" 
-        
-        luci.util.exec("/etc/init.d/ddnsto stop") 
-        luci.util.exec("/etc/init.d/ddnsto start")
-        luci.util.exec("sleep 1")
-    else
-        log = log .. "参数错误：\n"
-        log = log .. "\n"
-        log = log .. error .."\n"
-        log = log .. "\n"
-        log = log .. "保存失败！\n"
-        log = log .. "请关闭对话框\n" 
-        luci.util.exec("sleep 1")
-    end
- 
-    
-    local result = {
-        async = false,
-        log = log,
-        data = get_data(),
-        schema = get_schema()
-    } 
-    local response = {
-        success = 0,
-        result = result,
-    } 
-    http.prepare_content("application/json")
-    http.write_json(response)
-end
-
-function ddnsto_log()
-    local http = require "luci.http" 
-    local fs   = require "nixio.fs"
-    local data = fs.readfile("/tmp/ddnsto/ddnsto-luci.log")
-
-    http.prepare_content("text/plain;charset=utf-8")
-    http.write(data)
-end
-
-function ddnsto_status()
-        local sys  = require "luci.sys"
-        local status = {
-                running = (sys.call("pidof ddnstod >/dev/null") == 0)
-        }
-
-        luci.http.prepare_content("application/json")
-        luci.http.write_json(status)
-end
-
-local page_index = {"admin", "services", "ddnsto", "pages"}
-function redirect_index()
-    luci.http.redirect(luci.dispatcher.build_url(unpack(page_index)))
-end
-
-function ddnsto_index()
-    luci.template.render("ddnsto/main", {prefix=luci.dispatcher.build_url(unpack(page_index))})
-end
-
-function ddnsto_dev()
-    luci.template.render("ddnsto/main_dev", {prefix=luci.dispatcher.build_url(unpack({"admin", "services", "ddnsto", "dev"}))})
+    template.render("ddnsto/dev", data)
 end

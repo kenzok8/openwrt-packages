@@ -11,7 +11,7 @@ PKG_ARCH_quickstart:=$(ARCH)
 
 PKG_NAME:=quickstart
 PKG_VERSION:=0.11.13
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/linkease/istore-packages/releases/download/prebuilt/
 PKG_HASH:=f9b3161f540b522d29fa28749da5fca34472f626e1ecd1f47d7aa279b6d0d111
@@ -28,7 +28,8 @@ define Package/$(PKG_NAME)
 	CATEGORY:=Network
 	SUBMENU:=Web Servers/Proxies
 	TITLE:=Quickstart, the quick start.
-	DEPENDS:=@(x86_64||aarch64||arm) +shadow-utils +shadow-useradd +mount-utils +block-mount +lsblk +e2fsprogs +parted +smartmontools +smartd +mdadm +ip-full +ubus +uci +bash
+	DEPENDS:=@(x86_64||aarch64||arm) +shadow-utils +shadow-useradd +mount-utils +block-mount +lsblk +e2fsprogs +parted \
+		+smartmontools +smartd +smartmontools-drivedb +mdadm +ip-full +ubus +uci +bash
 	URL:=https://easepi.linkease.com/
 endef
 
