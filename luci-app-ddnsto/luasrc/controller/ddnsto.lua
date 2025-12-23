@@ -582,54 +582,66 @@ function api_status()
 
   local version = get_command("/usr/sbin/ddnstod -v")
 
-  -- Check connectivity to the tunnel server (BusyBox nc may not support -z/-w flags)
+  -- Check connectivity to the tunnel server via ping
   local function resolve_host(host)
-    local out = sys.exec(string.format("nslookup %s 2>/dev/null", host)) or ""
+    -- Prefer public DNS to avoid local resolver issues; fallback to default resolver
+    local out = sys.exec(string.format("nslookup %s 223.5.5.5 2>/dev/null", host)) or ""
+    if out == "" then
+      out = sys.exec(string.format("nslookup %s 8.8.8.8 2>/dev/null", host)) or ""
+    end
+    if out == "" then
+      out = sys.exec(string.format("nslookup %s 2>/dev/null", host)) or ""
+    end
     local ip = out:match("Address 1:%s*([%d%.]+)") or out:match("Address:%s*([%d%.]+)")
     return ip or ""
   end
 
-  local tunnel_ip = resolve_host("tunnel.kooldns.cn")
-  local tunnel_target = tunnel_ip ~= "" and tunnel_ip or "tunnel.kooldns.cn"
-  local tunnel_err = nil
-  local tunnel_ret = -1
+  local tunnel_targets = {}
+  local resolved_ip = resolve_host("tunnel.kooldns.cn")
+  if resolved_ip ~= "" then table.insert(tunnel_targets, resolved_ip) end
+  table.insert(tunnel_targets, "tunnel.kooldns.cn")
+  -- Fallback known IP to avoid DNS issues
+  table.insert(tunnel_targets, "125.39.21.43")
 
-  if tunnel_ip == "" then
+  -- Deduplicate targets
+  do
+    local seen = {}
+    local uniq = {}
+    for _, t in ipairs(tunnel_targets) do
+      if not seen[t] then
+        seen[t] = true
+        table.insert(uniq, t)
+      end
+    end
+    tunnel_targets = uniq
+  end
+
+  local function connect_target(target)
+    -- BusyBox ping: -c 1 (one packet), -W 2 (2s timeout)
+    local ret = sys.call(string.format("ping -c 1 -W 2 %s >/dev/null 2>&1", target))
+    if ret == 0 then
+      return 0, nil
+    end
+    return ret, string.format("ping exit %d to %s", ret, target)
+  end
+
+  local tunnel_ok = false
+  local tunnel_err = nil
+
+  if #tunnel_targets == 0 then
     tunnel_err = "resolve tunnel.kooldns.cn failed"
   else
-    local has_timeout = (sys.call("command -v timeout >/dev/null 2>&1") == 0)
-    if has_timeout then
-      -- Prefer timeout if available
-      tunnel_ret = sys.call(string.format("timeout 3 nc %s 4445 </dev/null >/dev/null 2>&1", tunnel_target))
-    else
-      -- Fallback: background nc and kill after ~3s if still running
-      local tmpl = table.concat({
-        "sh -c '",
-        "nc %s 4445 </dev/null >/dev/null 2>&1 & pid=$!;",
-        "for i in 1 2 3; do",
-        "  sleep 1;",
-        "  if ! kill -0 $pid 2>/dev/null; then",
-        "    wait $pid;",
-        "    exit $?;",
-        "  fi;",
-        "done;",
-        "kill -9 $pid >/dev/null 2>&1;",
-        "wait $pid >/dev/null 2>&1;",
-        "exit 1",
-        "'"
-      }, " ")
-      tunnel_ret = sys.call(string.format(tmpl, tunnel_target))
-    end
-    if tunnel_ret ~= 0 then
-      if has_timeout then
-        tunnel_err = string.format("nc exit %d", tunnel_ret)
+    for _, target in ipairs(tunnel_targets) do
+      local ret, err = connect_target(target)
+      if ret == 0 then
+        tunnel_ok = true
+        tunnel_err = nil
+        break
       else
-        tunnel_err = string.format("nc exit %d (no timeout available, BusyBox nc limited)", tunnel_ret)
+        tunnel_err = err
       end
     end
   end
-
-  local tunnel_ok = (tunnel_ret == 0)
 
   local did = ""
   do
