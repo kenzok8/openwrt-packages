@@ -37,8 +37,7 @@ LuCI 对 POST 通常要求 token 校验。这里提供两种方式（二选一�
 开发/调试注意
 ------------
 1) 修改 controller 后，LuCI 可能缓存索引：
-   - rm -f /tmp/luci-indexcache
-   - /etc/init.d/uhttpd restart  （或重启设备）
+   - rm -f /tmp/luci-indexcache /tmp/luci-indexcache.*
 2) 确保 /etc/config/ddnsto 存在；否则 index() 会直接 return。
 3) 若想扩展更多字段（如 address），建议在 GET 返回里带出，但 POST 仅允许白名单字段写入。
 

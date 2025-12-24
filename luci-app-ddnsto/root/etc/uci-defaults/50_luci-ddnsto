@@ -1,4 +1,4 @@
 #!/bin/sh
 
-rm -f /tmp/luci-indexcache
+rm -f /tmp/luci-indexcache /tmp/luci-indexcache.*
 exit 0
