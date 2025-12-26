@@ -8,6 +8,8 @@
 [discord-badge]: https://img.shields.io/badge/visit_Discord-Comunity-blue
 [paypal]: https://www.paypal.com/paypalme/derisamedia
 [paypal-badge]: https://img.shields.io/badge/Donate-Paypal_me-blue
+[new-release]: https://github.com/derisamedia/luci-theme-alpha-reborn
+[new-release-badge]: https://img.shields.io/badge/download-check_releases-red
 
 
 
