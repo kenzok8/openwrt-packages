@@ -9,7 +9,7 @@
 [paypal]: https://www.paypal.com/paypalme/derisamedia
 [paypal-badge]: https://img.shields.io/badge/Donate-Paypal_me-blue
 [new-release]: https://github.com/derisamedia/luci-theme-alpha-reborn
-[new-release-badge]: https://img.shields.io/badge/download-check_releases-red
+[new-release-badge]: https://img.shields.io/badge/New_Release-AlphaOS_Reborn_v4-red
 
 
 
@@ -28,6 +28,7 @@
 [![group][group-badge]][group]
 [![discord][discord-badge]][discord]
 [![paypal][paypal-badge]][paypal]
+[![new-release][new-release-badge]][new-release]
 
 
 Luci theme for Official Openwrt and Alpha OS build ,based on bootstrap framework 
