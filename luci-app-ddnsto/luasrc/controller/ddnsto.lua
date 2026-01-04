@@ -37,7 +37,8 @@ LuCI 对 POST 通常要求 token 校验。这里提供两种方式（二选一�
 开发/调试注意
 ------------
 1) 修改 controller 后，LuCI 可能缓存索引：
-   - rm -f /tmp/luci-indexcache /tmp/luci-indexcache.*
+   - rm -f /tmp/luci-indexcache
+   - /etc/init.d/uhttpd restart  （或重启设备）
 2) 确保 /etc/config/ddnsto 存在；否则 index() 会直接 return。
 3) 若想扩展更多字段（如 address），建议在 GET 返回里带出，但 POST 仅允许白名单字段写入。
 
@@ -273,7 +274,7 @@ function index()
 
   entry({"admin", "services", "ddnsto"}, firstchild(), _("DDNSTO 远程控制"), 60).dependent = false
   entry({"admin", "services", "ddnsto", "page"}, call("action_page"), _("Settings"), 10).leaf = true
-  -- entry({"admin", "ddnsto_dev"}, call("action_ddnsto_dev"), _("DDNSTO (Dev)"), 99).leaf = true
+  entry({"admin", "ddnsto_dev"}, call("action_ddnsto_dev"), _("DDNSTO (Dev)"), 99).leaf = true
   
   entry({"admin", "services", "ddnsto", "api", "config"},  call("api_config")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "service"}, call("api_service")).leaf = true
@@ -282,6 +283,7 @@ function index()
   entry({"admin", "services", "ddnsto", "api", "stop"},    call("api_stop")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "onboarding", "start"}, call("api_onboarding_start")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "onboarding", "address"}, call("api_onboarding_address")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "connectivity"},  call("api_connectivity")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "status"},  call("api_status")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "logs"},    call("api_logs")).leaf = true
 end
@@ -581,9 +583,40 @@ function api_status()
 
   local version = get_command("/usr/sbin/ddnstod -v")
 
-  -- Check connectivity to the tunnel server via ping
+  local did = ""
+  do
+    local idx = index
+    if not (idx and tostring(idx):match("^%d+$")) then
+      idx = "0"
+    end
+    local cmd = string.format("/usr/sbin/ddnstod -x %s -w | awk '{print $2}'", idx)
+    did = get_command(cmd)
+  end
+
+  write_json({
+    ok = true,
+    data = {
+      enabled = enabled,
+      running = running,
+      pid = pid,
+      token_set = (token and #token > 0) or false,
+      address = address,
+      device_id = did,
+      deviceId = did,
+      hostname = hostname,
+      version = version,
+    }
+  })
+end
+
+-- ==========
+-- API: connectivity (tunnel server reachability)
+-- ==========
+
+function api_connectivity()
+  local sys  = require "luci.sys"
+
   local function resolve_host(host)
-    -- Prefer public DNS to avoid local resolver issues; fallback to default resolver
     local out = sys.exec(string.format("nslookup %s 223.5.5.5 2>/dev/null", host)) or ""
     if out == "" then
       out = sys.exec(string.format("nslookup %s 8.8.8.8 2>/dev/null", host)) or ""
@@ -599,10 +632,8 @@ function api_status()
   local resolved_ip = resolve_host("tunnel.kooldns.cn")
   if resolved_ip ~= "" then table.insert(tunnel_targets, resolved_ip) end
   table.insert(tunnel_targets, "tunnel.kooldns.cn")
-  -- Fallback known IP to avoid DNS issues
   table.insert(tunnel_targets, "125.39.21.43")
 
-  -- Deduplicate targets
   do
     local seen = {}
     local uniq = {}
@@ -616,7 +647,6 @@ function api_status()
   end
 
   local function connect_target(target)
-    -- BusyBox ping: -c 1 (one packet), -W 2 (2s timeout)
     local ret = sys.call(string.format("ping -c 1 -W 2 %s >/dev/null 2>&1", target))
     if ret == 0 then
       return 0, nil
@@ -642,30 +672,12 @@ function api_status()
     end
   end
 
-  local did = ""
-  do
-    local idx = index
-    if not (idx and tostring(idx):match("^%d+$")) then
-      idx = "0"
-    end
-    local cmd = string.format("/usr/sbin/ddnstod -x %s -w | awk '{print $2}'", idx)
-    did = get_command(cmd)
-  end
-
   write_json({
     ok = true,
     data = {
-      enabled = enabled,
-      running = running,
-      pid = pid,
-      token_set = (token and #token > 0) or false,
-      address = address,
-      device_id = did,
-      deviceId = did,
-      hostname = hostname,
-      version = version,
       tunnel_ok = tunnel_ok,
       tunnel_ret = tunnel_ok and nil or tunnel_err,
+      targets = tunnel_targets,
     }
   })
 end
