@@ -1,8 +1,7 @@
 --[[
 DDNSTO LuCI Controller + JSON API
 =================================
-
-目标
+ 
 ----
 为 ddnsto 的 LuCI 页面（可用原生 JS/React/Vue）提供稳定的后端接口：
 1) 读取/更新 UCI 配置：/etc/config/ddnsto
@@ -89,14 +88,6 @@ local function read_json_body()
   return obj
 end
 
-local function get_command2(cmd)
-  local f = io.popen(cmd, "r")
-  if not f then return "" end
-  local out = f:read("*l") or ""
-  f:close()
-  return (out:gsub("^%s+", ""):gsub("%s+$", ""))
-end
-
 local function get_command(cmd)
     local handle = io.popen(cmd, "r")
     if handle then
@@ -106,6 +97,30 @@ local function get_command(cmd)
     end
     return ""
     
+end
+
+local function parse_device_id(raw)
+  local cleaned = tostring(raw or "")
+  cleaned = cleaned:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+  if cleaned == "" then
+    return ""
+  end
+  local _, did = cleaned:match("^(%S+)%s+(%S+)$")
+  return did or cleaned
+end
+
+local function normalize_index(index)
+  local idx = index
+  if not (idx and tostring(idx):match("^%d+$")) then
+    idx = "0"
+  end
+  return idx
+end
+
+local function fetch_device_id(index)
+  local idx = normalize_index(index)
+  local cmd = string.format("/usr/sbin/ddnstod -x %s -w", idx)
+  return parse_device_id(get_command(cmd))
 end
 
 local function param(body, key)
@@ -221,12 +236,7 @@ local function read_config()
   end)
 
   do
-    local idx = cfg.index
-    if not (idx and tostring(idx):match("^%d+$")) then
-      idx = "0"
-    end
-    local cmd = string.format("/usr/sbin/ddnstod -x %s -w | awk '{print $2}'", idx)
-    local did = get_command(cmd)
+    local did = fetch_device_id(cfg.index)
     cfg.device_id = did
     cfg.deviceId = did
   end
@@ -274,7 +284,7 @@ function index()
 
   entry({"admin", "services", "ddnsto"}, firstchild(), _("DDNSTO 远程控制"), 60).dependent = false
   entry({"admin", "services", "ddnsto", "page"}, call("action_page"), _("Settings"), 10).leaf = true
-  entry({"admin", "ddnsto_dev"}, call("action_ddnsto_dev"), _("DDNSTO (Dev)"), 99).leaf = true
+  -- entry({"admin", "ddnsto_dev"}, call("action_ddnsto_dev"), _("DDNSTO (Dev)"), 99).leaf = true
   
   entry({"admin", "services", "ddnsto", "api", "config"},  call("api_config")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "service"}, call("api_service")).leaf = true
@@ -421,7 +431,7 @@ end
 -- API: service
 -- ==========
 
-function api_service()
+local function run_service_action(action, allow_reload)
   local http = require "luci.http"
   local sys = require "luci.sys"
   local method = http.getenv("REQUEST_METHOD") or ""
@@ -433,38 +443,29 @@ function api_service()
 
   if not require_csrf() then return end
 
-  local body = read_json_body()
-  local action = param(body, "action") or ""
+  if not action then
+    local body = read_json_body()
+    action = param(body, "action") or ""
+  end
 
-  if action ~= "start" and action ~= "stop" and action ~= "restart" and action ~= "reload" then
+  local allow = {
+    start = true,
+    stop = true,
+    restart = true,
+    reload = allow_reload == true,
+  }
+
+  if not allow[action] then
     return bad_request("bad action")
   end
 
   local cmd = string.format("/etc/init.d/ddnsto %s >/dev/null 2>&1", action)
   local rc = sys.call(cmd)
-
   write_json({ ok = (rc == 0), rc = rc })
 end
 
-local function run_service_action(action)
-  local http = require "luci.http"
-  local sys = require "luci.sys"
-  local method = http.getenv("REQUEST_METHOD") or ""
-  
-  if method ~= "POST" then
-    method_not_allowed()
-    return
-  end
-
-  if not require_csrf() then return end
-
-  if action ~= "start" and action ~= "stop" and action ~= "restart" then
-    return bad_request("bad action")
-  end
-
-  local cmd = string.format("/etc/init.d/ddnsto %s >/dev/null 2>&1", action)
-  local rc = sys.call(cmd)
-  write_json({ ok = (rc == 0), rc = rc })
+function api_service()
+  return run_service_action(nil, true)
 end
 
 function api_run()
@@ -585,12 +586,7 @@ function api_status()
 
   local did = ""
   do
-    local idx = index
-    if not (idx and tostring(idx):match("^%d+$")) then
-      idx = "0"
-    end
-    local cmd = string.format("/usr/sbin/ddnstod -x %s -w | awk '{print $2}'", idx)
-    did = get_command(cmd)
+    did = fetch_device_id(index)
   end
 
   write_json({

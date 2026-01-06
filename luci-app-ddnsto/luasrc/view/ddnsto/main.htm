@@ -7,12 +7,7 @@
       api_base: "<%=api_base or '/cgi-bin/luci'%>",
       lang: "<%=lang or 'zh-cn'%>"
     };
- 
-    window.IstoreosFormConfig = {
-      getApi: "/cgi-bin/luci/admin/services/ddnsto/form/",
-      logApi: "/cgi-bin/luci/admin/services/ddnsto/log",
-      submitApi: "/cgi-bin/luci/admin/services/ddnsto/submit/"
-    };
+
   })();
 </script>
 
@@ -20,5 +15,6 @@
   <div id="app" class="ddnsto-root" data-ddnsto-shadow></div>
 </div>
 
-<script type="module" crossorigin src="/luci-static/ddnsto/index.js?v=<%=math.random(1,100000)%>"></script>
+<% local cache_bust = os.time() %>
+<script type="module" crossorigin src="/luci-static/ddnsto/index.js?v=<%=cache_bust%>"></script>
 <%+footer%>
