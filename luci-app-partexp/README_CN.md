@@ -15,14 +15,11 @@
 
 ![screenshots](https://raw.githubusercontent.com/sirpdboy/openwrt/master/doc/说明1.jpg)
 
-
 [luci-app-partexp](https://github.com/sirpdboy/luci-app-partexp) 一键自动格式化分区、扩容、自动挂载插件
-
 
 请 **认真阅读完毕** 本页面，本页面包含注意事项和如何使用。
 
 ## 功能说明：
-
 
 #### 一键自动格式化分区、扩容、自动挂载插件，专为OPENWRT设计，简化OPENWRT在分区挂载上烦锁的操作。本插件是sirpdboy耗费大量精力制作测试，请勿删除制作者信息！！
 
@@ -39,8 +36,17 @@
 
 ## 版本
 
+### 更新日期：2026年1月14日
+
+- 最新更新版本号： V2.0.2
+- 更新内容：
+- 全新升级js版，支持openwrt25.12版本 。
+- 增加进度条显示功能和更多的分区格式。
+- 增加更详细的日志分区情况汇报。
+- 目前在X86的机器上测试完全正常，其它路由设备上未测试。有问题请提交硬盘分区情况和错误提示。
+ 
+### 更新日期：2025年3月26日
 - 最新更新版本号： V1.3.1
-- 更新日期：2025年3月26日
 - 更新内容：
 - 重新整理分区扩容代码，解决一些不合理的地方。
 - 加入对目标分区的格式，可以指定格式化为ext4,ntfs和Btrfs以及不格式化。
@@ -89,13 +95,13 @@
 
 ![screenshots](./doc/partexp2.png)
 
+![screenshots](./doc/partexp3.png)
 
+![screenshots](./doc/partexp4.png)
 
 ## 使用与授权相关说明
  
 - 本人开源的所有源码，任何引用需注明本处出处，如需修改二次发布必告之本人，未经许可不得做于任何商用用途。
-
-
 
 
 # My other project
