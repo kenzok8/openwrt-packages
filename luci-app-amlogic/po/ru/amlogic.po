@@ -1,0 +1,588 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: https://github.com/ophub/luci-app-amlogic\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru_RU\n"
+"X-Generator: Poedit 2.3.1\n"
+
+msgid "Choose local file:"
+msgstr "Выберите локальный файл:"
+
+msgid "Couldn't open file:"
+msgstr "Не удалось открыть файл:"
+
+msgid "The file Will download automatically."
+msgstr "Файл будет загружен автоматически."
+
+msgid "Create upload file error."
+msgstr "Ошибка создания загружаемого файла."
+
+msgid "Download"
+msgstr "Скачать"
+
+msgid "Download file"
+msgstr "Скачать файл"
+
+msgid "File name"
+msgstr "Имя файла"
+
+msgid "File saved to"
+msgstr "Файл сохранён в"
+
+msgid "FileTransfer"
+msgstr "Передача файлов"
+
+msgid "Install"
+msgstr "Установить"
+
+msgid "Attributes"
+msgstr "Атрибуты"
+
+msgid "Modify time"
+msgstr "Время изменения"
+
+msgid "No specify upload file."
+msgstr "Не указан файл для загрузки."
+
+msgid "Path on Route:"
+msgstr "Путь на маршрутизаторе:"
+
+msgid "Remove"
+msgstr "Удалить"
+
+msgid "Size"
+msgstr "Размер"
+
+msgid "Upload"
+msgstr "Загрузить"
+
+msgid "Upload file list"
+msgstr "Список загруженных файлов"
+
+msgid "There are config file in the upload directory, and you can restore the config. "
+msgstr "В каталоге загрузки есть файл конфигурации — вы можете восстановить настройки."
+
+msgid "There are kernel files in the upload directory, and you can replace the kernel."
+msgstr "В каталоге загрузки находятся файлы ядра — вы можете заменить ядро."
+
+msgid "There are openwrt firmware file in the upload directory, and you can update the openwrt."
+msgstr "В каталоге загрузки есть файл прошивки OpenWrt — вы можете обновить OpenWrt."
+
+msgid "Update plugins first, then update the kernel or firmware."
+msgstr "Сначала обновите плагины, затем ядро или прошивку."
+
+msgid "After uploading [Firmware], [Kernel], [IPK] or [Backup Config], the operation buttons will be displayed."
+msgstr "После загрузки [прошивки], [ядра], [IPK-пакета] или [резервной конфигурации] появятся соответствующие кнопки управления."
+
+msgid "After uploading firmware (.img/.img.gz/.img.xz/.7z suffix) or kernel files (3 kernel files), the update button will be displayed."
+msgstr "После загрузки файлов прошивки (с расширениями .img/.img.gz/.img.xz/.7z) или файлов ядра (3 файла), появится кнопка обновления."
+
+msgid "Amlogic Service"
+msgstr "Сервис Amlogic"
+
+msgid "Restore Config / Replace OpenWrt Kernel"
+msgstr "Восстановить конфигурацию / Заменить ядро OpenWrt"
+
+msgid "Manually Upload Update"
+msgstr "Обновление вручную"
+
+msgid "Install OpenWrt"
+msgstr "Установить OpenWrt"
+
+msgid "Select the device model:"
+msgstr "Выберите модель устройства:"
+
+msgid "Select List"
+msgstr "Выбрать из списка"
+
+msgid "Enter the dtb file name"
+msgstr "Введите имя файла DTB"
+
+msgid "Enter the soc name:"
+msgstr "Введите имя SoC:"
+
+msgid "Enter the uboot_overload name:"
+msgstr "Введите имя uboot_overload:"
+
+msgid "Invalid value."
+msgstr "Недопустимое значение."
+
+msgid "Install OpenWrt:"
+msgstr "Установка OpenWrt:"
+
+msgid "Install OpenWrt to EMMC, Please select the device model, Or enter the dtb file name."
+msgstr "Установка OpenWrt на eMMC. Пожалуйста, выберите модель устройства или введите имя файла DTB."
+
+msgid "Tip: Writing is in progress, and it will automatically restart after completion."
+msgstr "Подсказка: идёт запись — после завершения устройство автоматически перезагрузится."
+
+msgid "You have chosen:"
+msgstr "Вы выбрали:"
+
+msgid "Start install?"
+msgstr "Начать установку?"
+
+msgid "Installing..."
+msgstr "Установка..."
+
+msgid "Install Failed"
+msgstr "Установка не удалась"
+
+msgid "Successful Install"
+msgstr "Установка завершена успешно"
+
+msgid "Update"
+msgstr "Обновить"
+
+msgid "Updating..."
+msgstr "Обновление..."
+
+msgid "Update Failed"
+msgstr "Обновление не удалось"
+
+msgid "Successful Update"
+msgstr "Обновление завершено успешно"
+
+msgid "Update OpenWrt firmware"
+msgstr "Обновить прошивку OpenWrt"
+
+msgid "kernel"
+msgstr "ядро"
+
+msgid "Replace OpenWrt Kernel"
+msgstr "Заменить ядро OpenWrt"
+
+msgid "Tip: The kernel is being replaced, and it will automatically restart after completion."
+msgstr "Подсказка: идёт замена ядра — после завершения устройство автоматически перезагрузится."
+
+msgid "Supports management of Amlogic s9xxx, Allwinner (V-Plus Cloud), and Rockchip (BeikeYun, Chainedbox L1 Pro) boxes."
+msgstr "Поддерживает управление устройствами на базе Amlogic s9xxx, Allwinner (V-Plus Cloud) и Rockchip (BeikeYun, Chainedbox L1 Pro)."
+
+msgid "Supported functions:"
+msgstr "Поддерживаемые функции:"
+
+msgid "Provide services such as install to EMMC, Update Firmware and Kernel, Backup and Recovery Config, Snapshot management, etc."
+msgstr "Позволяет устанавливать OpenWrt на eMMC, обновлять прошивку и ядро, выполнять резервное копирование и восстановление конфигурации, а также управлять снапшотами (мгновенными снимками системы)."
+
+msgid "Supported Boxes:"
+msgstr "Поддерживаемые устройства:"
+
+msgid "Amlogic s922x --- [ Beelink, Beelink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas-VIM3, Ali-CT2000 ]"
+msgstr "Amlogic s922x — [Beelink, Beelink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas-VIM3, Ali-CT2000]"
+
+msgid "Amlogic s905x3 -- [ X96-Max+, HK1-Box, H96-Max-X3, Ugoos-X3, TX3, X96-Air, A95XF3-Air ]"
+msgstr "Amlogic s905x3 — [X96-Max+, HK1-Box, H96-Max-X3, Ugoos-X3, TX3, X96-Air, A95XF3-Air]"
+
+msgid "Amlogic s905x2 -- [ X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2 ]"
+msgstr "Amlogic s905x2 — [X96Max-4G, X96Max-2G, MECOOL-KM3-4G, Tanix-Tx5-Max, A95X-F2]"
+
+msgid "Amlogic s912 ---- [ H96-Pro-Plus, Octopus-Planet, A1, A2, Z6-Plus, TX92, X92, TX8-MAX, TX9-Pro ]"
+msgstr "Amlogic s912 — [H96-Pro-Plus, Octopus-Planet, A1, A2, Z6-Plus, TX92, X92, TX8-MAX, TX9-Pro]"
+
+msgid "Amlogic s905x --- [ HG680P, B860H, TBee, T95, TX9, XiaoMI-3S, X96 ]"
+msgstr "Amlogic s905x — [HG680P, B860H, TBee, T95, TX9, XiaoMI-3S, X96]"
+
+msgid "Amlogic s905w --- [ X96-Mini, TX3-Mini, W95, X96W/FunTV, MXQ-Pro-4K ]"
+msgstr "Amlogic s905w — [X96-Mini, TX3-Mini, W95, X96W/FunTV, MXQ-Pro-4K]"
+
+msgid "Amlogic s905d --- [ Phicomm-N1, MECOOL-KI-Pro, SML-5442TW ]"
+msgstr "Amlogic s905d — [Phicomm-N1, MECOOL-KI-Pro, SML-5442TW]"
+
+msgid "Amlogic s905l --- [ UNT402A, M201-S ]"
+msgstr "Amlogic s905l — [UNT402A, M201-S]"
+
+msgid "Amlogic s905l2 -- [ MGV2000, MGV3000, Wojia-TV-IPBS9505, M301A, E900v21E ]"
+msgstr "Amlogic s905l2 — [MGV2000, MGV3000, Wojia-TV-IPBS9505, M301A, E900v21E]"
+
+msgid "Amlogic s905l3 -- [ CM211-1, CM311-1, HG680-LC, M401A, UNT400G1, UNT402A, ZXV10-BV310 ]"
+msgstr "Amlogic s905l3 — [CM211-1, CM311-1, HG680-LC, M401A, UNT400G1, UNT402A, ZXV10-BV310]"
+
+msgid "Amlogic s905l3a - [ E900V22C/D, CM311-1a-YST, M401A, M411A, UNT403A, UNT413A, IP112H ]"
+msgstr "Amlogic s905l3a — [E900V22C/D, CM311-1a-YST, M401A, M411A, UNT403A, UNT413A, IP112H]"
+
+msgid "Amlogic s905l3b - [ CM211-1, CM311-1, E900V22D, E900V21E, E900V22E, M302A/M304A ]"
+msgstr "Amlogic s905l3b — [CM211-1, CM311-1, E900V22D, E900V21E, E900V22E, M302A/M304A]"
+
+msgid "Amlogic s905 ---- [ Beelink-Mini-MX-2G, Sunvell-T95M, MXQ-Pro+4K, SumaVision-Q5 ]"
+msgstr "Amlogic s905 — [Beelink-Mini-MX-2G, Sunvell-T95M, MXQ-Pro+4K, SumaVision-Q5]"
+
+msgid "Allwinner H6 ---- [ V-Plus Cloud ]"
+msgstr "Allwinner H6 — [V-Plus Cloud]"
+
+msgid "Rockchip -------- [ BeikeYun, L1-Pro, FastRhino R66S/R68S, Radxa 5B/E25 ]"
+msgstr "Rockchip — [BeikeYun, L1-Pro, FastRhino R66S/R68S, Radxa 5B/E25]"
+
+msgid "Used in KVM ----- [ Can be used in KVM virtual machine of Armbian system. ]"
+msgstr "Используется в KVM — [можно использовать в виртуальной машине KVM на базе Armbian]."
+
+msgid "KVM dual system switching"
+msgstr "Переключение между двумя системами в KVM"
+
+msgid "You can freely switch between KVM dual partitions, using OpenWrt systems in different partitions."
+msgstr "Вы можете свободно переключаться между двумя разделами KVM, используя OpenWrt из разных разделов."
+
+msgid "Switch System"
+msgstr "Переключить систему"
+
+msgid "System is switching..."
+msgstr "Переключение системы..."
+
+msgid "Waiting for system switching..."
+msgstr "Ожидание завершения переключения..."
+
+msgid "System switchover succeeded, restarting..."
+msgstr "Переключение успешно, перезагрузка..."
+
+msgid "Are you sure you want to switch systems?"
+msgstr "Вы уверены, что хотите переключить систему?"
+
+msgid "Install Ipk"
+msgstr "Установить IPK"
+
+msgid "Plugin Settings"
+msgstr "Настройки плагина"
+
+msgid "Backup Firmware Config"
+msgstr "Резервное копирование конфигурации"
+
+msgid "Backup Config:"
+msgstr "Резервная копия конфигурации:"
+
+msgid "Download Backup"
+msgstr "Скачать резервную копию"
+
+msgid "Backup OpenWrt config (openwrt_config.tar.gz). Use this file to restore the config in [Manually Upload Update]."
+msgstr "Создать резервную копию конфигурации OpenWrt (openwrt_config.tar.gz). Используйте этот файл для восстановления в разделе [Обновление вручную]."
+
+msgid "Edit List:"
+msgstr "Редактировать список:"
+
+msgid "Open List"
+msgstr "Открыть список"
+
+msgid "Backup Configuration - Custom List"
+msgstr "Резервная копия — пользовательский список"
+
+msgid "Write one configuration item per line, and directories should end with a /."
+msgstr "По одному элементу на строку. Имена каталогов должны оканчиваться на «/»."
+
+msgid "Restore Backup:"
+msgstr "Восстановить из резервной копии:"
+
+msgid "Upload Backup"
+msgstr "Загрузить резервную копию"
+
+msgid "Restore"
+msgstr "Восстановить"
+
+msgid "Restore Config"
+msgstr "Восстановить конфигурацию"
+
+msgid "Restore configuration"
+msgstr "Восстановление конфигурации"
+
+msgid "Config File"
+msgstr "Файл конфигурации"
+
+msgid "Tip: The config is being restored, and it will automatically restart after completion."
+msgstr "Подсказка: идёт восстановление конфигурации — после завершения устройство автоматически перезагрузится."
+
+msgid "Snapshot Management"
+msgstr "Управление снапшотами"
+
+msgid "Create Snapshot"
+msgstr "Создать снапшот"
+
+msgid "Creating..."
+msgstr "Создание..."
+
+msgid "Created successfully"
+msgstr "Создано успешно"
+
+msgid "Creation failed"
+msgstr "Ошибка создания"
+
+msgid "Initialize Snapshot"
+msgstr "Инициализировать снапшот"
+
+msgid "Update Snapshot"
+msgstr "Обновить снапшот"
+
+msgid "Restore Snap"
+msgstr "Восстановить снапшот"
+
+msgid "Restoring..."
+msgstr "Восстановление..."
+
+msgid "Restore Failed"
+msgstr "Восстановление не удалось"
+
+msgid "Successfully Restored"
+msgstr "Восстановлено успешно"
+
+msgid "Delete Snap"
+msgstr "Удалить снапшот"
+
+msgid "You selected a snapshot:"
+msgstr "Вы выбрали снапшот:"
+
+msgid "Confirm delete?"
+msgstr "Подтвердить удаление?"
+
+msgid "Confirm recovery and restart OpenWrt?"
+msgstr "Подтвердить восстановление и перезагрузку OpenWrt?"
+
+msgid "Delete Failed"
+msgstr "Удаление не удалось"
+
+msgid "Successfully Deleted"
+msgstr "Удалено успешно"
+
+msgid "Create a snapshot of the current system configuration, or restore to a snapshot."
+msgstr "Создать снапшот текущей конфигурации системы или восстановиться из снапшота."
+
+msgid "Currently OpenWrt does not support the snapshot function."
+msgstr "В текущей версии OpenWrt функция снапшотов не поддерживается."
+
+msgid "Please use this plugin to reinstall or upgrade OpenWrt to enable the snapshot function."
+msgstr "Пожалуйста, используйте этот плагин для переустановки или обновления OpenWrt, чтобы включить поддержку снапшотов."
+
+msgid "Deleting..."
+msgstr "Удаление..."
+
+msgid "Online Download Update"
+msgstr "Обновление через интернет"
+
+msgid "Config Source"
+msgstr "Источник конфигурации"
+
+msgid "You can customize the github.com download repository of OpenWrt files and kernels in [Online Download Update]."
+msgstr "Вы можете настроить репозиторий на github.com для загрузки файлов OpenWrt и ядер в разделе [Обновление через интернет]."
+
+msgid "Tip: The same files as the current OpenWrt system's BOARD (such as rock5b) and kernel (such as 5.10) will be downloaded."
+msgstr "Подсказка: будут загружены файлы, соответствующие текущей платформе (например, rock5b) и версии ядра (например, 5.10)."
+
+msgid "OpenWrt download repository:"
+msgstr "Репозиторий OpenWrt:"
+
+msgid "Set the OpenWrt files download repository on github.com in [Online Download Update]."
+msgstr "Укажите репозиторий на github.com для загрузки файлов OpenWrt в разделе [Обновление через интернет]."
+
+msgid "OpenWrt download tags keyword:"
+msgstr "Ключевое слово тега OpenWrt:"
+
+msgid "Set the OpenWrt files download tags keyword for github.com in [Online Download Update]."
+msgstr "Укажите ключевое слово тега для загрузки файлов OpenWrt на github.com в разделе [Обновление через интернет]."
+
+msgid "OpenWrt files suffix:"
+msgstr "Расширение файлов OpenWrt:"
+
+msgid "Set the OpenWrt files download suffix for github.com in [Online Download Update]."
+msgstr "Укажите расширение файлов OpenWrt, загружаемых с github.com, в разделе [Обновление через интернет]."
+
+msgid "Kernel download repository:"
+msgstr "Репозиторий ядра:"
+
+msgid "Set the kernel files download repository on github.com in [Online Download Update]."
+msgstr "Укажите репозиторий на github.com для загрузки файлов ядра в разделе [Обновление через интернет]."
+
+msgid "Kernel download tags:"
+msgstr "Теги ядра:"
+
+msgid "Set the kernel files download tags on github.com in [Online Download Update]."
+msgstr "Укажите теги для загрузки файлов ядра на github.com в разделе [Обновление через интернет]."
+
+msgid "kernel_rk3588 [Rockchip RK3588 Kernel]"
+msgstr "kernel_rk3588 [Ядро для Rockchip RK3588]"
+
+msgid "kernel_rk35xx [Rockchip RK35xx Kernel]"
+msgstr "kernel_rk35xx [Ядро для Rockchip RK35xx]"
+
+msgid "kernel_stable [Mainline Stable Kernel]"
+msgstr "kernel_stable [Стабильное ядро из mainline]"
+
+msgid "kernel_flippy [Mainline Stable Kernel by Flippy]"
+msgstr "kernel_flippy [Стабильное ядро от Flippy]"
+
+msgid "kernel_h6 [Allwinner H6 Kernel]"
+msgstr "kernel_h6 [Ядро для Allwinner H6]"
+
+msgid "kernel_beta [Beta Kernel]"
+msgstr "kernel_beta [Бета-версия ядра]"
+
+msgid "Set version branch:"
+msgstr "Ветка версии:"
+
+msgid "Set the version branch of the OpenWrt files and kernel selected in [Online Download Update]."
+msgstr "Укажите ветку версии для файлов OpenWrt и ядра в разделе [Обновление через интернет]."
+
+msgid "Keep config update:"
+msgstr "Сохранять конфигурацию при обновлении:"
+
+msgid "Set whether to keep the current config during [Online Download Update] and [Manually Upload Update]."
+msgstr "Выберите, сохранять ли текущую конфигурацию при обновлении через интернет или вручную."
+
+msgid "Auto write bootloader:"
+msgstr "Автоматически записывать bootloader:"
+
+msgid "[Recommended choice] Set whether to auto write bootloader during install and update OpenWrt."
+msgstr "[Рекомендуется] Указывает, записывать ли автоматически bootloader при установке или обновлении OpenWrt."
+
+msgid "Set the file system type:"
+msgstr "Тип файловой системы:"
+
+msgid "[Default ext4] Set the file system type of the shared partition (/mnt/mmcblk*p4) when install OpenWrt."
+msgstr "[По умолчанию ext4] Укажите тип файловой системы для общего раздела (/mnt/mmcblk*p4) при установке OpenWrt."
+
+msgid "Save Config:"
+msgstr "Сохранить конфигурацию:"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Check All Components Update"
+msgstr "Проверка обновлений"
+
+msgid "Provide OpenWrt Firmware, Kernel and Plugin online check, download and update service."
+msgstr "Предоставляет онлайн-проверку, загрузку и обновление прошивки OpenWrt, ядра и плагинов."
+
+msgid "Only update Amlogic Service"
+msgstr "Обновить только сервис Amlogic"
+
+msgid "Update system kernel only"
+msgstr "Обновить только ядро системы"
+
+msgid "Complete system update"
+msgstr "Полное обновление системы"
+
+msgid "Check Update"
+msgstr "Проверить обновления"
+
+msgid "Checking..."
+msgstr "Проверка..."
+
+msgid "Current Version"
+msgstr "Текущая версия"
+
+msgid "Latest Version"
+msgstr "Последняя версия"
+
+msgid "Rescue Kernel"
+msgstr "Аварийное восстановление ядра"
+
+msgid "When a kernel update fails and causes the OpenWrt system to be unbootable, the kernel can be restored by mutual recovery from eMMC/NVMe/sdX."
+msgstr "Если обновление ядра привело к невозможности загрузки OpenWrt, его можно восстановить с другого носителя (eMMC/NVMe/sdX)."
+
+msgid "Rescue the original system kernel"
+msgstr "Восстановить исходное ядро системы"
+
+msgid "Rescuing..."
+msgstr "Восстановление..."
+
+msgid "Current Device:"
+msgstr "Текущее устройство:"
+
+msgid "Display the PLATFORM classification of the device."
+msgstr "Отображает класс PLATFORM устройства."
+
+msgid "Update plugins first, then update the kernel or firmware. More options can be configured in [Plugin Settings]."
+msgstr "Сначала обновите плагины, затем ядро или прошивку. Дополнительные настройки доступны в [Настройках плагина]."
+
+msgid "Collecting data..."
+msgstr "Сбор данных..."
+
+msgid "Server Logs"
+msgstr "Журнал операций"
+
+msgid "Display the execution log of the current operation."
+msgstr "Отображает журнал выполнения текущей операции."
+
+msgid "Stop Refresh Log"
+msgstr "Остановить обновление журнала"
+
+msgid "Start Refresh Log"
+msgstr "Начать обновление журнала"
+
+msgid "Clean Log"
+msgstr "Очистить журнал"
+
+msgid "Download Log"
+msgstr "Скачать журнал"
+
+msgid "CPU Settings"
+msgstr "Настройки CPU"
+
+msgid "CPU Freq"
+msgstr "Частота CPU"
+
+msgid "CPU Freq Settings"
+msgstr "Настройки частоты CPU"
+
+msgid "Set CPU Scaling Governor to Max Performance or Balance Mode"
+msgstr "Выберите режим управления частотой CPU: максимальная производительность или баланс."
+
+msgid "CPU Scaling Governor:"
+msgstr "Режим управления частотой:"
+
+msgid "ondemand"
+msgstr "Ondemand — автоматический баланс"
+
+msgid "performance"
+msgstr "Performance — максимальная производительность"
+
+msgid "schedutil"
+msgstr "Schedutil — умный планировщик"
+
+msgid "CPU Freq from 48000 to 716000 (Khz)"
+msgstr "Диапазон частоты CPU: от 48000 до 716000 КГц"
+
+msgid "Min Freq:"
+msgstr "Мин. частота:"
+
+msgid "Max Freq:"
+msgstr "Макс. частота:"
+
+msgid "CPU Switching Threshold:"
+msgstr "Порог переключения частоты CPU:"
+
+msgid "Kernel make a decision on whether it should increase the frequency (%)"
+msgstr "При загрузке CPU выше указанного процента (%), ядро увеличит частоту."
+
+msgid "CPU Switching Sampling rate:"
+msgstr "Период проверки частоты CPU:"
+
+msgid "The sampling rate determines how frequently the governor checks to tune the CPU (ms)"
+msgstr "Частота проверки загрузки CPU (мс). Примечание: слишком частое переключение может вызвать дрожание задержек в сети."
+
+msgid "Microarchitectures:"
+msgstr "Микроархитектура:"
+
+msgid "Loading"
+msgstr "Загрузка"
+
+msgid "PowerOff"
+msgstr "Выключить"
+
+msgid "Shut down your router device."
+msgstr "Выключить устройство маршрутизатора."
+
+msgid "Perform PowerOff"
+msgstr "Выполнить выключение"
+
+msgid "Are you sure you want to shut down?"
+msgstr "Вы уверены, что хотите выключить устройство?"
+
+msgid "Device is shutting down..."
+msgstr "Устройство выключается..."
+
+msgid "Waiting for the device to shut down..."
+msgstr "Ожидание завершения выключения..."
+
+msgid "The device has been turned off"
+msgstr "Устройство выключено"
