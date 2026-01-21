@@ -9,9 +9,5 @@ uci -q batch <<-EOF >/dev/null
 EOF
 }
 
-rm -f /tmp/luci-indexcache* 2>/dev/null
-rm -f /tmp/luci-modulecache/* 2>/dev/null  # OpenWrt 21.02
-rm -f /tmp/luci-indexcache
-
 rm -rf /tmp/luci-*
 exit 0

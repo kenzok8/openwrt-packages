@@ -2,7 +2,7 @@ msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
 msgid "Lucky"
-msgstr "Lucky"
+msgstr "Lucky大吉"
 
 msgid "Lucky Control panel"
 msgstr "Lucky操作台"
@@ -57,3 +57,7 @@ msgstr "使用https加密访问"
 
 msgid "Set an installation access path, eg:sirpdboy"
 msgstr "设置一个安装访问路径，如:sirpdboy"
+
+msgid "Lucky Service Not Running"
+msgstr "Lucky服务未启用"
+

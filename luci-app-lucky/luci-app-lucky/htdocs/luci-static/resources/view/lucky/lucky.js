@@ -1,4 +1,4 @@
-// 版权   Copyright (C) 2021-2025 sirpdboy herboy2008@gmail.com https://github.com/sirpdboy/luci-app-lucky  
+// 版权   Copyright (C) 2021-2026 sirpdboy herboy2008@gmail.com https://github.com/sirpdboy/luci-app-lucky  
 
 'use strict';
 'require view';
@@ -16,7 +16,7 @@ return view.extend({
     checkRunning: function() {
         return fs.exec('/bin/pidof', ['lucky']).then(function(pidRes) {
             if (pidRes.code === 0) return { isRunning: true };
-            return fs.exec('/bin/ash', ['-c', 'ps | grep -q "[d]dns-go"']).then(function(grepRes) {
+            return fs.exec('/bin/ash', ['-c', 'ps | grep -q "[l]ucky"']).then(function(grepRes) {
                 return { isRunning: grepRes.code === 0 };
             });
         });
@@ -56,7 +56,7 @@ return view.extend({
                 });
                 container.appendChild(iframe);
             }
-            
+
             poll.add(function() {
                 return self.checkRunning().then(function(checkResult) {
                     var newStatus = checkResult.isRunning;

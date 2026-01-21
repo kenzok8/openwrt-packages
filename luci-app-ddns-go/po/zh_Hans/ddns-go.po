@@ -76,6 +76,9 @@ msgstr "开机延时启动（秒）"
 msgid "Update kernel"
 msgstr "更新内核"
 
+msgid "Current Version"
+msgstr "当前版本"
+
 msgid "Check and update DDNS-Go to the latest version"
 msgstr "更新DDNS-Go到最新版本"
 

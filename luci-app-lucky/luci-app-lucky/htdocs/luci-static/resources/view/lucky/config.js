@@ -1,4 +1,4 @@
-//   Copyright (C) 2021-2025 sirpdboy herboy2008@gmail.com https://github.com/sirpdboy/luci-app-lucky 
+//   Copyright (C) 2021-2026 sirpdboy herboy2008@gmail.com https://github.com/sirpdboy/luci-app-lucky 
 
 'use strict';
 'require form';

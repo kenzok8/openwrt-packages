@@ -1,4 +1,4 @@
-/*   Copyright (C) 2021-2025 sirpdboy herboy2008@gmail.com https://github.com/sirpdboy/luci-app-ddns-go */
+/*   Copyright (C) 2021-2026 sirpdboy herboy2008@gmail.com https://github.com/sirpdboy/luci-app-ddns-go */
 'use strict';
 'require view';
 'require fs';
@@ -308,12 +308,17 @@ return view.extend({
 
         o = s.option(form.Value, 'delay', _('Delayed Start (seconds)'));
         o.default = '60';
-        
+	
         o = s.option(form.Button, '_newpassword', _('Reset account password'));
         o.inputtitle = _('ResetPassword');
         o.inputstyle = 'apply';
         o.onclick = L.bind(this.handleResetPassword, this, data);
-        
+
+        o = s.option(form.Button, '_update', _('Update kernel'));
+        o.inputtitle = _('Check Update');
+        o.inputstyle = 'apply';
+        o.onclick = L.bind(this.handleUpdate, this, data);
+
         o = s.option(form.DummyValue, '_update_status', _('Current Version'));
         o.rawhtml = true;
         var currentVersion = '';
@@ -332,12 +337,6 @@ return view.extend({
                     currentVersion ? String.format('v%s', currentVersion) : _('Loading...'))
             ]);
         };
-
-        o = s.option(form.Button, '_update', _('Update kernel'),
-                _('Check and update DDNS-Go to the latest version'));
-        o.inputtitle = _('Check Update');
-        o.inputstyle = 'apply';
-        o.onclick = L.bind(this.handleUpdate, this, data);
         
         return m.render();
     }

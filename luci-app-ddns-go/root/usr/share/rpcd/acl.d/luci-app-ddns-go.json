@@ -1,33 +1,34 @@
 {
     "luci-app-ddns-go": {
-		"description": "Grant UCI access for luci-app-ddns-go",
+        "description": "Grant UCI access for luci-app-ddns-go",
         "read": {
-            "uci": [ "ddns-go" ],
+            "uci": ["*"],
             "file": {
-        			"/etc/init.d/ddns-go": [ "exec" ],
-        			"/usr/libexec/ddns-go-call": [ "exec" ],
-        			"/usr/share/rpcd/ucode/luci.ddns-go": [ "exec" ],
-        			"/bin/pidof": [ "exec" ],
-        			"/bin/ps": [ "exec" ],
-        			"/bin/ash": [ "exec" ],
-        			"/etc/ddns-go/ddns-go-config.yaml": [ "read" ],
-        			"/var/log/ddns-go.log": [ "read" ]
-      	    },
+                "/etc/init.d/ddns-go": ["exec"],
+                "/usr/libexec/ddns-go-call": ["exec"],
+                "/usr/share/rpcd/ucode/luci.ddns-go": ["exec"],
+                "/bin/pidof": ["exec"],
+                "/bin/ps": ["exec"],
+                "/bin/ash": ["exec"],
+                "/etc/ddns-go/ddns-go-config.yaml": ["read"],
+                "/var/log/ddns-go.log": ["read"]
+            },
             "ubus": {
-                "rc": [ "*" ],
+                "rc": ["*"],
                 "service": ["list"],
-                "luci.ddns-go": [ "*" ]
+                "luci.ddns-go": ["*"],
+                "network.interface.*": ["status"],
+                "network": ["reload", "restart"]
             }
         },
         "write": {
             "ubus": {
-                "luci.ddns-go": [ "*" ]
+                "luci.ddns-go": ["*"]
             },
             "file": {
                 "/etc/ddns-go/ddns-go-config.yaml": ["write"]
-	    },
-            "uci": ["ddns-go"]
+            },
+            "uci": ["*"]
         }
     }
-
 }
