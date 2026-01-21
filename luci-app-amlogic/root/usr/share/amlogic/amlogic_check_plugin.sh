@@ -116,7 +116,7 @@ else
 
     # Intelligent File Discovery
     plugin_file_name=""
-    lang_file_name=""
+    lang_file_list=""
 
     # Method 1: Use GitHub API if 'jq' is installed (Preferred Method)
     if command -v jq >/dev/null 2>&1; then
@@ -129,7 +129,7 @@ else
         if [[ -n "${asset_list}" ]]; then
             # Discover exact filenames using regular expressions from the asset list
             plugin_file_name="$(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-app-amlogic.*${package_manager}$" | head -n 1)"
-            lang_file_name="$(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-i18n-amlogic-zh-cn.*${package_manager}$" | head -n 1)"
+            lang_file_list=($(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-i18n-amlogic.*${package_manager}$"))
         else
             tolog "Warning: Failed to fetch data from GitHub API." "1"
         fi
@@ -138,29 +138,26 @@ else
     fi
 
     # Validation and Download
-    if [[ -z "${plugin_file_name}" || -z "${lang_file_name}" ]]; then
+    if [[ -z "${plugin_file_name}" || "${#lang_file_list[@]}" -eq "0" ]]; then
         tolog "02.03.2 Could not discover plugin(.${package_manager}) in the release. Aborting." "1"
     fi
 
     tolog "Found plugin file: ${plugin_file_name}"
-    tolog "Found language file: ${lang_file_name}"
-
-    plugin_full_url="${download_repo}/${latest_version}/${plugin_file_name}"
-    lang_full_url="${download_repo}/${latest_version}/${lang_file_name}"
-
-    # Download the language pack
-    tolog "02.04 Downloading language pack..."
-    curl -fsSL "${lang_full_url}" -o "${TMP_CHECK_DIR}/${lang_file_name}"
-    if [[ "${?}" -ne "0" ]]; then
-        tolog "02.04 Language pack download failed." "1"
-    fi
+    tolog "Found language file: $(echo ${lang_file_list[@]} | xargs)"
 
     # Download the main plugin file
-    tolog "02.05 Downloading main plugin..."
+    plugin_full_url="${download_repo}/${latest_version}/${plugin_file_name}"
+    tolog "02.04 Downloading main plugin..."
     curl -fsSL "${plugin_full_url}" -o "${TMP_CHECK_DIR}/${plugin_file_name}"
-    if [[ "${?}" -ne "0" ]]; then
-        tolog "02.05 Plugin download failed." "1"
-    fi
+    [[ "${?}" -ne "0" ]] && tolog "02.04 Plugin [ ${plugin_file_name} ] download failed." "1"
+
+    # Download language packs
+    for langfile in "${lang_file_list[@]}"; do
+        lang_full_url="${download_repo}/${latest_version}/${langfile}"
+        tolog "02.05 Downloading language pack [ ${langfile} ]..."
+        curl -fsSL "${lang_full_url}" -o "${TMP_CHECK_DIR}/${langfile}"
+        [[ "${?}" -ne "0" ]] && tolog "02.05 Language pack [ ${langfile} ] download failed." "1"
+    done
 
     sync && sleep 2
 fi
@@ -168,7 +165,6 @@ fi
 tolog "03. The plug is ready, you can update."
 sleep 2
 
-#echo '<a href=upload>Update</a>' >$START_LOG
 tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_plugin(this)"/> Latest version: '${latest_version}'' "1"
 
 exit 0
