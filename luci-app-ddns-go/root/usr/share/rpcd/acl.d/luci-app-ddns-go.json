@@ -18,7 +18,7 @@
                 "service": ["list"],
                 "luci.ddns-go": ["*"],
                 "network.interface.*": ["status"],
-                "network": ["reload", "restart"]
+                "network": ["*"]
             }
         },
         "write": {
