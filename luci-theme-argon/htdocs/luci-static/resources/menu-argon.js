@@ -204,18 +204,10 @@ return baseclass.extend({
 	 * @param {Object} tree - Menu tree structure from LuCI
 	 */
 	render: function (tree) {
-		var node = tree,
-			url = '',
-			children = ui.menu.getChildren(tree);
+		var node = tree;
+		var url = '';
 
-		// Find and render the active main menu item
-		for (var i = 0; i < children.length; i++) {
-			var isActive = (L.env.requestpath.length ? children[i].name == L.env.requestpath[0] : i == 0);
-
-			if (isActive) {
-				this.renderMainMenu(children[i], children[i].name);
-			}
-		}
+		this.renderModeMenu(node);
 
 		// Render tab menu if we're deep enough in the navigation hierarchy
 		if (L.env.dispatchpath.length >= 3) {
@@ -355,6 +347,27 @@ return baseclass.extend({
 		}
 		
 		return menuContainer;
+	},
+
+	renderModeMenu: function (tree) {
+		var menu = document.querySelector('#modemenu');
+		var children = ui.menu.getChildren(tree);
+
+		for (var i = 0; i < children.length; i++) {
+			var isActive = (L.env.requestpath.length ? children[i].name == L.env.requestpath[0] : i == 0);
+			if (i > 0)
+				menu.appendChild(E([], ['\u00a0|\u00a0']));
+			menu.appendChild(E('li', {}, [
+				E('a', {
+					'href': L.url(children[i].name),
+					'class': isActive ? 'active' : null
+				}, [_(children[i].title)])
+			]));
+			if (isActive)
+				this.renderMainMenu(children[i], children[i].name);
+		}
+		if (menu.children.length > 1)
+			menu.style.display = '';
 	},
 
 	/**
