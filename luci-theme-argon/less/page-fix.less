@@ -599,6 +599,14 @@
     .nft-chain-hook {
         padding: 0.5rem 1.25rem;
     }
+
+    // Fixed the issue of .alert-message not closing properly.
+    .alert-message { 
+        opacity: 1;
+    }
+    .alert-message.fade-out {
+        opacity: 0;
+    }
 }
 
 // Status - Network Bandwidth Monitor
