@@ -282,8 +282,8 @@ while [ $p -ge 1 ]; do
 done
 
 # you can change ROOT size(MB) >= 320
-ROOT1="960"
-ROOT2="960"
+ROOT1="2048"
+ROOT2="2048"
 if [[ "${AMLOGIC_SOC}" == "s912" ]] && [[ "${boxtype}" == "213" || "${boxtype}" == "2e" ]]; then
     BOOT="512"
     BLANK1="700"
@@ -324,7 +324,7 @@ elif [[ "${AMLOGIC_SOC}" == "s905l3a" ]] && [[ "${boxtype}" == "305" || "${boxty
     BLANK4="0"
 elif [[ "${AMLOGIC_SOC}" == "s905l3b" ]]; then
     # M302A/M304A(s905l3b)
-    BOOT="513"
+    BOOT="512"
     BLANK1="128"
     BLANK2="720"
     BLANK3="0"
