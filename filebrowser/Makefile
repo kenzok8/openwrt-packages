@@ -47,9 +47,9 @@ endef
 define Build/Compile
 	( \
 		pushd "$(PKG_BUILD_DIR)/frontend" ; \
-		npm ci; \
-		npm run lint ; \
-		npm run build ; \
+		npm install -g pnpm ; \
+		pnpm install --frozen-lockfile ; \
+		pnpm run build ; \
 		popd ; \
 		$(call GoPackage/Build/Compile) ; \
 	)
