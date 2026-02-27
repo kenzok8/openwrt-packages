@@ -135,7 +135,7 @@ return view.extend({
                 message = _('Password reset successfully to admin12345');
 
             ui.showModal(_('Password Reset Successful'), [
-                E('p', _('Admin password has been reset to: admin12345')),
+                E('p', _('Reset User:admin ,Reset password: admin12345')),
                 E('p', _('You need to restart DDNS-Go service for the changes to take effect.')),
                 E('div', { 'class': 'right' }, [
                     E('button', {

@@ -109,8 +109,8 @@ msgstr "成功重置密码admin12345"
 msgid "Password Reset Successful"
 msgstr "重置密码成功"
 
-msgid "User password has been reset to: admin12345"
-msgstr "用户密码重置为admin12345"
+msgid "Reset User:admin ,Reset password: admin12345"
+msgstr "重置用户名：admin 重置密码：admin12345"
 
 msgid "You need to restart DDNS-Go service for the changes to take effect."
 msgstr "需要重启DDNS-GO服务更改才生效"
