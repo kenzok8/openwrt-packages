@@ -1,19 +1,21 @@
 {
     "luci-app-partexp": {
-        "description": "Grant UCI access for luci-app-partexp",
-	"read": {
+        "description": "Grant access for luci-app-partexp",
+        "read": {
             "ubus": {
-                        "file": ["exec", "list", "stat", "read"],
-                        "uci": [ "*" ],
-                        "partexp": ["*"]
+                "file": ["exec", "list", "stat", "read"],
+                "uci": ["partexp"],
+                "partexp": ["get_devices", "get_log", "get_status"]
             }
-	},
-	"write": {
+        },
+        "write": {
             "ubus": {
-                "partexp": ["*"],
-                "file": ["write"],
-                "uci": ["*"]
-      }
+                "partexp": ["autopart", "save_config"],
+                "file": ["write"]
+            },
+            "file": {
+                "/etc/config/partexp": ["write"]
+            }
+        }
     }
-  }
 }

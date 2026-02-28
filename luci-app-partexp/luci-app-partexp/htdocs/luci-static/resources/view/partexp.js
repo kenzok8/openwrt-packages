@@ -266,32 +266,74 @@ return view.extend({
             this.updateFormVisibility();
         }
     },
-
-    // 加载设备列表
-    loadDevices: function() {
-        var self = this;
-        
+    
+loadDevices: function() {
+    var self = this;
+    
+    if (self.dom.targetDisk) {
+        var loadingOption = document.createElement('option');
+        loadingOption.value = '';
+        loadingOption.textContent = _('Loading devices...');
+        loadingOption.disabled = true;
+        loadingOption.selected = true;
+        self.dom.targetDisk.innerHTML = '';
+        self.dom.targetDisk.appendChild(loadingOption);
+    }
+    function loadDevicesWithRetry(retryCount = 0) {
         callPartExpGetDevices().then(function(response) {
-            if (!response || !response.devices || response.devices.length === 0) {
-                return;
+            if (!response) {
+                throw new Error('Empty response');
             }
-            
-            // 清空设备列表
             if (self.dom.targetDisk) {
                 self.dom.targetDisk.innerHTML = '';
-                
-                // 添加设备选项
-                response.devices.forEach(function(device) {
-                    var option = document.createElement('option');
-                    option.value = device.name;
-                    option.textContent = device.name + ' (' + device.dev + ', ' + device.size + ' MB)';
-                    self.dom.targetDisk.appendChild(option);
-                });
+                if (response.devices && response.devices.length > 0) {
+                    response.devices.forEach(function(device) {
+                        var option = document.createElement('option');
+                        option.value = device.name;
+                        option.textContent = device.name + ' (' + device.dev + ', ' + device.size + ' MB)';
+                        self.dom.targetDisk.appendChild(option);
+                    });
+                } else {
+		
+                    var noDeviceOption = document.createElement('option');
+                    noDeviceOption.value = '';
+                    noDeviceOption.textContent = _('no find device');
+                    noDeviceOption.disabled = true;
+                    noDeviceOption.selected = true;
+                    self.dom.targetDisk.appendChild(noDeviceOption);
+                }
             }
         }).catch(function(error) {
             console.error('Failed to load devices:', error);
+            
+            if (retryCount < 3) {
+                setTimeout(function() {
+                    loadDevicesWithRetry(retryCount + 1);
+                }, 1000 * (retryCount + 1));
+            } else {
+                if (self.dom.targetDisk) {
+                    self.dom.targetDisk.innerHTML = '';
+                    var errorOption = document.createElement('option');
+                    errorOption.value = '';
+                    errorOption.textContent = _('load error');
+                    errorOption.disabled = true;
+                    errorOption.selected = true;
+                    self.dom.targetDisk.appendChild(errorOption);
+                }
+                
+                ui.addNotification({
+                    title: _('load device error'),
+                    text: _('Failed to load devices:'),
+                    type: 'error',
+                    delay: 5000
+                });
+            }
         });
-    },
+    }
+
+    loadDevicesWithRetry();
+},
+
 
     // 加载现有的日志文件内容
     loadExistingLog: function() {
