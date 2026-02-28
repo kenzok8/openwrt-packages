@@ -13,8 +13,8 @@
 
     "admin/services/ddns-go/ddns-go": {
          "title": "DDNS-GO Control panel",
-             "order": 10,
-             "action": {
+         "order": 10,
+         "action": {
                "type": "view",
                "path": "ddns-go/ddns-go"
              }
@@ -27,7 +27,7 @@
                "path": "ddns-go/config"
              }
     },
-    
+
     "admin/services/ddns-go/log": {
 		"title": "Log",
              "order": 30,

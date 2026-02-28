@@ -95,7 +95,7 @@ msgid "Update status unknown"
 msgstr "更新状态未知"
 
 msgid "Reset account password"
-msgstr "重置登录密码"
+msgstr "重置帐号密码"
 
 msgid "ResetPassword"
 msgstr "重置密码"
@@ -103,17 +103,32 @@ msgstr "重置密码"
 msgid "SUCCESS:"
 msgstr "完成执行："
 
-msgid "Password reset successfully to admin12345"
-msgstr "成功重置密码admin12345"
+msgid "Resetting admin username and password, please wait...5"
+msgstr "重置用户名与密码，请稍等"
 
-msgid "Password Reset Successful"
-msgstr "重置密码成功"
+msgid "Username and Password Reset Successful"
+msgstr "用户名和密码重置成功"
 
-msgid "Reset User:admin ,Reset password: admin12345"
+msgid "Reset username to: admin, Reset password to: admin12345"
 msgstr "重置用户名：admin 重置密码：admin12345"
+
+msgid "Username: admin, Password: admin12345"
+msgstr "用户名：admin 密码：admin12345"
 
 msgid "You need to restart DDNS-Go service for the changes to take effect."
 msgstr "需要重启DDNS-GO服务更改才生效"
+
+msgid "You may need to restart DDNS-Go service manually."
+msgstr "必须要重启DDNS-GO服务."
+
+msgid "DDNS-Go command reset may have failed, but configuration file has been updated."
+msgstr "ddns-go重置命令失败，尝试通过直接修改配置文件来重置"
+
+msgid "Reset username/password"
+msgstr "重置用户名/密码"
+
+msgid "DDNS-Go service restarted successfully"
+msgstr "DDNS-GO服务重启成功"
 
 msgid "Restart Service Now"
 msgstr "立刻重启服务"
