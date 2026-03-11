@@ -24,7 +24,7 @@ msgstr "DDNS-GO WEB服务禁用"
 msgid "DDNS-GO Control panel"
 msgstr "DDNS-GO操作台"
 
-msgid "Update interval(seconds)"
+msgid "Update interval (seconds)"
 msgstr "更新间隔（秒）"
 
 msgid "Provider comparison interval"
