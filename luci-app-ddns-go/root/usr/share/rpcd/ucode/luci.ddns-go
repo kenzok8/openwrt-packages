@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: GPL-2.0-only
  *
- * Copyright (C) 2021-2025  sirpdboy  <herboy2008@gmail.com> https://github.com/sirpdboy/luci-app-ddns-go 
+ * Copyright (C) 2022-2026  sirpdboy  <herboy2008@gmail.com>
  */
 
 'use strict';
@@ -26,7 +26,6 @@ function get_current_version() {
 			return null;
 		
 		try {
-			// 去除开头的 'v' 字符
 			version_output = replace(trim(version_output), /^v/, '');
 			return version_output;
 		} catch(e) {
@@ -79,9 +78,9 @@ const methods = {
 					
 					if (version_before && update_info.version_after && version_before !== update_info.version_after) {
 						update_info.update_successful = true;
-						update_info.has_update = false; // 已经更新完成，所以没有待更新了
+						update_info.has_update = false; 
 						update_info.status = 'updated';
-						update_info.message = `更新成功: ${version_before} → ${update_info.version_after}`;
+						update_info.message = `Update successful: ${version_before} → ${update_info.version_after}`;
 					}
 					else if (match(output, /Current version.*is the latest/)) {
 						update_info.status = 'latest';
@@ -91,7 +90,7 @@ const methods = {
 							update_info.current_version = replace(version_match[0], /^v/, '');
 							update_info.latest_version = update_info.current_version;
 						}
-						update_info.message = '已是最新版本 ' + (update_info.current_version || '');
+						update_info.message = 'Already the latest version ' + (update_info.current_version || '');
 						
 					} else if (match(output, /new version.*available/)) {
 						update_info.status = 'update_available';
@@ -104,17 +103,17 @@ const methods = {
 						} else if (version_before) {
 							update_info.current_version = version_before;
 						}
-						update_info.message = '有新版本可用: ' + (update_info.latest_version || '');
+						update_info.message = 'New version available: ' + (update_info.latest_version || '');
 						
 					} else if (match(output, /download.*failed/)) {
 						update_info.status = 'download_failed';
 						update_info.has_update = false;
-						update_info.message = '下载更新失败';
+						update_info.message = 'Download update failed';
 						
 					} else if (match(output, /check.*failed/)) {
 						update_info.status = 'check_failed';
 						update_info.has_update = false;
-						update_info.message = '检查更新失败';
+						update_info.message = 'Update check failed';
 						
 					} else {
 						update_info.status = 'unknown';

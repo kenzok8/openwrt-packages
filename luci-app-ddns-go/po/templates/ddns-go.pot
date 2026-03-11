@@ -1,5 +1,7 @@
 msgid ""
 msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: ddns-go\n"
 
 msgid "DDNS-GO"
 msgstr ""
@@ -7,37 +9,10 @@ msgstr ""
 msgid "DDNS-GO automatically obtains your public IPv4 or IPv6 address and resolves it to the corresponding domain name service."
 msgstr ""
 
-msgid "Base Setting"
+msgid "Enable"
 msgstr ""
 
-msgid "Status check error:"
-msgstr ""
-
-msgid "Checking status..."
-msgstr ""
-
-msgid "DDNS-GO Control panel"
-msgstr ""
-
-msgid "Open Web Interface"
-msgstr ""
-
-msgid "Log"
-msgstr ""
-
-msgid "Clear Logs..."
-msgstr ""
-
-msgid "Logs cleared successfully!"
-msgstr ""
-
-msgid "Clear Logs"
-msgstr ""
-
-msgid "NOT RUNNING"
-msgstr ""
-
-msgid "RUNNING"
+msgid "Listen port"
 msgstr ""
 
 msgid "DDNS-GO Service Not Running"
@@ -46,22 +21,16 @@ msgstr ""
 msgid "DDNS-GO Web Interface Disabled"
 msgstr ""
 
-msgid "Open Web Interface"
+msgid "DDNS-GO Control panel"
 msgstr ""
 
-msgid "Set the DDNS-TO access port"
-msgstr ""
-
-msgid "Collecting data..."
-msgstr ""
-
-msgid "update interval"
-msgstr ""
-
-msgid "Skip verifying certificates"
+msgid "Update interval(seconds)"
 msgstr ""
 
 msgid "Compare with service provider N times intervals"
+msgstr ""
+
+msgid "Skip verifying certificates"
 msgstr ""
 
 msgid "Specify DNS resolution server"
@@ -73,40 +42,91 @@ msgstr ""
 msgid "Delayed Start (seconds)"
 msgstr ""
 
-msgid "Update kernel"
-msgstr ""
-
-msgid "Check and update DDNS-Go to the latest version"
+msgid "Reset account password"
 msgstr ""
 
 msgid "Check Update"
 msgstr ""
 
-msgid "Updating, please wait..."
+msgid "Current Version:"
 msgstr ""
 
-msgid "Update failed"
+msgid "Reset"
+msgstr ""
+
+msgid "RUNNING"
+msgstr ""
+
+msgid "NOT RUNNING"
+msgstr ""
+
+msgid "Open Web Interface"
+msgstr ""
+
+msgid "Checking status..."
+msgstr ""
+
+msgid "Status check error"
+msgstr ""
+
+msgid "Already the latest version"
+msgstr ""
+
+msgid "New version available"
+msgstr ""
+
+msgid "Update successful"
+msgstr ""
+
+msgid "Download update failed"
+msgstr ""
+
+msgid "Update check failed"
 msgstr ""
 
 msgid "Update status unknown"
 msgstr ""
 
-msgid "Reset account password"
+msgid "Update failed"
 msgstr ""
 
-msgid "ResetPassword"
+msgid "Updating, please wait..."
 msgstr ""
 
-msgid "SUCCESS:"
+msgid "Loading..."
 msgstr ""
 
-msgid "Password reset successfully to admin12345"
+msgid "Unknown"
 msgstr ""
 
-msgid "Password Reset Successful"
+msgid "Failed to load"
 msgstr ""
 
-msgid "User password has been reset to: admin12345"
+msgid "Log is clean."
+msgstr ""
+
+msgid "Clear Logs"
+msgstr ""
+
+msgid "Logs cleared!"
+msgstr ""
+
+msgid "Refresh every 5 seconds."
+msgstr ""
+
+msgid "No ddns-go logs found"
+msgstr ""
+
+msgid "Resetting Password"
+msgstr ""
+
+msgid "Resetting admin username and password, please wait..."
+msgstr ""
+
+msgid "Username and Password Reset Successful"
+msgstr ""
+
+msgid "Username: admin, Password: admin12345"
 msgstr ""
 
 msgid "You need to restart DDNS-Go service for the changes to take effect."
@@ -118,5 +138,50 @@ msgstr ""
 msgid "Restart Later"
 msgstr ""
 
-msgid ""
+msgid "Partial Reset"
+msgstr ""
+
+msgid "DDNS-Go command reset may have failed, but configuration file has been updated."
+msgstr ""
+
+msgid "You may need to restart DDNS-Go service manually."
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
+msgid "ERROR:"
+msgstr ""
+
+msgid "Reset username/password failed:"
+msgstr ""
+
+msgid "SUCCESS:"
+msgstr ""
+
+msgid "DDNS-Go service restarted successfully"
+msgstr ""
+
+msgid "Failed to restart service:"
+msgstr ""
+
+msgid "Ali DNS 223.5.5.5"
+msgstr ""
+
+msgid "Ali DNS 223.6.6.6"
+msgstr ""
+
+msgid "Tencent DNS 119.29.29.29"
+msgstr ""
+
+msgid "CloudFlare DNS 1.1.1.1"
+msgstr ""
+
+msgid "Google DNS 8.8.8.8"
+msgstr ""
+
+msgid "Google DNS 8.8.4.4"
+msgstr ""
+
+msgid "Found %d ddns-go entries. Last updated: %s"
 msgstr ""

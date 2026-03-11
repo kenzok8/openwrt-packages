@@ -1,44 +1,19 @@
 msgid ""
-msgstr "Content-Type: text/plain; charset=UTF-8"
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: ddns-go\n"
 
 msgid "DDNS-GO"
 msgstr "DDNS-GO"
 
 msgid "DDNS-GO automatically obtains your public IPv4 or IPv6 address and resolves it to the corresponding domain name service."
-msgstr "DDNS-GO自动获得你的公网 IPv4 或 IPv6 地址,并解析到对应的域名服务."
+msgstr "DDNS-GO 自动获取您的公网 IPv4 或 IPv6 地址，并解析到对应的域名服务。"
 
-msgid "Base Setting"
-msgstr "基本设置"
+msgid "Enable"
+msgstr "启用"
 
-msgid "Status check error:"
-msgstr "状态检查错误:"
-
-msgid "Checking status..."
-msgstr "检查状态..."
-
-msgid "DDNS-GO Control panel"
-msgstr "DDNS-GO操作台"
-
-msgid "Open Web Interface"
-msgstr "打开Web界面"
-
-msgid "Log"
-msgstr "日志"
-
-msgid "Clear Logs..."
-msgstr "清除日志..."
-
-msgid "Logs cleared successfully!"
-msgstr "日志清除成功！"
-
-msgid "Clear Logs"
-msgstr "清除日志"
-
-msgid "NOT RUNNING"
-msgstr "未运行"
-
-msgid "RUNNING"
-msgstr "运行中"
+msgid "Listen port"
+msgstr "监听端口"
 
 msgid "DDNS-GO Service Not Running"
 msgstr "DDNS-GO服务未启用"
@@ -46,95 +21,179 @@ msgstr "DDNS-GO服务未启用"
 msgid "DDNS-GO Web Interface Disabled"
 msgstr "DDNS-GO WEB服务禁用"
 
-msgid "Open Web Interface"
-msgstr "打开Web界面"
+msgid "DDNS-GO Control panel"
+msgstr "DDNS-GO操作台"
 
-msgid "Set the DDNS-TO access port"
-msgstr "设置访问端口"
+msgid "Update interval(seconds)"
+msgstr "更新间隔（秒）"
 
-msgid "Collecting data..."
-msgstr "收集数据..."
+msgid "Provider comparison interval"
+msgstr "提供商比较间隔"
 
-msgid "update interval"
-msgstr "更新间隔"
+msgid "Number of times to compare with service provider (1-60)"
+msgstr "与服务提供商间隔比较的次数（1-60）"
 
 msgid "Skip verifying certificates"
-msgstr "跳过验证证书"
-
-msgid "Compare with service provider N times intervals"
-msgstr "间隔N次与服务商比对"
+msgstr "跳过证书验证"
 
 msgid "Specify DNS resolution server"
 msgstr "指定DNS解析服务器"
 
 msgid "Do not start web services"
-msgstr "不启动web服务"
+msgstr "不启动Web服务"
 
 msgid "Delayed Start (seconds)"
-msgstr "开机延时启动（秒）"
+msgstr "延迟启动（秒）"
 
-msgid "Update kernel"
-msgstr "更新内核"
-
-msgid "Current Version"
-msgstr "当前版本"
-
-msgid "Check and update DDNS-Go to the latest version"
-msgstr "更新DDNS-Go到最新版本"
+msgid "Reset account password"
+msgstr "重置账户密码"
 
 msgid "Check Update"
 msgstr "检查更新"
 
-msgid "Updating, please wait..."
-msgstr "更新中，请稍等..."
+msgid "Port number (1-65535)"
+msgstr "端口范围(1-65535)"
 
-msgid "Update failed"
-msgstr "更新失败"
+msgid "Check"
+msgstr "检查"
+
+msgid "Update interval in seconds (60-86400)"
+msgstr "更新间隔范围(60-86400)秒"
+
+msgid "Current Version"
+msgstr "当前版本"
+
+msgid "Reset"
+msgstr "重置"
+
+msgid "RUNNING"
+msgstr "运行中"
+
+msgid "NOT RUNNING"
+msgstr "未运行"
+
+msgid "Open Web Interface"
+msgstr "打开Web界面"
+
+msgid "Checking status..."
+msgstr "检查状态中..."
+
+msgid "Status check error"
+msgstr "状态检查错误"
+
+msgid "Already the latest version"
+msgstr "已是最新版本"
+
+msgid "New version available"
+msgstr "有新版本可用"
+
+msgid "Update successful"
+msgstr "更新成功"
+
+msgid "Download update failed"
+msgstr "下载更新失败"
+
+msgid "Update check failed"
+msgstr "检查更新失败"
 
 msgid "Update status unknown"
 msgstr "更新状态未知"
 
-msgid "Reset account password"
-msgstr "重置帐号密码"
+msgid "Update failed"
+msgstr "更新失败"
 
-msgid "ResetPassword"
+msgid "Updating, please wait..."
+msgstr "正在更新，请稍候..."
+
+msgid "Loading..."
+msgstr "加载中..."
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Failed to load"
+msgstr "加载失败"
+
+msgid "Log is clean."
+msgstr "日志清除"
+
+msgid "Clear Logs"
+msgstr "清除日志"
+
+msgid "Logs cleared!"
+msgstr "已清除"
+
+msgid "Refresh every 5 seconds."
+msgstr "每 5 秒刷新"
+
+msgid "No ddns-go logs found"
+msgstr "没有日志"
+
+msgid "Resetting Password"
 msgstr "重置密码"
 
-msgid "SUCCESS:"
-msgstr "完成执行："
-
-msgid "Resetting admin username and password, please wait...5"
-msgstr "重置用户名与密码，请稍等"
+msgid "Resetting admin username and password, please wait..."
+msgstr "正在重置管理员用户名和密码，请稍候..."
 
 msgid "Username and Password Reset Successful"
 msgstr "用户名和密码重置成功"
 
-msgid "Reset username to: admin, Reset password to: admin12345"
-msgstr "重置用户名：admin 重置密码：admin12345"
-
 msgid "Username: admin, Password: admin12345"
-msgstr "用户名：admin 密码：admin12345"
+msgstr "用户名: admin, 密码: admin12345"
 
 msgid "You need to restart DDNS-Go service for the changes to take effect."
-msgstr "需要重启DDNS-GO服务更改才生效"
-
-msgid "You may need to restart DDNS-Go service manually."
-msgstr "必须要重启DDNS-GO服务."
-
-msgid "DDNS-Go command reset may have failed, but configuration file has been updated."
-msgstr "ddns-go重置命令失败，尝试通过直接修改配置文件来重置"
-
-msgid "Reset username/password"
-msgstr "重置用户名/密码"
-
-msgid "DDNS-Go service restarted successfully"
-msgstr "DDNS-GO服务重启成功"
+msgstr "您需要重启 DDNS-Go 服务以使更改生效。"
 
 msgid "Restart Service Now"
-msgstr "立刻重启服务"
+msgstr "立即重启服务"
 
 msgid "Restart Later"
 msgstr "稍后重启"
 
-msgid "Due to browser security policies, the DDNS-GO interface https cannot be embedded directly."
-msgstr "由于浏览器安全策略，DDNS-GO接口https不能直接嵌入。"
+msgid "Partial Reset"
+msgstr "部分重置"
+
+msgid "DDNS-Go command reset may have failed, but configuration file has been updated."
+msgstr "DDNS-Go 命令重置可能失败，但配置文件已更新。"
+
+msgid "You may need to restart DDNS-Go service manually."
+msgstr "您可能需要手动重启 DDNS-Go 服务。"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "ERROR:"
+msgstr "错误:"
+
+msgid "Reset username/password failed:"
+msgstr "重置用户名/密码失败:"
+
+msgid "SUCCESS:"
+msgstr "成功:"
+
+msgid "DDNS-Go service restarted successfully"
+msgstr "DDNS-Go 服务重启成功"
+
+msgid "Failed to restart service:"
+msgstr "重启服务失败:"
+
+msgid "Ali DNS 223.5.5.5"
+msgstr "阿里 DNS 223.5.5.5"
+
+msgid "Ali DNS 223.6.6.6"
+msgstr "阿里 DNS 223.6.6.6"
+
+msgid "Tencent DNS 119.29.29.29"
+msgstr "腾讯 DNS 119.29.29.29"
+
+msgid "CloudFlare DNS 1.1.1.1"
+msgstr "CloudFlare DNS 1.1.1.1"
+
+msgid "Google DNS 8.8.8.8"
+msgstr "谷歌 DNS 8.8.8.8"
+
+msgid "Google DNS 8.8.4.4"
+msgstr "谷歌 DNS 8.8.4.4"
+
+msgid "Found %d ddns-go entries. Last updated: %s"
+msgstr "找到 %d ddns-go记录，最近时间: %s"

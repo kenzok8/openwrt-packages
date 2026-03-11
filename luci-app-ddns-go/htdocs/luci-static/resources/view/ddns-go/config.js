@@ -1,4 +1,4 @@
-/*   Copyright (C) 2021-2026 sirpdboy herboy2008@gmail.com https://github.com/sirpdboy/luci-app-ddns-go */
+/*   Copyright (C) 2022-2026 sirpdboy herboy2008@gmail.com*/
 'use strict';
 'require view';
 'require fs';
@@ -20,8 +20,16 @@ const getUpdateInfo = rpc.declare({
     expect: { 'update': {} }
 });
 
+const updateMessageMap = {
+    'Already the latest version': _('Already the latest version'),
+    'New version available': _('New version available'),
+    'Update successful': _('Update successful'),
+    'Download update failed': _('Download update failed'),
+    'Update check failed': _('Update check failed'),
+    'Update status unknown': _('Update status unknown')
+};
+
 async function checkProcess() {
-    // 先尝试用 pidof
     try {
         const pidofRes = await fs.exec('/bin/pidof', ['ddns-go']);
         if (pidofRes.code === 0) {
@@ -31,7 +39,6 @@ async function checkProcess() {
             };
         }
     } catch (err) {
-        // pidof 失败，继续尝试 ps
     }
     try {
         const psRes = await fs.exec('/bin/ps', ['-C', 'ddns-go', '-o', 'pid=']);
@@ -47,7 +54,6 @@ async function checkProcess() {
 
 function getVersionInfo() {
     return L.resolveDefault(getDDNSGoInfo(), {}).then(function(result) {
-        //console.log('getVersionInfo result:', result);
         return result || {};
     }).catch(function(error) {
         console.error('Failed to get version:', error);
@@ -57,12 +63,19 @@ function getVersionInfo() {
 
 function checkUpdateStatus() {
     return L.resolveDefault(getUpdateInfo(), {}).then(function(result) {
-        //console.log('checkUpdateStatus result:', result);
         return result || {};
     }).catch(function(error) {
         console.error('Failed to get update info:', error);
         return {};
     });
+}
+function extractPortNumber(portValue) {
+    if (!portValue) return '9876';
+    if (portValue.includes(':')) {
+        var parts = portValue.split(':');
+        return parts[parts.length - 1];
+    }
+    return portValue;
 }
 
 function renderStatus(isRunning, listen_port, noweb, version) {
@@ -92,6 +105,13 @@ function renderUpdateStatus(updateInfo) {
     var status = updateInfo.status;
     var message = updateInfo.message || '';
     
+    for (let [en, zh] of Object.entries(updateMessageMap)) {
+        if (message.includes(en)) {
+            message = message.replace(en, zh);
+            break;
+        }
+    }
+    
     switch(status) {
         case 'updated':
             return String.format('<span style="color:green">✓ %s</span>', message);
@@ -113,91 +133,90 @@ return view.extend({
             uci.load('ddns-go')
         ]);
     },
+    
     handleResetPassword: async function () {
-    try {
-        ui.showModal(_('Resetting Password'), [
-            E('p', { 'class': 'spinning' }, _('Resetting admin username and password, please wait...'))
-        ]);
-        const result = await fs.exec('/usr/bin/ddns-go', ['-resetPassword', 'admin12345', '-c', '/etc/ddns-go/ddns-go-config.yaml']);
-        const configFile = '/etc/ddns-go/ddns-go-config.yaml';
-        const readResult = await fs.read(configFile);
-        if (readResult && readResult.trim() !== '') {
-            let configContent = readResult;
-            configContent = configContent.replace(/(username:\s*).*/g, '$1admin');
-            
-            if (!configContent.includes('user:')) {
-                configContent += '\nuser:\n    username: admin\n    password: $2a$10$G1xO1cVUYtSpPYwV/Jk3l.u7PxLUxo03wntWG6VA9BxAftNWfZEhK';
+        try {
+            ui.showModal(_('Resetting Password'), [
+                E('p', { 'class': 'spinning' }, _('Resetting admin username and password, please wait...'))
+            ]);
+            const result = await fs.exec('/usr/bin/ddns-go', ['-resetPassword', 'admin12345', '-c', '/etc/ddns-go/ddns-go-config.yaml']);
+            const configFile = '/etc/ddns-go/ddns-go-config.yaml';
+            const readResult = await fs.read(configFile);
+            if (readResult && readResult.trim() !== '') {
+                let configContent = readResult;
+                configContent = configContent.replace(/(username:\s*).*/g, '$1admin');
+                
+                if (!configContent.includes('user:')) {
+                    configContent += '\nuser:\n    username: admin\n    password: $2a$10$G1xO1cVUYtSpPYwV/Jk3l.u7PxLUxo03wntWG6VA9BxAftNWfZEhK';
+                }
+                
+                await fs.write(configFile, configContent);
+            }
+
+            ui.hideModal();
+
+            if (result.code === 0) {
+                ui.showModal(_('Username and Password Reset Successful'), [
+                    E('p', _('Username: admin, Password: admin12345')),
+                    E('p', _('You need to restart DDNS-Go service for the changes to take effect.')),
+                    E('div', { 'class': 'right' }, [
+                        E('button', {
+                            'class': 'btn cbi-button cbi-button-positive',
+                            'click': ui.createHandlerFn(this, function() {
+                                ui.hideModal();
+                                this.handleRestartService();
+                            })
+                        }, _('Restart Service Now')),
+                        ' ',
+                        E('button', {
+                            'class': 'btn cbi-button cbi-button-neutral',
+                            'click': ui.hideModal
+                        }, _('Restart Later'))
+                    ])
+                ]);
+            } else {
+                ui.showModal(_('Partial Reset'), [
+                    E('p', _('DDNS-Go command reset may have failed, but configuration file has been updated.')),
+                    E('p', _('Username: admin, Password: admin12345')),
+                    E('p', _('You may need to restart DDNS-Go service manually.')),
+                    E('div', { 'class': 'right' }, [
+                        E('button', {
+                            'class': 'btn cbi-button cbi-button-positive',
+                            'click': ui.createHandlerFn(this, function() {
+                                ui.hideModal();
+                                this.handleRestartService();
+                            })
+                        }, _('Restart Service Now')),
+                        ' ',
+                        E('button', {
+                            'class': 'btn cbi-button cbi-button-neutral',
+                            'click': ui.hideModal
+                        }, _('Close'))
+                    ])
+                ]);
             }
             
-            await fs.write(configFile, configContent);
+        } catch (error) {
+            ui.hideModal();
+            alert(_('ERROR:') + '\n' + _('Reset username/password failed:') + '\n' + error.message);
         }
-
-        ui.hideModal();
-
-        if (result.code === 0) {
-            ui.showModal(_('Username and Password Reset Successful'), [
-                E('p', _('Username: admin, Password: admin12345')),
-                E('p', _('You need to restart DDNS-Go service for the changes to take effect.')),
-                E('div', { 'class': 'right' }, [
-                    E('button', {
-                        'class': 'btn cbi-button cbi-button-positive',
-                        'click': ui.createHandlerFn(this, function() {
-                            ui.hideModal();
-                            this.handleRestartService();
-                        })
-                    }, _('Restart Service Now')),
-                    ' ',
-                    E('button', {
-                        'class': 'btn cbi-button cbi-button-neutral',
-                        'click': ui.hideModal
-                    }, _('Restart Later'))
-                ])
-            ]);
-        } else {
-            ui.showModal(_('Partial Reset'), [
-                E('p', _('DDNS-Go command reset may have failed, but configuration file has been updated.')),
-                E('p', _('Username: admin, Password: admin12345')),
-                E('p', _('You may need to restart DDNS-Go service manually.')),
-                E('div', { 'class': 'right' }, [
-                    E('button', {
-                        'class': 'btn cbi-button cbi-button-positive',
-                        'click': ui.createHandlerFn(this, function() {
-                            ui.hideModal();
-                            this.handleRestartService();
-                        })
-                    }, _('Restart Service Now')),
-                    ' ',
-                    E('button', {
-                        'class': 'btn cbi-button cbi-button-neutral',
-                        'click': ui.hideModal
-                    }, _('Close'))
-                ])
-            ]);
-        }
-        
-    } catch (error) {
-        ui.hideModal();
-        //console.error('Reset username/password failed:', error);
-        alert(_('ERROR:') + '\n' + _('Resetusername/ password failed:') + '\n' + error.message);
-    }
-},
+    },
  
     handleRestartService: async function() {
-    try {
-        await fs.exec('/etc/init.d/ddns-go', ['stop']);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await fs.exec('/etc/init.d/ddns-go', ['start']);
-        
-        alert(_('SUCCESS:') + '\n' + _('DDNS-Go service restarted successfully'));
-        if (window.statusPoll) {
-            window.statusPoll();
+        try {
+            await fs.exec('/etc/init.d/ddns-go', ['stop']);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await fs.exec('/etc/init.d/ddns-go', ['start']);
+            
+            alert(_('SUCCESS:') + '\n' + _('DDNS-Go service restarted successfully'));
+            if (window.statusPoll) {
+                window.statusPoll();
+            }
+        } catch (error) {
+            alert(_('ERROR:') + '\n' + _('Failed to restart service:') + '\n' + error.message);
         }
-    } catch (error) {
-        alert(_('ERROR:') + '\n' + _('Failed to restart service:') + '\n' + error.message);
-    }
     },
 
-    
     handleUpdate: async function () {
         try {
             var updateView = document.getElementById('update_status');
@@ -214,14 +233,13 @@ return view.extend({
                     window.statusPoll();
                 }
                 
-                // 3秒后恢复显示版本信息
                 setTimeout(() => {
                     var updateView = document.getElementById('update_status');
                     if (updateView) {
                         getVersionInfo().then(function(versionInfo) {
                             var version = versionInfo.version || '';
                             updateView.innerHTML = String.format('<span style="color:green">✓ %s v%s</span>', 
-                                _('Current Version:'), version);
+                                _('Current Version'), version);
                         });
                     }
                 }, 3000);
@@ -233,12 +251,11 @@ return view.extend({
             if (updateView) {
                 updateView.innerHTML = '<span style="color:red">✗ ' + _('Update failed') + '</span>';
 
-                // 5秒后恢复显示版本信息
                 setTimeout(() => {
                     getVersionInfo().then(function(versionInfo) {
                         var version = versionInfo.version || '';
                         updateView.innerHTML = String.format('<span>%s v%s</span>', 
-                            _('Current Version:'), version);
+                            _('Current Version'), version);
                     });
                 }, 5000);
             }
@@ -247,13 +264,14 @@ return view.extend({
     
     render: function(data) {
         var m, s, o;
-        var listen_port = (uci.get('ddns-go', 'config', 'port') || '[::]:9876').split(':').slice(-1)[0];
+        
+        var portValue = uci.get('ddns-go', 'config', 'port') || '[::]:9876';
+        var listen_port = extractPortNumber(portValue);
         var noweb = uci.get('ddns-go', 'config', 'noweb') || '0';
 
         m = new form.Map('ddns-go', _('DDNS-GO'),
             _('DDNS-GO automatically obtains your public IPv4 or IPv6 address and resolves it to the corresponding domain name service.'));
 
-        // 状态显示部分
         s = m.section(form.TypedSection);
         s.anonymous = true;
    
@@ -261,7 +279,6 @@ return view.extend({
             var statusView = E('p', { id: 'control_status' }, 
                 '<span class="spinning"></span> ' + _('Checking status...'));
             
-
             window.statusPoll = function() {
                 return Promise.all([
                     checkProcess(),
@@ -276,20 +293,10 @@ return view.extend({
                 });
             };
             
-            var pollInterval = poll.add(window.statusPoll, 5); // 每5秒检查一次
+            poll.add(window.statusPoll, 5);
             
             return E('div', { class: 'cbi-section', id: 'status_bar' }, [
-                statusView,
-                E('div', { 'style': 'text-align: right; font-style: italic;' }, [
-                    E('span', {}, [
-                        _('© github '),
-                        E('a', { 
-                            'href': 'https://github.com/sirpdboy', 
-                            'target': '_blank',
-                            'style': 'text-decoration: none;'
-                        }, 'by sirpdboy')
-                    ])
-                ])
+                statusView
             ]);
         };
 
@@ -300,17 +307,25 @@ return view.extend({
         o.rmempty = false;
 
         o = s.option(form.Value, 'port', _('Listen port'));
-        o.default = '[::]:9876';
+        o.default = '9876';
         o.rmempty = false;
+        o.datatype = 'string'; 
+        o.description = _('Port number (1-65535)');
 
-        o = s.option(form.Value, 'time', _('Update interval'));
+        o = s.option(form.Value, 'time', _('Update interval (seconds)'));
         o.default = '300';
+        o.datatype = 'range(60,86400)'; 
+        o.description = _('Update interval in seconds (60-86400)');
 
-        o = s.option(form.Value, 'ctimes', _('Compare with service provider N times intervals'));
+        o = s.option(form.Value, 'ctimes', _('Provider comparison interval'));
         o.default = '5';
+        o.datatype = 'range(1,60)';
+        o.description = _('Number of times to compare with service provider (1-60)');
 
         o = s.option(form.Value, 'skipverify', _('Skip verifying certificates'));
         o.default = '0';
+        o.value('0', _('No'));
+        o.value('1', _('Yes'));
 
         o = s.option(form.Value, 'dns', _('Specify DNS resolution server'));
         o.value('223.5.5.5', _('Ali DNS 223.5.5.5'));
@@ -327,19 +342,20 @@ return view.extend({
 
         o = s.option(form.Value, 'delay', _('Delayed Start (seconds)'));
         o.default = '60';
-	
+    
         o = s.option(form.Button, '_newpassword', _('Reset account password'));
         o.inputtitle = _('Reset');
         o.inputstyle = 'apply';
         o.onclick = L.bind(this.handleResetPassword, this, data);
 
-        o = s.option(form.Button, '_update', _('Update kernel'));
-        o.inputtitle = _('Check Update');
+        o = s.option(form.Button, '_update', _('Check update'));
+        o.inputtitle = _('Check');
         o.inputstyle = 'apply';
         o.onclick = L.bind(this.handleUpdate, this, data);
 
         o = s.option(form.DummyValue, '_update_status', _('Current Version'));
         o.rawhtml = true;
+        
         var currentVersion = '';
 	
         getVersionInfo().then(function(versionInfo) {

@@ -1,0 +1,10 @@
+#!/bin/sh
+case "$1" in
+    "get_logs")
+        logread -l 200 2>/dev/null | grep ddns-go || echo "No ddns-go logs found"
+        ;;
+    "clear_logs")
+        /etc/init.d/log restart >/dev/null 2>&1
+        echo "Logs cleared"
+        ;;
+esac

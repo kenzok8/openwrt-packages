@@ -1,4 +1,4 @@
-/*   Copyright (C) 2021-2026 sirpdboy herboy2008@gmail.com https://github.com/sirpdboy/luci-app-ddns-go */
+/*   Copyright (C) 2022-2026 sirpdboy herboy2008@gmail.com */
 
 'use strict';
 'require view';
@@ -63,16 +63,6 @@ render: function() {
                         class: 'cbi-button cbi-button-apply',
                         style: 'display: inline-block; margin-top: 1em; padding: 10px 20px; font-size: 16px; text-decoration: none; color: white;'
                     }, _('Open Web Interface')),
-                E('div', { 'style': 'text-align: right; font-style: italic;' }, [
-                    E('span', {}, [
-                        _('© github '),
-                        E('a', { 
-                            'href': 'https://github.com/sirpdboy', 
-                            'target': '_blank',
-                            'style': 'text-decoration: none;'
-                        }, 'by sirpdboy')
-                    ])
-                ])
                 ]);
                 container.appendChild(buttonContainer);
             } else {
