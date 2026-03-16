@@ -1,7 +1,9 @@
 module("luci.controller.design-config", package.seeall)
 
+local fs = require "nixio.fs"
+
 function index()
-	if not nixio.fs.access('/www/luci-static/design/css/style.css') then
+	if not fs.access('/www/luci-static/design/css/style.css') then
 		return
 	end
 
