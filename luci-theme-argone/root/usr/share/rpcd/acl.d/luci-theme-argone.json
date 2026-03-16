@@ -1,0 +1,8 @@
+{
+    "luci-theme-argone": {
+        "description": "Grant UCI access for luci-theme-argone",
+        "read": {
+            "uci": [ "argone" ]
+        }
+    }
+}
