@@ -1,0 +1,92 @@
+{#
+	Alpha os is made from me for all .. especially for indo wrt members and fan of OpenWrt or DBAI Community
+	luci-theme-alpha
+	Copyright 2022 derisamedia <facebook.com/derisamedia>
+-#}
+{%
+	import { getuid, getspnam } from 'luci.core';
+
+	const boardinfo = ubus.call('system', 'board') || {};
+	
+	http.prepare_content("text/html; charset=UTF-8");
+-%}
+<!DOCTYPE html>
+<html lang="{{ dispatcher.lang }}">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#09c">
+<meta name="msapplication-tap-highlight" content="no">
+<meta name="msapplication-TileColor" content="#09c">
+<meta name="application-name" content="{{ striptags(boardinfo.hostname ?? "?") }} - LuCI">
+<meta name="apple-mobile-web-app-title" content="{{ striptags(boardinfo.hostname ?? "?") }} - LuCI">
+<link rel="stylesheet" href="{{ media }}/gaya/gaya.css">
+<link rel="shortcut icon" href="{{ media }}/favicon.ico">
+{% if (node?.css): %}
+<link rel="stylesheet" href="{{ resource }}/{{ node.css }}">
+{% endif %}
+<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}"></script>
+<script src="{{ resource }}/cbi.js"></script>
+<title>{{ striptags(`${boardinfo.hostname ?? '?'}${dispatched?.title ? ` - ${_(dispatched.title)}` : ''}`) }} - LuCI</title>
+{% if (css): %}
+<style title="text/css">
+{{ css }}
+</style>
+{% endif %}
+</head>
+<body class="lang_{{ dispatcher.lang }} {% if (ctx.authsession): %}logged-in{% endif %} {% if (length(ctx.request_path) > 0): %}node-{{ join('-', ctx.request_path) }}{% else %}node-main-login{% endif %}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}" style="background-image:url('/luci-static/alpha/background/dashboard.png')">
+<header>
+	<div class="fill">
+		<div class="container">
+		<a id="logo" href="{% if (ctx.authsession): %}{{ dispatcher.build_url('admin/status/overview') }}{% else %}#{% endif %}">
+			<img src="{{ media }}/brand.png" alt="OpenWrt">
+		</a>
+		<div class="status" id="indicators"></div>
+		<div class="logout" >  
+			<a href="/cgi-bin/luci/admin/logout" data-title="Logout">Keluar</a>
+		</div>
+		<div class="showSide">
+			<img src="{{ media }}/gaya/icon/menu_icon.svg" alt="">
+		</div>
+		</div>
+	</div>
+</header>
+<div class="main">
+	<div style="" class="loading"><span><div class="loading-img"></div></span></div>
+	<div class="main-left" id="mainmenu" style="display:none"></div>
+	<div class="main-right">
+		<div class="modemenu-buttons" style="display:none">
+			<ul id="modemenu"></ul>
+		</div>
+		<div class="darkMask"></div>
+		<div id="maincontent">
+			<div class="container">
+				{% if (getuid() == 0 && getspnam('root')?.pwdp === '' && join('-', ctx.request_path) != "admin-system-admin-password"): %}
+				<div class="alert-message warning">
+					<h4>{{ _('No password set!') }}</h4>
+					<p>{{ _('There is no password set on this router. Please configure a root password to protect the web interface.') }}</p>
+					{% if (dispatcher.lookup("admin/system/admin")): %}
+					  <div class="right"><a class="btn" href="{{ dispatcher.build_url("admin/system/admin") }}">{{ _('Go to password configuration...') }}</a></div>
+					{% endif %}
+				</div>
+				{% endif %}
+
+				{% if (boardinfo.rootfs_type == "initramfs"): %}
+				<div class="alert-message warning">
+					<h4>{{ _('System running in recovery (initramfs) mode.') }}</h4>
+					<p>{{ _('No changes to settings will be stored and are lost after rebooting. This mode should only be used to install a firmware upgrade') }}</p>
+					{% if (dispatcher.lookup("admin/system/flash")): %}
+					  <div class="right"><a class="btn" href="{{ dispatcher.build_url("admin/system/flash") }}">{{ _('Go to firmware upgrade...') }}</a></div>
+					{% endif %}
+				</div>
+				{% endif %}
+
+				<noscript>
+					<div class="alert-message warning">
+						<h4>{{ _('JavaScript required!') }}</h4>
+						<p>{{ _('You must enable JavaScript in your browser or LuCI will not work properly.') }}</p>
+					</div>
+				</noscript>
+				<div id="tabmenu" style="display:none"></div>

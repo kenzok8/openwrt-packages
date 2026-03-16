@@ -1,0 +1,102 @@
+{#
+	Alpha os is made from me for all .. especially for indo wrt members and fan of OpenWrt or DBAI Community
+	luci-theme-alpha
+	Copyright 2024 derisamedia <facebook.com/derisamedia>
+-#}
+{% 
+	import { cursor } from 'luci.model.uci';
+	let uci = cursor();
+	let config = uci.get_all("alpha", "theme") || {};
+	let icon = {};
+	
+	uci.foreach("alpha", "navbar", function(section) {
+		let address = section.address;
+		let icon_url = section.icon;
+		if (address && icon_url) {
+			icon_url = replace(icon_url, /^\/www\/luci\-static\/alpha\//, "");
+			icon[address] = icon_url;
+		}
+	});
+
+	let navbar_enabled = (config.navbar == "1");
+	let num_links = 0;
+	uci.foreach("alpha", "navbar", function(section) {
+		if (section.enable == "Enable") {
+			num_links++;
+		}
+	});
+
+	let link_width = `calc(100% / ${num_links})`;
+	let background_color = config.color || '#2222359a';
+	let blur_value = config.blur || 20;
+	let link_blur = `blur(${blur_value}px)`;
+%}
+
+<style>
+.main > .main-left, .cbi-section, .cbi-section-error, #iptables, .Firewall form, #cbi-network > .cbi-section-node, #cbi-wireless > .cbi-section-node, #cbi-wireless > #wifi_assoclist_table, [data-tab-title], [data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear), [data-page="admin-system-opkg"] #maincontent > .container, .tabs, .cbi-tabmenu, .cbi-tooltip {
+	background-color: {{ background_color }};
+	backdrop-filter: {{ link_blur }};
+	-webkit-backdrop-filter: {{ link_blur }};
+}
+
+@media screen and (max-width: 720px) {
+	.navbar a {
+		width: {{ link_width }};
+	}
+}
+
+{% if (!navbar_enabled): %}
+.navbar {
+	display: none;
+}
+{% endif %}
+</style>
+
+</div>
+<footer class="mobile">
+	<a href="https://github.com/derisamedia/luci-theme-alpha">{{ version.luciname }} | Alpha OS Theme v3.9.5</a>
+</footer>
+</div>
+<div class="navbar active">
+	{% if (navbar_enabled): %}
+	<div class="dropdown">
+		{% 
+		uci.foreach("alpha", "navbar", function(section) {
+			let address = section.address;
+			let icon_url = icon[address] || 'default/icon.png';
+			let target_blank = (section.newtab == "Yes") ? 'target="_blank"' : '';
+
+			if (section.enable == "Enable") {
+		%}
+			<a href="{{ address }}" {{ target_blank }}>
+				<img src="{{ media }}/{{ icon_url }}" />
+			</a>
+		{% 
+			}
+		});
+		%}
+	</div>
+	{% endif %}
+	<label class="toggler">
+		<img src="{{ media }}/gaya/icon/arrow.svg">
+	</label>
+</div>
+<script>
+{
+	const nav = document.querySelector(".navbar");
+	let lastScrollY = window.scrollY;
+	window.addEventListener("scroll", () => {
+		if (lastScrollY < window.scrollY) {
+			nav.classList.add("navbar--hidden");
+		} else {
+			nav.classList.remove("navbar--hidden");
+		}
+		lastScrollY = window.scrollY;
+	});
+}
+</script>
+</div>
+<script type="text/javascript">L.require('menu-alpha')</script>
+<script src="{{ media }}/app.js"></script>
+</body>
+</html>

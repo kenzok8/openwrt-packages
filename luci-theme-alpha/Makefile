@@ -36,8 +36,15 @@ define Package/luci-theme-$(THEME_NAME)/install
 	echo "uci set luci.themes.$(THEME_TITLE)=/luci-static/$(THEME_NAME); uci commit luci" > $(1)/etc/uci-defaults/30-luci-theme-$(THEME_NAME)
 	$(INSTALL_DIR) $(1)/www/luci-static/$(THEME_NAME)
 	$(CP) -a ./luasrc/* $(1)/www/luci-static/$(THEME_NAME)/ 2>/dev/null || true
+	
+	# Install HTML templates for OpenWrt 23.xx and older (Lua)
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)
-	$(CP) -a ./template/* $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)/ 2>/dev/null || true
+	$(CP) -a ./template/*.htm $(1)/usr/lib/lua/luci/view/themes/$(THEME_NAME)/ 2>/dev/null || true
+	
+	# Install Ucode templates for OpenWrt 24.xx / 25.xx and newer (ucode)
+	$(INSTALL_DIR) $(1)/usr/share/ucode/luci/template/themes/$(THEME_NAME)
+	$(CP) -a ./template/*.ut $(1)/usr/share/ucode/luci/template/themes/$(THEME_NAME)/ 2>/dev/null || true
+	
 	$(INSTALL_DIR) $(1)/www/luci-static/resources
 	$(CP) -a ./js/* $(1)/www/luci-static/resources/ 2>/dev/null || true
 	$(INSTALL_DIR) $(1)/etc/config
