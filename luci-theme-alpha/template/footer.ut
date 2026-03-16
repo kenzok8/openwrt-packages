@@ -4,7 +4,7 @@
 	Copyright 2024 derisamedia <facebook.com/derisamedia>
 -#}
 {% 
-	import { cursor } from 'luci.model.uci';
+	import { cursor } from 'uci';
 	let uci = cursor();
 	let config = uci.get_all("alpha", "theme") || {};
 	let icon = {};
