@@ -1,0 +1,14 @@
+{
+	"admin/system/argone-config": {
+		"title": "Argone Config",
+		"order": 90,
+		"action": {
+			"type": "view",
+			"path": "argone-config"
+		},
+		"depends": {
+			"acl": [ "luci-app-argone-config" ],
+			"uci": { "argone": true }
+		}
+	}
+}
