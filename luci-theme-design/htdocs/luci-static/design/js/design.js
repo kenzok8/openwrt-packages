@@ -13,7 +13,7 @@ this.get=function(url,data,callback)
 if(url.substr(url.length-1,1)=='&')
 url+=code;else
 url+='?'+code;xhr.open('GET',url,true);xhr.onreadystatechange=function()
-{if(xhr.readyState==4){var json=null;if(xhr.getResponseHeader("Content-Type")=="application/json"){try{json=eval('('+xhr.responseText+')');}
+{if(xhr.readyState==4){var json=null;var contentType=xhr.getResponseHeader("Content-Type")||"";if(contentType.indexOf("application/json")!==-1){try{json=JSON.parse(xhr.responseText);}
 catch(e){json=null;}}
 callback(xhr,json);}}
 xhr.send(null);}

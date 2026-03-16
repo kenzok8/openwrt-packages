@@ -37,6 +37,10 @@
     var lastNode = undefined;
     var mainNodeName = undefined;
 
+    function escapeRegExp(text) {
+        return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
     var nodeUrl = "";
     (function (node) {
         if (node[0] == "admin") {
@@ -45,9 +49,9 @@
             luciLocation = node;
         }
 
-        for (var i in luciLocation) {
+        for (var i = 0; i < luciLocation.length; i++) {
             nodeUrl += luciLocation[i];
-            if (i != luciLocation.length - 1) {
+            if (i !== luciLocation.length - 1) {
                 nodeUrl += "/";
             }
         }
@@ -62,7 +66,7 @@
             luciLocation = ["Main", "Login"];
             return true;
         }
-        const urlReg = new RegExp(nodeUrl + "$")
+        const urlReg = new RegExp(escapeRegExp(nodeUrl) + "$")
         var ret = false;
         $(".main > .main-left > .nav > .slide > .active").next(".slide-menu").stop(true).slideUp("fast");
         $(".main > .main-left > .nav > .slide > .menu").removeClass("active");
@@ -73,7 +77,7 @@
                 var that = $(this);
                 var href = that.attr("href");
 
-                if (urlReg.test(href)) {
+                if (href && urlReg.test(href)) {
                     ulNode.click();
                     ulNode.next(".slide-menu").stop(true, true);
                     lastNode = that.parent();

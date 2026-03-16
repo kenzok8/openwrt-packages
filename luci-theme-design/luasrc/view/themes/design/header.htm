@@ -283,7 +283,7 @@
 			 for i, r in ipairs(childs) do
 			 local nnode = cattree.nodes[r]
 			 local href  = controller .. "/" .. category .. "/" .. r ..
-			 (nnode.query and http.build_querystring(k.query) or "")
+			 (nnode.query and http.build_querystring(nnode.query) or "")
 			 local grandchildren = disp.node_childs(nnode)
 
 			 if #grandchildren > 0 then
