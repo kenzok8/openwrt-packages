@@ -1,11 +1,11 @@
 /**
- *  Argone is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argone Template
+ *  Argon is a clean HTML5 theme for LuCI. It is based on luci-theme-material and Argon Template
  *
  *  luci-theme-argone
- *      Copyright 2020 Jerryk
+ *      Copyright 2020 Jerryk <jerrykuku@gmail.com>
  *
  *  Have a bug? Please create an issue here on GitHub!
- *      https://github.com/kenzok78/luci-theme-argone/issues
+ *      https://github.com/jerrykuku/luci-theme-argone/issues
  *
  *  luci-theme-bootstrap:
  *      Copyright 2008 Steven Barth <steven@midlink.org>
@@ -400,7 +400,7 @@ li {
                     position: relative;
 
                     &::before {
-                        font-family: 'argon' !important;
+                        font-family: 'argone' !important;
                         font-style: normal;
                         font-weight: normal;
                         font-variant: normal;
@@ -787,7 +787,7 @@ footer {
                         position: relative;
 
                         &::before {
-                            font-family: 'argon' !important;
+                            font-family: 'argone' !important;
                             font-style: normal;
                             font-weight: normal;
                             font-variant: normal;
@@ -807,7 +807,7 @@ footer {
                             position: absolute;
                             right: 0.5rem;
                             top: 0.8rem;
-                            font-family: 'argon' !important;
+                            font-family: 'argone' !important;
                             font-style: normal;
                             font-weight: normal;
                             font-variant: normal;
@@ -1490,7 +1490,6 @@ ul li .cbi-input-checkbox {
 
 .cbi-section-create {
     margin: 0;
-    padding-left: 0.5rem;
     align-items: center;
 
 }
@@ -1951,22 +1950,27 @@ td>table>tbody>tr>td,
 }
 
 
-#cbi-firewall-redirect table *,
-#cbi-network-switch_vlan table *,
-#cbi-firewall-zone table * {
+#cbi-firewall-redirect table *:not([type="button"]),
+#cbi-firewall-rule table *:not([type="button"]),
+#cbi-network-switch_vlan table *:not([type="button"]),
+#cbi-firewall-zone table *:not([type="button"]) {
     font-size: small;
 }
 
 #cbi-firewall-redirect table input[type="text"],
 #cbi-network-switch_vlan table input[type="text"],
-#cbi-firewall-zone table input[type="text"] {
-    width: 5rem;
+#cbi-firewall-zone table input[type="text"],
+#cbi-firewall-rule table input[type="text"] {
+    width: inherit !important;
+    text-align: center;
 }
 
 #cbi-firewall-redirect table select,
 #cbi-network-switch_vlan table select,
 #cbi-firewall-zone table select {
     min-width: 3.5rem;
+    text-align: center;
+    text-align-last: center;
 }
 
 #cbi-network-switch_vlan .th,
@@ -2163,7 +2167,7 @@ body.lang_pl.node-main-login .cbi-value-title {
 .cbi-value-helpicon,
 .showSide,
 .main>.loading>span {
-    font-family: 'argon' !important;
+    font-family: 'argone' !important;
     font-style: normal !important;
     font-weight: normal !important;
     font-variant: normal !important;
@@ -2568,12 +2572,11 @@ table>thead>tr>td {
 table>tbody>tr>th,
 table>tfoot>tr>th,
 table>thead>tr>th {
-
     padding-right: 1.5rem;
     padding-left: 1.5rem;
     color: #8898aa;
     background-color: #f6f9fc;
-    font-size: .65rem;
+    font-size: .75rem;
     padding-top: .75rem;
     padding-bottom: .75rem;
     letter-spacing: 1px;
@@ -2660,8 +2663,8 @@ td>table>tbody>tr>td {
     li[class~="active"],
     li:hover {
         cursor: pointer;
-        border-bottom: 0.18751rem solid #5e72e4;
-        border-bottom: 0.18751rem solid var(--primary);
+        border-bottom: 0.18751rem solid #5e72e4 !important;
+        border-bottom: 0.18751rem solid var(--primary) !important;
         color: #5e72e4;
         color: var(--primary);
         background-color: var(--light-subtabs-background);
@@ -2684,11 +2687,6 @@ td>table>tbody>tr>td {
             text-decoration: none;
             color: #404040;
             padding: 0.5rem 0.8rem;
-        }
-
-        &:hover {
-            border-bottom: 0.18751rem solid #5e72e4;
-            border-bottom: 0.18751rem solid var(--primary);
         }
     }
 }
@@ -2736,7 +2734,7 @@ div::-webkit-scrollbar {
         border-top-left-radius: 0.25rem;
         border-top-right-radius: 0.25rem;
         padding: 0.5rem 0rem;
-        border-bottom: 0.18751rem solid rgba(0, 0, 0, 0);
+        border-bottom: 0.18751rem solid rgba(0, 0, 0, 0) !important;
 
         a {
             text-decoration: none;
@@ -2746,8 +2744,8 @@ div::-webkit-scrollbar {
 
         &:hover {
             cursor: pointer;
-            border-bottom: 0.18751rem solid #5e72e4;
-            border-bottom: 0.18751rem solid var(--primary);
+            border-bottom: 0.18751rem solid #5e72e4 !important;
+            border-bottom: 0.18751rem solid var(--primary) !important;
             color: #5e72e4;
             color: var(--primary);
             background-color: var(--light-subtabs-background);
@@ -2760,8 +2758,8 @@ div::-webkit-scrollbar {
     }
 
     li[class~="cbi-tab"] {
-        border-bottom: 0.18751rem solid #5e72e4;
-        border-bottom: 0.18751rem solid var(--primary);
+        border-bottom: 0.18751rem solid #5e72e4 !important;
+        border-bottom: 0.18751rem solid var(--primary) !important;
         color: var(--primary);
         background-color: var(--light-subtabs-background);
         margin-bottom: 0;
@@ -3360,7 +3358,7 @@ td>.ifacebadge,
 }
 
 .cbi-section-create>.cbi-button-add {
-    margin: 0.75rem 0.75rem 0.75rem 0.25rem;
+    margin: 0.75rem 0.75rem 0.75rem 0.75rem;
 }
 
 .cbi-section-remove {
@@ -3411,7 +3409,7 @@ input[name="nslookup"] {
 
 .node-status-overview>.main #wan4_i,
 .node-status-overview>.main #wan6_i {
-    width: 80px !important;
+    min-width: 80px !important;
 }
 
 /* fix status processes */
@@ -3710,19 +3708,28 @@ div.commandbox {
 
 /* luci-app-ttyd */
 .TTYD.node-system-terminal .main {
-    height: 100%!important;
+    height: 100% !important;
 }
 .TTYD.node-system-terminal .main .main-right,
 .TTYD.node-system-terminal .main .main-right #maincontent,
 .TTYD.node-system-terminal .main .main-right #maincontent .container .cbi-map {
-    height: 100%!important;
-    display: flex!important;
-    flex-direction: column!important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 .TTYD.node-system-terminal .main .main-right #maincontent,
 .TTYD.node-system-terminal .main .main-right #maincontent .container,
 .TTYD.node-system-terminal .main .main-right #maincontent .container .cbi-map #terminal {
-    flex: 1!important;
+    flex: 1 !important;
+}
+
+/* luci-app-nlbwmon */
+[class*="node-nlbw-usage"] #intervalSelect {
+    height: unset !important;
+}
+[class*="node-nlbw-usage"] #resetDatabase {
+    bottom: 20px !important;
+    right: 4px !important;
 }
 
 @media screen and (max-width: 1600px) {
@@ -3979,8 +3986,7 @@ div.commandbox {
 
     select,
     input {
-        width: 100% !important;
-        min-width: auto;
+        min-width: max-content;
         margin: 0.25rem 0;
     }
 
