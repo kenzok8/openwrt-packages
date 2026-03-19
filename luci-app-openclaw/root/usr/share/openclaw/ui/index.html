@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>一万AI分享 OpenClaw 配置管理</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#1a1b26;font-family:system-ui,-apple-system,sans-serif}
+  #loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#7aa2f7;z-index:100;background:#1a1b26;transition:opacity .4s}
+  #loading.hidden{opacity:0;pointer-events:none}
+  #loading .spinner{width:40px;height:40px;border:3px solid #2a2b3d;border-top:3px solid #ff9e64;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #loading h2{font-size:18px;font-weight:500;margin-bottom:8px}
+  #loading p{font-size:13px;color:#565f89}
+  #loading .debug{font-size:11px;color:#3b3d57;margin-top:12px;max-width:90%;word-break:break-all;text-align:center}
+  #terminal-container{width:100%;height:calc(100% - 36px);position:absolute;top:36px;left:0;right:0;bottom:0;padding:4px;overflow:hidden}
+  .xterm{height:100%!important}
+  .xterm-viewport::-webkit-scrollbar{width:8px}
+  .xterm-viewport::-webkit-scrollbar-thumb{background:#2a2b3d;border-radius:4px}
+  .xterm-viewport::-webkit-scrollbar-thumb:hover{background:#3b3d57}
+  #topbar{position:fixed;top:0;left:0;right:0;height:36px;background:#16161e;border-bottom:1px solid #2a2b3d;display:flex;align-items:center;padding:0 12px;z-index:50;gap:8px}
+  #topbar .logo{font-size:14px;color:#ff9e64;font-weight:600}
+  #topbar .status{font-size:11px;padding:2px 8px;border-radius:10px;background:#2a2b3d}
+  #topbar .status.connected{color:#9ece6a}
+  #topbar .status.disconnected{color:#f7768e}
+  #topbar .btn{font-size:12px;color:#7aa2f7;background:none;border:1px solid #3b3d57;border-radius:4px;padding:3px 10px;cursor:pointer;margin-left:auto}
+  #topbar .btn:hover{background:#2a2b3d}
+  #reconnect-overlay{display:none;position:absolute;inset:0;background:rgba(26,27,38,.9);z-index:80;flex-direction:column;align-items:center;justify-content:center;color:#c0caf5}
+  #reconnect-overlay.show{display:flex}
+  #reconnect-overlay button{margin-top:16px;padding:8px 24px;background:#ff9e64;color:#1a1b26;border:none;border-radius:6px;font-size:14px;cursor:pointer;font-weight:600}
+  #reconnect-overlay button:hover{background:#e0884a}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span class="logo">🦞 一万AI分享 OpenClaw 配置管理</span>
+  <span id="status" class="status disconnected">● 连接中...</span>
+  <button class="btn" onclick="location.reload()" title="重新启动配置脚本">🔄 重启</button>
+</div>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <h2>🦞 一万AI分享 OpenClaw 配置管理工具</h2>
+  <p id="loading-msg">正在连接终端...</p>
+  <div id="loading-debug" class="debug"></div>
+</div>
+
+<div id="terminal-container"></div>
+
+<div id="reconnect-overlay">
+  <p style="font-size:16px;margin-bottom:4px">⚡ 连接已断开</p>
+  <p style="font-size:13px;color:#565f89">配置脚本已退出或连接中断</p>
+  <button onclick="location.reload()">🔄 重新启动</button>
+</div>
+
+<link rel="stylesheet" href="/lib/xterm.min.css">
+<script src="/lib/xterm.min.js"></script>
+<script src="/lib/addon-fit.min.js"></script>
+<script src="/lib/addon-web-links.min.js"></script>
+
+<script>
+(function() {
+  const statusEl = document.getElementById('status');
+  const loadingEl = document.getElementById('loading');
+  const reconnectEl = document.getElementById('reconnect-overlay');
+  const containerEl = document.getElementById('terminal-container');
+  const loadingMsg = document.getElementById('loading-msg');
+  const loadingDebug = document.getElementById('loading-debug');
+
+  // ── 创建终端 ──
+  const term = new window.Terminal({
+    cursorBlink: true,
+    cursorStyle: 'bar',
+    fontSize: 15,
+    fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", "Source Code Pro", Menlo, Monaco, "Courier New", monospace',
+    lineHeight: 1.2,
+    scrollback: 5000,
+    allowProposedApi: true,
+    theme: {
+      background: '#1a1b26',
+      foreground: '#c0caf5',
+      cursor: '#ff9e64',
+      cursorAccent: '#1a1b26',
+      selectionBackground: '#33467c',
+      selectionForeground: '#c0caf5',
+      black: '#15161e',
+      red: '#f7768e',
+      green: '#9ece6a',
+      yellow: '#e0af68',
+      blue: '#7aa2f7',
+      magenta: '#bb9af7',
+      cyan: '#7dcfff',
+      white: '#a9b1d6',
+      brightBlack: '#414868',
+      brightRed: '#f7768e',
+      brightGreen: '#9ece6a',
+      brightYellow: '#e0af68',
+      brightBlue: '#7aa2f7',
+      brightMagenta: '#bb9af7',
+      brightCyan: '#7dcfff',
+      brightWhite: '#c0caf5',
+    }
+  });
+
+  const fitAddon = new window.FitAddon.FitAddon();
+  term.loadAddon(fitAddon);
+
+  try {
+    const webLinksAddon = new window.WebLinksAddon.WebLinksAddon();
+    term.loadAddon(webLinksAddon);
+  } catch(e) { /* optional */ }
+
+  term.open(containerEl);
+
+  function doFit() {
+    try { fitAddon.fit(); } catch(e) { /* ignore */ }
+    try { term.scrollToBottom(); } catch(e) { /* ignore */ }
+  }
+  doFit();
+  window.addEventListener('resize', () => { setTimeout(doFit, 100); });
+
+  // 监听 iframe 容器大小变化 (FnOS 桌面可能调整窗口大小)
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(function() { setTimeout(doFit, 50); }).observe(containerEl);
+  }
+
+  // ── WebSocket 连接 ──
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  // 从 URL 参数或 hash 获取 PTY token 用于 WebSocket 认证
+  const urlParams = new URLSearchParams(location.search);
+  const ptyToken = urlParams.get('pty_token') || '';
+  const wsUrl = proto + '//' + location.host + '/ws' + (ptyToken ? '?token=' + encodeURIComponent(ptyToken) : '');
+  let ws = null;
+  let connected = false;
+  let retryCount = 0;
+  const MAX_RETRY = Infinity;
+  let retryTimer = null;
+  let wasEverConnected = false;
+  let pingTimer = null;
+
+  console.log('[oc-config] protocol:', location.protocol);
+  console.log('[oc-config] host:', location.host, 'port:', location.port);
+  console.log('[oc-config] WebSocket URL:', wsUrl);
+  loadingDebug.textContent = wsUrl;
+
+  function connect() {
+    if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+    if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
+    if (ws) { try { ws.close(); } catch(e){} ws = null; }
+
+    retryCount++;
+    console.log('[oc-config] Connecting to', wsUrl, '(attempt', retryCount + ')');
+    loadingMsg.textContent = retryCount > 1
+      ? '正在重新连接... (第 ' + retryCount + ' 次)'
+      : '正在连接终端...';
+    loadingDebug.textContent = wsUrl;
+
+    // 先做一个 HTTP 预检确认服务器可达
+    fetch('/health').then(function(r) {
+      return r.json();
+    }).then(function(data) {
+      console.log('[oc-config] Health check OK:', JSON.stringify(data));
+      doWebSocket();
+    }).catch(function(err) {
+      console.log('[oc-config] Health check failed:', err.message || err);
+      // 服务器不可达，稍后重试
+      scheduleRetry();
+    });
+  }
+
+  function doWebSocket() {
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch(e) {
+      console.error('[oc-config] WebSocket constructor error:', e);
+      scheduleRetry();
+      return;
+    }
+
+    console.log('[oc-config] WebSocket created, readyState:', ws.readyState);
+
+    // 连接超时保护: 5秒没连上就重试
+    var connectTimeout = setTimeout(function() {
+      if (ws && ws.readyState !== WebSocket.OPEN) {
+        console.log('[oc-config] Connection timeout, readyState:', ws.readyState);
+        try { ws.close(); } catch(e){}
+        scheduleRetry();
+      }
+    }, 5000);
+
+    ws.onopen = function() {
+      clearTimeout(connectTimeout);
+      connected = true;
+      var isReconnect = wasEverConnected;
+      wasEverConnected = true;
+      retryCount = 0;
+      loadingEl.classList.add('hidden');
+      reconnectEl.classList.remove('show');
+      statusEl.textContent = '● 已连接';
+      statusEl.className = 'status connected';
+      // 重连时清屏，避免旧内容和新菜单混在一起
+      if (isReconnect) {
+        term.clear();
+        term.write('\x1b[33m⚡ 已重新连接，配置脚本已重新启动\x1b[0m\r\n\r\n');
+      }
+      // 连接后重新 fit，确保尺寸正确
+      setTimeout(doFit, 50);
+      term.focus();
+      try {
+        ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }));
+      } catch(e) {}
+      // 客户端心跳: 每 20 秒发送一次，防止连接被浏览器/代理超时关闭
+      if (pingTimer) clearInterval(pingTimer);
+      pingTimer = setInterval(function() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          try { ws.send(JSON.stringify({ type: 'ping' })); } catch(e) {}
+        }
+      }, 20000);
+    };
+
+    ws.onmessage = function(ev) {
+      if (typeof ev.data === 'string') {
+        // 过滤掉服务端的 pong 心跳消息，不写入终端
+        if (ev.data.indexOf('"type":"pong"') !== -1) return;
+        term.write(ev.data, function() { term.scrollToBottom(); });
+      } else if (ev.data instanceof Blob) {
+        ev.data.text().then(function(text) {
+          if (text.indexOf('"type":"pong"') !== -1) return;
+          term.write(text, function() { term.scrollToBottom(); });
+        });
+      }
+    };
+
+    ws.onclose = function(ev) {
+      clearTimeout(connectTimeout);
+      if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
+      connected = false;
+      statusEl.textContent = '● 已断开';
+      statusEl.className = 'status disconnected';
+      console.log('[oc-config] WebSocket closed, code:', ev.code, 'reason:', ev.reason);
+      if (wasEverConnected) {
+        // 自动重连，不显示断连覆盖层
+        console.log('[oc-config] Auto-reconnecting in 2s...');
+        statusEl.textContent = '● 重连中...';
+        retryCount = 0;
+        setTimeout(function() {
+          connect();
+        }, 2000);
+      } else {
+        // 从未连接成功过，自动重试
+        scheduleRetry();
+      }
+    };
+
+    ws.onerror = function(ev) {
+      clearTimeout(connectTimeout);
+      connected = false;
+      console.error('[oc-config] WebSocket error, will retry');
+      // 不要在这里做UI更新, onclose 会紧跟着触发
+    };
+  }
+
+  function scheduleRetry() {
+    if (retryCount >= MAX_RETRY) {
+      loadingMsg.textContent = '连接失败，请检查服务状态';
+      loadingDebug.textContent = '已重试 ' + MAX_RETRY + ' 次。请刷新页面重试。';
+      statusEl.textContent = '● 连接失败';
+      statusEl.className = 'status disconnected';
+      return;
+    }
+    // 逐步增加重试间隔: 1s, 1s, 2s, 2s, 3s, 3s, ...
+    var delay = Math.min(Math.floor(retryCount / 2) + 1, 5) * 1000;
+    loadingMsg.textContent = '等待服务就绪... ' + Math.ceil(delay/1000) + '秒后重试';
+    console.log('[oc-config] Retry in', delay, 'ms');
+    retryTimer = setTimeout(connect, delay);
+  }
+
+  term.onData(function(data) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'stdin', data: data }));
+    }
+  });
+
+  term.onResize(function(size) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'resize', cols: size.cols, rows: size.rows }));
+    }
+  });
+
+  // 等 DOM 和资源就绪后再连接
+  if (document.readyState === 'complete') {
+    connect();
+  } else {
+    window.addEventListener('load', connect);
+  }
+})();
+</script>
+</body>
+</html>

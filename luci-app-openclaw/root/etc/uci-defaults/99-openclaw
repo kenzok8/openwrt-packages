@@ -1,0 +1,86 @@
+#!/bin/sh
+# luci-app-openclaw — 首次安装/升级初始化脚本
+
+# ── v1.0.16: 清理错误路径下的配置文件 (Issue #42) ──
+# 用户在 SSH 中直接运行 openclaw 命令时，可能创建了 /root/.openclaw/ 目录
+# 需要迁移数据并清理，避免路径混乱
+if [ -d "/root/.openclaw" ]; then
+	OC_DATA="/opt/openclaw/data"
+	# 迁移 skills 目录 (如果存在且目标不存在)
+	if [ -d "/root/.openclaw/skills" ] && [ ! -d "${OC_DATA}/.openclaw/skills" ]; then
+		mkdir -p "${OC_DATA}/.openclaw"
+		mv "/root/.openclaw/skills" "${OC_DATA}/.openclaw/" 2>/dev/null
+		chown -R openclaw:openclaw "${OC_DATA}/.openclaw/skills" 2>/dev/null
+	fi
+	# 迁移 sessions 目录 (如果存在且目标不存在)
+	if [ -d "/root/.openclaw/sessions" ] && [ ! -d "${OC_DATA}/.openclaw/sessions" ]; then
+		mkdir -p "${OC_DATA}/.openclaw"
+		mv "/root/.openclaw/sessions" "${OC_DATA}/.openclaw/" 2>/dev/null
+		chown -R openclaw:openclaw "${OC_DATA}/.openclaw/sessions" 2>/dev/null
+	fi
+	# 迁移 openclaw.json (仅当目标不存在时)
+	if [ -f "/root/.openclaw/openclaw.json" ] && [ ! -f "${OC_DATA}/.openclaw/openclaw.json" ]; then
+		mkdir -p "${OC_DATA}/.openclaw"
+		mv "/root/.openclaw/openclaw.json" "${OC_DATA}/.openclaw/" 2>/dev/null
+		chown openclaw:openclaw "${OC_DATA}/.openclaw/openclaw.json" 2>/dev/null
+	fi
+	# 清理空的旧目录
+	rmdir "/root/.openclaw" 2>/dev/null || true
+fi
+
+# 创建 openclaw 系统用户 (无 home, 无 shell)
+if ! id openclaw >/dev/null 2>&1; then
+	# 动态查找可用 UID/GID (从 1000 开始，避免与已有用户冲突)
+	OC_UID=1000
+	while grep -q "^[^:]*:x:${OC_UID}:" /etc/passwd 2>/dev/null; do
+		OC_UID=$((OC_UID + 1))
+	done
+	OC_GID=$OC_UID
+	while grep -q "^[^:]*:x:${OC_GID}:" /etc/group 2>/dev/null; do
+		OC_GID=$((OC_GID + 1))
+	done
+	# OpenWrt 方式：直接写入 /etc/passwd 和 /etc/shadow
+	if ! grep -q '^openclaw:' /etc/passwd 2>/dev/null; then
+		echo "openclaw:x:${OC_UID}:${OC_GID}:openclaw:/opt/openclaw/data:/bin/false" >> /etc/passwd
+	fi
+	if ! grep -q '^openclaw:' /etc/shadow 2>/dev/null; then
+		echo 'openclaw:x:0:0:99999:7:::' >> /etc/shadow
+	fi
+	if ! grep -q '^openclaw:' /etc/group 2>/dev/null; then
+		echo "openclaw:x:${OC_GID}:" >> /etc/group
+	fi
+fi
+
+# 创建数据目录
+# ── OverlayFS 兼容: Docker bind mount 可能导致 /opt 不可写 ──
+if ! mkdir -p /opt/openclaw/.probe 2>/dev/null; then
+	if [ -d /overlay/upper/opt ]; then
+		mkdir -p /overlay/upper/opt/openclaw 2>/dev/null
+		mount --bind /overlay/upper/opt /opt 2>/dev/null
+	fi
+	rmdir /opt/openclaw/.probe 2>/dev/null
+else
+	rmdir /opt/openclaw/.probe 2>/dev/null
+fi
+mkdir -p /opt/openclaw/data/.openclaw
+mkdir -p /opt/openclaw/node
+mkdir -p /opt/openclaw/global
+chown -R openclaw:openclaw /opt/openclaw 2>/dev/null || true
+
+# 生成随机 Token (如果尚未设置)
+CURRENT_TOKEN=$(uci -q get openclaw.main.token)
+if [ -z "$CURRENT_TOKEN" ]; then
+	TOKEN=$(head -c 24 /dev/urandom | hexdump -e '24/1 "%02x"' 2>/dev/null || dd if=/dev/urandom bs=24 count=1 2>/dev/null | od -An -tx1 | tr -d ' \n' | head -c 48)
+	uci set openclaw.main.token="$TOKEN"
+	uci commit openclaw
+fi
+
+# 生成 PTY Token (如果尚未设置)
+CURRENT_PTY_TOKEN=$(uci -q get openclaw.main.pty_token)
+if [ -z "$CURRENT_PTY_TOKEN" ]; then
+	PTY_TOKEN=$(head -c 24 /dev/urandom | hexdump -e '24/1 "%02x"' 2>/dev/null || dd if=/dev/urandom bs=24 count=1 2>/dev/null | od -An -tx1 | tr -d ' \n' | head -c 48)
+	uci set openclaw.main.pty_token="$PTY_TOKEN"
+	uci commit openclaw
+fi
+
+exit 0

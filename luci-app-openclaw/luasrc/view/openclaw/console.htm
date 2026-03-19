@@ -1,0 +1,183 @@
+<%#
+ luci-app-openclaw — Web 控制台页面
+ 嵌入 OpenClaw 官方 Web UI，用户可在此配置模型/渠道并直接对话
+-%>
+<%+header%>
+
+<%
+local uci = require "luci.model.uci".cursor()
+local port = uci:get("openclaw", "main", "port") or "18789"
+%>
+
+<style type="text/css">
+.oc-page-header { margin: 0 0 16px 0; }
+.oc-page-header h2 { font-size: 18px; font-weight: 600; color: #333; margin: 0 0 6px 0; }
+.oc-page-header p { font-size: 13px; color: #666; margin: 0; line-height: 1.6; }
+
+.oc-console-info {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 16px;
+	margin-bottom: 16px;
+	background: #f6f8fa;
+	border: 1px solid #e1e4e8;
+	border-radius: 6px;
+	font-size: 13px;
+	color: #555;
+	flex-wrap: wrap;
+}
+.oc-console-info .label { color: #888; }
+.oc-console-info .value { font-family: monospace; color: #333; font-weight: 500; }
+.oc-console-info .sep { color: #ddd; }
+.oc-console-info .btn-open {
+	margin-left: auto;
+	padding: 4px 14px;
+	background: #4a90d9;
+	color: #fff;
+	border: none;
+	border-radius: 4px;
+	font-size: 12px;
+	cursor: pointer;
+	text-decoration: none;
+}
+.oc-console-info .btn-open:hover { background: #357abd; }
+
+.oc-console-wrap {
+	border: 2px solid #e0e0e0;
+	border-radius: 8px;
+	overflow: hidden;
+	background: #fff;
+	box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+#oc-console-iframe { width: 100%; height: 700px; border: none; display: block; }
+
+.oc-console-loading {
+	display: flex; flex-direction: column; align-items: center; justify-content: center;
+	height: 300px; color: #666; font-size: 14px; background: #fafafa;
+}
+.oc-console-loading .spinner {
+	width: 32px; height: 32px; border: 3px solid #e0e0e0; border-top: 3px solid #4a90d9;
+	border-radius: 50%; animation: oc-spin .8s linear infinite; margin-bottom: 12px;
+}
+@keyframes oc-spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="oc-page-header">
+	<h2>🖥️ Web 控制台</h2>
+	<p>OpenClaw 官方 Web 管理界面 — 在这里可以配置 AI 模型、消息渠道（QQ、Telegram、Discord 等），直接与 AI 进行对话，以及管理所有功能。</p>
+</div>
+
+<div class="oc-console-info">
+	<span class="label">网关地址：</span>
+	<span class="value" id="oc-console-addr">-</span>
+	<span class="sep">|</span>
+	<span class="label">活跃模型：</span>
+	<span class="value" id="oc-console-model" style="color:#555;">-</span>
+	<span class="sep">|</span>
+	<span class="label">状态：</span>
+	<span id="oc-console-status-text">检查中...</span>
+	<a id="oc-console-open-btn" class="btn-open" href="#" target="_blank" rel="noopener" style="display:none;">
+		↗ 新窗口打开
+	</a>
+</div>
+
+<div class="oc-console-wrap">
+	<div id="oc-console-container">
+		<div class="oc-console-loading" id="oc-console-loading">
+			<div class="spinner"></div>
+			<span>正在连接 OpenClaw 控制台...</span>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+(function() {
+	var gwPort = '<%=port%>';
+	var gwToken = '';
+	var statusUrl = '<%=luci.dispatcher.build_url("admin", "services", "openclaw", "status_api")%>';
+	var tokenUrl = '<%=luci.dispatcher.build_url("admin", "services", "openclaw", "get_token")%>';
+	var container = document.getElementById('oc-console-container');
+	var loading = document.getElementById('oc-console-loading');
+	var addrEl = document.getElementById('oc-console-addr');
+	var modelEl = document.getElementById('oc-console-model');
+	var statusTextEl = document.getElementById('oc-console-status-text');
+	var openBtn = document.getElementById('oc-console-open-btn');
+
+	function getConsoleUrl() {
+		var proto = window.location.protocol;
+		var host = window.location.hostname;
+		var url = proto + '//' + host + ':' + gwPort + '/';
+		if (gwToken) url += '#token=' + encodeURIComponent(gwToken);
+		return url;
+	}
+
+	function checkAndLoad() {
+		addrEl.textContent = window.location.hostname + ':' + gwPort;
+
+		// 先获取 token，再检查状态
+		(new XHR()).get(tokenUrl, null, function(tx) {
+			try {
+				var td = JSON.parse(tx.responseText);
+				gwToken = td.token || '';
+			} catch(e) {}
+
+			(new XHR()).get(statusUrl, null, function(x) {
+				try {
+					var d = JSON.parse(x.responseText);
+					var url = getConsoleUrl();
+					if (d.active_model) {
+						modelEl.textContent = d.active_model;
+					}
+					if (d.gateway_running) {
+						statusTextEl.innerHTML = '<span style="color:#1a7f37;">● 网关运行中</span>';
+						openBtn.href = url;
+						openBtn.style.display = '';
+						showIframe(url);
+					} else if (d.gateway_starting) {
+						statusTextEl.innerHTML = '<span style="color:#9a6700;">⏳ 网关正在启动</span>';
+						openBtn.style.display = 'none';
+						loading.innerHTML = '<div style="text-align:center;color:#666;">' +
+							'<div style="font-size:40px;margin-bottom:12px;">⏳</div>' +
+							'<div style="font-size:15px;margin-bottom:6px;">OpenClaw 网关正在启动中...</div>' +
+							'<div style="font-size:12px;color:#999;">首次启动可能需要 2~5 分钟，请耐心等待，页面会自动刷新。</div>' +
+							'</div>';
+					} else {
+						statusTextEl.innerHTML = '<span style="color:#cf222e;">● 网关未运行</span>';
+						openBtn.style.display = 'none';
+						loading.innerHTML = '<div style="text-align:center;color:#666;">' +
+							'<div style="font-size:40px;margin-bottom:12px;">🧠</div>' +
+							'<div style="font-size:15px;margin-bottom:6px;">OpenClaw 网关未运行</div>' +
+							'<div style="font-size:12px;color:#999;">请先在「基本设置」页面启用服务并启动。</div>' +
+							'</div>';
+					}
+				} catch(e) {
+					statusTextEl.textContent = '查询失败';
+				}
+			});
+		});
+	}
+
+	function showIframe(url) {
+		loading.style.display = 'none';
+		var existing = document.getElementById('oc-console-iframe');
+		if (existing) return;
+
+		var iframe = document.createElement('iframe');
+		iframe.id = 'oc-console-iframe';
+		iframe.src = url;
+		iframe.style.width = '100%';
+		iframe.style.height = '700px';
+		iframe.style.border = 'none';
+		iframe.setAttribute('allowfullscreen', 'true');
+		container.appendChild(iframe);
+	}
+
+	checkAndLoad();
+})();
+//]]>
+</script>
+
+<%+footer%>

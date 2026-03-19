@@ -1,0 +1,550 @@
+#!/bin/sh /etc/rc.common
+# luci-app-openclaw — procd init 脚本
+
+USE_PROCD=1
+START=99
+STOP=10
+
+EXTRA_COMMANDS="setup status_service restart_gateway"
+EXTRA_HELP="    setup            下载 Node.js 并安装 OpenClaw
+        status_service   显示服务状态
+        restart_gateway  仅重启 Gateway 实例 (不影响 Web PTY)"
+
+NODE_BASE="/opt/openclaw/node"
+OC_GLOBAL="/opt/openclaw/global"
+OC_DATA="/opt/openclaw/data"
+
+# ── OverlayFS 兼容性修复 ──
+# Docker bind mount (/overlay/upper/opt/docker) 会导致 /opt 不可写
+# 解决: bind mount upper 层的 /opt 到合并视图的 /opt
+_oc_fix_opt() {
+	mkdir -p /opt/openclaw/.probe 2>/dev/null && { rmdir /opt/openclaw/.probe 2>/dev/null; return 0; }
+	if [ -d /overlay/upper/opt ]; then
+		mkdir -p /overlay/upper/opt/openclaw 2>/dev/null
+		mount --bind /overlay/upper/opt /opt 2>/dev/null && return 0
+	fi
+	return 1
+}
+_oc_fix_opt
+
+NODE_BIN="${NODE_BASE}/bin/node"
+CONFIG_FILE="${OC_DATA}/.openclaw/openclaw.json"
+
+get_oc_entry() {
+local search_dirs="${OC_GLOBAL}/lib/node_modules/openclaw
+${OC_GLOBAL}/node_modules/openclaw
+${NODE_BASE}/lib/node_modules/openclaw"
+
+# pnpm 全局安装路径形如: $OC_GLOBAL/5/node_modules/openclaw
+for ver_dir in "${OC_GLOBAL}"/*/node_modules/openclaw; do
+[ -d "$ver_dir" ] && search_dirs="$search_dirs
+$ver_dir"
+done
+
+# v2026.3.8: 跟随符号链接解析真实包路径 (pnpm store / symlinked wrappers)
+for link_dir in "${OC_GLOBAL}/lib/node_modules/openclaw" "${OC_GLOBAL}/node_modules/openclaw"; do
+	[ -L "$link_dir" ] && {
+		local real_dir=$(readlink -f "$link_dir" 2>/dev/null)
+		[ -n "$real_dir" ] && [ -d "$real_dir" ] && search_dirs="$search_dirs
+$real_dir"
+	}
+done
+
+local d _tmpf
+_tmpf=$(mktemp)
+echo "$search_dirs" > "$_tmpf"
+while read -r d; do
+[ -z "$d" ] && continue
+if [ -f "${d}/openclaw.mjs" ]; then
+echo "${d}/openclaw.mjs"
+rm -f "$_tmpf"
+return
+elif [ -f "${d}/dist/cli.js" ]; then
+echo "${d}/dist/cli.js"
+rm -f "$_tmpf"
+return
+fi
+done < "$_tmpf"
+rm -f "$_tmpf"
+}
+
+patch_iframe_headers() {
+# 移除 OpenClaw 网关的 X-Frame-Options 和 frame-ancestors 限制，允许 LuCI iframe 嵌入
+# v2026.3.8: 资产路径可能通过符号链接解析，需同时搜索 OC_GLOBAL 和 NODE_BASE
+local gw_js
+for search_root in "${OC_GLOBAL}" "${NODE_BASE}/lib"; do
+	[ -d "$search_root" ] || continue
+	for f in $(find "$search_root" -name "gateway-cli-*.js" -type f 2>/dev/null); do
+		if grep -q "X-Frame-Options.*DENY" "$f" 2>/dev/null; then
+			sed -i "s|res.setHeader(\"X-Frame-Options\", \"DENY\");|// res.setHeader(\"X-Frame-Options\", \"DENY\"); // patched by luci-app-openclaw|g" "$f"
+			sed -i "s|\"frame-ancestors 'none'\"|\"frame-ancestors *\"|g" "$f"
+			logger -t openclaw "Patched iframe headers in $f"
+		fi
+	done
+done
+}
+
+sync_uci_to_json() {
+# 将 UCI 配置同步到 openclaw.json，同时确保 token 双向同步
+local port bind token
+port=$(uci -q get openclaw.main.port || echo "18789")
+bind=$(uci -q get openclaw.main.bind || echo "lan")
+token=$(uci -q get openclaw.main.token || echo "")
+
+# 确保配置目录和文件存在 (路径已在脚本开头做 OverlayFS 重映射)
+mkdir -p "$(dirname "$CONFIG_FILE")" 2>/dev/null
+if [ ! -f "$CONFIG_FILE" ]; then
+echo '{}' > "$CONFIG_FILE"
+fi
+
+# UCI 没有 token 时，尝试从已有的 JSON 读取
+if [ -z "$token" ] && [ -x "$NODE_BIN" ]; then
+	token=$("$NODE_BIN" -e "
+try{const d=JSON.parse(require('fs').readFileSync('${CONFIG_FILE}','utf8'));
+if(d.gateway&&d.gateway.auth&&d.gateway.auth.token)process.stdout.write(d.gateway.auth.token);}catch(e){}
+" 2>/dev/null)
+fi
+
+# 如果仍然没有 token，生成一个新的
+if [ -z "$token" ]; then
+	token=$(head -c 24 /dev/urandom | hexdump -e '24/1 "%02x"' 2>/dev/null || openssl rand -hex 24 2>/dev/null || dd if=/dev/urandom bs=24 count=1 2>/dev/null | od -An -tx1 | tr -d ' \n' | head -c 48)
+fi
+
+# 确保 token 写回 UCI
+local uci_token
+uci_token=$(uci -q get openclaw.main.token || echo "")
+if [ "$uci_token" != "$token" ]; then
+	uci set openclaw.main.token="$token"
+	uci commit openclaw 2>/dev/null
+fi
+
+# 使用 Node.js 写入 JSON (如果可用)
+if [ -x "$NODE_BIN" ]; then
+OC_SYNC_PORT="$port" OC_SYNC_BIND="$bind" OC_SYNC_TOKEN="$token" OC_SYNC_FILE="$CONFIG_FILE" \
+"$NODE_BIN" -e "
+const fs=require('fs');
+const f=process.env.OC_SYNC_FILE;
+let d={};
+try{d=JSON.parse(fs.readFileSync(f,'utf8'));}catch(e){}
+if(!d.gateway)d.gateway={};
+d.gateway.port=parseInt(process.env.OC_SYNC_PORT)||18789;
+d.gateway.bind=process.env.OC_SYNC_BIND||'lan';
+d.gateway.mode='local';
+if(!d.gateway.auth)d.gateway.auth={};
+d.gateway.auth.mode='token';
+d.gateway.auth.token=process.env.OC_SYNC_TOKEN||'';
+if(!d.gateway.controlUi)d.gateway.controlUi={};
+d.gateway.controlUi.allowInsecureAuth=true;
+d.gateway.controlUi.dangerouslyDisableDeviceAuth=true;
+d.gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback=true;
+// 清理 v2026.3.1+ 已废弃的字段，避免配置验证失败
+delete d.gateway.name;
+delete d.gateway.bonjour;
+delete d.gateway.plugins;
+// v2026.3.2: 禁用 ACP dispatch 防止路由器内存溢出
+if(!d.acp)d.acp={};
+if(!d.acp.dispatch)d.acp.dispatch={};
+d.acp.dispatch.enabled=false;
+// v2026.3.2: tools.profile 默认改为 messaging，路由器场景需强制 coding
+if(!d.tools)d.tools={};
+d.tools.profile='coding';
+// 禁用 OpenClaw 内置更新检查，防止 Control UI 显示升级横幅
+if(!d.update)d.update={};
+d.update.checkOnStart=false;
+// v2026.3.2: 迁移 Ollama provider 到原生 API
+if(d.models&&d.models.providers&&d.models.providers.ollama){const ol=d.models.providers.ollama;if(ol.api==='openai-chat-completions'||ol.api==='openai-completions')ol.api='ollama';if(ol.baseUrl&&ol.baseUrl.endsWith('/v1'))ol.baseUrl=ol.baseUrl.replace(/\/v1$/,'');if(ol.apiKey==='ollama')ol.apiKey='ollama-local';}
+// v2026.3.7: 清理已废弃的顶层配置键 (loadConfig() 现在会严格校验)
+['cli','commands.native','commands.nativeSkills','commands.ownerDisplay'].forEach(k=>{const ks=k.split('.');let o=d;for(let i=0;i<ks.length-1;i++){if(!o[ks[i]])return;o=o[ks[i]];}delete o[ks[ks.length-1]];});
+fs.writeFileSync(f,JSON.stringify(d,null,2));
+" 2>/dev/null
+fi
+
+chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
+}
+
+start_service() {
+local enabled port bind pty_port
+config_load openclaw
+config_get enabled main enabled "0"
+config_get port main port "18789"
+config_get bind main bind "lan"
+config_get pty_port main pty_port "18793"
+
+[ "$enabled" = "1" ] || {
+echo "openclaw 已禁用。请在 /etc/config/openclaw 中设置 enabled 为 1"
+return 0
+}
+
+# 检查 Node.js
+if [ ! -x "$NODE_BIN" ]; then
+echo "未找到 Node.js: $NODE_BIN"
+echo "请运行: openclaw-env setup"
+return 1
+fi
+
+# 检查 openclaw 入口
+local oc_entry
+oc_entry=$(get_oc_entry)
+if [ -z "$oc_entry" ]; then
+echo "OpenClaw 未安装。请运行: openclaw-env setup"
+return 1
+fi
+
+	# 同步 UCI 到 JSON
+	sync_uci_to_json
+
+	# v2026.3.13: 修复插件配置中的插件名称不匹配问题
+	# OpenClaw 加强了配置验证，plugins.allow 中的名称必须与实际插件名完全匹配
+	# 问题: 旧版本写入的是 "openclaw-qqbot"，但实际插件名是 "@tencent-connect/openclaw-qqbot"
+	fix_plugin_config() {
+		local qqbot_ext_dir="${OC_DATA}/.openclaw/extensions/openclaw-qqbot"
+		[ ! -d "$qqbot_ext_dir" ] && return
+		[ ! -f "$CONFIG_FILE" ] && return
+		
+		"$NODE_BIN" -e "
+			const fs=require('fs');
+			try{
+				const d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));
+				if(!d.plugins)d.plugins={};
+				let modified=false;
+				
+				// 修复 plugins.allow 数组中的插件名称
+				if(Array.isArray(d.plugins.allow)){
+					const oldName='openclaw-qqbot';
+					const newName='@tencent-connect/openclaw-qqbot';
+					const idx=d.plugins.allow.indexOf(oldName);
+					if(idx!==-1){
+						if(!d.plugins.allow.includes(newName)){
+							d.plugins.allow[idx]=newName;
+							modified=true;
+						}else{
+							d.plugins.allow.splice(idx,1);
+							modified=true;
+						}
+					}
+				}
+				
+				// 同时修复 plugins.entries 中的键名
+				if(d.plugins.entries && d.plugins.entries['openclaw-qqbot']){
+					if(!d.plugins.entries['@tencent-connect/openclaw-qqbot']){
+						d.plugins.entries['@tencent-connect/openclaw-qqbot']=d.plugins.entries['openclaw-qqbot'];
+					}
+					delete d.plugins.entries['openclaw-qqbot'];
+					modified=true;
+				}
+				
+				if(modified){
+					fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
+					console.log('FIXED');
+				}
+			}catch(e){}
+		" 2>/dev/null && chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null
+	}
+	fix_plugin_config
+
+	# 修复数据目录权限 (防止 root 用户操作后留下无法读取的文件)
+	chown -R openclaw:openclaw "$OC_DATA" 2>/dev/null || true
+
+	# Patch iframe 安全头，允许 LuCI 嵌入
+	patch_iframe_headers
+
+# 将 UCI bind 映射到 openclaw gateway --bind 参数
+local gw_bind="loopback"
+case "$bind" in
+lan)      gw_bind="lan" ;;
+loopback) gw_bind="loopback" ;;
+all)      gw_bind="custom" ;;  # custom = 0.0.0.0
+*)        gw_bind="$bind" ;;
+esac
+
+# 确保网关端口未被残留进程占用 (防止 restart 时 crash loop)
+# v2026.3.14 优化: 快速轮询 + 批量 kill
+_ensure_port_free() {
+	local p="$1"
+	local i=0 max_wait=10  # 10 * 0.2 = 2 秒
+	
+	# 先检查端口是否已被占用
+	if command -v ss >/dev/null 2>&1; then
+		ss -tulnp 2>/dev/null | grep -q ":${p} " || return 0
+	else
+		netstat -tulnp 2>/dev/null | grep -q ":${p} " || return 0
+	fi
+	
+	# 端口被占用，尝试清理
+	for occ_pid in $(pgrep -f "openclaw-gateway" 2>/dev/null); do
+		kill "$occ_pid" 2>/dev/null
+	done
+	
+	while [ $i -lt $max_wait ]; do
+		if command -v ss >/dev/null 2>&1; then
+			ss -tulnp 2>/dev/null | grep -q ":${p} " || return 0
+		else
+			netstat -tulnp 2>/dev/null | grep -q ":${p} " || return 0
+		fi
+		usleep 200000 2>/dev/null || sleep 0.2
+		i=$((i + 1))
+	done
+	
+	# 最后手段: SIGKILL
+	local port_pid=""
+	if command -v ss >/dev/null 2>&1; then
+		port_pid=$(ss -tulnp 2>/dev/null | grep ":${p} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | head -1)
+	else
+		port_pid=$(netstat -tulnp 2>/dev/null | grep ":${p} " | sed -n 's|.* \([0-9]*\)/.*|\1|p' | head -1)
+	fi
+	[ -n "$port_pid" ] && kill -9 "$port_pid" 2>/dev/null && usleep 300000 2>/dev/null
+	return 0
+}
+_ensure_port_free "$port"
+
+# 启动 OpenClaw Gateway (主服务, 前台运行)
+procd_open_instance "gateway"
+procd_set_param command "$NODE_BIN" "$oc_entry" gateway run \
+--port "$port" --bind "$gw_bind"
+procd_set_param env \
+HOME="$OC_DATA" \
+OPENCLAW_HOME="$OC_DATA" \
+OPENCLAW_STATE_DIR="${OC_DATA}/.openclaw" \
+OPENCLAW_CONFIG_PATH="$CONFIG_FILE" \
+NODE_ICU_DATA="${NODE_BASE}/share/icu" \
+NODE_BASE="$NODE_BASE" \
+OC_GLOBAL="$OC_GLOBAL" \
+OC_DATA="$OC_DATA" \
+PATH="${NODE_BASE}/bin:${OC_GLOBAL}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+procd_set_param user openclaw
+procd_set_param respawn 3600 10 5
+procd_set_param stdout 1
+procd_set_param stderr 1
+procd_set_param pidfile /var/run/openclaw.pid
+procd_close_instance
+
+# 启动 Web PTY 配置终端 (辅助服务)
+# 复用已有 PTY token，只在不存在时才生成新的
+# 这样避免服务重启时 PTY WebSocket 连接因 token 变化而断开
+local pty_token
+pty_token=$(uci -q get openclaw.main.pty_token || echo "")
+if [ -z "$pty_token" ]; then
+	pty_token=$(head -c 16 /dev/urandom | hexdump -e '16/1 "%02x"' 2>/dev/null || openssl rand -hex 16 2>/dev/null || echo "pty_$(date +%s)")
+	uci set openclaw.main.pty_token="$pty_token"
+	uci commit openclaw 2>/dev/null
+fi
+
+procd_open_instance "pty"
+procd_set_param command "$NODE_BIN" /usr/share/openclaw/web-pty.js
+procd_set_param env \
+OC_CONFIG_PORT="$pty_port" \
+OC_PTY_TOKEN="$pty_token" \
+OC_CONFIG_SCRIPT="/usr/share/openclaw/oc-config.sh" \
+NODE_ICU_DATA="${NODE_BASE}/share/icu" \
+NODE_BASE="$NODE_BASE" \
+OC_GLOBAL="$OC_GLOBAL" \
+OC_DATA="$OC_DATA" \
+HOME="$OC_DATA" \
+OPENCLAW_HOME="$OC_DATA" \
+OPENCLAW_STATE_DIR="${OC_DATA}/.openclaw" \
+OPENCLAW_CONFIG_PATH="$CONFIG_FILE" \
+PATH="${NODE_BASE}/bin:${OC_GLOBAL}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+procd_set_param respawn 3600 5 5
+procd_set_param stdout 1
+procd_set_param stderr 1
+procd_set_param pidfile /var/run/openclaw-pty.pid
+procd_close_instance
+}
+
+stop_service() {
+# procd 会自动停止它管理的主进程 (openclaw)
+# 但 openclaw 会 fork 出 openclaw-gateway 子进程实际监听端口
+# procd 不一定能正确追踪并杀掉子进程树，需要手动清理
+
+local port
+port=$(uci -q get openclaw.main.port || echo "18789")
+
+# v2026.3.14 优化: 快速终止进程树，减少等待时间
+# 1) 先获取所有相关 PID
+local gw_pids=""
+gw_pids=$(pgrep -f "openclaw-gateway" 2>/dev/null)
+gw_pids="$gw_pids $(pgrep -f "openclaw.*gateway.*run" 2>/dev/null)"
+
+# 2) 同时发送 SIGTERM 给所有进程
+for pid in $gw_pids; do
+	[ -n "$pid" ] && kill "$pid" 2>/dev/null
+done
+
+# 3) 快速轮询等待端口释放 (200ms 间隔，最多 3 秒)
+local wait_count=0
+local max_wait=15  # 15 * 0.2 = 3 秒
+while [ $wait_count -lt $max_wait ]; do
+	if command -v ss >/dev/null 2>&1; then
+		ss -tulnp 2>/dev/null | grep -q ":${port} " || break
+	else
+		netstat -tulnp 2>/dev/null | grep -q ":${port} " || break
+	fi
+	usleep 200000 2>/dev/null || sleep 0.2
+	wait_count=$((wait_count + 1))
+done
+
+# 4) 如果端口仍被占用，强制 SIGKILL
+if [ $wait_count -ge $max_wait ]; then
+	local port_pid=""
+	if command -v ss >/dev/null 2>&1; then
+		port_pid=$(ss -tulnp 2>/dev/null | grep ":${port} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | head -1)
+	else
+		port_pid=$(netstat -tulnp 2>/dev/null | grep ":${port} " | sed -n 's|.* \([0-9]*\)/.*|\1|p' | head -1)
+	fi
+	if [ -n "$port_pid" ]; then
+		kill -9 "$port_pid" 2>/dev/null
+		# 等待内核回收 (缩短到 0.5 秒)
+		usleep 500000 2>/dev/null || sleep 0.5
+	fi
+fi
+}
+
+service_triggers() {
+procd_add_reload_trigger "openclaw"
+
+}
+
+reload_service() {
+stop
+# v2026.3.14: stop_service 已优化等待逻辑，缩短额外等待时间
+usleep 300000 2>/dev/null || sleep 0.3
+start
+}
+
+setup() {
+echo "正在调用 openclaw-env setup..."
+/usr/bin/openclaw-env setup
+}
+
+restart_gateway() {
+# 仅重启 Gateway 进程，通过 kill 触发 procd respawn
+# 绝对不能调用 start_service，否则会重启 PTY 实例
+
+local port
+port=$(uci -q get openclaw.main.port || echo "18789")
+
+# v2026.3.14 优化: 快速终止并重启
+# 1) 同时获取端口 PID 和 procd 管理的 PID
+local port_pid="" gw_pid=""
+if command -v ss >/dev/null 2>&1; then
+	port_pid=$(ss -tulnp 2>/dev/null | grep ":${port} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | head -1)
+else
+	port_pid=$(netstat -tulnp 2>/dev/null | grep ":${port} " | sed -n 's|.* \([0-9]*\)/.*|\1|p' | head -1)
+fi
+gw_pid=$(ubus call service list '{"name":"openclaw"}' 2>/dev/null | \
+	jsonfilter -e '$.openclaw.instances.gateway.pid' 2>/dev/null) || true
+
+# 2) 同时发送 SIGTERM 给所有相关进程
+[ -n "$port_pid" ] && kill "$port_pid" 2>/dev/null
+[ -n "$gw_pid" ] && kill -0 "$gw_pid" 2>/dev/null && kill "$gw_pid" 2>/dev/null
+
+# 3) 兜底: kill 所有残留进程
+for pid in $(pgrep -f "openclaw-gateway" 2>/dev/null) $(pgrep -f "openclaw.*gateway.*run" 2>/dev/null); do
+	kill "$pid" 2>/dev/null
+done
+
+# 4) 快速轮询等待端口释放 (200ms 间隔，最多 2 秒)
+local wait_count=0
+while [ $wait_count -lt 10 ]; do
+	if command -v ss >/dev/null 2>&1; then
+		ss -tulnp 2>/dev/null | grep -q ":${port} " || break
+	else
+		netstat -tulnp 2>/dev/null | grep -q ":${port} " || break
+	fi
+	usleep 200000 2>/dev/null || sleep 0.2
+	wait_count=$((wait_count + 1))
+done
+
+# 5) 如果端口仍被占用，强制 SIGKILL
+if [ $wait_count -ge 10 ]; then
+	[ -n "$port_pid" ] && kill -9 "$port_pid" 2>/dev/null
+	usleep 300000 2>/dev/null || sleep 0.3
+fi
+
+# 6) 如果 procd 中没有 gateway 服务注册，调用 start
+if [ -z "$gw_pid" ]; then
+	/etc/init.d/openclaw start >/dev/null 2>&1
+fi
+# 如果 gw_pid 存在，procd respawn 会自动重启 gateway
+}
+
+status_service() {
+local port pty_port
+port=$(uci -q get openclaw.main.port || echo "18789")
+pty_port=$(uci -q get openclaw.main.pty_port || echo "18793")
+
+echo "=== OpenClaw 服务状态 ==="
+
+# Node.js
+if [ -x "$NODE_BIN" ]; then
+echo "Node.js:  $($NODE_BIN --version 2>/dev/null)"
+else
+echo "Node.js:  未安装"
+fi
+
+# OpenClaw
+local oc_entry
+oc_entry=$(get_oc_entry)
+if [ -n "$oc_entry" ]; then
+local ver
+ver=$("$NODE_BIN" "$oc_entry" --version 2>/dev/null | tr -d '[:space:]')
+echo "OpenClaw: v${ver:-未知}"
+else
+echo "OpenClaw: 未安装"
+fi
+
+# 端口检测函数 (ss 优先, 回退 netstat)
+_check_port() {
+	local p="$1"
+	if command -v ss >/dev/null 2>&1; then
+		ss -tulnp 2>/dev/null | grep -q ":${p} "
+	else
+		netstat -tulnp 2>/dev/null | grep -q ":${p} "
+	fi
+}
+
+_get_pid_by_port() {
+	local p="$1"
+	if command -v ss >/dev/null 2>&1; then
+		ss -tulnp 2>/dev/null | grep ":${p} " | head -1 | sed -n 's/.*pid=\([0-9]*\).*/\1/p'
+	else
+		netstat -tulnp 2>/dev/null | grep ":${p} " | head -1 | sed 's|.* \([0-9]*\)/.*|\1|'
+	fi
+}
+
+# Gateway port
+if _check_port "$port"; then
+echo "网关:     运行中 (端口 $port)"
+# PID
+local pid
+pid=$(_get_pid_by_port "$port")
+if [ -n "$pid" ]; then
+echo "进程ID:   $pid"
+# Memory
+local rss
+rss=$(awk '/VmRSS/{print $2}' /proc/$pid/status 2>/dev/null)
+[ -n "$rss" ] && echo "内存:     ${rss} kB"
+# Uptime
+local start_time now_time
+start_time=$(stat -c %Y /proc/$pid 2>/dev/null || echo "0")
+now_time=$(date +%s)
+if [ "$start_time" -gt 0 ]; then
+local uptime=$((now_time - start_time))
+local hours=$((uptime / 3600))
+local mins=$(( (uptime % 3600) / 60 ))
+echo "运行时间: ${hours}小时 ${mins}分钟"
+fi
+fi
+elif pgrep -f "openclaw.*gateway" >/dev/null 2>&1; then
+echo "网关:     正在启动 (首次启动可能需要 2~5 分钟)"
+else
+echo "网关:     已停止"
+fi
+
+# PTY port
+if _check_port "$pty_port"; then
+echo "Web PTY:  运行中 (端口 $pty_port)"
+else
+echo "Web PTY:  已停止"
+fi
+}

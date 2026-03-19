@@ -1,0 +1,482 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh-cn\n"
+
+# ═══════════════════════════════════════════
+# controller/openclaw.lua — 菜单 & API
+# ═══════════════════════════════════════════
+
+msgid "OpenClaw"
+msgstr "OpenClaw AI 网关"
+
+msgid "OpenClaw AI Gateway"
+msgstr "OpenClaw AI 网关"
+
+msgid "Basic Settings"
+msgstr "基本设置"
+
+msgid "Model Settings"
+msgstr "模型设置"
+
+msgid "Channel Settings"
+msgstr "渠道设置"
+
+msgid "Advanced"
+msgstr "高级配置"
+
+# ═══════════════════════════════════════════
+# basic.lua — 基本设置页
+# ═══════════════════════════════════════════
+
+msgid "OpenClaw is an AI coding agent gateway that supports GitHub Copilot, Claude, GPT, Gemini and various messaging channels."
+msgstr "OpenClaw 是一个 AI 编程代理网关，支持 GitHub Copilot、Claude、GPT、Gemini 等大模型以及 QQ、Telegram、Discord 等多种消息渠道。"
+
+msgid "Enable"
+msgstr "启用"
+
+msgid "Enable OpenClaw AI Gateway"
+msgstr "启用 OpenClaw AI 网关"
+
+msgid "Gateway Port"
+msgstr "网关端口"
+
+msgid "OpenClaw API listening port"
+msgstr "OpenClaw API 监听端口"
+
+msgid "Bind Interface"
+msgstr "绑定接口"
+
+msgid "Network binding mode"
+msgstr "网络绑定模式"
+
+msgid "LAN only"
+msgstr "仅局域网"
+
+msgid "Loopback only"
+msgstr "仅本地回环"
+
+msgid "All interfaces (WAN accessible)"
+msgstr "所有接口（WAN 可访问）"
+
+msgid "Auto"
+msgstr "自动"
+
+msgid "Config Terminal Port"
+msgstr "配置终端端口"
+
+msgid "Web PTY terminal port for oc-config"
+msgstr "oc-config Web PTY 终端端口"
+
+msgid "Node.js Version"
+msgstr "Node.js 版本"
+
+msgid "Node.js version to download (requires v22+)"
+msgstr "要下载的 Node.js 版本（需要 v22+）"
+
+msgid "Authentication"
+msgstr "认证"
+
+msgid "Gateway Token"
+msgstr "网关令牌"
+
+msgid "Authentication token for API access. Keep it secret."
+msgstr "API 访问认证令牌，请妥善保管。"
+
+msgid "Reset Token"
+msgstr "重置令牌"
+
+msgid "Generate New Token"
+msgstr "生成新令牌"
+
+msgid "Are you sure you want to generate a new token? Current connections will be disconnected."
+msgstr "确定要生成新令牌吗？当前连接将会断开。"
+
+msgid "Generating..."
+msgstr "正在生成..."
+
+msgid "Token updated"
+msgstr "令牌已更新"
+
+msgid "Quick Actions"
+msgstr "快捷操作"
+
+msgid "Download Node.js and install OpenClaw"
+msgstr "下载 Node.js 并安装 OpenClaw"
+
+msgid "Install Environment"
+msgstr "安装环境"
+
+msgid "Restart Service"
+msgstr "重启服务"
+
+msgid "Stop Service"
+msgstr "停止服务"
+
+msgid "Advanced Configuration"
+msgstr "高级配置"
+
+msgid "Executing..."
+msgstr "正在执行..."
+
+msgid "completed"
+msgstr "已完成"
+
+# ═══════════════════════════════════════════
+# model.lua — 模型设置页
+# ═══════════════════════════════════════════
+
+msgid "Configure your AI model provider and API credentials. After saving, the configuration will be synced to OpenClaw."
+msgstr "配置您的 AI 模型提供商和 API 凭证。保存后配置将自动同步到 OpenClaw。"
+
+msgid "AI Model Provider"
+msgstr "AI 模型提供商"
+
+msgid "Provider"
+msgstr "提供商"
+
+msgid "Select your AI model provider"
+msgstr "选择您的 AI 模型提供商"
+
+msgid "-- Not configured --"
+msgstr "-- 未配置 --"
+
+msgid "Multi-provider aggregator"
+msgstr "多提供商聚合器"
+
+msgid "Custom OpenAI-compatible API"
+msgstr "自定义 OpenAI 兼容 API"
+
+msgid "API Key"
+msgstr "API 密钥"
+
+msgid "Your provider API key"
+msgstr "您的提供商 API 密钥"
+
+msgid "API Base URL"
+msgstr "API 基础地址"
+
+msgid "Custom OpenAI-compatible API endpoint"
+msgstr "自定义 OpenAI 兼容 API 端点"
+
+msgid "Active Model"
+msgstr "当前模型"
+
+msgid "Model"
+msgstr "模型"
+
+msgid "Multimodal flagship (recommended)"
+msgstr "多模态旗舰（推荐）"
+
+msgid "Cost effective"
+msgstr "经济实惠"
+
+msgid "Reasoning flagship"
+msgstr "推理旗舰"
+
+msgid "Reasoning lightweight"
+msgstr "轻量推理"
+
+msgid "Reasoning classic"
+msgstr "经典推理"
+
+msgid "Latest Sonnet (recommended)"
+msgstr "最新 Sonnet（推荐）"
+
+msgid "Top reasoning"
+msgstr "顶级推理"
+
+msgid "Fast"
+msgstr "快速"
+
+msgid "Flagship reasoning (recommended)"
+msgstr "旗舰推理（推荐）"
+
+msgid "Fast balanced"
+msgstr "快速均衡"
+
+msgid "Low latency"
+msgstr "低延迟"
+
+msgid "General chat"
+msgstr "通用对话"
+
+msgid "Deep reasoning"
+msgstr "深度推理"
+
+msgid "(ultra fast)"
+msgstr "（超快）"
+
+msgid "Model Name"
+msgstr "模型名称"
+
+msgid "For multi-provider setup, advanced model allowlist, or OAuth login (Qwen Portal, Gemini CLI), use the"
+msgstr "如需多提供商配置、高级模型白名单或 OAuth 登录（Qwen Portal、Gemini CLI），请使用"
+
+msgid "page which provides the full interactive wizard."
+msgstr "页面，其中提供完整的交互式配置向导。"
+
+# ═══════════════════════════════════════════
+# channel.lua — 渠道设置页
+# ═══════════════════════════════════════════
+
+msgid "Configure messaging channels for OpenClaw. Telegram is most popular."
+msgstr "配置 OpenClaw 的消息渠道。Telegram 是最常用的渠道。"
+
+msgid "Bot Token"
+msgstr "Bot 令牌"
+
+msgid "Get from @BotFather on Telegram: /newbot → copy token"
+msgstr "从 Telegram 的 @BotFather 获取：/newbot → 复制令牌"
+
+msgid "After setting Bot Token, restart the service, then send /start to your Bot on Telegram."
+msgstr "设置 Bot 令牌后，重启服务，然后在 Telegram 上向您的 Bot 发送 /start。"
+
+msgid "For pairing wizard, go to"
+msgstr "如需配对向导，请前往"
+
+msgid "Get from discord.com/developers/applications → Bot → Reset Token"
+msgstr "从 discord.com/developers/applications → Bot → Reset Token 获取"
+
+msgid "Feishu (Lark)"
+msgstr "飞书"
+
+msgid "App ID"
+msgstr "应用 ID"
+
+msgid "Get from open.feishu.cn → Create App"
+msgstr "从 open.feishu.cn → 创建应用 获取"
+
+msgid "App Secret"
+msgstr "应用密钥"
+
+msgid "Get from api.slack.com/apps → Create App (xoxb-...)"
+msgstr "从 api.slack.com/apps → Create App 获取（xoxb-...）"
+
+msgid "WhatsApp requires QR code pairing through the Web console."
+msgstr "WhatsApp 需要通过 Web 控制台扫码配对。"
+
+msgid "After starting the service, visit:"
+msgstr "启动服务后，请访问："
+
+msgid "Then go to Channels → WhatsApp to scan QR code."
+msgstr "然后进入 Channels → WhatsApp 扫描二维码。"
+
+msgid "For official interactive channel wizard, Telegram pairing helper, or Signal/Line/MS Teams configuration, use the"
+msgstr "如需官方交互式渠道向导、Telegram 配对助手或 Signal/Line/MS Teams 配置，请使用"
+
+msgid "page."
+msgstr "页面。"
+
+# ═══════════════════════════════════════════
+# status.htm — 状态面板
+# ═══════════════════════════════════════════
+
+msgid "Service Status"
+msgstr "服务状态"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Loading..."
+msgstr "加载中..."
+
+msgid "Gateway"
+msgstr "网关"
+
+msgid "Config Terminal"
+msgstr "配置终端"
+
+msgid "Memory"
+msgstr "内存"
+
+msgid "Uptime"
+msgstr "运行时间"
+
+msgid "Disabled"
+msgstr "已禁用"
+
+msgid "Running"
+msgstr "运行中"
+
+msgid "Stopped"
+msgstr "已停止"
+
+msgid "Listening"
+msgstr "监听中"
+
+msgid "Not listening"
+msgstr "未监听"
+
+msgid "Not installed"
+msgstr "未安装"
+
+msgid "Error"
+msgstr "错误"
+
+# ═══════════════════════════════════════════
+# advanced.htm — 高级配置页
+# ═══════════════════════════════════════════
+
+msgid "What is this?"
+msgstr "这是什么？"
+
+msgid "This page embeds the OpenClaw interactive configuration terminal (oc-config). It provides the full-featured management menu including:"
+msgstr "此页面嵌入了 OpenClaw 交互式配置终端（oc-config），提供完整的管理菜单，包括："
+
+msgid "Multi-provider AI model setup with OAuth support"
+msgstr "支持 OAuth 的多提供商 AI 模型配置"
+
+msgid "Telegram pairing wizard"
+msgstr "Telegram 配对向导"
+
+msgid "Health check and diagnostics"
+msgstr "健康检查和诊断"
+
+msgid "Raw configuration file editor"
+msgstr "原始配置文件编辑器"
+
+msgid "Factory reset"
+msgstr "恢复出厂设置"
+
+msgid "Configuration Terminal"
+msgstr "配置终端"
+
+msgid "Checking..."
+msgstr "检查中..."
+
+msgid "Reload"
+msgstr "刷新"
+
+msgid "Connecting to configuration terminal..."
+msgstr "正在连接配置终端..."
+
+msgid "Available menu options in terminal"
+msgstr "终端中可用的菜单选项"
+
+msgid "View current config"
+msgstr "查看当前配置"
+
+msgid "Configure AI model provider"
+msgstr "配置 AI 模型提供商"
+
+msgid "Set active model"
+msgstr "设置当前模型"
+
+msgid "Configure channels"
+msgstr "配置消息渠道"
+
+msgid "pairing wizard"
+msgstr "配对向导"
+
+msgid "Health check"
+msgstr "健康检查"
+
+msgid "Restart Gateway"
+msgstr "重启网关"
+
+msgid "View/edit raw config"
+msgstr "查看/编辑原始配置"
+
+msgid "Reset to defaults"
+msgstr "恢复默认设置"
+
+msgid "Connected"
+msgstr "已连接"
+
+msgid "Terminal not running"
+msgstr "终端未运行"
+
+msgid "Web PTY terminal is not running."
+msgstr "Web PTY 终端未运行。"
+
+msgid "Please enable and start the service first from Basic Settings page."
+msgstr "请先在基本设置页面启用并启动服务。"
+
+msgid "Failed to check terminal status"
+msgstr "检查终端状态失败"
+
+msgid "Reconnecting..."
+msgstr "正在重新连接..."
+
+# ═══════════════════════════════════════════
+# 其他
+# ═══════════════════════════════════════════
+
+msgid "Port"
+msgstr "端口"
+
+msgid "PID"
+msgstr "进程 ID"
+
+msgid "Node.js"
+msgstr "Node.js"
+
+msgid "Web Console"
+msgstr "Web 控制台"
+
+msgid "Verify Token"
+msgstr "验证令牌"
+
+msgid "Allow insecure auth"
+msgstr "允许不安全认证"
+
+msgid "Disable device auth"
+msgstr "禁用设备认证"
+
+msgid "Allow host header fallback"
+msgstr "允许主机头回退"
+
+msgid "Docker sandbox"
+msgstr "Docker 沙箱"
+
+msgid "Enable Docker sandbox for code execution"
+msgstr "启用 Docker 沙箱执行代码"
+
+msgid "Node.js Mirror"
+msgstr "Node.js 镜像源"
+
+msgid "China mirror (npmmirror.com)"
+msgstr "中国镜像 (npmmirror.com)"
+
+msgid "Official (nodejs.org)"
+msgstr "官方 (nodejs.org)"
+
+msgid "Check Environment"
+msgstr "检查环境"
+
+msgid "Install / Upgrade"
+msgstr "安装 / 升级"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "Discord"
+msgstr "Discord"
+
+msgid "Feishu"
+msgstr "飞书"
+
+msgid "Slack"
+msgstr "Slack"
+
+msgid "WhatsApp"
+msgstr "WhatsApp"
+
+msgid "Regenerate Token"
+msgstr "重新生成令牌"
+
+msgid "Custom API Base URL"
+msgstr "自定义 API 基础地址"
+
+msgid "Auth Token"
+msgstr "认证令牌"
+
+msgid "Gateway authentication token"
+msgstr "网关认证令牌"
+
+msgid "Web PTY terminal port for oc-config"
+msgstr "oc-config Web PTY 终端端口"
+
+msgid "Select the AI model provider to use"
+msgstr "选择要使用的 AI 模型提供商"

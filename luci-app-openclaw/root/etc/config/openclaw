@@ -1,0 +1,6 @@
+config openclaw 'main'
+	option enabled '0'
+	option port '18789'
+	option bind 'lan'
+	option token ''
+	option pty_port '18793'
