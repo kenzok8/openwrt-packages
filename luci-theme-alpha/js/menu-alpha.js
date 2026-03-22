@@ -201,7 +201,6 @@ return baseclass.extend({
         mainLeft.style.visibility = willOpen ? "visible" : "";
         darkMask.style.visibility = willOpen ? "visible" : "";
         darkMask.style.opacity = willOpen ? 1 : "";
-        mainRight.style["overflow-y"] = willOpen ? "hidden" : "visible";
         mainRight.style.width = "";
     } else {
         // Desktop behavior
@@ -211,7 +210,8 @@ return baseclass.extend({
         mainRight.style.width = willOpen ? "" : "100%";
         darkMask.style.visibility = "";
         darkMask.style.opacity = "";
-        mainRight.style["overflow-y"] = "visible";
     }
+    if (ev && ev.preventDefault) ev.preventDefault();
+    if (ev && ev.stopPropagation) ev.stopPropagation();
   },
 });

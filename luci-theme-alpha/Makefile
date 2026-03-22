@@ -10,7 +10,7 @@ THEME_NAME:=alpha
 THEME_TITLE:=Alpha
 
 PKG_NAME:=luci-theme-$(THEME_NAME)
-PKG_VERSION:=3.9.6_beta
+PKG_VERSION:=3.9.7_beta
 PKG_RELEASE:=10
 
 include $(INCLUDE_DIR)/package.mk

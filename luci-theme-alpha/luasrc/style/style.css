@@ -410,7 +410,8 @@ img.bawah {
     display: block;
     padding: 20px;
     text-decoration: none;
-    width: 25rem;
+    width: 14rem;
+    max-width: 80vw;
 }
 
 .icon-credits a {
