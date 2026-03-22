@@ -1,5 +1,14 @@
 msgid ""
-msgstr "Content-Type: text/plain; charset=UTF-8\n"
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: luci-app-aliddns\n"
+"PO-Revision-Date: 2024\n"
+"Last-Translator: kenzok8\n"
+"Language-Team: Chinese\n"
+"Language: zh_Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "AliDDNS"
 msgstr "阿里DDNS"
@@ -20,7 +29,7 @@ msgid "Base"
 msgstr "基本设置"
 
 msgid "Internet"
-msgstr "Internet(ip-api.com)"
+msgstr "Internet"
 
 msgid "WAN-IP Source"
 msgstr "WAN-IP来源"
@@ -60,3 +69,9 @@ msgstr "域名检查间隔时间，单位分钟，范围1-59"
 
 msgid "Update Log"
 msgstr "更新记录"
+
+msgid "Access Key ID"
+msgstr "阿里云 Access Key ID"
+
+msgid "Access Key Secret"
+msgstr "阿里云 Access Key Secret"

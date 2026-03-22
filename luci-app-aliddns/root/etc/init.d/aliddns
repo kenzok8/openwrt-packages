@@ -1,0 +1,87 @@
+#!/bin/sh /etc/rc.common
+
+START=80
+STOP=20
+NAME="aliddns"
+EXTRA_COMMANDS="status"
+EXTRA_HELP="        status          Service status"
+
+NE_TIPS="AliDDNS NOT ENABLED"
+
+restart() {
+	stop
+	start
+}
+
+uci_get_by_name() {
+	local ret
+	ret="$(uci get "${NAME}.$1.$2" 2>/dev/null)"
+	echo "${ret:-$3}"
+}
+
+uci_bool_by_name() {
+	case "$(uci_get_by_name "$1" "$2")" in
+		1 | on | true | yes | enabled) return 0 ;;
+	esac
+	return 1
+}
+
+add_hotplug() {
+	mkdir -p "/etc/hotplug.d/iface"
+	cat <<'HOTPLUG_EOF' > "/etc/hotplug.d/iface/${START}-${NAME}"
+#!/bin/sh
+
+[ "${ACTION}" = "ifup" ] && [ "${INTERFACE}" = "wan" ] || exit 0
+
+DATE=$(date +'%Y-%m-%d %H:%M:%S')
+( sleep 10 && ( echo "${DATE} IFUP-WAN" && /usr/sbin/aliddns ) >> /var/log/aliddns.log 2>&1 ) &
+
+exit 0
+HOTPLUG_EOF
+	chmod +x "/etc/hotplug.d/iface/${START}-${NAME}"
+}
+
+start() {
+	uci_bool_by_name base enable || {
+		stop
+		return 0
+	}
+
+	add_hotplug
+
+	[ -f /var/log/aliddns.log ] && sed -i "/${NE_TIPS}/d" /var/log/aliddns.log
+
+	local time_interval
+	time_interval="$(uci_get_by_name base time 10)"
+	# Validate range
+	case "$time_interval" in
+		''|*[!0-9]*) time_interval=10 ;;
+	esac
+	[ "$time_interval" -lt 1 ] 2>/dev/null && time_interval=10
+	[ "$time_interval" -gt 59 ] 2>/dev/null && time_interval=10
+
+	mkdir -p /etc/crontabs
+	[ -f /etc/crontabs/root ] || touch /etc/crontabs/root
+	sed -i '/aliddns/d' /etc/crontabs/root
+	echo "*/${time_interval} * * * * /usr/sbin/aliddns >> /var/log/aliddns.log 2>&1" >> /etc/crontabs/root
+	/etc/init.d/cron reload 2>/dev/null
+
+	/usr/sbin/aliddns >> /var/log/aliddns.log 2>&1 &
+}
+
+stop() {
+	rm -f "/etc/hotplug.d/iface/${START}-${NAME}"
+	[ -f /etc/crontabs/root ] && sed -i '/aliddns/d' /etc/crontabs/root
+	/etc/init.d/cron reload 2>/dev/null
+	echo "${NE_TIPS}" > /var/log/aliddns.log
+}
+
+status() {
+	if grep -q aliddns /etc/crontabs/root 2>/dev/null; then
+		echo "running"
+		return 0
+	else
+		echo "inactive"
+		return 1
+	fi
+}

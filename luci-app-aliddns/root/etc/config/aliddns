@@ -1,4 +1,5 @@
-
 config base 'base'
 	option enable '0'
 	option time '10'
+	option ipv4 '1'
+	option ipv6 '0'
