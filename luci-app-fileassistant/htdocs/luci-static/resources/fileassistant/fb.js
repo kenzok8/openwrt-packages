@@ -1,34 +1,49 @@
-String.prototype.replaceAll = function(search, replacement) {
-  var target = this;
-  return target.replace(new RegExp(search, 'g'), replacement);
-};
 (function () {
+  'use strict';
+
+  function escapeHtml(str) {
+    if (str === null || str === undefined) {
+      return '';
+    }
+    var div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
+  }
+
   var iwxhr = new XHR();
   var listElem = document.getElementById("list-content");
   listElem.onclick = handleClick;
   var currentPath;
   var pathElem = document.getElementById("current-path");
+
   pathElem.onblur = function () {
-    update_list(this.value.trim());
+    var newPath = this.value.trim();
+    if (newPath && newPath !== currentPath) {
+      update_list(newPath);
+    }
   };
+
   pathElem.onkeyup = function (evt) {
-    if (evt.keyCode == 13) {
+    if (evt.keyCode === 13) {
       this.blur();
     }
   };
+
   function removePath(filename, isdir) {
-    var c = confirm('你确定要删除 ' + filename + ' 吗？');
-    if (c) {
-      iwxhr.get('/cgi-bin/luci/admin/nas/fileassistant/delete',
-        {
+    var msg = isdir === "1" ? '你确定要删除目录 ' : '你确定要删除文件 ';
+    if (confirm(msg + escapeHtml(filename) + ' 吗？')) {
+      iwxhr.get('/cgi-bin/luci/admin/nas/fileassistant/delete', {
           path: concatPath(currentPath, filename),
           isdir: isdir
         },
         function (x, res) {
           if (res.ec === 0) {
             refresh_list(res.data, currentPath);
+          } else {
+            alert('删除失败: ' + (res.error || '未知错误'));
           }
-      });
+        }
+      );
     }
   }
 
@@ -37,53 +52,51 @@ String.prototype.replaceAll = function(search, replacement) {
       alert('这是一个目录，请选择 ipk 文件进行安装！');
       return;
     }
-    var isipk = isIPK(filename);
-    if (isipk === 0) {
+    if (!isIPK(filename)) {
       alert('只允许安装 ipk 格式的文件！');
       return;
     }
-    var c = confirm('你确定要安装 ' + filename + ' 吗？');
-    if (c) {
-      iwxhr.get('/cgi-bin/luci/admin/nas/fileassistant/install',
-        {
+    if (confirm('你确定要安装 ' + escapeHtml(filename) + ' 吗？')) {
+      iwxhr.get('/cgi-bin/luci/admin/nas/fileassistant/install', {
           filepath: concatPath(currentPath, filename),
           isdir: isdir
         },
         function (x, res) {
           if (res.ec === 0) {
-            location.reload();
             alert('安装成功!');
+            location.reload();
           } else {
-            alert('安装失败，请检查文件格式!');
+            alert('安装失败: ' + (res.error || '请检查文件格式'));
           }
-      });
+        }
+      );
     }
   }
 
   function isIPK(filename) {
-    var index= filename.lastIndexOf(".");
-    var ext = filename.substr(index+1);
-    if (ext === 'ipk') {
-      return 1;
-    } else {
-      return 0;
-    }
+    var ext = filename.slice(filename.lastIndexOf(".") + 1);
+    return ext.toLowerCase() === 'ipk' ? 1 : 0;
   }
 
   function renamePath(filename) {
     var newname = prompt('请输入新的文件名：', filename);
     if (newname) {
       newname = newname.trim();
-      if (newname != filename) {
+      if (newname && newname !== filename) {
+        if (!/^[\w\-.\s]+$/.test(newname)) {
+          alert('文件名包含非法字符');
+          return;
+        }
         var newpath = concatPath(currentPath, newname);
-        iwxhr.get('/cgi-bin/luci/admin/nas/fileassistant/rename',
-          {
+        iwxhr.get('/cgi-bin/luci/admin/nas/fileassistant/rename', {
             filepath: concatPath(currentPath, filename),
             newpath: newpath
           },
           function (x, res) {
             if (res.ec === 0) {
               refresh_list(res.data, currentPath);
+            } else {
+              alert('重命名失败: ' + (res.error || '未知错误'));
             }
           }
         );
@@ -99,184 +112,245 @@ String.prototype.replaceAll = function(search, replacement) {
   }
 
   function getFileElem(elem) {
-    if (elem.className.indexOf('-icon') > -1) {
+    if (!elem) {
+      return null;
+    }
+    if (elem.className && elem.className.indexOf('-icon') > -1) {
       return elem;
     }
-    else if (elem.parentNode.className.indexOf('-icon') > -1) {
+    if (elem.parentNode && elem.parentNode.className && elem.parentNode.className.indexOf('-icon') > -1) {
       return elem.parentNode;
     }
+    return null;
   }
 
   function concatPath(path, filename) {
     if (path === '/') {
       return path + filename;
     }
-    else {
-      return path.replace(/\/$/, '') + '/' + filename;
-    }
+    return path.replace(/\/$/, '') + '/' + filename;
   }
 
   function handleClick(evt) {
     var targetElem = evt.target;
+    if (!targetElem) {
+      return;
+    }
+    var targetClass = targetElem.className || '';
     var infoElem;
-    if (targetElem.className.indexOf('cbi-button-remove') > -1) {
-      infoElem = targetElem.parentNode.parentNode;
-      removePath(infoElem.dataset['filename'] , infoElem.dataset['isdir'])
-    }
-    else if (targetElem.className.indexOf('cbi-button-install') > -1) {
-      infoElem = targetElem.parentNode.parentNode;
-      installPath(infoElem.dataset['filename'] , infoElem.dataset['isdir'])
-    }
-    else if (targetElem.className.indexOf('cbi-button-edit') > -1) {
-      renamePath(targetElem.parentNode.parentNode.dataset['filename']);
-    }
-    else if (targetElem = getFileElem(targetElem)) {
-      if (targetElem.className.indexOf('parent-icon') > -1) {
-        update_list(currentPath.replace(/\/[^/]+($|\/$)/, ''));
+
+    if (targetClass.indexOf('cbi-button-remove') > -1) {
+      infoElem = targetElem.closest('tr');
+      if (infoElem) {
+        removePath(infoElem.dataset.filename, infoElem.dataset.isdir);
       }
-      else if (targetElem.className.indexOf('file-icon') > -1) {
-        openpath(targetElem.parentNode.dataset['filename']);
+    } else if (targetClass.indexOf('cbi-button-install') > -1) {
+      infoElem = targetElem.closest('tr');
+      if (infoElem) {
+        installPath(infoElem.dataset.filename, infoElem.dataset.isdir);
       }
-      else if (targetElem.className.indexOf('link-icon') > -1) {
-        infoElem = targetElem.parentNode;
-        var filepath = infoElem.dataset['linktarget'];
-        if (filepath) {
-          if (infoElem.dataset['isdir'] === "1") {
-            update_list(filepath);
+    } else if (targetClass.indexOf('cbi-button-edit') > -1) {
+      infoElem = targetElem.closest('tr');
+      if (infoElem) {
+        renamePath(infoElem.dataset.filename);
+      }
+    } else {
+      var fileElem = getFileElem(targetElem);
+      if (fileElem) {
+        var fileClass = fileElem.className || '';
+        var row = fileElem.closest('tr');
+        if (fileClass.indexOf('parent-icon') > -1) {
+          update_list(currentPath.replace(/\/[^/]+(\/|$)/, ''));
+        } else if (fileClass.indexOf('file-icon') > -1 && row) {
+          openpath(row.dataset.filename);
+        } else if (fileClass.indexOf('link-icon') > -1) {
+          if (row && row.dataset.linktarget) {
+            if (row.dataset.isdir === "1") {
+              update_list(row.dataset.linktarget);
+            } else {
+              var target = row.dataset.linktarget;
+              var lastSlash = target.lastIndexOf('/');
+              openpath(target.substring(lastSlash + 1), target.substring(0, lastSlash || 1));
+            }
           }
-          else {
-            var lastSlash = filepath.lastIndexOf('/');
-            openpath(filepath.substring(lastSlash + 1), filepath.substring(0, lastSlash));
-          }
+        } else if (fileClass.indexOf('folder-icon') > -1 && row) {
+          update_list(concatPath(currentPath, row.dataset.filename));
         }
-      }
-      else if (targetElem.className.indexOf('folder-icon') > -1) {
-        update_list(concatPath(currentPath, targetElem.parentNode.dataset['filename']))
       }
     }
   }
+
   function refresh_list(filenames, path) {
     var listHtml = '<table class="cbi-section-table"><tbody>';
     if (path !== '/') {
       listHtml += '<tr class="cbi-section-table-row cbi-rowstyle-2"><td class="parent-icon" colspan="6"><strong>..</strong></td></tr>';
     }
-    if (filenames) {
+    if (filenames && filenames.length) {
       for (var i = 0; i < filenames.length; i++) {
         var line = filenames[i];
         if (line) {
-          var f = line.match(/(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+([\S\s]+)/);
-          var isLink = f[1][0] === 'z' || f[1][0] === 'l' || f[1][0] === 'x';
-          var o = {
-            displayname: f[9],
-            filename: isLink ? f[9].split(' -> ')[0] : f[9],
-            perms: f[1],
-            date: f[7] + ' ' + f[6] + ' ' + f[8],
-            size: f[5],
-            owner: f[3],
-            icon: (f[1][0] === 'd') ? "folder-icon" : (isLink ? "link-icon" : "file-icon")
-          };
-		  
-		  var install_btn = '<button class="cbi-button cbi-button-install" style="visibility: hidden;">安装</button>';
-          var index= o.filename.lastIndexOf(".");
-		  var ext = o.filename.substr(index+1);
-          if (ext === 'ipk') {
-            install_btn = '<button class="cbi-button cbi-button-install">安装</button>';
+          var f = line.match(/^([drwl-][r-][w-][x-][r-][w-][x-][r-][w-][x-])\s+(\S+)\s+(\S+)\s+(\S+)\s+(\d+)\s+(\S+\s+\d+\s+\d+:\d+)\s+(.+)$/);
+          if (!f) {
+            continue;
           }
-		  
-          listHtml += '<tr class="cbi-section-table-row cbi-rowstyle-' + (1 + i%2)
-            + '" data-filename="' + o.filename + '" data-isdir="' + Number(f[1][0] === 'd' || f[1][0] === 'z') + '"'
-            + ((f[1][0] === 'z' || f[1][0] === 'l') ? (' data-linktarget="' + f[9].split(' -> ')[1]) : '')
-            + '">'
-            + '<td class="cbi-value-field ' + o.icon + '">'
-            +   '<strong>' + o.displayname + '</strong>'
+          var perm = f[1];
+          var owner = f[3];
+          var size = f[5];
+          var date = f[6];
+          var name = f[7];
+          var isLink = perm[0] === 'l' || perm[0] === 'z' || perm[0] === 'x';
+          var displayname = name;
+          var filename = name;
+          var linktarget = '';
+          if (isLink && name.indexOf(' -> ') > -1) {
+            var parts = name.split(' -> ');
+            displayname = parts[0] + ' -> ' + escapeHtml(parts[1]);
+            filename = parts[0];
+            linktarget = parts[1];
+          } else {
+            displayname = escapeHtml(name);
+          }
+          var icon = (perm[0] === 'd') ? 'folder-icon' : (isLink ? 'link-icon' : 'file-icon');
+          var installBtn = '';
+          if (filename.slice(filename.lastIndexOf('.') + 1).toLowerCase() === 'ipk') {
+            installBtn = '<button class="cbi-button cbi-button-add">安装</button>';
+          }
+          listHtml += '<tr class="cbi-section-table-row cbi-rowstyle-' + (1 + i % 2) + '"'
+            + ' data-filename="' + escapeHtml(filename) + '"'
+            + ' data-isdir="' + (perm[0] === 'd' ? 1 : 0) + '"'
+            + (linktarget ? ' data-linktarget="' + escapeHtml(linktarget) + '"' : '')
+            + '>'
+            + '<td class="cbi-value-field ' + icon + '"><strong>' + displayname + '</strong></td>'
+            + '<td class="cbi-value-field cbi-value-owner">' + escapeHtml(owner) + '</td>'
+            + '<td class="cbi-value-field cbi-value-date">' + escapeHtml(date) + '</td>'
+            + '<td class="cbi-value-field cbi-value-size">' + escapeHtml(size) + '</td>'
+            + '<td class="cbi-value-field cbi-value-perm">' + escapeHtml(perm) + '</td>'
+            + '<td class="cbi-section-table-cell">'
+            + '<button class="cbi-button cbi-button-edit">重命名</button>'
+            + '<button class="cbi-button cbi-button-remove">删除</button>'
+            + installBtn
             + '</td>'
-            + '<td class="cbi-value-field cbi-value-owner">'+o.owner+'</td>'
-            + '<td class="cbi-value-field cbi-value-date">'+o.date+'</td>'
-            + '<td class="cbi-value-field cbi-value-size">'+o.size+'</td>'
-            + '<td class="cbi-value-field cbi-value-perm">'+o.perms+'</td>'
-            + '<td class="cbi-section-table-cell">\
-				<button class="cbi-button cbi-button-edit">重命名</button>\
-                <button class="cbi-button cbi-button-remove">删除</button>'
-			+ install_btn
-			+ '</td>'
             + '</tr>';
         }
       }
     }
-    listHtml += "</table>";
+    listHtml += '</tbody></table>';
     listElem.innerHTML = listHtml;
   }
+
   function update_list(path, opt) {
     opt = opt || {};
     path = concatPath(path, '');
-    if (currentPath != path) {
-      iwxhr.get('/cgi-bin/luci/admin/nas/fileassistant/list',
-        {path: path},
+    if (currentPath !== path) {
+      iwxhr.get('/cgi-bin/luci/admin/nas/fileassistant/list', {
+          path: path
+        },
         function (x, res) {
           if (res.ec === 0) {
             refresh_list(res.data, path);
-          }
-          else {
+          } else {
             refresh_list([], path);
+            if (res.error) {
+              console.error('Error:', res.error);
+            }
           }
         }
       );
       if (!opt.popState) {
-        history.pushState({path: path}, null, '?path=' + path);
+        history.pushState({path: path}, null, '?path=' + encodeURIComponent(path));
       }
       currentPath = path;
       pathElem.value = currentPath;
     }
-  };
+  }
 
   var uploadToggle = document.getElementById('upload-toggle');
   var uploadContainer = document.getElementById('upload-container');
   var isUploadHide = true;
-  uploadToggle.onclick = function() {
-    if (isUploadHide) {
-      uploadContainer.style.display = 'inline-flex';
-    }
-    else {
-      uploadContainer.style.display = 'none';
-    }
-    isUploadHide = !isUploadHide;
-  };
-  var uploadBtn = uploadContainer.getElementsByClassName('cbi-input-apply')[0];
-  uploadBtn.onclick = function (evt) {
-    var uploadinput = document.getElementById('upload-file');
-    var fullPath = uploadinput.value;
-    if (!fullPath) {
+
+  if (uploadToggle && uploadContainer) {
+    uploadToggle.onclick = function () {
+      isUploadHide = !isUploadHide;
+      uploadContainer.style.display = isUploadHide ? 'none' : 'inline-flex';
+    };
+  }
+
+  var uploadBtn = uploadContainer ? uploadContainer.querySelector('.cbi-input-apply') : null;
+  if (uploadBtn) {
+    uploadBtn.onclick = function (evt) {
       evt.preventDefault();
-    }
-    else {
+      var uploadInput = document.getElementById('upload-file');
+      if (!uploadInput || !uploadInput.files || !uploadInput.files[0]) {
+        alert('请选择要上传的文件');
+        return;
+      }
+      var file = uploadInput.files[0];
       var formData = new FormData();
-      var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
-      formData.append('upload-filename', fullPath.substring(startIndex + 1));
+      var filename = file.name;
+      var lastSlash = Math.max(filename.lastIndexOf('\\'), filename.lastIndexOf('/'));
+      if (lastSlash >= 0) {
+        filename = filename.substring(lastSlash + 1);
+      }
+      formData.append('upload-filename', filename);
       formData.append('upload-dir', concatPath(currentPath, ''));
-      formData.append('upload-file', uploadinput.files[0]);
+      formData.append('upload-file', file);
+
       var xhr = new XMLHttpRequest();
-      xhr.open("POST", "/cgi-bin/luci/admin/nas/fileassistant/upload", true);
-      xhr.onload = function() {
-        if (xhr.status == 200) {
-          var res = JSON.parse(xhr.responseText);
-          refresh_list(res.data, currentPath);
-          uploadinput.value = '';
+      xhr.open('POST', '/cgi-bin/luci/admin/nas/fileassistant/upload', true);
+
+      xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+          var percent = Math.round((e.loaded / e.total) * 100);
+          console.log('Upload: ' + percent + '%');
         }
-        else {
+      };
+
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          try {
+            var res = JSON.parse(xhr.responseText);
+            if (res.ec === 0) {
+              refresh_list(res.data, currentPath);
+              uploadInput.value = '';
+              alert('上传成功!');
+            } else {
+              alert('上传失败: ' + (res.error || '未知错误'));
+            }
+          } catch (e) {
+            alert('上传失败: 响应解析错误');
+          }
+        } else {
           alert('上传失败，请稍后再试...');
         }
       };
-      xhr.send(formData);
-    }
-  };
 
-  document.addEventListener('DOMContentLoaded', function(evt) {
+      xhr.onerror = function () {
+        alert('上传失败，请检查网络连接');
+      };
+
+      xhr.send(formData);
+    };
+  }
+
+  function init() {
     var initPath = '/';
-    if (/path=([/\w]+)/.test(location.search)) {
-      initPath = RegExp.$1;
+    var match = location.search.match(/path=([^&]+)/);
+    if (match && match[1]) {
+      try {
+        initPath = decodeURIComponent(match[1]);
+      } catch (e) {
+        initPath = '/';
+      }
     }
     update_list(initPath, {popState: true});
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
   window.addEventListener('popstate', function (evt) {
     var path = '/';
     if (evt.state && evt.state.path) {
