@@ -1,3 +1,0 @@
-config guest-wifi 'config'
-	option enabled '0'
-	option isolate '1'

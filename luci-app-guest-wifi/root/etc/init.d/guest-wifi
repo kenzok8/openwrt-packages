@@ -4,13 +4,13 @@ START=99
 USE_PROCD=1
 
 reload_service() {
-    wifi reload
+	wifi reload >/dev/null 2>&1
 }
 
 service_triggers() {
-    procd_add_reload_trigger "wireless"
+	procd_add_reload_trigger "wireless"
 }
 
 start_service() {
-    reload_service
+	reload_service
 }

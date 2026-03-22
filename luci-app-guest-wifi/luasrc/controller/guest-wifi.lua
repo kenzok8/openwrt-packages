@@ -1,9 +1,11 @@
 module("luci.controller.guest-wifi", package.seeall)
 
-function index()
-    if not nixio.fs.access("/etc/config/wireless") then
-        return
-    end
+local fs = require "nixio.fs"
 
-    entry({"admin", "network", "guest-wifi"}, view("guest-wifi/wifi"), _("Guest WiFi"), 60)
+function index()
+	if not fs.access("/etc/config/wireless") then
+		return
+	end
+
+	entry({"admin", "network", "guest-wifi"}, view("guest-wifi/wifi"), _("Guest WiFi"), 60)
 end
