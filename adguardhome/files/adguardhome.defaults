@@ -1,0 +1,109 @@
+#!/bin/sh
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
+# Migrate old config format only
+OLD_CONFIG_FILE=$(uci -q get adguardhome.config.config)
+OLD_CONFIG_FILE=${OLD_CONFIG_FILE:-/etc/adguardhome.yaml}
+OLD_CONFIG_NEW_OPT_FILE=$(uci -q get adguardhome.config.config_file)
+NEW_CONFIG_DIR=/etc/adguardhome
+NEW_CONFIG_FILE="$NEW_CONFIG_DIR/adguardhome.yaml"
+
+start_service() {
+	if ! /etc/init.d/adguardhome running; then
+		/etc/init.d/adguardhome start
+	fi
+}
+
+stop_service() {
+	if /etc/init.d/adguardhome running; then
+		/etc/init.d/adguardhome stop
+	fi
+}
+
+if [ -f "$OLD_CONFIG_NEW_OPT_FILE" ] && [ "$OLD_CONFIG_NEW_OPT_FILE" != "$NEW_CONFIG_FILE" ]; then
+	echo "Old AdGuard Home config found in '$OLD_CONFIG_NEW_OPT_FILE'"
+
+	USER=$(uci -q get adguardhome.config.user)
+	USER=${USER:-adguardhome}
+
+	echo "AdGuard Home config is stored in a non-default path."
+	echo "Ensure configured service user '$USER' can access it."
+
+elif [ -f "$OLD_CONFIG_FILE" ] && [ "$OLD_CONFIG_FILE" != "$NEW_CONFIG_FILE" ]; then
+	echo "Old AdGuard Home config found in '$OLD_CONFIG_FILE'"
+	OLD_CONFIG_DIR=$(dirname "$OLD_CONFIG_FILE")
+
+	USER=$(uci -q get adguardhome.config.user)
+	USER=${USER:-adguardhome}
+	GROUP=$(uci -q get adguardhome.config.group)
+	GROUP=${GROUP:-adguardhome}
+
+	CUR_CONFIG_FILE="$OLD_CONFIG_FILE"
+	if [ "$OLD_CONFIG_DIR" = "/etc" ]; then
+		echo "AdGuard Home config must be stored in its own directory. Migrating..."
+		stop_service
+
+		echo "Using $USER:$GROUP for file ownership."
+
+		[ -d "$NEW_CONFIG_DIR" ] || mkdir -m 0700 -p "$NEW_CONFIG_DIR"
+		mv "$OLD_CONFIG_FILE" "$NEW_CONFIG_FILE"
+		chown -R "$USER":"$GROUP" "$NEW_CONFIG_DIR"
+		CUR_CONFIG_FILE="$NEW_CONFIG_FILE"
+
+		echo "Config migrated to '$NEW_CONFIG_FILE'"
+
+	else
+		echo "AdGuard Home config is stored in a non-default path."
+		echo "Ensure configured service user '$USER' can access it."
+	fi
+
+	uci set adguardhome.config.config_file="$CUR_CONFIG_FILE"
+	uci -q delete adguardhome.config.config
+
+	# Use awk to split match on :, remove double quotes and trim leading and
+	# trailing spaces
+	cert_path=$(grep certificate_path: "$CUR_CONFIG_FILE" \
+		| awk -F':' '{gsub(/"/, "", $2); gsub(/^ +| +$/, "", $2); print $2}')
+	if [ -n "$cert_path" ]; then
+		echo "Found custom 'certificate_path' pointing to '$cert_path'." \
+			+ "Ensure configured service user '$USER' can access it."
+
+		stop_service
+
+		if ! uci -q show adguardhome.config.jail_mount | grep -q "$cert_path"; then
+			uci add_list adguardhome.config.jail_mount="$cert_path"
+		fi
+	fi
+
+	private_key_path=$(grep private_key_path: "$CUR_CONFIG_FILE" \
+		| awk -F':' '{gsub(/"/, "", $2); gsub(/^ +| +$/, "", $2); print $2}')
+	if [ -n "$private_key_path" ]; then
+		echo "Found custom 'private_key_path' pointing to '$private_key_path'." \
+			+ "Ensure configured service user '$USER' can access it."
+
+		stop_service
+
+		if ! uci -q show adguardhome.config.jail_mount | grep -q "$private_key_path"; then
+			uci add_list adguardhome.config.jail_mount="$private_key_path"
+		fi
+	fi
+
+	uci commit adguardhome
+	start_service
+
+elif [ -z "$OLD_CONFIG_NEW_OPT_FILE" ] && [ "$OLD_CONFIG_FILE" != "$NEW_CONFIG_FILE" ]; then
+	echo "Old AdGuard Home config not found in '$OLD_CONFIG_FILE'"
+	stop_service
+
+	# Service script will create the new config directory
+	uci set adguardhome.config.config_file="$NEW_CONFIG_FILE"
+	uci -q delete adguardhome.config.config
+	echo "Config path changed to '$NEW_CONFIG_FILE'"
+
+	uci commit adguardhome
+	start_service
+
+else
+	echo "AdGuard Home config is in its default path '$NEW_CONFIG_FILE'"
+fi
