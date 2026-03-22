@@ -1,130 +1,193 @@
-module("luci.controller.AdGuardHome",package.seeall)
-local fs=require"nixio.fs"
-local http=require"luci.http"
-local uci=require"luci.model.uci".cursor()
+module("luci.controller.AdGuardHome", package.seeall)
+
+local fs = require "nixio.fs"
+local http = require "luci.http"
+local uci = require "luci.model.uci".cursor()
+
 function index()
-local page = entry({"admin", "services", "AdGuardHome"},alias("admin", "services", "AdGuardHome", "base"),_("AdGuard Home"))
-page.order = 10
-page.dependent = true
-page.acl_depends = { "luci-app-adguardhome" }
-entry({"admin","services","AdGuardHome","base"},cbi("AdGuardHome/base"),_("Base Setting"),1).leaf = true
-entry({"admin","services","AdGuardHome","log"},form("AdGuardHome/log"),_("Log"),2).leaf = true
-entry({"admin","services","AdGuardHome","manual"},cbi("AdGuardHome/manual"),_("Manual Config"),3).leaf = true
-entry({"admin","services","AdGuardHome","status"},call("act_status")).leaf=true
-entry({"admin", "services", "AdGuardHome", "check"}, call("check_update"))
-entry({"admin", "services", "AdGuardHome", "doupdate"}, call("do_update"))
-entry({"admin", "services", "AdGuardHome", "getlog"}, call("get_log"))
-entry({"admin", "services", "AdGuardHome", "dodellog"}, call("do_dellog"))
-entry({"admin", "services", "AdGuardHome", "reloadconfig"}, call("reload_config"))
-entry({"admin", "services", "AdGuardHome", "gettemplateconfig"}, call("get_template_config"))
+	local page = entry({"admin", "services", "AdGuardHome"},
+		alias("admin", "services", "AdGuardHome", "base"),
+		_("AdGuard Home"), 10)
+	page.dependent = true
+	page.acl_depends = { "luci-app-adguardhome" }
+
+	entry({"admin", "services", "AdGuardHome", "base"},
+		cbi("AdGuardHome/base"), _("Base Setting"), 1).leaf = true
+	entry({"admin", "services", "AdGuardHome", "log"},
+		form("AdGuardHome/log"), _("Log"), 2).leaf = true
+	entry({"admin", "services", "AdGuardHome", "manual"},
+		cbi("AdGuardHome/manual"), _("Manual Config"), 3).leaf = true
+
+	entry({"admin", "services", "AdGuardHome", "status"},
+		call("act_status"), nil).leaf = true
+	entry({"admin", "services", "AdGuardHome", "check"},
+		call("check_update"), nil)
+	entry({"admin", "services", "AdGuardHome", "doupdate"},
+		call("do_update"), nil)
+	entry({"admin", "services", "AdGuardHome", "getlog"},
+		call("get_log"), nil)
+	entry({"admin", "services", "AdGuardHome", "dodellog"},
+		call("do_dellog"), nil)
+	entry({"admin", "services", "AdGuardHome", "reloadconfig"},
+		call("reload_config"), nil)
+	entry({"admin", "services", "AdGuardHome", "gettemplateconfig"},
+		call("get_template_config"), nil)
 end
-function get_template_config()
-	local b
-	local d=""
-	for cnt in io.lines("/tmp/resolv.conf.d/resolv.conf.auto") do
-		b=string.match (cnt,"^[^#]*nameserver%s+([^%s]+)$")
-		if (b~=nil) then
-			d=d.."  - "..b.."\n"
+
+local function gen_template_config()
+	local dns_servers = ""
+	local resolv_auto = "/tmp/resolv.conf.d/resolv.conf.auto"
+	if fs.access(resolv_auto) then
+		for line in io.lines(resolv_auto) do
+			local ns = line:match("^[^#]*nameserver%s+([^%s]+)")
+			if ns then
+				dns_servers = dns_servers .. "  - " .. ns .. "\n"
+			end
 		end
 	end
-	local f=io.open("/usr/share/AdGuardHome/AdGuardHome_template.yaml", "r+")
-	local tbl = {}
-	local a=""
-	while (1) do
-    	a=f:read("*l")
-		if (a=="#bootstrap_dns") then
-			a=d
-		elseif (a=="#upstream_dns") then
-			a=d
-		elseif (a==nil) then
-			break
+
+	local tmpl = "/usr/share/AdGuardHome/AdGuardHome_template.yaml"
+	local f = io.open(tmpl, "r")
+	if not f then return "" end
+
+	local lines = {}
+	for line in f:lines() do
+		if line == "#bootstrap_dns" then
+			table.insert(lines, dns_servers)
+		elseif line == "#upstream_dns" then
+			table.insert(lines, dns_servers)
+		else
+			table.insert(lines, line)
 		end
-		table.insert(tbl, a)
 	end
 	f:close()
-	http.prepare_content("text/plain; charset=utf-8")
-	http.write(table.concat(tbl, "\n"))
+	return table.concat(lines, "\n")
 end
+
+function get_template_config()
+	http.prepare_content("text/plain; charset=utf-8")
+	http.write(gen_template_config())
+end
+
 function reload_config()
 	fs.remove("/tmp/AdGuardHometmpconfig.yaml")
 	http.prepare_content("application/json")
-	http.write('')
+	http.write('{}')
 end
+
 function act_status()
-	local e={}
-	local binpath=uci:get("AdGuardHome","AdGuardHome","binpath")
-	e.running=luci.sys.call("pgrep "..binpath.." >/dev/null")==0
-	e.redirect=(fs.readfile("/var/run/AdGredir")=="1")
-	http.prepare_content("application/json")
-	http.write_json(e)
-end
-function do_update()
-	fs.writefile("/var/run/lucilogpos","0")
-	http.prepare_content("application/json")
-	http.write('')
-	local arg
-	if luci.http.formvalue("force") == "1" then
-		arg="force"
+	local result = {}
+	local binpath = uci:get("AdGuardHome", "AdGuardHome", "binpath") or "/usr/bin/AdGuardHome"
+
+	if fs.access(binpath) then
+		result.running = (luci.sys.call("pgrep -f '" .. binpath .. "' >/dev/null 2>&1") == 0)
 	else
-		arg=""
+		result.running = false
 	end
+
+	local redir = fs.readfile("/var/run/AdGredir")
+	result.redirect = (redir == "1")
+
+	http.prepare_content("application/json")
+	http.write_json(result)
+end
+
+function do_update()
+	fs.writefile("/var/run/lucilogpos", "0")
+	http.prepare_content("application/json")
+	http.write('{}')
+
+	local arg = ""
+	if luci.http.formvalue("force") == "1" then
+		arg = "force"
+	end
+
+	local script = "/usr/share/AdGuardHome/update_core.sh"
 	if fs.access("/var/run/update_core") then
-		if arg=="force" then
-			luci.sys.exec("kill $(pgrep /usr/share/AdGuardHome/update_core.sh) ; sh /usr/share/AdGuardHome/update_core.sh "..arg.." >/tmp/AdGuardHome_update.log 2>&1 &")
+		if arg == "force" then
+			luci.sys.exec("pkill -f '" .. script .. "' 2>/dev/null; " .. script .. " " .. arg .. " >/tmp/AdGuardHome_update.log 2>&1 &")
 		end
 	else
-		luci.sys.exec("sh /usr/share/AdGuardHome/update_core.sh "..arg.." >/tmp/AdGuardHome_update.log 2>&1 &")
+		luci.sys.exec(script .. " " .. arg .. " >/tmp/AdGuardHome_update.log 2>&1 &")
 	end
 end
+
 function get_log()
-	local logfile=uci:get("AdGuardHome","AdGuardHome","logfile")
-	if (logfile==nil) then
+	local logfile = uci:get("AdGuardHome", "AdGuardHome", "logfile")
+
+	if not logfile or logfile == "" then
 		http.write("no log available\n")
 		return
-	elseif (logfile=="syslog") then
+	end
+
+	if logfile == "syslog" then
 		if not fs.access("/var/run/AdGuardHomesyslog") then
 			luci.sys.exec("(/usr/share/AdGuardHome/getsyslog.sh &); sleep 1;")
 		end
-		logfile="/tmp/AdGuardHometmp.log"
-		fs.writefile("/var/run/AdGuardHomesyslog","1")
+		logfile = "/tmp/AdGuardHometmp.log"
+		fs.writefile("/var/run/AdGuardHomesyslog", "1")
 	elseif not fs.access(logfile) then
 		http.write("")
 		return
 	end
+
 	http.prepare_content("text/plain; charset=utf-8")
-	local fdp
+
+	local fdp = 0
 	if fs.access("/var/run/lucilogreload") then
-		fdp=0
+		fdp = 0
 		fs.remove("/var/run/lucilogreload")
 	else
-		fdp=tonumber(fs.readfile("/var/run/lucilogpos")) or 0
+		local pos = fs.readfile("/var/run/lucilogpos")
+		fdp = tonumber(pos) or 0
 	end
-	local f=io.open(logfile, "r+")
-	f:seek("set",fdp)
-	local a=f:read(2048000) or ""
-	fdp=f:seek()
-	fs.writefile("/var/run/lucilogpos",tostring(fdp))
+
+	local f = io.open(logfile, "r")
+	if not f then
+		http.write("")
+		return
+	end
+
+	f:seek("set", fdp)
+	local content = f:read(2048000) or ""
+	fdp = f:seek()
 	f:close()
-	http.write(a)
+
+	fs.writefile("/var/run/lucilogpos", tostring(fdp))
+	http.write(content)
 end
+
 function do_dellog()
-	local logfile=uci:get("AdGuardHome","AdGuardHome","logfile")
-	fs.writefile(logfile,"")
+	local logfile = uci:get("AdGuardHome", "AdGuardHome", "logfile")
+	if logfile and logfile ~= "" and logfile ~= "syslog" then
+		fs.writefile(logfile, "")
+	end
 	http.prepare_content("application/json")
-	http.write('')
+	http.write('{}')
 end
+
 function check_update()
 	http.prepare_content("text/plain; charset=utf-8")
-	local fdp=tonumber(fs.readfile("/var/run/lucilogpos")) or 0
-	local f=io.open("/tmp/AdGuardHome_update.log", "r+")
-	f:seek("set",fdp)
-	local a=f:read(2048000) or ""
-	fdp=f:seek()
-	fs.writefile("/var/run/lucilogpos",tostring(fdp))
+
+	local pos = fs.readfile("/var/run/lucilogpos")
+	local fdp = tonumber(pos) or 0
+
+	local f = io.open("/tmp/AdGuardHome_update.log", "r")
+	if not f then
+		http.write("")
+		return
+	end
+
+	f:seek("set", fdp)
+	local content = f:read(2048000) or ""
+	fdp = f:seek()
 	f:close()
-if fs.access("/var/run/update_core") then
-	http.write(a)
-else
-	http.write(a.."\0")
-end
+
+	fs.writefile("/var/run/lucilogpos", tostring(fdp))
+
+	if fs.access("/var/run/update_core") then
+		http.write(content)
+	else
+		http.write(content .. "\0")
+	end
 end
