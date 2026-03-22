@@ -30,29 +30,42 @@ return baseclass.extend({
       );
     document.querySelector(".main > .loading").style.opacity = "0";
     document.querySelector(".main > .loading").style.visibility = "hidden";
-    if (window.innerWidth <= 1152)
-      document.querySelector(".main-left").style.width = "0";
+    if (window.innerWidth <= 1152) {
+      document.querySelector(".main-left").style.transform = "translateX(-20rem)";
+    }
     window.addEventListener("resize", this.handleSidebarToggle, true);
   },
   handleMenuExpand: function (ev) {
     var a = ev.target,
       ul1 = a.parentNode,
-      ul2 = a.nextElementSibling;
+      ul2 = a.nextElementSibling,
+      isActive = ul1.classList.contains("active");
     document.querySelectorAll("li.slide.active").forEach(function (li) {
       if (li !== a.parentNode || li == ul1) {
+        var menu = li.querySelector("ul");
+        if (menu) {
+          if (!menu.style.maxHeight || menu.style.maxHeight === "1200px") {
+            menu.style.maxHeight = menu.scrollHeight + "px";
+          }
+          void menu.offsetHeight; // Force layout
+          menu.style.maxHeight = "0px";
+        }
         li.classList.remove("active");
         li.childNodes[0].classList.remove("active");
       }
       if (li == ul1) return;
     });
     if (!ul2) return;
-    if (
-      ul2.parentNode.offsetLeft + ul2.offsetWidth <=
-      ul1.offsetLeft + ul1.offsetWidth
-    )
-      ul2.classList.add("align-left");
-    ul1.classList.add("active");
-    a.classList.add("active");
+    if (!isActive) {
+      if (
+        ul2.parentNode.offsetLeft + ul2.offsetWidth <=
+        ul1.offsetLeft + ul1.offsetWidth
+      )
+        ul2.classList.add("align-left");
+      ul1.classList.add("active");
+      a.classList.add("active");
+      ul2.style.maxHeight = ul2.scrollHeight + "px";
+    }
     a.blur();
     ev.preventDefault();
     ev.stopPropagation();
@@ -167,13 +180,38 @@ return baseclass.extend({
       darkMask = document.querySelector(".darkMask"),
       mainRight = document.querySelector(".main-right"),
       mainLeft = document.querySelector(".main-left"),
-      open = mainLeft.style.width == "";
-    if (width > 1152 || ev.type == "resize") open = true;
-    darkMask.style.visibility = open ? "" : "visible";
-    darkMask.style.opacity = open ? "" : 1;
-    if (width <= 1152) mainLeft.style.width = open ? "0" : "";
-    else mainLeft.style.width = "";
-    mainLeft.style.visibility = open ? "" : "visible";
-    mainRight.style["overflow-y"] = open ? "visible" : "hidden";
+      open = mainLeft.style.transform === ""; // true if currently open
+    
+    // If it's a resize event, we simulate that the sidebar was "open" so the logic below closes it for mobile, and opens it for desktop
+    if (ev.type == "resize") {
+        open = true;
+    }
+    
+    // Logics: 'open' true means we want to CLOSE it on mobile, but OPEN it on desktop.
+    // Actually, let's make it clearer: we toggle the state.
+    var willOpen = !open;
+    if (ev.type == "resize") {
+        willOpen = width > 1152;
+    }
+
+    if (width <= 1152) {
+        // Mobile behavior
+        mainLeft.style.width = ""; // Reset width
+        mainLeft.style.transform = willOpen ? "" : "translateX(-20rem)";
+        mainLeft.style.visibility = willOpen ? "visible" : "";
+        darkMask.style.visibility = willOpen ? "visible" : "";
+        darkMask.style.opacity = willOpen ? 1 : "";
+        mainRight.style["overflow-y"] = willOpen ? "hidden" : "visible";
+        mainRight.style.width = "";
+    } else {
+        // Desktop behavior
+        mainLeft.style.width = ""; // Reset width
+        mainLeft.style.transform = willOpen ? "" : "translateX(-20rem)";
+        mainLeft.style.visibility = willOpen ? "visible" : "hidden";
+        mainRight.style.width = willOpen ? "" : "100%";
+        darkMask.style.visibility = "";
+        darkMask.style.opacity = "";
+        mainRight.style["overflow-y"] = "visible";
+    }
   },
 });
