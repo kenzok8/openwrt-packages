@@ -159,6 +159,16 @@ else
         [[ "${?}" -ne "0" ]] && tolog "02.05 Language pack [ ${langfile} ] download failed." "1"
     done
 
+    # The .apk filename is preceded by a tilde (~) instead of a dot (.).
+    for file in ${TMP_CHECK_DIR}/*.apk; do
+        [[ -f "${file}" ]] || continue
+        base_name="$(basename "${file}")"
+        new_name="$(echo "${base_name}" | sed -E 's/\.([a-f0-9]{7}\.apk)/~\1/')"
+        if [[ "${base_name}" != "${new_name}" ]]; then
+            mv -f "${file}" "${TMP_CHECK_DIR}/${new_name}" || true
+        fi
+    done
+
     sync && sleep 2
 fi
 
