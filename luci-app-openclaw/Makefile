@@ -70,11 +70,6 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DATA) ./root/usr/share/openclaw/web-pty.js $(1)/usr/share/openclaw/web-pty.js
 	$(INSTALL_DIR) $(1)/usr/share/openclaw/ui
 	$(CP) ./root/usr/share/openclaw/ui/* $(1)/usr/share/openclaw/ui/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
-	if [ -f ./po/zh-cn/openclaw.po ]; then \
-		po2lmo ./po/zh-cn/openclaw.po $(1)/usr/lib/lua/luci/i18n/openclaw.zh-cn.lmo 2>/dev/null || true; \
-	fi
-endef
 
 define Package/$(PKG_NAME)/postinst
 #!/bin/sh
