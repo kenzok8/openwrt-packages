@@ -282,8 +282,8 @@ while [ $p -ge 1 ]; do
 done
 
 # you can change ROOT size(MB) >= 320
-ROOT1="2048"
-ROOT2="2048"
+ROOT1="1280"
+ROOT2="1280"
 if [[ "${AMLOGIC_SOC}" == "s912" ]] && [[ "${boxtype}" == "213" || "${boxtype}" == "2e" ]]; then
     BOOT="512"
     BLANK1="700"
