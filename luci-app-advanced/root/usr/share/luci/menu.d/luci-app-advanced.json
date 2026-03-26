@@ -1,0 +1,24 @@
+{
+	"admin/system/advanced": {
+		"title": "高级设置",
+		"order": 60,
+		"action": {
+			"type": "cbi",
+			"path": "advanced"
+		},
+		"acl": {
+			"anonymous": false
+		}
+	},
+	"admin/system/fileassistant": {
+		"title": "文件管理",
+		"order": 84,
+		"action": {
+			"type": "template",
+			"path": "fileassistant"
+		},
+		"acl": {
+			"anonymous": false
+		}
+	}
+}

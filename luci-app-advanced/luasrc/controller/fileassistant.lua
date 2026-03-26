@@ -1,30 +1,28 @@
 module("luci.controller.fileassistant", package.seeall)
 
+local util = require "luci.util"
+
 function index()
+    -- API 路由前置，供页面 XHR 使用
+    local function leaf(name, func)
+        entry({"admin", "system", "fileassistant", name}, call(func), nil).leaf = true
+    end
+    leaf("list",    "fileassistant_list")
+    leaf("open",    "fileassistant_open")
+    leaf("delete",  "fileassistant_delete")
+    leaf("rename",  "fileassistant_rename")
+    leaf("upload",  "fileassistant_upload")
+    leaf("install", "fileassistant_install")
+
+    -- luci 23.05+ 已通过 menu.d JSON 注册菜单，无需重复
+    if nixio.fs.access("/usr/share/luci/menu.d/luci-app-advanced.json") then
+        return
+    end
 
     local page
     page = entry({"admin", "system", "fileassistant"}, template("fileassistant"), _("文件管理"), 84)
     page.i18n = "base"
     page.dependent = true
-
-    page = entry({"admin", "system", "fileassistant", "list"}, call("fileassistant_list"), nil)     
-    page.leaf = true
-
-    page = entry({"admin", "system", "fileassistant", "open"}, call("fileassistant_open"), nil)
-    page.leaf = true
-
-    page = entry({"admin", "system", "fileassistant", "delete"}, call("fileassistant_delete"), nil)
-    page.leaf = true
-
-    page = entry({"admin", "system", "fileassistant", "rename"}, call("fileassistant_rename"), nil)
-    page.leaf = true
-
-    page = entry({"admin", "system", "fileassistant", "upload"}, call("fileassistant_upload"), nil)
-    page.leaf = true
-
-    page = entry({"admin", "system", "fileassistant", "install"}, call("fileassistant_install"), nil)
-    page.leaf = true
-
 end
 
 function list_response(path, success)
@@ -67,10 +65,9 @@ function fileassistant_delete()
     local path = luci.http.formvalue("path")
     local isdir = luci.http.formvalue("isdir")
     path = path:gsub("<>", "/")
-    path = path:gsub(" ", "\ ")
     local success
     if isdir then
-        success = os.execute('rm -r "'..path..'"')
+        success = os.execute('rm -r ' .. util.shellquote(path)) == 0
     else
         success = os.remove(path)
     end
@@ -80,19 +77,18 @@ end
 function fileassistant_rename()
     local filepath = luci.http.formvalue("filepath")
     local newpath = luci.http.formvalue("newpath")
-    local success = os.execute('mv "'..filepath..'" "'..newpath..'"')
+    local success = os.execute('mv ' .. util.shellquote(filepath) .. ' ' .. util.shellquote(newpath)) == 0
     list_response(nixio.fs.dirname(filepath), success)
 end
 
 function fileassistant_install()
     local filepath = luci.http.formvalue("filepath")
     local isdir = luci.http.formvalue("isdir")
-    local ext = filepath:match(".+%.(%w+)$")
+    local ext = filepath:match(".+%%.(%w+)$")
     filepath = filepath:gsub("<>", "/")
-    filepath = filepath:gsub(" ", "\ ")
     local success
     if isdir == "1" then
-        success = false  
+        success = false
     elseif ext == "ipk" then
         success = installIPK(filepath)
     else
@@ -102,9 +98,9 @@ function fileassistant_install()
 end
 
 function installIPK(filepath)
-    luci.sys.exec('opkg --force-depends install "'..filepath..'"')
+    luci.sys.exec('opkg --force-depends install ' .. util.shellquote(filepath))
     luci.sys.exec('rm -rf /tmp/luci-*')
-    return true;
+    return true
 end
 
 function fileassistant_upload()
@@ -133,14 +129,14 @@ end
 
 function scandir(directory)
     local i, t, popen = 0, {}, io.popen
-
-    local pfile = popen("ls -lh \""..directory.."\" | egrep '^d' ; ls -lh \""..directory.."\" | egrep -v '^d|^l'")
+    local qdir = util.shellquote(directory)
+    local pfile = popen("ls -lh " .. qdir .. " | egrep '^d' ; ls -lh " .. qdir .. " | egrep -v '^d|^l'")
     for fileinfo in pfile:lines() do
         i = i + 1
         t[i] = fileinfo
     end
     pfile:close()
-    pfile = popen("ls -lh \""..directory.."\" | egrep '^l' ;")
+    pfile = popen("ls -lh " .. qdir .. " | egrep '^l' ;")
     for fileinfo in pfile:lines() do
         i = i + 1
         linkindex, _, linkpath = string.find(fileinfo, "->%s+(.+)$")

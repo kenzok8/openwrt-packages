@@ -1,6 +1,6 @@
 local e=require"nixio.fs"
 local t=require"luci.sys"
-local t=luci.model.uci.cursor()
+local uci=luci.model.uci.cursor()
 m=Map("advanced",translate("高级进阶设置"),translate("<font color=\"Red\"><strong>配置文档是直接编辑的除非你知道自己在干什么，否则请不要轻易修改这些配置文档。配置不正确可能会导致不能开机等错误。</strong></font><br/>"))
 m.apply_on_parse=true
 s=m:section(TypedSection,"advanced")
@@ -68,7 +68,7 @@ if(luci.sys.call("cmp -s /etc/config/wireless.tmp /etc/config/wireless")==1)then
 e.writefile("/etc/config/wireless",t)
 luci.sys.call("wifi reload >/dev/null &")
 end
-e.remove("/tmp//tmp/wireless.tmp")
+e.remove("/etc/config/wireless.tmp")
 end
 end
 end
