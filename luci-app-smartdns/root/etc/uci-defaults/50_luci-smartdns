@@ -1,4 +1,5 @@
 #!/bin/sh
+[ -z "${IPKG_INSTROOT}" ] || exit 0
 #
 # Copyright (C) 2018-2024 Ruilin Peng (Nick) <pymumu@gmail.com>.
 #

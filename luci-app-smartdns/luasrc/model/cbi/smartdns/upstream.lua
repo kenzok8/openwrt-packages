@@ -16,7 +16,7 @@
 
 local sid = arg[1]
 
-m = Map("smartdns", "%s - %s" %{translate("SmartDNS Server"), translate("Upstream DNS Server Configuration")})
+m = Map("smartdns", string.format("%s - %s", translate("SmartDNS Server"), translate("Upstream DNS Server Configuration")))
 m.redirect = luci.dispatcher.build_url("admin/services/smartdns")
 
 if m.uci:get("smartdns", sid) ~= "server" then
