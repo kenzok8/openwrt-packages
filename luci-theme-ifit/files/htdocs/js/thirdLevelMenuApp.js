@@ -1,0 +1,1 @@
+if("undefined"!=typeof level3Menu){Vue.createApp({data:()=>({thirdLevelMenu:level3Menu}),methods:{goToUrl:function(e){const t=e.target,n=$(t),o=window.location.href;let i=n.attr("href");-1==o.indexOf(i)&&(window.location.href=i)}}}).mount("#thirdLevelMenuApp")}else $("#thirdLevelMenuApp").parent().hide();

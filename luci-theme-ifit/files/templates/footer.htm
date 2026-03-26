@@ -1,0 +1,71 @@
+<%#
+	ifit is a clean HTML5 theme for LuCI.
+
+	luci-theme-ifit
+	Copyright 2024 Eric <xiaoqingfengatgm@gmail.com>
+	Modified by kenzok78
+
+	Have a bug? Please create an issue here on GitHub!
+	https://github.com/kenzok78/luci-theme-infinityfreedom/issues
+
+	Licensed to the public under the Apache License 2.0
+-%>
+<%
+	local ver = require "luci.version"
+	local disp = require "luci.dispatcher"
+	local request  = disp.context.path
+	local category = request[1]
+	local tree = disp.node()
+	local categories = disp.node_childs(tree)
+%>
+
+                </div><!-- container-fluid -->
+
+       </div> <!-- content -->
+	   <script src="<%=media%>/js/ngRender.js"></script>
+        <!-- Footer Start -->
+        <footer class="footer">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-9" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;" 
+						 title="<%= os.date("%Y") %> &copy; <%= ver.luciname %> (<%= ver.luciversion %> / <%= ver.distversion %>">
+                        <%= os.date("%Y") %> &copy; <%= ver.luciname %> (<%= ver.luciversion %> / <%= ver.distversion %>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-md-end footer-links d-none d-sm-block">
+                            <a href="https://github.com/xiaoqingfengATGH/HomeLede" target="_blank">固件源码</a>
+                            <a href="https://github.com/xiaoqingfengATGH/HomeLede/wiki" target="_blank">交流讨论</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- end Footer -->
+
+    </div> <!-- content-page -->
+</div> <!-- END wrapper -->
+
+
+<!-- Right bar overlay-->
+<div class="rightbar-overlay"></div>
+<script>
+jQuery(function()
+{
+	if(jQuery("body").hasClass("authentication-bg")){
+		jQuery("footer.footer").addClass("footer-login")
+		jQuery("div.content-page").addClass("content-page-login")
+	}
+})
+</script>
+<script src="<%=media%>/js/thirdLevelMenuApp.js"></script>
+<script>
+	jQuery(function(){
+		if(typeof(animation)!="undefined"){
+			animation.destroy();
+		}
+		jQuery("#loading_cover").hide()
+	})
+</script>
+</body>
+
+</html>

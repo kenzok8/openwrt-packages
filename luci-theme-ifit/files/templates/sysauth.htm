@@ -1,0 +1,105 @@
+<%#
+	ifit is a clean HTML5 theme for LuCI.
+
+	luci-theme-ifit
+	Copyright 2024 Eric <xiaoqingfengatgm@gmail.com>
+	Modified by kenzok78
+
+	Have a bug? Please create an issue here on GitHub!
+	https://github.com/kenzok78/luci-theme-infinityfreedom/issues
+
+	Licensed to the public under the Apache License 2.0
+-%>
+
+<%+header_login%>
+			<div class="account-pages mt-5 mb-5">
+				<div class="container">
+					<div class="row justify-content-center">
+						<div class="col-md-8 col-lg-6 col-xl-4">
+							<div class="card shadow-none">
+								<%- if fuser then %>
+								<div class="alert alert-warning bg-warning text-white border-0 alert-dismissible fade show" role="alert">
+									<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+									<%:Invalid username and/or password! Please try again.%>
+								</div>
+								<% end -%>
+								<div class="card-body p-3">
+									
+									<div class="text-center w-75 m-auto">
+										<div class="auth-logo">
+											<a href="/cgi-bin/luci/" class="logo logo-dark text-center">
+												<span class="logo-lg">
+													<img src="<%=media%>/images/Homelede2023-logo-light.png" alt="" height="44">
+												</span>
+											</a>
+						
+											<a href="/cgi-bin/luci/" class="logo logo-light text-center">
+												<span class="logo-lg">
+													<img src="<%=media%>/images/Homelede2023-logo-light.png" alt="" height="44">
+												</span>
+											</a>
+										</div>
+										<p class="text-muted mb-4 mt-3">请输入用户名密码登录到您的路由器</p>
+									</div>
+	
+									<form action="<%=pcdata(luci.http.getenv("REQUEST_URI"))%>">
+
+										<div class="mb-3">
+											<label for="luci_username" class="form-label"><%:Username%></label>
+											<input class="form-control form-control-login" required="true" placeholder="Enter your username" type="text" name="luci_username" value="<%=duser%>">
+										</div>
+	
+										<div class="mb-3">
+											<label for="password" class="form-label"><%:Password%></label>
+											<div class="input-group input-group-merge">
+												<input type="password" id="password" class="form-control" placeholder="Enter your password" name="luci_password">
+												<div class="input-group-text" data-password="false">
+													<span class="password-eye"></span>
+												</div>
+											</div>
+										</div>
+	
+										<div class="text-center d-grid button-list">
+											<button class="btn btn-primary" type="submit"> <%:Login%> </button>
+											<button class="btn btn-light waves-effect" type="reset"> <%:Reset%> </button>
+										</div>
+	
+									</form>
+	
+								</div> <!-- end card-body -->
+							</div>
+							<!-- end card -->
+							<!-- end row -->
+	
+						</div> <!-- end col -->
+					</div>
+					<!-- end row -->
+				</div>
+				<!-- end container -->
+			</div>
+			<!-- end page -->
+			<%
+			local uci  = require "luci.model.uci".cursor()
+			local fs  = require "nixio.fs"
+			local https_key = uci:get("uhttpd", "main", "key")
+			local https_port = uci:get("uhttpd", "main", "listen_https")
+			if type(https_port) == "table" then
+				https_port = https_port[1]
+			end
+
+			if https_port and fs.access(https_key) then
+				https_port = https_port:match("(%d+)$")
+			%>
+			<script type="text/javascript">//<![CDATA[
+				if (document.location.protocol != 'https:') {
+					var url = 'https://' + window.location.hostname + ':' + '<%=https_port%>' + window.location.pathname;
+					var img = new Image;
+					img.onload = function () { window.location = url };
+					img.src = 'https://' + window.location.hostname + ':' + '<%=https_port%>' + '<%=resource%>/cbi/up.gif?' + Math.random();;
+					setTimeout(function () {
+						img.src = ''
+					}, 5000);
+				}
+			//]]></script>
+			<% end %>
+<%+footer%>

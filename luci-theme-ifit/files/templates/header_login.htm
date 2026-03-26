@@ -1,0 +1,104 @@
+<%#
+	ifit is a clean HTML5 theme for LuCI.
+
+	luci-theme-ifit
+	Copyright 2024 Eric <xiaoqingfengatgm@gmail.com>
+	Modified by kenzok78
+
+	Have a bug? Please create an issue here on GitHub!
+	https://github.com/kenzok78/luci-theme-infinityfreedom/issues
+
+	Licensed to the public under the Apache License 2.0
+-%>
+
+<%
+	local sys  = require "luci.sys"
+	local util = require "luci.util"
+	local http = require "luci.http"
+	local disp = require "luci.dispatcher"
+
+    local fs	= require "nixio.fs"
+	local nutil = require "nixio.util"
+	local uci = require 'luci.model.uci'.cursor()
+	local boardinfo = util.ubus("system", "board")
+	
+	local request  = disp.context.path
+	local request2 = disp.context.request
+
+	local category = request[1]
+	local cattree  = category and disp.node(category)
+
+	local leaf = request2[#request2]
+
+	local tree = disp.node()
+	local node = disp.context.dispatched
+
+	local categories = disp.node_childs(tree)
+
+	local c = tree
+	local i, r
+-%>
+<!DOCTYPE html>
+<html lang="<%=luci.i18n.context.lang%>">
+	<head>
+		<meta charset="utf-8">
+		<title>
+		<%=striptags( (boardinfo.hostname or "?") .. ( (node and node.title) and ' - ' .. translate(node.title) or '')) %> - LuCI
+		</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta content="A theme customized for Homelede, also applicable to other OpenWrt distributions" name="description" />
+		<meta content="xiaoqingfengatgm@gmail.com" name="author" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+		<meta name="application-name" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+		<meta name="apple-mobile-web-app-title" content="<%=striptags( (boardinfo.hostname or "?") ) %> - LuCI">
+		<meta name="msapplication-TileImage" content="<%=media%>/logo.png"/>
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+		<meta name="format-detection" content="telephone=no, email=no"/>
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="mobile-web-app-capable" content="yes">
+		<meta name="x5-fullscreen" content="true">
+		<meta name="full-screen" content="yes">
+		<meta name="x5-page-mode" content="app">
+		<meta name="browsermode" content="application">
+		<meta name="theme-color" content="#0099CC">
+		<meta name="msapplication-tap-highlight" content="no">
+		<meta name="msapplication-TileColor" content="#0099CC">
+		<link rel="icon" href="<%=media%>/logo.png" sizes="144x144">
+		<link rel="apple-touch-icon-precomposed" href="<%=media%>/logo.png" sizes="144x144">
+        <!-- App favicon -->
+        <link rel="shortcut icon" href="<%=media%>/images/favicon.ico">
+
+		<!-- App css -->
+		<link href="<%=media%>/css/bootstrap.min.css" rel="stylesheet" type="text/css" id="bs-default-stylesheet" />
+		<link href="<%=media%>/css/app.min.css" rel="stylesheet" type="text/css" id="app-default-stylesheet" />
+
+		<link href="<%=media%>/css/bootstrap-dark.min.css" rel="stylesheet" type="text/css" id="bs-dark-stylesheet" />
+		<link href="<%=media%>/css/app-dark.min.css" rel="stylesheet" type="text/css" id="app-dark-stylesheet" />
+
+		<!-- icons -->
+		<link href="<%=media%>/css/icons.min.css" rel="stylesheet" type="text/css" />
+
+		<link href="<%=media%>/css/ng.css" rel="stylesheet" type="text/css" />
+
+		<link rel="shortcut icon" href="<%=media%>/favicon.ico">
+		<% if node and node.css then %>
+		<link rel="stylesheet" href="<%=resource%>/<%=node.css%>">
+		<% end -%>
+		<% if css then %>
+		<style title="text/css"><%=css %></style>
+		<% end -%>
+		<script src="<%=resource%>/cbi.js?v=1.7.3"></script>
+		<!-- Vendor js -->
+		<script src="<%=media%>/js/vendor.min.js"></script>
+		<script src="<%=media%>/js/vue.global.prod.js"></script>
+	</head>
+
+<body class="authentication-bg lang_<%=luci.i18n.context.lang%> <%- if node then %><%= striptags( node.title ) %><%- end %> <% if luci.dispatcher.context.authsession then %>logged-in<% end %>"
+    data-layout='{"mode": "dark", "width": "fluid", "menuPosition": "fixed", "sidebar": { "color": "dark", "size": "default", "showuser": false}, "topbar": {"color": "dark"}, "showRightSidebarOnPageLoad": false}'>
+	<!-- App js-->
+	<script src="<%=media%>/js/app.min.js"></script>
+	<!-- Begin page -->
+    <div id="wrapper">
+        <div class="content-page">
+            <div class="content">
