@@ -1,4 +1,5 @@
 #!/bin/sh
+[ -z "${IPKG_INSTROOT}" ] || exit 0
 
 uci -q batch <<-EOF >/dev/null
 	delete ucitrack.@easymesh[-1]

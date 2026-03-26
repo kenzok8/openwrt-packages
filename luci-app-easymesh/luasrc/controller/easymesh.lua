@@ -2,8 +2,10 @@
 
 module("luci.controller.easymesh", package.seeall)
 
+local fs = require "nixio.fs"
+
 function index()
-	if not nixio.fs.access("/etc/config/easymesh") then
+	if not fs.access("/etc/config/easymesh") then
 		return
 	end
 
