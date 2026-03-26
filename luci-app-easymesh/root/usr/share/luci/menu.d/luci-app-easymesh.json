@@ -1,0 +1,14 @@
+{
+    "admin/network/easymesh": {
+        "title": "EASY MESH",
+        "order": 60,
+        "action": {
+            "type": "cbi",
+            "path": "easymesh"
+        },
+        "depends": {
+            "acl": [ "luci-app-easymesh" ],
+            "uci": { "easymesh": true }
+        }
+    }
+}

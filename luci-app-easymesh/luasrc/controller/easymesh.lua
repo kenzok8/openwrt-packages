@@ -9,6 +9,11 @@ function index()
 		return
 	end
 
+	-- luci 23.05+ 已通过 menu.d JSON 注册菜单，无需重复
+	if fs.access("/usr/share/luci/menu.d/luci-app-easymesh.json") then
+		return
+	end
+
 	local page
 
 	page = entry({"admin", "network", "easymesh"}, cbi("easymesh"), _("EASY MESH"), 60)

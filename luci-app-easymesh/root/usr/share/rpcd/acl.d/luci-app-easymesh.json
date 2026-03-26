@@ -2,7 +2,7 @@
     "luci-app-easymesh": {
         "description": "Grant UCI access for luci-app-easymesh",
         "read": {
-            "uci": [ "easymesh" ]
+            "uci": [ "easymesh", "wireless", "network" ]
         },
         "write": {
             "uci": [ "easymesh" ]
