@@ -1,0 +1,26 @@
+#!/bin/sh
+uci set network.@globals[0].ula_prefix=''
+uci set network.lan.delegate='0'
+uci set network.wan.mtu=1460
+uci set network.wan.metric='41'
+uci set network.wan.delegate='0'
+uci set network.wan.ipv6='0'
+uci commit network
+uci set dhcp.@dnsmasq[0].cachesize='15000'
+uci set dhcp.@dnsmasq[0].min_ttl='3600'
+uci set dhcp.@dnsmasq[0].filter_aaaa='1'
+uci set dhcp.@dnsmasq[0].localservice='0'
+uci set dhcp.@dnsmasq[0].nonwildcard='0'
+uci set dhcp.@dnsmasq[0].rebind_protection='0'
+uci set dhcp.@dnsmasq[0].noresolv='0'
+uci set dhcp.lan.ra=''
+uci set dhcp.lan.ndp=''
+uci set dhcp.lan.dhcpv6=''
+uci set dhcp.lan.ignore='0'
+uci set dhcp.lan.ra_management='1'
+uci set dhcp.lan.ra_default='1'
+uci set dhcp.lan.force='1'
+uci commit dhcp
+sed -i "/list server/d" /etc/config/dhcp
+/etc/init.d/network restart
+/etc/init.d/dnsmasq restart

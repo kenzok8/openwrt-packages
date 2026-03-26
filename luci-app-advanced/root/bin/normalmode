@@ -1,0 +1,30 @@
+#!/bin/sh
+
+uci set system.@system[0].hostname="Openwrt"
+uci commit
+
+cat > /etc/config/network <<EOF
+config interface 'loopback'
+	option ifname 'lo'
+	option proto 'static'
+	option ipaddr '127.0.0.1'
+	option netmask '255.0.0.0'
+
+config interface 'lan'
+	option type 'bridge'
+	option proto 'static'
+	option ipaddr '192.168.1.1'
+	option netmask '255.255.255.0'
+	option ifname 'eth0 eth2 eth3'
+
+config interface 'wan'
+	option ifname 'eth1'
+	option proto 'dhcp'
+	option hostname 'Openwrt'
+EOF
+
+sed -i '/REDIRECT --to-ports 53/d' /etc/firewall.user
+sed -i '/MASQUERADE/d' /etc/firewall.user
+echo "iptables -t nat -A PREROUTING -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/firewall.user
+echo "iptables -t nat -A PREROUTING -p tcp --dport 53 -j REDIRECT --to-ports 53" >> /etc/firewall.user
+reboot
