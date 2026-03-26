@@ -1,24 +1,15 @@
+// SPDX-License-Identifier: Apache-2.0
+// NOTE: luci-app-fileassistant 使用模板视图（luasrc/view/fileassistant.htm）
+// 此文件在 luci 23.05+ 下通过 menu.d 的 action.type=template 加载，
+// 不会直接调用本 JS view，保留此文件仅供参考。
 'use strict';
 'require view';
 'require rpc';
-
-var callStatus = rpc.declare({
-	object: 'luci',
-	method: 'get_status',
-	params: ['name'],
-	expect: { '': {} }
-});
+'require form';
 
 return view.extend({
-	load: function() {},
-
 	render: function() {
-		var m = new form.Map('config', _('Settings'));
-		var s = m.section(form.NamedSection, 'main', 'main', _('Configuration'));
-		s.anonymous = true;
-		
-		var o = s.option(form.Value, 'name', _('Name'));
-		
-		return m.render();
+		// 实际界面由 luasrc/view/fileassistant.htm 模板提供
+		return E('p', {}, _('Loading…'));
 	}
 });

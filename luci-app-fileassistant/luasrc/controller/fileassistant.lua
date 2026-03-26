@@ -13,14 +13,18 @@ local ALLOWED_PATHS = {
 local MAX_UPLOAD_SIZE = 500 * 1024 * 1024
 
 function index()
-    entry({"admin", "nas"}, firstchild(), _("NAS"), 44).dependent = false
+    -- luci 23.05+ 已通过 menu.d JSON 注册菜单，无需重复注册菜单项
+    if not nixio.fs.access("/usr/share/luci/menu.d/luci-app-fileassistant.json") then
+        entry({"admin", "nas"}, firstchild(), _("NAS"), 44).dependent = false
 
-    local page
-    page = entry({"admin", "nas", "fileassistant"}, template("fileassistant"), _("文件助手"), 1)
-    page.i18n = "base"
-    page.dependent = true
-    page.acl_depends = { "luci-app-fileassistant" }
+        local page
+        page = entry({"admin", "nas", "fileassistant"}, template("fileassistant"), _("文件助手"), 1)
+        page.i18n = "base"
+        page.dependent = true
+        page.acl_depends = { "luci-app-fileassistant" }
+    end
 
+    -- API 路由在新旧版本均需注册（fb.js 的 AJAX 请求依赖这些路由）
     entry({"admin", "nas", "fileassistant", "list"}, call("fileassistant_list"), nil)
     entry({"admin", "nas", "fileassistant", "open"}, call("fileassistant_open"), nil)
     entry({"admin", "nas", "fileassistant", "delete"}, call("fileassistant_delete"), nil)
@@ -67,7 +71,8 @@ function sanitize_path(path)
     if not path then
         return nil
     end
-    path = path:gsub("<>", "/"):gsub("//+", "/"):gsub("/$", "")
+    -- Bug fix: 原代码将 "<>" 替换为 "/"，应为 "\\"（Windows 路径反斜杠）
+    path = path:gsub("\\\\", "/"):gsub("//+", "/"):gsub("/$", "")
     if path == "" then
         return "/"
     end
@@ -81,7 +86,8 @@ function fileassistant_list()
         list_response(path, false, "Path not allowed")
         return
     end
-    if not nixio.fs.stat(realpath, "type") == "dir" and not nixio.fs.stat(realpath) then
+    -- Bug fix: Lua 中 not 优先级高于 ==，原写法恒为 false
+    if not nixio.fs.stat(realpath) or nixio.fs.stat(realpath, "type") ~= "dir" then
         list_response(path, false, "Invalid directory")
         return
     end
@@ -218,7 +224,9 @@ function fileassistant_install()
 end
 
 function installIPK(filepath)
-    local output = luci.sys.exec('opkg --force-depends install "' .. filepath .. '" 2>&1')
+    -- Security fix: 用单引号包裹路径，防止命令注入
+    local safe_path = filepath:gsub("'", "'\\''")
+    local output = luci.sys.exec("opkg --force-depends install '" .. safe_path .. "' 2>&1")
     luci.sys.exec('rm -rf /tmp/luci-*')
     if output:match("Installing") and output:match("completed") then
         return true
@@ -233,7 +241,8 @@ function fileassistant_upload()
         list_response(uploaddir, false, "Path not allowed")
         return
     end
-    if not nixio.fs.stat(realpath, "type") == "dir" then
+    -- Bug fix: Lua 中 not 优先级高于 ==，原写法恒为 false
+    if not nixio.fs.stat(realpath) or nixio.fs.stat(realpath, "type") ~= "dir" then
         list_response(uploaddir, false, "Invalid directory")
         return
     end
