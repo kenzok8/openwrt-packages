@@ -2,7 +2,13 @@
 	"luci-app-filebrowser": {
 		"description": "Grant UCI access for luci-app-filebrowser",
 		"read": {
-			"uci": [ "filebrowser" ]
+			"ubus": {
+				"luci.filebrowser": [ "status" ]
+			},
+			"uci": [ "filebrowser" ],
+			"file": {
+				"/var/log/filebrowser.log": [ "read" ]
+			}
 		},
 		"write": {
 			"uci": [ "filebrowser" ]

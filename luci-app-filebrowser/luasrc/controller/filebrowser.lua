@@ -6,6 +6,8 @@ local api = require "luci.model.cbi.filebrowser.api"
 
 function index()
 	if not fs.access("/etc/config/filebrowser") then return end
+	-- luci 23.05+ 已通过 menu.d JSON 注册菜单，无需重复注册
+	if fs.access("/usr/share/luci/menu.d/luci-app-filebrowser.json") then return end
 
 	entry({"admin", "services"}, firstchild(), "Services", 44).dependent = false
 	entry({"admin", "services", "filebrowser"}, cbi("filebrowser/settings"),

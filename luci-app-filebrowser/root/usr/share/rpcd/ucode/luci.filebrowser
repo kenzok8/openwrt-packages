@@ -1,0 +1,34 @@
+'use strict';
+
+import { cursor } from 'uci';
+import { popen, access } from 'fs';
+
+function find_binary() {
+	const uci = cursor();
+	const exec_dir = uci.get('filebrowser', '@global[0]', 'executable_directory') || '/tmp';
+	const fb_bin = exec_dir + '/filebrowser';
+	return access(fb_bin) ? fb_bin : null;
+}
+
+return {
+	status: {
+		call: function() {
+			const fb_bin = find_binary();
+			if (!fb_bin) return { status: false, version: '' };
+
+			const f = popen(`pgrep -f '${replace(fb_bin, "'", "'\\''")}' >/dev/null 2>&1; echo $?`);
+			if (!f) return { status: false };
+			const code = trim(f.read('all'));
+			f.close();
+
+			let version = '';
+			const vf = popen(`"${fb_bin}" version 2>/dev/null | head -1`);
+			if (vf) {
+				version = trim(vf.read('all'));
+				vf.close();
+			}
+
+			return { status: (code === '0'), version: version };
+		}
+	}
+};

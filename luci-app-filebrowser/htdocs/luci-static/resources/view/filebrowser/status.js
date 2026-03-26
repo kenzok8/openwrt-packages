@@ -2,11 +2,11 @@
 'require view';
 'require rpc';
 'require uci';
+'require form';
 
 var callStatus = rpc.declare({
-	object: 'luci',
-	method: 'filebrowser_status',
-	params: ['name'],
+	object: 'luci.filebrowser',
+	method: 'status',
 	expect: { '': {} }
 });
 

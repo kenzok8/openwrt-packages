@@ -1,0 +1,10 @@
+{
+	"admin/services/filebrowser": {
+		"title": "File Browser",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "filebrowser/status"
+		}
+	}
+}

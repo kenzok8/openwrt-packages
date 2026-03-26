@@ -28,7 +28,7 @@ o = s:option(Value, "username", translate("Initial username"))
 o.default = "admin"
 o.rmempty = false
 
-o = s:option(Value, "Value", "password", translate("Initial password"))
+o = s:option(Value, "password", translate("Initial password"))
 o.default = "admin"
 o.rmempty = false
 
