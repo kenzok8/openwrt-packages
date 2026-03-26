@@ -1,0 +1,3 @@
+config gost 'config'
+	option enabled '0'
+	option config_file '/etc/gost/gost.json'

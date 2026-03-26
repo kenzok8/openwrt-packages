@@ -1,0 +1,56 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: PACKAGE VERSION\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: zh-Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:46
+msgid "A simple security tunnel written in Golang."
+msgstr "GO 语言实现的安全隧道。"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:71
+msgid "Arguments"
+msgstr "参数"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:59
+msgid "Collecting data…"
+msgstr "正在收集数据中…"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:67
+msgid "Configuration file"
+msgstr "配置文件"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:65
+msgid "Enable"
+msgstr "启用"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:78
+msgid "Expecting: %s"
+msgstr "请输入：%s"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:34
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:36
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:45
+#: applications/luci-app-gost/root/usr/share/luci/menu.d/luci-app-gost.json:3
+msgid "GOST"
+msgstr "GOST"
+
+#: applications/luci-app-gost/root/usr/share/rpcd/acl.d/luci-app-gost.json:3
+msgid "Grant UCI access for luci-app-gost"
+msgstr "授予 luci-app-gost 访问 UCI 配置的权限"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:36
+msgid "NOT RUNNING"
+msgstr "未运行"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:34
+msgid "RUNNING"
+msgstr "运行中"
+
+#: applications/luci-app-gost/htdocs/luci-static/resources/view/gost.js:78
+msgid "non-empty value"
+msgstr "非空值"

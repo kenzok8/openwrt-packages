@@ -1,0 +1,13 @@
+{
+	"admin/services/gost": {
+		"title": "GOST",
+		"action": {
+			"type": "view",
+			"path": "gost"
+		},
+		"depends": {
+			"acl": [ "luci-app-gost" ],
+			"uci": { "gost": true }
+		}
+	}
+}
