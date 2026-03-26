@@ -1,0 +1,107 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+USE_PROCD=1
+
+LOG_PATH="/var/log/filebrowser.log"
+
+echolog() {
+	echo -e "$(date "+%Y-%m-%d %H:%M:%S") $1" >> $LOG_PATH
+}
+
+config_t_get() {
+	local index=0
+	[ -n "$4" ] && index="$4"
+	local ret
+	ret="$(uci get "filebrowser.@$1[$index].$2" 2>/dev/null)"
+	[ -z "$ret" ] && ret="$3"
+	echo "$ret"
+}
+
+start_service() {
+	local enabled
+	enabled="$(config_t_get global enable 0)"
+	[ "$enabled" = "0" ] && return
+
+	local address
+	address="$(config_t_get global address 0.0.0.0)"
+	local port
+	port="$(config_t_get global port 8088)"
+	local database
+	database="$(config_t_get global database /etc/filebrowser.db)"
+	local username
+	username="$(config_t_get global username admin)"
+	local password
+	password="$(config_t_get global password admin)"
+	local ssl_cert
+	ssl_cert="$(config_t_get global ssl_cert '')"
+	local ssl_key
+	ssl_key="$(config_t_get global ssl_key '')"
+	local root_path
+	root_path="$(config_t_get global root_path /root)"
+	local executable_directory
+	executable_directory="$(config_t_get global executable_directory /tmp)"
+
+	[ ! -f "$executable_directory/filebrowser" ] && {
+		echolog "$executable_directory/filebrowser not found, please download first"
+		return 1
+	}
+
+	local ssl_params=""
+	if [ -n "$ssl_cert" ] && [ -n "$ssl_key" ]; then
+		ssl_params="--ssl-cert $ssl_cert --ssl-key $ssl_key"
+	fi
+
+	local hash_pass
+	hash_pass="$("$executable_directory/filebrowser" hash "$password" 2>/dev/null)"
+
+	mkdir -p "$(dirname "$LOG_PATH")"
+	"$executable_directory/filebrowser" \
+		-a "$address" \
+		-p "$port" \
+		-r "$root_path" \
+		-d "$database" \
+		--username "$username" \
+		--password "$hash_pass" \
+		$ssl_params \
+		-l "$LOG_PATH" >/dev/null 2>&1 &
+}
+
+stop_service() {
+	local executable_directory
+	executable_directory="$(config_t_get global executable_directory /tmp)"
+	local fb_bin="${executable_directory}/filebrowser"
+
+	local pids
+	pids="$(pgrep -f "$fb_bin" 2>/dev/null)"
+	if [ -n "$pids" ]; then
+		for pid in $pids; do
+			kill -TERM "$pid" 2>/dev/null
+		done
+		sleep 2
+		pids="$(pgrep -f "$fb_bin" 2>/dev/null)"
+		[ -n "$pids" ] && kill -KILL $pids 2>/dev/null
+	fi
+
+	rm -f "$LOG_PATH"
+}
+
+reload_service() {
+	stop_service
+	sleep 1
+	start_service
+}
+
+start() {
+	start_service
+}
+
+stop() {
+	stop_service
+}
+
+restart() {
+	stop_service
+	sleep 1
+	start_service
+}

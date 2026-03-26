@@ -1,0 +1,46 @@
+<%
+local dsp = require "luci.dispatcher"
+local sys = require "luci.sys"
+local uci = require "luci.model.uci".cursor()
+
+local exec_dir = uci:get("filebrowser", "@global[0]", "executable_directory") or "/tmp"
+local fb_bin = exec_dir .. "/filebrowser"
+-%>
+
+<fieldset class="cbi-section">
+	<legend><%:Running Status%></legend>
+	<fieldset class="cbi-section">
+		<div class="cbi-value">
+			<label class="cbi-value-title"><%:Status%></label>
+			<div class="cbi-value-field" id="_status"><p><span><%:Collecting data...%></span></p></div>
+		</div>
+	</fieldset>
+</fieldset>
+
+<script type="text/javascript">//<![CDATA[
+(function() {
+	var statusEl = document.getElementById('_status');
+	XHR.poll(3, '<%=dsp.build_url("admin/services/filebrowser/status")%>', null,
+		function(x, json) {
+			if (x && x.status == 200 && statusEl) {
+				if (json.status) {
+					statusEl.innerHTML = '<p><span style="color:green;"><%:RUNNING%></span> <input type="button" class="cbi-button cbi-input-apply" value="<%:Enter interface%>" onclick="openwebui()" /></p>';
+				} else {
+					statusEl.innerHTML = '<p><span style="color:red;"><%:NOT RUNNING%></span></p>';
+				}
+			}
+		});
+
+	window.openwebui = function() {
+		var url = window.location.hostname;
+		var port = '<%=uci:get("filebrowser", "@global[0]", "port") or "8088"%>';
+		var sslCert = '<%=uci:get("filebrowser", "@global[0]", "ssl_cert") or ""%>';
+		var sslKey = '<%=uci:get("filebrowser", "@global[0]", "ssl_key") or ""%>';
+		var protocol = 'http';
+		if (sslCert !== '' && sslKey !== '') {
+			protocol = 'https';
+		}
+		window.open(protocol + '://' + url + ':' + port, '_blank');
+	};
+})();
+//]]></script>

@@ -1,0 +1,171 @@
+<%
+local dsp = require "luci.dispatcher"
+-%>
+
+<script type="text/javascript">//<![CDATA[
+(function() {
+	var msgInfo = null;
+
+	var tokenStr = '<%=token%>';
+	var clickToDownloadText = '<%:Click to download%>';
+	var inProgressText = '<%:Downloading...%>';
+	var downloadInProgressNotice = '<%:Download, are you sure to close?%>';
+	var downloadSuccessText = '<%:Download successful%>';
+	var unexpectedErrorText = '<%:Unexpected error%>';
+
+	function addPageNotice() {
+		window.onbeforeunload = function(e) {
+			e.returnValue = downloadInProgressNotice;
+			return downloadInProgressNotice;
+		};
+	}
+
+	function removePageNotice() {
+		window.onbeforeunload = null;
+	}
+
+	function onUpdateSuccess(btn) {
+		alert(downloadSuccessText);
+
+		if (btn) {
+			btn.value = downloadSuccessText;
+			btn.placeholder = downloadSuccessText;
+			btn.disabled = true;
+		}
+
+		window.setTimeout(function() {
+			window.location.reload();
+		}, 1000);
+	}
+
+	function onRequestError(btn, errorMessage) {
+		if (!btn) return;
+		btn.disabled = false;
+		btn.value = btn.placeholder || clickToDownloadText;
+
+		if (errorMessage) {
+			alert(errorMessage);
+		}
+	}
+
+	function doAjaxGet(url, data, onResult) {
+		new XHR().get(url, data, function(_, json) {
+			var resultJson = json || {
+				code: 1,
+				error: unexpectedErrorText
+			};
+
+			if (typeof onResult === 'function') {
+				onResult(resultJson);
+			}
+		});
+	}
+
+	function checkUpdate(btn) {
+		if (!btn) return;
+		btn.disabled = true;
+		btn.value = inProgressText;
+
+		addPageNotice();
+
+		var detailEl = document.getElementById((btn.id || btn.name) + '-detail');
+
+		doAjaxGet('<%=dsp.build_url("admin/services/filebrowser/check")%>/', {
+			token: tokenStr
+		}, function(json) {
+			removePageNotice();
+
+			if (json.code) {
+				msgInfo = null;
+				onRequestError(btn, json.error);
+			} else {
+				msgInfo = json;
+				btn.disabled = false;
+				btn.value = clickToDownloadText;
+				btn.placeholder = clickToDownloadText;
+			}
+
+			if (detailEl && json.version) {
+				var urlNode = '<em style="color:red;"><%:The latest version:%>' + json.version + '</em>';
+				if (json.url && json.url.html) {
+					urlNode = '<a href="' + json.url.html + '" target="_blank">' + urlNode + '</a>';
+				}
+				detailEl.innerHTML = urlNode;
+			}
+		});
+	}
+
+	function doDownload(btn) {
+		if (!btn) return;
+		btn.disabled = true;
+		btn.value = '<%:Downloading...%>';
+
+		addPageNotice();
+
+		var updateUrl = '<%=dsp.build_url("admin/services/filebrowser/download")%>';
+
+		doAjaxGet(updateUrl, {
+			token: tokenStr,
+			url: msgInfo && msgInfo.url ? msgInfo.url.download : ''
+		}, function(json) {
+			if (json.code) {
+				removePageNotice();
+				onRequestError(btn, json.error);
+				return;
+			}
+
+			btn.value = '<%:Unpacking...%>';
+
+			doAjaxGet(updateUrl, {
+				token: tokenStr,
+				task: 'extract',
+				file: json.file
+			}, function(json) {
+				if (json.code) {
+					removePageNotice();
+					onRequestError(btn, json.error);
+					return;
+				}
+
+				btn.value = '<%:Moving...%>';
+
+				doAjaxGet(updateUrl, {
+					token: tokenStr,
+					task: 'move',
+					file: json.file
+				}, function(json) {
+					removePageNotice();
+					if (json.code) {
+						onRequestError(btn, json.error);
+					} else {
+						onUpdateSuccess(btn);
+					}
+				});
+			});
+		});
+	}
+
+	window.downloadClick = function(btn) {
+		if (msgInfo === null || msgInfo === undefined) {
+			checkUpdate(btn);
+		} else {
+			doDownload(btn);
+		}
+	};
+})();
+//]]>
+</script>
+
+<%+cbi/valueheader%>
+<% if self:cfgvalue(section) ~= false then %>
+<input class="cbi-button cbi-input-<%=self.inputstyle or "button" %>" type="button"<%=
+	attr("name", cbid) ..
+	attr("id", self.id or cbid) ..
+	attr("value", self.inputtitle or self.title) ..
+	ifattr(self.placeholder, "placeholder")
+%> />
+<span id="<%=self.id or cbid%>-detail"></span>
+<% else %>
+-
+<% end %>
+<%+cbi/valuefooter%>
