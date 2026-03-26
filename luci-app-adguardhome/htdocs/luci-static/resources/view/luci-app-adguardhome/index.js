@@ -1,24 +1,14 @@
+// SPDX-License-Identifier: Apache-2.0
+// NOTE: luci-app-adguardhome 使用多页面 CBI 模板架构，luci 23.05+ 通过 menu.d alias 跳转至 base 子页。
+// 此 JS 文件不直接调用，保留供参考。
 'use strict';
 'require view';
 'require rpc';
-
-var callStatus = rpc.declare({
-	object: 'luci',
-	method: 'get_status',
-	params: ['name'],
-	expect: { '': {} }
-});
+'require form';
 
 return view.extend({
-	load: function() {},
-
 	render: function() {
-		var m = new form.Map('config', _('Settings'));
-		var s = m.section(form.NamedSection, 'main', 'main', _('Configuration'));
-		s.anonymous = true;
-		
-		var o = s.option(form.Value, 'name', _('Name'));
-		
-		return m.render();
+		// 实际界面由 luasrc/model/cbi/AdGuardHome/ 下多个 CBI 模型提供
+		return E('p', {}, _('Loading…'));
 	}
 });

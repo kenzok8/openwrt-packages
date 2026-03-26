@@ -5,19 +5,23 @@ local http = require "luci.http"
 local uci = require "luci.model.uci".cursor()
 
 function index()
-	local page = entry({"admin", "services", "AdGuardHome"},
-		alias("admin", "services", "AdGuardHome", "base"),
-		_("AdGuard Home"), 10)
-	page.dependent = true
-	page.acl_depends = { "luci-app-adguardhome" }
+	-- luci 23.05+ 已通过 menu.d JSON 注册菜单，无需重复注册
+	if not nixio.fs.access("/usr/share/luci/menu.d/luci-app-adguardhome.json") then
+		local page = entry({"admin", "services", "AdGuardHome"},
+			alias("admin", "services", "AdGuardHome", "base"),
+			_("AdGuard Home"), 10)
+		page.dependent = true
+		page.acl_depends = { "luci-app-adguardhome" }
 
-	entry({"admin", "services", "AdGuardHome", "base"},
-		cbi("AdGuardHome/base"), _("Base Setting"), 1).leaf = true
-	entry({"admin", "services", "AdGuardHome", "log"},
-		form("AdGuardHome/log"), _("Log"), 2).leaf = true
-	entry({"admin", "services", "AdGuardHome", "manual"},
-		cbi("AdGuardHome/manual"), _("Manual Config"), 3).leaf = true
+		entry({"admin", "services", "AdGuardHome", "base"},
+			cbi("AdGuardHome/base"), _("Base Setting"), 1).leaf = true
+		entry({"admin", "services", "AdGuardHome", "log"},
+			form("AdGuardHome/log"), _("Log"), 2).leaf = true
+		entry({"admin", "services", "AdGuardHome", "manual"},
+			cbi("AdGuardHome/manual"), _("Manual Config"), 3).leaf = true
+	end
 
+	-- API 路由在新旧版本均需注册
 	entry({"admin", "services", "AdGuardHome", "status"},
 		call("act_status"), nil).leaf = true
 	entry({"admin", "services", "AdGuardHome", "check"},
@@ -80,7 +84,9 @@ function act_status()
 	local binpath = uci:get("AdGuardHome", "AdGuardHome", "binpath") or "/usr/bin/AdGuardHome"
 
 	if fs.access(binpath) then
-		result.running = (luci.sys.call("pgrep -f '" .. binpath .. "' >/dev/null 2>&1") == 0)
+		-- Security fix: binpath 来自 UCI 用户数据，用单引号包裹防止命令注入
+		local safe_bin = binpath:gsub("'", "'\\''")
+		result.running = (luci.sys.call("pgrep -f '" .. safe_bin .. "' >/dev/null 2>&1") == 0)
 	else
 		result.running = false
 	end
@@ -105,6 +111,7 @@ function do_update()
 	local script = "/usr/share/AdGuardHome/update_core.sh"
 	if fs.access("/var/run/update_core") then
 		if arg == "force" then
+			-- Security fix: script 路径是固定常量，arg 只能是 "force" 或 ""，无注入风险
 			luci.sys.exec("pkill -f '" .. script .. "' 2>/dev/null; " .. script .. " " .. arg .. " >/tmp/AdGuardHome_update.log 2>&1 &")
 		end
 	else
