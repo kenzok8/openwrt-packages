@@ -1,39 +1,51 @@
 local ipc = require "luci.ip"
+local sys = require "luci.sys"
 
 local m = Map("eqos", translate("Quality of Service"))
 
-local s = m:section(TypedSection, "eqos", "")
-s.anonymous = true
+local global_section = m:section(NamedSection, "global", "eqos", translate("Global Settings"))
+global_section.addremove = false
+global_section.cfgsections = {"global"}
 
-local e = s:option(Flag, "enabled", translate("Enable"))
-e.rmempty = false
+local enabled = global_section:option(Flag, "enabled", translate("Enable EQOS"))
+enabled.rmempty = false
 
-local dl = s:option(Value, "download", translate("Download speed (Mbit/s)"), translate("Total bandwidth"))
-dl.datatype = "and(uinteger,min(1))"
+local wan_device = global_section:option(Value, "wan", translate("WAN Device"))
+wan_device.datatype = "network"
+wan_device.default = "wan"
 
-local ul = s:option(Value, "upload", translate("Upload speed (Mbit/s)"), translate("Total bandwidth"))
-ul.datatype = "and(uinteger,min(1))"
+local dl_speed = global_section:option(Value, "download", translate("Download Speed (Mbit/s)"), translate("Total bandwidth"))
+dl_speed.datatype = "and(uinteger,min(1))"
+dl_speed.default = "100"
 
-s = m:section(TypedSection, "device", translate("Speed limit based on IP address"))
-s.template = "cbi/tblsection"
-s.anonymous = true
-s.addremove = true
-s.sortable  = true
+local ul_speed = global_section:option(Value, "upload", translate("Upload Speed (Mbit/s)"), translate("Total bandwidth"))
+ul_speed.datatype = "and(uinteger,min(1))"
+ul_speed.default = "50"
 
-local ip = s:option(Value, "ip", translate("IP address"))
+local device_section = m:section(TypedSection, "device", translate("Speed Limit by IP Address"))
+device_section.template = "cbi/tblsection"
+device_section.anonymous = true
+device_section.addremove = true
+
+local ip_addr = device_section:option(Value, "ip", translate("IP Address"))
+ip_addr.datatype = "ipaddr"
+ip_addr.placeholder = "192.168.1.100"
 
 ipc.neighbors({family = 4, dev = "br-lan"}, function(n)
 	if n.mac and n.dest then
-		ip:value(n.dest:string(), "%s (%s)" %{ n.dest:string(), n.mac })
+		ip_addr:value(n.dest:string(), "%s (%s)" %{ n.dest:string(), n.mac })
 	end
 end)
 
-dl = s:option(Value, "download", translate("Download speed (Mbit/s)"))
-dl.datatype = "and(uinteger,min(1))"
+local dl_limit = device_section:option(Value, "download", translate("Download (Mbit/s)"))
+dl_limit.datatype = "and(uinteger,min(1))"
+dl_limit.placeholder = "10"
 
-ul = s:option(Value, "upload", translate("Upload speed (Mbit/s)"))
-ul.datatype = "and(uinteger,min(1))"
+local ul_limit = device_section:option(Value, "upload", translate("Upload (Mbit/s)"))
+ul_limit.datatype = "and(uinteger,min(1))"
+ul_limit.placeholder = "5"
 
-comment = s:option(Value, "comment", translate("Comment"))
+local comment = device_section:option(Value, "comment", translate("Comment"))
+comment.placeholder = translate("Description")
 
 return m

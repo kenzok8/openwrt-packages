@@ -1,60 +1,194 @@
 #!/bin/sh
+# EQOS - Easy QoS for OpenWrt
+# Copyright (C) 2024 kenzok78
+# Licensed under GPL v2
 
-dev=br-lan
+LOGGER="logger -t eqos"
+$LOGGER "eqos service started"
+
+[ -f /etc/config/eqos ] || exit 1
+
+. /lib/functions.sh
+. /lib/functions/network.sh
+
+validate_ip() {
+    local ip="$1"
+    echo "$ip" | grep -qE '^([0-9]{1,3}\.){3}[0-9]{1,3}$' || return 1
+    for octet in $(echo "$ip" | tr '.' ' '); do
+        [ "$octet" -gt 255 ] 2>/dev/null && return 1
+    done
+    return 0
+}
+
+validate_speed() {
+    local speed="$1"
+    echo "$speed" | grep -qE '^[0-9]+$' && [ "$speed" -gt 0 ] && [ "$speed" -le 10000 ]
+}
+
+get_wan_device() {
+    local wan_cfg="$1"
+    local wan_dev=$(uci get network.$wan_cfg.ifname 2>/dev/null)
+    if [ -z "$wan_dev" ]; then
+        wan_dev=$(uci get eqos.$wan_cfg.wan 2>/dev/null)
+    fi
+    echo "${wan_dev:-br-lan}"
+}
 
 stop_qos() {
-	tc qdisc del dev $dev root 2>/dev/null
-	tc qdisc del dev $dev ingress 2>/dev/null
-	tc qdisc del dev ${dev}-ifb root 2>/dev/null
-	ip link del dev ${dev}-ifb 2>/dev/null
+    local dev="$1"
+    $LOGGER "Stopping QoS on device: $dev"
+    tc qdisc del dev "$dev" root 2>/dev/null
+    tc qdisc del dev "$dev" ingress 2>/dev/null
+    tc qdisc del dev "${dev}-ifb" root 2>/dev/null
+    ip link del dev "${dev}-ifb" 2>/dev/null
+    return 0
 }
 
 start_qos() {
-	local dl=$1
-	local up=$2
-	
-	tc qdisc add dev $dev root handle 1: htb
-	tc class add dev $dev parent 1: classid 1:1 htb rate ${dl}mbit
-	
-	ip link add dev ${dev}-ifb name ${dev}-ifb type ifb
-	ip link set dev ${dev}-ifb up
-	
-	tc qdisc add dev ${dev}-ifb root handle 1: htb
-	tc class add dev ${dev}-ifb parent 1: classid 1:1 htb rate ${up}mbit
-	
-	tc qdisc add dev $dev ingress
-	tc filter add dev $dev parent ffff: protocol ip u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev ${dev}-ifb
+    local dl="$1"
+    local up="$2"
+    local dev="$3"
+    
+    $LOGGER "Starting QoS: DL=$dl Mbit/s UP=$up Mbit/s DEV=$dev"
+    
+    validate_speed "$dl" || { $LOGGER "Invalid download speed: $dl"; return 1; }
+    validate_speed "$up" || { $LOGGER "Invalid upload speed: $up"; return 1; }
+    
+    stop_qos "$dev"
+    
+    tc qdisc add dev "$dev" root handle 1: htb 2>&1 | while read line; do $LOGGER "$line"; done
+    tc class add dev "$dev" parent 1: classid 1:1 htb rate "${dl}mbit" 2>&1 | while read line; do $LOGGER "$line"; done
+    
+    ip link add dev "${dev}-ifb" name "${dev}-ifb" type ifb 2>/dev/null
+    ip link set dev "${dev}-ifb" up 2>/dev/null
+    
+    tc qdisc add dev "${dev}-ifb" root handle 1: htb 2>&1 | while read line; do $LOGGER "$line"; done
+    tc class add dev "${dev}-ifb" parent 1: classid 1:1 htb rate "${up}mbit" 2>&1 | while read line; do $LOGGER "$line"; done
+    
+    tc qdisc add dev "$dev" ingress 2>&1 | while read line; do $LOGGER "$line"; done
+    tc filter add dev "$dev" parent ffff: protocol ip u32 match u32 0 0 flowid 1:1 action mirred egress redirect dev "${dev}-ifb" 2>&1 | while read line; do $LOGGER "$line"; done
+    
+    $LOGGER "QoS started successfully"
+    return 0
 }
 
-case "$1" in
-	"stop")
-		stop_qos
-	;;
-	"start")
-		stop_qos
-		start_qos $2 $3
-	;;
-	"add")
-		ip="$2"
-		dl="$3"
-		up="$4"
-		
-		cnt=$(tc class show dev $dev | wc -l)
-		
-		tc class add dev $dev parent 1:1 classid 1:1$cnt htb rate ${dl}mbit ceil ${dl}mbit
-		tc filter add dev $dev parent 1:0 protocol ip u32 match ip dst $ip flowid 1:1$cnt
-		
-		tc class add dev ${dev}-ifb parent 1:1 classid 1:1$cnt htb rate ${up}mbit ceil ${up}mbit
-		tc filter add dev ${dev}-ifb parent 1:0 protocol ip u32 match ip src $ip flowid 1:1$cnt
-	;;
-	*)
-		echo "Usage: $0 <command> [options]"
-		echo "Commands:"
-		echo "  start dl_rate up_rate       #Total bandwidth (Mbit/s)"
-		echo "  stop"
-		echo "  add ip dl_rate up_rate      #Limiting the bandwidth of a single IP (Mbit/s)"
-		echo "Example:"
-		echo "  $0 start 30 20              # Total bandwidth: down 30Mbit/s up 20Mbit/s"
-		echo "  $0 add 192.168.22.12 10 2   # down 10Mbit/s  up 2Mbit/s"
-	;;
+add_device() {
+    local ip="$1"
+    local dl="$2"
+    local up="$3"
+    local dev="$4"
+    
+    validate_ip "$ip" || { $LOGGER "Invalid IP address: $ip"; return 1; }
+    validate_speed "$dl" || { $LOGGER "Invalid download speed: $dl"; return 1; }
+    validate_speed "$up" || { $LOGGER "Invalid upload speed: $up"; return 1; }
+    
+    local cnt=$(tc class show dev "$dev" 2>/dev/null | grep -c "class htb" || echo "0")
+    local classid=$((100 + cnt))
+    
+    $LOGGER "Adding QoS rule: IP=$ip DL=$dl Mbit/s UP=$up Mbit/s"
+    
+    tc class add dev "$dev" parent 1:1 classid "1:${classid}" htb rate "${dl}mbit" ceil "${dl}mbit" 2>/dev/null
+    tc filter add dev "$dev" parent 1:0 protocol ip prio 1 u32 match ip dst "$ip/32" flowid "1:${classid}" 2>/dev/null
+    
+    tc class add dev "${dev}-ifb" parent 1:1 classid "1:${classid}" htb rate "${up}mbit" ceil "${up}mbit" 2>/dev/null
+    tc filter add dev "${dev}-ifb" parent 1:0 protocol ip prio 1 u32 match ip src "$ip/32" flowid "1:${classid}" 2>/dev/null
+    
+    $LOGGER "QoS rule added for $ip"
+    return 0
+}
+
+flush_devices() {
+    local dev="$1"
+    $LOGGER "Flushing all device QoS rules"
+    local class_list=$(tc class show dev "$dev" 2>/dev/null | grep -oE '1:[0-9]+' | grep -v '^1:1$' | sort -u)
+    for class in $class_list; do
+        local filter_list=$(tc filter show dev "$dev" 2>/dev/null | grep "$class" | grep -oE 'pref [0-9]+' | awk '{print $2}')
+        for pref in $filter_list; do
+            tc filter del dev "$dev" parent 1:0 prio "$pref" 2>/dev/null
+        done
+        tc class del dev "$dev" "$class" 2>/dev/null
+        
+        local filter_list_ifb=$(tc filter show dev "${dev}-ifb" 2>/dev/null | grep "$class" | grep -oE 'pref [0-9]+' | awk '{print $2}')
+        for pref in $filter_list_ifb; do
+            tc filter del dev "${dev}-ifb" parent 1:0 prio "$pref" 2>/dev/null
+        done
+        tc class del dev "${dev}-ifb" "$class" 2>/dev/null
+    done
+    $LOGGER "All device QoS rules flushed"
+}
+
+cmd="$1"
+shift
+
+case "$cmd" in
+    start)
+        config_load eqos
+        config_get enabled global enabled 0
+        [ "$enabled" = "1" ] || { $LOGGER "EQOS is disabled"; exit 0; }
+        
+        config_get wan_dev global wan "wan"
+        config_get dl global download "100"
+        config_get up global upload "50"
+        
+        real_wan=$(get_wan_device "$wan_dev")
+        start_qos "$dl" "$up" "$real_wan" || exit 1
+        
+        config_foreach add_device device
+        ;;
+    stop)
+        config_load eqos
+        config_get wan_dev global wan "wan"
+        real_wan=$(get_wan_device "$wan_dev")
+        stop_qos "$real_wan"
+        ;;
+    restart)
+        config_load eqos
+        config_get wan_dev global wan "wan"
+        real_wan=$(get_wan_device "$wan_dev")
+        stop_qos "$real_wan"
+        config_get enabled global enabled 0
+        [ "$enabled" = "1" ] || exit 0
+        config_get dl global download "100"
+        config_get up global upload "50"
+        start_qos "$dl" "$up" "$real_wan"
+        ;;
+    add)
+        local ip="$1"; local dl="$2"; local up="$3"
+        [ -z "$ip" ] || [ -z "$dl" ] || [ -z "$up" ] && { $LOGGER "Usage: eqos add <ip> <dl> <up>"; exit 1; }
+        
+        config_load eqos
+        config_get wan_dev global wan "wan"
+        real_wan=$(get_wan_device "$wan_dev")
+        
+        add_device "$ip" "$dl" "$up" "$real_wan"
+        ;;
+    flush)
+        config_load eqos
+        config_get wan_dev global wan "wan"
+        real_wan=$(get_wan_device "$wan_dev")
+        flush_devices "$real_wan"
+        ;;
+    show)
+        config_load eqos
+        config_get wan_dev global wan "wan"
+        real_wan=$(get_wan_device "$wan_dev")
+        echo "=== QoS Classes on $real_wan ==="
+        tc class show dev "$real_wan" 2>/dev/null
+        echo "=== QoS Filters on $real_wan ==="
+        tc filter show dev "$real_wan" 2>/dev/null
+        ;;
+    *)
+        echo "Usage: $0 <command> [options]"
+        echo "Commands:"
+        echo "  start              - Start EQOS service"
+        echo "  stop               - Stop EQOS service"
+        echo "  restart            - Restart EQOS service"
+        echo "  add <ip> <dl> <up> - Add IP rule (Mbit/s)"
+        echo "  flush              - Flush all device rules"
+        echo "  show               - Show QoS status"
+        echo ""
+        echo "Examples:"
+        echo "  $0 start"
+        echo "  $0 add 192.168.1.100 10 5"
+        ;;
 esac

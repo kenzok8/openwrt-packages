@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: LuCi Chinese Translation\n"
+"Project-Id-Version: LuCI Chinese Translation\n"
 "Report-Msgid-Bugs-To: \n"
 "Language: zh_CN\n"
 "MIME-Version: 1.0\n"
@@ -9,29 +9,44 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.0.6\n"
 
-msgid "EQoS"
-msgstr "IP限速"
-
-msgid "Comment"
-msgstr "注解"
-
-msgid "Download speed (Mbit/s)"
-msgstr "下载速度 (Mbit/s)"
-
-msgid "Enable"
-msgstr "开启"
-
-msgid "QoS"
-msgstr "QoS"
+msgid "EQOS"
+msgstr "EQOS"
 
 msgid "Quality of Service"
 msgstr "IP限速"
 
-msgid "Upload speed (Mbit/s)"
-msgstr "上传速度 (Mbit/s)"
+msgid "Global Settings"
+msgstr "全局设置"
 
-msgid "Speed limit based on IP address"
-msgstr "IP限速"
+msgid "Enable EQOS"
+msgstr "启用EQOS"
+
+msgid "WAN Device"
+msgstr "WAN设备"
+
+msgid "Download Speed (Mbit/s)"
+msgstr "下载速度 (Mbit/s)"
+
+msgid "Upload Speed (Mbit/s)"
+msgstr "上传速度 (Mbit/s)"
 
 msgid "Total bandwidth"
 msgstr "总带宽"
+
+msgid "Speed Limit by IP Address"
+msgstr "按IP限速"
+
+msgid "IP Address"
+msgstr "IP地址"
+
+msgid "Download (Mbit/s)"
+msgstr "下载 (Mbit/s)"
+
+msgid "Upload (Mbit/s)"
+msgstr "上传 (Mbit/s)"
+
+msgid "Comment"
+msgstr "备注"
+
+msgid "Description"
+msgstr "描述"
