@@ -1,0 +1,14 @@
+{
+	"luci-app-smartdns": {
+		"description": "Grant UCI access for luci-app-smartdns",
+		"read": {
+			"ubus": {
+				"service": [ "list" ]
+			},
+			"uci": [ "smartdns", "dhcp" ]
+		},
+		"write": {
+			"uci": [ "smartdns" ]
+		}
+	}
+}

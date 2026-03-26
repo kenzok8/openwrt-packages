@@ -26,6 +26,11 @@ function index()
 		return
 	end
 
+	-- luci 23.05+ 已通过 menu.d JSON 注册菜单，无需重复注册
+	if fs.access("/usr/share/luci/menu.d/luci-app-smartdns.json") then
+		return
+	end
+
 	local page
 	page = entry({"admin", "services", "smartdns"}, cbi("smartdns/smartdns"), _("SmartDNS"), 60)
 	page.dependent = true

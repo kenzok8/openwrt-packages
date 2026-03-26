@@ -1,0 +1,14 @@
+{
+	"admin/services/smartdns": {
+		"title": "SmartDNS",
+		"order": 60,
+		"action": {
+			"type": "cbi",
+			"path": "smartdns/smartdns"
+		},
+		"depends": {
+			"acl": [ "luci-app-smartdns" ],
+			"uci": { "smartdns": true }
+		}
+	}
+}

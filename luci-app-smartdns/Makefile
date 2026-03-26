@@ -16,6 +16,7 @@
 
 include $(TOPDIR)/rules.mk
 
+PKG_NAME:=luci-app-smartdns
 PKG_LICENSE:=GPL-3.0-or-later
 PKG_MAINTAINER:=Nick Peng <pymumu@gmail.com>
 PKG_VERSION:=1.2024.45
@@ -36,3 +37,4 @@ endef
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
+$(eval $(call BuildPackage,$(PKG_NAME)))
