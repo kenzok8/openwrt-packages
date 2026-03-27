@@ -7,9 +7,11 @@ include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=Atmaterial_new kenzo
 LUCI_DEPENDS:=
+PKG_NAME:=luci-theme-atmaterial_new
 PKG_VERSION:=1.2
 PKG_RELEASE:=2
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
+$(eval $(call BuildPackage,$(PKG_NAME)))

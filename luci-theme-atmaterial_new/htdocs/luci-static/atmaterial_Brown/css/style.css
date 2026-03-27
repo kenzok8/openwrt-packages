@@ -502,6 +502,9 @@ color: #8965e0!important;
     content: "\e02c";
  color: #00b2ee!important;
 }
+.main > .main-left > .nav > .slide > a[data-title="iStore"]:before {
+    content: "\e01d";
+}
 .main > .main-left > .nav > .slide > a[data-title="NAS"]:before {
     content: "\e00b";
    color: #f3a4b5!important;
@@ -520,6 +523,9 @@ color: #8965e0!important;
 .main > .main-left > .nav > .slide > a[data-title="Bandwidth Monitor"]:before {
     content: "\e00f";
 color: #2dce89!important;
+}
+.main > .main-left > .nav > .slide > a[data-title="Statistics"]:before {
+    content: "\e00f";
 }
 
 .main > .main-left > .nav > li > a[data-title="Logout"] {
@@ -2118,4 +2124,20 @@ body.lang_pl.node-main-login .cbi-value-title {
     .cbi-value-field .cbi-dropdown {
         min-width: 25rem;
     }
+}
+
+/* luci-app-dockerman */
+#cbi-dockerd > .cbi-section > br,
+#cbi-docker > .cbi-section > br {
+    display: none;
+}
+
+/* luci-app-istorex (Quick Start) */
+#app #main #page .app-container_body .btn-f,
+#app #main #page .app-container_body .btn-r {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    width: 30px;
 }
