@@ -19,7 +19,7 @@ define Package/luci-theme-$(THEME_NAME)
   SECTION:=luci
   CATEGORY:=LuCI
   SUBMENU:=9. Themes
-  DEPENDS:=+libc
+  DEPENDS:=+libc +luci-app-alpha-config
   TITLE:=LuCi Theme For OpenWrt And Alpha OS ONLY - $(THEME_TITLE)
   URL:=http://facebook.com/derisamedia/
   PKGARCH:=all

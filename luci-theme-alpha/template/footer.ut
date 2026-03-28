@@ -54,7 +54,7 @@
 
 </div>
 <footer class="mobile">
-	<a href="https://github.com/derisamedia/luci-theme-alpha">{{ version.luciname }} | Alpha OS Theme v3.9.7</a>
+	<a href="https://github.com/derisamedia/luci-theme-alpha">{{ version.distname }} {{ version.distversion }} | Alpha OS Theme v3.9.7</a>
 </footer>
 </div>
 <div class="navbar active">
