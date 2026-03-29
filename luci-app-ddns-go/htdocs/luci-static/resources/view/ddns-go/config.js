@@ -203,18 +203,28 @@ return view.extend({
     },
  
     handleRestartService: async function() {
-        try {
-            await fs.exec('/etc/init.d/ddns-go', ['stop']);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+        // const enabledValue = document.querySelector('input[name="cfg001c48.enabled"]')?.checked ? '1' : '0';
+	const enabledValue = document.querySelectorAll('input[id="widget.cbid.ddns-go.config.enabled"]')?.checked ? '1' : '0';
+
+        await uci.set('ddns-go', 'config', 'enabled', enabledValue);
+        await uci.save('ddns-go');
+        await uci.apply();
+        
+        await fs.exec('/etc/init.d/ddns-go', ['stop']);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        if (enabledValue === '1') {
             await fs.exec('/etc/init.d/ddns-go', ['start']);
-            
-            alert(_('SUCCESS:') + '\n' + _('DDNS-Go service restarted successfully'));
-            if (window.statusPoll) {
-                window.statusPoll();
-            }
-        } catch (error) {
-            alert(_('ERROR:') + '\n' + _('Failed to restart service:') + '\n' + error.message);
         }
+        
+        alert(_('SUCCESS:') + '\n' + _('DDNS-Go service restarted successfully'));
+        if (window.statusPoll) {
+            window.statusPoll();
+        }
+    } catch (error) {
+        alert(_('ERROR:') + '\n' + _('Failed to restart service:') + '\n' + error.message);
+    }
     },
 
     handleUpdate: async function () {
@@ -348,7 +358,7 @@ return view.extend({
         o.inputstyle = 'apply';
         o.onclick = L.bind(this.handleResetPassword, this, data);
 
-        o = s.option(form.Button, '_update', _('Check update'));
+        o = s.option(form.Button, '_update', _('Check Update'));
         o.inputtitle = _('Check');
         o.inputstyle = 'apply';
         o.onclick = L.bind(this.handleUpdate, this, data);

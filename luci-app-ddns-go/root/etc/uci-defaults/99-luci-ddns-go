@@ -6,5 +6,5 @@ chmod +x /usr/share/rpcd/ucode/luci.ddns-go
 chown root:www-data /usr/libexec/ddns-go-call
 chmod 750 /usr/libexec/ddns-go-call
 rm -f /tmp/luci-indexcache
-
+/etc/init.d/rpcd restart
 exit 0
