@@ -1,0 +1,245 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Project-Id-Version: luci-app-openclaw\n"
+"Language: zh_Hans\n"
+
+msgid "Active Model"
+msgstr "活跃模型"
+
+msgid "All Interfaces"
+msgstr "所有接口"
+
+msgid "Already up to date"
+msgstr "已是最新版本"
+
+msgid "Basic Settings"
+msgstr "基本设置"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Channels"
+msgstr "渠道"
+
+msgid "Check Update"
+msgstr "检查更新"
+
+msgid "Checking..."
+msgstr "检查中..."
+
+msgid "Choose Installation Version"
+msgstr "选择安装版本"
+
+msgid "Complete"
+msgstr "完成"
+
+msgid "Config PTY"
+msgstr "配置终端"
+
+msgid "Config Terminal"
+msgstr "配置终端"
+
+msgid "Config terminal is not running."
+msgstr "配置终端未运行。"
+
+msgid "Confirm Uninstall"
+msgstr "确认卸载"
+
+msgid "Connecting to config terminal..."
+msgstr "正在连接配置终端..."
+
+msgid "Current: "
+msgstr "当前版本："
+
+msgid "Default: 18789"
+msgstr "默认：18789"
+
+msgid "Default: 18793"
+msgstr "默认：18793"
+
+msgid "Disabled"
+msgstr "已禁用"
+
+msgid "Enable Service"
+msgstr "启用服务"
+
+msgid "Environment uninstalled successfully"
+msgstr "环境已成功卸载"
+
+msgid "Error: "
+msgstr "错误："
+
+msgid "Executing: "
+msgstr "正在执行："
+
+msgid "Failed"
+msgstr "失败"
+
+msgid "Gateway Port"
+msgstr "网关端口"
+
+msgid "Install"
+msgstr "安装"
+
+msgid "Install Environment"
+msgstr "安装环境"
+
+msgid "Installation failed. Check the log above for details."
+msgstr "安装失败，请查看上方日志了解详情。"
+
+msgid "Installation successful!"
+msgstr "安装成功！"
+
+msgid "Installing..."
+msgstr "安装中..."
+
+msgid "Intelligent AI routing on your OpenWrt router"
+msgstr "路由器上的 AI 智能路由网关"
+
+msgid "Later"
+msgstr "稍后"
+
+msgid "Latest"
+msgstr "最新版"
+
+msgid "Latest npm release, may have untested issues"
+msgstr "最新 npm 发行版，可能存在未测试的问题"
+
+msgid "Latest: "
+msgstr "最新版本："
+
+msgid "Listen Interface"
+msgstr "监听接口"
+
+msgid "Log"
+msgstr "日志"
+
+msgid "Memory"
+msgstr "内存"
+
+msgid "More"
+msgstr "更多"
+
+msgid "Node.js"
+msgstr "Node.js"
+
+msgid "Not installed"
+msgstr "未安装"
+
+msgid "OpenClaw"
+msgstr "OpenClaw"
+
+msgid "Overview"
+msgstr "概览"
+
+msgid "PID"
+msgstr "进程号"
+
+msgid "PTY Port"
+msgstr "终端端口"
+
+msgid "Please start the OpenClaw service first."
+msgstr "请先启动 OpenClaw 服务。"
+
+msgid "Plugin"
+msgstr "插件"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Refresh the page to see updated status."
+msgstr "刷新页面查看最新状态。"
+
+msgid "Reset"
+msgstr "重置"
+
+msgid "Restart"
+msgstr "重启"
+
+msgid "Running"
+msgstr "运行中"
+
+msgid "Save & Apply"
+msgstr "保存并应用"
+
+msgid "Service Control"
+msgstr "服务控制"
+
+msgid "Service Status"
+msgstr "服务状态"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Settings saved successfully"
+msgstr "设置已成功保存"
+
+msgid "Stable (Recommended)"
+msgstr "稳定版（推荐）"
+
+msgid "Start"
+msgstr "启动客户端"
+
+msgid "Starting"
+msgstr "启动中"
+
+msgid "Starting installation"
+msgstr "开始安装"
+
+msgid "Stop"
+msgstr "停止客户端"
+
+msgid "Stopped"
+msgstr "已停止"
+
+msgid "System Information"
+msgstr "系统信息"
+
+msgid "Tested and verified for compatibility"
+msgstr "已测试并验证兼容性"
+
+msgid "This action cannot be undone."
+msgstr "此操作不可撤销。"
+
+msgid "This will remove Node.js, OpenClaw runtime, and all related data."
+msgstr "这将移除 Node.js、OpenClaw 运行时和所有相关数据。"
+
+msgid "Uninstall"
+msgstr "卸载"
+
+msgid "Uninstalling..."
+msgstr "正在卸载..."
+
+msgid "Unknown"
+msgstr "未知"
+
+msgid "Update Available"
+msgstr "有可用更新"
+
+msgid "Upgrade"
+msgstr "升级"
+
+msgid "Upgrade complete"
+msgstr "升级完成"
+
+msgid "Upgrade successful!"
+msgstr "升级成功！"
+
+msgid "Upgrading to "
+msgstr "正在升级到 "
+
+msgid "Upgrading..."
+msgstr "升级中..."
+
+msgid "Uptime"
+msgstr "运行时间"
+
+msgid "Web Console"
+msgstr "Web 控制台"
+
+msgid "Web console is not available."
+msgstr "Web 控制台不可用。"
+
+msgid "A management plugin for OpenClaw AI Gateway — supports 12+ AI model providers and multiple messaging channels."
+msgstr "OpenClaw AI 网关管理插件 — 支持 12+ AI 模型提供商和多种消息渠道。"

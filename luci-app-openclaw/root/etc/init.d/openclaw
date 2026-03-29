@@ -261,7 +261,7 @@ esac
 # v2026.3.14 优化: 快速轮询 + 批量 kill
 _ensure_port_free() {
 	local p="$1"
-	local i=0 max_wait=10  # 10 * 0.2 = 2 秒
+	local i=0 max_wait=3  # 3 × 1s = 3 秒 (BusyBox 不支持 usleep)
 	
 	# 先检查端口是否已被占用
 	if command -v ss >/dev/null 2>&1; then
@@ -281,10 +281,10 @@ _ensure_port_free() {
 		else
 			netstat -tulnp 2>/dev/null | grep -q ":${p} " || return 0
 		fi
-		usleep 200000 2>/dev/null || sleep 0.2
+		sleep 1
 		i=$((i + 1))
 	done
-	
+
 	# 最后手段: SIGKILL
 	local port_pid=""
 	if command -v ss >/dev/null 2>&1; then
@@ -292,14 +292,31 @@ _ensure_port_free() {
 	else
 		port_pid=$(netstat -tulnp 2>/dev/null | grep ":${p} " | sed -n 's|.* \([0-9]*\)/.*|\1|p' | head -1)
 	fi
-	[ -n "$port_pid" ] && kill -9 "$port_pid" 2>/dev/null && usleep 300000 2>/dev/null
+	[ -n "$port_pid" ] && kill -9 "$port_pid" 2>/dev/null && sleep 1
 	return 0
 }
 _ensure_port_free "$port"
 
 # 启动 OpenClaw Gateway (主服务, 前台运行)
+# OpenWrt 内存约束: 限制 V8 堆上限防止 OOM kill
+# 2GB 设备建议 512MB，1GB 设备建议 256MB，根据 uci mem_limit 可覆盖
+local mem_limit
+mem_limit=$(uci -q get openclaw.main.mem_limit || echo "")
+if [ -z "$mem_limit" ]; then
+	local total_kb
+	total_kb=$(awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null || echo "0")
+	if [ "$total_kb" -ge 3000000 ] 2>/dev/null; then
+		mem_limit=1024
+	elif [ "$total_kb" -ge 1500000 ] 2>/dev/null; then
+		mem_limit=512
+	elif [ "$total_kb" -ge 700000 ] 2>/dev/null; then
+		mem_limit=256
+	else
+		mem_limit=128
+	fi
+fi
 procd_open_instance "gateway"
-procd_set_param command "$NODE_BIN" "$oc_entry" gateway run \
+procd_set_param command "$NODE_BIN" "--max-old-space-size=${mem_limit}" "$oc_entry" gateway run \
 --port "$port" --bind "$gw_bind"
 procd_set_param env \
 HOME="$OC_DATA" \
@@ -310,6 +327,7 @@ NODE_ICU_DATA="${NODE_BASE}/share/icu" \
 NODE_BASE="$NODE_BASE" \
 OC_GLOBAL="$OC_GLOBAL" \
 OC_DATA="$OC_DATA" \
+NODE_OPTIONS="--max-old-space-size=${mem_limit}" \
 PATH="${NODE_BASE}/bin:${OC_GLOBAL}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 procd_set_param user openclaw
 procd_set_param respawn 3600 10 5
@@ -330,7 +348,7 @@ if [ -z "$pty_token" ]; then
 fi
 
 procd_open_instance "pty"
-procd_set_param command "$NODE_BIN" /usr/share/openclaw/web-pty.js
+procd_set_param command "$NODE_BIN" "--max-old-space-size=128" /usr/share/openclaw/web-pty.js
 procd_set_param env \
 OC_CONFIG_PORT="$pty_port" \
 OC_PTY_TOKEN="$pty_token" \
@@ -372,14 +390,14 @@ done
 
 # 3) 快速轮询等待端口释放 (200ms 间隔，最多 3 秒)
 local wait_count=0
-local max_wait=15  # 15 * 0.2 = 3 秒
+local max_wait=4  # 4 × 1s = 4 秒 (BusyBox 不支持 usleep)
 while [ $wait_count -lt $max_wait ]; do
 	if command -v ss >/dev/null 2>&1; then
 		ss -tulnp 2>/dev/null | grep -q ":${port} " || break
 	else
 		netstat -tulnp 2>/dev/null | grep -q ":${port} " || break
 	fi
-	usleep 200000 2>/dev/null || sleep 0.2
+	sleep 1
 	wait_count=$((wait_count + 1))
 done
 
@@ -393,8 +411,7 @@ if [ $wait_count -ge $max_wait ]; then
 	fi
 	if [ -n "$port_pid" ]; then
 		kill -9 "$port_pid" 2>/dev/null
-		# 等待内核回收 (缩短到 0.5 秒)
-		usleep 500000 2>/dev/null || sleep 0.5
+		sleep 1
 	fi
 fi
 }
@@ -407,7 +424,7 @@ procd_add_reload_trigger "openclaw"
 reload_service() {
 stop
 # v2026.3.14: stop_service 已优化等待逻辑，缩短额外等待时间
-usleep 300000 2>/dev/null || sleep 0.3
+sleep 1
 start
 }
 
@@ -443,22 +460,22 @@ for pid in $(pgrep -f "openclaw-gateway" 2>/dev/null) $(pgrep -f "openclaw.*gate
 	kill "$pid" 2>/dev/null
 done
 
-# 4) 快速轮询等待端口释放 (200ms 间隔，最多 2 秒)
+# 4) 轮询等待端口释放 (1s 间隔，最多 3 秒, BusyBox 兼容)
 local wait_count=0
-while [ $wait_count -lt 10 ]; do
+while [ $wait_count -lt 3 ]; do
 	if command -v ss >/dev/null 2>&1; then
 		ss -tulnp 2>/dev/null | grep -q ":${port} " || break
 	else
 		netstat -tulnp 2>/dev/null | grep -q ":${port} " || break
 	fi
-	usleep 200000 2>/dev/null || sleep 0.2
+	sleep 1
 	wait_count=$((wait_count + 1))
 done
 
 # 5) 如果端口仍被占用，强制 SIGKILL
-if [ $wait_count -ge 10 ]; then
+if [ $wait_count -ge 3 ]; then
 	[ -n "$port_pid" ] && kill -9 "$port_pid" 2>/dev/null
-	usleep 300000 2>/dev/null || sleep 0.3
+	sleep 1
 fi
 
 # 6) 如果 procd 中没有 gateway 服务注册，调用 start

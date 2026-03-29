@@ -1,0 +1,62 @@
+<%#
+ luci-app-openclaw — Config Terminal (18.06 compat)
+-%>
+<%+header%>
+<%
+local uci = require "luci.model.uci".cursor()
+local pty_port = uci:get("openclaw", "main", "pty_port") or "18793"
+%>
+<style>
+.oc-page-hdr{margin:0 0 16px}
+.oc-page-hdr h2{font-size:18px;font-weight:600;color:#333;margin:0 0 6px}
+.oc-page-hdr p{font-size:13px;color:#666;margin:0}
+.oc-wrap{border:2px solid #2d333b;border-radius:8px;overflow:hidden;background:#1a1b26}
+.oc-wrap iframe{width:100%;height:650px;border:none;display:block}
+.oc-loading{display:flex;align-items:center;justify-content:center;height:200px;color:#7aa2f7;font-size:14px;background:#1a1b26}
+</style>
+
+<div class="oc-page-hdr">
+	<h2>⌨️ <%:Config Terminal%></h2>
+	<p><%:Interactive terminal for OpenClaw configuration — AI models, messaging channels, health check.%></p>
+</div>
+
+<div class="oc-wrap" id="oc-term-wrap">
+	<div class="oc-loading" id="oc-term-loading">⏳ <%:Connecting to config terminal...%></div>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+(function(){
+	var statusUrl='<%=luci.dispatcher.build_url("admin","services","openclaw","status_api")%>';
+	var tokenUrl='<%=luci.dispatcher.build_url("admin","services","openclaw","get_token")%>';
+	var wrap=document.getElementById('oc-term-wrap');
+	var loading=document.getElementById('oc-term-loading');
+
+	(new XHR()).get(tokenUrl,null,function(tx){
+		var ptyToken='';
+		try{ptyToken=JSON.parse(tx.responseText).pty_token||'';}catch(e){}
+
+		(new XHR()).get(statusUrl,null,function(x){
+			try{
+				var d=JSON.parse(x.responseText);
+				if(d.pty_running){
+					loading.style.display='none';
+					var url=location.protocol+'//'+location.hostname+':<%=pty_port%>/';
+					if(ptyToken)url+='?pty_token='+encodeURIComponent(ptyToken);
+					var iframe=document.createElement('iframe');
+					iframe.src=url;
+					iframe.setAttribute('allow','clipboard-read; clipboard-write');
+					iframe.style.cssText='width:100%;height:650px;border:none;display:block';
+					wrap.appendChild(iframe);
+					iframe.addEventListener('load',function(){try{iframe.contentWindow.focus();}catch(e){}});
+					wrap.addEventListener('click',function(){try{iframe.contentWindow.focus();}catch(e){}});
+				}else{
+					loading.innerHTML='❌ <%:Config terminal is not running.%><br><span style="font-size:12px;color:#999"><%:Please start the service first.%></span>';
+				}
+			}catch(e){loading.textContent='<%:Failed to check status%>';}
+		});
+	});
+})();
+//]]>
+</script>
+<%+footer%>

@@ -157,7 +157,9 @@ class PtySession {
       }
       else if (msg.type === 'resize') {
         this.cols = msg.cols || 80; this.rows = msg.rows || 24;
-        if (this.proc && this.proc.pid) { try { process.kill(-this.proc.pid, 'SIGWINCH'); } catch(e){} }
+        if (this.proc && this.proc.pid) {
+          try { process.kill(-this.proc.pid, 'SIGWINCH'); } catch(e){}
+        }
       }
       else if (msg.type === 'ping') {
         // 应用层心跳: 客户端定期发送 ping，服务端回复 pong 保持连接活跃

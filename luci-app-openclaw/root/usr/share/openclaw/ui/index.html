@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>一万AI分享 OpenClaw 配置管理</title>
+<title>OpenClaw 配置管理</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{width:100%;height:100%;overflow:hidden;background:#1a1b26;font-family:system-ui,-apple-system,sans-serif}
@@ -35,14 +35,14 @@
 <body>
 
 <div id="topbar">
-  <span class="logo">🦞 一万AI分享 OpenClaw 配置管理</span>
+  <span class="logo">🦞 OpenClaw 配置管理</span>
   <span id="status" class="status disconnected">● 连接中...</span>
   <button class="btn" onclick="location.reload()" title="重新启动配置脚本">🔄 重启</button>
 </div>
 
 <div id="loading">
   <div class="spinner"></div>
-  <h2>🦞 一万AI分享 OpenClaw 配置管理工具</h2>
+  <h2>🦞 OpenClaw 配置管理</h2>
   <p id="loading-msg">正在连接终端...</p>
   <div id="loading-debug" class="debug"></div>
 </div>
@@ -121,14 +121,8 @@
   doFit();
   window.addEventListener('resize', () => { setTimeout(doFit, 100); });
 
-  // 监听 iframe 容器大小变化 (FnOS 桌面可能调整窗口大小)
-  if (typeof ResizeObserver !== 'undefined') {
-    new ResizeObserver(function() { setTimeout(doFit, 50); }).observe(containerEl);
-  }
-
   // ── WebSocket 连接 ──
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  // 从 URL 参数或 hash 获取 PTY token 用于 WebSocket 认证
   const urlParams = new URLSearchParams(location.search);
   const ptyToken = urlParams.get('pty_token') || '';
   const wsUrl = proto + '//' + location.host + '/ws' + (ptyToken ? '?token=' + encodeURIComponent(ptyToken) : '');
@@ -139,6 +133,26 @@
   let retryTimer = null;
   let wasEverConnected = false;
   let pingTimer = null;
+
+  // ── 等待 xterm 有合法列数后再连接 ──
+  // LuCI 用 display:none 隐藏非活动面板，iframe 在隐藏状态下 fit 得到 0 宽度
+  // 必须等容器真正可见（cols > 40）才建立 WebSocket，否则 shell 按错误列宽渲染菜单
+  var _readyToConnect = false;
+  var _connectPending = false;
+  function _tryConnect() {
+    if (_readyToConnect) return;
+    try { fitAddon.fit(); } catch(e) {}
+    if (term.cols > 40) {
+      _readyToConnect = true;
+      if (_connectPending) { _connectPending = false; connect(); }
+    }
+  }
+  // ResizeObserver 监听容器尺寸变化（切换到本 Tab 时触发）
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(function() {
+      setTimeout(function() { doFit(); _tryConnect(); }, 50);
+    }).observe(containerEl);
+  }
 
   console.log('[oc-config] protocol:', location.protocol);
   console.log('[oc-config] host:', location.host, 'port:', location.port);
@@ -289,11 +303,19 @@
     }
   });
 
-  // 等 DOM 和资源就绪后再连接
+  // 等 DOM 就绪后检查是否可连接（可能 iframe 已在可见容器里）
+  function _onLoad() {
+    doFit();
+    _tryConnect();
+    if (!_readyToConnect) {
+      // 容器还不可见，标记待连接，等 ResizeObserver 触发
+      _connectPending = true;
+    }
+  }
   if (document.readyState === 'complete') {
-    connect();
+    _onLoad();
   } else {
-    window.addEventListener('load', connect);
+    window.addEventListener('load', _onLoad);
   }
 })();
 </script>

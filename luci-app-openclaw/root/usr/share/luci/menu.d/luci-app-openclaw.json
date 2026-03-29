@@ -1,0 +1,14 @@
+{
+	"admin/services/openclaw": {
+		"title": "OpenClaw",
+		"order": 90,
+		"action": {
+			"type": "view",
+			"path": "openclaw"
+		},
+		"depends": {
+			"acl": ["luci-app-openclaw"],
+			"uci": { "openclaw": true }
+		}
+	}
+}

@@ -1,11 +1,31 @@
 {
 	"luci-app-openclaw": {
-		"description": "Grant UCI access for luci-app-openclaw",
+		"description": "Grant access for luci-app-openclaw",
 		"read": {
-			"uci": [ "openclaw" ]
+			"uci": ["openclaw"],
+			"ubus": {
+				"service": ["list"],
+				"file": ["exec", "read", "stat"]
+			},
+			"file": {
+				"/usr/share/openclaw/luci-helper": ["exec"],
+				"/etc/init.d/openclaw": ["exec"],
+				"/usr/share/openclaw/VERSION": ["read"],
+				"/tmp/openclaw-setup.log": ["read"],
+				"/tmp/openclaw-setup.exit": ["read"],
+				"/tmp/openclaw-plugin-upgrade.log": ["read"],
+				"/tmp/openclaw-plugin-upgrade.exit": ["read"]
+			}
 		},
 		"write": {
-			"uci": [ "openclaw" ]
+			"uci": ["openclaw"],
+			"ubus": {
+				"file": ["exec", "write"]
+			},
+			"file": {
+				"/usr/share/openclaw/luci-helper": ["exec"],
+				"/etc/init.d/openclaw": ["exec"]
+			}
 		}
 	}
 }

@@ -1,160 +1,86 @@
 <%#
- luci-app-openclaw — 运行状态面板 (全面汉化 + 界面优化)
+ luci-app-openclaw — Status Panel (18.06 compat)
 -%>
 
-<style type="text/css">
-#oc-status-panel {
-	margin: 0 0 20px 0;
-	padding: 0;
-	border: 1px solid #e0e0e0;
-	border-radius: 8px;
-	background: #fff;
-	overflow: hidden;
-	box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-}
-#oc-status-panel .panel-title {
-	background: linear-gradient(135deg, #4a90d9, #357abd);
-	color: #fff;
-	padding: 10px 16px;
-	font-size: 14px;
-	font-weight: 600;
-	letter-spacing: 0.5px;
-}
-#oc-status-panel .panel-body {
-	padding: 0;
-}
-#oc-status-panel table {
-	width: 100%;
-	border-collapse: collapse;
-}
-#oc-status-panel td {
-	padding: 8px 16px;
-	border-bottom: 1px solid #f2f2f2;
-	font-size: 13px;
-	vertical-align: middle;
-}
-#oc-status-panel tr:last-child td {
-	border-bottom: none;
-}
-#oc-status-panel td:first-child {
-	width: 120px;
-	color: #888;
-	font-weight: 500;
-	white-space: nowrap;
-}
-#oc-status-panel td:last-child {
-	color: #333;
-}
-.oc-badge {
-	display: inline-block;
-	padding: 2px 12px;
-	border-radius: 12px;
-	font-size: 12px;
-	font-weight: 600;
-}
-.oc-badge-running { background: #e6f7e9; color: #1a7f37; }
-.oc-badge-stopped { background: #ffeef0; color: #cf222e; }
-.oc-badge-starting { background: #fff8c5; color: #9a6700; }
-.oc-badge-disabled { background: #f0f0f0; color: #656d76; }
-.oc-badge-unknown { background: #fff8c5; color: #9a6700; }
-.oc-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-.oc-dot-green { background: #1a7f37; }
-.oc-dot-red { background: #cf222e; }
-.oc-dot-gray { background: #999; }
+<style>
+.oc-panel{margin:0 0 20px;border:1px solid #e0e0e0;border-radius:8px;background:#fff;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.oc-panel .hdr{background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;padding:10px 16px;font-size:14px;font-weight:600}
+.oc-panel table{width:100%;border-collapse:collapse}
+.oc-panel td{padding:8px 16px;border-bottom:1px solid #f2f2f2;font-size:13px}
+.oc-panel tr:last-child td{border-bottom:none}
+.oc-panel td:first-child{width:120px;color:#888;font-weight:500}
+.oc-badge{display:inline-block;padding:2px 12px;border-radius:12px;font-size:12px;font-weight:600}
+.oc-badge-run{background:#e8f5e9;color:#2e7d32}
+.oc-badge-stop{background:#ffebee;color:#c62828}
+.oc-badge-start{background:#fff8e1;color:#f57f17}
+.oc-badge-off{background:#f5f5f5;color:#9e9e9e}
+.oc-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px}
+.oc-actions .btn{padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
 </style>
 
-<div id="oc-status-panel">
-	<div class="panel-title" id="oc-panel-title">🦞 OpenClaw 服务状态</div>
-	<div class="panel-body">
-		<table>
-			<tr><td>运行状态</td><td id="oc-st-status"><span class="oc-badge oc-badge-unknown">加载中...</span></td></tr>
-			<tr><td>网关服务</td><td id="oc-st-gateway">-</td></tr>
-			<tr><td>配置终端</td><td id="oc-st-pty">-</td></tr>
-			<tr><td>活跃模型</td><td id="oc-st-model">-</td></tr>
-			<tr><td>消息渠道</td><td id="oc-st-channels">-</td></tr>
-			<tr><td>进程 PID</td><td id="oc-st-pid">-</td></tr>
-			<tr><td>内存占用</td><td id="oc-st-mem">-</td></tr>
-			<tr><td>运行时间</td><td id="oc-st-uptime">-</td></tr>
-			<tr><td>Node.js</td><td id="oc-st-node">-</td></tr>
-			<tr><td>OpenClaw</td><td id="oc-st-oc-ver">-</td></tr>
-			<tr><td>插件版本</td><td id="oc-st-plugin">-</td></tr>
-		</table>
-	</div>
+<div class="oc-panel">
+	<div class="hdr">🦞 OpenClaw Service Status</div>
+	<table>
+		<tr><td><%:Status%></td><td id="oc-st-status"><span class="oc-badge oc-badge-off">Loading...</span></td></tr>
+		<tr><td><%:Gateway%></td><td id="oc-st-gw">-</td></tr>
+		<tr><td><%:Config PTY%></td><td id="oc-st-pty">-</td></tr>
+		<tr><td>Node.js</td><td id="oc-st-node">-</td></tr>
+		<tr><td>OpenClaw</td><td id="oc-st-oc">-</td></tr>
+		<tr><td><%:Plugin%></td><td id="oc-st-plugin">-</td></tr>
+		<tr><td><%:Active Model%></td><td id="oc-st-model">-</td></tr>
+		<tr><td><%:Memory%></td><td id="oc-st-mem">-</td></tr>
+		<tr><td><%:Uptime%></td><td id="oc-st-up">-</td></tr>
+	</table>
+</div>
+
+<div class="oc-actions">
+	<button class="btn cbi-button cbi-button-action" onclick="ocCtl('start')">▶ <%:Start%></button>
+	<button class="btn cbi-button cbi-button-action" onclick="ocCtl('stop')">⏹ <%:Stop%></button>
+	<button class="btn cbi-button cbi-button-action" onclick="ocCtl('restart')">🔄 <%:Restart%></button>
 </div>
 
 <script type="text/javascript">
 //<![CDATA[
-(function() {
-	var statusUrl = '<%=luci.dispatcher.build_url("admin", "services", "openclaw", "status_api")%>';
+(function(){
+	var apiUrl='<%=luci.dispatcher.build_url("admin","services","openclaw","status_api")%>';
+	var ctlUrl='<%=luci.dispatcher.build_url("admin","services","openclaw","service_ctl")%>';
 
-	function updateStatus() {
-		(new XHR()).get(statusUrl, null, function(x) {
-			try {
-				var d = JSON.parse(x.responseText);
+	function fmtMem(kb){
+		kb=parseInt(kb)||0;
+		if(kb<=0)return'-';
+		if(kb>=1024)return(kb/1024).toFixed(1)+' MB';
+		return kb+' KB';
+	}
 
-				var stEl = document.getElementById('oc-st-status');
-				if (d.enabled !== '1') {
-					stEl.innerHTML = '<span class="oc-badge oc-badge-disabled">已禁用</span>';
-				} else if (d.gateway_running) {
-					stEl.innerHTML = '<span class="oc-badge oc-badge-running">运行中</span>';
-				} else if (d.gateway_starting) {
-					stEl.innerHTML = '<span class="oc-badge oc-badge-starting">⏳ 正在启动...</span>';
-				} else {
-					stEl.innerHTML = '<span class="oc-badge oc-badge-stopped">已停止</span>';
-				}
-
-				var gwEl = document.getElementById('oc-st-gateway');
-				if (d.gateway_running) {
-					gwEl.innerHTML = '<span class="oc-dot oc-dot-green"></span>监听中 :' + d.port;
-				} else if (d.gateway_starting) {
-					gwEl.innerHTML = '<span class="oc-dot oc-dot-gray"></span>初始化中，首次启动可能需要 2~5 分钟...';
-				} else {
-					gwEl.innerHTML = '<span class="oc-dot oc-dot-red"></span>未监听';
-				}
-
-				var ptyEl = document.getElementById('oc-st-pty');
-				if (d.pty_running) {
-					ptyEl.innerHTML = '<span class="oc-dot oc-dot-green"></span>监听中 :' + d.pty_port;
-				} else {
-					ptyEl.innerHTML = '<span class="oc-dot oc-dot-gray"></span>未监听';
-				}
-
-				document.getElementById('oc-st-pid').textContent = d.pid || '-';
-
-				var channelsEl = document.getElementById('oc-st-channels');
-				if (d.channels) {
-					channelsEl.innerHTML = '<span style="color:#1a7f37;font-weight:500;">' + d.channels + '</span>';
-				} else {
-					channelsEl.textContent = '未配置';
-				}
-
-				var modelEl = document.getElementById('oc-st-model');
-				if (d.active_model) {
-					modelEl.innerHTML = '<code style="padding:2px 8px;background:#f0f3f6;border-radius:4px;font-size:12px;">' + d.active_model + '</code>';
-				} else {
-					modelEl.textContent = '未配置';
-				}
-
-				var memEl = document.getElementById('oc-st-mem');
-				if (d.memory_kb > 0) {
-					var mb = (d.memory_kb / 1024).toFixed(1);
-					memEl.textContent = mb + ' MB';
-				} else {
-					memEl.textContent = '-';
-				}
-
-				document.getElementById('oc-st-uptime').textContent = d.uptime || '-';
-				document.getElementById('oc-st-node').textContent = d.node_version || '未安装';
-				document.getElementById('oc-st-oc-ver').textContent = d.oc_version ? ('v' + d.oc_version) : '未安装';
-				document.getElementById('oc-st-plugin').textContent = d.plugin_version ? ('v' + d.plugin_version) : '-';
-                        } catch(e) {
-				document.getElementById('oc-st-status').innerHTML = '<span class="oc-badge oc-badge-unknown">查询失败</span>';
-			}
+	function update(){
+		(new XHR()).get(apiUrl,null,function(x){
+			try{
+				var d=JSON.parse(x.responseText);
+				var st=document.getElementById('oc-st-status');
+				if(d.enabled!=='1')st.innerHTML='<span class="oc-badge oc-badge-off">Disabled</span>';
+				else if(d.gateway_running)st.innerHTML='<span class="oc-badge oc-badge-run">Running</span>';
+				else if(d.gateway_starting)st.innerHTML='<span class="oc-badge oc-badge-start">Starting...</span>';
+				else st.innerHTML='<span class="oc-badge oc-badge-stop">Stopped</span>';
+				document.getElementById('oc-st-gw').textContent=d.gateway_running?'✅ :'+d.port:'⏹ Stopped';
+				document.getElementById('oc-st-pty').textContent=d.pty_running?'✅ :'+d.pty_port:'⏹ Stopped';
+				document.getElementById('oc-st-node').textContent=d.node_version||'Not installed';
+				document.getElementById('oc-st-oc').textContent=d.oc_version||'Not installed';
+				document.getElementById('oc-st-plugin').textContent=d.plugin_version||'-';
+				document.getElementById('oc-st-model').textContent=d.active_model||'-';
+				document.getElementById('oc-st-mem').textContent=fmtMem(d.memory_kb);
+				document.getElementById('oc-st-up').textContent=d.uptime||'-';
+			}catch(e){}
 		});
 	}
 
-	updateStatus();
-	setInterval(updateStatus, 5000);
+	window.ocCtl=function(action){
+		(new XHR()).get(ctlUrl+'?action='+action,null,function(){
+			setTimeout(update,2500);
+		});
+	};
+
+	update();
+	setInterval(update,5000);
 })();
 //]]>
 </script>

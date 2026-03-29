@@ -1,0 +1,343 @@
+#!/bin/sh
+# luci-app-openclaw — Backend helper for JS view
+# Called via ubus file.exec from the LuCI frontend
+
+. /lib/functions.sh 2>/dev/null || true
+
+OC_NODE="/opt/openclaw/node/bin/node"
+OC_DATA="/opt/openclaw/data"
+OC_GLOBAL="/opt/openclaw/global"
+OC_CONFIG="${OC_DATA}/.openclaw/openclaw.json"
+
+# ── JSON helper: escape string for JSON output ──
+json_esc() {
+	printf '%s' "$1" | sed 's/\\/\\\\/g;s/"/\\"/g;s/	/\\t/g' | tr '\n' ' '
+}
+
+# ── Port listening check (ss or netstat) ──
+port_listening() {
+	local p="$1"
+	if command -v ss >/dev/null 2>&1; then
+		ss -tulnp 2>/dev/null | grep -q ":${p} "
+	else
+		netstat -tulnp 2>/dev/null | grep -q ":${p} "
+	fi
+}
+
+pid_by_port() {
+	local p="$1"
+	if command -v ss >/dev/null 2>&1; then
+		ss -tulnp 2>/dev/null | grep ":${p} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | head -1
+	else
+		netstat -tulnp 2>/dev/null | grep ":${p} " | sed -n 's|.* \([0-9]*\)/.*|\1|p' | head -1
+	fi
+}
+
+case "$1" in
+
+# ═══════════════════════════════════════════
+# STATUS — gather all status info as JSON
+# ═══════════════════════════════════════════
+status)
+	enabled=$(uci -q get openclaw.main.enabled || echo "0")
+	port=$(uci -q get openclaw.main.port || echo "18789")
+	pty_port=$(uci -q get openclaw.main.pty_port || echo "18793")
+
+	# Validate ports
+	case "$port" in *[!0-9]*) port="18789" ;; esac
+	case "$pty_port" in *[!0-9]*) pty_port="18793" ;; esac
+
+	# Gateway check
+	gw_running=false
+	gw_starting=false
+	port_listening "$port" && gw_running=true
+	if [ "$gw_running" = "false" ] && [ "$enabled" = "1" ]; then
+		pgrep -f 'openclaw.*gateway' >/dev/null 2>&1 && gw_starting=true
+	fi
+
+	# PTY check
+	pty_running=false
+	port_listening "$pty_port" && pty_running=true
+
+	# Node.js version
+	node_ver=""
+	[ -x "$OC_NODE" ] && node_ver=$("$OC_NODE" --version 2>/dev/null | tr -d '[:space:]')
+
+	# OpenClaw version (from package.json)
+	oc_ver=""
+	for d in "$OC_GLOBAL/lib/node_modules/openclaw" \
+	         "$OC_GLOBAL/node_modules/openclaw" \
+	         "/opt/openclaw/node/lib/node_modules/openclaw"; do
+		[ -f "$d/package.json" ] || continue
+		oc_ver=$(sed -n 's/.*"version" *: *"\([^"]*\)".*/\1/p' "$d/package.json" | head -1)
+		[ -n "$oc_ver" ] && break
+	done
+	# Also check pnpm versioned dirs
+	if [ -z "$oc_ver" ]; then
+		for d in "$OC_GLOBAL"/*/node_modules/openclaw; do
+			[ -f "$d/package.json" ] || continue
+			oc_ver=$(sed -n 's/.*"version" *: *"\([^"]*\)".*/\1/p' "$d/package.json" | head -1)
+			[ -n "$oc_ver" ] && break
+		done
+	fi
+
+	# Plugin version
+	plugin_ver=""
+	[ -f "/usr/share/openclaw/VERSION" ] && plugin_ver=$(cat /usr/share/openclaw/VERSION 2>/dev/null | tr -d '[:space:]')
+
+	# PID, memory, uptime
+	pid="" mem_kb=0 uptime_str=""
+	if [ "$gw_running" = "true" ]; then
+		pid=$(pid_by_port "$port")
+		if [ -n "$pid" ] && [ -d "/proc/$pid" ]; then
+			mem_kb=$(awk '/VmRSS/{print $2}' "/proc/$pid/status" 2>/dev/null)
+			[ -z "$mem_kb" ] && mem_kb=0
+			# BusyBox 无 stat，用 date -r 读 /proc/$pid 目录 mtime
+			start_ts=$(date -r "/proc/$pid" +%s 2>/dev/null)
+			if [ -n "$start_ts" ]; then
+				now=$(date +%s)
+				diff=$((now - start_ts))
+				h=$((diff / 3600)) m=$(((diff % 3600) / 60)) s=$((diff % 60))
+				if [ $h -gt 0 ]; then uptime_str="${h}h ${m}m"
+				elif [ $m -gt 0 ]; then uptime_str="${m}m ${s}s"
+				else uptime_str="${s}s"; fi
+			fi
+		fi
+	fi
+
+	# Active model & channels (via Node.js if available)
+	active_model="" channels=""
+	if [ -f "$OC_CONFIG" ] && [ -x "$OC_NODE" ]; then
+		active_model=$("$OC_NODE" -e "
+try{const d=JSON.parse(require('fs').readFileSync('$OC_CONFIG','utf8'));
+if(d.models&&d.models.primary)process.stdout.write(d.models.primary);}catch(e){}" 2>/dev/null)
+		channels=$("$OC_NODE" -e "
+try{const d=JSON.parse(require('fs').readFileSync('$OC_CONFIG','utf8'));const c=[];
+if(d.qqbot||d.plugins&&d.plugins.entries&&d.plugins.entries['@tencent-connect/openclaw-qqbot'])c.push('QQ');
+if(d.telegram&&d.telegram.botToken)c.push('Telegram');
+if(d.discord)c.push('Discord');if(d.feishu)c.push('Feishu');if(d.slack)c.push('Slack');
+process.stdout.write(c.join(', '));}catch(e){}" 2>/dev/null)
+	fi
+
+	cat <<JSON
+{
+	"enabled": "$enabled",
+	"port": "$port",
+	"pty_port": "$pty_port",
+	"gateway_running": $gw_running,
+	"gateway_starting": $gw_starting,
+	"pty_running": $pty_running,
+	"node_version": "$node_ver",
+	"oc_version": "$oc_ver",
+	"plugin_version": "$plugin_ver",
+	"pid": "$pid",
+	"memory_kb": ${mem_kb:-0},
+	"uptime": "$uptime_str",
+	"active_model": "$(json_esc "$active_model")",
+	"channels": "$(json_esc "$channels")"
+}
+JSON
+	;;
+
+# ═══════════════════════════════════════════
+# SETUP — install Node.js + OpenClaw
+# ═══════════════════════════════════════════
+setup)
+	version="${2:-stable}"
+	# Clean old state
+	: > /tmp/openclaw-setup.log
+	: > /tmp/openclaw-setup.exit
+	: > /tmp/openclaw-setup.pid
+
+	env_prefix=""
+	if [ "$version" = "stable" ]; then
+		tested_ver=$(grep '^OC_TESTED_VERSION=' /usr/bin/openclaw-env 2>/dev/null | cut -d'"' -f2)
+		[ -n "$tested_ver" ] && env_prefix="OC_VERSION=$tested_ver "
+	elif [ "$version" != "latest" ]; then
+		# Validate version format
+		echo "$version" | grep -qE '^[0-9a-zA-Z._-]+$' && env_prefix="OC_VERSION=$version "
+	fi
+
+	( eval ${env_prefix}/usr/bin/openclaw-env setup > /tmp/openclaw-setup.log 2>&1
+	  RC=$?
+	  echo $RC > /tmp/openclaw-setup.exit
+	  if [ $RC -eq 0 ]; then
+	    uci set openclaw.main.enabled=1
+	    uci commit openclaw
+	    /etc/init.d/openclaw enable 2>/dev/null
+	    sleep 1
+	    /etc/init.d/openclaw start >> /tmp/openclaw-setup.log 2>&1
+	  fi
+	) &
+	echo $! > /tmp/openclaw-setup.pid
+
+	echo '{"status":"ok","message":"setup started"}'
+	;;
+
+# ═══════════════════════════════════════════
+# SETUP_LOG — poll setup progress
+# ═══════════════════════════════════════════
+setup_log)
+	log=""
+	[ -f /tmp/openclaw-setup.log ] && log=$(cat /tmp/openclaw-setup.log 2>/dev/null)
+
+	running=false
+	if [ -f /tmp/openclaw-setup.pid ]; then
+		pid=$(cat /tmp/openclaw-setup.pid 2>/dev/null | tr -d '[:space:]')
+		[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && running=true
+	fi
+
+	exit_code=-1
+	if [ "$running" = "false" ] && [ -f /tmp/openclaw-setup.exit ]; then
+		exit_code=$(cat /tmp/openclaw-setup.exit 2>/dev/null | tr -d '[:space:]')
+		[ -z "$exit_code" ] && exit_code=-1
+	fi
+
+	state="idle"
+	if [ "$running" = "true" ]; then state="running"
+	elif [ "$exit_code" = "0" ]; then state="success"
+	elif [ "$exit_code" -gt 0 ] 2>/dev/null; then state="failed"
+	fi
+
+	# Escape log for JSON
+	log_escaped=$(printf '%s' "$log" | sed 's/\\/\\\\/g;s/"/\\"/g;s/	/\\t/g' | tr '\n' '\\' | sed 's/\\/\\n/g')
+
+	printf '{"state":"%s","exit_code":%s,"log":"%s"}\n' "$state" "${exit_code}" "$log_escaped"
+	;;
+
+# ═══════════════════════════════════════════
+# CHECK_UPDATE — check plugin version
+# ═══════════════════════════════════════════
+check_update)
+	plugin_current=""
+	[ -f "/usr/share/openclaw/VERSION" ] && plugin_current=$(cat /usr/share/openclaw/VERSION 2>/dev/null | tr -d '[:space:]')
+
+	plugin_latest="" release_notes="" has_update=false
+
+	gh_json=$(curl -sf --connect-timeout 5 --max-time 10 \
+		'https://api.github.com/repos/10000ge10000/luci-app-openclaw/releases/latest' 2>/dev/null)
+
+	if [ -n "$gh_json" ] && [ -x "$OC_NODE" ]; then
+		eval $(echo "$gh_json" | "$OC_NODE" -e "
+try{const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+const tag=(d.tag_name||'').replace(/^v/,'').trim();
+const body=(d.body||'').replace(/\\\\/g,'\\\\\\\\').replace(/\"/g,'\\\\\"').replace(/\\n/g,'\\\\n');
+console.log('plugin_latest=\"'+tag+'\"');
+console.log('release_notes=\"'+body+'\"');
+}catch(e){}" 2>/dev/null)
+	fi
+
+	if [ -n "$plugin_current" ] && [ -n "$plugin_latest" ] && [ "$plugin_current" != "$plugin_latest" ]; then
+		has_update=true
+	fi
+
+	cat <<JSON
+{
+	"status": "ok",
+	"plugin_current": "$plugin_current",
+	"plugin_latest": "$plugin_latest",
+	"plugin_has_update": $has_update,
+	"release_notes": "$release_notes"
+}
+JSON
+	;;
+
+# ═══════════════════════════════════════════
+# GET_TOKEN — return gateway and PTY tokens
+# ═══════════════════════════════════════════
+get_token)
+	token=$(uci -q get openclaw.main.token || echo "")
+	pty_token=$(uci -q get openclaw.main.pty_token || echo "")
+	printf '{"token":"%s","pty_token":"%s"}\n' "$token" "$pty_token"
+	;;
+
+# ═══════════════════════════════════════════
+# UNINSTALL — remove environment
+# ═══════════════════════════════════════════
+uninstall)
+	/etc/init.d/openclaw stop >/dev/null 2>&1
+	/etc/init.d/openclaw disable 2>/dev/null
+	uci set openclaw.main.enabled=0
+	uci commit openclaw 2>/dev/null
+	[ -d /opt/openclaw ] && { find /opt/openclaw -delete 2>/dev/null || true; }
+	[ -d /root/.openclaw ] && { find /root/.openclaw -delete 2>/dev/null || true; }
+	: > /tmp/openclaw-setup.log 2>/dev/null
+	: > /tmp/openclaw-setup.pid 2>/dev/null
+	: > /tmp/openclaw-setup.exit 2>/dev/null
+	: > /tmp/openclaw-plugin-upgrade.log 2>/dev/null
+	sed -i '/^openclaw:/d' /etc/passwd /etc/shadow /etc/group 2>/dev/null
+	echo '{"status":"ok","message":"uninstalled"}'
+	;;
+
+# ═══════════════════════════════════════════
+# PLUGIN_UPGRADE — upgrade plugin via .run
+# ═══════════════════════════════════════════
+plugin_upgrade)
+	version="$2"
+	[ -z "$version" ] && { echo '{"status":"error","message":"missing version"}'; exit 1; }
+	echo "$version" | grep -qE '^[0-9.]+$' || { echo '{"status":"error","message":"invalid version"}'; exit 1; }
+
+	: > /tmp/openclaw-plugin-upgrade.log
+	: > /tmp/openclaw-plugin-upgrade.exit
+	: > /tmp/openclaw-plugin-upgrade.pid
+
+	run_url="https://github.com/10000ge10000/luci-app-openclaw/releases/download/v${version}/luci-app-openclaw_${version}.run"
+
+	( echo "Downloading plugin v${version}..." > /tmp/openclaw-plugin-upgrade.log
+	  curl -sL --connect-timeout 15 --max-time 120 -o /tmp/luci-app-openclaw-update.run "$run_url" >> /tmp/openclaw-plugin-upgrade.log 2>&1
+	  RC=$?
+	  if [ $RC -ne 0 ]; then
+	    echo "Download failed (curl exit: $RC)" >> /tmp/openclaw-plugin-upgrade.log
+	    echo $RC > /tmp/openclaw-plugin-upgrade.exit
+	  else
+	    fsize=$(wc -c < /tmp/luci-app-openclaw-update.run 2>/dev/null | tr -d ' ')
+	    if [ "${fsize:-0}" -lt 10000 ] 2>/dev/null; then
+	      echo "File too small (${fsize} bytes), download may have failed" >> /tmp/openclaw-plugin-upgrade.log
+	      echo 1 > /tmp/openclaw-plugin-upgrade.exit
+	    else
+	      echo "Download complete (${fsize} bytes), installing..." >> /tmp/openclaw-plugin-upgrade.log
+	      sh /tmp/luci-app-openclaw-update.run >> /tmp/openclaw-plugin-upgrade.log 2>&1
+	      RC2=$?
+	      echo $RC2 > /tmp/openclaw-plugin-upgrade.exit
+	      [ $RC2 -eq 0 ] && echo "✅ Plugin upgrade complete!" >> /tmp/openclaw-plugin-upgrade.log
+	    fi
+	    [ -f /tmp/luci-app-openclaw-update.run ] && unlink /tmp/luci-app-openclaw-update.run
+	  fi
+	) &
+	echo $! > /tmp/openclaw-plugin-upgrade.pid
+	echo '{"status":"ok","message":"upgrade started"}'
+	;;
+
+# ═══════════════════════════════════════════
+# PLUGIN_UPGRADE_LOG — poll upgrade progress
+# ═══════════════════════════════════════════
+plugin_upgrade_log)
+	log=""
+	[ -f /tmp/openclaw-plugin-upgrade.log ] && log=$(cat /tmp/openclaw-plugin-upgrade.log 2>/dev/null)
+
+	running=false
+	if [ -f /tmp/openclaw-plugin-upgrade.pid ]; then
+		pid=$(cat /tmp/openclaw-plugin-upgrade.pid 2>/dev/null | tr -d '[:space:]')
+		[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null && running=true
+	fi
+
+	exit_code=-1
+	if [ "$running" = "false" ] && [ -f /tmp/openclaw-plugin-upgrade.exit ]; then
+		exit_code=$(cat /tmp/openclaw-plugin-upgrade.exit 2>/dev/null | tr -d '[:space:]')
+		[ -z "$exit_code" ] && exit_code=-1
+	fi
+
+	state="idle"
+	if [ "$running" = "true" ]; then state="running"
+	elif [ "$exit_code" = "0" ]; then state="success"
+	elif [ "$exit_code" -gt 0 ] 2>/dev/null; then state="failed"
+	fi
+
+	log_escaped=$(printf '%s' "$log" | sed 's/\\/\\\\/g;s/"/\\"/g;s/	/\\t/g' | tr '\n' '\\' | sed 's/\\/\\n/g')
+	printf '{"state":"%s","exit_code":%s,"log":"%s"}\n' "$state" "${exit_code}" "$log_escaped"
+	;;
+
+*)
+	echo '{"status":"error","message":"unknown command"}'
+	;;
+esac

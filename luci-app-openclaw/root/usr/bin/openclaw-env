@@ -57,7 +57,7 @@ NODE_MIRROR="${NODE_MIRROR:-https://nodejs.org/dist}"
 NODE_MIRROR_CN="https://npmmirror.com/mirrors/node"
 NODE_MUSL_MIRROR="https://unofficial-builds.nodejs.org/download/release"
 # 项目自托管 ARM64 musl Node.js (unofficial-builds 仅提供 x64 musl)
-NODE_SELF_HOST="https://github.com/10000ge10000/luci-app-openclaw/releases/download/node-bins"
+NODE_SELF_HOST="https://github.com/kenzok8/luci-app-openclaw/releases/download/node-bins"
 
 export PATH="${NODE_BASE}/bin:${OC_GLOBAL}/bin:$PATH"
 export NODE_ICU_DATA="${NODE_BASE}/share/icu"
@@ -77,17 +77,206 @@ ensure_mkdir() {
 	fi
 }
 
-# 检测 C 运行时类型 (glibc vs musl)
-detect_libc() {
-	if ldd --version 2>&1 | grep -qi musl; then
-		echo "musl"
-	elif [ -f /lib/ld-musl-*.so.1 ] 2>/dev/null; then
-		echo "musl"
-	elif [ -f /etc/openwrt_release ] || grep -qi "openwrt\|istoreos\|lede" /etc/os-release 2>/dev/null; then
-		echo "musl"
+# ── OpenWrt/BusyBox 专用底层工具 ──────────────────────────────────────────────
+
+# 已选定的下载工具 (空=未初始化)
+_OC_DOWNLOADER=""
+
+# 检测可用下载工具 (OpenWrt 上 wget 是 BusyBox 内置，curl 是可选包，wget 优先)
+_oc_detect_downloader() {
+	[ -n "$_OC_DOWNLOADER" ] && return 0
+	if command -v wget >/dev/null 2>&1; then
+		_OC_DOWNLOADER="wget"
+	elif command -v curl >/dev/null 2>&1; then
+		_OC_DOWNLOADER="curl"
 	else
-		echo "glibc"
+		log_error "没有可用的下载工具 (wget 或 curl 均未找到)"
+		return 1
 	fi
+}
+
+# 统一下载函数，兼容 BusyBox wget 和 curl
+# 用法: _oc_http_get <url> <output_file>
+# BusyBox wget 注意事项:
+#   - 使用 -T (inactivity timeout)，不是 --max-time
+#   - 设置足够长的超时 (120s)，避免慢速连接中断
+#   - 如果 HTTPS 失败 (CA 证书缺失)，自动加 --no-check-certificate 重试
+_oc_http_get() {
+	local url="$1"
+	local out="$2"
+	_oc_detect_downloader || return 1
+
+	rm -f "$out"
+	if [ "$_OC_DOWNLOADER" = "wget" ]; then
+		wget -q -T 120 -O "$out" "$url" 2>/dev/null && return 0
+		# SSL 失败重试 (OpenWrt 常缺 CA bundle)
+		wget -q -T 120 --no-check-certificate -O "$out" "$url" 2>/dev/null && return 0
+	else
+		curl -fL --connect-timeout 20 --max-time 300 -o "$out" "$url" 2>/dev/null && return 0
+		# SSL 失败重试
+		curl -fL --connect-timeout 20 --max-time 300 -k -o "$out" "$url" 2>/dev/null && return 0
+	fi
+	rm -f "$out"
+	return 1
+}
+
+# 检查目录可用空间是否满足最小要求
+# 用法: _oc_check_space <dir> <min_kb>
+_oc_check_space() {
+	local dir="$1"
+	local min_kb="$2"
+	local avail
+	# BusyBox df: 第 4 列是 Available (KB)
+	avail=$(df -k "$dir" 2>/dev/null | awk 'NR==2{print $4}')
+	[ -z "$avail" ] && return 0   # 无法检测则跳过
+	if [ "$avail" -lt "$min_kb" ] 2>/dev/null; then
+		log_error "空间不足: $dir 仅剩 ${avail}KB，至少需要 ${min_kb}KB"
+		return 1
+	fi
+}
+
+# opkg update 只执行一次，后续调用直接跳过
+_OC_OPKG_UPDATED=0
+_oc_opkg_update() {
+	[ "$_OC_OPKG_UPDATED" -eq 1 ] && return 0
+	command -v opkg >/dev/null 2>&1 || return 0
+	log_warn "正在更新 opkg 包列表..."
+	opkg update >/dev/null 2>&1 || true
+	_OC_OPKG_UPDATED=1
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 从 Alpine 仓库下载并提取 libstdc++.so.6
+# 背景: 新版 ImmortalWrt 仓库已切换为 apk v3 (ADBd) 格式，opkg 无法识别。
+# Alpine 同样使用 musl libc，libstdc++ ABI 与 ImmortalWrt 兼容。
+# Alpine apk v2 格式 = [签名.tar.gz] + [数据.tar.gz] 拼接，BusyBox tar 可解。
+_oc_install_libstdcpp_from_alpine() {
+	local tmp_dir="/tmp/oc-libstdcpp-$$"
+	mkdir -p "$tmp_dir/extract" || return 1
+
+	local arch_str
+	case "$(uname -m)" in
+		x86_64)  arch_str="x86_64" ;;
+		aarch64) arch_str="aarch64" ;;
+		*)
+			log_error "不支持的架构: $(uname -m)"
+			rm -rf "$tmp_dir"
+			return 1
+			;;
+	esac
+
+	local pkg_name="libstdc++-14.2.0-r4.apk"
+	local mirrors="
+https://dl-cdn.alpinelinux.org/alpine/v3.21/main/${arch_str}/${pkg_name}
+https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.21/main/${arch_str}/${pkg_name}
+https://mirrors.aliyun.com/alpine/v3.21/main/${arch_str}/${pkg_name}
+"
+	local pkg_file="$tmp_dir/libstdc++.apk"
+	local downloaded=0
+
+	for url in $mirrors; do
+		[ -z "$url" ] && continue
+		log_warn "  尝试: $url"
+		if _oc_http_get "$url" "$pkg_file"; then
+			local fsize
+			fsize=$(wc -c < "$pkg_file" 2>/dev/null || echo 0)
+			if [ "$fsize" -gt 100000 ]; then
+				downloaded=1
+				break
+			fi
+			log_warn "文件大小异常 (${fsize} bytes)，跳过"
+		fi
+		rm -f "$pkg_file"
+	done
+
+	if [ "$downloaded" -eq 0 ]; then
+		log_error "所有镜像均无法下载 libstdc++ 包"
+		rm -rf "$tmp_dir"
+		return 1
+	fi
+
+	# 尝试直接解压 (部分 BusyBox tar 能跳过签名段)
+	( cd "$tmp_dir/extract" && tar -xzf "$pkg_file" 2>/dev/null ) || true
+
+	local so_file
+	so_file=$(find "$tmp_dir/extract" -name "libstdc++.so.6.*" | head -1)
+
+	if [ -z "$so_file" ]; then
+		# 直接解压未能提取到文件 — BusyBox tar 停在签名段
+		# Alpine 签名段固定 < 4096 字节，逐步偏移跳过
+		local offset
+		for offset in 512 1024 2048 4096; do
+			local ex2="$tmp_dir/extract2_${offset}"
+			mkdir -p "$ex2"
+			dd if="$pkg_file" bs=1 skip=$offset 2>/dev/null | \
+				tar -xzf - -C "$ex2" 2>/dev/null || true
+			so_file=$(find "$ex2" -name "libstdc++.so.6.*" | head -1)
+			[ -n "$so_file" ] && break
+		done
+	fi
+
+	if [ -z "$so_file" ]; then
+		log_error "无法从 Alpine 包中提取 libstdc++.so.6，请手动安装"
+		rm -rf "$tmp_dir"
+		return 1
+	fi
+
+	local so_name
+	so_name=$(basename "$so_file")
+	cp "$so_file" /usr/lib/
+	ln -sf "/usr/lib/$so_name" /usr/lib/libstdc++.so.6
+	ldconfig 2>/dev/null || true
+
+	rm -rf "$tmp_dir"
+	log_info "libstdc++.so.6 已从 Alpine 包安装 ($so_name)"
+	return 0
+}
+
+ensure_node_runtime_deps() {
+	local pkgs=""
+
+	[ -e /usr/lib/libstdc++.so.6 ] || [ -e /lib/libstdc++.so.6 ] || pkgs="$pkgs libstdcpp"
+	[ -e /lib/libgcc_s.so.1 ] || pkgs="$pkgs libgcc1"
+
+	pkgs=$(echo "$pkgs" | awk '{$1=$1; print}')
+	[ -n "$pkgs" ] || return 0
+
+	log_warn "缺少 Node.js 运行依赖，正在安装: $pkgs"
+	if command -v opkg >/dev/null 2>&1; then
+		_oc_opkg_update
+		opkg install $pkgs 2>&1 | tail -5 || true
+	fi
+
+	# opkg 成功则直接返回
+	if [ -e /usr/lib/libstdc++.so.6 ] || [ -e /lib/libstdc++.so.6 ]; then
+		return 0
+	fi
+
+	# opkg 失败 (新版 ImmortalWrt 仓库为 apk v3 格式，opkg 不兼容)
+	# 回退: 从 Alpine 仓库提取 libstdc++.so.6 (Alpine 同为 musl，ABI 兼容)
+	log_warn "opkg 安装失败，尝试从 Alpine 仓库提取 libstdc++.so.6..."
+	if _oc_install_libstdcpp_from_alpine; then
+		return 0
+	fi
+
+	log_error "libstdc++ 安装失败，Node.js 无法运行"
+	return 1
+}
+
+# 检测 C 运行时类型 (glibc vs musl)
+# OpenWrt/ImmortalWrt 必为 musl，优先通过系统标志文件判断
+# 避免直接调 ldd —— OpenWrt 上 ldd 可能不存在
+detect_libc() {
+	# 1. OpenWrt/ImmortalWrt 标志文件 (最明确)
+	[ -f /etc/openwrt_release ] && echo "musl" && return
+	# 2. musl 动态链接器存在
+	for _f in /lib/ld-musl-*.so.1; do
+		[ -f "$_f" ] && echo "musl" && return
+	done
+	# 3. 通用 Linux: 尝试 ldd 输出
+	ldd --version 2>&1 | grep -qi musl && echo "musl" && return
+	echo "glibc"
 }
 
 # 在所有可能的位置查找 openclaw 入口文件
@@ -135,6 +324,49 @@ detect_arch() {
 	esac
 }
 
+extract_node_archive() {
+	local archive="$1"
+	local dest="$2"
+	local tmp_extract="/tmp/node-extract-$$"
+	local top_dir
+
+	case "$archive" in
+		*.tar.gz|*.tgz)
+			if tar --strip-components=1 -zxf "$archive" -C "$dest" 2>/dev/null; then
+				return 0
+			fi
+			ensure_mkdir "$tmp_extract" || return 1
+			tar zxf "$archive" -C "$tmp_extract" || {
+				rm -rf "$tmp_extract"
+				return 1
+			}
+			;;
+		*.tar.xz)
+			if tar --strip-components=1 -xf "$archive" -C "$dest" 2>/dev/null; then
+				return 0
+			fi
+			log_error "当前系统无法解压 .tar.xz，请改用 .tar.gz 包"
+			return 1
+			;;
+		*)
+			log_error "不支持的 Node.js 压缩包格式: $archive"
+			return 1
+			;;
+	esac
+
+	# 用 tar -tf 获取顶层目录名，比 ls | head -1 更可靠
+	top_dir=$(tar -tzf "$archive" 2>/dev/null | head -1 | cut -d/ -f1)
+	if [ -n "$top_dir" ] && [ -d "$tmp_extract/$top_dir" ]; then
+		cp -a "$tmp_extract/$top_dir/." "$dest/"
+		rm -rf "$tmp_extract"
+		return 0
+	fi
+
+	rm -rf "$tmp_extract"
+	log_error "解压后未找到顶层目录，安装失败"
+	return 1
+}
+
 download_node() {
 	local node_ver="$1"
 	local node_arch
@@ -163,8 +395,10 @@ download_node() {
 
 	# ── 构建下载 URL 列表 (按优先级排列，支持双版本回退) ──
 	local mirror_list=""
-	local musl_tarball="node-v${node_ver}-${node_arch}-musl.tar.xz"
-	local glibc_tarball="node-v${node_ver}-${node_arch}.tar.xz"
+	local musl_tarball_gz="node-v${node_ver}-${node_arch}-musl.tar.gz"
+	local musl_tarball_xz="node-v${node_ver}-${node_arch}-musl.tar.xz"
+	local glibc_tarball_gz="node-v${node_ver}-${node_arch}.tar.gz"
+	local glibc_tarball_xz="node-v${node_ver}-${node_arch}.tar.xz"
 
 	if [ "$libc_type" = "musl" ]; then
 		echo ""
@@ -173,56 +407,65 @@ download_node() {
 		if [ "$node_arch" = "linux-arm64" ]; then
 			# ARM64 musl: unofficial-builds 不提供，从项目自托管下载
 			# 1) 项目自托管 ARM64 musl 构建 (当前版本)
-			mirror_list="${NODE_SELF_HOST}/${musl_tarball}"
+			mirror_list="${NODE_SELF_HOST}/${musl_tarball_gz} ${NODE_SELF_HOST}/${musl_tarball_xz}"
 			# 2) unofficial-builds (留作将来可能支持)
-			mirror_list="$mirror_list ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball}"
+			mirror_list="$mirror_list ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_gz} ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_xz}"
 			# 3) 回退到 V1 版本 (兼容旧环境，仅当请求 V2 时)
 			if [ "$node_ver" = "$NODE_VERSION_V2" ]; then
-				local v1_tarball="node-v${NODE_VERSION_V1}-${node_arch}-musl.tar.xz"
-				mirror_list="$mirror_list ${NODE_SELF_HOST}/${v1_tarball}"
+				local v1_tarball_gz="node-v${NODE_VERSION_V1}-${node_arch}-musl.tar.gz"
+				local v1_tarball_xz="node-v${NODE_VERSION_V1}-${node_arch}-musl.tar.xz"
+				mirror_list="$mirror_list ${NODE_SELF_HOST}/${v1_tarball_gz} ${NODE_SELF_HOST}/${v1_tarball_xz}"
 			fi
 		else
 			# x64 musl: unofficial-builds 提供
-			# 1) unofficial-builds
-			mirror_list="${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball}"
+			# 1) gzip 包优先，兼容 BusyBox tar
+			mirror_list="${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_gz} ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_xz}"
 			# 2) npmmirror 镜像
-			mirror_list="$mirror_list ${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball}"
+			mirror_list="$mirror_list ${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball_gz} ${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball_xz}"
 		fi
 	else
 		echo ""
 		echo "=== 下载 Node.js v${node_ver} (${node_arch}, glibc) ==="
 
-		mirror_list="${NODE_MIRROR}/v${node_ver}/${glibc_tarball}"
-		mirror_list="$mirror_list ${NODE_MIRROR_CN}/v${node_ver}/${glibc_tarball}"
+		mirror_list="${NODE_MIRROR}/v${node_ver}/${glibc_tarball_gz} ${NODE_MIRROR}/v${node_ver}/${glibc_tarball_xz}"
+		mirror_list="$mirror_list ${NODE_MIRROR_CN}/v${node_ver}/${glibc_tarball_gz} ${NODE_MIRROR_CN}/v${node_ver}/${glibc_tarball_xz}"
 	fi
+
+	# ── 下载前检查 /tmp 空间 (Node.js musl 包约 15MB，解压约 80MB) ──
+	_oc_check_space /tmp 51200 || exit 1   # 至少 50MB
 
 	# ── 逐个尝试下载 ──
 	local downloaded=0
-	local tmp_file="/tmp/node-v${node_ver}.tar.xz"
+	local tmp_file=""
+	local downloaded_file=""
 	local attempt=0
-	local total=$(echo "$mirror_list" | wc -w)
+	local total
+	total=$(echo "$mirror_list" | wc -w)
 
 	for mirror_url in $mirror_list; do
 		attempt=$((attempt + 1))
-		echo "  正在从 ${mirror_url} 下载... (${attempt}/${total})"
-		if curl -fSL --connect-timeout 15 --max-time 300 -o "$tmp_file" "$mirror_url" 2>/dev/null || \
-		   wget -q --timeout=15 -O "$tmp_file" "$mirror_url" 2>/dev/null; then
-			# 校验文件大小 (Node.js xz 压缩包至少 5MB; Alpine 精简包约 12MB, 官方完整包约 30MB)
-			local fsize=$(wc -c < "$tmp_file" 2>/dev/null || echo 0)
+		# 用 $$ 避免并发/重试时文件名冲突
+		tmp_file="/tmp/oc-node-$$.$(basename "$mirror_url")"
+		echo "  正在下载 (${attempt}/${total}): ${mirror_url}"
+		if _oc_http_get "$mirror_url" "$tmp_file"; then
+			# 校验文件大小 (musl 精简包 ≥ 12MB，官方完整包 ≥ 30MB，最低门槛 5MB)
+			local fsize
+			fsize=$(wc -c < "$tmp_file" 2>/dev/null || echo 0)
 			if [ "$fsize" -gt 5000000 ] 2>/dev/null; then
 				downloaded=1
+				downloaded_file="$tmp_file"
 				break
 			else
-				log_warn "文件大小异常 (${fsize} bytes), 跳过"
+				log_warn "文件大小异常 (${fsize} bytes)，跳过"
 				rm -f "$tmp_file"
 			fi
 		fi
-		log_warn "下载失败, 尝试备用镜像..."
+		log_warn "下载失败，尝试备用镜像..."
 	done
 
 	if [ "$downloaded" -eq 0 ]; then
 		log_error "所有镜像均下载失败"
-		rm -f "$tmp_file"
+		rm -f "$tmp_file" "$downloaded_file"
 		exit 1
 	fi
 
@@ -235,33 +478,18 @@ download_node() {
 		rm -rf "/overlay/upper${NODE_BASE}" 2>/dev/null
 	fi
 	ensure_mkdir "$NODE_BASE"
-	# 兼容 BusyBox tar (不支持 --strip-components) 和 GNU tar
-	# 方法: 先解压到临时目录，再移动顶层子目录内容到目标目录
-	if tar --strip-components=1 -xf "$tmp_file" -C "$NODE_BASE" 2>/dev/null; then
-		: # GNU tar 成功
-	else
-		# BusyBox tar 回退: 解压到临时目录后手动移动
-		local tmp_extract="/tmp/node-extract-$$"
-		ensure_mkdir "$tmp_extract"
-		tar xf "$tmp_file" -C "$tmp_extract"
-		# 找顶层目录 (node-vX.X.X-linux-xxx)
-		local top_dir
-		top_dir=$(ls "$tmp_extract" 2>/dev/null | head -1)
-		if [ -n "$top_dir" ] && [ -d "$tmp_extract/$top_dir" ]; then
-			cp -a "$tmp_extract/$top_dir/." "$NODE_BASE/"
-		else
-			log_error "解压后未找到顶层目录，安装失败"
-			rm -rf "$tmp_extract"
-			exit 1
-		fi
-		rm -rf "$tmp_extract"
-	fi
-	rm -f "$tmp_file"
+	extract_node_archive "$downloaded_file" "$NODE_BASE" || exit 1
+	rm -f "$downloaded_file"
+	ensure_node_runtime_deps || exit 1
 
 	# 验证
 	if [ -x "$NODE_BIN" ]; then
 		local installed_ver
-		installed_ver=$("$NODE_BIN" --version 2>/dev/null || echo "unknown")
+		installed_ver=$("$NODE_BIN" --version 2>/dev/null) || {
+			log_error "Node.js 已解压，但运行失败"
+			ldd "$NODE_BIN" 2>/dev/null | head -5 || true
+			exit 1
+		}
 		log_info "Node.js ${installed_ver} 安装成功"
 	else
 		log_error "Node.js 安装验证失败"
@@ -321,7 +549,7 @@ install_openclaw() {
 	# 检查 git 是否可用 (openclaw 部分依赖可能使用 git:// 协议)
 	if ! command -v git >/dev/null 2>&1; then
 		log_warn "未检测到 git，正在尝试安装..."
-		opkg update >/dev/null 2>&1
+		_oc_opkg_update
 		opkg install git git-http 2>&1 | tail -3 || true
 		if command -v git >/dev/null 2>&1; then
 			log_info "git 安装成功"
@@ -339,7 +567,9 @@ install_openclaw() {
 		if [ -n "$(find_oc_entry)" ]; then
 			npm_ok=1
 		else
-			log_warn "首次安装未成功，尝试 --no-optional 模式重试..."
+			log_warn "首次安装未成功，清理残留后用 --no-optional 模式重试..."
+			# 清理可能导致 ENOENT 的残留目录，避免 npm 在半成品目录上重试失败
+			rm -rf "${OC_GLOBAL}/lib/node_modules/openclaw" 2>/dev/null || true
 			"$NPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" $install_flags --no-optional 2>&1 | tail -10
 			[ -n "$(find_oc_entry)" ] && npm_ok=1
 		fi
@@ -366,8 +596,19 @@ install_openclaw() {
 		exit 1
 	fi
 
-	# 安装 Gemini CLI (官方模型配置向导的 Google Gemini OAuth 依赖)
-	if [ -x "$NPM_BIN" ]; then
+	# Gemini CLI 体积较大 (~200MB)，在资源受限的 OpenWrt 设备上跳过
+	# 仅在非 OpenWrt 且磁盘充足时安装
+	local skip_gemini=0
+	[ -f /etc/openwrt_release ] && skip_gemini=1
+	if [ "$skip_gemini" -eq 0 ]; then
+		local avail_mb
+		avail_mb=$(df -k "$OC_GLOBAL" 2>/dev/null | awk 'NR==2{print int($4/1024)}')
+		[ "${avail_mb:-0}" -lt 300 ] && skip_gemini=1
+	fi
+
+	if [ "$skip_gemini" -eq 1 ]; then
+		log_warn "跳过 Gemini CLI 安装 (OpenWrt 设备资源受限，不影响核心功能)"
+	elif [ -x "$NPM_BIN" ]; then
 		echo ""
 		echo "=== 安装 Gemini CLI (Google OAuth 依赖) ==="
 		"$NPM_BIN" install -g @google/gemini-cli --prefix="$OC_GLOBAL" $install_flags 2>&1 | tail -3
@@ -429,7 +670,7 @@ do_setup() {
 	fi
 
 	echo "╔══════════════════════════════════════════════════════════════╗"
-	echo "║            一万AI分享  OpenClaw 环境安装                     ║"
+	echo "║                kenzok8  OpenClaw 环境安装                    ║"
 	echo "╚══════════════════════════════════════════════════════════════╝"
 	echo ""
 	echo "  架构:       $(uname -m)"
@@ -504,7 +745,7 @@ do_check() {
 
 do_upgrade() {
 	echo "╔══════════════════════════════════════════════════════════════╗"
-	echo "║            一万AI分享  OpenClaw 升级                         ║"
+	echo "║                kenzok8  OpenClaw 升级                        ║"
 	echo "╚══════════════════════════════════════════════════════════════╝"
 	echo ""
 
@@ -647,7 +888,7 @@ do_setup_offline() {
 	fi
 
 	echo "╔══════════════════════════════════════════════════════════════╗"
-	echo "║       一万AI分享  OpenClaw 离线安装                          ║"
+	echo "║                kenzok8  OpenClaw 离线安装                    ║"
 	echo "╚══════════════════════════════════════════════════════════════╝"
 	echo ""
 	echo "  架构:       $(uname -m)"
@@ -657,34 +898,34 @@ do_setup_offline() {
 	echo ""
 
 	# [1] 安装 Node.js
-	local node_tarball="$offline_dir/node.tar.xz"
-	if [ -f "$node_tarball" ]; then
+	local node_tarball=""
+	if [ -f "$offline_dir/node.tar.gz" ]; then
+		node_tarball="$offline_dir/node.tar.gz"
+	elif [ -f "$offline_dir/node.tar.xz" ]; then
+		node_tarball="$offline_dir/node.tar.xz"
+	fi
+	if [ -n "$node_tarball" ]; then
 		echo "=== 安装 Node.js (离线) ==="
 		rm -rf "$NODE_BASE" 2>/dev/null
 		[ -d /overlay/upper ] && rm -rf "/overlay/upper${NODE_BASE}" 2>/dev/null
 		ensure_mkdir "$NODE_BASE"
 
-		if tar --strip-components=1 -xf "$node_tarball" -C "$NODE_BASE" 2>/dev/null; then
-			: # GNU tar
-		else
-			local tmp_extract="/tmp/node-extract-$$"
-			ensure_mkdir "$tmp_extract"
-			tar xf "$node_tarball" -C "$tmp_extract"
-			local top_dir=$(ls "$tmp_extract" 2>/dev/null | head -1)
-			if [ -n "$top_dir" ] && [ -d "$tmp_extract/$top_dir" ]; then
-				cp -a "$tmp_extract/$top_dir/." "$NODE_BASE/"
-			fi
-			rm -rf "$tmp_extract"
-		fi
+		extract_node_archive "$node_tarball" "$NODE_BASE" || exit 1
+		ensure_node_runtime_deps || exit 1
 
 		if [ -x "$NODE_BIN" ]; then
-			log_info "Node.js $($NODE_BIN --version 2>/dev/null) 安装成功"
+			local offline_node_ver
+			offline_node_ver=$($NODE_BIN --version 2>/dev/null) || {
+				log_error "Node.js 已解压，但运行失败"
+				exit 1
+			}
+			log_info "Node.js ${offline_node_ver} 安装成功"
 		else
 			log_error "Node.js 安装失败"
 			exit 1
 		fi
 	else
-		log_error "未找到 Node.js 离线包: $node_tarball"
+		log_error "未找到 Node.js 离线包: $offline_dir/node.tar.gz 或 $offline_dir/node.tar.xz"
 		exit 1
 	fi
 
