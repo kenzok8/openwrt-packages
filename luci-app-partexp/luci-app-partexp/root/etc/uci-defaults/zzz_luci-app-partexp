@@ -1,0 +1,6 @@
+#!/bin/sh
+
+chmod +x /usr/bin/partexp /usr/libexec/rpcd/partexp
+/etc/init.d/rpcd restart
+rm -f /tmp/luci-indexcache
+exit 0
