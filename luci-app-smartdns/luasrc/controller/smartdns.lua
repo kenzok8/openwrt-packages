@@ -22,6 +22,10 @@ local http = require "luci.http"
 local smartdns = require "luci.model.smartdns"
 
 function index()
+	local page
+	page = entry({"admin", "services", "smartdns", "status"}, call("act_status"))
+	page.leaf = true
+
 	if not fs.access("/etc/config/smartdns") then
 		return
 	end
@@ -31,11 +35,8 @@ function index()
 		return
 	end
 
-	local page
 	page = entry({"admin", "services", "smartdns"}, cbi("smartdns/smartdns"), _("SmartDNS"), 60)
 	page.dependent = true
-	page = entry({"admin", "services", "smartdns", "status"}, call("act_status"))
-	page.leaf = true
 	page = entry({"admin", "services", "smartdns", "upstream"}, cbi("smartdns/upstream"), nil)
 	page.leaf = true
 end
