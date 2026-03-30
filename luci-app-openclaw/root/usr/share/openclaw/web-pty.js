@@ -153,7 +153,23 @@ class PtySession {
       if (msg.type === 'stdin' && this.proc && this.proc.stdin.writable) {
         // 去除 bracketed paste 转义序列，避免污染 shell read 输入
         const cleaned = msg.data.replace(/\x1b\[\?2004[hl]/g, '').replace(/\x1b\[20[01]~/g, '');
-        this.proc.stdin.write(cleaned);
+        // sh 模式无 PTY：xterm.js 按 Enter 发送 \r，但 sh 的 read 等 \n 才结束
+        // PTY 模式由内核 PTY 层自动转换 \r → \n，无需手动处理
+        const input = this._usePty ? cleaned : cleaned.replace(/\r/g, '\n');
+        this.proc.stdin.write(input);
+        // sh 模式无 PTY echo：手动将输入回显给客户端，让用户看到自己打的字
+        if (!this._usePty) {
+          let echo = '';
+          for (let i = 0; i < cleaned.length; i++) {
+            const c = cleaned[i];
+            const code = cleaned.charCodeAt(i);
+            if (c === '\r') { echo += '\r\n'; }           // Enter: 换行
+            else if (code === 0x7f || code === 0x08) { echo += '\b \b'; } // Backspace: 擦除
+            else if (code === 0x03) { echo += '^C\r\n'; } // Ctrl+C
+            else if (code >= 0x20 && code <= 0x7e) { echo += c; } // 可打印字符
+          }
+          if (echo) this.socket.write(encodeWSFrame(echo, 0x01));
+        }
       }
       else if (msg.type === 'resize') {
         this.cols = msg.cols || 80; this.rows = msg.rows || 24;

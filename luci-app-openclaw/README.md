@@ -10,6 +10,7 @@ OpenWrt LuCI 插件，为 [OpenClaw AI Gateway](https://openclaw.ai) 提供 Web 
 
 - **一键安装**：自动下载 Node.js musl 版本 + 安装 OpenClaw，适配 OpenWrt/ImmortalWrt
 - **Web 管理界面**：概况、设置、Web 控制台、配置终端 全中文 UI
+- **配置终端**：内嵌 xterm.js + WebSocket PTY，支持完整交互式配置
 - **资源自适应**：根据设备内存自动限制 Node.js 堆大小，防止 OOM
 - **磁盘空间优化**：安装前预检空间，双 registry 重试（npmmirror → npmjs.org）
 - **BusyBox 兼容**：完整适配 OpenWrt BusyBox 环境（无 `usleep`、`stat`、`ldd` 等）
@@ -22,6 +23,8 @@ OpenWrt LuCI 插件，为 [OpenClaw AI Gateway](https://openclaw.ai) 提供 Web 
 |------|------|
 | x86_64 | 主要测试平台（ImmortalWrt x86_64）|
 | aarch64 | 树莓派、R4S、R5S 等 ARM64 设备 |
+
+---
 
 ## 安装（推荐）
 
@@ -39,7 +42,7 @@ sh -c "$(wget -qO- https://cdn.jsdelivr.net/gh/kenzok8/luci-app-openclaw@main/sc
 
 ```sh
 wget -O /tmp/luci-app-openclaw.ipk \
-  https://github.com/kenzok8/luci-app-openclaw/releases/latest/download/luci-app-openclaw_all.ipk
+  https://github.com/kenzok8/luci-app-openclaw/releases/latest/download/luci-app-openclaw_2026.03.30_all.ipk
 opkg install --force-reinstall /tmp/luci-app-openclaw.ipk
 ```
 
@@ -81,6 +84,8 @@ mount --bind /tmp/openclaw /opt/openclaw
 
 > `/tmp` 通常挂载为 tmpfs，大小约为物理内存的 50%，重启后数据丢失，需重新安装
 
+---
+
 ## 目录结构
 
 ```
@@ -114,6 +119,8 @@ luci-app-openclaw/
 └── VERSION
 ```
 
+---
+
 ## Node.js 二进制
 
 Node.js musl 静态编译版本托管在：
@@ -125,6 +132,8 @@ Node.js musl 静态编译版本托管在：
 | `node-v22.16.0-linux-arm64-musl.tar.gz` | aarch64 | musl libc 静态编译 |
 
 由 [node-bins.yml](.github/workflows/node-bins.yml) 每周自动同步最新 LTS 版本。
+
+---
 
 ## 常见问题
 
@@ -143,12 +152,19 @@ A: 插件自动根据内存设置 Node.js 堆限制（512MB RAM → 限制 256MB
 **Q: npm 安装时 ENOSPC 错误**
 A: openclaw-env 已将 npm logs 和 cache 全部重定向到 `/tmp`，避免写满根分区。如仍出现，手动执行 `df -h` 确认 `/tmp` 空间充足（建议 > 300MB）。
 
+**Q: 配置终端无法输入**
+A: 确保点击终端区域使其获得焦点，然后输入数字并按 Enter。路由器不需要安装额外的 `script` 包，插件已内置 sh 模式兼容。
+
+---
+
 ## 版本历史
 
 | 版本 | 日期 | 主要变更 |
 |------|------|---------|
-| 2026.03.30 | 2026-03-30 | 终端连接修复、npm ENOSPC 修复、双 registry 重试、磁盘空间预检、Box 对齐修复 |
+| 2026.03.30 | 2026-03-30 | 终端输入修复（server-side echo）、npm ENOSPC 修复、双 registry 重试、磁盘空间预检、Box 对齐修复、菜单文字优化 |
 | 2026.03.29 | 2026-03-29 | 初始发布，支持 x86_64/aarch64 musl |
+
+---
 
 ## 致谢
 

@@ -114,6 +114,10 @@
 
   term.open(containerEl);
 
+  // 点击终端区域时确保 xterm.js 获得键盘焦点
+  containerEl.addEventListener('click', function() { term.focus(); });
+  document.addEventListener('click', function() { term.focus(); });
+
   function doFit() {
     try { fitAddon.fit(); } catch(e) { /* ignore */ }
     try { term.scrollToBottom(); } catch(e) { /* ignore */ }
