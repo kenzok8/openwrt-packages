@@ -191,14 +191,23 @@ class PtySession {
     if (hasScript) {
       this.proc = spawn('script', ['-qc', `stty rows ${this.rows} cols ${this.cols} 2>/dev/null; printf '\\e[?2004l'; sh "${SCRIPT_PATH}"`, '/dev/null'],
         { stdio: ['pipe', 'pipe', 'pipe'], env, detached: true });
+      this._usePty = true;
     } else {
       console.log('[oc-config] "script" command not found, falling back to sh (install util-linux-script for full PTY support)');
       this.proc = spawn('sh', [SCRIPT_PATH],
         { stdio: ['pipe', 'pipe', 'pipe'], env, detached: true });
+      this._usePty = false;
     }
 
-    this.proc.stdout.on('data', (d) => { if (this.alive) { this._spawnFailCount = 0; this.socket.write(encodeWSFrame(d, 0x01)); } });
-    this.proc.stderr.on('data', (d) => { if (this.alive) { this._spawnFailCount = 0; this.socket.write(encodeWSFrame(d, 0x01)); } });
+    // sh 模式无 PTY，shell 只输出 \n，终端需要 \r\n，否则每行从上一行末尾开始（斜向偏移）
+    const _emit = (d) => {
+      if (!this.alive) return;
+      this._spawnFailCount = 0;
+      const out = this._usePty ? d : Buffer.from(d.toString('binary').replace(/\r?\n/g, '\r\n'), 'binary');
+      this.socket.write(encodeWSFrame(out, 0x01));
+    };
+    this.proc.stdout.on('data', _emit);
+    this.proc.stderr.on('data', _emit);
     this.proc.on('close', (code) => {
       if (!this.alive) return;
       // PTY 以 root 运行，子脚本可能创建了 root-owned 的目录

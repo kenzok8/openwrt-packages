@@ -73,7 +73,7 @@
   const term = new window.Terminal({
     cursorBlink: true,
     cursorStyle: 'bar',
-    fontSize: 15,
+    fontSize: 13,
     fontFamily: '"Cascadia Code", "Fira Code", "JetBrains Mono", "Source Code Pro", Menlo, Monaco, "Courier New", monospace',
     lineHeight: 1.2,
     scrollback: 5000,
@@ -144,7 +144,7 @@
     try { fitAddon.fit(); } catch(e) {}
     if (term.cols > 40) {
       _readyToConnect = true;
-      if (_connectPending) { _connectPending = false; connect(); }
+      connect();  // 首次就绪时直接连接，不依赖 _connectPending
     }
   }
   // ResizeObserver 监听容器尺寸变化（切换到本 Tab 时触发）
@@ -307,10 +307,7 @@
   function _onLoad() {
     doFit();
     _tryConnect();
-    if (!_readyToConnect) {
-      // 容器还不可见，标记待连接，等 ResizeObserver 触发
-      _connectPending = true;
-    }
+    // 若容器不可见（cols<=40），等 ResizeObserver 触发后 _tryConnect 会自动 connect()
   }
   if (document.readyState === 'complete') {
     _onLoad();

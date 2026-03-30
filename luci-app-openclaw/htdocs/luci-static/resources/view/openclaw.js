@@ -66,9 +66,12 @@ var CSS = '\
 .oc-btn:active{transform:scale(.97)}\
 .oc-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;filter:none}\
 .oc-btn-p{background:var(--primary,#5e72e4);color:#fff}\
-.oc-btn-s{background:#2e7d32;color:#fff}\
-.oc-btn-d{background:#c62828;color:#fff}\
-.oc-btn-r{background:#e65100;color:#fff}\
+.oc-btn-s{background:#1b5e20;color:#fff;box-shadow:0 2px 6px rgba(27,94,32,.35)}\
+.oc-btn-s:hover{background:#2e7d32}\
+.oc-btn-d{background:#37474f;color:#fff;box-shadow:0 2px 6px rgba(55,71,79,.3)}\
+.oc-btn-d:hover{background:#546e7a}\
+.oc-btn-r{background:#1565c0;color:#fff;box-shadow:0 2px 6px rgba(21,101,192,.35)}\
+.oc-btn-r:hover{background:#1976d2}\
 .oc-btn-g{border:1px solid rgba(128,128,128,.3);color:inherit;background:transparent}\
 .oc-btn-icon{padding:6px 10px;font-size:16px;line-height:1;min-width:unset}\
 .oc-log-wrap{margin-top:16px;display:none}\
@@ -109,12 +112,11 @@ var CSS = '\
 .oc-switch input:checked+.slider{background:var(--primary,#5e72e4)}\
 .oc-switch input:checked+.slider:before{transform:translateX(20px)}\
 .oc-more-wrap{position:relative;display:inline-block}\
-.oc-more-menu{position:absolute;bottom:calc(100% + 4px);right:0;border:1px solid rgba(128,128,128,.2);border-radius:10px;box-shadow:0 -4px 20px rgba(0,0,0,.12);min-width:190px;z-index:100;display:none;overflow:hidden;padding:4px 0;background:var(--background-color-low,#f8f8f8)}\
-.oc-more-menu.open{display:block}\
+.oc-more-menu{position:fixed;border:1px solid rgba(128,128,128,.2);border-radius:10px;box-shadow:0 -4px 20px rgba(0,0,0,.15);min-width:190px;z-index:9999;display:none;overflow:hidden;padding:4px 0;background:var(--background-color-low,#f8f8f8)}\
 .oc-more-item{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:background .12s;color:inherit}\
 .oc-more-item:hover{background:rgba(128,128,128,.1)}\
-.oc-more-item.danger{color:#c62828}\
-.oc-more-item.danger:hover{background:rgba(198,40,40,.08)}\
+.oc-more-item.danger{color:inherit;background:none}\
+.oc-more-item.danger:hover{background:rgba(128,128,128,.1)}\
 .oc-more-sep{height:1px;background:rgba(128,128,128,.15);margin:4px 0}\
 @media(max-width:768px){\
 #oc-app{padding:0 10px;overflow-x:hidden}\
@@ -183,7 +185,7 @@ return view.extend({
 
 		document.addEventListener('click', function() {
 			var m = document.getElementById('oc-more-menu');
-			if (m) m.classList.remove('open');
+			if (m) m.style.display = 'none';
 		});
 
 		return app;
@@ -323,14 +325,21 @@ return view.extend({
 			'click': function(ev) {
 				ev.stopPropagation();
 				var m = document.getElementById('oc-more-menu');
-				if (m) m.classList.toggle('open');
+				if (!m) return;
+				if (m.style.display === 'block') { m.style.display = 'none'; return; }
+				var rect = ev.currentTarget.getBoundingClientRect();
+				m.style.display = 'block';
+				var mh = m.offsetHeight;
+				m.style.top = (rect.top - mh - 6) + 'px';
+				m.style.left = 'auto';
+				m.style.right = (window.innerWidth - rect.right) + 'px';
 			}
 		}, ['⚙']));
 
 		gearWrap.appendChild(E('div', { 'class': 'oc-more-menu', 'id': 'oc-more-menu' }, [
-			E('div', { 'class': 'oc-more-item', 'click': function() { self._closeMenu(); self._showSetupDialog(); } }, ['📦 ' + _('重装环境')]),
+			E('div', { 'class': 'oc-more-item', 'click': function() { self._closeMenu(); self._showSetupDialog(); } }, ['📦 ' + _('安装环境')]),
 			E('div', { 'class': 'oc-more-sep' }),
-			E('div', { 'class': 'oc-more-item danger', 'click': function() { self._closeMenu(); self._uninstall(); } }, ['🗑️ ' + _('卸载')])
+			E('div', { 'class': 'oc-more-item', 'click': function() { self._closeMenu(); self._uninstall(); } }, ['🗑️ ' + _('卸载')])
 		]));
 
 		wrap.appendChild(gearWrap);
@@ -339,7 +348,7 @@ return view.extend({
 
 	_closeMenu: function() {
 		var m = document.getElementById('oc-more-menu');
-		if (m) m.classList.remove('open');
+		if (m) m.style.display = 'none';
 	},
 
 	_logViewer: function() {
@@ -552,7 +561,7 @@ return view.extend({
 
 		var overlay = E('div', { 'class': 'oc-dialog-overlay', 'id': 'oc-setup-dlg' });
 		var dlg = E('div', { 'class': 'oc-dialog' }, [
-			E('h3', {}, ['📦 ' + _('选择安装版本')]),
+			E('h3', {}, ['📦 ' + _('安装环境')]),
 			E('div', {
 				'class': 'oc-dialog-opt sel', 'id': 'oc-opt-stable',
 				'click': function() { choice = 'stable'; self._selOpt('stable'); }

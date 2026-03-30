@@ -1,1012 +1,687 @@
 #!/bin/sh
 # ============================================================================
-# openclaw-env — Node.js 环境自动检测/下载 + OpenClaw 安装
-# 用法:
-#   openclaw-env setup     — 完整安装 (Node.js + pnpm + OpenClaw)
-#   openclaw-env check     — 检查环境状态
-#   openclaw-env upgrade   — 升级 OpenClaw 到最新版
-#   openclaw-env node      — 仅下载/更新 Node.js
-# 环境变量:
-#   OC_VERSION  — 指定 OpenClaw 版本 (如 2026.3.1)，不设置则安装最新版
+# openclaw-env — OpenClaw 环境安装管理脚本
+# 用法: openclaw-env setup | check | upgrade | node
+# 环境变量: OC_VERSION — 指定安装版本，不设置则安装稳定测试版
 # ============================================================================
-set -e
 
-# ── Node.js 版本策略 (双版本兼容) ──
-# V2: 当前推荐版本，用于 OpenClaw v2026.3.11+ (要求 >= 22.16.0)
-# V1: 旧版兼容，用于 OpenClaw v2026.3.8 及更早版本
-NODE_VERSION_V2="22.16.0"
-NODE_VERSION_V1="22.15.1"
-# 默认使用 V2 版本 (可通过 NODE_VERSION 环境变量覆盖)
-NODE_VERSION="${NODE_VERSION:-${NODE_VERSION_V2}}"
-# 经过验证的 OpenClaw 稳定版本 (更新此值需同步测试)
+# ── 版本与路径常量 ─────────────────────────────────────────────────────────
+NODE_VERSION="22.16.0"
 OC_TESTED_VERSION="2026.3.13"
-# 用户可通过 OC_VERSION 环境变量覆盖安装版本
 OC_VERSION="${OC_VERSION:-}"
+
 NODE_BASE="/opt/openclaw/node"
 OC_GLOBAL="/opt/openclaw/global"
 OC_DATA="/opt/openclaw/data"
-
-# ── OverlayFS 兼容性修复 ──
-# iStoreOS/OpenWrt 上 Docker 的 bind mount (/overlay/upper/opt/docker)
-# 会导致 OverlayFS 合并视图中 /opt 完全不可写 (mkdir 报 "Directory not empty")。
-# 解决方案: 将 /overlay/upper/opt bind mount 到 /opt，绕过 OverlayFS 冲突。
-_oc_fix_opt() {
-	# 如果 /opt 可正常写入，无需修复
-	if mkdir -p /opt/openclaw/.probe 2>/dev/null; then
-		rmdir /opt/openclaw/.probe 2>/dev/null
-		return 0
-	fi
-	# /opt 不可写且 overlay upper 层存在 — 执行 bind mount 修复
-	if [ -d /overlay/upper/opt ]; then
-		# 确保 upper 层有 openclaw 目录
-		mkdir -p /overlay/upper/opt/openclaw 2>/dev/null
-		# 绑定挂载 upper 层的 /opt 到合并视图的 /opt
-		mount --bind /overlay/upper/opt /opt 2>/dev/null && return 0
-	fi
-	return 1
-}
-_oc_fix_opt
-
 NODE_BIN="${NODE_BASE}/bin/node"
 NPM_BIN="${NODE_BASE}/bin/npm"
-PNPM_BIN="${OC_GLOBAL}/bin/pnpm"
 
-# Node.js 官方镜像 + musl 非官方构建
-# Node.js 官方镜像 + musl 非官方构建
-NODE_MIRROR="${NODE_MIRROR:-https://nodejs.org/dist}"
-NODE_MIRROR_CN="https://npmmirror.com/mirrors/node"
-NODE_MUSL_MIRROR="https://unofficial-builds.nodejs.org/download/release"
-# 项目自托管 ARM64 musl Node.js (unofficial-builds 仅提供 x64 musl)
+# 下载镜像
+NODE_MUSL_CN="https://npmmirror.com/mirrors/node"
+NODE_MUSL_UNOFFICIAL="https://unofficial-builds.nodejs.org/download/release"
 NODE_SELF_HOST="https://github.com/kenzok8/luci-app-openclaw/releases/download/node-bins"
+ALPINE_MIRROR="https://mirrors.aliyun.com/alpine/v3.21/main"
+ALPINE_CDN="https://dl-cdn.alpinelinux.org/alpine/v3.21/main"
 
 export PATH="${NODE_BASE}/bin:${OC_GLOBAL}/bin:$PATH"
-export NODE_ICU_DATA="${NODE_BASE}/share/icu"
 
-log_info() { echo "  [✓] $1"; }
-log_warn() { echo "  [!] $1"; }
-log_error() { echo "  [✗] $1"; }
+# ── 日志工具 ───────────────────────────────────────────────────────────────
+log_ok()   { echo "  [✓] $*"; }
+log_warn() { echo "  [!] $*"; }
+log_err()  { echo "  [✗] $*"; }
+log_step() { echo ""; echo "=== $* ==="; }
 
-# 安全创建目录 (会在 _oc_fix_opt 修复 /opt 后使用标准路径)
-ensure_mkdir() {
-	local target="$1"
-	[ -d "$target" ] && return 0
-	if ! mkdir -p "$target" 2>/dev/null; then
-		log_error "无法创建目录: $target"
-		log_error "如果安装了 Docker，可能需要手动执行: mount --bind /overlay/upper/opt /opt"
-		return 1
-	fi
-}
-
-# ── OpenWrt/BusyBox 专用底层工具 ──────────────────────────────────────────────
-
-# 已选定的下载工具 (空=未初始化)
-_OC_DOWNLOADER=""
-
-# 检测可用下载工具 (OpenWrt 上 wget 是 BusyBox 内置，curl 是可选包，wget 优先)
-_oc_detect_downloader() {
-	[ -n "$_OC_DOWNLOADER" ] && return 0
-	if command -v wget >/dev/null 2>&1; then
-		_OC_DOWNLOADER="wget"
-	elif command -v curl >/dev/null 2>&1; then
-		_OC_DOWNLOADER="curl"
-	else
-		log_error "没有可用的下载工具 (wget 或 curl 均未找到)"
-		return 1
-	fi
-}
-
-# 统一下载函数，兼容 BusyBox wget 和 curl
-# 用法: _oc_http_get <url> <output_file>
-# BusyBox wget 注意事项:
-#   - 使用 -T (inactivity timeout)，不是 --max-time
-#   - 设置足够长的超时 (120s)，避免慢速连接中断
-#   - 如果 HTTPS 失败 (CA 证书缺失)，自动加 --no-check-certificate 重试
-_oc_http_get() {
-	local url="$1"
-	local out="$2"
-	_oc_detect_downloader || return 1
-
-	rm -f "$out"
-	if [ "$_OC_DOWNLOADER" = "wget" ]; then
-		wget -q -T 120 -O "$out" "$url" 2>/dev/null && return 0
-		# SSL 失败重试 (OpenWrt 常缺 CA bundle)
-		wget -q -T 120 --no-check-certificate -O "$out" "$url" 2>/dev/null && return 0
-	else
-		curl -fL --connect-timeout 20 --max-time 300 -o "$out" "$url" 2>/dev/null && return 0
-		# SSL 失败重试
-		curl -fL --connect-timeout 20 --max-time 300 -k -o "$out" "$url" 2>/dev/null && return 0
-	fi
-	rm -f "$out"
+# ── OverlayFS 修复（iStoreOS Docker /opt 冲突）──────────────────────────────
+_fix_opt() {
+	mkdir -p /opt/openclaw/.probe 2>/dev/null && { rmdir /opt/openclaw/.probe 2>/dev/null; return 0; }
+	[ -d /overlay/upper/opt ] && mkdir -p /overlay/upper/opt/openclaw 2>/dev/null && \
+		mount --bind /overlay/upper/opt /opt 2>/dev/null && return 0
 	return 1
 }
+_fix_opt
 
-# 检查目录可用空间是否满足最小要求
-# 用法: _oc_check_space <dir> <min_kb>
-_oc_check_space() {
-	local dir="$1"
-	local min_kb="$2"
+# ── 基础工具 ───────────────────────────────────────────────────────────────
+ensure_dir() { [ -d "$1" ] && return 0; mkdir -p "$1" 2>/dev/null || { log_err "无法创建目录: $1"; return 1; }; }
+
+# 检查路径可用空间，不足则警告（不阻断）
+# 用 tail -1 + $(NF-2) 兼容 BusyBox df 长设备名换行的输出格式
+_df_avail() {
+	# 路径不存在则尝试上级直到根
+	local p="$1"
+	while [ -n "$p" ] && [ "$p" != "/" ]; do
+		[ -e "$p" ] && break
+		p="${p%/*}"
+	done
+	[ -z "$p" ] && p="/"
+	df -m "$p" 2>/dev/null | tail -1 | awk '{print $(NF-2)}'
+}
+
+check_space() {
+	local path="$1" need_mb="$2" label="$3"
 	local avail
-	# BusyBox df: 第 4 列是 Available (KB)
-	avail=$(df -k "$dir" 2>/dev/null | awk 'NR==2{print $4}')
-	[ -z "$avail" ] && return 0   # 无法检测则跳过
-	if [ "$avail" -lt "$min_kb" ] 2>/dev/null; then
-		log_error "空间不足: $dir 仅剩 ${avail}KB，至少需要 ${min_kb}KB"
-		return 1
+	avail=$(_df_avail "$path")
+	[ -z "$avail" ] && return 0
+	if [ "$avail" -lt "$need_mb" ]; then
+		log_warn "${label} 可用空间不足：${avail}MB < ${need_mb}MB 建议值，安装可能失败"
+	else
+		log_ok "${label} 可用空间：${avail}MB"
 	fi
 }
 
-# opkg update 只执行一次，后续调用直接跳过
-_OC_OPKG_UPDATED=0
-_oc_opkg_update() {
-	[ "$_OC_OPKG_UPDATED" -eq 1 ] && return 0
-	command -v opkg >/dev/null 2>&1 || return 0
-	log_warn "正在更新 opkg 包列表..."
-	opkg update >/dev/null 2>&1 || true
-	_OC_OPKG_UPDATED=1
+# 统一下载：BusyBox wget 优先，curl 备用
+_download() {
+	local url="$1" out="$2"
+	if command -v wget >/dev/null 2>&1; then
+		wget -q --no-check-certificate -O "$out" "$url" 2>/dev/null
+	elif command -v curl >/dev/null 2>&1; then
+		curl -fsSL --connect-timeout 15 --max-time 120 -o "$out" "$url" 2>/dev/null
+	else
+		log_err "没有可用的下载工具 (wget/curl)"; return 1
+	fi
 }
 
-# ─────────────────────────────────────────────────────────────────────────────
-
-# 从 Alpine 仓库下载并提取 libstdc++.so.6
-# 背景: 新版 ImmortalWrt 仓库已切换为 apk v3 (ADBd) 格式，opkg 无法识别。
-# Alpine 同样使用 musl libc，libstdc++ ABI 与 ImmortalWrt 兼容。
-# Alpine apk v2 格式 = [签名.tar.gz] + [数据.tar.gz] 拼接，BusyBox tar 可解。
-_oc_install_libstdcpp_from_alpine() {
-	local tmp_dir="/tmp/oc-libstdcpp-$$"
-	mkdir -p "$tmp_dir/extract" || return 1
-
-	local arch_str
-	case "$(uname -m)" in
-		x86_64)  arch_str="x86_64" ;;
-		aarch64) arch_str="aarch64" ;;
-		*)
-			log_error "不支持的架构: $(uname -m)"
-			rm -rf "$tmp_dir"
-			return 1
-			;;
-	esac
-
-	local pkg_name="libstdc++-14.2.0-r4.apk"
-	local mirrors="
-https://dl-cdn.alpinelinux.org/alpine/v3.21/main/${arch_str}/${pkg_name}
-https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.21/main/${arch_str}/${pkg_name}
-https://mirrors.aliyun.com/alpine/v3.21/main/${arch_str}/${pkg_name}
-"
-	local pkg_file="$tmp_dir/libstdc++.apk"
-	local downloaded=0
-
-	for url in $mirrors; do
+# 尝试多个镜像，返回第一个成功的文件
+_download_first() {
+	local out="$1"; shift
+	for url in "$@"; do
 		[ -z "$url" ] && continue
-		log_warn "  尝试: $url"
-		if _oc_http_get "$url" "$pkg_file"; then
-			local fsize
-			fsize=$(wc -c < "$pkg_file" 2>/dev/null || echo 0)
-			if [ "$fsize" -gt 100000 ]; then
-				downloaded=1
-				break
-			fi
-			log_warn "文件大小异常 (${fsize} bytes)，跳过"
+		if _download "$url" "$out"; then
+			local sz; sz=$(wc -c < "$out" 2>/dev/null || echo 0)
+			[ "$sz" -gt 10000 ] && return 0
 		fi
-		rm -f "$pkg_file"
+		rm -f "$out"
 	done
-
-	if [ "$downloaded" -eq 0 ]; then
-		log_error "所有镜像均无法下载 libstdc++ 包"
-		rm -rf "$tmp_dir"
-		return 1
-	fi
-
-	# 尝试直接解压 (部分 BusyBox tar 能跳过签名段)
-	( cd "$tmp_dir/extract" && tar -xzf "$pkg_file" 2>/dev/null ) || true
-
-	local so_file
-	so_file=$(find "$tmp_dir/extract" -name "libstdc++.so.6.*" | head -1)
-
-	if [ -z "$so_file" ]; then
-		# 直接解压未能提取到文件 — BusyBox tar 停在签名段
-		# Alpine 签名段固定 < 4096 字节，逐步偏移跳过
-		local offset
-		for offset in 512 1024 2048 4096; do
-			local ex2="$tmp_dir/extract2_${offset}"
-			mkdir -p "$ex2"
-			dd if="$pkg_file" bs=1 skip=$offset 2>/dev/null | \
-				tar -xzf - -C "$ex2" 2>/dev/null || true
-			so_file=$(find "$ex2" -name "libstdc++.so.6.*" | head -1)
-			[ -n "$so_file" ] && break
-		done
-	fi
-
-	if [ -z "$so_file" ]; then
-		log_error "无法从 Alpine 包中提取 libstdc++.so.6，请手动安装"
-		rm -rf "$tmp_dir"
-		return 1
-	fi
-
-	local so_name
-	so_name=$(basename "$so_file")
-	cp "$so_file" /usr/lib/
-	ln -sf "/usr/lib/$so_name" /usr/lib/libstdc++.so.6
-	ldconfig 2>/dev/null || true
-
-	rm -rf "$tmp_dir"
-	log_info "libstdc++.so.6 已从 Alpine 包安装 ($so_name)"
-	return 0
-}
-
-ensure_node_runtime_deps() {
-	local pkgs=""
-
-	[ -e /usr/lib/libstdc++.so.6 ] || [ -e /lib/libstdc++.so.6 ] || pkgs="$pkgs libstdcpp"
-	[ -e /lib/libgcc_s.so.1 ] || pkgs="$pkgs libgcc1"
-
-	pkgs=$(echo "$pkgs" | awk '{$1=$1; print}')
-	[ -n "$pkgs" ] || return 0
-
-	log_warn "缺少 Node.js 运行依赖，正在安装: $pkgs"
-	if command -v opkg >/dev/null 2>&1; then
-		_oc_opkg_update
-		opkg install $pkgs 2>&1 | tail -5 || true
-	fi
-
-	# opkg 成功则直接返回
-	if [ -e /usr/lib/libstdc++.so.6 ] || [ -e /lib/libstdc++.so.6 ]; then
-		return 0
-	fi
-
-	# opkg 失败 (新版 ImmortalWrt 仓库为 apk v3 格式，opkg 不兼容)
-	# 回退: 从 Alpine 仓库提取 libstdc++.so.6 (Alpine 同为 musl，ABI 兼容)
-	log_warn "opkg 安装失败，尝试从 Alpine 仓库提取 libstdc++.so.6..."
-	if _oc_install_libstdcpp_from_alpine; then
-		return 0
-	fi
-
-	log_error "libstdc++ 安装失败，Node.js 无法运行"
 	return 1
 }
 
-# 检测 C 运行时类型 (glibc vs musl)
-# OpenWrt/ImmortalWrt 必为 musl，优先通过系统标志文件判断
-# 避免直接调 ldd —— OpenWrt 上 ldd 可能不存在
+# ── 架构检测 ───────────────────────────────────────────────────────────────
+detect_arch() {
+	case "$(uname -m)" in
+		x86_64)  echo "linux-x64" ;;
+		aarch64) echo "linux-arm64" ;;
+		*) log_err "不支持的架构: $(uname -m)"; exit 1 ;;
+	esac
+}
+
 detect_libc() {
-	# 1. OpenWrt/ImmortalWrt 标志文件 (最明确)
 	[ -f /etc/openwrt_release ] && echo "musl" && return
-	# 2. musl 动态链接器存在
-	for _f in /lib/ld-musl-*.so.1; do
-		[ -f "$_f" ] && echo "musl" && return
-	done
-	# 3. 通用 Linux: 尝试 ldd 输出
-	ldd --version 2>&1 | grep -qi musl && echo "musl" && return
+	for f in /lib/ld-musl-*.so.1; do [ -f "$f" ] && echo "musl" && return; done
 	echo "glibc"
 }
 
-# 在所有可能的位置查找 openclaw 入口文件
-# pnpm 全局安装路径形如: $OC_GLOBAL/5/node_modules/openclaw
+# ── 查找 openclaw 入口文件 ─────────────────────────────────────────────────
 find_oc_entry() {
-	local search_dirs="${OC_GLOBAL}/lib/node_modules/openclaw
-${OC_GLOBAL}/node_modules/openclaw
-${NODE_BASE}/lib/node_modules/openclaw"
-
-	# 添加 pnpm 版本化目录 (如 /opt/openclaw/global/5/node_modules/openclaw)
-	for ver_dir in "${OC_GLOBAL}"/*/node_modules/openclaw; do
-		[ -d "$ver_dir" ] 2>/dev/null && search_dirs="$search_dirs
-$ver_dir"
-	done
-
 	local d
-	echo "$search_dirs" | while read -r d; do
-		[ -z "$d" ] && continue
-		if [ -f "${d}/openclaw.mjs" ]; then
-			echo "${d}/openclaw.mjs"
-			return
-		elif [ -f "${d}/dist/cli.js" ]; then
-			echo "${d}/dist/cli.js"
-			return
-		fi
+	for d in \
+		"${OC_GLOBAL}/lib/node_modules/openclaw" \
+		"${OC_GLOBAL}/node_modules/openclaw" \
+		"${NODE_BASE}/lib/node_modules/openclaw"; do
+		[ -f "${d}/openclaw.mjs" ] && echo "${d}/openclaw.mjs" && return
+		[ -f "${d}/dist/cli.js"  ] && echo "${d}/dist/cli.js"  && return
+	done
+	# pnpm 版本化路径 (如 global/5/node_modules/openclaw)
+	for d in "${OC_GLOBAL}"/*/node_modules/openclaw; do
+		[ -f "${d}/openclaw.mjs" ] && echo "${d}/openclaw.mjs" && return
+		[ -f "${d}/dist/cli.js"  ] && echo "${d}/dist/cli.js"  && return
 	done
 }
 
-detect_arch() {
-	local arch
-	arch=$(uname -m)
-	case "$arch" in
-		x86_64)  echo "linux-x64" ;;
-		aarch64) echo "linux-arm64" ;;
-		armv7l|armv6l)
-			log_error "不支持的 CPU 架构: $arch"
-			log_error "Node.js v22+ 不提供 32 位 ARM 预编译包。"
-			log_error "建议: 使用 aarch64 (ARM64) 版本的固件，或使用 x86_64 设备。"
-			exit 1
-			;;
-		*)
-			log_error "不支持的 CPU 架构: $arch (仅支持 x86_64/aarch64)"
-			exit 1
-			;;
-	esac
-}
+# ── 安装 git（npm 依赖） ───────────────────────────────────────────────────
+# 策略：opkg → 从 Alpine APK 提取二进制（Alpine 与 ImmortalWrt 同为 musl，ABI 兼容）
+# Alpine APK 有签名头，BusyBox tar 需要跳过才能解压
+_extract_apk_file() {
+	# 用法: _extract_apk_file <apk文件> <目标目录> <要找的文件名模式>
+	# Alpine APK = 签名段 + gzip tar，BusyBox tar 可能停在签名段
+	# 先直接解压，失败则用 dd 跳过签名（签名段 < 4096 字节）
+	local apk="$1" dest="$2" pattern="$3"
+	ensure_dir "$dest"
+	( cd "$dest" && tar xzf "$apk" 2>/dev/null ) || true
+	local found; found=$(find "$dest" -name "$pattern" | head -1)
+	[ -n "$found" ] && echo "$found" && return 0
 
-extract_node_archive() {
-	local archive="$1"
-	local dest="$2"
-	local tmp_extract="/tmp/node-extract-$$"
-	local top_dir
-
-	case "$archive" in
-		*.tar.gz|*.tgz)
-			if tar --strip-components=1 -zxf "$archive" -C "$dest" 2>/dev/null; then
-				return 0
-			fi
-			ensure_mkdir "$tmp_extract" || return 1
-			tar zxf "$archive" -C "$tmp_extract" || {
-				rm -rf "$tmp_extract"
-				return 1
-			}
-			;;
-		*.tar.xz)
-			if tar --strip-components=1 -xf "$archive" -C "$dest" 2>/dev/null; then
-				return 0
-			fi
-			log_error "当前系统无法解压 .tar.xz，请改用 .tar.gz 包"
-			return 1
-			;;
-		*)
-			log_error "不支持的 Node.js 压缩包格式: $archive"
-			return 1
-			;;
-	esac
-
-	# 用 tar -tf 获取顶层目录名，比 ls | head -1 更可靠
-	top_dir=$(tar -tzf "$archive" 2>/dev/null | head -1 | cut -d/ -f1)
-	if [ -n "$top_dir" ] && [ -d "$tmp_extract/$top_dir" ]; then
-		cp -a "$tmp_extract/$top_dir/." "$dest/"
-		rm -rf "$tmp_extract"
-		return 0
-	fi
-
-	rm -rf "$tmp_extract"
-	log_error "解压后未找到顶层目录，安装失败"
+	# BusyBox tar 停在签名段，用 dd 逐步跳过
+	local offset ex
+	for offset in 512 1024 2048 4096; do
+		ex="${dest}/ex${offset}"
+		ensure_dir "$ex"
+		dd if="$apk" bs=1 skip=$offset 2>/dev/null | tar xzf - -C "$ex" 2>/dev/null || true
+		found=$(find "$ex" -name "$pattern" | head -1)
+		[ -n "$found" ] && echo "$found" && return 0
+	done
 	return 1
 }
 
-download_node() {
-	local node_ver="$1"
-	local node_arch
-	node_arch=$(detect_arch)
-	local libc_type
-	libc_type=$(detect_libc)
+install_git() {
+	command -v git >/dev/null 2>&1 && return 0
+	log_warn "未检测到 git，正在尝试安装..."
 
-	# 如果已存在且版本兼容, 跳过
-	if [ -x "$NODE_BIN" ]; then
-		local current_ver
-		current_ver=$("$NODE_BIN" --version 2>/dev/null | sed 's/^v//')
-		if [ "$current_ver" = "$node_ver" ]; then
-			log_info "Node.js v${node_ver} 已安装, 跳过下载"
-			return 0
-		fi
-		# ARM64 musl 使用 Alpine 打包，版本号可能不完全匹配
-		# 只要主版本号相同即认为兼容 (如 22.15.1 vs 22.15.0)
-		local cur_major=$(echo "$current_ver" | cut -d. -f1)
-		local want_major=$(echo "$node_ver" | cut -d. -f1)
-		if [ "$cur_major" = "$want_major" ]; then
-			log_info "Node.js v${current_ver} 已安装 (兼容 v${node_ver}), 跳过下载"
-			return 0
-		fi
-		log_warn "当前 Node.js v${current_ver}, 将更新到 v${node_ver}"
-	fi
+	# 1) opkg
+	opkg install git git-http 2>/dev/null | tail -2 || true
+	command -v git >/dev/null 2>&1 && { log_ok "git 已通过 opkg 安装"; return 0; }
 
-	# ── 构建下载 URL 列表 (按优先级排列，支持双版本回退) ──
-	local mirror_list=""
-	local musl_tarball_gz="node-v${node_ver}-${node_arch}-musl.tar.gz"
-	local musl_tarball_xz="node-v${node_ver}-${node_arch}-musl.tar.xz"
-	local glibc_tarball_gz="node-v${node_ver}-${node_arch}.tar.gz"
-	local glibc_tarball_xz="node-v${node_ver}-${node_arch}.tar.xz"
+	# 2) 从 Alpine APK 提取 git 二进制
+	local arch
+	case "$(uname -m)" in
+		x86_64)  arch="x86_64" ;;
+		aarch64) arch="aarch64" ;;
+		*) log_warn "无法为此架构安装 git"; return 1 ;;
+	esac
 
-	if [ "$libc_type" = "musl" ]; then
-		echo ""
-		echo "=== 下载 Node.js v${node_ver} (${node_arch}, musl libc) ==="
+	local tmp="/tmp/oc-git-$$"
+	ensure_dir "$tmp" || return 1
+	local pkg="git-2.47.3-r0.apk"
 
-		if [ "$node_arch" = "linux-arm64" ]; then
-			# ARM64 musl: unofficial-builds 不提供，从项目自托管下载
-			# 1) 项目自托管 ARM64 musl 构建 (当前版本)
-			mirror_list="${NODE_SELF_HOST}/${musl_tarball_gz} ${NODE_SELF_HOST}/${musl_tarball_xz}"
-			# 2) unofficial-builds (留作将来可能支持)
-			mirror_list="$mirror_list ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_gz} ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_xz}"
-			# 3) 回退到 V1 版本 (兼容旧环境，仅当请求 V2 时)
-			if [ "$node_ver" = "$NODE_VERSION_V2" ]; then
-				local v1_tarball_gz="node-v${NODE_VERSION_V1}-${node_arch}-musl.tar.gz"
-				local v1_tarball_xz="node-v${NODE_VERSION_V1}-${node_arch}-musl.tar.xz"
-				mirror_list="$mirror_list ${NODE_SELF_HOST}/${v1_tarball_gz} ${NODE_SELF_HOST}/${v1_tarball_xz}"
+	log_warn "尝试从 Alpine 镜像提取 git..."
+	if _download_first "$tmp/git.apk" \
+		"${ALPINE_MIRROR}/${arch}/${pkg}" \
+		"${ALPINE_CDN}/${arch}/${pkg}"; then
+
+		local git_bin
+		git_bin=$(_extract_apk_file "$tmp/git.apk" "$tmp/extracted" "git")
+		# 过滤掉目录，只要可执行文件
+		[ -n "$git_bin" ] && [ ! -d "$git_bin" ] || \
+			git_bin=$(find "$tmp/extracted" -name "git" -type f | head -1)
+
+		if [ -n "$git_bin" ] && [ -f "$git_bin" ]; then
+			# 直接安装到系统路径（安装后通过 _GIT_INSTALLED 标记，用完清理）
+			# 这是最可靠的方式——npm spawn 继承完整系统 PATH 和 libexec
+			cp "$git_bin" /usr/bin/git && chmod 755 /usr/bin/git
+			_GIT_INSTALLED_SYSTEM=1
+
+			# 安装 git-core（含 git-remote-https）到系统路径
+			# Alpine 固定路径: usr/libexec/git-core（不用 find，避免取到 usr/share/git-core）
+			local core_src="$tmp/extracted/usr/libexec/git-core"
+			if [ -d "$core_src" ] && [ -f "$core_src/git-remote-https" ]; then
+				mkdir -p /usr/libexec
+				cp -r "$core_src" /usr/libexec/git-core
+				chmod 755 /usr/libexec/git-core/* 2>/dev/null || true
 			fi
-		else
-			# x64 musl: unofficial-builds 提供
-			# 1) npmmirror 国内镜像优先 (国内访问更稳定)
-			mirror_list="${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball_gz} ${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball_xz}"
-			# 2) unofficial-builds 官方源备用
-			mirror_list="$mirror_list ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_gz} ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_xz}"
-			# 3) 项目自托管备用
-			mirror_list="$mirror_list ${NODE_SELF_HOST}/${musl_tarball_gz}"
-		fi
-	else
-		echo ""
-		echo "=== 下载 Node.js v${node_ver} (${node_arch}, glibc) ==="
+			rm -rf "$tmp"
 
-		mirror_list="${NODE_MIRROR}/v${node_ver}/${glibc_tarball_gz} ${NODE_MIRROR}/v${node_ver}/${glibc_tarball_xz}"
-		mirror_list="$mirror_list ${NODE_MIRROR_CN}/v${node_ver}/${glibc_tarball_gz} ${NODE_MIRROR_CN}/v${node_ver}/${glibc_tarball_xz}"
-	fi
+			opkg install libpcre2 2>/dev/null | tail -1 || true
 
-	# ── 下载前检查 /tmp 空间 (Node.js musl 包约 15MB，解压约 80MB) ──
-	_oc_check_space /tmp 51200 || exit 1   # 至少 50MB
-
-	# ── 逐个尝试下载 ──
-	local downloaded=0
-	local tmp_file=""
-	local downloaded_file=""
-	local attempt=0
-	local total
-	total=$(echo "$mirror_list" | wc -w)
-
-	for mirror_url in $mirror_list; do
-		attempt=$((attempt + 1))
-		# 用 $$ 避免并发/重试时文件名冲突
-		tmp_file="/tmp/oc-node-$$.$(basename "$mirror_url")"
-		echo "  正在下载 (${attempt}/${total}): ${mirror_url}"
-		if _oc_http_get "$mirror_url" "$tmp_file"; then
-			# 校验文件大小 (musl 精简包 ≥ 12MB，官方完整包 ≥ 30MB，最低门槛 5MB)
-			local fsize
-			fsize=$(wc -c < "$tmp_file" 2>/dev/null || echo 0)
-			if [ "$fsize" -gt 5000000 ] 2>/dev/null; then
-				downloaded=1
-				downloaded_file="$tmp_file"
-				break
+			if /usr/bin/git --version >/dev/null 2>&1; then
+				log_ok "git 可用: $(/usr/bin/git --version 2>/dev/null)"
+				return 0
 			else
-				log_warn "文件大小异常 (${fsize} bytes)，跳过"
-				rm -f "$tmp_file"
+				log_warn "git 二进制无法运行"
+				rm -f /usr/bin/git; rm -rf /usr/libexec/git-core
+				_GIT_INSTALLED_SYSTEM=0
 			fi
 		fi
-		log_warn "下载失败，尝试备用镜像..."
-	done
-
-	if [ "$downloaded" -eq 0 ]; then
-		log_error "所有镜像均下载失败"
-		rm -f "$tmp_file" "$downloaded_file"
-		exit 1
 	fi
 
-	# 解压
-	echo "  正在解压到 ${NODE_BASE}..."
-	# OverlayFS 兼容: rm -rf 后可能因 whiteout 导致 mkdir 失败
-	# 先尝试常规方式，失败则通过 overlay upper 层操作
-	rm -rf "$NODE_BASE" 2>/dev/null
-	if [ -d /overlay/upper ]; then
-		rm -rf "/overlay/upper${NODE_BASE}" 2>/dev/null
-	fi
-	ensure_mkdir "$NODE_BASE"
-	extract_node_archive "$downloaded_file" "$NODE_BASE" || exit 1
-	rm -f "$downloaded_file"
-	ensure_node_runtime_deps || exit 1
-
-	# 验证
-	if [ -x "$NODE_BIN" ]; then
-		local installed_ver
-		installed_ver=$("$NODE_BIN" --version 2>/dev/null) || {
-			log_error "Node.js 已解压，但运行失败"
-			ldd "$NODE_BIN" 2>/dev/null | head -5 || true
-			exit 1
-		}
-		log_info "Node.js ${installed_ver} 安装成功"
-	else
-		log_error "Node.js 安装验证失败"
-		exit 1
-	fi
+	rm -rf "$tmp"
+	log_warn "git 安装失败，npm 将因 git 依赖报错"
+	return 1
 }
 
-install_pnpm() {
-	echo ""
-	echo "=== 安装 pnpm ==="
+_GIT_CFG=""  # 临时 git 配置文件路径
 
-	if [ -x "$PNPM_BIN" ]; then
-		log_info "pnpm 已安装: $($PNPM_BIN --version 2>/dev/null)"
-		return 0
+setup_git_config() {
+	# 将 SSH git URL 重写为 HTTPS（OpenWrt 无 SSH 密钥，GitHub SSH 端口常被封）
+	_GIT_CFG="/tmp/oc-gitcfg-$$"
+	cat > "$_GIT_CFG" << 'EOF'
+[url "https://github.com/"]
+    insteadOf = ssh://git@github.com/
+    insteadOf = git@github.com:
+    insteadOf = git://github.com/
+EOF
+	export GIT_CONFIG_GLOBAL="$_GIT_CFG"
+}
+
+_GIT_INSTALLED_SYSTEM=0
+cleanup_git() {
+	if [ "${_GIT_INSTALLED_SYSTEM:-0}" = "1" ]; then
+		rm -f /usr/bin/git
+		rm -rf /usr/libexec/git-core 2>/dev/null || true
+		_GIT_INSTALLED_SYSTEM=0
+	fi
+	[ -n "$_GIT_CFG" ] && rm -f "$_GIT_CFG" && _GIT_CFG="" && unset GIT_CONFIG_GLOBAL
+	log_ok "已清理临时 git"
+}
+
+# ── 安装 libstdc++（Node.js 运行依赖）─────────────────────────────────────
+ensure_node_deps() {
+	[ -e /usr/lib/libstdc++.so.6 ] || [ -e /lib/libstdc++.so.6 ] && return 0
+
+	log_warn "缺少 libstdc++.so.6，尝试安装..."
+	opkg install libstdcpp 2>/dev/null | tail -2 || true
+	[ -e /usr/lib/libstdc++.so.6 ] || [ -e /lib/libstdc++.so.6 ] && return 0
+
+	# 从 Alpine 提取
+	local arch; case "$(uname -m)" in x86_64) arch="x86_64";; aarch64) arch="aarch64";; *) return 1;; esac
+	local tmp="/tmp/oc-libstdc-$$"; ensure_dir "$tmp" || return 1
+	local pkg="libstdc++-14.2.0-r4.apk"
+
+	_download_first "$tmp/lib.apk" \
+		"${ALPINE_MIRROR}/${arch}/${pkg}" \
+		"${ALPINE_CDN}/${arch}/${pkg}" || { rm -rf "$tmp"; return 1; }
+
+	( cd "$tmp" && tar xzf lib.apk 2>/dev/null ) || true
+
+	local so; so=$(find "$tmp" -name "libstdc++.so.6.*" | head -1)
+	if [ -n "$so" ]; then
+		cp "$so" /usr/lib/
+		ln -sf "/usr/lib/$(basename "$so")" /usr/lib/libstdc++.so.6
+		ldconfig 2>/dev/null || true
+		log_ok "libstdc++.so.6 安装成功"
+		rm -rf "$tmp"; return 0
 	fi
 
-	# 使用 npm 安装 pnpm 到全局目录
-	ensure_mkdir "$OC_GLOBAL"
-	"$NPM_BIN" install -g pnpm --prefix="$OC_GLOBAL" 2>/dev/null
+	rm -rf "$tmp"
+	log_err "libstdc++ 安装失败"
+	return 1
+}
 
-	if [ -x "$OC_GLOBAL/bin/pnpm" ]; then
-		PNPM_BIN="$OC_GLOBAL/bin/pnpm"
-		log_info "pnpm $($PNPM_BIN --version 2>/dev/null) 安装成功"
-	elif [ -x "$NODE_BASE/bin/pnpm" ]; then
-		PNPM_BIN="$NODE_BASE/bin/pnpm"
-		log_info "pnpm $($PNPM_BIN --version 2>/dev/null) 安装成功"
+# ── 安装 Node.js ───────────────────────────────────────────────────────────
+install_node() {
+	local node_ver="${1:-$NODE_VERSION}"
+	local node_arch; node_arch=$(detect_arch)
+	local libc; libc=$(detect_libc)
+
+	# 已安装且版本匹配则跳过
+	if [ -x "$NODE_BIN" ]; then
+		local cur; cur=$("$NODE_BIN" --version 2>/dev/null | sed 's/^v//')
+		if [ "$cur" = "$node_ver" ] || [ "$(echo "$cur" | cut -d. -f1)" = "$(echo "$node_ver" | cut -d. -f1)" ]; then
+			log_ok "Node.js v${cur} 已安装，跳过下载"
+			return 0
+		fi
+		log_warn "当前 Node.js v${cur}，将更新到 v${node_ver}"
+	fi
+
+	log_step "下载 Node.js v${node_ver} (${node_arch}, ${libc})"
+
+	local tarball="node-v${node_ver}-${node_arch}-musl.tar.gz"
+	local tmp_file="/tmp/oc-node-$$.tar.gz"
+
+	if [ "$libc" = "musl" ]; then
+		if [ "$node_arch" = "linux-arm64" ]; then
+			_download_first "$tmp_file" \
+				"${NODE_SELF_HOST}/${tarball}" \
+				"${NODE_MUSL_UNOFFICIAL}/v${node_ver}/${tarball}" || \
+				{ log_err "Node.js 下载失败"; exit 1; }
+		else
+			_download_first "$tmp_file" \
+				"${NODE_MUSL_CN}/v${node_ver}/${tarball}" \
+				"${NODE_MUSL_UNOFFICIAL}/v${node_ver}/${tarball}" \
+				"${NODE_SELF_HOST}/${tarball}" || \
+				{ log_err "Node.js 下载失败"; exit 1; }
+		fi
 	else
-		log_warn "pnpm 安装失败, 将使用 npm 作为回退"
+		local glibc_tarball="node-v${node_ver}-${node_arch}.tar.gz"
+		_download_first "$tmp_file" \
+			"${NODE_MUSL_CN}/v${node_ver}/${glibc_tarball}" \
+			"https://nodejs.org/dist/v${node_ver}/${glibc_tarball}" || \
+			{ log_err "Node.js 下载失败"; exit 1; }
 	fi
+
+	echo "  正在解压..."
+	rm -rf "$NODE_BASE" 2>/dev/null
+	[ -d /overlay/upper ] && rm -rf "/overlay/upper${NODE_BASE}" 2>/dev/null
+	ensure_dir "$NODE_BASE"
+
+	# 解压（BusyBox tar 兼容）
+	if ! tar --strip-components=1 -zxf "$tmp_file" -C "$NODE_BASE" 2>/dev/null; then
+		local xtmp="/tmp/oc-node-extract-$$"
+		ensure_dir "$xtmp"
+		tar zxf "$tmp_file" -C "$xtmp" 2>/dev/null || { log_err "解压失败"; rm -f "$tmp_file"; exit 1; }
+		local topdir; topdir=$(ls "$xtmp" | head -1)
+		[ -d "$xtmp/$topdir" ] && mv "$xtmp/$topdir"/* "$NODE_BASE"/ 2>/dev/null
+		rm -rf "$xtmp"
+	fi
+	rm -f "$tmp_file"
+
+	ensure_node_deps || exit 1
+
+	"$NODE_BIN" --version >/dev/null 2>&1 || { log_err "Node.js 安装验证失败"; exit 1; }
+	log_ok "Node.js $("$NODE_BIN" --version) 安装成功"
+}
+
+# ── 安装 OpenClaw ──────────────────────────────────────────────────────────
+
+# npm 安装辅助：_npm_install_pkg <pkg> <registry> <npm_tmp> <install_flags> <attempt>
+_npm_install_pkg() {
+	local pkg="$1" registry="$2" npm_tmp="$3" flags="$4" attempt="$5"
+	log_warn "安装尝试 ${attempt}：${registry}"
+	ensure_dir "${npm_tmp}/cache"
+	ensure_dir "${npm_tmp}/logs"
+	"$NPM_BIN" install -g "$pkg" \
+		--prefix="$OC_GLOBAL" \
+		$flags \
+		--cache="${npm_tmp}/cache" \
+		--logs-dir="${npm_tmp}/logs" \
+		--registry="$registry" \
+		--fetch-timeout=90000 \
+		--fetch-retry-mintimeout=5000 \
+		--fetch-retry-maxtimeout=30000 \
+		--fetch-retries=2 \
+		--prefer-offline=false \
+		--no-fund --no-audit 2>&1 | tail -20
+}
+
+_finish_openclaw_install() {
+	local npm_tmp="$1"
+	rm -rf "$npm_tmp" 2>/dev/null || true
+	cleanup_git
+	local ver; ver=$("$NODE_BIN" "$(find_oc_entry)" --version 2>/dev/null | tr -d '[:space:]')
+	log_ok "OpenClaw v${ver} 安装成功"
 }
 
 install_openclaw() {
-	echo ""
-	echo "=== 安装 OpenClaw ==="
-
-	# 确定安装版本
 	local oc_pkg="openclaw"
+	local libc; libc=$(detect_libc)
+	local install_flags=""
+	[ "$libc" = "musl" ] && install_flags="--ignore-scripts"
+
 	if [ -n "$OC_VERSION" ]; then
 		oc_pkg="openclaw@${OC_VERSION}"
-		log_info "指定版本: v${OC_VERSION}"
+		log_ok "指定版本: v${OC_VERSION}"
 	else
-		oc_pkg="openclaw@latest"
-		log_info "安装最新版本"
+		log_ok "安装最新版"
 	fi
 
-	local libc_type
-	libc_type=$(detect_libc)
+	# 确保 git 可用（openclaw 依赖 ssh://git@github.com/ URL）
+	install_git
+	setup_git_config  # SSH → HTTPS 重写（无需 SSH 密钥）
 
-	# musl 系统使用 npm + --ignore-scripts 避免 node-llama-cpp 编译失败
-	# glibc 系统正常安装
-	local install_flags=""
-	if [ "$libc_type" = "musl" ]; then
-		log_warn "检测到 musl libc，将跳过本地编译依赖 (不影响核心功能)"
-		install_flags="--ignore-scripts"
-	fi
+	log_step "安装 OpenClaw"
+	ensure_dir "$OC_GLOBAL"
 
-	# 检查 git 是否可用 (openclaw 部分依赖可能使用 git:// 协议)
-	_FAKE_GIT_CREATED=0
-	if ! command -v git >/dev/null 2>&1; then
-		log_warn "未检测到 git，正在尝试安装..."
-		_oc_opkg_update
-		opkg install git git-http 2>&1 | tail -3 || true
-		if command -v git >/dev/null 2>&1; then
-			log_info "git 安装成功"
-		else
-			log_warn "git 安装失败，创建 git 占位脚本以绕过 npm git 依赖..."
-			printf '#!/bin/sh\nexit 0\n' > /usr/bin/git
-			chmod 755 /usr/bin/git
-			_FAKE_GIT_CREATED=1
-		fi
-	fi
-
-	# 优先用 npm 安装 (pnpm 在 musl 上全局安装可能有路径问题)
-	local npm_ok=0
-	if [ -x "$NPM_BIN" ]; then
-		ensure_mkdir "$OC_GLOBAL"
-		"$NPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" $install_flags \
-			--registry=https://registry.npmmirror.com \
-			--fetch-timeout=60000 --fetch-retry-mintimeout=5000 2>&1 | tail -10
-		# 检查是否安装成功
-		if [ -n "$(find_oc_entry)" ]; then
-			npm_ok=1
-		else
-			log_warn "首次安装未成功，清理残留后用 --no-optional 模式重试..."
-			# 清理可能导致 ENOENT 的残留目录，避免 npm 在半成品目录上重试失败
-			rm -rf "${OC_GLOBAL}/lib/node_modules/openclaw" 2>/dev/null || true
-			"$NPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" $install_flags --no-optional \
-				--registry=https://registry.npmmirror.com \
-				--fetch-timeout=60000 --fetch-retry-mintimeout=5000 2>&1 | tail -10
-			[ -n "$(find_oc_entry)" ] && npm_ok=1
-		fi
-	elif [ -x "$PNPM_BIN" ]; then
-		ensure_mkdir "$OC_GLOBAL"
-		"$PNPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" 2>&1 | tail -5
+	# npm cache 和 logs 全部放到 tmpfs，避免根分区 ENOSPC
+	[ -d /root/.npm ] && rm -rf /root/.npm 2>/dev/null && log_ok "已清理旧 npm 缓存"
+	# 低内存设备 /tmp 可能只有 50-100MB，不够放 npm 缓存；改到 /opt 同盘
+	local npm_tmp
+	local tmp_avail; tmp_avail=$(_df_avail /tmp)
+	if [ -n "$tmp_avail" ] && [ "$tmp_avail" -ge 200 ]; then
+		npm_tmp="/tmp/oc-npm-$$"
 	else
-		log_error "npm 和 pnpm 均不可用"
-		[ "$_FAKE_GIT_CREATED" = "1" ] && rm -f /usr/bin/git
-		exit 1
+		npm_tmp="${OC_DATA}/.npm-$$"
+		log_warn "/tmp 空间不足（${tmp_avail:-?}MB），npm 缓存改到 ${npm_tmp}"
 	fi
 
-	# 清理 git 占位脚本
-	[ "$_FAKE_GIT_CREATED" = "1" ] && rm -f /usr/bin/git && log_info "已移除 git 占位脚本"
+	# 第一次：npmmirror（国内最快）
+	_npm_install_pkg "$oc_pkg" "https://registry.npmmirror.com" "$npm_tmp" "$install_flags" 1
 
-	# 验证
-	local oc_ver=""
-	local oc_found
-	oc_found=$(find_oc_entry)
-	if [ -n "$oc_found" ]; then
-		oc_ver=$("$NODE_BIN" "$oc_found" --version 2>/dev/null | tr -d '[:space:]')
+	if [ -n "$(find_oc_entry)" ]; then
+		_finish_openclaw_install "$npm_tmp"
+		return 0
 	fi
 
-	if [ -n "$oc_ver" ]; then
-		log_info "OpenClaw v${oc_ver} 安装成功"
-	else
-		log_error "OpenClaw 安装验证失败"
-		exit 1
+	# 第二次：清理损坏缓存，切换到 npmjs.org 官方源
+	log_warn "npmmirror 安装失败，清理缓存并切换到官方源重试..."
+	rm -rf "${OC_GLOBAL}/lib/node_modules/openclaw" 2>/dev/null || true
+	rm -rf "${npm_tmp}/cache" 2>/dev/null || true
+
+	_npm_install_pkg "$oc_pkg" "https://registry.npmjs.org" "$npm_tmp" "$install_flags" 2
+
+	if [ -n "$(find_oc_entry)" ]; then
+		_finish_openclaw_install "$npm_tmp"
+		return 0
 	fi
 
-	# Gemini CLI 体积较大 (~200MB)，在资源受限的 OpenWrt 设备上跳过
-	# 仅在非 OpenWrt 且磁盘充足时安装
-	local skip_gemini=0
-	[ -f /etc/openwrt_release ] && skip_gemini=1
-	if [ "$skip_gemini" -eq 0 ]; then
-		local avail_mb
-		avail_mb=$(df -k "$OC_GLOBAL" 2>/dev/null | awk 'NR==2{print int($4/1024)}')
-		[ "${avail_mb:-0}" -lt 300 ] && skip_gemini=1
-	fi
-
-	if [ "$skip_gemini" -eq 1 ]; then
-		log_warn "跳过 Gemini CLI 安装 (OpenWrt 设备资源受限，不影响核心功能)"
-	elif [ -x "$NPM_BIN" ]; then
-		echo ""
-		echo "=== 安装 Gemini CLI (Google OAuth 依赖) ==="
-		"$NPM_BIN" install -g @google/gemini-cli --prefix="$OC_GLOBAL" $install_flags 2>&1 | tail -3
-		if command -v gemini >/dev/null 2>&1 || [ -x "$OC_GLOBAL/bin/gemini" ]; then
-			log_info "Gemini CLI 安装成功"
-		else
-			log_warn "Gemini CLI 安装失败 (不影响核心功能，仅影响 Google Gemini OAuth 登录)"
-		fi
-	fi
+	rm -rf "$npm_tmp" 2>/dev/null || true
+	cleanup_git
+	log_err "OpenClaw 安装失败（已尝试 npmmirror 和 npmjs.org）"
+	log_err "请检查网络连接或磁盘空间后重试"
+	exit 1
 }
 
+# ── 初始化 OpenClaw 配置 ───────────────────────────────────────────────────
 init_openclaw() {
-	echo ""
-	echo "=== 初始化 OpenClaw ==="
+	log_step "初始化 OpenClaw"
 
-	# 创建数据目录
-	ensure_mkdir "$OC_DATA/.openclaw"
+	ensure_dir "${OC_DATA}/.openclaw"
+	local oc_entry; oc_entry=$(find_oc_entry)
+	[ -z "$oc_entry" ] && return 0
 
-	# 运行 onboard
-	local oc_entry=""
-	oc_entry=$(find_oc_entry)
+	# onboard
+	HOME="$OC_DATA" OPENCLAW_HOME="$OC_DATA" \
+	OPENCLAW_STATE_DIR="${OC_DATA}/.openclaw" \
+	OPENCLAW_CONFIG_PATH="${OC_DATA}/.openclaw/openclaw.json" \
+	"$NODE_BIN" "$oc_entry" onboard --non-interactive --accept-risk --tools-profile coding 2>/dev/null || true
 
-	if [ -n "$oc_entry" ]; then
-		HOME="$OC_DATA" \
-		OPENCLAW_HOME="$OC_DATA" \
-		OPENCLAW_STATE_DIR="${OC_DATA}/.openclaw" \
-		OPENCLAW_CONFIG_PATH="${OC_DATA}/.openclaw/openclaw.json" \
-		"$NODE_BIN" "$oc_entry" onboard --non-interactive --accept-risk --tools-profile coding 2>/dev/null || true
-		log_info "初始化完成"
+	# OpenWrt 适配：写入推荐配置
+	local cfg="${OC_DATA}/.openclaw/openclaw.json"
+	if [ -f "$cfg" ]; then
+		local tok
+		tok=$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n' | head -c 48)
+		for kv in \
+			"gateway.port=18789" \
+			"gateway.bind=lan" \
+			"gateway.mode=local" \
+			"gateway.auth.mode=token" \
+			"gateway.auth.token=${tok}" \
+			"gateway.controlUi.allowInsecureAuth=true" \
+			"gateway.controlUi.dangerouslyDisableDeviceAuth=true" \
+			"gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback=true" \
+			"gateway.tailscale.mode=off" \
+			"acp.dispatch.enabled=false" \
+			"tools.profile=coding"; do
+			local k="${kv%%=*}" v="${kv#*=}"
+			_JS_KEY="$k" _JS_VAL="$v" "$NODE_BIN" -e "
+const fs=require('fs'),cfg=process.env._JS_KEY.split('.'),v=process.env._JS_VAL;
+let d={};try{d=JSON.parse(fs.readFileSync('${cfg}','utf8'));}catch(e){}
+let o=d;for(let i=0;i<cfg.length-1;i++){if(!o[cfg[i]]||typeof o[cfg[i]]!=='object')o[cfg[i]]={};o=o[cfg[i]];}
+try{o[cfg[cfg.length-1]]=JSON.parse(v);}catch(e){o[cfg[cfg.length-1]]=v;}
+fs.writeFileSync('${cfg}',JSON.stringify(d,null,2));
+" 2>/dev/null
+		done
+		# 同步 token 到 UCI
+		uci set openclaw.main.token="$tok" 2>/dev/null || true
+		uci commit openclaw 2>/dev/null || true
+		log_ok "配置初始化完成"
 	fi
 
-	# 设置文件权限
-	chown -R openclaw:openclaw "$OC_DATA" 2>/dev/null || true
-	chown -R openclaw:openclaw "$OC_GLOBAL" 2>/dev/null || true
-	chown -R openclaw:openclaw "$NODE_BASE" 2>/dev/null || true
+	chown -R openclaw:openclaw "$OC_DATA" "$OC_GLOBAL" "$NODE_BASE" 2>/dev/null || true
 }
 
-do_setup() {
-	local node_ver="$NODE_VERSION"
+# ── 命令：setup ────────────────────────────────────────────────────────────
+cmd_setup() {
+	check_space /opt 200 "安装目录(/opt)"
+	check_space /tmp 300 "临时目录(/tmp)"
 
-	# 检查是否已安装
+	# 已安装则提示并退出
 	if [ -x "$NODE_BIN" ] && [ -n "$(find_oc_entry)" ]; then
-		local oc_ver=""
-		local oc_entry="$(find_oc_entry)"
-		local oc_pkg_dir="$(dirname "$oc_entry")"
-		[ -f "$oc_pkg_dir/package.json" ] && \
-			oc_ver=$("$NODE_BIN" -e "try{console.log(require('$oc_pkg_dir/package.json').version)}catch(e){}" 2>/dev/null) || true
 		echo "╔══════════════════════════════════════════════════════════════╗"
-		echo "║          ⚠️  OpenClaw 运行环境已安装，无需重复安装          ║"
+		echo "║   [!]  OpenClaw 已安装，如需重装请先卸载                     ║"
 		echo "╚══════════════════════════════════════════════════════════════╝"
-		echo ""
-		echo "  Node.js:    $($NODE_BIN --version 2>/dev/null)"
-		[ -n "$oc_ver" ] && echo "  OpenClaw:   v${oc_ver}"
-		echo ""
-		echo "  如需升级，请使用: openclaw-env upgrade"
-		echo "  如需重装，请先卸载: 在 LuCI 界面点击「卸载环境」"
-		echo ""
+		echo "  Node.js:  $("$NODE_BIN" --version 2>/dev/null)"
+		echo "  如需升级: openclaw-env upgrade"
 		exit 0
 	fi
+
+	local oc_ver_display="${OC_VERSION:-最新版}"
+	[ -n "$OC_VERSION" ] && oc_ver_display="v${OC_VERSION} (稳定版)"
 
 	echo "╔══════════════════════════════════════════════════════════════╗"
 	echo "║                kenzok8  OpenClaw 环境安装                    ║"
 	echo "╚══════════════════════════════════════════════════════════════╝"
-	echo ""
-	echo "  架构:       $(uname -m)"
-	echo "  Node 版本:  v${node_ver}"
-	if [ -n "$OC_VERSION" ]; then
-		echo "  OpenClaw:   v${OC_VERSION} (稳定版)"
-	else
-		echo "  OpenClaw:   最新版"
-	fi
-	echo "  安装路径:   ${NODE_BASE}"
-	echo "  数据路径:   ${OC_DATA}"
+	echo "  架构:      $(uname -m)"
+	echo "  Node:      v${NODE_VERSION}"
+	echo "  OpenClaw:  ${oc_ver_display}"
+	echo "  安装路径:  ${NODE_BASE}"
+	echo "  数据路径:  ${OC_DATA}"
 	echo ""
 
-	download_node "$node_ver"
-	install_pnpm
+	install_node "$NODE_VERSION"
 	install_openclaw
 	init_openclaw
 
 	echo ""
 	echo "╔══════════════════════════════════════════════════════════════╗"
-	echo "║  ✅ 安装完成！                                               ║"
-	echo "║                                                              ║"
-	echo "║  如通过 LuCI 安装，服务已自动启用并启动。                    ║"
-	echo "║  如通过命令行安装，请在 LuCI → 服务 → OpenClaw 中启用。      ║"
+	echo "║  ✅ 安装完成！请在 LuCI → 服务 → OpenClaw 中启用服务         ║"
 	echo "╚══════════════════════════════════════════════════════════════╝"
 }
 
-do_check() {
+# ── 命令：check ────────────────────────────────────────────────────────────
+cmd_check() {
 	echo "=== OpenClaw 环境检查 ==="
 	echo ""
-
-	# Node.js
 	if [ -x "$NODE_BIN" ]; then
-		echo "  Node.js:  $($NODE_BIN --version 2>/dev/null)"
+		echo "  Node.js:  $("$NODE_BIN" --version 2>/dev/null)"
 	else
 		echo "  Node.js:  未安装"
 	fi
 
-	# pnpm
-	if [ -x "$PNPM_BIN" ]; then
-		echo "  pnpm:     $($PNPM_BIN --version 2>/dev/null)"
-	elif [ -x "${NODE_BASE}/bin/pnpm" ]; then
-		echo "  pnpm:     $(${NODE_BASE}/bin/pnpm --version 2>/dev/null)"
-	else
-		echo "  pnpm:     未安装"
-	fi
-
-	# OpenClaw
-	local oc_entry=""
-	oc_entry=$(find_oc_entry)
+	local oc_entry; oc_entry=$(find_oc_entry)
 	if [ -n "$oc_entry" ] && [ -x "$NODE_BIN" ]; then
-		echo "  OpenClaw: v$($NODE_BIN $oc_entry --version 2>/dev/null | tr -d '[:space:]')"
+		echo "  OpenClaw: v$("$NODE_BIN" "$oc_entry" --version 2>/dev/null | tr -d '[:space:]')"
 	else
 		echo "  OpenClaw: 未安装"
 	fi
 
-	# 配置文件
-	if [ -f "$OC_DATA/.openclaw/openclaw.json" ]; then
-		echo "  配置:     $OC_DATA/.openclaw/openclaw.json (存在)"
-	else
+	[ -f "${OC_DATA}/.openclaw/openclaw.json" ] && \
+		echo "  配置:     ${OC_DATA}/.openclaw/openclaw.json (存在)" || \
 		echo "  配置:     未初始化"
-	fi
 
-	# 磁盘使用
-	local used
-	used=$(du -sh /opt/openclaw 2>/dev/null | awk '{print $1}')
-	echo "  磁盘:     ${used:-N/A}"
-
-	# libc 类型
+	echo "  磁盘:     $(du -sh /opt/openclaw 2>/dev/null | awk '{print $1}' || echo 'N/A')"
 	echo "  C库:      $(detect_libc)"
+	echo "  git:      $(command -v git >/dev/null 2>&1 && git --version 2>/dev/null || echo '未安装')"
 }
 
-do_upgrade() {
+# ── 命令：upgrade ──────────────────────────────────────────────────────────
+cmd_upgrade() {
+	[ -x "$NODE_BIN" ] || { log_err "Node.js 未安装，请先运行: openclaw-env setup"; exit 1; }
+
+	local libc; libc=$(detect_libc)
+	local install_flags=""
+	[ "$libc" = "musl" ] && install_flags="--ignore-scripts"
+
 	echo "╔══════════════════════════════════════════════════════════════╗"
 	echo "║                kenzok8  OpenClaw 升级                        ║"
 	echo "╚══════════════════════════════════════════════════════════════╝"
-	echo ""
 
-	if [ ! -x "$NODE_BIN" ]; then
-		log_error "Node.js 未安装, 请先运行: openclaw-env setup"
-		exit 1
-	fi
+	install_git
+	setup_git_config
 
-	# 获取当前版本
-	local current_ver=""
-	local oc_entry=""
-	oc_entry=$(find_oc_entry)
-	if [ -n "$oc_entry" ]; then
-		local oc_pkg_dir="$(dirname "$oc_entry")"
-		[ -f "$oc_pkg_dir/package.json" ] && \
-			current_ver=$("$NODE_BIN" -e "try{console.log(require('$oc_pkg_dir/package.json').version)}catch(e){}" 2>/dev/null) || true
-	fi
-
-	echo "  Node.js:     $($NODE_BIN --version 2>/dev/null)"
-	[ -n "$current_ver" ] && echo "  当前版本:    v${current_ver}"
-	echo ""
-
-	local libc_type
-	libc_type=$(detect_libc)
-	local install_flags=""
-	[ "$libc_type" = "musl" ] && install_flags="--ignore-scripts"
-
-	echo "=== 正在升级 OpenClaw ==="
-	echo ""
-	"$NPM_BIN" install -g openclaw@latest --prefix="$OC_GLOBAL" $install_flags 2>&1
-
-	# 验证升级结果
-	local new_ver=""
-	local new_entry=""
-	new_entry=$(find_oc_entry)
-	if [ -n "$new_entry" ]; then
-		local new_pkg_dir="$(dirname "$new_entry")"
-		[ -f "$new_pkg_dir/package.json" ] && \
-			new_ver=$("$NODE_BIN" -e "try{console.log(require('$new_pkg_dir/package.json').version)}catch(e){}" 2>/dev/null) || true
-	fi
-
-	echo ""
-	if [ -n "$new_ver" ]; then
-		if [ "$current_ver" = "$new_ver" ]; then
-			log_info "当前已是最新版本 v${new_ver}"
-		else
-			log_info "升级成功: v${current_ver} → v${new_ver}"
-		fi
-		echo ""
-		echo "╔══════════════════════════════════════════════════════════════╗"
-		echo "║  ✅ 升级完成！                                               ║"
-		echo "╚══════════════════════════════════════════════════════════════╝"
+	log_step "升级 OpenClaw"
+	local npm_tmp; local tmp_avail; tmp_avail=$(_df_avail /tmp)
+	if [ -n "$tmp_avail" ] && [ "$tmp_avail" -ge 200 ]; then
+		npm_tmp="/tmp/oc-npm-$$"
 	else
-		log_error "升级验证失败，OpenClaw 入口文件未找到"
-		exit 1
+		npm_tmp="${OC_DATA}/.npm-$$"
 	fi
+
+	_npm_install_pkg "openclaw@latest" "https://registry.npmmirror.com" "$npm_tmp" "$install_flags" 1
+
+	# 验证，失败则切换官方源
+	if [ -z "$(find_oc_entry)" ]; then
+		log_warn "切换到官方源重试..."
+		rm -rf "${npm_tmp}/cache" 2>/dev/null || true
+		_npm_install_pkg "openclaw@latest" "https://registry.npmjs.org" "$npm_tmp" "$install_flags" 2
+	fi
+
+	rm -rf "$npm_tmp" 2>/dev/null || true
+	cleanup_git
+
+	local ver; ver=$("$NODE_BIN" "$(find_oc_entry)" --version 2>/dev/null | tr -d '[:space:]')
+	log_ok "当前版本: v${ver}"
+	echo ""
+	echo "╔══════════════════════════════════════════════════════════════╗"
+	echo "║  ✅ 升级完成！                                               ║"
+	echo "╚══════════════════════════════════════════════════════════════╝"
 }
 
-# ── 恢复出厂设置 (非交互式) ──
-do_factory_reset() {
-	local config_dir="${OC_DATA}/.openclaw"
-	local config_file="${config_dir}/openclaw.json"
-	local auth_file="${config_dir}/agents/main/agent/auth-profiles.json"
+# ── 命令：node（仅更新 Node.js）───────────────────────────────────────────
+cmd_node() {
+	install_node "$NODE_VERSION"
+}
 
-	log_info "恢复出厂设置..."
+# ── 命令：factory-reset ────────────────────────────────────────────────────
+cmd_factory_reset() {
+	local cfg="${OC_DATA}/.openclaw/openclaw.json"
+	log_warn "恢复出厂设置..."
 
-	# 1. 停止 Gateway
-	log_info "停止 Gateway..."
-	/etc/init.d/openclaw stop >/dev/null 2>&1 || true
-	sleep 2
+	/etc/init.d/openclaw stop >/dev/null 2>&1 || true; sleep 2
 
-	# 2. 备份当前配置
-	if [ -f "$config_file" ]; then
-		local backup_dir="${config_dir}/backups"
-		local backup_ts=$(date +%Y%m%d_%H%M%S)
-		ensure_mkdir "$backup_dir"
-		cp "$config_file" "${backup_dir}/openclaw_${backup_ts}.json"
-		log_info "备份已保存: backups/openclaw_${backup_ts}.json"
+	# 备份
+	if [ -f "$cfg" ]; then
+		local bk="${OC_DATA}/.openclaw/backups/openclaw_$(date +%Y%m%d_%H%M%S).json"
+		ensure_dir "$(dirname "$bk")"
+		cp "$cfg" "$bk" && log_ok "配置已备份: $bk"
 	fi
 
-	# 3. 重置配置
-	rm -f "$config_file" "${config_file}.bak" 2>/dev/null || true
-	echo '{}' > "$config_file"
-	chown openclaw:openclaw "$config_file" 2>/dev/null || true
+	# 重置
+	rm -f "$cfg" "${cfg}.bak" 2>/dev/null; echo '{}' > "$cfg"
+	chown openclaw:openclaw "$cfg" 2>/dev/null || true
 
-	# 4. 重置认证信息
-	if [ -f "$auth_file" ]; then
-		echo '{"version":1,"profiles":{},"usageStats":{}}' > "$auth_file"
-		chown openclaw:openclaw "$auth_file" 2>/dev/null || true
-	fi
-
-	# 5. 重新初始化
-	if [ -x "$NODE_BIN" ]; then
-		local oc_entry
-		oc_entry=$(find "$OC_GLOBAL" -name "openclaw.mjs" -path "*/openclaw/openclaw.mjs" 2>/dev/null | head -1)
-		if [ -n "$oc_entry" ]; then
-			log_info "重新初始化..."
-			OPENCLAW_HOME="$OC_DATA" "$NODE_BIN" "$oc_entry" onboard --non-interactive --accept-risk --tools-profile coding >/dev/null 2>&1 || true
-		fi
-	fi
-
-	# 6. 应用 OpenWrt 适配配置
-	if [ -x "$NODE_BIN" ] && [ -f "$config_file" ]; then
-		local new_token
-		new_token=$(head -c 24 /dev/urandom | hexdump -e '24/1 "%02x"' 2>/dev/null || dd if=/dev/urandom bs=24 count=1 2>/dev/null | od -An -tx1 | tr -d ' \n' | head -c 48)
-		_JS_KEY="gateway.port" _JS_VAL="18789" "$NODE_BIN" -e "const fs=require('fs');let d={};try{d=JSON.parse(fs.readFileSync('${config_file}','utf8'));}catch(e){}const ks=process.env._JS_KEY.split('.');let o=d;for(let i=0;i<ks.length-1;i++){if(!o[ks[i]]||typeof o[ks[i]]!=='object')o[ks[i]]={};o=o[ks[i]];}let v=process.env._JS_VAL;try{v=JSON.parse(v);}catch(e){}o[ks[ks.length-1]]=v;fs.writeFileSync('${config_file}',JSON.stringify(d,null,2));" 2>/dev/null
-		for kv in "gateway.bind=lan" "gateway.mode=local" "gateway.auth.mode=token" "gateway.auth.token=${new_token}" "gateway.controlUi.allowInsecureAuth=true" "gateway.controlUi.dangerouslyDisableDeviceAuth=true" "gateway.controlUi.dangerouslyAllowHostHeaderOriginFallback=true" "gateway.tailscale.mode=off" "acp.dispatch.enabled=false" "tools.profile=coding"; do
-			local k="${kv%%=*}" v="${kv#*=}"
-			_JS_KEY="$k" _JS_VAL="$v" "$NODE_BIN" -e "const fs=require('fs');let d={};try{d=JSON.parse(fs.readFileSync('${config_file}','utf8'));}catch(e){}const ks=process.env._JS_KEY.split('.');let o=d;for(let i=0;i<ks.length-1;i++){if(!o[ks[i]]||typeof o[ks[i]]!=='object')o[ks[i]]={};o=o[ks[i]];}let v=process.env._JS_VAL;try{v=JSON.parse(v);}catch(e){}o[ks[ks.length-1]]=v;fs.writeFileSync('${config_file}',JSON.stringify(d,null,2));" 2>/dev/null
-		done
-		chown openclaw:openclaw "$config_file" 2>/dev/null || true
-
-		# 同步 token 到 UCI
-		. /lib/functions.sh 2>/dev/null || true
-		uci set openclaw.main.token="$new_token" 2>/dev/null || true
-		uci commit openclaw 2>/dev/null || true
-		log_info "新认证令牌: $new_token"
-	fi
-
-	# 7. 重启服务
+	init_openclaw
 	/etc/init.d/openclaw start >/dev/null 2>&1 &
-	log_info "出厂设置已恢复，Gateway 重启中..."
+	log_ok "出厂设置已恢复，Gateway 重启中..."
 }
 
-# ── 离线安装 (从本地文件安装 Node.js + OpenClaw) ──
-do_setup_offline() {
-	local offline_dir="${2:-/tmp/openclaw-offline}"
+# ── 命令：setup-offline ────────────────────────────────────────────────────
+cmd_setup_offline() {
+	local dir="${1:-/tmp/openclaw-offline}"
+	[ -d "$dir" ] || { log_err "离线目录不存在: $dir"; exit 1; }
 
-	if [ ! -d "$offline_dir" ]; then
-		log_error "离线安装目录不存在: $offline_dir"
-		log_error "此命令通常由离线 .run 安装器自动调用"
-		exit 1
-	fi
-
-	# 检查是否已安装
 	if [ -x "$NODE_BIN" ] && [ -n "$(find_oc_entry)" ]; then
-		log_warn "OpenClaw 运行环境已安装"
-		log_warn "如需重新离线安装，请先卸载现有环境"
-		exit 0
+		log_warn "OpenClaw 已安装，如需重装请先卸载"; exit 0
 	fi
 
 	echo "╔══════════════════════════════════════════════════════════════╗"
 	echo "║                kenzok8  OpenClaw 离线安装                    ║"
 	echo "╚══════════════════════════════════════════════════════════════╝"
-	echo ""
-	echo "  架构:       $(uname -m)"
-	echo "  安装路径:   ${NODE_BASE}"
-	echo "  数据路径:   ${OC_DATA}"
-	echo "  离线包:     ${offline_dir}"
-	echo ""
 
-	# [1] 安装 Node.js
-	local node_tarball=""
-	if [ -f "$offline_dir/node.tar.gz" ]; then
-		node_tarball="$offline_dir/node.tar.gz"
-	elif [ -f "$offline_dir/node.tar.xz" ]; then
-		node_tarball="$offline_dir/node.tar.xz"
-	fi
-	if [ -n "$node_tarball" ]; then
-		echo "=== 安装 Node.js (离线) ==="
-		rm -rf "$NODE_BASE" 2>/dev/null
-		[ -d /overlay/upper ] && rm -rf "/overlay/upper${NODE_BASE}" 2>/dev/null
-		ensure_mkdir "$NODE_BASE"
+	# Node.js
+	log_step "安装 Node.js (离线)"
+	local node_pkg=""
+	[ -f "$dir/node.tar.gz" ] && node_pkg="$dir/node.tar.gz"
+	[ -z "$node_pkg" ] && [ -f "$dir/node.tar.xz" ] && node_pkg="$dir/node.tar.xz"
+	[ -n "$node_pkg" ] || { log_err "未找到 Node.js 离线包"; exit 1; }
 
-		extract_node_archive "$node_tarball" "$NODE_BASE" || exit 1
-		ensure_node_runtime_deps || exit 1
+	rm -rf "$NODE_BASE" 2>/dev/null
+	ensure_dir "$NODE_BASE"
+	tar --strip-components=1 -zxf "$node_pkg" -C "$NODE_BASE" 2>/dev/null || \
+		{ log_err "Node.js 解压失败"; exit 1; }
+	ensure_node_deps || exit 1
+	log_ok "Node.js $("$NODE_BIN" --version 2>/dev/null) 安装成功"
 
-		if [ -x "$NODE_BIN" ]; then
-			local offline_node_ver
-			offline_node_ver=$($NODE_BIN --version 2>/dev/null) || {
-				log_error "Node.js 已解压，但运行失败"
-				exit 1
-			}
-			log_info "Node.js ${offline_node_ver} 安装成功"
-		else
-			log_error "Node.js 安装失败"
-			exit 1
-		fi
-	else
-		log_error "未找到 Node.js 离线包: $offline_dir/node.tar.gz 或 $offline_dir/node.tar.xz"
-		exit 1
-	fi
+	# openclaw tarball
+	log_step "安装 OpenClaw (离线)"
+	local oc_pkg=""
+	[ -f "$dir/openclaw.tgz" ] && oc_pkg="$dir/openclaw.tgz"
+	[ -z "$oc_pkg" ] && oc_pkg=$(ls "$dir"/openclaw-*.tgz 2>/dev/null | head -1)
+	[ -n "$oc_pkg" ] || { log_err "未找到 openclaw 离线包"; exit 1; }
 
-	# [2] 安装 OpenClaw
-	local oc_tarball="$offline_dir/openclaw-deps.tar.gz"
-	if [ -f "$oc_tarball" ]; then
-		echo ""
-		echo "=== 安装 OpenClaw (离线) ==="
-		rm -rf "$OC_GLOBAL" 2>/dev/null
-		[ -d /overlay/upper ] && rm -rf "/overlay/upper${OC_GLOBAL}" 2>/dev/null
-		ensure_mkdir "$OC_GLOBAL"
+	ensure_dir "$OC_GLOBAL"
+	local libc; libc=$(detect_libc)
+	local flags=""; [ "$libc" = "musl" ] && flags="--ignore-scripts"
+	"$NPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" $flags --no-fund --no-audit 2>&1 | tail -10
 
-		tar xzf "$oc_tarball" -C "$OC_GLOBAL"
+	[ -n "$(find_oc_entry)" ] || { log_err "离线安装验证失败"; exit 1; }
+	log_ok "OpenClaw 离线安装成功"
 
-		local oc_entry=$(find_oc_entry)
-		if [ -n "$oc_entry" ]; then
-			local oc_ver=$("$NODE_BIN" "$oc_entry" --version 2>/dev/null | tr -d '[:space:]')
-			log_info "OpenClaw v${oc_ver} 安装成功"
-		else
-			log_error "OpenClaw 安装验证失败"
-			exit 1
-		fi
-	else
-		log_error "未找到 OpenClaw 离线包: $oc_tarball"
-		exit 1
-	fi
-
-	# [3] 初始化
 	init_openclaw
 
 	echo ""
 	echo "╔══════════════════════════════════════════════════════════════╗"
 	echo "║  ✅ 离线安装完成！                                           ║"
-	echo "║                                                              ║"
-	echo "║  请在 LuCI → 服务 → OpenClaw 中启用服务。                    ║"
 	echo "╚══════════════════════════════════════════════════════════════╝"
 }
 
-# ── 主入口 ──
+# ── 主入口 ─────────────────────────────────────────────────────────────────
 case "${1:-}" in
-	setup)
-		do_setup
-		;;
-	setup-offline)
-		do_setup_offline "$@"
-		;;
-	check)
-		do_check
-		;;
-	upgrade)
-		do_upgrade
-		;;
-	node)
-		download_node "$NODE_VERSION"
-		;;
-	factory-reset)
-		do_factory_reset
-		;;
+	setup)         cmd_setup ;;
+	check)         cmd_check ;;
+	upgrade)       cmd_upgrade ;;
+	node)          cmd_node ;;
+	factory-reset) cmd_factory_reset ;;
+	setup-offline) cmd_setup_offline "${2:-}" ;;
 	*)
-		echo "用法: openclaw-env {setup|setup-offline|check|upgrade|node|factory-reset}"
+		echo "用法: openclaw-env <命令>"
 		echo ""
-		echo "  setup          — 完整安装 (下载 Node.js + pnpm + OpenClaw)"
-		echo "  setup-offline  — 离线安装 (从本地文件安装，由 .run 安装器调用)"
-		echo "  check          — 检查环境状态"
-		echo "  upgrade        — 升级 OpenClaw 到最新版"
-		echo "  node           — 仅下载/更新 Node.js"
-		echo "  factory-reset  — 恢复出厂设置 (清除所有配置)"
+		echo "命令:"
+		echo "  setup          完整安装 (Node.js + OpenClaw)"
+		echo "  check          检查环境状态"
+		echo "  upgrade        升级 OpenClaw 到最新版"
+		echo "  node           仅更新 Node.js"
+		echo "  factory-reset  恢复出厂设置"
+		echo "  setup-offline  从本地文件安装"
+		echo ""
+		echo "环境变量:"
+		echo "  OC_VERSION     指定安装版本 (如 2026.3.13)"
 		exit 1
 		;;
 esac
