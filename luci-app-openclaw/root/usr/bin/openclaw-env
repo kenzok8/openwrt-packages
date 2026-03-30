@@ -418,10 +418,12 @@ download_node() {
 			fi
 		else
 			# x64 musl: unofficial-builds 提供
-			# 1) gzip 包优先，兼容 BusyBox tar
-			mirror_list="${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_gz} ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_xz}"
-			# 2) npmmirror 镜像
-			mirror_list="$mirror_list ${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball_gz} ${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball_xz}"
+			# 1) npmmirror 国内镜像优先 (国内访问更稳定)
+			mirror_list="${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball_gz} ${NODE_MIRROR_CN}/v${node_ver}/${musl_tarball_xz}"
+			# 2) unofficial-builds 官方源备用
+			mirror_list="$mirror_list ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_gz} ${NODE_MUSL_MIRROR}/v${node_ver}/${musl_tarball_xz}"
+			# 3) 项目自托管备用
+			mirror_list="$mirror_list ${NODE_SELF_HOST}/${musl_tarball_gz}"
 		fi
 	else
 		echo ""
@@ -547,6 +549,7 @@ install_openclaw() {
 	fi
 
 	# 检查 git 是否可用 (openclaw 部分依赖可能使用 git:// 协议)
+	_FAKE_GIT_CREATED=0
 	if ! command -v git >/dev/null 2>&1; then
 		log_warn "未检测到 git，正在尝试安装..."
 		_oc_opkg_update
@@ -554,7 +557,10 @@ install_openclaw() {
 		if command -v git >/dev/null 2>&1; then
 			log_info "git 安装成功"
 		else
-			log_warn "git 安装失败，将尝试无 git 模式安装"
+			log_warn "git 安装失败，创建 git 占位脚本以绕过 npm git 依赖..."
+			printf '#!/bin/sh\nexit 0\n' > /usr/bin/git
+			chmod 755 /usr/bin/git
+			_FAKE_GIT_CREATED=1
 		fi
 	fi
 
@@ -562,7 +568,9 @@ install_openclaw() {
 	local npm_ok=0
 	if [ -x "$NPM_BIN" ]; then
 		ensure_mkdir "$OC_GLOBAL"
-		"$NPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" $install_flags 2>&1 | tail -10
+		"$NPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" $install_flags \
+			--registry=https://registry.npmmirror.com \
+			--fetch-timeout=60000 --fetch-retry-mintimeout=5000 2>&1 | tail -10
 		# 检查是否安装成功
 		if [ -n "$(find_oc_entry)" ]; then
 			npm_ok=1
@@ -570,7 +578,9 @@ install_openclaw() {
 			log_warn "首次安装未成功，清理残留后用 --no-optional 模式重试..."
 			# 清理可能导致 ENOENT 的残留目录，避免 npm 在半成品目录上重试失败
 			rm -rf "${OC_GLOBAL}/lib/node_modules/openclaw" 2>/dev/null || true
-			"$NPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" $install_flags --no-optional 2>&1 | tail -10
+			"$NPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" $install_flags --no-optional \
+				--registry=https://registry.npmmirror.com \
+				--fetch-timeout=60000 --fetch-retry-mintimeout=5000 2>&1 | tail -10
 			[ -n "$(find_oc_entry)" ] && npm_ok=1
 		fi
 	elif [ -x "$PNPM_BIN" ]; then
@@ -578,8 +588,12 @@ install_openclaw() {
 		"$PNPM_BIN" install -g "$oc_pkg" --prefix="$OC_GLOBAL" 2>&1 | tail -5
 	else
 		log_error "npm 和 pnpm 均不可用"
+		[ "$_FAKE_GIT_CREATED" = "1" ] && rm -f /usr/bin/git
 		exit 1
 	fi
+
+	# 清理 git 占位脚本
+	[ "$_FAKE_GIT_CREATED" = "1" ] && rm -f /usr/bin/git && log_info "已移除 git 占位脚本"
 
 	# 验证
 	local oc_ver=""

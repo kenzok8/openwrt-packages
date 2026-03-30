@@ -93,8 +93,8 @@ var CSS = '\
 .oc-iframe-wrap iframe{width:100%;height:650px;border:none;display:block}\
 .oc-iframe-msg{padding:48px;text-align:center;opacity:.55;font-size:14px;line-height:1.8}\
 .oc-iframe-msg .icon{font-size:36px;margin-bottom:12px}\
-.oc-dialog-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:10000;display:flex;align-items:center;justify-content:center}\
-.oc-dialog{background:inherit;border-radius:12px;padding:24px;max-width:440px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.2);border:1px solid rgba(128,128,128,.2)}\
+.oc-dialog-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:transparent;z-index:10000;display:flex;align-items:center;justify-content:center}\
+.oc-dialog{background:var(--background-color-low,var(--background-color,#fff));border-radius:12px;padding:24px;max-width:440px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.18);border:1px solid rgba(128,128,128,.2)}\
 .oc-dialog h3{margin:0 0 16px;font-size:16px}\
 .oc-dialog-opt{padding:12px 14px;border:2px solid rgba(128,128,128,.2);border-radius:8px;margin-bottom:10px;cursor:pointer;transition:all .2s}\
 .oc-dialog-opt:hover{border-color:rgba(128,128,128,.5)}\
@@ -109,7 +109,7 @@ var CSS = '\
 .oc-switch input:checked+.slider{background:var(--primary,#5e72e4)}\
 .oc-switch input:checked+.slider:before{transform:translateX(20px)}\
 .oc-more-wrap{position:relative;display:inline-block}\
-.oc-more-menu{position:absolute;top:100%;right:0;margin-top:6px;border:1px solid rgba(128,128,128,.2);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.12);min-width:190px;z-index:100;display:none;overflow:hidden;padding:4px 0;background:inherit}\
+.oc-more-menu{position:absolute;bottom:calc(100% + 4px);right:0;border:1px solid rgba(128,128,128,.2);border-radius:10px;box-shadow:0 -4px 20px rgba(0,0,0,.12);min-width:190px;z-index:100;display:none;overflow:hidden;padding:4px 0;background:var(--background-color-low,#f8f8f8)}\
 .oc-more-menu.open{display:block}\
 .oc-more-item{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:background .12s;color:inherit}\
 .oc-more-item:hover{background:rgba(128,128,128,.1)}\
