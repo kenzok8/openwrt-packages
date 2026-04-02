@@ -24,7 +24,7 @@
 						end) -- Check navbar enable status local navbar_enabled=config.navbar=="1" -- Calculate number
 						of enabled navbar links local num_links=0 uci:foreach("alpha", "navbar" , function(section) if
 						section.enable=="Enable" then num_links=num_links + 1 end end) -- Calculate link width for
-						responsive design local link_width=string.format("calc(100%% / %d)", num_links) -- Retrieve
+						responsive design local link_width=string.format("calc(100%% / %d)", num_links > 0 and num_links or 1) -- Retrieve
 						theme properties local background_color=config.color or '#2222359a' local
 						blur_value=tonumber(config.blur) or 20 local link_blur=string.format("blur(%dpx)", blur_value)
 						%>
@@ -65,7 +65,7 @@
 						</div>
 						<footer class="mobile">
 							<a href="https://github.com/derisamedia/luci-theme-alpha">
-								<%=ver.luciname%> | Alpha OS Theme v3.9.7
+								<%=ver.luciname%> | Alpha OS Theme v3.9.7-r2
 							</a>
 						</footer>
 						</div>

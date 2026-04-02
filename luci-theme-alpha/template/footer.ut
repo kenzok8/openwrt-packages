@@ -26,7 +26,7 @@
 		}
 	});
 
-	let link_width = `calc(100% / ${num_links})`;
+	let link_width = `calc(100% / ${num_links > 0 ? num_links : 1})`;
 	let background_color = config.color || '#2222359a';
 	let blur_value = config.blur || 20;
 	let link_blur = `blur(${blur_value}px)`;

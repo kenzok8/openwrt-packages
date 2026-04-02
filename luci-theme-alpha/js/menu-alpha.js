@@ -82,7 +82,8 @@ return baseclass.extend({
           url + "/" + children[i].name,
           l
         ),
-        hasChildren = submenu.children.length;
+        hasChildren = submenu.children.length,
+        dataTitle = hasChildren ? children[i].title : _(children[i].title);
       ul.appendChild(
         E(
           "li",
@@ -104,9 +105,8 @@ return baseclass.extend({
                 click: hasChildren
                   ? ui.createHandlerFn(this, "handleMenuExpand")
                   : null,
-                "data-title": hasChildren
-                  ? children[i].title
-                  : _(children[i].title),
+                "data-title": dataTitle,
+                "data-name": children[i].name,
               },
               [_(children[i].title)]
             ),
@@ -180,36 +180,31 @@ return baseclass.extend({
       darkMask = document.querySelector(".darkMask"),
       mainRight = document.querySelector(".main-right"),
       mainLeft = document.querySelector(".main-left"),
-      open = mainLeft.style.transform === ""; // true if currently open
-    
-    // If it's a resize event, we simulate that the sidebar was "open" so the logic below closes it for mobile, and opens it for desktop
+      open = mainLeft.style.transform === "";
+
     if (ev.type == "resize") {
-        open = true;
+      open = true;
     }
-    
-    // Logics: 'open' true means we want to CLOSE it on mobile, but OPEN it on desktop.
-    // Actually, let's make it clearer: we toggle the state.
+
     var willOpen = !open;
     if (ev.type == "resize") {
-        willOpen = width > 1152;
+      willOpen = width > 1152;
     }
 
     if (width <= 1152) {
-        // Mobile behavior
-        mainLeft.style.width = ""; // Reset width
-        mainLeft.style.transform = willOpen ? "" : "translateX(-20rem)";
-        mainLeft.style.visibility = willOpen ? "visible" : "";
-        darkMask.style.visibility = willOpen ? "visible" : "";
-        darkMask.style.opacity = willOpen ? 1 : "";
-        mainRight.style.width = "";
+      mainLeft.style.width = "";
+      mainLeft.style.transform = willOpen ? "" : "translateX(-20rem)";
+      mainLeft.style.visibility = willOpen ? "visible" : "";
+      darkMask.style.visibility = willOpen ? "visible" : "";
+      darkMask.style.opacity = willOpen ? 1 : "";
+      mainRight.style.width = "";
     } else {
-        // Desktop behavior
-        mainLeft.style.width = ""; // Reset width
-        mainLeft.style.transform = willOpen ? "" : "translateX(-20rem)";
-        mainLeft.style.visibility = willOpen ? "visible" : "hidden";
-        mainRight.style.width = willOpen ? "" : "100%";
-        darkMask.style.visibility = "";
-        darkMask.style.opacity = "";
+      mainLeft.style.width = "";
+      mainLeft.style.transform = willOpen ? "" : "translateX(-20rem)";
+      mainLeft.style.visibility = willOpen ? "visible" : "hidden";
+      mainRight.style.width = willOpen ? "" : "100%";
+      darkMask.style.visibility = "";
+      darkMask.style.opacity = "";
     }
     if (ev && ev.preventDefault) ev.preventDefault();
     if (ev && ev.stopPropagation) ev.stopPropagation();

@@ -187,7 +187,7 @@
  	--main-menu-color: #202124;
  	--submenu-bg-hover: #4d5ca5;
  	--submenu-bg-hover-active: #09c;
- 	--font-body: 'Inter-Regular';
+	--font-body: 'Inter-Regular', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', sans-serif;
  }
 
  tt {
@@ -372,7 +372,19 @@
  	height: 100%;
  	margin: 0;
  	padding: 0;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
  }
+
+body.lang_zh-cn,
+body.lang_zh_CN,
+body.lang_zh-hans,
+body.lang_zh_Hans,
+body.lang_zh-tw,
+body.lang_zh_TW {
+	font-family: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', sans-serif;
+}
 
  select {
  	color: #555;
@@ -838,9 +850,13 @@
  }
 
  .main>.main-left>.nav>li>[data-title="Log out"],
- .main>.main-left>.nav>li>[data-title="Logout"] {
+.main>.main-left>.nav>li>[data-title="Logout"],
+.main>.main-left>.nav>li>[data-name="logout"] {
  	display: flex;
+	align-items: center;
+	justify-content: flex-start;
  	padding: 0.5rem 1rem;
+	padding-right: 3rem;
  }
 
  .main>.main-left>.nav>li a {
@@ -850,7 +866,9 @@
 
  .main>.main-left>.nav>li>[data-title="Log out"],
  .main>.main-left>.nav>li>[data-title="Logout"],
- .main>.main-left>.nav>li>[data-title="iStore"] {
+.main>.main-left>.nav>li>[data-title="iStore"],
+.main>.main-left>.nav>li>[data-name="logout"],
+.main>.main-left>.nav>li>[data-name="istore"] {
  	font-size: 1rem;
  	color: #fff;
  }
@@ -866,6 +884,8 @@
  .main>.main-left>.nav>.slide>.menu,
  .main>.main-left>.nav>li>[data-title="Logout"],
  .main>.main-left>.nav>li>[data-title="iStore"],
+.main>.main-left>.nav>li>[data-name="logout"],
+.main>.main-left>.nav>li>[data-name="istore"],
  .main>.main-left>.nav>li>[data-title="Dashboard"] {
  	font-size: 1rem;
  	font-weight: 500;
@@ -891,7 +911,8 @@
 
  .main>.main-left>.nav>.slide>.menu.active::before {}
 
- .main>.main-left>.nav>.slide>[data-title="Status"]:before {
+.main>.main-left>.nav>.slide>[data-title="Status"]:before,
+.main>.main-left>.nav>.slide>[data-name="status"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -901,7 +922,8 @@
  	background-size: 25px;
  }
 
- .main>.main-left>.nav>.slide>[data-title="System"]:before {
+.main>.main-left>.nav>.slide>[data-title="System"]:before,
+.main>.main-left>.nav>.slide>[data-name="system"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -911,7 +933,8 @@
  	background-size: 25px;
  }
 
- .main>.main-left>.nav>.slide>[data-title="Services"]:before {
+.main>.main-left>.nav>.slide>[data-title="Services"]:before,
+.main>.main-left>.nav>.slide>[data-name="services"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -921,7 +944,8 @@
  	background-size: 25px;
  }
 
- .main>.main-left>.nav>.slide>[data-title="NAS"]:before {
+.main>.main-left>.nav>.slide>[data-title="NAS"]:before,
+.main>.main-left>.nav>.slide>[data-name="nas"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -931,7 +955,8 @@
  	background-size: 25px;
  }
 
- .main>.main-left>.nav>.slide>[data-title="Modem"]:before {
+.main>.main-left>.nav>.slide>[data-title="Modem"]:before,
+.main>.main-left>.nav>.slide>[data-name="modem"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -941,7 +966,8 @@
  	background-size: 25px;
  }
 
- .main>.main-left>.nav>.slide>[data-title="Network"]:before {
+.main>.main-left>.nav>.slide>[data-title="Network"]:before,
+.main>.main-left>.nav>.slide>[data-name="network"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -951,7 +977,8 @@
  	background-size: 25px;
  }
 
- .main>.main-left>.nav>.slide>[data-title="VPN"]:before {
+.main>.main-left>.nav>.slide>[data-title="VPN"]:before,
+.main>.main-left>.nav>.slide>[data-name="vpn"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -961,7 +988,8 @@
  	background-size: 25px;
  }
 
- .main>.main-left>.nav>.slide>[data-title="Docker"]:before {
+.main>.main-left>.nav>.slide>[data-title="Docker"]:before,
+.main>.main-left>.nav>.slide>[data-name="docker"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -971,7 +999,8 @@
  	background-size: 25px;
  }
 
- .main>.main-left>.nav>li>[data-title="iStore"]:before {
+.main>.main-left>.nav>li>[data-title="iStore"]:before,
+.main>.main-left>.nav>li>[data-name="istore"]:before {
  	position: absolute;
  	right: 14px;
  	width: 25px;
@@ -1057,12 +1086,15 @@
  }
 
  .main>.main-left>.nav>li>[data-title="Logout"]::before,
- .main>.main-left>.nav>li>[data-title="Log out"]::before {
+.main>.main-left>.nav>li>[data-title="Log out"]::before,
+.main>.main-left>.nav>li>[data-name="logout"]::before {
  	position: absolute;
+	top: 50%;
  	right: 14px;
  	width: 25px;
  	height: 25px;
  	content: "";
+	transform: translateY(-50%);
  	background: url(./icon/logout.svg) no-repeat;
  	background-size: 25px;
  }
@@ -1089,7 +1121,9 @@
  .main>.main-left>.nav>.slide>.slide-menu>li,
  .main>.main-left>.nav>li>[data-title="Logout"],
  .main>.main-left>.nav>li>[data-title="Log out"],
- .main>.main-left>.nav>li>[data-title="iStore"] {
+.main>.main-left>.nav>li>[data-title="iStore"],
+.main>.main-left>.nav>li>[data-name="logout"],
+.main>.main-left>.nav>li>[data-name="istore"] {
  	position: relative;
  	overflow: hidden;
  	transform: translate3d(0, 0, 0);
@@ -1099,7 +1133,9 @@
  .main>.main-left>.nav>.slide>.slide-menu>li::after,
  .main>.main-left>.nav>li>[data-title="Logout"]::after,
  .main>.main-left>.nav>li>[data-title="Log out"]::after,
- .main>.main-left>.nav>li>[data-title="iStore"]::after {
+.main>.main-left>.nav>li>[data-title="iStore"]::after,
+.main>.main-left>.nav>li>[data-name="logout"]::after,
+.main>.main-left>.nav>li>[data-name="istore"]::after {
  	position: absolute;
  	top: 0;
  	left: 0;
@@ -1120,7 +1156,9 @@
  .main>.main-left>.nav>.slide>.slide-menu>li:active::after,
  .main>.main-left>.nav>li>[data-title="Logout"]:active::after,
  .main>.main-left>.nav>li>[data-title="Log out"]:active::after,
- .main>.main-left>.nav>li>[data-title="iStore"]:active::after {
+.main>.main-left>.nav>li>[data-title="iStore"]:active::after,
+.main>.main-left>.nav>li>[data-name="logout"]:active::after,
+.main>.main-left>.nav>li>[data-name="istore"]:active::after {
  	transition: 0s;
  	transform: scale(0, 0);
  	opacity: 0.2;
@@ -1360,6 +1398,15 @@
  .cbi-button+.cbi-button {
  	margin-left: 0.6rem;
  }
+
+.btn,
+.cbi-button,
+[data-page="admin-system-opkg"] div.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1.2;
+}
 
  .btn:hover,
  .btn:focus,
@@ -2170,6 +2217,7 @@
 
  .ifacebadge {
  	display: inline-flex;
+	align-items: center;
  	background: #ffffff33;
  	padding: 0.5rem 0.8rem;
  	border-radius: 10px;
@@ -2178,14 +2226,14 @@
  td>.ifacebadge,
  .td>.ifacebadge {
  	font-size: 0.8rem;
- 	background-color: #000000;
+	background-color: #222235b3;
  	border-radius: 10px;
  }
 
  .ifacebadge>em,
  .ifacebadge>img {
  	display: inline-block;
- 	align-self: flex-start;
+	align-self: center;
  	margin: 0 0.2rem;
  }
 
@@ -2213,7 +2261,7 @@
  	align-items: center;
  	flex: 1 1 auto;
  	min-width: 220px;
- 	background-color: #11111d;
+	background-color: #222235b3;
  	margin: 0.5em 0.25em 0;
  	padding: 0.5em;
  	border-radius: 10px;
@@ -2610,8 +2658,8 @@
  }
 
  [data-page="admin-system-opkg"] div.btn {
- 	display: inline;
- 	padding: 0.3rem 0.6rem;
+	padding: 0.3rem 0.9rem;
+	min-height: 2.3rem;
  }
 
  [data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear),
@@ -2623,6 +2671,25 @@
  [data-page="admin-system-opkg"] #maincontent>.container {
  	margin: 2rem 2rem 1rem;
  }
+
+[data-page="admin-system-opkg"] #packages {
+	border-radius: 14px;
+	overflow: hidden;
+	background-color: rgba(16, 28, 45, 0.58);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+}
+
+[data-page="admin-system-opkg"] #packages>.tr>.td,
+[data-page="admin-system-opkg"] #packages tbody tr>td {
+	background-color: rgba(34, 34, 53, 0.46);
+	border-top: thin solid rgba(255, 255, 255, 0.08);
+}
+
+[data-page="admin-system-opkg"] #packages>.tr.table-titles>.th,
+[data-page="admin-system-opkg"] #packages thead tr>th {
+	background-color: rgba(12, 22, 38, 0.82);
+}
 
  .td.version,
  .td.size {
@@ -3101,7 +3168,7 @@
  	}
  }
 
- @media screen and (max-width: 2000000000px) {
+ @media screen and (max-width: 2000px) {
  	header {
  		height: 3.5rem;
  	}
@@ -3162,8 +3229,10 @@
  	.main>.main-left>.nav>li a,
  	.main>.main-left>.nav>.slide>.menu,
  	.main>.main-left>.nav>li>[data-title="Logout"],
-	.main>.main-left>.nav>li>[data-title="Logout"],
-  .main>.main-left>.nav>li>[data-title="iStore"] {
+	.main>.main-left>.nav>li>[data-title="Log out"],
+	.main>.main-left>.nav>li>[data-title="iStore"],
+	.main>.main-left>.nav>li>[data-name="logout"],
+	.main>.main-left>.nav>li>[data-name="istore"] {
  		font-size: 1rem;
  		color: #fff;
  	}
@@ -3447,7 +3516,9 @@
  .main>.main-left>.nav>.slide>.menu,
  .main>.main-left>.nav>li>[data-title="Logout"],
  .main>.main-left>.nav>li>[data-title="Log out"],
- .main>.main-left>.nav>li>[data-title="iStore"] {
+.main>.main-left>.nav>li>[data-title="iStore"],
+.main>.main-left>.nav>li>[data-name="logout"],
+.main>.main-left>.nav>li>[data-name="istore"] {
  	font-size: 1.1rem;
  }
 
@@ -3596,7 +3667,7 @@
  .main>.main-left>.nav>.slide>.slide-menu>li>a,
  .tr[data-title]::before,
  .tr.cbi-section-table-titles.named::before {
- 	font-size:
+	font-size: 0.8rem;
  }
 
  .cbi-value-title,

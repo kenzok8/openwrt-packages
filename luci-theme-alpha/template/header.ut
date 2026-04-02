@@ -46,7 +46,7 @@
 		</a>
 		<div class="status" id="indicators"></div>
 		<div class="logout" >  
-			<a href="/cgi-bin/luci/admin/logout" data-title="Logout">Keluar</a>
+			<a href="/cgi-bin/luci/admin/logout" data-title="Logout">{{ _('Logout') }}</a>
 		</div>
 		<div class="showSide">
 			<img src="{{ media }}/gaya/icon/menu_icon.svg" alt="">
