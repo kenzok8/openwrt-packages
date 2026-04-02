@@ -12,6 +12,11 @@ local res, containers, volumes, lost_state
 
 function get_volumes()
 	local data = {}
+
+	if type(volumes) ~= "table" then
+		return nil
+	end
+
 	for i, v in ipairs(volumes) do
 		local index = v.Name
 		data[index]={}

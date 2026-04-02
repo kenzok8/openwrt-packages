@@ -177,28 +177,30 @@ function action_events()
 	local query ={}
 
 	local dk = docker.new()
+	-- Get events from last 24 hours
+	query["since"] = os.time() - 86400
 	query["until"] = os.time()
 	local events = dk:events({query = query})
 
-	if events.code == 200 then
+	if events.code == 200 and type(events.body) == "table" then
 		for _, v in ipairs(events.body) do
 			local date = "unknown"
 			if v and v.time then
 				date = os.date("%Y-%m-%d %H:%M:%S", v.time)
 			end
 
-			local name = v.Actor.Attributes.name or "unknown"
+			local name = v.Actor and v.Actor.Attributes and v.Actor.Attributes.name or "unknown"
 			local action = v.Action or "unknown"
 
 			if v and v.Type == "container" then
-				local id = v.Actor.ID or "unknown"
+				local id = v.Actor and v.Actor.ID or "unknown"
 				logs = logs .. string.format("[%s] %s %s Container ID: %s Container Name: %s\n", date, v.Type, action, id, name)
 			elseif v.Type == "network" then
-				local container = v.Actor.Attributes.container or "unknown"
-				local network = v.Actor.Attributes.type or "unknown"
+				local container = v.Actor and v.Actor.Attributes and v.Actor.Attributes.container or "unknown"
+				local network = v.Actor and v.Actor.Attributes and v.Actor.Attributes.type or "unknown"
 				logs = logs .. string.format("[%s] %s %s Container ID: %s Network Name: %s Network type: %s\n", date, v.Type, action, container, name, network)
 			elseif v.Type == "image" then
-				local id = v.Actor.ID or "unknown"
+				local id = v.Actor and v.Actor.ID or "unknown"
 				logs = logs .. string.format("[%s] %s %s Image: %s Image name: %s\n", date, v.Type, action, id, name)
 			end
 		end
@@ -212,11 +214,11 @@ local calculate_cpu_percent = function(d)
 		return
 	end
 
-	local cpu_count = tonumber(d["cpu_stats"]["online_cpus"])
+	local cpu_count = tonumber(d["cpu_stats"] and d["cpu_stats"]["online_cpus"])
 	local cpu_percent = 0.0
-	local cpu_delta = tonumber(d["cpu_stats"]["cpu_usage"]["total_usage"]) - tonumber(d["precpu_stats"]["cpu_usage"]["total_usage"])
-	local system_delta = tonumber(d["cpu_stats"]["system_cpu_usage"]) -- tonumber(d["precpu_stats"]["system_cpu_usage"])
-	if system_delta > 0.0 then
+	local cpu_delta = tonumber(d["cpu_stats"] and d["cpu_stats"]["cpu_usage"] and d["cpu_stats"]["cpu_usage"]["total_usage"]) - tonumber(d["precpu_stats"] and d["precpu_stats"]["cpu_usage"] and d["precpu_stats"]["cpu_usage"]["total_usage"])
+	local system_delta = tonumber(d["cpu_stats"] and d["cpu_stats"]["system_cpu_usage"]) -- tonumber(d["precpu_stats"]["system_cpu_usage"])
+	if system_delta and system_delta > 0.0 then
 		cpu_percent = string.format("%.2f", cpu_delta / system_delta * 100.0 * cpu_count)
 	end
 
@@ -232,8 +234,8 @@ local get_memory = function(d)
 	-- local usage = string.format("%.2f", (tonumber(d["memory_stats"]["usage"]) - tonumber(d["memory_stats"]["stats"]["total_cache"])) / 1024 / 1024)
 	-- return usage .. "MB / " .. limit.. "MB" 
 
-	local limit =tonumber(d["memory_stats"]["limit"])
-	local usage = tonumber(d["memory_stats"]["usage"]) 
+	local limit = tonumber(d["memory_stats"] and d["memory_stats"]["limit"])
+	local usage = tonumber(d["memory_stats"] and d["memory_stats"]["usage"]) 
 	-- - tonumber(d["memory_stats"]["stats"]["total_cache"])
 
 	return usage, limit
@@ -247,10 +249,12 @@ local get_rx_tx = function(d)
 	local data = {}
 	if type(d["networks"]) == "table" then
 		for e, v in pairs(d["networks"]) do
-			data[e] = {
-				bw_tx = tonumber(v.tx_bytes),
-				bw_rx = tonumber(v.rx_bytes)
-			}
+			if v then
+				data[e] = {
+					bw_tx = tonumber(v.tx_bytes),
+					bw_rx = tonumber(v.rx_bytes)
+				}
+			end
 		end
 	end
 
@@ -261,7 +265,7 @@ local function get_stat(container_id)
 	if container_id then
 		local dk = docker.new()
 		local response = dk.containers:inspect({id = container_id})
-		if response.code == 200 and response.body.State.Running then
+		if response.code == 200 and response.body and response.body.State and response.body.State.Running then
 			response = dk.containers:stats({id = container_id, query = {stream = false,  ["one-shot"] = true}})
 			if response.code == 200 then
 				local container_stats = response.body

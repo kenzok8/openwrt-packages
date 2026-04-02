@@ -26,6 +26,10 @@ end
 function get_images()
 	local data = {}
 
+	if type(images) ~= "table" then
+		return nil
+	end
+
 	for i, v in ipairs(images) do
 		local index = v.Created .. v.Id
 
