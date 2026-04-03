@@ -58,10 +58,6 @@ src-git openclaw https://github.com/kenzok8/luci-app-openclaw.git
 make package/luci-app-openclaw/compile V=s
 ```
 
-### ~~方式四：手动推送（已弃用）~~
-
-> 不再推荐。请使用上方一键安装命令。
-
 ---
 
 ## 安装后配置
