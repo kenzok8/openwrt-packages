@@ -2494,6 +2494,19 @@ pre.command-output {
 }
 
 
+.alert-message.spinning,
+.modal.alert-message.spinning {
+  position: relative;
+
+  &::before {
+    height: 16px;
+    width: 16px;
+    position: absolute;
+    top: 2rem;
+    left: 0.5rem;
+  }
+}
+
 /* page fix */
 @import url("page-fix.less");
 
