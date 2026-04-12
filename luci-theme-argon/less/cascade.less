@@ -257,6 +257,11 @@ select[multiple="multiple"] {
   margin: 5em auto;
 }
 
+.alert-message {
+  transform: none;
+  position: static;
+}
+
 .alert-message>h4 {
   font-size: 110%;
   font-weight: bold;
@@ -268,6 +273,11 @@ select[multiple="multiple"] {
 
 .alert-message .btn {
   padding: .3rem .6rem;
+}
+
+#maincontent > .alert-message {
+  position: fixed;
+  transform: translate(-50%, -50%);
 }
 
 .container .alert,
@@ -1431,7 +1441,6 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   cursor: pointer;
   user-select: none;
   font-size: 0;
-  color: #8898aa;
   background-color: currentColor;
   mask-image: var(--dropdown-arrow-icon);
   mask-repeat: no-repeat;
@@ -1470,6 +1479,10 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 
 .cbi-dropdown>ul>li[display]:not([display="0"]) {
   border-left: thin solid #ccc;
+}
+
+.cbi-dropdown>ul>li[display="0"] {
+  color: #fff;
 }
 
 .cbi-dropdown[empty]>ul {
@@ -2492,7 +2505,6 @@ input[name="nslookup"] {
 pre.command-output {
   padding: 1.5rem;
 }
-
 
 .alert-message.spinning,
 .modal.alert-message.spinning {
