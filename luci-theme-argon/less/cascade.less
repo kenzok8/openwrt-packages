@@ -474,14 +474,16 @@ table>thead>tr>th,
   flex: 1 1 auto;
 }
 
-tr>td,
-tr>th,
-.tr>.td,
-.tr>.th,
-.cbi-section-table-row::before,
-#cbi-wireless>#wifi_assoclist_table>.tr:nth-child(2) {
-  border-top: thin solid #ddd;
-  padding: 1.1em 1.25rem;
+body:not([data-page="admin-dashboard"]) {
+  tr>td,
+  tr>th,
+  .tr>.td,
+  .tr>.th,
+  .cbi-section-table-row::before,
+  #cbi-wireless>#wifi_assoclist_table>.tr:nth-child(2) {
+    border-top: thin solid #ddd;
+    padding: 1.1em 1.25rem;
+  }
 }
 
 #cbi-wireless .td,
