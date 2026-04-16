@@ -1483,10 +1483,6 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   border-left: thin solid #ccc;
 }
 
-.cbi-dropdown>ul>li[display="0"] {
-  color: #fff;
-}
-
 .cbi-dropdown[empty]>ul {
   max-width: 1px;
 }
@@ -2519,6 +2515,14 @@ pre.command-output {
     top: 2rem;
     left: 0.5rem;
   }
+}
+
+.cbi-dropdown.cbi-button-positive>ul>li[display="0"] {
+  color: #fff;
+}
+
+.cbi-dropdown[open]>ul.dropdown>li[selected] {
+  color: #000;
 }
 
 /* page fix */
