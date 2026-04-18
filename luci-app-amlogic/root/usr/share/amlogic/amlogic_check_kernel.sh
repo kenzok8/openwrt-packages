@@ -133,6 +133,8 @@ else
         kernel_tag="rk3588"
     elif [[ "${kernel_uname}" =~ -rk35xx ]]; then
         kernel_tag="rk35xx"
+    elif [[ "${kernel_uname}" =~ -flippy ]]; then
+        kernel_tag="flippy"
     elif [[ "${kernel_uname}" =~ -h6|-zicai ]]; then
         kernel_tag="h6"
     else
