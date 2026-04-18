@@ -1,0 +1,13 @@
+{
+	"admin/netwizard": {
+		"title": "Netwizard",
+		"order": 11,
+		"action": {
+			"type": "view",
+			"path": "netwizard/netwizard"
+		},
+		"depends": {
+			"acl": [ "luci-app-netwizard" ]
+		}
+	}
+}

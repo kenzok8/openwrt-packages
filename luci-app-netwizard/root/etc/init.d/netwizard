@@ -1,0 +1,720 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+
+UCISET='uci -q set'
+UCIDEL='uci -q delete'
+UCIADD='uci -q add'
+UCIADDLIST='uci -q add_list'
+LOCK=/var/lock/netwizard-boot.lock
+LOCK_TIMEOUT=300
+
+log() {
+    echo "netwizard:$1"
+}
+
+validate_ip() {
+    echo "$1" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$' && return 0 || return 1
+}
+
+validate_cidr() {
+    echo "$1" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$' && return 0 || return 1
+}
+
+validate_interface() {
+    [ -n "$1" ] && [ -d "/sys/class/net/$1" ] && return 0 || return 1
+}
+
+# 检查锁文件
+check_lock() {
+    if [ -f "$LOCK" ]; then
+        local lock_age=$(($(date +%s) - $(stat -c %Y "$LOCK" 2>/dev/null || echo 0)))
+        if [ $lock_age -gt $LOCK_TIMEOUT ]; then
+            log "Removing stale lock file (age: ${lock_age}s)"
+            rm -f "$LOCK"
+            return 1
+        fi
+        log "Another instance is running, exiting"
+        return 0
+    fi
+    return 1
+}
+
+create_lock() {
+    touch "$LOCK" 2>/dev/null || {
+        log_error "Failed to create lock file"
+        return 1
+    }
+    return 0
+}
+
+remove_lock() {
+    rm -f "$LOCK" 2>/dev/null
+}
+
+check_dependencies() {
+    local missing=""
+    
+    for cmd in $REQUIRED_COMMANDS; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing="$missing $cmd"
+        fi
+    done
+    
+    if [ -n "$missing" ]; then
+        log_error "Required commands not found:$missing"
+        return 1
+    fi
+    
+    return 0
+}
+setipv6() {
+    case $1 in
+        0)
+	       bINDEX=$(uci show network | grep -E "@device\[[0-9]+\].name='br-lan'" | sed -n 's/.*@device\[\([0-9]*\)\].name.*/\1/p')
+	       if [ -n "$bINDEX" ]; then 
+	           $UCISET network.@device[$bINDEX].ipv6='0'
+	       fi
+	       	nINDEX=$(uci show network | grep -E "@device\[[0-9]+\].name=\'$wan_interface\'" | sed -n 's/.*@device\[\([0-9]*\)\].name.*/\1/p')
+	       [ -n "$nINDEX" ] && $UCIDEL network.@device[$nINDEX]
+            uci -q batch <<EOF
+                delete network.wan6
+                delete dhcp.lan.ra
+                set network.wan.ipv6='0'
+                set network.wan.delegate='0'
+                delete dhcp.lan.dns
+                delete network.globals.ula_prefix
+                delete dhcp.lan.ra_default
+                delete dhcp.lan.ra_slaac
+                delete dhcp.lan.dhcpv6
+                delete dhcp.lan.ra_flags
+                delete dhcp.wan.ra
+                delete dhcp.wan.ndp
+                delete dhcp.wan.ra_flags
+                add_list dhcp.wan.ra_flags='none'
+                set network.lan.delegate='0'
+EOF
+            ;;
+        1) #pppoe
+	       bINDEX=$(uci show network | grep -E "@device\[[0-9]+\].name='br-lan'" | sed -n 's/.*@device\[\([0-9]*\)\].name.*/\1/p')
+	       if [ -n "$bINDEX" ]; then 
+	           $UCISET network.@device[$bINDEX].ipv6='1'
+	       fi
+	       	nINDEX=$(uci show network | grep -E "@device\[[0-9]+\].name=\'$wan_interface\'" | sed -n 's/.*@device\[\([0-9]*\)\].name.*/\1/p')
+	       [ -n "$nINDEX" ] && $UCIDEL network.@device[$nINDEX]
+	       $UCIADD network device
+	       $UCISET network.@device[-1].ipv6='1'
+	       $UCISET network.@device[-1].name=$wan_interface
+            uci -q batch <<EOF
+                set dhcp.lan.ra='hybrid'
+                set dhcp.lan.dhcpv6='hybrid'
+                del network.lan.delegate
+                set network.wan.ipv6='1'
+                set network.wan.delegate='0'
+                delete dhcp.@dnsmasq[0].filter_aaaa
+                set dhcp.lan.ndp='relay'
+                delete dhcp.lan.ra_flags
+                delete dhcp.lan.ra_slaac
+                delete dhcp.wan.master
+                delete dhcp.wan.ra_flags
+                delete network.wan6.sourcefilter
+                delete network.wan6.delegate
+                set network.wan6.extendprefix='1'
+                set network.lan.ip6ifaceid='eui64'
+                delete network.wan6.reqaddress
+                set network.wan6.reqprefix='auto'
+                set dhcp.wan6.master='1'
+                set dhcp.wan6.ra='relay'
+                set dhcp.wan6.dhcpv6='relay'
+                set dhcp.wan6.ndp='relay'
+EOF
+            ;;
+        2) #siderouter
+	       bINDEX=$(uci show network | grep -E "@device\[[0-9]+\].name='br-lan'" | sed -n 's/.*@device\[\([0-9]*\)\].name.*/\1/p')
+	       if [ -n "$bINDEX" ]; then 
+	           $UCISET network.@device[$bINDEX].ipv6='1'
+	       fi
+	       	nINDEX=$(uci show network | grep -E "@device\[[0-9]+\].name=\'$wan_interface\'" | sed -n 's/.*@device\[\([0-9]*\)\].name.*/\1/p')
+	       [ -n "$nINDEX" ] && $UCIDEL network.@device[$nINDEX]
+	       $UCIADD network device
+	       $UCISET network.@device[-1].ipv6='1'
+	       $UCISET network.@device[-1].name=$wan_interface
+            uci -q batch <<EOF
+                del dhcp.lan.ra_default
+                del dhcp.lan.ra_slaac
+                set dhcp.lan.ra='relay'
+                set dhcp.lan.dhcpv6='relay'
+                set dhcp.lan.ndp='relay'
+                delete dhcp.@dnsmasq[0].filter_aaaa
+                set dhcp.lan6=dhcp
+                set dhcp.lan6.interface='lan6'
+                set dhcp.lan6.ignore='1'
+                set dhcp.lan.ra_management='1'
+                del network.lan.delegate
+                set network.lan.ip6assign='64'
+                set network.lan6.extendprefix='1'
+                set network.lan.ip6ifaceid='eui64'
+                del network.lan6.delegate
+                set network.lan6.reqaddress='try'
+                set network.lan6.reqprefix='auto'
+                set network.lan6.norelease='1'
+                set dhcp.lan6.master='1'
+                set dhcp.lan6.ra='relay'
+                set dhcp.lan6.dhcpv6='relay'
+                set dhcp.lan6.ndp='relay'
+		set firewall.@zone[0].masq6='1'
+EOF
+            ;;
+        3)  #dhcp
+	       bINDEX=$(uci show network | grep -E "@device\[[0-9]+\].name='br-lan'" | sed -n 's/.*@device\[\([0-9]*\)\].name.*/\1/p')
+	       if [ -n "$bINDEX" ]; then 
+	           $UCISET network.@device[$bINDEX].ipv6='1'
+	       fi
+	       	nINDEX=$(uci show network | grep -E "@device\[[0-9]+\].name=\'$wan_interface\'" | sed -n 's/.*@device\[\([0-9]*\)\].name.*/\1/p')
+	       [ -n "$nINDEX" ] && $UCIDEL network.@device[$nINDEX]
+	       $UCIADD network device
+	       $UCISET network.@device[-1].ipv6='1'
+	       $UCISET network.@device[-1].name=$wan_interface
+            uci -q batch <<EOF
+                set dhcp.lan.ra='hybrid'
+                set dhcp.lan.dhcpv6='hybrid'
+                set dhcp.lan.ndp='relay'
+                set dhcp.lan.ra_management='1'
+                del network.lan.delegate
+                set network.wan.ipv6='1'
+                del network.wan.delegate
+                del network.wan6.delegate
+                delete dhcp.wan.master
+                delete dhcp.wan.ra_flags
+                delete network.wan6.sourcefilter
+                delete network.wan6.delegate
+                set network.wan6.extendprefix='1'
+                set network.lan.ip6ifaceid='eui64'
+                set dhcp.wan6.master='1'
+                set dhcp.wan6.ra='relay'
+                set dhcp.wan6.dhcpv6='relay'
+                set dhcp.wan6.ndp='relay'
+EOF
+            ;;
+    esac
+}
+
+setsynflood() {
+    if [ "x$synflood" = "x1" ]; then
+        $UCISET firewall.@defaults[0].syn_flood='1'
+        $UCISET firewall.@defaults[0].synflood_protect='1'
+    else
+        $UCIDEL firewall.@defaults[0].syn_flood
+        $UCIDEL firewall.@defaults[0].synflood_protect
+    fi
+}
+
+setforwarding() {
+    idx=0
+    while uci -q get firewall.@forwarding[$idx] >/dev/null 2>&1; do
+            local src=$(uci -q get firewall.@forwarding[$idx].src)
+            local dest=$(uci -q get firewall.@forwarding[$idx].dest)
+            if [ "$src" = "lan" ] && [ "$dest" = "wan" ]; then
+                $UCIDEL firewall.@forwarding[$idx]
+                break
+            fi
+            idx=$((idx + 1))
+    done
+    $UCIADD firewall forwarding
+    $UCISET firewall.@forwarding[-1].src='lan'
+    $UCISET firewall.@forwarding[-1].dest='wan'
+}
+
+# 设置HTTPS
+sethttps() {
+    local cfg=$1
+    local https
+    
+    config_get https "$cfg" https '0'
+    
+    if [ -n "$(command -v nginx)" ]; then
+        if [ -z "$(uci -q get nginx._redirect2ssl)" ]; then
+            $UCISET nginx._redirect2ssl=server
+            $UCISET nginx._redirect2ssl.server_name='_redirect2ssl'
+            $UCISET nginx._redirect2ssl.return='302 https://$host$request_uri'
+            $UCISET nginx._redirect2ssl.access_log='off; # logd openwrt'
+        fi
+        
+        if [ "x${https}" = "x1" ]; then
+            $UCIDEL nginx.default_server.listen
+            $UCIADDLIST nginx.default_server.listen='80'
+            $UCIADDLIST nginx.default_server.listen='[::]:80'
+            $UCIDEL nginx._redirect2ssl.listen
+            $UCIADDLIST nginx._redirect2ssl.listen='80 default_server'
+            $UCIADDLIST nginx._redirect2ssl.listen='[::]:80 default_server'
+        else
+            $UCIDEL nginx._redirect2ssl.listen
+            $UCIADDLIST nginx._redirect2ssl.listen='80'
+            $UCIADDLIST nginx._redirect2ssl.listen='[::]:80'
+            $UCIDEL nginx.default_server.listen
+            $UCIADDLIST nginx.default_server.listen='80 default_server'
+            $UCIADDLIST nginx.default_server.listen='[::]:80 default_server'
+        fi
+        uci commit nginx
+        /etc/init.d/nginx reload
+    else
+        /etc/init.d/uhttpd stop 2>/dev/null
+        sed -i "/listen_https/d" /etc/config/uhttpd 2>/dev/null
+        $UCISET uhttpd.main.redirect_https='0'
+        
+        if [ "x${https}" = "x1" ]; then
+            certscrt='/etc/ssl/ezopwrt.crt'
+            certskey='/etc/ssl/ezopwrt.key'
+            
+            # 确保证书目录存在
+            mkdir -p /etc/ssl/
+            chmod 755 /etc/ssl/
+            
+            rm -f $certskey $certscrt 2>/dev/null
+            $UCIADDLIST uhttpd.main.listen_https='0.0.0.0:443'
+            $UCIADDLIST uhttpd.main.listen_https='[::]:443'
+            $UCISET uhttpd.main.redirect_https='1'
+            hostname=$(uci -q get system.@system[0].hostname | awk '{print tolower($0)}' || echo 'openwrt')
+            $UCISET network.lan.hostname=${hostname}
+            $UCISET dhcp.@dnsmasq[0].domain="${hostname}.lan"
+            
+            # 生成证书
+            openssl req -new -newkey rsa:2048 -days 3650 -sha256 -nodes -x509 \
+                -keyout $certskey \
+                -out $certscrt \
+                -subj "/C=CN/CN=$hostname.lan" 2>/dev/null
+            
+            if [ $? -eq 0 ] && [ -f "$certskey" ] && [ -f "$certscrt" ]; then
+                chmod 600 $certskey
+                chmod 644 $certscrt
+                $UCISET uhttpd.main.cert="$certscrt"
+                $UCISET uhttpd.main.key="$certskey"
+            else
+                log "Failed to generate SSL certificate"
+                $UCIDEL uhttpd.main.cert
+                $UCIDEL uhttpd.main.key
+            fi
+        fi
+    fi
+}
+
+# 备份配置
+backup_configs() {
+    local backup_dir="/tmp/netwizard_backup_$(date +%s)"
+    mkdir -p "$backup_dir"
+    for config in network firewall dhcp wireless system uhttpd nginx; do
+        if [ -f "/etc/config/$config" ]; then
+            cp "/etc/config/$config" "$backup_dir/" 2>/dev/null
+        fi
+    done
+    echo "$backup_dir"
+}
+
+# 恢复配置
+restore_configs() {
+    local backup_dir="$1"
+    if [ -d "$backup_dir" ]; then
+        log "Restoring configurations from backup"
+        for config in "$backup_dir"/*; do
+            if [ -f "$config" ]; then
+                cp "$config" "/etc/config/" 2>/dev/null
+            fi
+        done
+        rm -rf "$backup_dir"
+    fi
+}
+
+configure_network() {
+    local cfg=$1
+    local wan_proto wan_ipaddr wan_netmask wan_gateway wan_dns wan_pppoe_user wan_pppoe_pass
+    local ipv6 wifi_ssid wifi_key old_wifi_ssid old_wifi_key showhide
+    local lan_ipaddr lan_netmask lan_gateway lan_dns lan_dhcp wan_interface lan_proto
+    local dns_tables synflood https
+    local ifname lannet netname netsum i
+    
+    # 获取配置
+    config_get showhide "$cfg" showhide
+    config_get wan_proto "$cfg" wan_proto
+    config_get ipv6 "$cfg" ipv6 '0'
+    config_get dnsset "$cfg" dnsset '0'
+    config_get wan_interface "$cfg" wan_interface
+    config_get lan_dhcp "$cfg" lan_dhcp '0'
+    config_get synflood "$cfg" synflood '0'
+    config_get lan_ipaddr "$cfg" lan_ipaddr
+    config_get lan_netmask "$cfg" lan_netmask '255.255.255.0'
+    config_get lan_proto "$cfg" lan_proto 'static'
+    config_get lan_gateway "$cfg" lan_gateway
+    config_get lan_dns "$cfg" lan_dns
+    config_get dns_tables "$cfg" dns_tables
+    config_get https "$cfg" https '0'
+    config_get wan_ipaddr "$cfg" wan_ipaddr
+    config_get wan_netmask "$cfg" wan_netmask
+    config_get wan_gateway "$cfg" wan_gateway
+    config_get wan_dns "$cfg" wan_dns
+    config_get wan_pppoe_user "$cfg" wan_pppoe_user
+    config_get wan_pppoe_pass "$cfg" wan_pppoe_pass
+    config_get dhcp_proto "$cfg" dhcp_proto 'dhcp'
+    config_get wifi_ssid "$cfg" wifi_ssid
+    config_get wifi_key "$cfg" wifi_key
+    config_get old_wifi_ssid "$cfg" old_wifi_ssid
+    config_get old_wifi_key "$cfg" old_wifi_key
+
+    # 备份当前配置
+    local backup_dir=$(backup_configs)
+    
+    if [ "x$showhide" = "x1" ]; then
+        touch /etc/netwizard_hide 2>/dev/null
+        $UCISET advancedplus.@basic[0].wizard="1"
+        exit 0
+    else
+        rm -rf /etc/netwizard_hide 2>/dev/null
+        $UCISET advancedplus.@basic[0].wizard="0"
+    fi
+    
+    if [ -z "$wan_proto" ]; then
+        wan_proto=$(uci -q get network.wan.proto)
+        [ -z "$wan_proto" ] && wan_proto="siderouter"
+    fi
+    
+    
+    ifname=$(uci -q get network.lan.ifname)
+    [ "x$ifname" = "x" ] && ifname="device" || ifname="ifname"
+    
+    [ -n "$wan_interface" ] || wan_interface=$(uci -q get network.wan.$ifname)
+    
+    $UCIDEL network.lan.gateway
+    $UCIDEL network.lan.dns
+    $UCIDEL firewall.@zone[0].masq
+
+
+    [ -n "$(uci -q get network.wan)" ] && {
+       $UCIDEL network.wan 
+       WAN_INDEX=$(uci show firewall | grep -E "@zone\[[0-9]+\].name='wan'" | sed -n 's/.*@zone\[\([0-9]*\)\].name.*/\1/p')
+       [ -n "$WAN_INDEX" ] && $UCIDEL firewall.@zone[$WAN_INDEX]
+    }
+    [ -n "$(uci -q get network.wan6)" ] && $UCIDEL network.wan6
+    [ -n "$(uci -q get network.lan6)" ] && $UCIDEL network.lan6
+    
+    netname=$(ls /sys/class/net/ 2>/dev/null | grep -E '^(eth[0-9]+|en[op][0-9]+s[0-9]+|usb[0-9]+|wlan[0-9]+|wl[0-9]+)' | sort)
+    netsum=$(echo "$netname" | wc -l 2>/dev/null || echo 0)
+    
+    if [ "$netsum" -eq 0 ]; then
+        restore_configs "$backup_dir"
+        log "No network interfaces found"
+        return 1
+    elif [ "$netsum" -eq 1 ]; then
+        lannet=$(echo "$netname")
+        wan_interface=$(echo "$netname")
+    elif [ "$netsum" -gt 1 ]; then
+        [ -z "$wan_interface" ] && wan_interface=$(echo "$netname" | grep '^eth' | tail -n 1)
+        [ -z "$wan_interface" ] && wan_interface=$(echo "$netname" | grep -v '^wl' | grep -v '^wlan' | head -n 1)
+        [ -z "$wan_interface" ] && wan_interface=$(echo "$netname" | grep -E '^en[opx][0-9]+' | tail -n 1)
+        lannet=""
+        for eth_interface in $netname; do
+            if [ "$eth_interface" != "$wan_interface" ]; then
+                lannet=$lannet" "${eth_interface##*/}
+            fi
+        done
+        lannet=$(echo "$lannet" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+    fi
+    
+    if [ -n "$wan_interface" ] && [ "$wan_proto" != "siderouter" ]; then
+        $UCISET network.wan=interface
+        $UCISET network.wan6=interface
+        $UCISET network.wan6.proto='dhcpv6'
+        $UCISET network.wan6.delegate='1'
+        $UCIDEL dhcp.wan.master
+        $UCIDEL dhcp.lan.master
+        $UCISET network.wan.metric='1'
+        $UCISET network.wan.$ifname="${wan_interface}"
+        [ "$wan_proto" == "pppoe" ] && $UCISET network.wan6.$ifname="@wan" || $UCISET network.wan6.$ifname="${wan_interface}"
+        # firewall  ipv6
+	$UCIDEL dhcp.wan.ra_flags
+
+        $UCIADD firewall zone
+        $UCISET firewall.@zone[-1].name='wan'
+        $UCISET firewall.@zone[-1].input='REJECT'
+        $UCISET firewall.@zone[-1].output='ACCEPT'
+        $UCISET firewall.@zone[-1].forward='REJECT'
+        $UCIADDLIST firewall.@zone[-1].network='wan6'
+        $UCIADDLIST firewall.@zone[-1].network='wan'
+        $UCISET firewall.@zone[-1].masq='1'
+	$UCISET firewall.@zone[-1].masq6='1'
+	$UCISET firewall.@zone[0].masq6='0'
+    fi
+    
+    $UCISET firewall.@defaults[0].drop_invalid='1'
+    
+    case "${wan_proto}" in
+        pppoe)
+            $UCISET network.wan.proto='pppoe'
+            [ -n "${wan_pppoe_user}" ] && $UCISET network.wan.username="${wan_pppoe_user}"
+            [ -n "${wan_pppoe_pass}" ] && $UCISET network.wan.password="${wan_pppoe_pass}"
+            setforwarding
+            [ "x$ipv6" = "x1" ] && setipv6 1 || setipv6 0
+            
+            if [ -n "${wan_dns}" ]; then
+                $UCISET network.wan.peerdns='0'
+                for dns in ${wan_dns}; do
+                    $UCIADDLIST network.wan.dns="$dns"
+                done
+            else
+                $UCIDEL network.wan.peerdns
+                $UCIDEL network.wan.dns
+            fi
+            ;;
+            
+        dhcp)
+            case "${dhcp_proto}" in
+                static)
+                    $UCISET network.wan.proto='static'
+                    if [ -n "$wan_ipaddr" ]; then
+                        $UCISET network.wan.ipaddr="${wan_ipaddr}"
+                    fi
+                    if [ -n "$wan_netmask" ]; then
+                        $UCISET network.wan.netmask="${wan_netmask}"
+                    fi
+                    if [ -n "$wan_gateway" ]; then
+                        $UCISET network.wan.gateway="${wan_gateway}"
+                    fi
+                    if [ -n "${wan_dns}" ]; then
+                        $UCISET network.wan.defaultroute='1'
+                        for dns in ${wan_dns}; do
+                            $UCIADD network.wan.dns="$dns"
+                        done
+                    else
+                        $UCIDEL network.wan.dns
+                    fi
+                    ;;
+                    
+                dhcp)
+                    $UCISET network.wan.proto='dhcp'
+                    $UCISET network.wan.delegate='0'
+                    if [ -n "${wan_dns}" ]; then
+                        $UCISET network.wan.peerdns='0'
+                        for dns in ${wan_dns}; do
+                            $UCIADDLIST network.wan.dns="$dns"
+                        done
+                    else
+                        $UCIDEL network.wan.peerdns
+                        $UCIDEL network.wan.dns
+                    fi
+                    ;;
+            esac
+            setforwarding
+            [ "x$ipv6" = "x1" ] && setipv6 3 || setipv6 0
+            ;;
+            
+        siderouter)
+            $UCIDEL firewall.@zone[0].network
+            $UCIADDLIST firewall.@zone[0].network='lan'
+            $UCIDEL dhcp.lan.ra_slaac
+            
+            case "${lan_proto}" in
+                static)
+                    $UCISET network.lan.proto='static'
+                    if [ -n "$lan_ipaddr" ]; then
+                        $UCISET network.lan.ipaddr="${lan_ipaddr}"
+                    fi
+                    if [ -n "$lan_netmask" ]; then
+                        $UCISET network.lan.netmask="${lan_netmask}"
+                    fi
+                    if [ -n "$lan_gateway" ]; then
+                        $UCISET network.lan.gateway="${lan_gateway}"
+                    fi
+                    if [ -n "$lan_dns" ]; then
+                        for dns in ${lan_dns}; do
+                            $UCIADDLIST network.lan.dns="$dns"
+                        done
+                    else
+                        $UCIDEL network.lan.dns
+                    fi
+                    ;;
+                    
+                dhcp)
+                    $UCISET network.lan.proto='dhcp'
+                    $UCIDEL network.lan.ipaddr
+                    $UCIDEL network.lan.netmask
+                    if [ -n "$lan_dns" ]; then
+                        $UCISET network.lan.peerdns='0'
+                        for dns in ${lan_dns}; do
+                            $UCIADDLIST network.lan.dns="$dns"
+                        done
+                    else
+                        $UCIDEL network.lan.peerdns
+                        $UCIDEL network.lan.dns
+                    fi
+                    ;;
+            esac
+            
+            if [ $netsum -gt 1 ]; then
+                [ -n "$wan_interface" ] && lannet=$lannet" "${wan_interface##*/}
+            fi
+            
+            $UCISET firewall.@zone[0].masq='1'
+            $UCIDEL firewall.@zone[0].network
+            $UCIADDLIST firewall.@zone[0].network='lan'
+            
+            [ $(uci show network 2>/dev/null | grep utun | wc -l) -gt 1 ] && $UCIADDLIST firewall.@zone[0].network='utun'
+            
+            if [ "x$ipv6" = "x1" ]; then
+                $UCISET network.lan6=interface
+                $UCISET network.lan6.proto='dhcpv6'
+                $UCISET network.lan6.delegate='1'
+                $UCISET network.lan6.$ifname="@lan"
+                setipv6 2
+                $UCIADDLIST firewall.@zone[0].network='lan6'
+            else
+                setipv6 0
+            fi
+            ;;
+    esac
+
+    [ "x$ifname" = "xdevice" ] && $UCISET network.@$ifname[0].ports="${lannet}" || $UCISET network.lan.$ifname="${lannet}"
+    if [ -f /etc/config/dockerd ]; then 
+	     DOCKERINDEX=$(uci show firewall | grep -E "@zone\[[0-9]+\].name='docker'" | sed -n 's/.*@zone\[\([0-9]*\)\].name.*/\1/p')
+             [ -n "$DOCKERINDEX" ] && $UCIDEL firewall.@zone[$DOCKERINDEX]
+        uci -q batch <<EOF
+            add firewall zone
+            set firewall.@zone[-1].name='docker'
+            set firewall.@zone[-1].input='ACCEPT'
+            set firewall.@zone[-1].output='ACCEPT'
+            set firewall.@zone[-1].forward='ACCEPT'
+            add_list firewall.@zone[-1].subnet='172.16.0.0/12'
+            set firewall.docker_to_wan=forwarding
+            set firewall.docker_to_wan.src='docker'
+            set firewall.docker_to_wan.dest='wan'
+            set firewall.docker_to_lan=forwarding
+            set firewall.docker_to_lan.src='docker'
+            set firewall.docker_to_lan.dest='lan'
+            set firewall.lan_to_docker=forwarding
+            set firewall.lan_to_docker.src='lan'
+            set firewall.lan_to_docker.dest='docker'
+EOF
+    fi
+    if [ "$wan_proto" != "siderouter" ]; then
+        [ -n "${lan_ipaddr}" ] && $UCISET network.lan.ipaddr="${lan_ipaddr}"
+        [ -n "${lan_netmask}" ] && $UCISET network.lan.netmask="${lan_netmask}"
+    fi
+    
+    setsynflood
+    sethttps "$cfg"
+    sed -i "/dhcp_option '6/d" /etc/config/dhcp 2>/dev/null
+    sed -i "/list dns/d" /etc/config/dhcp 2>/dev/null
+    if [ "x$lan_dhcp" = "x1" ]; then
+        $UCIDEL dhcp.lan.force
+        $UCISET dhcp.lan.ignore='1'
+        $UCISET dhcp.lan.dynamicdhcp='0'
+        $UCISET dhcp.lan.ra_slaac="1"
+        $UCIDEL dhcp.@dnsmasq[0].authoritative
+    else
+        $UCIDEL dhcp.lan.ignore
+        $UCIDEL dhcp.lan.dynamicdhcp
+        $UCISET dhcp.lan.force='1'
+        $UCISET dhcp.@dnsmasq[0].authoritative='1'
+        
+        if [ "x$dnsset" = "x1" ]; then
+            if [ "${dns_tables}" = "1" ]; then
+                if [ -n "$lan_ipaddr" ]; then
+                    $UCIADDLIST dhcp.lan.dhcp_option="6,${lan_ipaddr}"
+                fi
+            elif [ -n "${dns_tables}" ]; then
+                $UCIADDLIST dhcp.lan.dhcp_option="6,${dns_tables}"
+            fi
+        fi
+    fi
+    
+    if [ -n "${wifi_ssid}" ] && [ -n "${wifi_key}" ]; then
+        idx=0
+        max_wifi_ifaces=10
+        while [ $idx -lt $max_wifi_ifaces ] && uci -q get wireless.@wifi-iface[$idx] >/dev/null; do
+            if [ "$(uci -q get wireless.@wifi-iface[$idx].mode)" = "ap" ]; then
+                $UCISET wireless.@wifi-iface[$idx].ssid="${wifi_ssid}"
+                $UCISET wireless.@wifi-iface[$idx].key="${wifi_key}"
+                $UCISET wireless.@wifi-iface[$idx].encryption='psk2'
+            fi
+            idx=$((idx + 1))
+        done
+        
+        for radio in radio0 radio1 radio2 radio3; do
+            if uci -q get wireless.${radio} >/dev/null 2>&1; then
+                if [ "$(uci -q get wireless.${radio}.band)" = "5g" ]; then
+                    $UCISET wireless.default_${radio}.ssid="${wifi_ssid}_5G"
+                else
+                    $UCISET wireless.default_${radio}.ssid="${wifi_ssid}_2.4G"
+                fi
+                $UCISET wireless.default_${radio}.device="${radio}"
+                $UCISET wireless.default_${radio}.encryption='psk2'
+                $UCISET wireless.default_${radio}.key="${wifi_key}"
+            fi
+        done
+        
+        $UCISET netwizard.default.old_wifi_ssid="${wifi_ssid}"
+        $UCISET netwizard.default.old_wifi_key="${wifi_key}"
+        uci commit wireless
+    fi
+    
+    # 提交所有配置
+    uci -q batch <<'COMMIT_EOF' >/dev/null
+        commit advancedplus
+        commit uhttpd
+        commit system
+        commit netwizard
+        commit dhcp
+        commit firewall
+        commit network
+COMMIT_EOF
+    
+    if [ $? -eq 0 ]; then
+        {
+
+            /etc/init.d/network restart 2>/dev/null
+            /etc/init.d/system reload 2>/dev/null
+            /etc/init.d/rpcd reload 2>/dev/null
+            /etc/init.d/uhttpd reload 2>/dev/null
+            sleep 1
+            /etc/init.d/dnsmasq reload 2>/dev/null
+            /etc/init.d/firewall reload 2>/dev/null
+        } >/dev/null 2>&1 &
+        rm -rf "$backup_dir" 2>/dev/null
+        log "Configuration applied successfully"
+    else
+        log "Failed to commit configuration, restoring backup"
+        restore_configs "$backup_dir"
+        return 1
+    fi
+}
+
+boot() {
+    XBOOT=1
+    start
+}
+
+start() {
+    check_lock && exit 0
+    # 启动时跳过
+    [ "x$XBOOT" = "x1" ] && exit 0
+    
+    # 检查依赖
+    for dep in uci awk grep sed; do
+        if ! command -v $dep >/dev/null 2>&1; then
+            log "ERROR: Required command '$dep' not found"
+            return 1
+        fi
+    done
+
+    create_lock || return 1
+    config_load netwizard
+    config_foreach configure_network netwizard
+    remove_lock
+}
+
+stop() {
+    remove_lock
+}
+
+restart() {
+    stop
+    sleep 1
+    start
+}

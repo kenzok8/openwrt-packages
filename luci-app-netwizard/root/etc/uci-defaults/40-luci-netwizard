@@ -1,0 +1,21 @@
+#!/bin/sh
+[ ! -f "/usr/share/ucitrack/luci-app-netwizard.json" ] && {
+    cat > /usr/share/ucitrack/luci-app-netwizard.json << EEOF
+{
+    "config": "netwizard",
+    "init": "netwizard"
+}
+EEOF
+}
+
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@netwizard[-1]
+	add ucitrack netwizard
+	set ucitrack.@netwizard[-1].init=netwizard
+	commit ucitrack
+EOF
+
+chmod +x /etc/init.d/netwizard 2>/dev/null
+rm -f /tmp/luci-indexcache
+
+exit 0
