@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ "$PKG_UPGRADE" != 1 ]; then
+	uci get luci.themes.Glass >/dev/null 2>&1 || \
+	uci batch <<-EOF
+		set luci.themes.Glass=/luci-static/glass
+		set luci.main.mediaurlbase=/luci-static/glass
+		commit luci
+	EOF
+fi
+
+exit 0

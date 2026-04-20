@@ -1,0 +1,99 @@
+/* ==========================================================================
+   Design Tokens — luci-theme-glass
+   All CSS custom properties live here for easy theming.
+   ========================================================================== */
+
+:root {
+  /* ---- Typography ---- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue",
+    "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas,
+    "Liberation Mono", monospace;
+  --font-size-base: 0.875rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.75rem;
+  --line-height: 1.5;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ---- Colors — Light mode ---- */
+  --color-primary: #007AFF;
+  --color-primary-hover: #0066d6;
+  --color-primary-active: #004fad;
+  --color-primary-rgb: 0, 122, 255;
+
+  --color-success: #34C759;
+  --color-warning: #FF9500;
+  --color-danger: #FF3B30;
+  --color-info: #5AC8FA;
+
+  --color-text: #1d1d1f;
+  --color-text-secondary: #6e6e73;
+  --color-text-tertiary: #aeaeb2;
+  --color-text-inverse: #ffffff;
+
+  --color-bg: #f5f5f7;
+  --color-bg-elevated: #ffffff;
+  --color-bg-secondary: #e8e8ed;
+
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.16);
+  --color-separator: rgba(60, 60, 67, 0.12);
+
+  /* ---- Glassmorphism ---- */
+  --glass-blur: 20px;
+  --glass-saturate: 180%;
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-hover: rgba(255, 255, 255, 0.82);
+  --glass-bg-strong: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-shadow: 0 2px 16px rgba(0, 0, 0, 0.06),
+    0 0 1px rgba(0, 0, 0, 0.08);
+  --glass-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.10),
+    0 0 1px rgba(0, 0, 0, 0.06);
+
+  /* ---- Layout ---- */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 64px;
+  --sidebar-gap: 10px;
+  --header-height: 56px;
+  --content-max-width: none;
+  --content-padding: 24px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ---- Spacing ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+  /* ---- Transitions ---- */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---- Z-index ---- */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-sidebar: 300;
+  --z-header: 400;
+  --z-overlay: 500;
+  --z-modal: 600;
+  --z-toast: 700;
+
+  /* ---- Background ---- */
+  --bg-gradient: linear-gradient(135deg, #b8c4d0 0%, #d5dce5 50%, #ddd5cc 100%);
+}

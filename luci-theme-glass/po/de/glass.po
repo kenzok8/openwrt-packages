@@ -1,0 +1,9 @@
+msgid ""
+msgstr ""
+"Language: de\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#: ucode/template/themes/glass/sysauth.ut:104
+msgid "Sign in to continue"
+msgstr "Zum Fortfahren anmelden"

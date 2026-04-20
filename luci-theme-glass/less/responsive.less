@@ -1,0 +1,91 @@
+/* ==========================================================================
+   Responsive — Media queries for tablet & mobile
+   ========================================================================== */
+
+/* Tablet: sidebar overlay */
+@media (max-width: 1024px) {
+  #sidebar {
+    transform: translateX(calc(-100% - var(--sidebar-gap)));
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  #header {
+    left: 0;
+  }
+
+  #header-sub {
+    left: 0;
+    max-width: calc(100vw - var(--sidebar-gap));
+  }
+
+  #content-wrap {
+    margin-left: 0;
+  }
+
+  .glass-footer {
+    margin-left: 0;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+}
+
+/* Hide status indicators on small screens */
+@media (max-width: 768px) {
+  #status-indicators {
+    display: none !important;
+  }
+}
+
+/* Mobile: tighter spacing */
+@media (max-width: 640px) {
+  :root {
+    --content-padding: 16px;
+    --sidebar-width: 280px;
+  }
+
+  .cbi-value {
+    flex-direction: column;
+  }
+
+  .cbi-value-title {
+    flex: none;
+    padding-right: 0;
+    padding-bottom: var(--space-xs);
+  }
+
+  .cbi-page-actions {
+    flex-direction: column;
+
+    .cbi-button {
+      width: 100%;
+    }
+  }
+
+  .login-card {
+    padding: var(--space-2xl) var(--space-xl);
+  }
+
+  .cbi-tabmenu {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+
+    li a {
+      white-space: nowrap;
+    }
+  }
+
+  table.cbi-section-table,
+  .table {
+    display: block;
+    overflow-x: auto;
+  }
+}

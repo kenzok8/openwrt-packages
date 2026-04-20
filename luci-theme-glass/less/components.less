@@ -1,0 +1,1167 @@
+/* ==========================================================================
+   Components — CBI forms, tables, buttons, inputs, dropdowns
+   ========================================================================== */
+
+/* ---- CBI Sections ---- */
+.cbi-section {
+  .glass-effect();
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  position: relative;
+  overflow-x: auto;
+
+  /* Lift section above siblings when a dropdown is open inside it */
+  &:has(.cbi-dropdown[open]) {
+    z-index: var(--z-dropdown);
+  }
+
+  /* Nested sections — flatten (no extra box/padding) */
+  .cbi-section {
+    padding: 0;
+    margin-bottom: 0;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
+
+/* Allow dropdowns to escape stacking contexts created by backdrop-filter.
+   Temporarily remove glass effects on the section and force overflow visible
+   on all ancestors up to the section. */
+.cbi-section:has(.cbi-dropdown[open]) {
+  z-index: var(--z-modal);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+}
+
+.cbi-section:has(.cbi-dropdown[open]) .table,
+.cbi-section:has(.cbi-dropdown[open]) .tr,
+.cbi-section:has(.cbi-dropdown[open]) .td,
+.cbi-section:has(.cbi-dropdown[open]) .cbi-value,
+.cbi-section:has(.cbi-dropdown[open]) .cbi-value-field {
+  overflow: visible !important;
+}
+
+.cbi-section-descr {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 0.5px solid var(--color-separator);
+}
+
+.cbi-section > h3,
+.cbi-section-node > h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-lg);
+}
+
+/* ---- Section fold/collapse ---- */
+.cbi-section.fade-in .cbi-title {
+  display: flex;
+  align-items: center;
+
+  > h3 {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  /* Move toggle button to the right of the title */
+  > div:last-child {
+    flex-shrink: 0;
+    margin-left: var(--space-md);
+  }
+
+  > div:last-child span {
+    font-size: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    &::after {
+      content: '';
+      display: block;
+      width: 7px;
+      height: 7px;
+      border-right: 1.5px solid var(--color-text-tertiary);
+      border-bottom: 1.5px solid var(--color-text-tertiary);
+      transform: rotate(-135deg);
+      transition: transform 0.3s ease;
+      margin-top: 3px;
+    }
+
+    &[data-style="inactive"]::after {
+      transform: rotate(45deg);
+      margin-top: -2px;
+    }
+  }
+}
+
+/* ---- CBI Map (page-level container) ---- */
+.cbi-map {
+  margin-bottom: var(--space-xl);
+}
+
+/* Title shown in header bar; description becomes tooltip */
+.cbi-map-descr,
+.cbi-map > h2,
+#view > h2,
+#maincontent > h2 {
+  display: none;
+}
+
+/* Hide descriptions only when moved to header tooltip (data-moved set by footer.ut JS) */
+.cbi-map-descr[data-moved],
+#view > h2 + [data-moved] {
+  display: none;
+}
+
+/* ---- CBI Value rows ---- */
+.cbi-value {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--space-md) 0;
+  border-bottom: 0.5px solid var(--color-separator);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  /* Plugins that use form.DummyValue.extend({ renderWidget }) to emit a
+     full-width section or table (usteer Hearing map, DHCP leases, etc.)
+     render the section as the *only* child of .cbi-value — no title, no
+     value-field wrapper. As a flex item with default `flex: 0 1 auto` it
+     shrinks to content width, leaving a big empty right zone
+     ([#8](https://github.com/rchen14b/luci-theme-glass/issues/8)). Switch
+     the row to block so the section spans full width. */
+  &:has(> .cbi-section),
+  &:has(> table) {
+    display: block;
+  }
+}
+
+.cbi-value-title {
+  flex: 0 0 200px;
+  padding-right: var(--space-xl);
+  font-weight: var(--font-weight-medium);
+  padding-top: var(--space-sm);
+  color: var(--color-text);
+}
+
+.cbi-value-description {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-xs);
+  font-weight: var(--font-weight-normal);
+}
+
+.cbi-value-field {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- Inputs ---- */
+.cbi-input-text,
+.cbi-input-password,
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+textarea {
+  max-width: 100%;
+  min-height: 80px;
+  resize: vertical;
+}
+
+select {
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  outline: none;
+  cursor: pointer;
+
+  &:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+  }
+}
+
+/* ---- Buttons — glass-ui pattern ---- */
+.btn,
+.cbi-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  /* Glass button surface */
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.12) 25%,
+    rgba(240, 248, 255, 0.13) 50%,
+    rgba(255, 255, 255, 0.11) 75%,
+    rgba(230, 240, 255, 0.12) 100%
+  );
+  background-color: rgba(255, 255, 255, 0.55);
+  border: 0.5px solid rgba(255, 255, 255, 0.30);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40),
+    inset 0 0 6px rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+  gap: var(--space-xs);
+
+  &:hover {
+    opacity: 0.90;
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.08),
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 0 8px rgba(255, 255, 255, 0.12);
+  }
+
+  &:active {
+    transform: scale(0.98);
+    opacity: 0.85;
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.15),
+      inset 0 1px 2px rgba(0, 0, 0, 0.10);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.cbi-button-positive,
+.cbi-button-apply,
+.cbi-button-action,
+.cbi-button-reload,
+.cbi-button[value="Submit"],
+.cbi-button[value="Upload"],
+.cbi-button[value$="Apply"] {
+  /* Primary glass — blue-tinted (Save & Apply, actions) */
+  background-image: linear-gradient(
+    135deg,
+    rgba(0, 122, 255, 0.10) 0%,
+    rgba(0, 122, 255, 0.07) 25%,
+    rgba(10, 132, 255, 0.09) 50%,
+    rgba(0, 122, 255, 0.06) 75%,
+    rgba(0, 100, 220, 0.08) 100%
+  );
+  background-color: rgba(255, 255, 255, 0.45);
+  color: var(--color-primary);
+  border: 0.5px solid rgba(0, 122, 255, 0.18);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 6px rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    opacity: 0.90;
+    color: var(--color-primary);
+    box-shadow:
+      0 4px 12px rgba(0, 122, 255, 0.12),
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.40),
+      inset 0 0 8px rgba(255, 255, 255, 0.10);
+  }
+
+  &:active {
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.15),
+      inset 0 1px 2px rgba(0, 0, 0, 0.10);
+  }
+}
+
+.cbi-button-save {
+  /* Secondary glass — green-tinted (Save) */
+  background-image: linear-gradient(
+    135deg,
+    rgba(52, 199, 89, 0.10) 0%,
+    rgba(52, 199, 89, 0.07) 25%,
+    rgba(48, 209, 88, 0.09) 50%,
+    rgba(52, 199, 89, 0.06) 75%,
+    rgba(40, 180, 75, 0.08) 100%
+  );
+  background-color: rgba(255, 255, 255, 0.45);
+  color: rgb(36, 138, 61);
+  border: 0.5px solid rgba(52, 199, 89, 0.20);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 6px rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    opacity: 0.90;
+    color: rgb(36, 138, 61);
+    box-shadow:
+      0 4px 12px rgba(52, 199, 89, 0.12),
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.40),
+      inset 0 0 8px rgba(255, 255, 255, 0.10);
+  }
+
+  &:active {
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.15),
+      inset 0 1px 2px rgba(0, 0, 0, 0.10);
+  }
+}
+
+.cbi-button-negative,
+.cbi-button-remove,
+.cbi-button-reset {
+  /* Tinted danger glass */
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 59, 48, 0.10) 0%,
+    rgba(255, 59, 48, 0.07) 50%,
+    rgba(255, 59, 48, 0.09) 100%
+  );
+  background-color: rgba(255, 255, 255, 0.45);
+  color: var(--color-danger);
+  border: 0.5px solid rgba(255, 59, 48, 0.18);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.05),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 6px rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.50);
+    box-shadow:
+      0 4px 12px rgba(255, 59, 48, 0.12),
+      0 1px 3px rgba(0, 0, 0, 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.40),
+      inset 0 0 8px rgba(255, 255, 255, 0.10);
+  }
+
+  &:active {
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, 0.15),
+      inset 0 1px 2px rgba(0, 0, 0, 0.10);
+  }
+}
+
+.cbi-button-neutral,
+.cbi-button-link,
+.cbi-button-edit,
+.cbi-button-find,
+.cbi-button-add,
+.cbi-button-download,
+.cbi-button-up,
+.cbi-button-down {
+  background-color: rgba(255, 255, 255, 0.40);
+  color: var(--color-text);
+}
+
+.cbi-page-actions {
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-xl);
+  margin-top: var(--space-xl);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+
+  /* Match header nav bar glass style */
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.12) 25%,
+    rgba(240, 248, 255, 0.13) 50%,
+    rgba(255, 255, 255, 0.11) 75%,
+    rgba(230, 240, 255, 0.12) 100%
+  );
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 2px 16px rgba(0, 0, 0, 0.06),
+    0 1px 4px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40),
+    inset 0 0 8px rgba(255, 255, 255, 0.12);
+}
+
+/* ---- Tables ---- */
+.table,
+table.cbi-section-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  thead tr,
+  .tr.table-titles,
+  .tr.cbi-section-table-titles {
+    th, .th {
+      padding: var(--space-sm) var(--space-lg);
+      text-align: left;
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-secondary);
+      border-bottom: 1px solid var(--color-separator);
+      white-space: nowrap;
+    }
+  }
+
+  tbody tr,
+  .tr {
+    td, .td {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: 0.5px solid var(--color-separator);
+      font-size: var(--font-size-sm);
+      vertical-align: middle;
+    }
+
+    &:last-child td,
+    &:last-child .td {
+      border-bottom: none;
+    }
+
+    /* Action button cells — right-aligned, equal-width buttons */
+    td:last-child:has(.cbi-button),
+    .td:last-child:has(.cbi-button) {
+      text-align: right;
+      white-space: nowrap;
+
+      .cbi-button {
+        min-width: 6rem;
+        width: 6rem;
+        text-align: center;
+      }
+    }
+
+    &:hover td,
+    &:hover .td {
+      background: rgba(0, 0, 0, 0.02);
+    }
+  }
+}
+
+/* ---- CBI Dynamic List (IP addresses, DNS servers, etc.) ---- */
+.cbi-dynlist {
+  line-height: 1.3;
+  flex-direction: column;
+  min-height: 30px;
+  cursor: text;
+  gap: 10px;
+
+  > .item {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    position: relative;
+    max-width: 25rem;
+    pointer-events: none;
+    color: var(--color-text-secondary);
+    outline: 0;
+
+    /* Remove button (×) */
+    &::after {
+      content: "\00D7";
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem !important;
+      height: 2.5rem;
+      margin: 0;
+      font-weight: normal;
+      font-size: 1rem;
+      line-height: 1.5rem;
+      color: var(--color-danger);
+      border: 0.5px solid rgba(255, 59, 48, 0.25);
+      border-left: none;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      outline: 0;
+      background: rgba(255, 59, 48, 0.08);
+      background-image: none;
+      box-shadow: none;
+      box-sizing: border-box;
+      transition: background 0.2s;
+    }
+
+    &::after:hover {
+      background: rgba(255, 59, 48, 0.18);
+    }
+
+    > span {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      box-sizing: border-box;
+      min-width: 15.5rem;
+      width: 15.5rem;
+      height: 2.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: text;
+      white-space: nowrap;
+      word-break: break-word;
+      line-height: 1.5em;
+      color: var(--color-text-primary);
+      border: 0.5px solid var(--color-border);
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      border-right: none;
+      outline: 0;
+      background: var(--color-bg-elevated);
+      box-shadow: none;
+    }
+  }
+
+  > .add-item {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: 15.5rem;
+    flex-wrap: nowrap;
+
+    input {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      box-sizing: border-box;
+      min-width: 15.5rem;
+      width: 15.5rem;
+      white-space: nowrap;
+      font-size: var(--font-size-sm);
+      line-height: 1.5rem;
+      color: var(--color-text-primary);
+      border: 0.5px solid var(--color-border);
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      border-right-width: 0;
+      outline: 0;
+      background: var(--color-bg-elevated);
+      box-shadow: none;
+    }
+
+    .cbi-button {
+      display: flex;
+      width: auto !important;
+      padding-left: 0.8rem;
+      padding-right: 0.8rem;
+      margin-left: 0;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+      outline: 0;
+      box-shadow: none;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    }
+
+    .cbi-button-add {
+      width: 2.5rem !important;
+      padding: 0.5rem 0 !important;
+      font-weight: normal;
+      font-size: 1.2rem;
+      color: #fff;
+      background: var(--color-primary);
+      border: 1px solid var(--color-primary);
+    }
+  }
+}
+
+/* ---- CBI Dropdown ---- */
+.cbi-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 150px;
+  cursor: pointer;
+
+  > ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    > li {
+      display: none;
+      padding: var(--space-sm) var(--space-md);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: auto;
+      line-height: 1.4;
+
+      .hide-close {
+        display: none;
+      }
+
+      &[display] {
+        display: flex;
+        align-items: center;
+      }
+
+      /* Hide placeholder <li> only when LuCI hasn't marked it as the
+         active display item. LuCI sets [display] on whichever <li> should
+         be shown — either the selected value or the placeholder itself
+         (e.g. Network Interfaces > Device dropdown with "unspecified").
+         Without the :not([display]) guard the placeholder is hidden and
+         the dropdown appears empty except for the arrow
+         ([#6](https://github.com/rchen14b/luci-theme-glass/issues/6)). */
+      &[placeholder]:not([display]) {
+        display: none;
+      }
+
+      &[placeholder][display] {
+        color: var(--color-text-tertiary);
+        font-style: italic;
+      }
+    }
+  }
+
+  > .more,
+  > .open {
+    flex-shrink: 0;
+    padding: 0 var(--space-xs);
+    cursor: pointer;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+
+  > .more {
+    display: none;
+  }
+
+  /* Opened dropdown list */
+  &[open] {
+    position: relative;
+    z-index: var(--z-modal);
+  }
+
+  &[open] > ul.dropdown {
+    /* Frosted glass dropdown list — matches sidebar/modal aesthetic.
+       Don't set top/left/bottom — LuCI's ui.js computes them inline based
+       on available viewport space. LuCI's inline `max-height` can clamp
+       to ~65px when the trigger is near the viewport edge, so override
+       with !important (matches argon).
+       ([#6](https://github.com/rchen14b/luci-theme-glass/issues/6)) */
+    position: absolute;
+    z-index: var(--z-modal);
+    width: auto;
+    min-width: 100%;
+    max-width: none;
+    max-height: 250px !important;
+    overflow-y: auto;
+    display: block;
+    border-radius: var(--radius-md);
+    padding: var(--space-xs);
+    color: var(--color-text);
+    background: var(--glass-bg-strong, rgba(255, 255, 255, 0.85));
+    backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+    border: 0.5px solid var(--glass-border);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.18),
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+
+    > li {
+      display: flex;
+      align-items: center;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--color-text);
+      transition: background var(--transition-fast), color var(--transition-fast);
+      white-space: nowrap;
+      line-height: 1.4;
+
+      &:hover,
+      &.focus {
+        background: rgba(255, 255, 255, 0.55);
+      }
+
+      &[selected] {
+        color: var(--color-primary);
+        font-weight: var(--font-weight-medium);
+        background: rgba(var(--color-primary-rgb), 0.10);
+      }
+
+      .hide-open {
+        display: none;
+      }
+
+      .hide-close {
+        display: initial;
+      }
+    }
+  }
+
+  &[open] > ul.preview {
+    display: flex;
+  }
+
+  /* Hidden input container */
+  > div {
+    display: none;
+  }
+
+  /* When dropdown is used as a button (.btn / .cbi-button) */
+  &.btn,
+  &.cbi-button {
+    padding: 0;
+
+    > ul > li[display] {
+      padding: var(--space-sm) var(--space-lg);
+    }
+  }
+
+  /* Arrow color inherits from button text */
+  &.cbi-button-apply > .open,
+  &.cbi-button-positive > .open,
+  &.cbi-button-save > .open {
+    color: var(--color-primary);
+  }
+}
+
+/* ---- Tabs ---- */
+.cbi-tabmenu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  list-style: none;
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-xs);
+  padding-left: var(--space-xs);
+  border-radius: var(--radius-md);
+  /* Glass tab bar — match header/sub-nav pattern */
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.12) 25%,
+    rgba(240, 248, 255, 0.13) 50%,
+    rgba(255, 255, 255, 0.11) 75%,
+    rgba(230, 240, 255, 0.12) 100%
+  );
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 1px 4px rgba(0, 0, 0, 0.04),
+    inset 0 0 0.5px rgba(255, 255, 255, 0.08),
+    inset 0 0 12px rgba(255, 255, 255, 0.10);
+
+  li {
+    a {
+      display: block;
+      padding: var(--space-sm) var(--space-lg);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-text-secondary);
+      transition: all var(--transition-fast);
+      text-decoration: none;
+
+      &:hover {
+        color: var(--color-text);
+        background: rgba(0, 0, 0, 0.04);
+      }
+    }
+
+    &.cbi-tab a {
+      background: rgba(255, 255, 255, 0.45);
+      color: var(--color-text);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.08),
+        inset 0 1px 1px rgba(255, 255, 255, 0.60),
+        inset 0 0 6px rgba(255, 255, 255, 0.15);
+    }
+  }
+}
+
+/* Tab content panels — hide inactive tabs.
+   Use [data-tab] selector (tab panels have data-tab + data-tab-title).
+   Individual form fields may have data-tab-title only — don't hide those.
+   IMPORTANT: Do NOT use !important here — LuCI's dependency system needs
+   to evaluate fields in all tabs during page load to set proper visibility. */
+[data-tab][data-tab-title]:not([data-tab-active="true"]) {
+  display: none;
+}
+
+/* ---- Alerts / Messages ----
+   Only the container is tinted — body text stays at `--color-text` so
+   plugins like Attended Sysupgrade, which dump labels + version numbers
+   inside the alert, remain readable. Tint applies to heading (`h4`) and
+   the left border accent instead
+   ([#7?]). */
+.alert-message,
+.cbi-section-error {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-lg);
+  color: var(--color-text);
+  background: rgba(90, 200, 250, 0.08);
+  border: 0.5px solid rgba(90, 200, 250, 0.20);
+  border-left: 3px solid var(--color-info);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    inset 0 0 6px rgba(255, 255, 255, 0.08);
+
+  > h4, > .title, > strong:first-child {
+    color: var(--color-info);
+    margin-bottom: var(--space-xs);
+  }
+}
+
+.alert-message.notice,
+.alert-message.info {
+  background: rgba(90, 200, 250, 0.10);
+  border: 0.5px solid rgba(90, 200, 250, 0.30);
+  border-left: 3px solid var(--color-info);
+}
+
+.alert-message.warning {
+  background: rgba(255, 149, 0, 0.10);
+  border: 0.5px solid rgba(255, 149, 0, 0.30);
+  border-left: 3px solid var(--color-warning);
+
+  > h4, > .title, > strong:first-child {
+    color: var(--color-warning);
+  }
+}
+
+.alert-message.error,
+.cbi-section-error {
+  background: rgba(255, 59, 48, 0.10);
+  border: 0.5px solid rgba(255, 59, 48, 0.30);
+  border-left: 3px solid var(--color-danger);
+
+  > h4, > .title, > strong:first-child {
+    color: var(--color-danger);
+  }
+}
+
+.alert-message.success {
+  background: rgba(52, 199, 89, 0.10);
+  border: 0.5px solid rgba(52, 199, 89, 0.30);
+  border-left: 3px solid var(--color-success);
+
+  > h4, > .title, > strong:first-child {
+    color: var(--color-success);
+  }
+}
+
+/* ---- Progress bars ---- */
+.cbi-progressbar {
+  position: relative;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+
+  > div {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-normal);
+    background: linear-gradient(
+      135deg,
+      rgba(var(--color-primary-rgb), 0.75) 0%,
+      rgba(var(--color-primary-rgb), 0.60) 50%,
+      rgba(var(--color-primary-rgb), 0.70) 100%
+    );
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.30),
+      inset 0 0 6px rgba(255, 255, 255, 0.10);
+  }
+
+  &::after {
+    content: attr(title);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.60);
+  }
+}
+
+/* ---- Checkbox & Radio ---- */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-primary);
+}
+
+/* ---- Spinning indicator ---- */
+.spinning {
+  position: relative;
+  padding-left: 32px !important;
+}
+
+.spinning::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0.2em;
+  width: 32px;
+  content: "";
+  background: url(/luci-static/resources/icons/loading.svg) no-repeat center;
+  background-size: 16px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Modal / Dialog ---- */
+#modal_overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: var(--z-modal);
+
+  > .modal {
+    .glass-frosted();
+    border-radius: var(--radius-xl);
+    padding: var(--space-2xl);
+    max-width: 600px;
+    min-width: 270px;
+    width: calc(100% - var(--space-2xl) * 2);
+    max-height: calc(100vh - 4em);
+    overflow-y: auto;
+    z-index: calc(var(--z-modal) + 1);
+
+    > * {
+      max-width: 100%;
+    }
+
+    > pre, > textarea {
+      white-space: pre-wrap;
+      overflow: auto;
+      width: 100%;
+    }
+
+    /* Flatten any .cbi-section nested directly inside a modal — the modal
+       itself already has glass background + padding, so the inner section
+       creates a visible box-in-box with extra padding
+       ([#6](https://github.com/rchen14b/luci-theme-glass/issues/6)). */
+    > .cbi-section,
+    > form > .cbi-section,
+    > .cbi-map > .cbi-section {
+      padding: 0;
+      margin-bottom: 0;
+      background: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    /* Let open dropdowns render beyond the modal's scroll clip. */
+    &:has(.cbi-dropdown[open]) {
+      overflow: visible;
+    }
+  }
+
+  /* Wide modals — CBI forms, sysupgrade, wireless edit */
+  > .modal.cbi-modal,
+  > .modal.uci-dialog {
+    max-width: 900px;
+  }
+}
+
+/* LuCI adds modal-overlay-active to <body>, not to #modal_overlay */
+body.modal-overlay-active #modal_overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── UCI Changes Dialog (Config / Changes) ── */
+.uci-dialog .cbi-section {
+  padding: 0;
+  margin: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+.uci-change-legend {
+  padding: 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.uci-change-legend-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+
+  > ins, > del, > var {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    margin-right: 6px;
+    padding: 0;
+    text-decoration: none;
+    font-style: normal;
+    overflow: hidden;
+    /* hide text content inside the color swatch */
+    text-indent: -9999px;
+  }
+
+  > ins {
+    background-color: rgba(52, 199, 89, 0.25);
+    border: 1px solid rgba(52, 199, 89, 0.5);
+  }
+
+  > del {
+    background-color: rgba(255, 59, 48, 0.25);
+    border: 1px solid rgba(255, 59, 48, 0.5);
+  }
+
+  > var {
+    background-color: rgba(90, 200, 250, 0.20);
+    border: 1px solid rgba(90, 200, 250, 0.4);
+  }
+}
+
+.uci-change-list {
+  font-family: inherit;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+
+  ins, del, var {
+    display: block;
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-style: normal;
+    font-size: var(--font-size-sm);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  ins {
+    background-color: rgba(52, 199, 89, 0.10);
+    border: 0.5px solid rgba(52, 199, 89, 0.30);
+    color: var(--color-success);
+  }
+
+  del {
+    background-color: rgba(255, 59, 48, 0.10);
+    border: 0.5px solid rgba(255, 59, 48, 0.30);
+    color: var(--color-danger);
+  }
+
+  var {
+    background-color: rgba(90, 200, 250, 0.08);
+    border: 0.5px solid rgba(90, 200, 250, 0.20);
+    color: var(--color-info);
+  }
+
+  /* Nested ins/del inside var (inline changed values) */
+  var ins, var del {
+    display: inline;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+  }
+
+  var ins {
+    color: var(--color-success);
+  }
+
+  var del {
+    color: var(--color-danger);
+  }
+}
+
+/* Button row inside uci-dialog */
+.uci-change-list + .right,
+.uci-dialog .right {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}

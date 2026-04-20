@@ -1,0 +1,553 @@
+/* ==========================================================================
+   Page Fixes — LuCI-specific overrides and quirks
+   ========================================================================== */
+
+/* LuCI wraps everything in #maincontent */
+#maincontent {
+  padding: 0;
+}
+
+/* ---- Interface boxes (general) ---- */
+.ifacebox {
+  .glass-effect();
+  display: inline-flex;
+  flex-direction: column;
+  border-radius: var(--radius-md);
+  padding: 0;
+  margin-bottom: var(--space-md);
+  line-height: 1.25;
+  overflow: visible;
+  min-width: 100px;
+}
+
+.ifacebox-head {
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-sm) var(--space-lg);
+  margin: 0;
+  border-bottom: 0.5px solid var(--color-separator);
+
+  /* Zone-colored header — tinted glass instead of opaque */
+  &[style*="background-color"] {
+    background-color: rgba(var(--zone-color-rgb), 0.50) !important;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-bottom: 0.5px solid rgba(var(--zone-color-rgb), 0.20);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  }
+
+  &.active {
+    background: linear-gradient(
+      135deg,
+      rgba(var(--color-primary-rgb), 0.75) 0%,
+      rgba(var(--color-primary-rgb), 0.60) 50%,
+      rgba(var(--color-primary-rgb), 0.70) 100%
+    );
+    color: var(--color-text-inverse);
+    padding: var(--space-sm) var(--space-lg);
+    border-bottom: none;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.20),
+      inset 0 0 6px rgba(255, 255, 255, 0.08);
+  }
+}
+
+.ifacebox-body {
+  line-height: 1.5;
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
+
+  /* L.itemlist output — key-value pairs */
+  > span {
+    display: block;
+    padding: var(--space-xs) 0;
+
+    > .nowrap {
+      display: inline-block;
+      margin-right: var(--space-md);
+      margin-bottom: 2px;
+
+      > strong {
+        color: var(--color-text-secondary);
+        font-weight: var(--font-weight-medium);
+      }
+    }
+  }
+
+  /* Device badge row */
+  > div {
+    margin-top: var(--space-sm);
+  }
+}
+
+/* ---- Port status grid (29_ports.js) ---- */
+div[style*="display:grid;grid-template-columns:repeat"] {
+  gap: var(--space-md) !important;
+  margin-bottom: var(--space-lg) !important;
+
+  > .ifacebox {
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: center;
+    border-radius: var(--radius-md) !important;
+    /* Glass-ui card pattern */
+    background-image: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.15) 0%,
+      rgba(255, 255, 255, 0.12) 25%,
+      rgba(240, 248, 255, 0.13) 50%,
+      rgba(255, 255, 255, 0.11) 75%,
+      rgba(230, 240, 255, 0.12) 100%
+    ) !important;
+    background-color: transparent !important;
+    backdrop-filter: blur(10px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+    border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.08),
+      0 1px 4px rgba(0, 0, 0, 0.04),
+      0 0 0 0.5px rgba(255, 255, 255, 0.08) inset,
+      0 0 12px rgba(255, 255, 255, 0.10) inset !important;
+
+    > .ifacebox-head {
+      padding: var(--space-xs) var(--space-sm);
+      font-size: var(--font-size-sm);
+      font-weight: var(--font-weight-semibold);
+      margin-bottom: 0;
+    }
+
+    > .ifacebox-body {
+      padding: var(--space-xs) var(--space-sm);
+      font-size: var(--font-size-sm);
+      line-height: 1.3;
+
+      img {
+        width: 28px;
+        height: 28px;
+        margin: 2px auto;
+      }
+    }
+
+    /* Zone color bar */
+    > .ifacebox-head.cbi-tooltip-container {
+      padding: 0;
+      border-bottom: none;
+
+      .zonebadge {
+        border-radius: 0;
+        padding: 0;
+      }
+    }
+  }
+}
+
+/* ---- Network status table (30_network.js) ---- */
+.network-status-table {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+
+  .ifacebox {
+    flex: 1 1 300px;
+    margin: 0;
+  }
+
+  .ifacebox-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+
+    > div {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    .ifacebadge {
+      flex: 1 1 auto;
+      min-width: 200px;
+
+      > span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+
+/* ---- Interface badges ---- */
+.ifacebadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 2px var(--space-sm);
+  margin-right: 0.4em;
+  min-width: max-content;
+  background: rgba(255, 255, 255, 0.40);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.20);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    inset 0 0 4px rgba(255, 255, 255, 0.08);
+
+  img {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Zone badges */
+.zonebadge {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px) saturate(160%);
+  -webkit-backdrop-filter: blur(6px) saturate(160%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 0 4px rgba(255, 255, 255, 0.06);
+}
+
+.zonebadge .ifacebadge {
+  margin: 1px 2px;
+  padding: 2px 4px;
+}
+
+/* ---- Tooltips ---- */
+.cbi-tooltip-container {
+  position: relative;
+}
+
+.cbi-tooltip {
+  display: none;
+  position: absolute;
+  z-index: var(--z-toast);
+  left: 0;
+  bottom: 100%;
+  margin-bottom: var(--space-xs);
+  .glass-effect();
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+  max-width: 300px;
+  white-space: normal;
+  line-height: 1.5;
+
+  &.left {
+    left: auto;
+    right: 0;
+  }
+}
+
+.cbi-tooltip-container:hover > .cbi-tooltip {
+  display: block;
+}
+
+/* System log */
+#syslog {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  overflow-y: hidden;
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Terminal / command output */
+pre {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+/* Flatten pre inside modals — avoid box-in-box */
+.modal pre {
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: var(--space-sm) 0;
+}
+
+/* Native progress element (package manager, etc.) */
+progress {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border: none;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.06);
+
+  &::-webkit-progress-bar {
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: var(--radius-full);
+  }
+
+  &::-webkit-progress-value {
+    background: linear-gradient(
+      135deg,
+      rgba(var(--color-primary-rgb), 0.75) 0%,
+      rgba(var(--color-primary-rgb), 0.60) 50%,
+      rgba(var(--color-primary-rgb), 0.70) 100%
+    );
+    border-radius: var(--radius-full);
+  }
+
+  &::-moz-progress-bar {
+    background: linear-gradient(
+      135deg,
+      rgba(var(--color-primary-rgb), 0.75) 0%,
+      rgba(var(--color-primary-rgb), 0.60) 50%,
+      rgba(var(--color-primary-rgb), 0.70) 100%
+    );
+    border-radius: var(--radius-full);
+  }
+}
+
+/* ACL/UBUS error page styling */
+#error-message {
+  text-align: center;
+  padding: var(--space-3xl);
+  color: var(--color-text-secondary);
+}
+
+/* LuCI diagnostics ping/traceroute output */
+#diag-rc-output {
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.12) 25%,
+    rgba(240, 248, 255, 0.13) 50%,
+    rgba(255, 255, 255, 0.11) 75%,
+    rgba(230, 240, 255, 0.12) 100%
+  );
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+
+/* File upload */
+.cbi-filebrowser {
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.12) 25%,
+    rgba(240, 248, 255, 0.13) 50%,
+    rgba(255, 255, 255, 0.11) 75%,
+    rgba(230, 240, 255, 0.12) 100%
+  );
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30),
+    inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+
+/* Apply config spinner */
+#cbi_apply_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#cbi_apply_overlay .spinning {
+  width: 40px;
+  height: 40px;
+  padding-left: 0 !important;
+  border: 3px solid var(--color-bg-secondary);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+
+  &::before {
+    display: none;
+  }
+}
+
+/* ---- Utility classes ---- */
+.nowrap {
+  white-space: nowrap;
+}
+
+.left {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+.hide-xs {
+  @media (max-width: 640px) {
+    display: none !important;
+  }
+}
+
+/* ---- Standalone section headings (DHCP, WiFi assoclist) ---- */
+#maincontent h3,
+#view h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin: var(--space-xl) 0 var(--space-md);
+}
+
+/* ---- Table sort indicators ---- */
+.th[data-sort-direction] {
+  cursor: pointer;
+  user-select: none;
+
+  &::after {
+    content: '';
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: var(--space-xs);
+    vertical-align: middle;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+  }
+
+  &[data-sort-direction="asc"]::after {
+    border-bottom: 5px solid var(--color-text-secondary);
+  }
+
+  &[data-sort-direction="desc"]::after {
+    border-top: 5px solid var(--color-text-secondary);
+  }
+}
+
+.th[data-sortable-row] {
+  cursor: pointer;
+}
+
+/* ---- Table placeholder (empty state) ---- */
+.tr.placeholder .td {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+/* ---- Software / Package Manager page ---- */
+[data-page="admin-system-opkg"],
+[data-page="admin-system-package-manager"] {
+  /* Action buttons — glass pill style */
+  div.btn {
+    display: inline-flex;
+    padding: var(--space-sm) var(--space-lg);
+  }
+
+  /* Override opkg.js inline CSS for controls layout */
+  .controls {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    gap: var(--space-md) var(--space-lg) !important;
+    margin: 0 0 var(--space-lg) 0 !important;
+  }
+
+  /* All control sections — override inline flex: 1 1 33% */
+  .controls > div {
+    padding: 0 !important;
+    white-space: normal !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: flex-end !important;
+  }
+
+  /* Disk space — full width row */
+  .controls > div:first-child {
+    flex: 1 1 100% !important;
+  }
+
+  /* Filter — share row, grow equally */
+  .controls > div:nth-child(2) {
+    flex: 1 1 200px !important;
+  }
+
+  /* Download / install — share row, grow equally */
+  .controls > div:nth-child(3) {
+    flex: 1 1 280px !important;
+  }
+
+  /* Actions — own row */
+  .controls > div:nth-child(4) {
+    flex: 1 1 100% !important;
+  }
+
+  /* Translation filter — own row */
+  .controls > div:nth-child(5) {
+    flex: 1 1 100% !important;
+  }
+
+  /* Labels — block above their control group */
+  .controls > div > label {
+    flex-basis: 100% !important;
+    min-width: 0 !important;
+    margin-bottom: var(--space-xs) !important;
+    font-weight: var(--font-weight-medium) !important;
+    font-size: var(--font-size-sm) !important;
+    color: var(--color-text-secondary) !important;
+  }
+
+  /* Control groups — input + button inline */
+  .controls .control-group {
+    display: flex !important;
+    gap: var(--space-sm) !important;
+    flex: 1 1 auto !important;
+    align-items: center !important;
+  }
+
+  .controls .control-group input[type="text"] {
+    flex: 1 1 auto !important;
+    min-width: 120px !important;
+    width: auto !important;
+  }
+
+  /* Action buttons — inline row with gap */
+  .controls > div:nth-child(4) > .control-group {
+    gap: var(--space-sm) !important;
+  }
+}

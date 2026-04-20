@@ -1,0 +1,15 @@
+{
+	"admin/system/glass": {
+		"title": "Glass Theme Config",
+		"order": 90,
+		"action": {
+			"type": "view",
+			"path": "system/glass"
+		},
+		"depends": {
+			"acl": [
+				"luci-theme-glass"
+			]
+		}
+	}
+}

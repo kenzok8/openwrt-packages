@@ -1,0 +1,339 @@
+/* ==========================================================================
+   Dark Mode — luci-theme-glass
+   Compiled separately and injected by header.ut when dark mode is active.
+   ========================================================================== */
+:root {
+  /* ---- Colors — Dark mode ---- */
+  --color-primary: #0A84FF;
+  --color-primary-hover: #409cff;
+  --color-primary-active: #0066d6;
+  --color-primary-rgb: 10, 132, 255;
+  --color-success: #30D158;
+  --color-warning: #FFD60A;
+  --color-danger: #FF453A;
+  --color-info: #64D2FF;
+  --color-text: #f5f5f7;
+  --color-text-secondary: #98989d;
+  --color-text-tertiary: #636366;
+  --color-text-inverse: #1d1d1f;
+  --color-bg: #1c1c1e;
+  --color-bg-elevated: #2c2c2e;
+  --color-bg-secondary: #3a3a3c;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-separator: rgba(84, 84, 88, 0.36);
+  /* ---- Dark glassmorphism ---- */
+  --glass-blur: 25px;
+  --glass-saturate: 180%;
+  --glass-bg: rgba(38, 38, 42, 0.55);
+  --glass-bg-hover: rgba(52, 52, 56, 0.65);
+  --glass-bg-strong: rgba(38, 38, 42, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 2px 16px rgba(0, 0, 0, 0.2), 0 0 1px rgba(0, 0, 0, 0.25);
+  --glass-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.3), 0 0 1px rgba(0, 0, 0, 0.15);
+  /* ---- Dark background ---- */
+  --bg-gradient: linear-gradient(135deg, #2c2e3a 0%, #353848 50%, #2a2d38 100%);
+}
+/* ---- Dark-mode-specific overrides ---- */
+/* Inputs need darker backgrounds */
+.cbi-input-text,
+.cbi-input-password,
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea,
+select {
+  background: rgba(44, 44, 46, 0.55);
+}
+/* Login card */
+.login-card {
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 25%, rgba(240, 248, 255, 0.08) 50%, rgba(255, 255, 255, 0.06) 75%, rgba(230, 240, 255, 0.07) 100%);
+  background-color: rgba(38, 38, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 16px rgba(255, 255, 255, 0.06);
+}
+.login-form .login-field input {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 4px rgba(255, 255, 255, 0.04);
+}
+.login-btn {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.06) 25%, rgba(240, 248, 255, 0.07) 50%, rgba(255, 255, 255, 0.05) 75%, rgba(230, 240, 255, 0.06) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.15), inset 0 0 0.5px rgba(255, 255, 255, 0.12), inset 0 0 12px rgba(255, 255, 255, 0.15);
+  color: var(--color-text);
+}
+/* Buttons — glass-ui dark pattern */
+.btn,
+.cbi-button {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.06) 25%, rgba(240, 248, 255, 0.07) 50%, rgba(255, 255, 255, 0.05) 75%, rgba(230, 240, 255, 0.06) 100%);
+  background-color: transparent;
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.15), inset 0 0 0.5px rgba(255, 255, 255, 0.12), inset 0 0 12px rgba(255, 255, 255, 0.15);
+}
+.btn:hover,
+.cbi-button:hover {
+  opacity: 0.9;
+  background-color: transparent;
+}
+.btn:active,
+.cbi-button:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.cbi-button-negative,
+.cbi-button-remove,
+.cbi-button-reset {
+  background-image: linear-gradient(135deg, rgba(255, 69, 58, 0.12) 0%, rgba(255, 69, 58, 0.08) 50%, rgba(255, 69, 58, 0.1) 100%);
+  background-color: transparent;
+  color: var(--color-danger);
+  border-color: rgba(255, 69, 58, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 1px 4px rgba(0, 0, 0, 0.15), inset 0 0 0.5px rgba(255, 255, 255, 0.08), inset 0 0 8px rgba(255, 255, 255, 0.06);
+}
+.cbi-button-negative:hover,
+.cbi-button-remove:hover,
+.cbi-button-reset:hover {
+  opacity: 0.9;
+  background-color: transparent;
+}
+.cbi-button-negative:active,
+.cbi-button-remove:active,
+.cbi-button-reset:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+/* Sidebar */
+#sidebar {
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 20%, rgba(240, 248, 255, 0.08) 45%, rgba(255, 255, 255, 0.06) 70%, rgba(230, 240, 255, 0.07) 100%);
+  background-color: rgba(38, 38, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 12px rgba(255, 255, 255, 0.06);
+}
+/* Header bar */
+#header {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 25%, rgba(240, 248, 255, 0.08) 50%, rgba(255, 255, 255, 0.06) 75%, rgba(230, 240, 255, 0.07) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 8px rgba(255, 255, 255, 0.06);
+}
+/* Page actions bar */
+.cbi-page-actions {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 25%, rgba(240, 248, 255, 0.08) 50%, rgba(255, 255, 255, 0.06) 75%, rgba(230, 240, 255, 0.07) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 0 0 8px rgba(255, 255, 255, 0.06);
+}
+/* Nav hover & active */
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.12), inset 0 0 8px rgba(255, 255, 255, 0.08);
+}
+/* Sub-item active — slider handles highlight */
+.nav-sub .nav-item.active {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Sliding selector — dark glass */
+.nav-sub .nav-slider {
+  background: rgba(255, 255, 255, 0.08);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.08), inset 0 0 4px rgba(255, 255, 255, 0.03);
+}
+/* Header tabs */
+.header-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text);
+}
+.header-tab.active {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Tab slider — dark glass */
+.tab-slider {
+  background: rgba(255, 255, 255, 0.1);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.1), inset 0 0 8px rgba(255, 255, 255, 0.06);
+}
+/* Sub-nav bar */
+#header-sub {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 25%, rgba(240, 248, 255, 0.08) 50%, rgba(255, 255, 255, 0.06) 75%, rgba(230, 240, 255, 0.07) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(255, 255, 255, 0.12) inset, 0 0 12px rgba(255, 255, 255, 0.15) inset;
+}
+.sub-tab:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.sub-tab.active {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Header glass pills */
+.header-title,
+#status-indicators,
+.header-actions {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.03) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+}
+/* Theme toggle */
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.theme-toggle-float {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 25%, rgba(240, 248, 255, 0.08) 50%, rgba(255, 255, 255, 0.06) 75%, rgba(230, 240, 255, 0.07) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 0 0.5px rgba(255, 255, 255, 0.12), inset 0 1px 6px rgba(255, 255, 255, 0.12);
+}
+/* Tabs */
+.cbi-tabmenu {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 25%, rgba(240, 248, 255, 0.08) 50%, rgba(255, 255, 255, 0.06) 75%, rgba(230, 240, 255, 0.07) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1), inset 0 0 0.5px rgba(255, 255, 255, 0.12), inset 0 0 12px rgba(255, 255, 255, 0.15);
+}
+.cbi-tabmenu li a:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.cbi-tabmenu li.cbi-tab a {
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.12), inset 0 0 8px rgba(255, 255, 255, 0.08);
+}
+/* Section fold button */
+.cbi-section.fade-in .cbi-title > div:last-child span:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+/* Table row hover */
+table tbody tr:hover td,
+.table .tr:hover .td {
+  background: rgba(255, 255, 255, 0.03);
+}
+/* Pre / code */
+pre,
+#syslog {
+  background: rgba(255, 255, 255, 0.04);
+}
+/* Alert colors adjusted for dark */
+.alert-message,
+.cbi-section-error {
+  background: rgba(100, 210, 255, 0.08);
+  border-color: rgba(100, 210, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 6px rgba(255, 255, 255, 0.04);
+}
+.alert-message.notice,
+.alert-message.info {
+  background: rgba(100, 210, 255, 0.1);
+  border-color: rgba(100, 210, 255, 0.25);
+}
+.alert-message.warning {
+  background: rgba(255, 214, 10, 0.1);
+  border-color: rgba(255, 214, 10, 0.25);
+}
+.alert-message.error,
+.cbi-section-error {
+  background: rgba(255, 69, 58, 0.1);
+  border-color: rgba(255, 69, 58, 0.25);
+}
+.alert-message.success {
+  background: rgba(48, 209, 88, 0.1);
+  border-color: rgba(48, 209, 88, 0.25);
+}
+/* Diagnostics & file browser in dark */
+#diag-rc-output,
+.cbi-filebrowser {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 25%, rgba(240, 248, 255, 0.08) 50%, rgba(255, 255, 255, 0.06) 75%, rgba(230, 240, 255, 0.07) 100%);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), 0 1px 2px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 6px rgba(255, 255, 255, 0.04);
+}
+/* Ifacebox zone header in dark — slightly brighter tint */
+.ifacebox-head[style*="background-color"] {
+  background-color: rgba(var(--zone-color-rgb), 0.2) !important;
+  border-bottom-color: rgba(var(--zone-color-rgb), 0.25) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+/* Zone badges in dark — tint zone color instead of opaque background */
+.zonebadge[style*="background-color"] {
+  background-color: rgba(var(--zone-color-rgb), 0.25) !important;
+  border-color: rgba(var(--zone-color-rgb), 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 4px rgba(255, 255, 255, 0.03);
+}
+.zonebadge {
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 4px rgba(255, 255, 255, 0.03);
+}
+/* Ifacebox in dark */
+.ifacebadge {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 0 4px rgba(255, 255, 255, 0.03);
+}
+/* Port grid boxes in dark — glass-ui dark card */
+div[style*="display:grid;grid-template-columns:repeat"] > .ifacebox {
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.07) 25%, rgba(240, 248, 255, 0.08) 50%, rgba(255, 255, 255, 0.06) 75%, rgba(230, 240, 255, 0.07) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(255, 255, 255, 0.12) inset, 0 0 12px rgba(255, 255, 255, 0.15) inset !important;
+}
+/* Network status table badges in dark */
+.network-status-table .ifacebox-body .ifacebadge {
+  background: rgba(255, 255, 255, 0.06);
+}
+/* Dropdown open items hover */
+.cbi-dropdown[open] > ul.dropdown > li:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+/* Progressbar */
+.cbi-progressbar {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+.cbi-progressbar > div {
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.65) 0%, rgba(var(--color-primary-rgb), 0.5) 50%, rgba(var(--color-primary-rgb), 0.6) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 0 6px rgba(255, 255, 255, 0.06);
+}
+.cbi-progressbar::after {
+  color: var(--color-text);
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+/* Ifacebox-body itemlist labels */
+.ifacebox-body > span > .nowrap > strong {
+  color: var(--color-text-tertiary);
+}
+/* UCI Changes dialog in dark */
+.uci-change-legend-label > ins {
+  background-color: rgba(48, 209, 88, 0.3);
+  border-color: rgba(48, 209, 88, 0.5);
+}
+.uci-change-legend-label > del {
+  background-color: rgba(255, 69, 58, 0.3);
+  border-color: rgba(255, 69, 58, 0.5);
+}
+.uci-change-legend-label > var {
+  background-color: rgba(100, 210, 255, 0.25);
+  border-color: rgba(100, 210, 255, 0.4);
+}
+.uci-change-list ins {
+  background-color: rgba(48, 209, 88, 0.12);
+  border-color: rgba(48, 209, 88, 0.25);
+}
+.uci-change-list del {
+  background-color: rgba(255, 69, 58, 0.12);
+  border-color: rgba(255, 69, 58, 0.25);
+}
+.uci-change-list var {
+  background-color: rgba(100, 210, 255, 0.1);
+  border-color: rgba(100, 210, 255, 0.18);
+}
+/* Selection */
+::selection {
+  background: rgba(var(--color-primary-rgb), 0.35);
+}

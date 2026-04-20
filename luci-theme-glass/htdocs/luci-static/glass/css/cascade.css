@@ -1,0 +1,2591 @@
+/* ==========================================================================
+   luci-theme-glass — Master Stylesheet
+   Import order matters: tokens → reset → mixins → layout → components → fixes
+   ========================================================================== */
+/* ==========================================================================
+   Design Tokens — luci-theme-glass
+   All CSS custom properties live here for easy theming.
+   ========================================================================== */
+:root {
+  /* ---- Typography ---- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+  --font-size-base: 0.875rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.75rem;
+  --line-height: 1.5;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  /* ---- Colors — Light mode ---- */
+  --color-primary: #007AFF;
+  --color-primary-hover: #0066d6;
+  --color-primary-active: #004fad;
+  --color-primary-rgb: 0, 122, 255;
+  --color-success: #34C759;
+  --color-warning: #FF9500;
+  --color-danger: #FF3B30;
+  --color-info: #5AC8FA;
+  --color-text: #1d1d1f;
+  --color-text-secondary: #6e6e73;
+  --color-text-tertiary: #aeaeb2;
+  --color-text-inverse: #ffffff;
+  --color-bg: #f5f5f7;
+  --color-bg-elevated: #ffffff;
+  --color-bg-secondary: #e8e8ed;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-border-strong: rgba(0, 0, 0, 0.16);
+  --color-separator: rgba(60, 60, 67, 0.12);
+  /* ---- Glassmorphism ---- */
+  --glass-blur: 20px;
+  --glass-saturate: 180%;
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-hover: rgba(255, 255, 255, 0.82);
+  --glass-bg-strong: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-shadow: 0 2px 16px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.08);
+  --glass-shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.06);
+  /* ---- Layout ---- */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 64px;
+  --sidebar-gap: 10px;
+  --header-height: 56px;
+  --content-max-width: none;
+  --content-padding: 24px;
+  /* ---- Radius ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  /* ---- Spacing ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  /* ---- Transitions ---- */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+  --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  /* ---- Z-index ---- */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-sidebar: 300;
+  --z-header: 400;
+  --z-overlay: 500;
+  --z-modal: 600;
+  --z-toast: 700;
+  /* ---- Background ---- */
+  --bg-gradient: linear-gradient(135deg, #b8c4d0 0%, #d5dce5 50%, #ddd5cc 100%);
+}
+/* ==========================================================================
+   Normalize / Reset — luci-theme-glass
+   Minimal reset for LuCI pages.
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Glass scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 128, 0.35) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.35);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.55);
+}
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover {
+  color: var(--color-primary-hover);
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+code,
+pre {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+hr {
+  border: none;
+  border-top: 0.5px solid var(--color-border);
+  margin: var(--space-md) 0;
+}
+p {
+  margin-bottom: var(--space-sm);
+}
+ul,
+ol {
+  padding-left: 1.5em;
+  margin: var(--space-sm) 0;
+}
+li {
+  margin-bottom: 2px;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+  color: var(--color-text);
+}
+h1 {
+  font-size: var(--font-size-2xl);
+}
+h2 {
+  font-size: var(--font-size-xl);
+}
+h3 {
+  font-size: 1.125rem;
+}
+h4 {
+  font-size: 1rem;
+}
+::selection {
+  background: rgba(var(--color-primary-rgb), 0.25);
+}
+/* LuCI injects <input type="submit" class="hidden"> at the top of every
+   CBI form. Without this rule the input renders as an unstyled browser
+   button (seen in PassWall, OpenAppFilter, etc). Both bootstrap and argon
+   themes ship this utility rule. */
+.hidden {
+  display: none;
+}
+/* ==========================================================================
+   Glassmorphism Mixins — luci-theme-glass
+   ========================================================================== */
+/* Standard glass panel — default for cards, sections, dropdowns */
+/* Frosted glass — stronger blur, higher opacity (sidebar, login card) */
+/* Subtle glass — minimal effect for secondary/nested elements */
+/* Glass hover state */
+/* Inner glow — top highlight for glass panels */
+/* ==========================================================================
+   Layout — Sidebar, Header, Content
+   ========================================================================== */
+/* ---- Background layer ---- */
+#bg-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background: var(--bg-gradient);
+  background-size: cover;
+  background-position: center;
+}
+#bg-wrap img,
+#bg-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* ---- Sidebar ---- */
+#sidebar {
+  position: fixed;
+  top: var(--sidebar-gap);
+  left: var(--sidebar-gap);
+  width: var(--sidebar-width);
+  height: calc(100vh - var(--sidebar-gap) * 2);
+  z-index: var(--z-sidebar);
+  /* True glassmorphism — multi-stop gradient, stronger for readability */
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.18) 20%, rgba(245, 250, 255, 0.2) 45%, rgba(255, 255, 255, 0.16) 70%, rgba(240, 245, 255, 0.19) 100%);
+  background-color: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 0 12px rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-slow);
+  overflow: hidden;
+}
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: var(--space-lg) var(--space-xl);
+  height: var(--header-height);
+  border-bottom: 0.5px solid var(--color-separator);
+}
+.sidebar-header .logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.sidebar-header .brand {
+  margin-left: var(--space-md);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sidebar-footer {
+  padding: var(--space-md) var(--space-xl);
+  border-top: 0.5px solid var(--color-separator);
+  text-align: center;
+}
+.sidebar-footer .sidebar-version {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+/* ---- Sidebar navigation ---- */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-sm) 0;
+}
+.sidebar-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-full);
+}
+.nav-group {
+  margin-bottom: var(--space-xs);
+}
+.nav-group .nav-group-title {
+  padding: var(--space-sm) var(--space-xl);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem var(--space-xl);
+  margin: 1px var(--space-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  text-decoration: none;
+}
+.nav-item:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-text);
+}
+.nav-item.active {
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 0 6px rgba(255, 255, 255, 0.15);
+}
+.nav-item .nav-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: var(--space-md);
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+.nav-item.active .nav-icon {
+  opacity: 1;
+}
+.nav-item .nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.nav-item .nav-arrow {
+  margin-left: auto;
+  width: 16px;
+  height: 16px;
+  opacity: 0.4;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity var(--transition-fast);
+}
+.nav-item.open .nav-arrow {
+  transform: rotate(90deg);
+  opacity: 0.6;
+}
+.nav-sub {
+  position: relative;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+}
+.nav-sub.open {
+  /* Upper bound for the expand animation. Must exceed the tallest submenu
+       encountered in the wild (System commonly reaches ~14 items once third-
+       party apps like theme-config, scheduled-tasks, etc. are installed). */
+  max-height: 2000px;
+  opacity: 1;
+}
+.nav-sub .nav-item {
+  padding-left: calc(var(--space-xl) + 32px);
+  font-size: var(--font-size-base);
+  transform: translateX(-8px);
+  opacity: 0;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease, color var(--transition-fast);
+  /* Sub-item active state — no background, slider handles it */
+}
+.nav-sub .nav-item.active {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  font-weight: var(--font-weight-medium);
+}
+.nav-sub.open .nav-item {
+  transform: translateX(0);
+  opacity: 1;
+}
+.nav-sub.open .nav-item:nth-of-type(1) {
+  transition-delay: 0.03s;
+}
+.nav-sub.open .nav-item:nth-of-type(2) {
+  transition-delay: 0.06s;
+}
+.nav-sub.open .nav-item:nth-of-type(3) {
+  transition-delay: 0.09s;
+}
+.nav-sub.open .nav-item:nth-of-type(4) {
+  transition-delay: 0.12s;
+}
+.nav-sub.open .nav-item:nth-of-type(5) {
+  transition-delay: 0.15s;
+}
+.nav-sub.open .nav-item:nth-of-type(6) {
+  transition-delay: 0.18s;
+}
+.nav-sub.open .nav-item:nth-of-type(7) {
+  transition-delay: 0.21s;
+}
+.nav-sub.open .nav-item:nth-of-type(8) {
+  transition-delay: 0.24s;
+}
+.nav-sub.open .nav-item:nth-of-type(n+9) {
+  transition-delay: 0.27s;
+}
+.nav-sub .nav-slider {
+  position: absolute;
+  left: var(--space-sm);
+  right: var(--space-sm);
+  top: 0;
+  height: 0;
+  opacity: 0;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 0.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.35), inset 0 0 4px rgba(255, 255, 255, 0.1);
+  transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+.nav-sub .nav-item {
+  position: relative;
+  z-index: 1;
+}
+/* ---- Sidebar user area ---- */
+.sidebar-user {
+  padding: var(--space-lg) var(--space-xl);
+  border-top: 0.5px solid var(--color-separator);
+  display: flex;
+  align-items: center;
+}
+.sidebar-user .user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+.sidebar-user .user-info {
+  margin-left: var(--space-md);
+  overflow: hidden;
+}
+.sidebar-user .user-info .user-name {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-user .user-info .user-host {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+}
+/* ---- Top header nav bar ---- */
+#header {
+  position: fixed;
+  top: var(--sidebar-gap);
+  left: calc(var(--sidebar-width) + var(--sidebar-gap) * 2);
+  right: var(--sidebar-gap);
+  height: 44px;
+  z-index: var(--z-header);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  padding: 4px 4px 4px 6px;
+  gap: var(--space-xs);
+  transition: left var(--transition-slow);
+  /* True glassmorphism — multi-stop gradient like sub-nav */
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%);
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.12);
+}
+/* ---- Header top-level tabs ---- */
+#header-nav,
+#header-tabs {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.header-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--color-separator);
+  margin: 0 var(--space-xs);
+  flex-shrink: 0;
+}
+.header-tab {
+  padding: 6px var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+  white-space: nowrap;
+}
+.header-tab:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-text);
+}
+.header-tab.active {
+  color: var(--color-text);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Horizontal sliding selector for header tabs */
+.tab-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  opacity: 0;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 0 6px rgba(255, 255, 255, 0.15);
+  transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  z-index: 0;
+  pointer-events: none;
+}
+.header-tab,
+.sub-tab {
+  position: relative;
+  z-index: 1;
+}
+/* ---- Status indicators (center of header) ---- */
+#status-indicators {
+  margin: 0 auto;
+  gap: var(--space-sm);
+  padding: 4px var(--space-md);
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 25%, rgba(240, 248, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 75%, rgba(230, 240, 255, 0.1) 100%);
+  background-color: transparent;
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03), 0 0 0 0.5px rgba(255, 255, 255, 0.08) inset, 0 1px 6px rgba(255, 255, 255, 0.1) inset;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+#status-indicators:empty {
+  display: none;
+}
+#status-indicators [data-indicator] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: default;
+  transition: color 0.3s ease;
+  /* Level colors — neutral by default, color only when noteworthy */
+}
+#status-indicators [data-indicator] .indicator-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: color 0.3s ease, opacity 0.3s ease;
+}
+#status-indicators [data-indicator][data-level="warn"] {
+  color: #FF9500;
+}
+#status-indicators [data-indicator][data-level="warn"] .indicator-icon {
+  opacity: 0.85;
+}
+#status-indicators [data-indicator][data-level="crit"] {
+  color: #FF3B30;
+}
+#status-indicators [data-indicator][data-level="crit"] .indicator-icon {
+  opacity: 0.9;
+}
+#status-indicators [data-indicator][data-level="active"] {
+  color: #007AFF;
+}
+#status-indicators [data-indicator][data-level="active"] .indicator-icon {
+  opacity: 0.8;
+}
+#status-indicators [data-indicator][data-level="busy"] {
+  color: #AF52DE;
+}
+#status-indicators [data-indicator][data-level="busy"] .indicator-icon {
+  opacity: 0.85;
+}
+#status-indicators [data-indicator] + [data-indicator] {
+  border-left: 0.5px solid rgba(128, 128, 128, 0.25);
+  padding-left: var(--space-sm);
+}
+/* ---- Glass pill badges (title + indicators) ---- */
+.header-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  white-space: nowrap;
+  cursor: default;
+  padding: 4px var(--space-md);
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 25%, rgba(240, 248, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 75%, rgba(230, 240, 255, 0.1) 100%);
+  background-color: transparent;
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03), 0 0 0 0.5px rgba(255, 255, 255, 0.08) inset, 0 1px 6px rgba(255, 255, 255, 0.1) inset;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+.header-actions {
+  margin-left: auto;
+  flex-shrink: 0;
+  gap: var(--space-sm);
+  padding: 4px var(--space-md);
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 25%, rgba(240, 248, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 75%, rgba(230, 240, 255, 0.1) 100%);
+  background-color: transparent;
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03), 0 0 0 0.5px rgba(255, 255, 255, 0.08) inset, 0 1px 6px rgba(255, 255, 255, 0.1) inset;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+.header-actions:empty {
+  display: none;
+}
+.header-actions [data-indicator] {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  cursor: default;
+}
+.header-actions [data-indicator][data-style="active"] {
+  color: var(--color-primary);
+}
+/* ---- Theme toggle button ---- */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  color: var(--color-text);
+}
+.theme-toggle:active {
+  transform: scale(0.92);
+}
+.theme-toggle .theme-icon {
+  width: 15px;
+  height: 15px;
+  display: none;
+}
+/* Show only the icon matching current theme */
+html[data-theme="auto"] .theme-icon-auto,
+html:not([data-theme]) .theme-icon-auto {
+  display: block;
+}
+html[data-theme="light"] .theme-icon-light {
+  display: block;
+}
+html[data-theme="dark"] .theme-icon-dark {
+  display: block;
+}
+/* Floating variant for login page */
+.theme-toggle-float {
+  position: fixed;
+  top: var(--space-lg);
+  right: var(--space-lg);
+  z-index: var(--z-dropdown);
+  width: 36px;
+  height: 36px;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.1) 25%, rgba(240, 248, 255, 0.12) 50%, rgba(255, 255, 255, 0.08) 75%, rgba(230, 240, 255, 0.1) 100%);
+  background-color: transparent;
+  border: 0.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03), 0 0 0 0.5px rgba(255, 255, 255, 0.08) inset, 0 1px 6px rgba(255, 255, 255, 0.1) inset;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+.theme-toggle-float .theme-icon {
+  width: 18px;
+  height: 18px;
+}
+/* Mobile hamburger */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-sm);
+  margin-right: var(--space-md);
+  color: var(--color-text);
+}
+.menu-toggle svg {
+  width: 22px;
+  height: 22px;
+}
+/* ---- Sub-navigation bar (CBI tabs) ---- */
+#header-sub {
+  position: fixed;
+  top: calc(var(--sidebar-gap) + 44px + 4px);
+  left: calc(var(--sidebar-width) + var(--sidebar-gap) * 2);
+  width: fit-content;
+  max-width: calc(100vw - var(--sidebar-width) - var(--sidebar-gap) * 3);
+  height: 2.25rem;
+  z-index: var(--z-header);
+  border-radius: var(--radius-md);
+  display: none;
+  align-items: center;
+  padding: 3px 4px;
+  gap: 2px;
+  overflow-x: auto;
+  transition: left var(--transition-slow);
+  /* Glass tab-list background — from glass-ui */
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%);
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(255, 255, 255, 0.08) inset, 0 0 12px rgba(255, 255, 255, 0.1) inset;
+  /* Hide scrollbar */
+  scrollbar-width: none;
+}
+#header-sub::-webkit-scrollbar {
+  display: none;
+}
+#header-sub.active {
+  display: inline-flex;
+}
+/* Sub-nav tab items — glass-ui TabsTrigger pattern */
+.sub-tab {
+  padding: 4px var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), backdrop-filter var(--transition-fast);
+}
+.sub-tab:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--color-text);
+}
+.sub-tab.active {
+  color: var(--color-text);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+/* Sub-tab slider — inset to match sub-tab content area */
+#header-sub > .tab-slider {
+  border-radius: var(--radius-sm);
+  top: 3px;
+  bottom: 3px;
+  height: auto;
+}
+/* ---- Page transition ---- */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* ---- Main content area ---- */
+#content-wrap {
+  margin-left: calc(var(--sidebar-width) + var(--sidebar-gap) * 2);
+  margin-top: calc(44px + var(--sidebar-gap) * 2);
+  min-height: calc(100vh - 44px - var(--sidebar-gap) * 2);
+  padding: var(--content-padding);
+  transition: margin-left var(--transition-slow);
+  animation: page-enter 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* JS view content — fade in when LuCI replaces the spinner */
+#view > :not(.spinning) {
+  animation: page-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* Style LuCI's "Loading view..." spinner as a centered glass card */
+#view > .spinning {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  padding: var(--space-lg) var(--space-xl);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  z-index: 100;
+}
+/* Fade-out before navigation */
+body.page-leaving #content-wrap {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+/* Push content down when sub-nav is visible */
+body.has-sub-nav #content-wrap {
+  margin-top: calc(44px + 36px + var(--sidebar-gap) * 2 + 4px);
+}
+#content {
+  max-width: var(--content-max-width);
+  margin: 0 auto;
+}
+/* Mobile overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: calc(var(--z-sidebar) - 1);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
+}
+/* ---- Page title ---- */
+.page-title {
+  margin-bottom: var(--space-xl);
+}
+.page-title h2 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+.page-title .page-description {
+  margin-top: var(--space-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+/* ---- Footer ---- */
+.glass-footer {
+  margin-left: calc(var(--sidebar-width) + var(--sidebar-gap) * 2);
+  padding: var(--space-lg) var(--content-padding);
+  text-align: right;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  transition: margin-left var(--transition-slow);
+}
+.glass-footer a {
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+}
+.glass-footer a:hover {
+  color: var(--color-text-secondary);
+}
+.glass-footer .footer-sep {
+  margin: 0 var(--space-sm);
+  opacity: 0.4;
+}
+/* ==========================================================================
+   Components — CBI forms, tables, buttons, inputs, dropdowns
+   ========================================================================== */
+/* ---- CBI Sections ---- */
+.cbi-section {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  margin-bottom: var(--space-xl);
+  position: relative;
+  overflow-x: auto;
+  /* Lift section above siblings when a dropdown is open inside it */
+  /* Nested sections — flatten (no extra box/padding) */
+}
+.cbi-section:has(.cbi-dropdown[open]) {
+  z-index: var(--z-dropdown);
+}
+.cbi-section .cbi-section {
+  padding: 0;
+  margin-bottom: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+/* Allow dropdowns to escape stacking contexts created by backdrop-filter.
+   Temporarily remove glass effects on the section and force overflow visible
+   on all ancestors up to the section. */
+.cbi-section:has(.cbi-dropdown[open]) {
+  z-index: var(--z-modal);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+}
+.cbi-section:has(.cbi-dropdown[open]) .table,
+.cbi-section:has(.cbi-dropdown[open]) .tr,
+.cbi-section:has(.cbi-dropdown[open]) .td,
+.cbi-section:has(.cbi-dropdown[open]) .cbi-value,
+.cbi-section:has(.cbi-dropdown[open]) .cbi-value-field {
+  overflow: visible !important;
+}
+.cbi-section-descr {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 0.5px solid var(--color-separator);
+}
+.cbi-section > h3,
+.cbi-section-node > h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--space-lg);
+}
+/* ---- Section fold/collapse ---- */
+.cbi-section.fade-in .cbi-title {
+  display: flex;
+  align-items: center;
+  /* Move toggle button to the right of the title */
+}
+.cbi-section.fade-in .cbi-title > h3 {
+  flex: 1;
+  margin-bottom: 0;
+}
+.cbi-section.fade-in .cbi-title > div:last-child {
+  flex-shrink: 0;
+  margin-left: var(--space-md);
+}
+.cbi-section.fade-in .cbi-title > div:last-child span {
+  font-size: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+.cbi-section.fade-in .cbi-title > div:last-child span:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.cbi-section.fade-in .cbi-title > div:last-child span::after {
+  content: '';
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid var(--color-text-tertiary);
+  border-bottom: 1.5px solid var(--color-text-tertiary);
+  transform: rotate(-135deg);
+  transition: transform 0.3s ease;
+  margin-top: 3px;
+}
+.cbi-section.fade-in .cbi-title > div:last-child span[data-style="inactive"]::after {
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+/* ---- CBI Map (page-level container) ---- */
+.cbi-map {
+  margin-bottom: var(--space-xl);
+}
+/* Title shown in header bar; description becomes tooltip */
+.cbi-map-descr,
+.cbi-map > h2,
+#view > h2,
+#maincontent > h2 {
+  display: none;
+}
+/* Hide descriptions only when moved to header tooltip (data-moved set by footer.ut JS) */
+.cbi-map-descr[data-moved],
+#view > h2 + [data-moved] {
+  display: none;
+}
+/* ---- CBI Value rows ---- */
+.cbi-value {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--space-md) 0;
+  border-bottom: 0.5px solid var(--color-separator);
+  /* Plugins that use form.DummyValue.extend({ renderWidget }) to emit a
+     full-width section or table (usteer Hearing map, DHCP leases, etc.)
+     render the section as the *only* child of .cbi-value — no title, no
+     value-field wrapper. As a flex item with default `flex: 0 1 auto` it
+     shrinks to content width, leaving a big empty right zone
+     ([#8](https://github.com/rchen14b/luci-theme-glass/issues/8)). Switch
+     the row to block so the section spans full width. */
+}
+.cbi-value:last-child {
+  border-bottom: none;
+}
+.cbi-value:has(> .cbi-section),
+.cbi-value:has(> table) {
+  display: block;
+}
+.cbi-value-title {
+  flex: 0 0 200px;
+  padding-right: var(--space-xl);
+  font-weight: var(--font-weight-medium);
+  padding-top: var(--space-sm);
+  color: var(--color-text);
+}
+.cbi-value-description {
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-sm);
+  margin-top: var(--space-xs);
+  font-weight: var(--font-weight-normal);
+}
+.cbi-value-field {
+  flex: 1;
+  min-width: 0;
+}
+/* ---- Inputs ---- */
+.cbi-input-text,
+.cbi-input-password,
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea {
+  width: 100%;
+  max-width: 400px;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+.cbi-input-text:focus,
+.cbi-input-password:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+}
+.cbi-input-text:disabled,
+.cbi-input-password:disabled,
+input[type="text"]:disabled,
+input[type="password"]:disabled,
+input[type="number"]:disabled,
+textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+textarea {
+  max-width: 100%;
+  min-height: 80px;
+  resize: vertical;
+}
+select {
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  outline: none;
+  cursor: pointer;
+}
+select:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
+}
+/* ---- Buttons — glass-ui pattern ---- */
+.btn,
+.cbi-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-md);
+  /* Glass button surface */
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%);
+  background-color: rgba(255, 255, 255, 0.55);
+  border: 0.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 0 6px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+  white-space: nowrap;
+  gap: var(--space-xs);
+}
+.btn:hover,
+.cbi-button:hover {
+  opacity: 0.9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 0 8px rgba(255, 255, 255, 0.12);
+}
+.btn:active,
+.cbi-button:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.btn:disabled,
+.cbi-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+.cbi-button-positive,
+.cbi-button-apply,
+.cbi-button-action,
+.cbi-button-reload,
+.cbi-button[value="Submit"],
+.cbi-button[value="Upload"],
+.cbi-button[value$="Apply"] {
+  /* Primary glass — blue-tinted (Save & Apply, actions) */
+  background-image: linear-gradient(135deg, rgba(0, 122, 255, 0.1) 0%, rgba(0, 122, 255, 0.07) 25%, rgba(10, 132, 255, 0.09) 50%, rgba(0, 122, 255, 0.06) 75%, rgba(0, 100, 220, 0.08) 100%);
+  background-color: rgba(255, 255, 255, 0.45);
+  color: var(--color-primary);
+  border: 0.5px solid rgba(0, 122, 255, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+.cbi-button-positive:hover,
+.cbi-button-apply:hover,
+.cbi-button-action:hover,
+.cbi-button-reload:hover,
+.cbi-button[value="Submit"]:hover,
+.cbi-button[value="Upload"]:hover,
+.cbi-button[value$="Apply"]:hover {
+  opacity: 0.9;
+  color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.1);
+}
+.cbi-button-positive:active,
+.cbi-button-apply:active,
+.cbi-button-action:active,
+.cbi-button-reload:active,
+.cbi-button[value="Submit"]:active,
+.cbi-button[value="Upload"]:active,
+.cbi-button[value$="Apply"]:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.cbi-button-save {
+  /* Secondary glass — green-tinted (Save) */
+  background-image: linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(52, 199, 89, 0.07) 25%, rgba(48, 209, 88, 0.09) 50%, rgba(52, 199, 89, 0.06) 75%, rgba(40, 180, 75, 0.08) 100%);
+  background-color: rgba(255, 255, 255, 0.45);
+  color: #248a3d;
+  border: 0.5px solid rgba(52, 199, 89, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+.cbi-button-save:hover {
+  opacity: 0.9;
+  color: #248a3d;
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.1);
+}
+.cbi-button-save:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.cbi-button-negative,
+.cbi-button-remove,
+.cbi-button-reset {
+  /* Tinted danger glass */
+  background-image: linear-gradient(135deg, rgba(255, 59, 48, 0.1) 0%, rgba(255, 59, 48, 0.07) 50%, rgba(255, 59, 48, 0.09) 100%);
+  background-color: rgba(255, 255, 255, 0.45);
+  color: var(--color-danger);
+  border: 0.5px solid rgba(255, 59, 48, 0.18);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.35), inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+.cbi-button-negative:hover,
+.cbi-button-remove:hover,
+.cbi-button-reset:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(255, 59, 48, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.1);
+}
+.cbi-button-negative:active,
+.cbi-button-remove:active,
+.cbi-button-reset:active {
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.cbi-button-neutral,
+.cbi-button-link,
+.cbi-button-edit,
+.cbi-button-find,
+.cbi-button-add,
+.cbi-button-download,
+.cbi-button-up,
+.cbi-button-down {
+  background-color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text);
+}
+.cbi-page-actions {
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-xl);
+  margin-top: var(--space-xl);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  /* Match header nav bar glass style */
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%);
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.12);
+}
+/* ---- Tables ---- */
+.table,
+table.cbi-section-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.table thead tr th,
+table.cbi-section-table thead tr th,
+.table .tr.table-titles th,
+table.cbi-section-table .tr.table-titles th,
+.table .tr.cbi-section-table-titles th,
+table.cbi-section-table .tr.cbi-section-table-titles th,
+.table thead tr .th,
+table.cbi-section-table thead tr .th,
+.table .tr.table-titles .th,
+table.cbi-section-table .tr.table-titles .th,
+.table .tr.cbi-section-table-titles .th,
+table.cbi-section-table .tr.cbi-section-table-titles .th {
+  padding: var(--space-sm) var(--space-lg);
+  text-align: left;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-separator);
+  white-space: nowrap;
+}
+.table tbody tr,
+table.cbi-section-table tbody tr,
+.table .tr,
+table.cbi-section-table .tr {
+  /* Action button cells — right-aligned, equal-width buttons */
+}
+.table tbody tr td,
+table.cbi-section-table tbody tr td,
+.table .tr td,
+table.cbi-section-table .tr td,
+.table tbody tr .td,
+table.cbi-section-table tbody tr .td,
+.table .tr .td,
+table.cbi-section-table .tr .td {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 0.5px solid var(--color-separator);
+  font-size: var(--font-size-sm);
+  vertical-align: middle;
+}
+.table tbody tr:last-child td,
+table.cbi-section-table tbody tr:last-child td,
+.table .tr:last-child td,
+table.cbi-section-table .tr:last-child td,
+.table tbody tr:last-child .td,
+table.cbi-section-table tbody tr:last-child .td,
+.table .tr:last-child .td,
+table.cbi-section-table .tr:last-child .td {
+  border-bottom: none;
+}
+.table tbody tr td:last-child:has(.cbi-button),
+table.cbi-section-table tbody tr td:last-child:has(.cbi-button),
+.table .tr td:last-child:has(.cbi-button),
+table.cbi-section-table .tr td:last-child:has(.cbi-button),
+.table tbody tr .td:last-child:has(.cbi-button),
+table.cbi-section-table tbody tr .td:last-child:has(.cbi-button),
+.table .tr .td:last-child:has(.cbi-button),
+table.cbi-section-table .tr .td:last-child:has(.cbi-button) {
+  text-align: right;
+  white-space: nowrap;
+}
+.table tbody tr td:last-child:has(.cbi-button) .cbi-button,
+table.cbi-section-table tbody tr td:last-child:has(.cbi-button) .cbi-button,
+.table .tr td:last-child:has(.cbi-button) .cbi-button,
+table.cbi-section-table .tr td:last-child:has(.cbi-button) .cbi-button,
+.table tbody tr .td:last-child:has(.cbi-button) .cbi-button,
+table.cbi-section-table tbody tr .td:last-child:has(.cbi-button) .cbi-button,
+.table .tr .td:last-child:has(.cbi-button) .cbi-button,
+table.cbi-section-table .tr .td:last-child:has(.cbi-button) .cbi-button {
+  min-width: 6rem;
+  width: 6rem;
+  text-align: center;
+}
+.table tbody tr:hover td,
+table.cbi-section-table tbody tr:hover td,
+.table .tr:hover td,
+table.cbi-section-table .tr:hover td,
+.table tbody tr:hover .td,
+table.cbi-section-table tbody tr:hover .td,
+.table .tr:hover .td,
+table.cbi-section-table .tr:hover .td {
+  background: rgba(0, 0, 0, 0.02);
+}
+/* ---- CBI Dynamic List (IP addresses, DNS servers, etc.) ---- */
+.cbi-dynlist {
+  line-height: 1.3;
+  flex-direction: column;
+  min-height: 30px;
+  cursor: text;
+  gap: 10px;
+}
+.cbi-dynlist > .item {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  position: relative;
+  max-width: 25rem;
+  pointer-events: none;
+  color: var(--color-text-secondary);
+  outline: 0;
+  /* Remove button (×) */
+}
+.cbi-dynlist > .item::after {
+  content: "\00D7";
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem !important;
+  height: 2.5rem;
+  margin: 0;
+  font-weight: normal;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--color-danger);
+  border: 0.5px solid rgba(255, 59, 48, 0.25);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  outline: 0;
+  background: rgba(255, 59, 48, 0.08);
+  background-image: none;
+  box-shadow: none;
+  box-sizing: border-box;
+  transition: background 0.2s;
+}
+.cbi-dynlist > .item::after:hover {
+  background: rgba(255, 59, 48, 0.18);
+}
+.cbi-dynlist > .item > span {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  box-sizing: border-box;
+  min-width: 15.5rem;
+  width: 15.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  user-select: text;
+  white-space: nowrap;
+  word-break: break-word;
+  line-height: 1.5em;
+  color: var(--color-text-primary);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-right: none;
+  outline: 0;
+  background: var(--color-bg-elevated);
+  box-shadow: none;
+}
+.cbi-dynlist > .add-item {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  min-width: 15.5rem;
+  flex-wrap: nowrap;
+}
+.cbi-dynlist > .add-item input {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  box-sizing: border-box;
+  min-width: 15.5rem;
+  width: 15.5rem;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  line-height: 1.5rem;
+  color: var(--color-text-primary);
+  border: 0.5px solid var(--color-border);
+  border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  border-right-width: 0;
+  outline: 0;
+  background: var(--color-bg-elevated);
+  box-shadow: none;
+}
+.cbi-dynlist > .add-item .cbi-button {
+  display: flex;
+  width: auto !important;
+  padding-left: 0.8rem;
+  padding-right: 0.8rem;
+  margin-left: 0;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  outline: 0;
+  box-shadow: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.cbi-dynlist > .add-item .cbi-button-add {
+  width: 2.5rem !important;
+  padding: 0.5rem 0 !important;
+  font-weight: normal;
+  font-size: 1.2rem;
+  color: #fff;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+/* ---- CBI Dropdown ---- */
+.cbi-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 150px;
+  cursor: pointer;
+  /* Opened dropdown list */
+  /* Hidden input container */
+  /* When dropdown is used as a button (.btn / .cbi-button) */
+  /* Arrow color inherits from button text */
+}
+.cbi-dropdown > ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cbi-dropdown > ul > li {
+  display: none;
+  padding: var(--space-sm) var(--space-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: auto;
+  line-height: 1.4;
+  /* Hide placeholder <li> only when LuCI hasn't marked it as the
+         active display item. LuCI sets [display] on whichever <li> should
+         be shown — either the selected value or the placeholder itself
+         (e.g. Network Interfaces > Device dropdown with "unspecified").
+         Without the :not([display]) guard the placeholder is hidden and
+         the dropdown appears empty except for the arrow
+         ([#6](https://github.com/rchen14b/luci-theme-glass/issues/6)). */
+}
+.cbi-dropdown > ul > li .hide-close {
+  display: none;
+}
+.cbi-dropdown > ul > li[display] {
+  display: flex;
+  align-items: center;
+}
+.cbi-dropdown > ul > li[placeholder]:not([display]) {
+  display: none;
+}
+.cbi-dropdown > ul > li[placeholder][display] {
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+.cbi-dropdown > .more,
+.cbi-dropdown > .open {
+  flex-shrink: 0;
+  padding: 0 var(--space-xs);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+.cbi-dropdown > .more {
+  display: none;
+}
+.cbi-dropdown[open] {
+  position: relative;
+  z-index: var(--z-modal);
+}
+.cbi-dropdown[open] > ul.dropdown {
+  /* Frosted glass dropdown list — matches sidebar/modal aesthetic.
+       Don't set top/left/bottom — LuCI's ui.js computes them inline based
+       on available viewport space. LuCI's inline `max-height` can clamp
+       to ~65px when the trigger is near the viewport edge, so override
+       with !important (matches argon).
+       ([#6](https://github.com/rchen14b/luci-theme-glass/issues/6)) */
+  position: absolute;
+  z-index: var(--z-modal);
+  width: auto;
+  min-width: 100%;
+  max-width: none;
+  max-height: 250px !important;
+  overflow-y: auto;
+  display: block;
+  border-radius: var(--radius-md);
+  padding: var(--space-xs);
+  color: var(--color-text);
+  background: var(--glass-bg-strong, rgba(255, 255, 255, 0.85));
+  backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.cbi-dropdown[open] > ul.dropdown > li {
+  display: flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-text);
+  transition: background var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.cbi-dropdown[open] > ul.dropdown > li:hover,
+.cbi-dropdown[open] > ul.dropdown > li.focus {
+  background: rgba(255, 255, 255, 0.55);
+}
+.cbi-dropdown[open] > ul.dropdown > li[selected] {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+  background: rgba(var(--color-primary-rgb), 0.1);
+}
+.cbi-dropdown[open] > ul.dropdown > li .hide-open {
+  display: none;
+}
+.cbi-dropdown[open] > ul.dropdown > li .hide-close {
+  display: initial;
+}
+.cbi-dropdown[open] > ul.preview {
+  display: flex;
+}
+.cbi-dropdown > div {
+  display: none;
+}
+.cbi-dropdown.btn,
+.cbi-dropdown.cbi-button {
+  padding: 0;
+}
+.cbi-dropdown.btn > ul > li[display],
+.cbi-dropdown.cbi-button > ul > li[display] {
+  padding: var(--space-sm) var(--space-lg);
+}
+.cbi-dropdown.cbi-button-apply > .open,
+.cbi-dropdown.cbi-button-positive > .open,
+.cbi-dropdown.cbi-button-save > .open {
+  color: var(--color-primary);
+}
+/* ---- Tabs ---- */
+.cbi-tabmenu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  list-style: none;
+  margin: 0 0 var(--space-xl);
+  padding: var(--space-xs);
+  padding-left: var(--space-xs);
+  border-radius: var(--radius-md);
+  /* Glass tab bar — match header/sub-nav pattern */
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%);
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04), inset 0 0 0.5px rgba(255, 255, 255, 0.08), inset 0 0 12px rgba(255, 255, 255, 0.1);
+}
+.cbi-tabmenu li a {
+  display: block;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+.cbi-tabmenu li a:hover {
+  color: var(--color-text);
+  background: rgba(0, 0, 0, 0.04);
+}
+.cbi-tabmenu li.cbi-tab a {
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--color-text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.6), inset 0 0 6px rgba(255, 255, 255, 0.15);
+}
+/* Tab content panels — hide inactive tabs.
+   Use [data-tab] selector (tab panels have data-tab + data-tab-title).
+   Individual form fields may have data-tab-title only — don't hide those.
+   IMPORTANT: Do NOT use !important here — LuCI's dependency system needs
+   to evaluate fields in all tabs during page load to set proper visibility. */
+[data-tab][data-tab-title]:not([data-tab-active="true"]) {
+  display: none;
+}
+/* ---- Alerts / Messages ----
+   Only the container is tinted — body text stays at `--color-text` so
+   plugins like Attended Sysupgrade, which dump labels + version numbers
+   inside the alert, remain readable. Tint applies to heading (`h4`) and
+   the left border accent instead
+   ([#7?]). */
+.alert-message,
+.cbi-section-error {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-lg);
+  color: var(--color-text);
+  background: rgba(90, 200, 250, 0.08);
+  border: 0.5px solid rgba(90, 200, 250, 0.2);
+  border-left: 3px solid var(--color-info);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+.alert-message > h4,
+.cbi-section-error > h4,
+.alert-message > .title,
+.cbi-section-error > .title,
+.alert-message > strong:first-child,
+.cbi-section-error > strong:first-child {
+  color: var(--color-info);
+  margin-bottom: var(--space-xs);
+}
+.alert-message.notice,
+.alert-message.info {
+  background: rgba(90, 200, 250, 0.1);
+  border: 0.5px solid rgba(90, 200, 250, 0.3);
+  border-left: 3px solid var(--color-info);
+}
+.alert-message.warning {
+  background: rgba(255, 149, 0, 0.1);
+  border: 0.5px solid rgba(255, 149, 0, 0.3);
+  border-left: 3px solid var(--color-warning);
+}
+.alert-message.warning > h4,
+.alert-message.warning > .title,
+.alert-message.warning > strong:first-child {
+  color: var(--color-warning);
+}
+.alert-message.error,
+.cbi-section-error {
+  background: rgba(255, 59, 48, 0.1);
+  border: 0.5px solid rgba(255, 59, 48, 0.3);
+  border-left: 3px solid var(--color-danger);
+}
+.alert-message.error > h4,
+.cbi-section-error > h4,
+.alert-message.error > .title,
+.cbi-section-error > .title,
+.alert-message.error > strong:first-child,
+.cbi-section-error > strong:first-child {
+  color: var(--color-danger);
+}
+.alert-message.success {
+  background: rgba(52, 199, 89, 0.1);
+  border: 0.5px solid rgba(52, 199, 89, 0.3);
+  border-left: 3px solid var(--color-success);
+}
+.alert-message.success > h4,
+.alert-message.success > .title,
+.alert-message.success > strong:first-child {
+  color: var(--color-success);
+}
+/* ---- Progress bars ---- */
+.cbi-progressbar {
+  position: relative;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 0.5px solid rgba(0, 0, 0, 0.04);
+}
+.cbi-progressbar > div {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal);
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.75) 0%, rgba(var(--color-primary-rgb), 0.6) 50%, rgba(var(--color-primary-rgb), 0.7) 100%);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 6px rgba(255, 255, 255, 0.1);
+}
+.cbi-progressbar::after {
+  content: attr(title);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+}
+/* ---- Checkbox & Radio ---- */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-primary);
+}
+/* ---- Spinning indicator ---- */
+.spinning {
+  position: relative;
+  padding-left: 32px !important;
+}
+.spinning::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0.2em;
+  width: 32px;
+  content: "";
+  background: url(/luci-static/resources/icons/loading.svg) no-repeat center;
+  background-size: 16px;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* ---- Modal / Dialog ---- */
+#modal_overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: var(--z-modal);
+  /* Wide modals — CBI forms, sysupgrade, wireless edit */
+}
+#modal_overlay > .modal {
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow-lg);
+  border-radius: var(--radius-xl);
+  padding: var(--space-2xl);
+  max-width: 600px;
+  min-width: 270px;
+  width: calc(100% - var(--space-2xl) * 2);
+  max-height: calc(100vh - 4em);
+  overflow-y: auto;
+  z-index: calc(var(--z-modal) + 1);
+  /* Flatten any .cbi-section nested directly inside a modal — the modal
+       itself already has glass background + padding, so the inner section
+       creates a visible box-in-box with extra padding
+       ([#6](https://github.com/rchen14b/luci-theme-glass/issues/6)). */
+  /* Let open dropdowns render beyond the modal's scroll clip. */
+}
+#modal_overlay > .modal > * {
+  max-width: 100%;
+}
+#modal_overlay > .modal > pre,
+#modal_overlay > .modal > textarea {
+  white-space: pre-wrap;
+  overflow: auto;
+  width: 100%;
+}
+#modal_overlay > .modal > .cbi-section,
+#modal_overlay > .modal > form > .cbi-section,
+#modal_overlay > .modal > .cbi-map > .cbi-section {
+  padding: 0;
+  margin-bottom: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+#modal_overlay > .modal:has(.cbi-dropdown[open]) {
+  overflow: visible;
+}
+#modal_overlay > .modal.cbi-modal,
+#modal_overlay > .modal.uci-dialog {
+  max-width: 900px;
+}
+/* LuCI adds modal-overlay-active to <body>, not to #modal_overlay */
+body.modal-overlay-active #modal_overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* ── UCI Changes Dialog (Config / Changes) ── */
+.uci-dialog .cbi-section {
+  padding: 0;
+  margin: 0;
+  background: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+.uci-change-legend {
+  padding: 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.uci-change-legend-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--font-size-sm);
+}
+.uci-change-legend-label > ins,
+.uci-change-legend-label > del,
+.uci-change-legend-label > var {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  padding: 0;
+  text-decoration: none;
+  font-style: normal;
+  overflow: hidden;
+  /* hide text content inside the color swatch */
+  text-indent: -9999px;
+}
+.uci-change-legend-label > ins {
+  background-color: rgba(52, 199, 89, 0.25);
+  border: 1px solid rgba(52, 199, 89, 0.5);
+}
+.uci-change-legend-label > del {
+  background-color: rgba(255, 59, 48, 0.25);
+  border: 1px solid rgba(255, 59, 48, 0.5);
+}
+.uci-change-legend-label > var {
+  background-color: rgba(90, 200, 250, 0.2);
+  border: 1px solid rgba(90, 200, 250, 0.4);
+}
+.uci-change-list {
+  font-family: inherit;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  /* Nested ins/del inside var (inline changed values) */
+}
+.uci-change-list ins,
+.uci-change-list del,
+.uci-change-list var {
+  display: block;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-style: normal;
+  font-size: var(--font-size-sm);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.uci-change-list ins {
+  background-color: rgba(52, 199, 89, 0.1);
+  border: 0.5px solid rgba(52, 199, 89, 0.3);
+  color: var(--color-success);
+}
+.uci-change-list del {
+  background-color: rgba(255, 59, 48, 0.1);
+  border: 0.5px solid rgba(255, 59, 48, 0.3);
+  color: var(--color-danger);
+}
+.uci-change-list var {
+  background-color: rgba(90, 200, 250, 0.08);
+  border: 0.5px solid rgba(90, 200, 250, 0.2);
+  color: var(--color-info);
+}
+.uci-change-list var ins,
+.uci-change-list var del {
+  display: inline;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+.uci-change-list var ins {
+  color: var(--color-success);
+}
+.uci-change-list var del {
+  color: var(--color-danger);
+}
+/* Button row inside uci-dialog */
+.uci-change-list + .right,
+.uci-dialog .right {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+/* ==========================================================================
+   Login Page (sysauth) — luci-theme-glass
+   ========================================================================== */
+.login-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-xl);
+}
+.login-card {
+  /* True frosted glass — translucent, not white box */
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.2) 25%, rgba(245, 250, 255, 0.22) 50%, rgba(255, 255, 255, 0.18) 75%, rgba(240, 248, 255, 0.21) 100%);
+  background-color: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(30px) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 0 16px rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3xl) var(--space-2xl);
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+  text-align: center;
+}
+.login-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-lg);
+}
+.login-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--space-xs);
+  color: var(--color-text);
+}
+.login-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-sm);
+}
+.login-version {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--space-2xl);
+}
+.login-form {
+  text-align: left;
+}
+.login-form .login-field {
+  margin-bottom: var(--space-lg);
+}
+.login-form .login-field label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+}
+.login-form .login-field input {
+  width: 100%;
+  max-width: none;
+  padding: var(--space-md) var(--space-lg);
+  background: rgba(255, 255, 255, 0.3);
+  border: 0.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), inset 0 0 4px rgba(255, 255, 255, 0.08);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.login-form .login-field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.login-form .login-field input::placeholder {
+  color: var(--color-text-tertiary);
+}
+.login-btn {
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  /* Glass button — glass-ui .glass-bg pattern */
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%);
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04), inset 0 0 0.5px rgba(255, 255, 255, 0.08), inset 0 0 12px rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.login-btn:hover {
+  opacity: 0.9;
+}
+.login-btn:active {
+  transform: scale(0.98);
+  opacity: 0.8;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.login-error {
+  background: rgba(255, 59, 48, 0.1);
+  border: 1px solid rgba(255, 59, 48, 0.3);
+  color: var(--color-danger);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+/* ==========================================================================
+   Responsive — Media queries for tablet & mobile
+   ========================================================================== */
+/* Tablet: sidebar overlay */
+@media (max-width: 1024px) {
+  #sidebar {
+    transform: translateX(calc(-100% - var(--sidebar-gap)));
+  }
+  #sidebar.open {
+    transform: translateX(0);
+  }
+  #header {
+    left: 0;
+  }
+  #header-sub {
+    left: 0;
+    max-width: calc(100vw - var(--sidebar-gap));
+  }
+  #content-wrap {
+    margin-left: 0;
+  }
+  .glass-footer {
+    margin-left: 0;
+  }
+  .menu-toggle {
+    display: block;
+  }
+  .sidebar-overlay.active {
+    display: block;
+  }
+}
+/* Hide status indicators on small screens */
+@media (max-width: 768px) {
+  #status-indicators {
+    display: none !important;
+  }
+}
+/* Mobile: tighter spacing */
+@media (max-width: 640px) {
+  :root {
+    --content-padding: 16px;
+    --sidebar-width: 280px;
+  }
+  .cbi-value {
+    flex-direction: column;
+  }
+  .cbi-value-title {
+    flex: none;
+    padding-right: 0;
+    padding-bottom: var(--space-xs);
+  }
+  .cbi-page-actions {
+    flex-direction: column;
+  }
+  .cbi-page-actions .cbi-button {
+    width: 100%;
+  }
+  .login-card {
+    padding: var(--space-2xl) var(--space-xl);
+  }
+  .cbi-tabmenu {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+  .cbi-tabmenu li a {
+    white-space: nowrap;
+  }
+  table.cbi-section-table,
+  .table {
+    display: block;
+    overflow-x: auto;
+  }
+}
+/* ==========================================================================
+   Page Fixes — LuCI-specific overrides and quirks
+   ========================================================================== */
+/* LuCI wraps everything in #maincontent */
+#maincontent {
+  padding: 0;
+}
+/* ---- Interface boxes (general) ---- */
+.ifacebox {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  display: inline-flex;
+  flex-direction: column;
+  border-radius: var(--radius-md);
+  padding: 0;
+  margin-bottom: var(--space-md);
+  line-height: 1.25;
+  overflow: visible;
+  min-width: 100px;
+}
+.ifacebox-head {
+  font-weight: var(--font-weight-semibold);
+  padding: var(--space-sm) var(--space-lg);
+  margin: 0;
+  border-bottom: 0.5px solid var(--color-separator);
+  /* Zone-colored header — tinted glass instead of opaque */
+}
+.ifacebox-head[style*="background-color"] {
+  background-color: rgba(var(--zone-color-rgb), 0.5) !important;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-bottom: 0.5px solid rgba(var(--zone-color-rgb), 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.ifacebox-head.active {
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.75) 0%, rgba(var(--color-primary-rgb), 0.6) 50%, rgba(var(--color-primary-rgb), 0.7) 100%);
+  color: var(--color-text-inverse);
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+.ifacebox-body {
+  line-height: 1.5;
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm) var(--space-lg) var(--space-lg);
+  /* L.itemlist output — key-value pairs */
+  /* Device badge row */
+}
+.ifacebox-body > span {
+  display: block;
+  padding: var(--space-xs) 0;
+}
+.ifacebox-body > span > .nowrap {
+  display: inline-block;
+  margin-right: var(--space-md);
+  margin-bottom: 2px;
+}
+.ifacebox-body > span > .nowrap > strong {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+.ifacebox-body > div {
+  margin-top: var(--space-sm);
+}
+/* ---- Port status grid (29_ports.js) ---- */
+div[style*="display:grid;grid-template-columns:repeat"] {
+  gap: var(--space-md) !important;
+  margin-bottom: var(--space-lg) !important;
+}
+div[style*="display:grid;grid-template-columns:repeat"] > .ifacebox {
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center;
+  border-radius: var(--radius-md) !important;
+  /* Glass-ui card pattern */
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%) !important;
+  background-color: transparent !important;
+  backdrop-filter: blur(10px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(255, 255, 255, 0.08) inset, 0 0 12px rgba(255, 255, 255, 0.1) inset !important;
+  /* Zone color bar */
+}
+div[style*="display:grid;grid-template-columns:repeat"] > .ifacebox > .ifacebox-head {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 0;
+}
+div[style*="display:grid;grid-template-columns:repeat"] > .ifacebox > .ifacebox-body {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: var(--font-size-sm);
+  line-height: 1.3;
+}
+div[style*="display:grid;grid-template-columns:repeat"] > .ifacebox > .ifacebox-body img {
+  width: 28px;
+  height: 28px;
+  margin: 2px auto;
+}
+div[style*="display:grid;grid-template-columns:repeat"] > .ifacebox > .ifacebox-head.cbi-tooltip-container {
+  padding: 0;
+  border-bottom: none;
+}
+div[style*="display:grid;grid-template-columns:repeat"] > .ifacebox > .ifacebox-head.cbi-tooltip-container .zonebadge {
+  border-radius: 0;
+  padding: 0;
+}
+/* ---- Network status table (30_network.js) ---- */
+.network-status-table {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+.network-status-table .ifacebox {
+  flex: 1 1 300px;
+  margin: 0;
+}
+.network-status-table .ifacebox-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.network-status-table .ifacebox-body > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+.network-status-table .ifacebox-body .ifacebadge {
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+.network-status-table .ifacebox-body .ifacebadge > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* ---- Interface badges ---- */
+.ifacebadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 2px var(--space-sm);
+  margin-right: 0.4em;
+  min-width: max-content;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 4px rgba(255, 255, 255, 0.08);
+}
+.ifacebadge img {
+  width: 16px;
+  height: 16px;
+}
+/* Zone badges */
+.zonebadge {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  border: 0.5px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px) saturate(160%);
+  -webkit-backdrop-filter: blur(6px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 0 4px rgba(255, 255, 255, 0.06);
+}
+.zonebadge .ifacebadge {
+  margin: 1px 2px;
+  padding: 2px 4px;
+}
+/* ---- Tooltips ---- */
+.cbi-tooltip-container {
+  position: relative;
+}
+.cbi-tooltip {
+  display: none;
+  position: absolute;
+  z-index: var(--z-toast);
+  left: 0;
+  bottom: 100%;
+  margin-bottom: var(--space-xs);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm);
+  max-width: 300px;
+  white-space: normal;
+  line-height: 1.5;
+}
+.cbi-tooltip.left {
+  left: auto;
+  right: 0;
+}
+.cbi-tooltip-container:hover > .cbi-tooltip {
+  display: block;
+}
+/* System log */
+#syslog {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  overflow-y: hidden;
+  width: 100%;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+/* Terminal / command output */
+pre {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+/* Flatten pre inside modals — avoid box-in-box */
+.modal pre {
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: var(--space-sm) 0;
+}
+/* Native progress element (package manager, etc.) */
+progress {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border: none;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.06);
+}
+progress::-webkit-progress-bar {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+}
+progress::-webkit-progress-value {
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.75) 0%, rgba(var(--color-primary-rgb), 0.6) 50%, rgba(var(--color-primary-rgb), 0.7) 100%);
+  border-radius: var(--radius-full);
+}
+progress::-moz-progress-bar {
+  background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.75) 0%, rgba(var(--color-primary-rgb), 0.6) 50%, rgba(var(--color-primary-rgb), 0.7) 100%);
+  border-radius: var(--radius-full);
+}
+/* ACL/UBUS error page styling */
+#error-message {
+  text-align: center;
+  padding: var(--space-3xl);
+  color: var(--color-text-secondary);
+}
+/* LuCI diagnostics ping/traceroute output */
+#diag-rc-output {
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%);
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+/* File upload */
+.cbi-filebrowser {
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.12) 25%, rgba(240, 248, 255, 0.13) 50%, rgba(255, 255, 255, 0.11) 75%, rgba(230, 240, 255, 0.12) 100%);
+  background-color: transparent;
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.3), inset 0 0 6px rgba(255, 255, 255, 0.08);
+}
+/* Apply config spinner */
+#cbi_apply_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#cbi_apply_overlay .spinning {
+  width: 40px;
+  height: 40px;
+  padding-left: 0 !important;
+  border: 3px solid var(--color-bg-secondary);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+#cbi_apply_overlay .spinning::before {
+  display: none;
+}
+/* ---- Utility classes ---- */
+.nowrap {
+  white-space: nowrap;
+}
+.left {
+  text-align: left;
+}
+.center {
+  text-align: center;
+}
+.right {
+  text-align: right;
+}
+@media (max-width: 640px) {
+  .hide-xs {
+    display: none !important;
+  }
+}
+/* ---- Standalone section headings (DHCP, WiFi assoclist) ---- */
+#maincontent h3,
+#view h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin: var(--space-xl) 0 var(--space-md);
+}
+/* ---- Table sort indicators ---- */
+.th[data-sort-direction] {
+  cursor: pointer;
+  user-select: none;
+}
+.th[data-sort-direction]::after {
+  content: '';
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-left: var(--space-xs);
+  vertical-align: middle;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+}
+.th[data-sort-direction][data-sort-direction="asc"]::after {
+  border-bottom: 5px solid var(--color-text-secondary);
+}
+.th[data-sort-direction][data-sort-direction="desc"]::after {
+  border-top: 5px solid var(--color-text-secondary);
+}
+.th[data-sortable-row] {
+  cursor: pointer;
+}
+/* ---- Table placeholder (empty state) ---- */
+.tr.placeholder .td {
+  text-align: center;
+  padding: var(--space-2xl) var(--space-lg);
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+/* ---- Software / Package Manager page ---- */
+[data-page="admin-system-opkg"],
+[data-page="admin-system-package-manager"] {
+  /* Action buttons — glass pill style */
+  /* Override opkg.js inline CSS for controls layout */
+  /* All control sections — override inline flex: 1 1 33% */
+  /* Disk space — full width row */
+  /* Filter — share row, grow equally */
+  /* Download / install — share row, grow equally */
+  /* Actions — own row */
+  /* Translation filter — own row */
+  /* Labels — block above their control group */
+  /* Control groups — input + button inline */
+  /* Action buttons — inline row with gap */
+}
+[data-page="admin-system-opkg"] div.btn,
+[data-page="admin-system-package-manager"] div.btn {
+  display: inline-flex;
+  padding: var(--space-sm) var(--space-lg);
+}
+[data-page="admin-system-opkg"] .controls,
+[data-page="admin-system-package-manager"] .controls {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  gap: var(--space-md) var(--space-lg) !important;
+  margin: 0 0 var(--space-lg) 0 !important;
+}
+[data-page="admin-system-opkg"] .controls > div,
+[data-page="admin-system-package-manager"] .controls > div {
+  padding: 0 !important;
+  white-space: normal !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-end !important;
+}
+[data-page="admin-system-opkg"] .controls > div:first-child,
+[data-page="admin-system-package-manager"] .controls > div:first-child {
+  flex: 1 1 100% !important;
+}
+[data-page="admin-system-opkg"] .controls > div:nth-child(2),
+[data-page="admin-system-package-manager"] .controls > div:nth-child(2) {
+  flex: 1 1 200px !important;
+}
+[data-page="admin-system-opkg"] .controls > div:nth-child(3),
+[data-page="admin-system-package-manager"] .controls > div:nth-child(3) {
+  flex: 1 1 280px !important;
+}
+[data-page="admin-system-opkg"] .controls > div:nth-child(4),
+[data-page="admin-system-package-manager"] .controls > div:nth-child(4) {
+  flex: 1 1 100% !important;
+}
+[data-page="admin-system-opkg"] .controls > div:nth-child(5),
+[data-page="admin-system-package-manager"] .controls > div:nth-child(5) {
+  flex: 1 1 100% !important;
+}
+[data-page="admin-system-opkg"] .controls > div > label,
+[data-page="admin-system-package-manager"] .controls > div > label {
+  flex-basis: 100% !important;
+  min-width: 0 !important;
+  margin-bottom: var(--space-xs) !important;
+  font-weight: var(--font-weight-medium) !important;
+  font-size: var(--font-size-sm) !important;
+  color: var(--color-text-secondary) !important;
+}
+[data-page="admin-system-opkg"] .controls .control-group,
+[data-page="admin-system-package-manager"] .controls .control-group {
+  display: flex !important;
+  gap: var(--space-sm) !important;
+  flex: 1 1 auto !important;
+  align-items: center !important;
+}
+[data-page="admin-system-opkg"] .controls .control-group input[type="text"],
+[data-page="admin-system-package-manager"] .controls .control-group input[type="text"] {
+  flex: 1 1 auto !important;
+  min-width: 120px !important;
+  width: auto !important;
+}
+[data-page="admin-system-opkg"] .controls > div:nth-child(4) > .control-group,
+[data-page="admin-system-package-manager"] .controls > div:nth-child(4) > .control-group {
+  gap: var(--space-sm) !important;
+}

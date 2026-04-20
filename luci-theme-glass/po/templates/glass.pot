@@ -1,0 +1,46 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: ucode/template/themes/glass/sysauth.ut:50
+msgid "Login"
+msgstr ""
+
+#: ucode/template/themes/glass/sysauth.ut:104
+msgid "Sign in to continue"
+msgstr ""
+
+#: ucode/template/themes/glass/sysauth.ut:109
+msgid "Invalid username and/or password! Please try again."
+msgstr ""
+
+#: ucode/template/themes/glass/sysauth.ut:115
+msgid "Username"
+msgstr ""
+
+#: ucode/template/themes/glass/sysauth.ut:122
+msgid "Password"
+msgstr ""
+
+#: ucode/template/themes/glass/sysauth.ut:127
+msgid "Log in"
+msgstr ""
+
+#: ucode/template/themes/glass/header.ut:176
+msgid "No password set!"
+msgstr ""
+
+#: ucode/template/themes/glass/header.ut:177
+msgid "There is no password set on this router. Please configure a root password to protect the web interface."
+msgstr ""
+
+#: ucode/template/themes/glass/header.ut:179
+msgid "Go to password configuration..."
+msgstr ""
+
+#: ucode/template/themes/glass/header.ut:186
+msgid "JavaScript required!"
+msgstr ""
+
+#: ucode/template/themes/glass/header.ut:187
+msgid "You must enable JavaScript in your browser or LuCI will not work properly."
+msgstr ""

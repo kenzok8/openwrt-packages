@@ -1,0 +1,129 @@
+/* ==========================================================================
+   Normalize / Reset — luci-theme-glass
+   Minimal reset for LuCI pages.
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Glass scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 128, 0.35) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.35);
+  border-radius: 3px;
+
+  &:hover {
+    background: rgba(128, 128, 128, 0.55);
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-primary-hover);
+  }
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+}
+
+hr {
+  border: none;
+  border-top: 0.5px solid var(--color-border);
+  margin: var(--space-md) 0;
+}
+
+p {
+  margin-bottom: var(--space-sm);
+}
+
+ul, ol {
+  padding-left: 1.5em;
+  margin: var(--space-sm) 0;
+}
+
+li {
+  margin-bottom: 2px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+  color: var(--color-text);
+}
+
+h1 { font-size: var(--font-size-2xl); }
+h2 { font-size: var(--font-size-xl); }
+h3 { font-size: 1.125rem; }
+h4 { font-size: 1rem; }
+
+::selection {
+  background: rgba(var(--color-primary-rgb), 0.25);
+}
+
+/* LuCI injects <input type="submit" class="hidden"> at the top of every
+   CBI form. Without this rule the input renders as an unstyled browser
+   button (seen in PassWall, OpenAppFilter, etc). Both bootstrap and argon
+   themes ship this utility rule. */
+.hidden {
+  display: none;
+}

@@ -1,0 +1,9 @@
+msgid ""
+msgstr ""
+"Language: ko\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: ucode/template/themes/glass/sysauth.ut:104
+msgid "Sign in to continue"
+msgstr "계속하려면 로그인하세요"
