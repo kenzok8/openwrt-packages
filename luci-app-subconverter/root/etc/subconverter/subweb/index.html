@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subconverter</title>
+    <style>
+        :root {
+            --accent-color: #2196F3;
+            --accent-color-hover: #1976D2;
+            --background-color: #f5f5f5;
+            --surface-color: #ffffff;
+            --text-color: #212121;
+            --border-color: #bdbdbd;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background-color: #121212;
+                --surface-color: #1e1e1e;
+                --text-color: #e0e0e0;
+                --border-color: #424242;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 15px;
+            padding: 10px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--surface-color);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        textarea,
+        input[type="text"],
+        select {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--surface-color);
+            color: var(--text-color);
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: var(--accent-color-hover);
+        }
+
+        #moreConfig {
+            margin-top: 10px;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #moreConfig {
+                background-color: rgba(255, 255, 255, 0.05);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center">Subconverter</h1>
+        <div>
+            <label for="urls">订阅链接</label>
+            <textarea id="urls" placeholder="多订阅链接或节点请确保每行一条\n支持手动使用'|'分割多链接或节点" rows="5"></textarea>
+            <label for="client">客户端</label>
+            <select id="client">
+                <option value="clash">Clash</option>
+                <option value="clashr">ClashR</option>
+                <option value="v2ray">V2Ray</option>
+                <option value="quan">Quantumult</option>
+                <option value="quanx">Quantumult X</option>
+                <option value="surge&ver=2">SurgeV2</option>
+                <option value="surge&ver=3">SurgeV3</option>
+                <option value="surge&ver=4">SurgeV4</option>
+                <option value="surfboard">Surfboard</option>
+                <option value="ss">SS (SIP002)</option>
+                <option value="sssub">SS Android</option>
+                <option value="ssd">SSD</option>
+                <option value="ssr">SSR</option>
+                <option value="loon">Loon</option>
+                <option value="singbox">Sing-box</option>
+            </select>
+            <label for="api">后端服务</label>
+            <select id="api" onchange="selectApi()">
+                <option id="default_api"></option>
+                <option value="manual">自定义后端 API 地址</option>
+            </select>
+            <input type="text" id="manualApi" placeholder="自定义后端 API 地址示例：https://sub.ops.ci" style="display:none;" />
+
+            <label for="remote">远程配置</label>
+            <select id="remote" onchange="selectRemoteConfig()">
+                <option
+                    value="https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/config/ACL4SSR_Online.ini">
+                    ACL4SSR Online</option>
+                <option value="manual">自定义远程配置地址</option>
+            </select>
+            <input type="text" id="manualRemote" placeholder="自定义远程配置地址：" style="display:none;" />
+
+            <label for="include">可选参数</label>
+            <input type="text" id="include" placeholder="Include: 可选" />
+            <input type="text" id="exclude" placeholder="Exclude: 可选" />
+            <button onclick="toggleMoreConfig()">参数</button>
+            <div id="moreConfig" style="display:none;">
+                <label><input type="checkbox" id="emoji" checked> Emoji</label>
+                <label><input type="checkbox" id="udp" checked> 开启UDP</label>
+                <label><input type="checkbox" id="sort"> 排序节点</label>
+                <label><input type="checkbox" id="scv"> 关闭证书检查</label>
+                <label><input type="checkbox" id="nodelist"> Node List</label>
+            </div>
+
+            <input type="text" id="subUrl" placeholder="点击转换链接" readonly />
+            <button onclick="getSubUrl()">转换</button>
+        </div>
+
+    </div>
+    <script>
+        const apiUrl = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "");
+
+        const defaultApi = document.getElementById("default_api")
+        defaultApi.value = apiUrl;
+        defaultApi.textContent = apiUrl;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('api').addEventListener('change', selectApi);
+            document.getElementById('remote').addEventListener('change', selectRemoteConfig);
+        });
+
+        function selectApi() {
+            const apiSelect = document.getElementById('api');
+            const manualApiInput = document.getElementById('manualApi');
+            if (apiSelect.value === 'manual') {
+                manualApiInput.style.display = 'block';
+                manualApiInput.value = '';
+            } else {
+                manualApiInput.style.display = 'none';
+            }
+        }
+
+        function selectRemoteConfig() {
+            const remoteSelect = document.getElementById('remote');
+            const manualRemoteInput = document.getElementById('manualRemote');
+            if (remoteSelect.value === 'manual') {
+                manualRemoteInput.style.display = 'block';
+                manualRemoteInput.value = '';
+            } else {
+                manualRemoteInput.style.display = 'none';
+            }
+        }
+
+        function toggleMoreConfig() {
+            const moreConfigDiv = document.getElementById('moreConfig');
+            moreConfigDiv.style.display = moreConfigDiv.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function getSubUrl() {
+            const urls = document.getElementById('urls').value.trim();
+            const api = document.getElementById('api').value === 'manual' ? document.getElementById('manualApi').value : document.getElementById('api').value;
+            const target = document.getElementById('client').value;
+            const remoteConfig = document.getElementById('remote').value === 'manual' ? document.getElementById('manualRemote').value : document.getElementById('remote').value;
+
+            if (!urls) {
+                alert('请输入订阅链接或节点');
+                return;
+            }
+            if (!regexCheck(api)) {
+                alert('请输入自定义后端 API 地址，或选择默认后端服务。');
+                return;
+            }
+
+            const moreConfig = {
+                include: document.getElementById('include').value,
+                exclude: document.getElementById('exclude').value,
+                emoji: document.getElementById('emoji').checked,
+                udp: document.getElementById('udp').checked,
+                sort: document.getElementById('sort').checked,
+                scv: document.getElementById('scv').checked,
+                list: document.getElementById('nodelist').checked,
+            };
+
+            const subUrl = getSubLink(urls, api, target, remoteConfig, moreConfig);
+            document.getElementById('subUrl').value = subUrl;
+            copyToClipboard(subUrl);
+        }
+
+        function getSubLink(urls, api, target, remoteConfig, moreConfig) {
+            let linkLst = urls.split('\n');
+            let link = linkLst.join('|');
+            let finalUrl = `${api}/sub?target=${target}&url=${encodeURIComponent(link)}`;
+
+            if (remoteConfig) {
+                finalUrl += `&config=${encodeURIComponent(remoteConfig)}`;
+            }
+
+            if (moreConfig.include) {
+                finalUrl += `&include=${encodeURIComponent(moreConfig.include)}`;
+            }
+
+            if (moreConfig.exclude) {
+                finalUrl += `&exclude=${encodeURIComponent(moreConfig.exclude)}`;
+            }
+
+            finalUrl += `&emoji=${moreConfig.emoji}`;
+            finalUrl += `&udp=${moreConfig.udp}`;
+            finalUrl += `&sort=${moreConfig.sort}`;
+            finalUrl += `&scv=${moreConfig.scv}`;
+            finalUrl += `&list=${moreConfig.list}`;
+
+            return finalUrl;
+        }
+
+        function regexCheck(url) {
+            const reg_url = /https?:\/\/[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]/;
+            return reg_url.test(url);
+        }
+
+        function copyToClipboard(text) {
+            const copyInput = document.createElement('input');
+            copyInput.setAttribute('value', text);
+            document.body.appendChild(copyInput);
+            copyInput.select();
+            try {
+                document.execCommand('copy');
+                alert('复制成功');
+            } catch (err) {
+                alert('复制失败，请检查浏览器兼容性');
+            }
+            document.body.removeChild(copyInput);
+        }
+    </script>
+</body>
+
+</html>

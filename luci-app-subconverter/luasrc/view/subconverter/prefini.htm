@@ -1,0 +1,33 @@
+<%
+local text = luci.sys.exec("cat /etc/subconverter/pref.ini")
+
+if luci.http.formvalue("save") then
+    local file = io.open("/etc/subconverter/pref.ini", "w")
+    if file then
+        file:write(luci.http.formvalue("text"))
+        file:close()
+    end
+    luci.http.redirect(luci.dispatcher.build_url("admin", "services", "subconverter/prefini"))
+    return
+end
+
+if luci.http.formvalue("reset") then
+  luci.sys.exec("cp /etc/subconverter/pref.ini.bak /etc/subconverter/pref.ini")
+  luci.http.redirect(luci.dispatcher.build_url("admin", "services", "subconverter/prefini"))
+  return
+end
+%>
+<%+header%>
+<div>
+  <h2>pref.ini</h2>
+  <p class="cbi-section-descr">this is the configuration for <a href="https://github.com/asdlokj1qpi233/subconverter">subconverter</a>, located in "/etc/subconverter/pref.ini", only for advanced user. <a href="https://github.com/asdlokj1qpi233/subconverter/blob/master/README-cn.md">document</a></p>
+  <form method="POST">
+    <textarea style="width:100%" rows="25" name="text"><%= text %></textarea>
+    <div class="cbi-page-actions">
+      <button class="cbi-button cbi-button-save" name="save">Save</button>
+      <button class="cbi-button cbi-button-reset" name="reset">Reset</button>
+    </div>
+  </form>
+</div>
+<%+footer%>
+
