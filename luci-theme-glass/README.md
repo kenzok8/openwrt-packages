@@ -6,7 +6,7 @@ A glassmorphism theme for OpenWrt LuCI, inspired by Apple's visionOS and macOS. 
 
 ![License](https://img.shields.io/badge/license-GPL--3.0%20%2F%20Commercial-blue.svg)
 ![OpenWrt](https://img.shields.io/badge/OpenWrt-23.05%2B-brightgreen.svg)
-![Version](https://img.shields.io/badge/version-1.1.4-orange.svg)
+![Version](https://img.shields.io/badge/version-1.1.6-orange.svg)
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/rchen14b)
 
 ## Screenshots
@@ -79,7 +79,7 @@ wget -O /etc/apk/keys/glass-apk.rsa.pub \
   https://raw.githubusercontent.com/rchen14b/luci-theme-glass/main/root/etc/apk/keys/glass-apk.rsa.pub
 
 # Add feed and install
-echo "https://rchen14b.github.io/luci-theme-glass/apk/packages.adb" > /etc/apk/repositories.d/glass.list
+echo "https://rchen14b.github.io/luci-theme-glass/apk/packages.adb" >> /etc/apk/repositories.d/customfeeds.list
 apk update
 apk add luci-theme-glass
 ```

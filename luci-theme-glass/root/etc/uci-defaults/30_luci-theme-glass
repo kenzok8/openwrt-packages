@@ -1,12 +1,12 @@
 #!/bin/sh
 
-if [ "$PKG_UPGRADE" != 1 ]; then
-	uci get luci.themes.Glass >/dev/null 2>&1 || \
-	uci batch <<-EOF
-		set luci.themes.Glass=/luci-static/glass
-		set luci.main.mediaurlbase=/luci-static/glass
-		commit luci
-	EOF
-fi
+# Always keep Glass in the theme list so it remains selectable in LuCI
+uci -q set luci.themes.Glass=/luci-static/glass
+
+# Set as default only on fresh install -- don't stomp user choice on upgrade
+[ "$PKG_UPGRADE" = 1 ] || uci -q set luci.main.mediaurlbase=/luci-static/glass
+
+uci -q commit luci
+rm -f /tmp/luci-indexcache /tmp/luci-modulecache
 
 exit 0
