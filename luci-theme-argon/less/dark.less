@@ -39,12 +39,14 @@ body {
 }
 
 .login-page .login-container {
+    background-color: rgba(0, 0, 0, var(--blur-opacity-dark));
+    -webkit-backdrop-filter: blur(var(--blur-radius-dark));
+    backdrop-filter: blur(var(--blur-radius-dark));
 
     .login-form {
-        background-color: #1e1e1e;
-        -webkit-backdrop-filter: blur(var(--blur-radius-dark)) brightness(0);
-        backdrop-filter: blur(var(--blur-radius-dark)) brightness(0);
-        background-color: rgba(0, 0, 0, var(--blur-opacity-dark));
+        background-color: transparent;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
 
         .brand {
             color: #adb5bd;

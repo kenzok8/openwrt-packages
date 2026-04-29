@@ -876,6 +876,24 @@
     background: transparent;
 }
 
+// VPN - Passwall2
+[data-page^="admin-vpn-passwall2"],
+[data-page^="admin-services-passwall2"] {
+    .tr,
+    .td,
+    .th,
+    .cbi-section-table-row,
+    #cbi-passwall2-socks,
+    #cbi-passwall2-socks * {
+        overflow: visible !important;
+        max-height: none !important;
+        transform: none !important;
+        filter: none !important;
+        contain: none !important;
+        clip-path: none !important;
+    }
+}
+
 /* openvpn bug fix */
 .OpenVPN a {
     line-height: initial !important;
@@ -919,6 +937,24 @@
             width: 23rem;
         }
     }
+}
+
+#cbi-wireless,
+#cbi-wireless *,
+#wifi_assoclist_table,
+#wifi_assoclist_table * {
+    overflow: visible !important;
+    max-height: none !important;
+    transform: none !important;
+    filter: none !important;
+    contain: none !important;
+    clip-path: none !important;
+}
+
+#cbi-wireless,
+#wifi_assoclist_table {
+    height: auto !important;
+    min-height: 0 !important;
 }
 
 /* samba */
