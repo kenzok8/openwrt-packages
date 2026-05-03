@@ -9,26 +9,43 @@
 	import { getuid, getspnam } from 'luci.core';
 
 	const boardinfo = ubus.call('system', 'board');
-	const darkpref = uci.get('luci', 'main', 'darkmode') || 'auto';
-	let themepref = null;
-	switch (theme) {
-		case 'material3-blue': themepref = 'blue'; break;
-		case 'material3-green': themepref = 'green'; break;
-		case 'material3-red': themepref = 'red'; break;
-	}
 
 	http.prepare_content('text/html; charset=UTF-8');
 -%}
 
 <!DOCTYPE html>
-<html lang="{{ dispatcher.lang }}" data-darkmode="{{ darkpref }}" {{ themepref ? `data-theme="${themepref}"` : '' }}>
+<html lang="{{ dispatcher.lang }}">
 	<head>
 		<meta charset="utf-8">
-		<title>{{ striptags(`${boardinfo.hostname ?? '?'}${node ? ` - ${node.title}` : ''}`) }} - LuCI</title>
-		<meta name="viewport" content="initial-scale=1.0">
+		<title>{{ striptags(`${boardinfo.hostname ?? '?'}${dispatched?.title ? ` | ${_(dispatched.title)}` : ''}`) }}</title>
+		<script>
+			(function() {
+				var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)'),
+				    modeKey = 'material3-mode-debug',
+				    rootElement = document.querySelector(':root'),
+				    setDarkMode = function(match) {
+					    var mode = localStorage.getItem(modeKey);
+
+					    if (mode == 'light' || mode == 'dark') {
+						    rootElement.setAttribute('data-mode', mode);
+						    rootElement.setAttribute('data-darkmode', mode == 'dark' ? 'true' : 'false');
+					    }
+					    else {
+						    rootElement.removeAttribute('data-mode');
+						    rootElement.setAttribute('data-darkmode', match.matches ? 'true' : 'false');
+					    }
+				    };
+
+				window.material3ApplyColorMode = setDarkMode;
+				mediaQuery.addEventListener('change', setDarkMode);
+				setDarkMode(mediaQuery);
+			})();
+		</script>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="darkreader-lock">
 		<link rel="stylesheet" href="{{ media }}/cascade.css">
-		<link rel="stylesheet" media="screen and (max-width: 854px)" href="{{ media }}/mobile.css" />
-		<link rel="icon" href="{{ media }}/logo.svg" sizes="any">
+		<link rel="stylesheet" media="only screen and (max-device-width: 854px)" href="{{ media }}/mobile.css" />
+			<link rel="icon" href="{{ media }}/logo.svg" sizes="any">
 		{% if (node?.css): %}
 		<link rel="stylesheet" href="{{ resource }}/{{ node.css }}">
 		{% endif %}
@@ -37,277 +54,205 @@
 		{% endif %}
 		<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}"></script>
 		<script src="{{ resource }}/cbi.js"></script>
-
-
-		<style title="darkmode-support">
-			/* Dark mode toggle styles */
-			:root {
-				--transition-duration: 0.3s;
-				--theme-switch-size: 42px;
-				--theme-switch-height: 24px;
-				--theme-switch-handle-size: 16px;
+		<style>
+			#material3-debug-switcher {
+				position: fixed;
+				right: 16px;
+				bottom: 16px;
+				z-index: 1200;
+				font: 12px/1 var(--font-sans);
 			}
 
-			.theme-switch-container {
-				display: flex;
-				align-items: center;
-				position: relative;
-			}
-
-			.header-controls {
-				display: flex;
-				align-items: center;
-				gap: 16px;
-				margin-left: auto;
-				padding: 0 8px;
-			}
-
-			@media (max-width: 768px) {
-				.header-controls {
-					gap: 12px;
-				}
-			}
-
-			.theme-switch {
-				position: relative;
-				display: inline-block;
-				width: var(--theme-switch-size);
-				height: var(--theme-switch-height);
-				cursor: pointer;
-			}
-
-			.theme-switch input {
-				opacity: 0;
-				width: 0;
-				height: 0;
-			}
-
-			.slider {
-				position: absolute;
-				cursor: pointer;
-				inset: 0;
-				background-color: var(--switch-bg, #ccc);
-				transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-				border-radius: var(--theme-switch-height);
-				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-			}
-
-			.slider:before {
-				position: absolute;
-				content: "";
-				height: var(--theme-switch-handle-size);
-				width: var(--theme-switch-handle-size);
-				left: 4px;
-				bottom: 4px;
-				background-color: var(--switch-handle, white);
-				transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
+			#material3-debug-switcher > button {
+				width: 42px;
+				height: 42px;
 				border-radius: 50%;
-				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+				border: 1px solid var(--border-color-medium);
+				background: var(--primary-color-high);
+				color: var(--on-primary-color);
+				box-shadow: 0 2px 8px rgba(0, 0, 0, .22);
 			}
 
-			input:checked + .slider {
-				background-color: var(--primary);
-			}
-
-			input:checked + .slider:before {
-				transform: translateX(18px);
-			}
-
-			/* Theme transition */
-			html {
-				transition: background-color var(--transition-duration) ease,
-							color var(--transition-duration) ease;
-			}
-
-			/* Theme toggle icon styles */
-			.theme-toggle {
-				position: relative;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 32px;
-				height: 32px;
-				border-radius: 50%;
-				transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-				background: transparent;
-			}
-
-			.theme-toggle:hover {
-				background-color: var(--md-sys-color-surface-variant);
-			}
-
-			.theme-toggle .icon {
-				position: absolute;
-				transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-				fill: var(--md-sys-color-refresh-button);
+			#material3-debug-switcher > button::before {
+				content: '';
+				display: block;
 				width: 20px;
 				height: 20px;
+				margin: auto;
+				background: currentColor;
+				-webkit-mask: url("{{ media }}/icons/palette.svg") center/contain no-repeat;
+				mask: url("{{ media }}/icons/palette.svg") center/contain no-repeat;
 			}
 
-			.theme-toggle .moon-icon {
-				opacity: 1;
-				transform: scale(1) rotate(0);
+			#material3-debug-switcher > div {
+				position: absolute;
+				right: 0;
+				bottom: 50px;
+				display: none;
+				grid-template-columns: repeat(3, 30px);
+				gap: 8px;
+				padding: 10px;
+				border: 1px solid var(--border-color-medium);
+				border-radius: 12px;
+				background: var(--background-color-high);
+				box-shadow: 0 4px 18px rgba(0, 0, 0, .22);
 			}
 
-			.theme-toggle .sun-icon {
-				opacity: 0;
-				transform: scale(0.5) rotate(90deg);
+			#material3-debug-switcher[open] > div {
+				display: grid;
 			}
 
-			html[data-darkmode="true"] .theme-toggle .moon-icon {
-				opacity: 0;
-				transform: scale(0.5) rotate(-90deg);
+			#material3-debug-switcher button[data-theme],
+			#material3-debug-switcher button[data-mode] {
+				width: 30px;
+				height: 30px;
+				border: 1px solid var(--border-color-medium);
+				border-radius: 50%;
+				background: var(--debug-color, var(--background-color-low));
+				color: var(--text-color-high);
+				box-shadow: inset 0 0 0 3px var(--background-color-high);
 			}
 
-			html[data-darkmode="true"] .theme-toggle .sun-icon {
-				opacity: 1;
-				transform: scale(1) rotate(0);
+			#material3-debug-switcher button[aria-pressed="true"] {
+				border-color: var(--primary-color-high);
+				box-shadow: inset 0 0 0 3px var(--background-color-high), 0 0 0 3px color-mix(in srgb, var(--primary-color-high) 30%, transparent);
 			}
 
-			.theme-toggle:hover .icon {
-				transform: rotate(15deg) scale(1.1);
+			#material3-debug-switcher button[data-mode] {
+				position: relative;
+				font-size: 0;
 			}
 
-			html[data-darkmode="true"] .theme-toggle:hover .icon {
-				transform: rotate(-15deg) scale(1.1);
+			#material3-debug-switcher button[data-mode]::before {
+				content: '';
+				position: absolute;
+				inset: 0;
+				width: 18px;
+				height: 18px;
+				margin: auto;
+				background: currentColor;
+				-webkit-mask: var(--debug-mode-icon) center/contain no-repeat;
+				mask: var(--debug-mode-icon) center/contain no-repeat;
 			}
 
-			/* 添加点击效果 */
-			.theme-toggle:active .icon {
-				transform: scale(0.95);
+			#material3-debug-switcher button[data-mode="light"] {
+				--debug-mode-icon: url("{{ media }}/icons/sun.svg");
 			}
 
-			/* System preference detection */
-			@media (prefers-color-scheme: dark) {
-				html[data-darkmode="auto"] {
-					--primary: #bb86fc;
-					--surface-1: #121212;
-					--surface-2: #1e1e1e;
-					--on-surface: #ffffff;
-					--on-surface-variant: rgba(255, 255, 255, 0.7);
-				}
+			#material3-debug-switcher button[data-mode="dark"] {
+				--debug-mode-icon: url("{{ media }}/icons/moon.svg");
+			}
+
+			#material3-debug-switcher button[data-mode="auto"] {
+				--debug-mode-icon: url("{{ media }}/icons/auto.svg");
 			}
 		</style>
+		<script>
+			(function() {
+				var root = document.documentElement,
+				    themeKey = 'material3-theme-debug',
+				    modeKey = 'material3-mode-debug',
+				    savedTheme = localStorage.getItem(themeKey);
 
+				if (savedTheme)
+					root.setAttribute('data-theme', savedTheme);
 
+				document.addEventListener('DOMContentLoaded', function() {
+					if (!window.L || !L.env || L.env.requestpath.join('/') != 'admin/system/system')
+						return;
+
+					var themes = [
+						['baseline', '#6750A4'],
+						['blue', '#0061A4'],
+						['green', '#006D3A'],
+						['teal', '#006A6A'],
+						['orange', '#8F4C00'],
+						['vivid-orange', '#E85D04'],
+						['sakura', '#BB1614'],
+						['rose', '#BA1A46'],
+						['gray', '#3F3F46']
+					];
+					var switcher = document.createElement('div'),
+					    toggle = document.createElement('button'),
+					    panel = document.createElement('div');
+
+					switcher.id = 'material3-debug-switcher';
+					toggle.type = 'button';
+					toggle.title = 'Material3 debug switcher';
+					toggle.setAttribute('aria-label', 'Material3 debug switcher');
+					toggle.addEventListener('click', function() {
+						switcher.toggleAttribute('open');
+					});
+
+					function setPressed() {
+						var theme = root.getAttribute('data-theme') || 'baseline',
+						    mode = localStorage.getItem(modeKey) || 'auto';
+
+						panel.querySelectorAll('[data-theme]').forEach(function(button) {
+							button.setAttribute('aria-pressed', button.getAttribute('data-theme') == theme ? 'true' : 'false');
+						});
+
+						panel.querySelectorAll('[data-mode]').forEach(function(button) {
+							button.setAttribute('aria-pressed', button.getAttribute('data-mode') == mode ? 'true' : 'false');
+						});
+					}
+
+					themes.forEach(function(item) {
+						var button = document.createElement('button');
+						button.type = 'button';
+						button.title = item[0];
+						button.setAttribute('data-theme', item[0]);
+						button.style.setProperty('--debug-color', item[1]);
+						button.addEventListener('click', function() {
+							root.setAttribute('data-theme', item[0]);
+							localStorage.setItem(themeKey, item[0]);
+							setPressed();
+						});
+						panel.appendChild(button);
+					});
+
+					['auto', 'light', 'dark'].forEach(function(mode) {
+						var button = document.createElement('button');
+						button.type = 'button';
+						button.title = mode;
+						button.setAttribute('aria-label', mode);
+						button.setAttribute('data-mode', mode);
+						button.addEventListener('click', function() {
+							if (mode == 'auto')
+								localStorage.removeItem(modeKey);
+							else
+								localStorage.setItem(modeKey, mode);
+
+							if (window.material3ApplyColorMode)
+								window.material3ApplyColorMode(window.matchMedia('(prefers-color-scheme: dark)'));
+
+							setPressed();
+						});
+						panel.appendChild(button);
+					});
+
+					switcher.append(toggle, panel);
+					document.body.appendChild(switcher);
+					setPressed();
+				});
+			})();
+		</script>
 	</head>
 
 	<body class="lang_{{ dispatcher.lang }} {{ entityencode(striptags(node?.title ?? ''), true) }}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
 		{% if (!blank_page): %}
 		<header>
-			<div class="menu-btn">
-				<span aria-label="{{ _('Toggle navigation menu') }}"></span>
-			</div>
-
+			<button class="menu-btn" type="button" aria-label="{{ _('Toggle navigation menu') }}" aria-expanded="false">
+				<span></span>
+			</button>
 			<a class="brand" href="/">{{ striptags(boardinfo.hostname ?? '?') }}</a>
-
-			<div class="header-controls">
-				<a href="#" class="header-icon theme-toggle" id="theme-toggle" title="{{ _('Toggle dark mode') }}">
-					<svg class="icon moon-icon" width="20" height="25" viewBox="0 0 24 24">
-						<path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1-8.313-12.454z"/>
-					</svg>
-					<svg class="icon sun-icon" width="20" height="25" viewBox="0 0 24 24">
-						<path d="M12 18a6 6 0 1 1 0-12 6 6 0 0 1 0 12zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM11 1h2v3h-2V1zm0 19h2v3h-2v-3zM3.515 4.929l1.414-1.414L7.05 5.636 5.636 7.05 3.515 4.93zM16.95 18.364l1.414-1.414 2.121 2.121-1.414 1.414-2.121-2.121zm2.121-14.85l1.414 1.415-2.121 2.121-1.414-1.414 2.121-2.121zM5.636 16.95l1.414 1.414-2.121 2.121-1.414-1.414 2.121-2.121zM23 11v2h-3v-2h3zM4 11v2H1v-2h3z"/>
-					</svg>
-				</a>
-
-				<div id="indicators" class="pull-right"></div>
-			</div>
+			<div id="indicators" class="pull-right"></div>
 		</header>
-		<script>
-		document.addEventListener('DOMContentLoaded', function() {
-			const toggle = document.getElementById('theme-toggle');
-			const html = document.documentElement;
-			const transitionDuration = 300; // ms
 
-			// 初始化主题（自动检测+记忆手动设置）
-			function initTheme() {
-				const manualMode = localStorage.getItem('luci-theme-manual');
-				const autoMode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'true' : 'false';
-				const initMode = manualMode || autoMode;
-				
-				// 添加过渡类
-				html.classList.add('theme-transition');
-				html.setAttribute('data-darkmode', initMode);
-				updateToggleState(initMode);
-				
-				// 移除过渡类
-				setTimeout(() => {
-					html.classList.remove('theme-transition');
-				}, transitionDuration);
-			}
-
-			// 更新开关状态
-			function updateToggleState(isDark) {
-				if (toggle) {
-					toggle.checked = isDark === 'true';
-					// 添加切换动画
-					toggle.classList.add('theme-switching');
-					setTimeout(() => {
-						toggle.classList.remove('theme-switching');
-					}, transitionDuration);
-				}
-			}
-
-			// 切换主题（单次点击）
-			function toggleTheme() {
-				const current = html.getAttribute('data-darkmode');
-				const newMode = current === 'true' ? 'false' : 'true';
-
-				// 添加过渡类
-				html.classList.add('theme-transition');
-				
-				// 更新状态
-				html.setAttribute('data-darkmode', newMode);
-				localStorage.setItem('luci-theme-manual', newMode);
-				updateToggleState(newMode);
-
-				// 移除过渡类
-				setTimeout(() => {
-					html.classList.remove('theme-transition');
-				}, transitionDuration);
-
-				// 同步到服务端
-				fetch('<%=url("admin/system/set-darkmode")%>', {
-					method: 'POST',
-					headers: { 'Content-Type': 'application/json' },
-					body: JSON.stringify({
-						mode: newMode,
-						source: 'manual'
-					})
-				}).catch(error => {
-					console.error('Failed to sync theme preference:', error);
-				});
-			}
-
-			// 监听系统主题变化
-			window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-				if (!localStorage.getItem('luci-theme-manual')) {
-					const newMode = e.matches ? 'true' : 'false';
-					html.classList.add('theme-transition');
-					html.setAttribute('data-darkmode', newMode);
-					updateToggleState(newMode);
-					setTimeout(() => {
-						html.classList.remove('theme-transition');
-					}, transitionDuration);
-				}
-			});
-
-			// 初始化
-			initTheme();
-
-			// 点击事件
-			if (toggle) {
-				toggle.addEventListener('click', function(e) {
-					e.preventDefault();
-					toggleTheme();
-				});
-			}
-		});
-		</script>
-		<aside class="sidebar">
+		<aside class="sidebar" aria-label="{{ _('Navigation') }}">
 			<ul class="nav" id="topmenu" style="display:none"></ul>
 		</aside>
+		<div class="sidebar-overlay"></div>
 
 		<div id="maincontent" class="container">
 			{% if (getuid() == 0 && getspnam('root')?.pwdp === ''): %}

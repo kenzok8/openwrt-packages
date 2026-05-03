@@ -3,85 +3,125 @@
 'require ui';
 
 return baseclass.extend({
-	__init__: function () {
-		ui.menu.load().then(L.bind(this.render, this));
-		this.initMenuToggle();
-		this.initRippleEffect();
-		this.initHeaderShadow();
+	__init__() {
+		ui.menu.load().then((tree) => this.render(tree));
+		this.initNavigationShell();
 	},
 
-	createRipple: function (event, target) {
-		// 移除已有的水波纹
-		var oldRipple = target.querySelector('.ripple');
-		if (oldRipple) {
+	createRipple(ev, target) {
+		const oldRipple = target.querySelector('.ripple');
+
+		if (oldRipple)
 			oldRipple.remove();
-		}
 
-		// 创建并设置水波纹
-		var ripple = document.createElement('div');
-		ripple.className = 'ripple';
-		ripple.style.left = event.clientX - target.getBoundingClientRect().left + 'px';
-		ripple.style.top = event.clientY - target.getBoundingClientRect().top + 'px';
+		const rect = target.getBoundingClientRect();
+		const ripple = E('span', { 'class': 'ripple' });
 
-		// 添加水波纹并设置自动移除
+		ripple.style.left = '%dpx'.format(ev.clientX - rect.left);
+		ripple.style.top = '%dpx'.format(ev.clientY - rect.top);
 		target.appendChild(ripple);
-		ripple.addEventListener('animationend', function () {
-			ripple.remove();
-		});
+		ripple.addEventListener('animationend', () => ripple.remove());
 	},
 
-	initMenuToggle: function () {
-		var menuBtn = document.querySelector('.menu-btn');
-		var sidebar = document.querySelector('.sidebar');
-		var body = document.body;
+	toggleDropdown(li) {
+		const submenu = Array.prototype.find.call(li.children, child => child.classList.contains('dropdown-menu'));
 
-		// 创建遮罩层
-		var overlay = document.createElement('div');
-		overlay.className = 'sidebar-overlay';
-		document.body.appendChild(overlay);
+		if (!submenu)
+			return;
 
-		if (menuBtn && sidebar) {
-			// 点击菜单按钮
-			menuBtn.addEventListener('click', function () {
-				menuBtn.classList.toggle('active');
-				sidebar.classList.toggle('active');
-				overlay.classList.toggle('active');
-				body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
-			});
-
-			// 点击遮罩层关闭菜单
-			overlay.addEventListener('click', function () {
-				menuBtn.classList.remove('active');
-				sidebar.classList.remove('active');
-				overlay.classList.remove('active');
-				body.style.overflow = '';
-			});
+		if (li.classList.contains('open')) {
+			submenu.style.height = '%dpx'.format(submenu.scrollHeight);
+			submenu.offsetHeight;
+			li.classList.remove('open');
+			submenu.style.height = '0px';
+		}
+		else {
+			this.closeOtherMenus(li);
+			li.classList.add('open');
+			submenu.style.height = '%dpx'.format(submenu.scrollHeight);
 		}
 	},
 
-	// 关闭其他展开的菜单
-	closeOtherMenus: function (currentMenu) {
-		var openMenus = document.querySelectorAll('#topmenu > li.open');
+	closeOtherMenus(currentMenu) {
+		document.querySelectorAll('#topmenu > li.open').forEach(menu => {
+			if (menu === currentMenu)
+				return;
 
-		openMenus.forEach(function (menu) {
-			if (menu !== currentMenu) {
-				var submenu = menu.querySelector('.dropdown-menu');
-				if (submenu) {
-					// 先设置实际高度，以便动画正常工作
-					submenu.style.height = submenu.scrollHeight + 'px';
-					// 强制重排
-					submenu.offsetHeight;
-					// 开始收起动画
-					submenu.style.height = '0px';
-					menu.classList.remove('open');
-				}
-			}
+			const submenu = menu.querySelector('.dropdown-menu');
+
+			if (!submenu)
+				return;
+
+			submenu.style.height = '%dpx'.format(submenu.scrollHeight);
+			submenu.offsetHeight;
+			submenu.style.height = '0px';
+			menu.classList.remove('open');
 		});
 	},
 
-	render: function (tree) {
-		var node = tree,
-			url = '';
+	initNavigationShell() {
+		const button = document.querySelector('.menu-btn');
+		const sidebar = document.querySelector('.sidebar');
+		const overlay = document.querySelector('.sidebar-overlay');
+		const header = document.querySelector('header');
+
+		if (header) {
+			window.addEventListener('scroll', () => {
+				header.classList.toggle('with-shadow', window.scrollY > 8);
+			});
+		}
+
+		if (!button || !sidebar || !overlay)
+			return;
+
+		const close = () => {
+			sidebar.classList.remove('active');
+			overlay.classList.remove('active');
+			button.classList.remove('active');
+			document.body.style.overflow = '';
+			button.setAttribute('aria-expanded', 'false');
+		};
+
+		button.addEventListener('click', () => {
+			sidebar.classList.toggle('active');
+			overlay.classList.toggle('active');
+			const isOpen = sidebar.classList.contains('active');
+
+			button.classList.toggle('active', isOpen);
+			document.body.style.overflow = isOpen ? 'hidden' : '';
+			button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+		});
+
+		overlay.addEventListener('click', close);
+
+		document.addEventListener('keydown', ev => {
+			if (ev.key == 'Escape')
+				close();
+		});
+
+		sidebar.addEventListener('click', ev => {
+			const link = ev.target.closest('a[href]');
+
+			if (!link)
+				return;
+
+			this.createRipple(ev, link);
+
+			if (link.getAttribute('href') != '#')
+				close();
+		});
+
+		document.addEventListener('click', ev => {
+			const target = ev.target.closest('.tabs > li, .cbi-tabmenu > li');
+
+			if (target)
+				this.createRipple(ev, target);
+		});
+		},
+
+	render(tree) {
+		let node = tree;
+		let url = '';
 
 		this.renderModeMenu(tree);
 
@@ -96,23 +136,23 @@ return baseclass.extend({
 		}
 	},
 
-	renderTabMenu: function (tree, url, level) {
-		var container = document.querySelector('#tabmenu'),
-			ul = E('ul', { 'class': 'tabs' }),
-			children = ui.menu.getChildren(tree),
-			activeNode = null;
+	renderTabMenu(tree, url, level) {
+		const container = document.querySelector('#tabmenu');
+		const ul = E('ul', { 'class': 'tabs' });
+		const children = ui.menu.getChildren(tree);
+		let activeNode = null;
 
-		for (var i = 0; i < children.length; i++) {
-			var isActive = (L.env.dispatchpath[3 + (level || 0)] == children[i].name),
-				activeClass = isActive ? ' active' : '',
-				className = 'tabmenu-item-%s %s'.format(children[i].name, activeClass);
+		children.forEach(child => {
+			const isActive = (L.env.dispatchpath[3 + (level || 0)] == child.name);
+			const activeClass = isActive ? ' active' : '';
+			const className = 'tabmenu-item-%s %s'.format(child.name, activeClass);
 
 			ul.appendChild(E('li', { 'class': className }, [
-				E('a', { 'href': L.url(url, children[i].name) }, [children[i].name === 'nas' ? 'NAS' : _(children[i].title)])]));
+				E('a', { 'href': L.url(url, child.name) }, [ _(child.title) ] )]));
 
 			if (isActive)
-				activeNode = children[i];
-		}
+				activeNode = child;
+		});
 
 		if (ul.children.length == 0)
 			return E([]);
@@ -126,128 +166,78 @@ return baseclass.extend({
 		return ul;
 	},
 
-	renderMainMenu: function (tree, url, level) {
-		var self = this;
-		var ul = level ? E('ul', { 'class': 'dropdown-menu' }) : document.querySelector('#topmenu'),
-			children = ui.menu.getChildren(tree);
+	renderMainMenu(tree, url, level) {
+		const ul = level ? E('ul', { 'class': 'dropdown-menu' }) : document.querySelector('#topmenu');
+		const children = ui.menu.getChildren(tree);
 
 		if (children.length == 0 || level > 1)
 			return E([]);
 
-		for (var i = 0; i < children.length; i++) {
-			var submenu = this.renderMainMenu(children[i], url + '/' + children[i].name, (level || 0) + 1),
-				subclass = (!level && submenu.firstElementChild) ? 'dropdown' : null,
-				linkclass = (!level && submenu.firstElementChild) ? 'menu' : null,
-				linkurl = submenu.firstElementChild ? '#' : L.url(url, children[i].name);
-
-			var currentPath = L.env.requestpath.join('/');
-			var itemPath = (url + '/' + children[i].name).replace(/^\/+/, '');
-			var isActive = currentPath.startsWith(itemPath);
-
-			if (isActive && submenu.firstElementChild) {
-				subclass = 'dropdown open active';
-				// 直接设置展开状态
-				submenu.style.display = 'block';
-				submenu.style.height = 'auto';
-			}
-			else if (isActive) {
-				subclass = 'active';
-			}
-			else if (submenu.firstElementChild) {
-				subclass = 'dropdown';
-				submenu.style.height = '0px';
-			}
-
-			var li = E('li', {
+		children.forEach(child => {
+			const submenu = this.renderMainMenu(child, url + '/' + child.name, (level || 0) + 1);
+			const itemPath = (url + '/' + child.name).replace(/^\/+/, '');
+			const currentPath = L.env.requestpath.join('/');
+			const isActive = currentPath == itemPath || currentPath.indexOf(itemPath + '/') == 0;
+			const hasSubmenu = !!submenu.firstElementChild;
+			const subclass = [
+				hasSubmenu ? 'dropdown' : '',
+				isActive ? 'active' : '',
+				(!level && hasSubmenu && isActive) ? 'open' : ''
+			].filter(Boolean).join(' ');
+			const linkclass = (!level && hasSubmenu) ? 'menu' : '';
+			const linkurl = hasSubmenu ? '#' : L.url(url, child.name);
+			const attrs = {
 				'class': subclass,
 				'data-path': itemPath
-			}, [
-				E('a', {
-					'class': linkclass,
-					'href': linkurl,
-					'click': (function (submenu, hasSubmenu, targetUrl, ev) {
-						// 添加水波纹效果
-						self.createRipple(ev, ev.currentTarget);
+			};
+			const linkAttrs = {
+				'class': linkclass,
+				'href': linkurl
+			};
 
-						if (hasSubmenu) {
-							ev.preventDefault();
-							ev.stopPropagation();
+			if (!level && hasSubmenu) {
+				linkAttrs.click = ev => {
+					ev.preventDefault();
+					this.toggleDropdown(ev.currentTarget.parentNode);
+				};
+			}
 
-							var parentLi = ev.currentTarget.parentNode;
-							var dropdownMenu = submenu;
-
-							if (parentLi.classList.contains('open')) {
-								// 先获取当前高度
-								dropdownMenu.style.height = dropdownMenu.scrollHeight + 'px';
-								// 强制重排
-								dropdownMenu.offsetHeight;
-								// 开始收起动画
-								parentLi.classList.remove('open');
-								dropdownMenu.style.height = '0px';
-							} else {
-								self.closeOtherMenus(parentLi);
-								parentLi.classList.add('open');
-								// 移除auto和display设置，以便动画生效
-								dropdownMenu.style.display = '';
-								dropdownMenu.style.height = dropdownMenu.scrollHeight + 'px';
-							}
-						}
-						else if (targetUrl) {
-							location.href = targetUrl;
-						}
-					}).bind(null, submenu, !!submenu.firstElementChild, linkurl)
-				}, [children[i].name === 'nas' ? 'NAS' : _(children[i].title)]),
+			const li = E('li', attrs, [
+				E('a', linkAttrs, [
+					_(child.title),
+				]),
 				submenu
 			]);
 
+			if (!level && hasSubmenu && isActive)
+				submenu.style.height = 'auto';
+
 			ul.appendChild(li);
-		}
+		});
 
 		ul.style.display = '';
 
 		return ul;
 	},
 
-	renderModeMenu: function (tree) {
-		var ul = document.querySelector('#modemenu'),
-			children = ui.menu.getChildren(tree);
+	renderModeMenu(tree) {
+		const ul = document.querySelector('#modemenu');
+		const children = ui.menu.getChildren(tree);
 
-		for (var i = 0; i < children.length; i++) {
-			var isActive = (L.env.requestpath.length ? children[i].name == L.env.requestpath[0] : i == 0);
+		children.forEach((child, index) => {
+			const isActive = L.env.requestpath.length
+				? child.name === L.env.requestpath[0]
+				: index === 0;
 
-			ul.appendChild(E('li', { 'class': isActive ? 'active' : null }, [
-				E('a', { 'href': L.url(children[i].name) }, [children[i].name === 'nas' ? 'NAS' : _(children[i].title)])
+			ul.appendChild(E('li', { 'class': isActive ? 'active' : '' }, [
+				E('a', { 'href': L.url(child.name) }, [ _(child.title) ])
 			]));
 
 			if (isActive)
-				this.renderMainMenu(children[i], children[i].name);
-		}
+				this.renderMainMenu(child, child.name);
+		});
 
 		if (ul.children.length > 1)
 			ul.style.display = '';
-	},
-
-	initRippleEffect: function () {
-		var self = this;
-		document.addEventListener('click', function (e) {
-			// 排除一级菜单的点击，因为它们已经在自己的点击事件中处理了水波纹
-			var target = e.target.closest('.dropdown-menu>li>a, .tabs>li, .cbi-tabmenu>li');
-			if (!target) return;
-
-			self.createRipple(e, target);
-		});
-	},
-
-	initHeaderShadow: function () {
-		var header = document.querySelector('header');
-		var scrollThreshold = 10; // 滚动阈值
-
-		window.addEventListener('scroll', function () {
-			if (window.scrollY > scrollThreshold) {
-				header.classList.add('with-shadow');
-			} else {
-				header.classList.remove('with-shadow');
-			}
-		});
 	}
 });
