@@ -8,6 +8,9 @@
 				/
 				<a href="{{ entityencode(version.disturl ?? '#', true) }}" target="_blank" rel="noreferrer">
 					{{ version.distname }} {{ version.distversion }} ({{ version.distrevision }})</a>
+				/
+				<a href="https://github.com/KawaiiHachimi/luci-theme-material3" target="_blank" rel="noreferrer">
+					luci-theme-material3</a>
 				{% if (lua_active): %}
 					/ {{ _('Lua compatibility mode active') }}
 				{% endif %}

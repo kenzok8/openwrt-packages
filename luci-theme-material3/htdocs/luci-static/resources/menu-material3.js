@@ -64,11 +64,16 @@ return baseclass.extend({
 		const sidebar = document.querySelector('.sidebar');
 		const overlay = document.querySelector('.sidebar-overlay');
 		const header = document.querySelector('header');
+		const collapsedQuery = window.matchMedia('(max-width: 854px), (max-device-width: 854px)');
 
 		if (header) {
-			window.addEventListener('scroll', () => {
-				header.classList.toggle('with-shadow', window.scrollY > 8);
-			});
+			const updateHeaderShadow = () => {
+				header.classList.toggle('with-shadow', collapsedQuery.matches && window.scrollY > 8);
+			};
+
+			updateHeaderShadow();
+			window.addEventListener('scroll', updateHeaderShadow, { passive: true });
+			collapsedQuery.addEventListener('change', updateHeaderShadow);
 		}
 
 		if (!button || !sidebar || !overlay)
@@ -78,6 +83,7 @@ return baseclass.extend({
 			sidebar.classList.remove('active');
 			overlay.classList.remove('active');
 			button.classList.remove('active');
+			document.body.classList.remove('sidebar-open');
 			document.body.style.overflow = '';
 			button.setAttribute('aria-expanded', 'false');
 		};
@@ -88,6 +94,7 @@ return baseclass.extend({
 			const isOpen = sidebar.classList.contains('active');
 
 			button.classList.toggle('active', isOpen);
+			document.body.classList.toggle('sidebar-open', isOpen);
 			document.body.style.overflow = isOpen ? 'hidden' : '';
 			button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 		});
@@ -117,7 +124,23 @@ return baseclass.extend({
 			if (target)
 				this.createRipple(ev, target);
 		});
-		},
+
+		sidebar.addEventListener('mouseover', ev => {
+			const link = ev.target.closest('.nav a');
+				const title = link ? link.querySelector('.nav-menu-title') : null;
+
+				if (title && title.scrollWidth > title.clientWidth)
+					title.scrollTo({ left: title.scrollWidth - title.clientWidth, behavior: 'smooth' });
+			});
+
+		sidebar.addEventListener('mouseout', ev => {
+			const link = ev.target.closest('.nav a');
+				const title = link ? link.querySelector('.nav-menu-title') : null;
+
+				if (title && !link.contains(ev.relatedTarget))
+					title.scrollTo({ left: 0, behavior: 'smooth' });
+			});
+	},
 
 	render(tree) {
 		let node = tree;
@@ -148,7 +171,7 @@ return baseclass.extend({
 			const className = 'tabmenu-item-%s %s'.format(child.name, activeClass);
 
 			ul.appendChild(E('li', { 'class': className }, [
-				E('a', { 'href': L.url(url, child.name) }, [ _(child.title) ] )]));
+				E('a', { 'href': L.url(url, child.name) }, [_(child.title)])]));
 
 			if (isActive)
 				activeNode = child;
@@ -204,7 +227,7 @@ return baseclass.extend({
 
 			const li = E('li', attrs, [
 				E('a', linkAttrs, [
-					_(child.title),
+					E('span', { 'class': 'nav-menu-title' }, [_(child.title)]),
 				]),
 				submenu
 			]);
@@ -230,7 +253,7 @@ return baseclass.extend({
 				: index === 0;
 
 			ul.appendChild(E('li', { 'class': isActive ? 'active' : '' }, [
-				E('a', { 'href': L.url(child.name) }, [ _(child.title) ])
+				E('a', { 'href': L.url(child.name) }, [_(child.title)])
 			]));
 
 			if (isActive)

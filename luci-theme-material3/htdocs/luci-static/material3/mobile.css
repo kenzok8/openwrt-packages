@@ -2,10 +2,15 @@ header h3 a {
 	display: none !important;
 }
 
-footer {
-	width: 100%;
-	padding-left: 12px;
-	padding-right: 12px;
+body[data-page="admin-status-overview"] .cbi-title .label {
+	width: 32px;
+	padding: 0;
+	font-size: 0 !important;
+	gap: 0;
+}
+
+body[data-page="admin-status-overview"] .cbi-title .label::before {
+	flex: 0 0 auto;
 }
 
 @media screen and (max-device-width: 600px) {
@@ -189,6 +194,7 @@ footer {
 		max-width: 100%;
 		padding: 3px 2px;
 		flex-basis: 100%;
+		text-align: left;
 	}
 
 	.hide-sm,

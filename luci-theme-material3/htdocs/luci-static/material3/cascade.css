@@ -1,6 +1,6 @@
 /*!
  * LuCI Bootstrap Theme
- * Material3 Mod
+ * Material3 Mod by KawaiiHachimi <bilibili@att.net>
  * Copyright 2012 Nut & Bolt
  * By David Menting <david@nut-bolt.nl>
  * Based on Bootstrap v1.4.0
@@ -131,7 +131,8 @@
 	--material3-shell-background: var(--surface);
 	--material3-shell-foreground: var(--on-surface);
 	--material3-shell-state: var(--surface-container);
-	--material3-header-background: color-mix(in srgb, var(--material3-shell-background) 88%, transparent);
+	--material3-header-background: color-mix(in srgb, var(--material3-shell-background) 72%, transparent);
+	--material3-header-scrolled-background: color-mix(in srgb, var(--material3-card-background) 72%, transparent);
 	--material3-header-foreground: var(--material3-shell-foreground);
 	--material3-header-state: var(--material3-shell-state);
 	--material3-indicator-hover-background: var(--primary-container);
@@ -1512,7 +1513,8 @@ select {
 .cbi-value {
 	display: flex;
 	flex-wrap: wrap;
-	margin-bottom: 18px;
+	margin: 0;
+	padding: 9px 0;
 	align-items: baseline;
 }
 
@@ -2079,12 +2081,17 @@ header p {
 header {
 	background: var(--material3-header-background);
 	box-shadow: none;
-	transition: box-shadow .3s;
+	transition: background-color .3s, box-shadow .3s;
 	padding: 0;
 }
 
 header.with-shadow {
-	box-shadow: none;
+	background: var(--material3-header-scrolled-background);
+	box-shadow: 0 .5px 1.5px 0 rgba(0, 0, 0, 19%), 0 0 1px 0 rgba(0, 0, 0, 3.9%);
+}
+
+body.sidebar-open header {
+	background: var(--material3-shell-background);
 }
 
 .menu-btn {
@@ -2166,7 +2173,7 @@ header.with-shadow {
 	top: var(--material3-header-height);
 	left: 0;
 	bottom: 0;
-	z-index: 760;
+	z-index: 820;
 	box-sizing: border-box;
 	width: var(--material3-sidebar-width);
 	padding: 0;
@@ -2246,6 +2253,17 @@ header.with-shadow {
 		opacity: 1;
 		visibility: visible;
 	}
+
+	.cbi-dropdown[open],
+	.cbi-dropdown[open]>ul.dropdown {
+		max-width: 100%;
+	}
+
+	.cbi-dropdown[open]>ul.dropdown {
+		box-sizing: border-box;
+		width: 100%;
+		min-width: 100%;
+	}
 }
 
 .nav {
@@ -2280,6 +2298,22 @@ header.with-shadow {
 	overflow: hidden;
 	position: relative;
 	transition: .3s;
+}
+
+.nav-menu-title {
+	display: block;
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+	-webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+	mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+}
+
+.nav a:hover>.nav-menu-title,
+.nav a:focus>.nav-menu-title {
+	-webkit-mask-image: none;
+	mask-image: none;
 }
 
 .nav>li>a::before {
@@ -2412,7 +2446,6 @@ header {
 	border: none;
 	backdrop-filter: blur(15px);
 	-webkit-backdrop-filter: blur(15px);
-	box-shadow: none;
 	background: var(--md-sys-color-surface-translucent);
 }
 
@@ -2443,7 +2476,8 @@ header {
 	transition: .3s;
 	padding: 1rem 1.5rem;
 	line-height: 18px;
-	display: block;
+	display: flex;
+	align-items: center;
 	border-radius: 2rem;
 	overflow: hidden;
 	text-shadow: none;
@@ -2786,6 +2820,7 @@ footer ul.breadcrumb {
 	white-space: pre-wrap;
 	overflow: auto;
 	width: 100%;
+	border-radius: var(--material3-card-radius);
 }
 
 .modal>.button-row {
@@ -2822,8 +2857,16 @@ body.modal-overlay-active #modal_overlay {
 	justify-content: center;
 	padding: 24px;
 	background:
-		radial-gradient(circle at top left, color-mix(in srgb, var(--primary-container) 64%, transparent), transparent 34rem),
-		radial-gradient(circle at top right, color-mix(in srgb, var(--tertiary-container) 58%, transparent), transparent 30rem),
+		radial-gradient(circle at 18% 8%,
+			color-mix(in srgb, var(--primary-container) 38%, transparent),
+			transparent 28rem),
+		linear-gradient(135deg,
+			color-mix(in srgb, var(--background) 78%, var(--primary-container)) 0%,
+			color-mix(in srgb, var(--background) 92%, var(--primary-container)) 46%,
+			color-mix(in srgb, var(--surface-container-low) 88%, var(--primary)) 100%),
+		linear-gradient(180deg,
+			color-mix(in srgb, var(--surface-container-low) 48%, transparent) 0%,
+			transparent 52%),
 		var(--background);
 }
 
@@ -2833,10 +2876,14 @@ body.modal-overlay-active #modal_overlay {
 	max-width: 420px;
 	margin: 0;
 	padding: 32px;
-	border: 0;
+	border: 1px solid color-mix(in srgb, var(--outline-variant) 52%, transparent);
 	border-radius: 28px;
-	background: var(--material3-card-background);
-	box-shadow: var(--material3-card-shadow);
+	background: color-mix(in srgb, var(--material3-card-background) 78%, transparent);
+	backdrop-filter: blur(24px) saturate(1.12);
+	-webkit-backdrop-filter: blur(24px) saturate(1.12);
+	box-shadow:
+		0 12px 36px color-mix(in srgb, var(--outline) 18%, transparent),
+		0 1px 1px color-mix(in srgb, var(--outline) 10%, transparent);
 	color: var(--on-surface);
 }
 
@@ -2954,8 +3001,8 @@ body.modal-overlay-active #modal_overlay {
 	}
 
 	.modal.login .material3-login-header img {
-		width: 48px;
-		height: 48px;
+		width: 64px;
+		height: 64px;
 	}
 
 	.modal.login .material3-login-header h2 {
@@ -3434,16 +3481,18 @@ body.modal-overlay-active #modal_overlay {
 }
 
 .cbi-progressbar {
+	border: 0;
 	border-radius: 3px;
 	position: relative;
 	min-width: 170px;
 	height: 4px;
 	margin: 1.4em 0 4px 0;
-	background: var(--background-color-medium);
+	background: var(--surface-container-high);
+	box-shadow: none;
 }
 
 .cbi-progressbar>div {
-	background: var(--primary-color-medium);
+	background: var(--primary);
 	height: 100%;
 	transition: width .25s ease-in;
 	width: 0%;
@@ -3605,7 +3654,7 @@ header [data-indicator] {
 	font-size: 12px;
 	font-weight: 600;
 	text-transform: none;
-	color: color-mix(in srgb, var(--material3-header-foreground) 80%, var(--material3-header-background));
+	color: color-mix(in srgb, var(--material3-header-foreground) 60%, var(--material3-header-background));
 	background: transparent;
 	transition: background-color .2s ease, color .2s ease;
 }
@@ -3966,7 +4015,7 @@ th[data-sort-direction="desc"]::after {
 	background: var(--default-btn-background, var(--background-color-high));
 	color: var(--on-color, var(--text-color-high));
 	text-shadow: none;
-	border-radius: 16px;
+	border-radius: 12px;
 	box-shadow: none;
 	cursor: default;
 	line-height: 1.2em;
@@ -4432,21 +4481,20 @@ div.cbi-value var.cbi-tooltip-container,
 	stroke: var(--text-color-highest) !important;
 }
 
-/* Status overview */
-body[data-page="admin-status-overview"] .cbi-section {
-	margin: 0 0 18px;
-	padding: 0;
-	width: auto;
+/* Status overview and dashboard */
+body[data-page="admin-status-overview"] .cbi-section,
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .cbi-section,
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .cbi-section-node {
 	border: 0;
-	border-radius: 0;
 	background: transparent;
 	box-shadow: none;
 }
 
-body[data-page="admin-status-overview"] .cbi-title h3 {
-	color: var(--on-surface);
-	font-size: 18px;
-	line-height: 36px;
+body[data-page="admin-status-overview"] .cbi-section {
+	margin: 0 0 18px;
+	padding: 0;
+	width: auto;
+	border-radius: 0;
 }
 
 body[data-page="admin-status-overview"] .cbi-section>.cbi-title+div {
@@ -4457,12 +4505,10 @@ body[data-page="admin-status-overview"] .cbi-section>.cbi-title+div {
 	box-shadow: none;
 }
 
-body[data-page="admin-status-overview"] .cbi-section-descr,
-body[data-page="admin-status-overview"] .cbi-map-descr,
-body[data-page="admin-status-overview"] .cbi-section p,
-body[data-page="admin-status-overview"] .cbi-section li,
-body[data-page="admin-status-overview"] .table .td,
-body[data-page="admin-status-overview"] .table .th {
+body[data-page="admin-status-overview"] :is(.cbi-section-descr,
+	.cbi-map-descr,
+	.cbi-section p,
+	.cbi-section li) {
 	color: var(--on-surface-variant);
 	font-size: 13px;
 	font-weight: 400;
@@ -4498,7 +4544,8 @@ body[data-page="admin-status-overview"] .cbi-title .label::before {
 	mask: url("icons/eye-off.svg") center/contain no-repeat;
 }
 
-body[data-page="admin-status-overview"] .cbi-title .label:hover {
+body[data-page="admin-status-overview"] .cbi-title .label:hover,
+body[data-page="admin-status-overview"] .cbi-title .label.notice:hover {
 	background: var(--material3-menu-hover-background);
 	color: var(--on-surface);
 }
@@ -4511,11 +4558,6 @@ body[data-page="admin-status-overview"] .cbi-title .label.notice {
 body[data-page="admin-status-overview"] .cbi-title .label.notice::before {
 	-webkit-mask-image: url("icons/eye.svg");
 	mask-image: url("icons/eye.svg");
-}
-
-body[data-page="admin-status-overview"] .cbi-title .label.notice:hover {
-	background: var(--material3-menu-hover-background);
-	color: var(--on-surface);
 }
 
 body[data-page="admin-status-overview"] .network-status-table {
@@ -4572,43 +4614,9 @@ body[data-page="admin-status-overview"] .network-status-table .ifacebox-body .if
 
 body[data-page="admin-status-overview"] .table {
 	margin: 1px;
-	width: calc(100% - 2px);
-	border-radius: var(--material3-card-radius);
-	background: var(--material3-card-background);
-	box-shadow: var(--material3-card-shadow);
-}
-
-body[data-page="admin-status-overview"] .cbi-progressbar {
-	border: 0;
-	background: var(--surface-container-high);
-	box-shadow: none;
-}
-
-body[data-page="admin-status-overview"] .cbi-progressbar>div {
-	background: var(--primary);
-}
-
-body[data-page="admin-status-overview"] .table .td,
-body[data-page="admin-status-overview"] .table .th,
-body[data-page="admin-status-overview"] .tr.cbi-section-table-titles,
-body[data-page="admin-status-overview"] .cbi-section-table-titles.named::before,
-body[data-page="admin-status-overview"] .cbi-section-table-descr.named::before,
-body[data-page="admin-status-overview"] .cbi-section-table-row[data-title]::before {
-	border-top: 0;
-}
-
-body[data-page="admin-status-overview"] .tr.cbi-section-table-titles {
-	background: transparent;
 }
 
 /* Dashboard cards */
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .cbi-section,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .cbi-section-node {
-	border: 0;
-	background: transparent;
-	box-shadow: none;
-}
-
 :is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .dashboard-bg.box-s1 {
 	border: 0;
 	border-radius: var(--material3-card-radius);
@@ -4616,9 +4624,10 @@ body[data-page="admin-status-overview"] .tr.cbi-section-table-titles {
 	box-shadow: var(--material3-card-shadow);
 }
 
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .thead.dashboard-bg,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .tr.dashboard-bg,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .tfoot.dashboard-bg {
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard :is(.thead.dashboard-bg,
+	.tr.dashboard-bg,
+	.tfoot.dashboard-bg,
+	.table) {
 	border-radius: 0;
 	background: transparent;
 	box-shadow: none;
@@ -4627,32 +4636,14 @@ body[data-page="admin-status-overview"] .tr.cbi-section-table-titles {
 :is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .table {
 	margin: 0;
 	width: auto;
-	border-radius: 0;
-	background: transparent;
-	box-shadow: none;
 }
 
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard hr,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .table .td,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .table .th {
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard hr {
 	border: 0;
 }
 
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard h3,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .settings-info,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .table .td,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .table .th {
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard :is(h3, .settings-info) {
 	color: var(--on-surface-variant);
-}
-
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .cbi-progressbar {
-	border: 0;
-	background: var(--surface-container-high);
-	box-shadow: none;
-}
-
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .cbi-progressbar>div {
-	background: var(--primary);
 }
 
 :is(body[data-page="admin-status-iptables"], body[data-page="admin-status-nftables-iptables"]) .cbi-tabmenu {
