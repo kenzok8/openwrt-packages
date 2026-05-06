@@ -2,14 +2,14 @@ header h3 a {
 	display: none !important;
 }
 
-body[data-page="admin-status-overview"] .cbi-title .label {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-title .label {
 	width: 32px;
 	padding: 0;
 	font-size: 0 !important;
 	gap: 0;
 }
 
-body[data-page="admin-status-overview"] .cbi-title .label::before {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-title .label::before {
 	flex: 0 0 auto;
 }
 
@@ -148,6 +148,7 @@ body[data-page="admin-status-overview"] .cbi-title .label::before {
 	}
 
 	.tr.table-titles,
+	.tr.dashboard-table-titles,
 	.cbi-section-table-titles,
 	.cbi-section-table-descr {
 		display: none;
@@ -307,23 +308,39 @@ body[data-page="admin-status-overview"] .cbi-title .label::before {
 		padding: 8px;
 	}
 
-	[data-page="admin-status-overview"] .td[width="33%"] {
+	:is([data-page="admin-status-overview"], [data-page=""]) .td[width="33%"] {
 		flex-basis: 33%;
 	}
 
-	[data-page="admin-status-overview"] .table {
-		margin: 4px;
-		width: calc(100% - 8px);
-	}
-
-	[data-page="admin-status-overview"] .table,
-	[data-page="admin-status-overview"] .tr,
-	[data-page="admin-status-overview"] .td,
-	[data-page="admin-status-overview"] .th,
-	[data-page="admin-status-overview"] .tr[data-title]::before,
-	[data-page="admin-status-overview"] .td[data-title]::before {
+	:is([data-page="admin-status-overview"], [data-page=""]) .table,
+	:is([data-page="admin-status-overview"], [data-page=""]) .tr,
+	:is([data-page="admin-status-overview"], [data-page=""]) .td,
+	:is([data-page="admin-status-overview"], [data-page=""]) .th,
+	:is([data-page="admin-status-overview"], [data-page=""]) .tr[data-title]::before,
+	:is([data-page="admin-status-overview"], [data-page=""]) .td[data-title]::before {
 		border-top: 0;
 		border-bottom: 0;
+	}
+
+	:is([data-page="admin-dashboard"], [data-page="admin"], [data-page=""]) :is(.Dashboard, .dashboard-bg.box-s1) .td[data-title]::before {
+		word-break: keep-all;
+	}
+
+	:is([data-page="admin-dashboard"], [data-page="admin"], [data-page=""]) .Dashboard .devices-list .devices-info .tr .td {
+		padding: 3px !important;
+	}
+
+	:is([data-page="admin-dashboard"], [data-page="admin"], [data-page=""]) .Dashboard .router-status-wifi.dashboard-bg.box-s1 .assoclist.devices-info.table>.tr:not(.dashboard-table-titles)>.td {
+		display: block;
+		flex: 0 0 50% !important;
+		width: 50% !important;
+		max-width: 50%;
+		min-width: 0;
+	}
+
+	:is([data-page="admin-dashboard"], [data-page="admin"], [data-page=""]) .Dashboard .router-status-wifi.dashboard-bg.box-s1 .assoclist.devices-info .cbi-progressbar {
+		width: 100% !important;
+		min-width: 0 !important;
 	}
 
 	header .pull-right .label {

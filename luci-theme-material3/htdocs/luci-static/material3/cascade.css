@@ -4462,8 +4462,9 @@ div.cbi-value var.cbi-tooltip-container,
 
 .cbi-section-node,
 .table {
-	margin: 0 1px 10px 1px;
-	width: calc(100% - 2px);
+	box-sizing: border-box;
+	margin: 0 0 10px;
+	width: 100%;
 	border-radius: var(--material3-card-radius);
 	background: var(--material3-card-background);
 	box-shadow: var(--material3-card-shadow);
@@ -4482,30 +4483,22 @@ div.cbi-value var.cbi-tooltip-container,
 }
 
 /* Status overview and dashboard */
-body[data-page="admin-status-overview"] .cbi-section,
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-section,
 :is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .cbi-section,
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .cbi-section-node {
+:is(body[data-page="admin-dashboard"], body[data-page="admin"]) .cbi-section-node {
 	border: 0;
 	background: transparent;
 	box-shadow: none;
 }
 
-body[data-page="admin-status-overview"] .cbi-section {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-section {
 	margin: 0 0 18px;
 	padding: 0;
 	width: auto;
 	border-radius: 0;
 }
 
-body[data-page="admin-status-overview"] .cbi-section>.cbi-title+div {
-	margin: 1px;
-	width: calc(100% - 2px);
-	border-radius: 0;
-	background: transparent;
-	box-shadow: none;
-}
-
-body[data-page="admin-status-overview"] :is(.cbi-section-descr,
+:is(body[data-page="admin-status-overview"], body[data-page=""]) :is(.cbi-section-descr,
 	.cbi-map-descr,
 	.cbi-section p,
 	.cbi-section li) {
@@ -4515,7 +4508,7 @@ body[data-page="admin-status-overview"] :is(.cbi-section-descr,
 	line-height: 18px;
 }
 
-body[data-page="admin-status-overview"] .cbi-title .label {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-title .label {
 	display: inline-flex !important;
 	align-items: center;
 	justify-content: center;
@@ -4535,7 +4528,7 @@ body[data-page="admin-status-overview"] .cbi-title .label {
 	transition: background-color .2s ease, color .2s ease, opacity .2s ease;
 }
 
-body[data-page="admin-status-overview"] .cbi-title .label::before {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-title .label::before {
 	content: '';
 	width: 17px;
 	height: 17px;
@@ -4544,66 +4537,65 @@ body[data-page="admin-status-overview"] .cbi-title .label::before {
 	mask: url("icons/eye-off.svg") center/contain no-repeat;
 }
 
-body[data-page="admin-status-overview"] .cbi-title .label:hover,
-body[data-page="admin-status-overview"] .cbi-title .label.notice:hover {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-title .label:hover,
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-title .label.notice:hover {
 	background: var(--material3-menu-hover-background);
 	color: var(--on-surface);
 }
 
-body[data-page="admin-status-overview"] .cbi-title .label.notice {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-title .label.notice {
 	background: transparent;
 	color: color-mix(in srgb, var(--on-surface-variant) 72%, transparent);
 }
 
-body[data-page="admin-status-overview"] .cbi-title .label.notice::before {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .cbi-title .label.notice::before {
 	-webkit-mask-image: url("icons/eye.svg");
 	mask-image: url("icons/eye.svg");
 }
 
-body[data-page="admin-status-overview"] .network-status-table {
-	width: calc(100% + 16px);
-	margin: 0 -8px 8px;
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .network-status-table {
+	gap: 10px;
+	margin: 0 0 10px;
 }
 
-body[data-page="admin-status-overview"] .network-status-table .ifacebox {
-	margin: 8px;
-	width: calc(100% - 16px);
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .network-status-table .ifacebox {
+	flex: 1 1 260px;
+	margin: 0;
 	padding: 8px;
-	border: 0;
-	border-radius: var(--material3-card-radius);
-	background: var(--material3-card-background);
-	box-shadow: var(--material3-card-shadow);
+	text-align: left;
+	white-space: normal;
 }
 
-body[data-page="admin-status-overview"] .ifacebox .ifacebox-head {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .ifacebox .ifacebox-head {
 	padding: 2px 0 8px;
 	border: 0;
-	border-radius: 16px 16px 0 0;
-	background: transparent;
+	border-radius: 0;
+	background: transparent !important;
 	color: var(--on-surface-variant);
 	font-weight: 400;
 	opacity: .9;
+	text-shadow: none;
 }
 
-body[data-page="admin-status-overview"] .ifacebox .ifacebox-head strong {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .ifacebox .ifacebox-head strong {
 	font-weight: 500;
 }
 
-body[data-page="admin-status-overview"] .ifacebox .ifacebox-head.active {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .ifacebox .ifacebox-head.active {
 	border: 0;
-	background: transparent;
+	background: transparent !important;
 	color: var(--on-surface);
 	text-shadow: none;
 }
 
-body[data-page="admin-status-overview"] .ifacebox .ifacebox-body {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .ifacebox .ifacebox-body {
 	padding: 0;
 	line-height: 1.35;
 }
 
-body[data-page="admin-status-overview"] .ifacebadge,
-body[data-page="admin-status-overview"] .ifacebadge.large,
-body[data-page="admin-status-overview"] .network-status-table .ifacebox-body .ifacebadge {
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .ifacebadge,
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .ifacebadge.large,
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .network-status-table .ifacebox-body .ifacebadge {
 	padding: 8px;
 	border: 1px solid color-mix(in srgb, var(--outline) 48%, transparent);
 	border-radius: 16px;
@@ -4612,12 +4604,9 @@ body[data-page="admin-status-overview"] .network-status-table .ifacebox-body .if
 	text-shadow: none;
 }
 
-body[data-page="admin-status-overview"] .table {
-	margin: 1px;
-}
-
 /* Dashboard cards */
-:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .dashboard-bg.box-s1 {
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .dashboard-bg.box-s1,
+:is(body[data-page="admin-status-overview"], body[data-page=""]) .network-status-table .ifacebox {
 	border: 0;
 	border-radius: var(--material3-card-radius);
 	background: var(--material3-card-background);
@@ -4636,6 +4625,18 @@ body[data-page="admin-status-overview"] .table {
 :is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .table {
 	margin: 0;
 	width: auto;
+}
+
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .router-status-wifi .assoclist.devices-info .tr> :nth-child(3) {
+	width: 30%;
+}
+
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .router-status-wifi .assoclist.devices-info .tr> :nth-child(4) {
+	width: 20%;
+	min-width: 85px;
+	white-space: normal;
+	word-break: keep-all;
+	overflow-wrap: normal;
 }
 
 :is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard hr {
