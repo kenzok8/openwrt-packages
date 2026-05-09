@@ -13,17 +13,17 @@
 #==================================================================
 
 # Set a fixed value
+check_option="${1}"
+download_version="${2}"
 TMP_CHECK_DIR="/tmp/amlogic"
 AMLOGIC_SOC_FILE="/etc/flippy-openwrt-release"
+AMLOGIC_CONFIG_FILE="/etc/config/amlogic"
 START_LOG="${TMP_CHECK_DIR}/amlogic_check_plugin.log"
 RUNNING_LOG="${TMP_CHECK_DIR}/amlogic_running_script.log"
 LOG_FILE="${TMP_CHECK_DIR}/amlogic.log"
 support_platform=("allwinner" "rockchip" "amlogic" "qemu-aarch64")
 LOGTIME="$(date "+%Y-%m-%d %H:%M:%S")"
-
 [[ -d ${TMP_CHECK_DIR} ]] || mkdir -p ${TMP_CHECK_DIR}
-rm -f ${TMP_CHECK_DIR}/*.ipk 2>/dev/null && sync
-rm -f ${TMP_CHECK_DIR}/sha256sums 2>/dev/null && sync
 
 # Clean the running log
 clean_running() {
@@ -64,102 +64,139 @@ fi
 tolog "PLATFORM: [ ${PLATFORM} ]"
 sleep 2
 
-# 01. Query local version information
-tolog "01. Query current version information."
-
-# If neither opkg nor apk found, set package_manager to empty
-package_manager=""
-current_plugin_v=""
-
-if command -v opkg >/dev/null 2>&1; then
-    # System has opkg
-    package_manager="ipk"
-    # Important: Add cut to handle versions like X.Y.Z-r1, ensuring consistent output
-    current_plugin_v="$(opkg list-installed | grep '^luci-app-amlogic' | awk '{print $3}' | cut -d'-' -f1)"
-elif command -v apk >/dev/null 2>&1; then
-    # System has apk
-    package_manager="apk"
-    current_plugin_v="$(apk list --installed | grep '^luci-app-amlogic' | awk '{print $1}' | cut -d'-' -f4)"
-fi
-
-# Check if we successfully found the plugin
-if [[ -z "${package_manager}" || -z "${current_plugin_v}" ]]; then
-    tolog "01.01 Plugin 'luci-app-amlogic' not found or package manager unknown." "1"
+# Read plugin branch from UCI config; default to "" (main-lua) when missing or empty
+# When amlogic_plugin_branch is missing, add it with empty value (main-lua default)
+if [[ -f "${AMLOGIC_CONFIG_FILE}" ]]; then
+    plugin_branch="$(uci get amlogic.config.amlogic_plugin_branch 2>/dev/null | xargs)"
+    if ! grep -q "amlogic_plugin_branch" "${AMLOGIC_CONFIG_FILE}" 2>/dev/null; then
+        uci set amlogic.config.amlogic_plugin_branch='' 2>/dev/null
+        uci commit amlogic 2>/dev/null
+        plugin_branch=""
+    fi
 else
-    tolog "01.01 Using [${package_manager}]. Current version: ${current_plugin_v}"
+    plugin_branch=""
 fi
-sleep 2
+tolog "Plugin branch: [ ${plugin_branch:-main-lua} ]"
+sleep 1
+get_plugin_info() {
+    package_manager=""
+    current_plugin_v=""
+    if command -v opkg >/dev/null 2>&1; then
+        package_manager="ipk"
+        current_plugin_v="$(opkg list-installed | grep '^luci-app-amlogic ' | awk '{print $3}' | cut -d'-' -f1)"
+    elif command -v apk >/dev/null 2>&1; then
+        package_manager="apk"
+        current_plugin_v="$(apk list --installed | grep '^luci-app-amlogic-' | awk '{print $1}' | cut -d'-' -f4)"
+    fi
+}
 
-# 02. Check the version on the server
-tolog "02. Start querying plugin version..."
-
-# Get the latest version
-latest_version="$(
-    curl -fsSL -m 10 \
-        https://github.com/ophub/luci-app-amlogic/releases |
-        grep -oE 'expanded_assets/[0-9]+.[0-9]+.[0-9]+(-[0-9]+)?' | sed 's|expanded_assets/||g' |
-        sort -urV | head -n 1
-)"
-if [[ -z "${latest_version}" ]]; then
-    tolog "02.01 Query failed, please try again." "1"
-else
-    tolog "02.01 current version: ${current_plugin_v}, Latest version: ${latest_version}"
+# Step 2: Check if there is the latest plugin version
+check_plugin() {
+    tolog "01. Query current version information."
+    get_plugin_info
+    if [[ -z "${package_manager}" || -z "${current_plugin_v}" ]]; then
+        tolog "01.01 Plugin 'luci-app-amlogic' not found or package manager unknown." "1"
+    else
+        tolog "01.01 Using [${package_manager}]. Current version: ${current_plugin_v}"
+    fi
     sleep 2
-fi
 
-# Compare the version and download the latest version
-if [[ "${current_plugin_v}" == "${latest_version}" ]]; then
-    tolog "02.02 Already the latest version, no need to update." "1"
-else
-    tolog "02.03 New version found. Preparing to download for [${package_manager}]..."
+    tolog "02. Start querying plugin version..."
+    if [[ "${plugin_branch}" == "js" ]]; then
+        latest_version="$(
+            curl -fsSL -m 10 \
+                https://github.com/ophub/luci-app-amlogic/releases |
+                grep -oE 'expanded_assets/[0-9]+\.[0-9]+\.[0-9]+-js' | sed 's|expanded_assets/||g' |
+                sort -urV | head -n 1
+        )"
+    else
+        latest_version="$(
+            curl -fsSL -m 10 \
+                https://github.com/ophub/luci-app-amlogic/releases |
+                grep -oE 'expanded_assets/[0-9]+\.[0-9]+\.[0-9]+' | sed 's|expanded_assets/||g' |
+                grep -v '\-js' |
+                sort -urV | head -n 1
+        )"
+    fi
+    if [[ -z "${latest_version}" ]]; then
+        tolog "02.01 Query failed, please try again." "1"
+    fi
+
+    tolog "02.01 Current version: ${current_plugin_v}, Latest version: ${latest_version}"
+    sleep 2
+
+    if [[ "${current_plugin_v}" == "${latest_version}" ]]; then
+        tolog "02.02 Already the latest version, no need to update." "1"
+    else
+        tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_plugin(this, '"'download_${latest_version}'"')"/> Latest version: '${latest_version}'' "1"
+    fi
+
+    exit 0
+}
+
+# Step 3: Download the latest plugin version
+download_plugin() {
+    tolog "03. Start downloading the plugin file."
+    if [[ "${download_version}" == "download_"* ]]; then
+        tolog "03.01 Start downloading..."
+    else
+        tolog "03.01 Invalid parameter." "1"
+    fi
+
+    # Extract version from parameter (e.g. "download_3.1.290" -> "3.1.290")
+    latest_version="$(echo "${download_version}" | cut -d '_' -f2-)"
+
+    get_plugin_info
+    if [[ -z "${package_manager}" ]]; then
+        tolog "03.02 Package manager not found." "1"
+    fi
+
+    tolog "03.02 Package manager: ${package_manager}, Version to download: ${latest_version}"
+
+    # Clean up previous downloads
+    rm -f ${TMP_CHECK_DIR}/*.ipk 2>/dev/null
+    rm -f ${TMP_CHECK_DIR}/*.apk 2>/dev/null
+    rm -f ${TMP_CHECK_DIR}/sha256sums 2>/dev/null
+    sync
+
     download_repo="https://github.com/ophub/luci-app-amlogic/releases/download"
 
-    # Intelligent File Discovery
-    plugin_file_name=""
-    lang_file_list=""
-
-    # Method 1: Use GitHub API if 'jq' is installed (Preferred Method)
-    if command -v jq >/dev/null 2>&1; then
-        tolog "Using GitHub API with jq to find package files."
-        api_url="https://api.github.com/repos/ophub/luci-app-amlogic/releases/tags/${latest_version}"
-
-        # Fetch all asset names from the API
-        asset_list="$(curl -fsSL -m 15 "${api_url}" | jq -r '.assets[].name' | xargs)"
-
-        if [[ -n "${asset_list}" ]]; then
-            # Discover exact filenames using regular expressions from the asset list
-            plugin_file_name="$(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-app-amlogic.*${package_manager}$" | head -n 1)"
-            lang_file_list=($(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-i18n-amlogic.*${package_manager}$"))
-        else
-            tolog "Warning: Failed to fetch data from GitHub API." "1"
-        fi
-    else
-        tolog "jq not found, Aborting." "1"
+    # Use GitHub API to find exact filenames
+    if ! command -v jq >/dev/null 2>&1; then
+        tolog "03.03 jq not found, cannot query GitHub API." "1"
     fi
 
-    # Validation and Download
-    if [[ -z "${plugin_file_name}" || "${#lang_file_list[@]}" -eq "0" ]]; then
-        tolog "02.03.2 Could not discover plugin(.${package_manager}) in the release. Aborting." "1"
+    tolog "03.03 Querying GitHub API for release assets..."
+    api_url="https://api.github.com/repos/ophub/luci-app-amlogic/releases/tags/${latest_version}"
+    asset_list="$(curl -fsSL -m 15 "${api_url}" | jq -r '.assets[].name' | xargs)"
+    if [[ -z "${asset_list}" ]]; then
+        tolog "03.03 Failed to fetch release assets from GitHub API." "1"
     fi
 
-    tolog "Found plugin file: ${plugin_file_name}"
-    tolog "Found language file: $(echo ${lang_file_list[@]} | xargs)"
+    plugin_file_name="$(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-app-amlogic.*${package_manager}$" | head -n 1)"
+    lang_file_list=($(echo "${asset_list}" | tr ' ' '\n' | grep -oE "^luci-i18n-amlogic.*${package_manager}$"))
+
+    if [[ -z "${plugin_file_name}" ]]; then
+        tolog "03.04 Could not find plugin file (.${package_manager}) in release assets." "1"
+    fi
+
+    tolog "03.04 Plugin file: ${plugin_file_name}"
 
     # Download the main plugin file
     plugin_full_url="${download_repo}/${latest_version}/${plugin_file_name}"
-    tolog "02.04 Downloading main plugin..."
+    tolog "03.05 Downloading main plugin..."
     curl -fsSL "${plugin_full_url}" -o "${TMP_CHECK_DIR}/${plugin_file_name}"
-    [[ "${?}" -ne "0" ]] && tolog "02.04 Plugin [ ${plugin_file_name} ] download failed." "1"
+    [[ "${?}" -ne "0" ]] && tolog "03.05 Plugin [ ${plugin_file_name} ] download failed." "1"
 
     # Download language packs
     for langfile in "${lang_file_list[@]}"; do
         lang_full_url="${download_repo}/${latest_version}/${langfile}"
-        tolog "02.05 Downloading language pack [ ${langfile} ]..."
+        tolog "03.06 Downloading language pack [ ${langfile} ]..."
         curl -fsSL "${lang_full_url}" -o "${TMP_CHECK_DIR}/${langfile}"
-        [[ "${?}" -ne "0" ]] && tolog "02.05 Language pack [ ${langfile} ] download failed." "1"
+        [[ "${?}" -ne "0" ]] && tolog "03.06 Language pack [ ${langfile} ] download failed." "1"
     done
 
-    # The .apk filename is preceded by a tilde (~) instead of a dot (.).
+    # The .apk filename uses tilde (~) instead of dot before the hash suffix
     for file in ${TMP_CHECK_DIR}/*.apk; do
         [[ -f "${file}" ]] || continue
         base_name="$(basename "${file}")"
@@ -170,11 +207,21 @@ else
     done
 
     sync && sleep 2
-fi
 
-tolog "03. The plug is ready, you can update."
-sleep 2
+    tolog "03.07 The plugin is ready, you can update."
+    sleep 2
 
-tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_plugin(this)"/> Latest version: '${latest_version}'' "1"
+    tolog '<input type="button" class="cbi-button cbi-button-reload" value="Update" onclick="return amlogic_plugin(this)"/> Latest version: '${latest_version}'' "1"
 
-exit 0
+    exit 0
+}
+
+getopts 'cd' opts
+case "${opts}" in
+c | check)
+    check_plugin
+    ;;
+* | download)
+    download_plugin
+    ;;
+esac

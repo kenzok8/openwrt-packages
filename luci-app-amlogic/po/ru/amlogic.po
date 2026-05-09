@@ -422,6 +422,18 @@ msgstr "Ветка версии:"
 msgid "Set the version branch of the OpenWrt files and kernel selected in [Online Download Update]."
 msgstr "Укажите ветку версии для файлов OpenWrt и ядра в разделе [Обновление через интернет]."
 
+msgid "Set plugin branch:"
+msgstr "Ветка плагина:"
+
+msgid "Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. Default (empty) uses the main (Lua) branch."
+msgstr "Укажите ветку плагина luci-app-amlogic для раздела [Только обновить сервис Amlogic]. По умолчанию (пусто) используется ветка main (Lua)."
+
+msgid "main [Lua version]"
+msgstr "main [Lua версия]"
+
+msgid "js [JavaScript version]"
+msgstr "js [JavaScript версия]"
+
 msgid "Keep config update:"
 msgstr "Сохранять конфигурацию при обновлении:"
 

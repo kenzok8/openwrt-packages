@@ -31,6 +31,7 @@ function index()
 	entry({ "admin", "system", "amlogic", "poweroff" }, form("amlogic/amlogic_poweroff"), _("PowerOff"), 9).leaf = true
 	entry({ "admin", "system", "amlogic", "check_firmware" }, call("action_check_firmware"))
 	entry({ "admin", "system", "amlogic", "check_plugin" }, call("action_check_plugin"))
+	entry({ "admin", "system", "amlogic", "check_plugin_download" }, call("action_check_plugin_download")).leaf = true
 	entry({ "admin", "system", "amlogic", "check_kernel" }, call("action_check_kernel"))
 	entry({ "admin", "system", "amlogic", "refresh_log" }, call("action_refresh_log"))
 	entry({ "admin", "system", "amlogic", "del_log" }, call("action_del_log"))
@@ -266,10 +267,20 @@ function start_snapshot_restore()
 	return state
 end
 
---Check the plugin
+--Check the plugin (phase 1: query latest version, output Download button to log)
 function action_check_plugin()
 	luci.sys.exec("chmod +x /usr/share/amlogic/amlogic_check_plugin.sh >/dev/null 2>&1")
-	return luci.sys.call("/usr/share/amlogic/amlogic_check_plugin.sh >/dev/null 2>&1")
+	return luci.sys.call("/usr/share/amlogic/amlogic_check_plugin.sh -c >/dev/null 2>&1")
+end
+
+--Check the plugin (phase 2: download the given version, output Update button to log)
+function action_check_plugin_download()
+	luci.sys.exec("chmod +x /usr/share/amlogic/amlogic_check_plugin.sh >/dev/null 2>&1")
+	local plugin_options = luci.http.formvalue("plugin_options") or ""
+	luci.http.prepare_content("application/json")
+	luci.http.write_json({
+		check_plugin_status = luci.sys.call("/usr/share/amlogic/amlogic_check_plugin.sh -d " .. plugin_options .. " >/dev/null 2>&1");
+	})
 end
 
 --Check and download the kernel

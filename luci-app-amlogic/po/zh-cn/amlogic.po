@@ -422,6 +422,18 @@ msgstr "设置版本分支："
 msgid "Set the version branch of the OpenWrt files and kernel selected in [Online Download Update]."
 msgstr "设置 [在线下载更新] 时 OpenWrt 文件与内核所选用的版本分支。"
 
+msgid "Set plugin branch:"
+msgstr "设置插件分支："
+
+msgid "Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. Default (empty) uses the main (Lua) branch."
+msgstr "设置 [仅更新晶晨宝盒] 时使用的插件分支。默认（空）使用 main (Lua) 分支。"
+
+msgid "main [Lua version]"
+msgstr "main [Lua 版本]"
+
+msgid "js [JavaScript version]"
+msgstr "js [JavaScript 版本]"
+
 msgid "Keep config update:"
 msgstr "保留配置更新："
 
