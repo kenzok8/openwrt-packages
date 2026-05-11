@@ -125,7 +125,10 @@ check_plugin() {
     tolog "02.01 Current version: ${current_plugin_v}, Latest version: ${latest_version}"
     sleep 2
 
-    if [[ "${current_plugin_v}" == "${latest_version}" ]]; then
+    # Strip variant suffix (e.g. "-js") from latest_version for comparison,
+    # because installed package version only contains the numeric part (e.g. 3.1.295).
+    latest_version_base="${latest_version%%-*}"
+    if [[ "${current_plugin_v}" == "${latest_version_base}" ]]; then
         tolog "02.02 Already the latest version, no need to update." "1"
     else
         tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_plugin(this, '"'download_${latest_version}'"')"/> Latest version: '${latest_version}'' "1"
