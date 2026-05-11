@@ -1,11 +1,75 @@
 {
 	"luci-app-amlogic": {
-		"description": "Grant UCI access for luci-app-amlogic",
+		"description": "Grant UCI/file/RPC access for the Amlogic Service plugin",
 		"read": {
-			"uci": [ "amlogic" ]
+			"ubus": {
+				"luci.amlogic": [
+					"state",
+					"author",
+					"model_database",
+					"platform_info",
+					"snapshot_list",
+					"check_upfiles",
+					"upload_path",
+					"list_uploads",
+					"read_log_tail",
+					"read_log_full",
+					"cpu_policies"
+				]
+			},
+			"uci": [ "amlogic" ],
+			"file": {
+				"/tmp/amlogic/amlogic.log": [ "read" ],
+				"/tmp/amlogic/amlogic_check_install.log": [ "read" ],
+				"/tmp/amlogic/amlogic_check_upfiles.log": [ "read" ],
+				"/tmp/amlogic/amlogic_check_plugin.log": [ "read" ],
+				"/tmp/amlogic/amlogic_check_kernel.log": [ "read" ],
+				"/tmp/amlogic/amlogic_check_firmware.log": [ "read" ],
+				"/tmp/amlogic/amlogic_check_rescue.log": [ "read" ],
+				"/tmp/amlogic/amlogic_running_script.log": [ "read" ],
+				"/etc/amlogic_backup_list.conf": [ "read" ],
+				"/etc/flippy-openwrt-release": [ "read" ],
+				"/etc/model_database.txt": [ "read" ],
+				"/.reserved/openwrt_config.tar.gz": [ "read" ]
+			}
 		},
 		"write": {
-			"uci": [ "amlogic" ]
+			"ubus": {
+				"luci.amlogic": [
+					"snapshot_create",
+					"snapshot_delete",
+					"snapshot_restore",
+					"check_plugin",
+					"check_kernel",
+					"check_firmware",
+					"start_plugin",
+					"start_kernel",
+					"start_update",
+					"start_install",
+					"start_rescue",
+					"del_log",
+					"poweroff",
+					"kvm_switch",
+					"delete_upload",
+					"install_upload",
+					"upload_chunk",
+					"backup_create",
+					"save_backup_list",
+					"prime_backup_list",
+					"reload_cpu",
+					"sync_menu"
+				]
+			},
+			"uci": [ "amlogic" ],
+			"file": {
+				"/etc/amlogic_backup_list.conf": [ "write" ],
+				"/tmp/upload/*": [ "write" ],
+				"/tmp/amlogic/*": [ "write" ],
+				"/mnt/mmcblk*p4/*": [ "write" ],
+				"/mnt/sd*4/*": [ "write" ],
+				"/mnt/hd*4/*": [ "write" ],
+				"/mnt/vd*4/*": [ "write" ]
+			}
 		}
 	}
 }

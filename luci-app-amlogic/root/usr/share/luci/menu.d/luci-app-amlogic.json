@@ -1,0 +1,77 @@
+{
+	"admin/system/amlogic": {
+		"title": "Amlogic Service",
+		"order": 88,
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-amlogic" ],
+			"fs": { "/etc/config/amlogic": "file" }
+		}
+	},
+
+	"admin/system/amlogic/info": {
+		"title": "Amlogic Service",
+		"order": 1,
+		"action": { "type": "view", "path": "amlogic/info" }
+	},
+
+	"admin/system/amlogic/install": {
+		"title": "Install OpenWrt",
+		"order": 2,
+		"action": { "type": "view", "path": "amlogic/install" },
+		"depends": {
+			"uci": { "amlogic": { "config": { "menu_install": "yes" } } }
+		}
+	},
+
+	"admin/system/amlogic/upload": {
+		"title": "Manually Upload Update",
+		"order": 3,
+		"action": { "type": "view", "path": "amlogic/upload" }
+	},
+
+	"admin/system/amlogic/check": {
+		"title": "Online Download Update",
+		"order": 4,
+		"action": { "type": "view", "path": "amlogic/check" }
+	},
+
+	"admin/system/amlogic/backup": {
+		"title": "Backup Firmware Config",
+		"order": 5,
+		"action": { "type": "view", "path": "amlogic/backup" }
+	},
+
+	"admin/system/amlogic/backuplist": {
+		"action": { "type": "view", "path": "amlogic/backuplist" }
+	},
+
+	"admin/system/amlogic/armcpu": {
+		"title": "CPU Settings",
+		"order": 6,
+		"action": { "type": "view", "path": "amlogic/armcpu" },
+		"depends": {
+			"uci": { "amlogic": { "config": { "menu_armcpu": "yes" } } }
+		}
+	},
+
+	"admin/system/amlogic/config": {
+		"title": "Plugin Settings",
+		"order": 7,
+		"action": { "type": "view", "path": "amlogic/config" }
+	},
+
+	"admin/system/amlogic/log": {
+		"title": "Server Logs",
+		"order": 8,
+		"action": { "type": "view", "path": "amlogic/log" }
+	},
+
+	"admin/system/amlogic/poweroff": {
+		"title": "PowerOff",
+		"order": 9,
+		"action": { "type": "view", "path": "amlogic/poweroff" }
+	}
+}

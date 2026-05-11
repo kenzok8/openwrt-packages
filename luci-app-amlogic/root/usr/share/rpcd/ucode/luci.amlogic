@@ -1,0 +1,759 @@
+// SPDX-License-Identifier: GPL-2.0
+//
+// luci.amlogic - ucode RPC bridge for the JS-based luci-app-amlogic.
+//
+// Helpers
+'use strict';
+
+import { popen, readfile, writefile, mkstemp, stat, glob, error as fserror,
+         unlink, mkdir, access, open as fsopen } from 'fs';
+
+const LOG_DIR        = '/tmp/amlogic';
+const LOG_FILE       = LOG_DIR + '/amlogic.log';
+const LOG_RUNNING    = LOG_DIR + '/amlogic_running_script.log';
+const LOG_INSTALL    = LOG_DIR + '/amlogic_check_install.log';
+const LOG_UPFILES    = LOG_DIR + '/amlogic_check_upfiles.log';
+const LOG_PLUGIN     = LOG_DIR + '/amlogic_check_plugin.log';
+const LOG_KERNEL     = LOG_DIR + '/amlogic_check_kernel.log';
+const LOG_FIRMWARE   = LOG_DIR + '/amlogic_check_firmware.log';
+const LOG_RESCUE     = LOG_DIR + '/amlogic_check_rescue.log';
+const UPLOAD_TMP     = '/tmp/upload';
+const PKG_NAME       = 'luci-app-amlogic';
+const BACKUP_LIST    = '/etc/amlogic_backup_list.conf';
+
+// Map of safe log names -> file paths (for read_log_tail/read_log_full)
+const LOG_MAP = {
+	'main':     LOG_FILE,
+	'install':  LOG_INSTALL,
+	'upfiles':  LOG_UPFILES,
+	'plugin':   LOG_PLUGIN,
+	'kernel':   LOG_KERNEL,
+	'firmware': LOG_FIRMWARE,
+	'rescue':   LOG_RESCUE,
+	'running':  LOG_RUNNING
+};
+
+// Run a shell command, return trimmed stdout
+function sh(cmd) {
+	const p = popen(cmd, 'r');
+	if (!p) return '';
+	const out = p.read('all') ?? '';
+	p.close();
+	return trim(out);
+}
+
+// Run a shell command, return exit code (0 on success)
+function shcall(cmd) {
+	// `sh -c "...; echo $?"` — last line is exit code.
+	const out = sh('(' + cmd + ') >/dev/null 2>&1; echo $?');
+	const lines = split(out, '\n');
+	const last = lines[length(lines) - 1] ?? '1';
+	return int(last);
+}
+
+// Run a shell command in the background (fire-and-forget).
+// Returns immediately so rpcd is not blocked, allowing concurrent
+// read_log_tail / read_log_full polls to succeed.
+function shbg(cmd) {
+	// Detach from rpcd: close stdin so interactive prompts don't block,
+	// but let the command manage its own stdout/stderr (e.g. redirect to log).
+	const wrapper = '(' + cmd + ') </dev/null &';
+	const p = popen(wrapper, 'r');
+	if (p) p.close();
+}
+
+// Shell-quote a string for embedding into a /bin/sh command line
+function shq(s) {
+	return "'" + replace(s ?? '', "'", "'\\''") + "'";
+}
+
+// Ensure the runtime tmp dirs exist (mirrors the luci.sys.exec calls in the
+// original controller's index() function).
+function ensure_dirs() {
+	mkdir(LOG_DIR);
+	mkdir(UPLOAD_TMP);
+}
+
+// Read flippy-openwrt-release platform identifier
+function flippy_var(name) {
+	return sh("cat /etc/flippy-openwrt-release 2>/dev/null | grep " + shq(name) +
+	          " | awk -F= '{print $2}' | tr -d '\"' | xargs");
+}
+
+function platform() {
+	const v = flippy_var('PLATFORM');
+	const m = match(v, /(amlogic|rockchip|allwinner|qemu)/);
+	return m ? m[1] : 'Unknown';
+}
+
+function show_install_menu() {
+	const v = flippy_var('SHOW_INSTALL_MENU');
+	const m = match(v, /(yes|no)/);
+	return m ? m[1] : 'Unknown';
+}
+
+// Pick the helper script names for the current platform (as the original
+// controller did).
+function platform_scripts() {
+	const p = platform();
+	if (index(p, 'rockchip') >= 0)
+		return { install: '', update: 'openwrt-update-rockchip', kernel: 'openwrt-kernel' };
+	if (index(p, 'allwinner') >= 0)
+		return { install: 'openwrt-install-allwinner', update: 'openwrt-update-allwinner', kernel: 'openwrt-kernel' };
+	if (index(p, 'qemu') >= 0)
+		return { install: '', update: 'openwrt-update-kvm', kernel: 'openwrt-kernel' };
+	return { install: 'openwrt-install-amlogic', update: 'openwrt-update-amlogic', kernel: 'openwrt-kernel' };
+}
+
+// Read an option from the [config] section of /etc/config/amlogic
+function uci_cfg(opt) {
+	return sh('uci -q get amlogic.config.' + opt);
+}
+
+// --- Version helpers (identical logic to controller's *_version() funcs) ---
+function current_firmware_version() {
+	const v = sh("uname -r 2>/dev/null | grep -oE '^[1-9]\\.[0-9]{1,3}\\.[0-9]+'");
+	return v != '' ? v : 'Invalid value.';
+}
+function current_kernel_version() { return current_firmware_version(); }
+function current_kernel_branch() {
+	const def = sh("uname -r 2>/dev/null | grep -oE '^[1-9]\\.[0-9]{1,3}'");
+	const cfg = sh("uci -q get amlogic.config.amlogic_kernel_branch | grep -oE '^[1-9]\\.[0-9]{1,3}'");
+	return cfg != '' ? cfg : def;
+}
+function current_plugin_version() {
+	let v = '';
+	if (shcall('command -v opkg') == 0)
+		v = sh("opkg list-installed | grep '^" + PKG_NAME + "' | awk '{print $3}' | cut -d'-' -f1");
+	if (v == '' && shcall('command -v apk') == 0)
+		v = sh("apk list --installed 2>/dev/null | grep '^" + PKG_NAME + "' | awk '{print $1}' | cut -d'-' -f4");
+	return v != '' ? v : 'Invalid value.';
+}
+
+// --- Config-driven flags used when invoking helper scripts ---
+function update_restore_config() {
+	const v = uci_cfg('amlogic_firmware_config');
+	return (v == '' || int(v) != 0) ? 'restore' : 'no-restore';
+}
+function auto_write_bootloader() {
+	const v = uci_cfg('amlogic_write_bootloader');
+	return (v == '' || int(v) != 0) ? 'yes' : 'no';
+}
+function auto_shared_fstype() {
+	const v = trim(uci_cfg('amlogic_shared_fstype'));
+	return v != '' ? v : 'ext4';
+}
+
+// Read tail / full content of a known log file
+function _safe_log_path(name) {
+	return LOG_MAP[name] ?? null;
+}
+function read_log_tail(name) {
+	const p = _safe_log_path(name);
+	if (!p) return '';
+	const pipe = popen('cat ' + p + ' 2>/dev/null | tail -c 4096', 'r');
+	if (!pipe) return '';
+	const content = pipe.read('all') ?? '';
+	pipe.close();
+	if (!content) return '';
+	// Find the last non-empty line
+	const lines = split(content, '\n');
+	for (let i = length(lines) - 1; i >= 0; i--) {
+		const line = trim(lines[i]);
+		if (line !== '') return line;
+	}
+	return '';
+}
+function read_log_full(name) {
+	const p = _safe_log_path(name ?? 'main');
+	if (!p) return '';
+	// Use popen+cat for consistency with read_log_tail; readfile() may be
+	// stale inside the long-lived rpcd ucode process.
+	const pipe = popen('cat ' + p + ' 2>/dev/null', 'r');
+	if (!pipe) return '';
+	const t = pipe.read('all') ?? '';
+	pipe.close();
+	return t;
+}
+
+// Lazily seed the main log on first read (matches the Lua action_refresh_log
+// behaviour: when the log is missing, populate it with `uname -a`).
+function ensure_main_log() {
+	ensure_dirs();
+	if (!access(LOG_FILE)) {
+		shcall("uname -a > " + LOG_FILE);
+		let _logs1 = [LOG_INSTALL, LOG_UPFILES, LOG_PLUGIN, LOG_KERNEL,
+		              LOG_FIRMWARE, LOG_RESCUE, LOG_RUNNING];
+		for (let i = 0; i < length(_logs1); i++)
+			writefile(_logs1[i], '');
+	}
+}
+
+// Helper: clear (truncate) a file
+function clear(path) { writefile(path, ''); }
+
+// Cast/sanitise an `amlogic_install_sel` token: form is
+//   "<soc_id>@<dtb>:<socname>:<ubootname>"  (from old install view)
+// The Lua original passed res[2] verbatim (colon-string) to the install
+// script as the dtb_filename argument when soc_id == 99.
+function parse_install_sel(s) {
+	const parts = split(s ?? '', '@');
+	const soc_id = (parts[0] ?? '99');
+	let dtb = 'auto_dtb';
+	if (int(parts[0]) == 99 && length(parts) > 1 && parts[1] != '')
+		dtb = parts[1];
+	return { soc_id, dtb };
+}
+
+// Helper: parse `amlogic_update_sel` form
+//   "<firmware_name>@<updated>@<write_path>"
+function parse_update_sel(s) {
+	const a = split(s ?? '', '@');
+	return {
+		name:    a[0] ?? 'auto',
+		updated: a[1] ?? 'updated',
+		path:    a[2] ?? '/tmp'
+	};
+}
+
+// === ubus method bodies ===
+
+function m_state() {
+	return {
+		current_firmware_version: current_firmware_version(),
+		current_plugin_version:   current_plugin_version(),
+		current_kernel_version:   current_kernel_version(),
+		current_kernel_branch:    current_kernel_branch(),
+		kernel_release:           sh('uname -r')
+	};
+}
+
+function m_author() {
+	const r = uci_cfg('amlogic_firmware_repo');
+	return { openwrt_author: r != '' ? r : 'Invalid value.' };
+}
+
+function m_platform_info() {
+	const p = platform();
+	const m = show_install_menu();
+	const has_kvm = access('/boot/efi/EFI/BOOT/grub.cfg.prev') ? true : false;
+	// can_install: amlogic or allwinner have an install script; also forced by SHOW_INSTALL_MENU=yes
+	const can_install = (index(p, 'amlogic') >= 0 || index(p, 'allwinner') >= 0 || index(m, 'yes') >= 0);
+	// can_armcpu: all platforms except qemu support CPU frequency settings
+	const can_armcpu = (index(p, 'qemu') < 0);
+	// is_installed: root fs is on an internal storage device (mmcblk/sd/hd/vd),
+	// meaning OpenWrt has already been installed to eMMC/NVMe/disk. When true,
+	// the Install OpenWrt menu should be hidden.
+	const root_pt = sh("df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}'");
+	const is_installed = (root_pt != '' &&
+		(match(root_pt, /^mmcblk[0-9]+p[1-4]$/) ||
+		 match(root_pt, /^[hsv]d[a-z][0-9]+$/) ||
+		 match(root_pt, /^nvme[0-9]+n[0-9]+p[0-9]+$/)));
+	return {
+		platform:     p,
+		install_menu: m,
+		can_install,
+		can_armcpu,
+		has_kvm,
+		is_installed: is_installed ? true : false
+	};
+}
+
+function m_model_database() {
+	const p = platform();
+	let pat;
+	if (index(p, 'allwinner') >= 0)
+		pat = "^w[0-9]{1,9}.*:";
+	else
+		pat = "^[0-9]{1,9}.*:";
+	const out = sh("cat /etc/model_database.txt 2>/dev/null | grep -E " + shq(pat) +
+	               " | awk -F ':' '{print $1\"###\"$2}' | tr ' ' '~'");
+	const entries = [];
+	for (let line in split(out, '\n')) {
+		const t = trim(line);
+		if (t == '') continue;
+		const kv = split(t, '###');
+		if (length(kv) >= 2)
+			push(entries, { id: trim(kv[0]), name: replace(trim(kv[1]), '~', ' ') });
+	}
+	return { entries };
+}
+
+function m_snapshot_list() {
+	const out = sh("btrfs subvolume list -rt / 2>/dev/null | awk '{print $4}' | grep .snapshots");
+	const names = [];
+	for (let l in split(out, '\n')) {
+		const n = replace(trim(l), '.snapshots/', '');
+		if (n != '') push(names, n);
+	}
+	return { names };
+}
+
+// Mirrors the Lua "Edit List" button's side-effect: if the backup-list file is
+// missing or empty, pre-populate it from the BACKUP_LIST shell variable inside
+// /usr/sbin/openwrt-backup.
+function m_prime_backup_list() {
+	shcall("[ -s " + BACKUP_LIST + " ] || sed -n \"/BACKUP_LIST='/,/.*'$/p\" /usr/sbin/openwrt-backup | sed -e \"s/BACKUP_LIST=\\(.*\\)/\\1/; s/'//g; s/\\\\\\\\//g; s/ //g\" > " + BACKUP_LIST + " 2>/dev/null");
+	return { code: 0 };
+}
+
+// Create a read-only snapshot of /etc into /.snapshots/etc-<MM.DD.HHMMSS>.
+// Mirrors the `Create Snapshot` button in amlogic_backup.lua.
+function m_snapshot_create() {
+	shcall("btrfs subvolume snapshot -r /etc /.snapshots/etc-$(date +%m.%d.%H%M%S) && sync");
+	return { code: 0 };
+}
+
+function m_snapshot_delete(req) {
+	const n = req.args?.name ?? '';
+	if (!match(n, /^[A-Za-z0-9._-]+$/))
+		return { code: 1, error: 'invalid name' };
+	const rc = shcall("btrfs subvolume delete -c /.snapshots/etc-" + n + " && sync");
+	return { code: rc };
+}
+
+function m_snapshot_restore(req) {
+	const n = req.args?.name ?? '';
+	if (!match(n, /^[A-Za-z0-9._-]+$/))
+		return { error: 'invalid name' };
+	shcall("btrfs subvolume snapshot /.snapshots/etc-" + n + " /etc && sync");
+	// trigger a reboot like the Lua version (echo b > /proc/sysrq-trigger)
+	shcall("(sleep 1 && echo b > /proc/sysrq-trigger) &");
+	return { code: 0 };
+}
+
+function m_check_plugin(req) {
+	ensure_dirs();
+	const opt = req.args?.options ?? 'check';
+	writefile(LOG_PLUGIN, '');
+	shcall('chmod +x /usr/share/amlogic/amlogic_check_plugin.sh');
+	if (opt === 'check') {
+		shbg('/usr/share/amlogic/amlogic_check_plugin.sh -check');
+		return { code: 0 };
+	}
+	// download option: e.g. "download_3.1.290" — pass verbatim to the script
+	shbg('/usr/share/amlogic/amlogic_check_plugin.sh -download ' + shq(opt));
+	return { code: 0 };
+}
+
+function m_check_kernel(req) {
+	ensure_dirs();
+	const opt = req.args?.options ?? 'check';
+	writefile(LOG_KERNEL, '');
+	shcall('chmod +x /usr/share/amlogic/amlogic_check_kernel.sh');
+	if (opt == 'check') {
+		shbg('/usr/share/amlogic/amlogic_check_kernel.sh -check');
+		return { code: 0 };
+	}
+	// download option: pass the full param string directly to the script
+	// (it may contain underscores, dots, and digits — safe to pass verbatim
+	// since shbg wraps the whole command in single-quoted sh -c)
+	shbg('/usr/share/amlogic/amlogic_check_kernel.sh -download ' + shq(opt));
+	return { code: 0 };
+}
+
+function m_check_firmware(req) {
+	ensure_dirs();
+	const opt = req.args?.options ?? 'check';
+	writefile(LOG_FIRMWARE, '');
+	shcall('chmod +x /usr/share/amlogic/amlogic_check_firmware.sh');
+	if (opt == 'check') {
+		shbg('/usr/share/amlogic/amlogic_check_firmware.sh -check');
+		return { code: 0 };
+	}
+	// download option: may contain @, /, dots, etc. — pass via shq
+	shbg('/usr/share/amlogic/amlogic_check_firmware.sh -download ' + shq(opt));
+	return { code: 0 };
+}
+
+function m_start_plugin() {
+	ensure_dirs();
+	const cfg      = '/etc/config/amlogic';
+	const cfg_bak  = '/etc/config/amlogic_bak';
+	const script_path = LOG_DIR + '/amlogic_install_plugin.sh';
+	writefile(LOG_RUNNING, '1@Plugin update in progress, try again later!\n');
+	writefile(LOG_PLUGIN, '');
+	// Write install script to a file so shbg (which redirects stdin from
+	// /dev/null) can execute it — heredoc via shbg does not work because
+	// shbg closes stdin before sh can read the here-document.
+	const script = '#!/bin/sh\n'
+		+ 'LOG=' + shq(LOG_PLUGIN) + '\n'
+		+ 'LOG_RUNNING=' + shq(LOG_RUNNING) + '\n'
+		+ 'cfg=' + shq(cfg) + '\n'
+		+ 'cfg_bak=' + shq(cfg_bak) + '\n'
+		+ '[ -f "$cfg" ] && cp -f "$cfg" "$cfg_bak"\n'
+		+ 'if command -v opkg >/dev/null 2>&1; then\n'
+		+ '  echo "System uses opkg." >> "$LOG"\n'
+		+ '  opkg --force-reinstall --force-downgrade install /tmp/amlogic/*.ipk >> "$LOG" 2>&1\n'
+		+ '  rc=$?\n'
+		+ 'elif command -v apk >/dev/null 2>&1; then\n'
+		+ '  echo "System uses apk." >> "$LOG"\n'
+		+ '  apk add --force-overwrite --allow-untrusted /tmp/amlogic/*.apk >> "$LOG" 2>&1\n'
+		+ '  rc=$?\n'
+		+ 'else\n'
+		+ '  echo "Error: No package manager." >> "$LOG"\n'
+		+ '  rc=1\n'
+		+ 'fi\n'
+		+ 'if [ "$rc" = "0" ]; then\n'
+		+ '  [ -f "$cfg_bak" ] && cp -f "$cfg_bak" "$cfg"\n'
+		+ '  rm -f /etc/config/amlogic.apk-new /etc/config/amlogic.ipk-old\n'
+		+ '  rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* "$cfg_bak"\n'
+		+ '  echo "" > "$LOG_RUNNING"\n'
+		+ '  echo "Successful Update" > "$LOG"\n'
+		+ '  # Cross-branch cleanup: run in background after a delay so the browser\n'
+		+ '  # can poll "Successful Update" before any files are removed.\n'
+		+ '  (sleep 3\n'
+		+ '  new_release=""\n'
+		+ '  if command -v opkg >/dev/null 2>&1; then\n'
+		+ '    _raw="$(opkg list-installed | grep \'^luci-app-amlogic \' | awk \'{print $3}\' | cut -d\'-\' -f2)"\n'
+		+ '    new_release="${_raw#r}"\n'
+		+ '  elif command -v apk >/dev/null 2>&1; then\n'
+		+ '    new_release="$(apk list --installed 2>/dev/null | grep \'^luci-app-amlogic-\' | awk \'{print $1}\' | cut -d\'-\' -f5 | sed \'s/^r//\')"\n'
+		+ '  fi\n'
+		+ '  if [ "${new_release}" = "2" ]; then\n'
+		+ '    rm -f /usr/lib/lua/luci/controller/amlogic.lua\n'
+		+ '    rm -rf /usr/lib/lua/luci/model/cbi/amlogic\n'
+		+ '    rm -rf /usr/lib/lua/luci/view/amlogic\n'
+		+ '  elif [ "${new_release}" = "1" ]; then\n'
+		+ '    rm -f /usr/share/rpcd/ucode/luci.amlogic\n'
+		+ '    rm -f /www/luci-static/resources/view/amlogic/*.js\n'
+		+ '    rm -f /usr/share/luci/menu.d/luci-app-amlogic.json\n'
+		+ '  fi) &\n'
+		+ 'else\n'
+		+ '  echo "--- INSTALLATION FAILED! ---" >> "$LOG"\n'
+		+ '  [ -f "$cfg_bak" ] && cp -f "$cfg_bak" "$cfg"\n'
+		+ '  rm -f "$cfg_bak"\n'
+		+ '  echo "" > "$LOG_RUNNING"\n'
+		+ 'fi\n';
+	writefile(script_path, script);
+	shbg('sh ' + shq(script_path));
+	return { code: 0 };
+}
+
+function m_start_kernel() {
+	ensure_dirs();
+	const sc = platform_scripts();
+	writefile(LOG_RUNNING, '2@Kernel update in progress, try again later!\n');
+	shcall('chmod +x /usr/sbin/' + sc.kernel);
+	shbg('/usr/sbin/' + sc.kernel + ' ' + auto_write_bootloader() + ' > ' + LOG_KERNEL + ' 2>&1 && sync && echo "" > ' + LOG_RUNNING);
+	return { code: 0 };
+}
+
+function m_start_update(req) {
+	ensure_dirs();
+	const sc = platform_scripts();
+	writefile(LOG_RUNNING, '3@OpenWrt update in progress, try again later!\n');
+	shcall('chmod +x /usr/sbin/' + sc.update);
+	const u = parse_update_sel(req.args?.amlogic_update_sel);
+	shcall('mkdir -p ' + shq(u.path + '/.luci-app-amlogic'));
+	shcall('echo ' + shq(u.updated) + ' > ' + shq(u.path + '/.luci-app-amlogic/op_release_code') + ' && sync');
+	shbg('/usr/sbin/' + sc.update + ' ' + shq(u.name) + ' ' +
+	     auto_write_bootloader() + ' ' + update_restore_config() +
+	     ' > ' + LOG_FIRMWARE + ' 2>&1 && sync && echo "" > ' + LOG_RUNNING);
+	return { code: 0 };
+}
+
+function m_start_install(req) {
+	ensure_dirs();
+	const sc = platform_scripts();
+	if (sc.install == '') return { error: 'install not supported on platform' };
+	shcall('chmod +x /usr/sbin/' + sc.install);
+	const i = parse_install_sel(req.args?.amlogic_install_sel);
+	if (!match(i.soc_id, /^[0-9]+$/) || !match(i.dtb, /^[A-Za-z0-9._:-]+$/))
+		return { error: 'invalid install sel' };
+	writefile(LOG_INSTALL, '');
+	shbg('/usr/sbin/' + sc.install + ' ' + auto_write_bootloader() + ' ' +
+	     i.soc_id + ' ' + i.dtb + ' ' + auto_shared_fstype() +
+	     ' > ' + LOG_INSTALL + ' 2>&1 && sync');
+	return { code: 0 };
+}
+
+function m_start_rescue() {
+	ensure_dirs();
+	const sc = platform_scripts();
+	writefile(LOG_RUNNING, '4@Kernel rescue in progress, try again later!\n');
+	shcall('chmod +x /usr/sbin/' + sc.kernel);
+	shbg('/usr/sbin/' + sc.kernel + ' -s > ' + LOG_RESCUE + ' 2>&1 && sync && echo "" > ' + LOG_RUNNING);
+	return { code: 0 };
+}
+
+function m_read_log_tail(req) {
+	return { line: read_log_tail(req.args?.name ?? '') };
+}
+
+function m_read_log_full(req) {
+	ensure_main_log();
+	return { content: read_log_full(req.args?.name ?? 'main') };
+}
+
+function m_del_log() {
+	let _logs2 = [LOG_FILE, LOG_INSTALL, LOG_UPFILES, LOG_PLUGIN, LOG_KERNEL,
+	              LOG_FIRMWARE, LOG_RESCUE, LOG_RUNNING];
+	for (let i = 0; i < length(_logs2); i++)
+		writefile(_logs2[i], '');
+	return { code: 0 };
+}
+
+function m_poweroff() {
+	shcall('(sleep 1 && /sbin/poweroff) &');
+	return { code: 0 };
+}
+
+function m_kvm_switch() {
+	shcall('[ -f /boot/efi/EFI/BOOT/grub.cfg.prev ] && (cd /boot/efi/EFI/BOOT/ && ' +
+	       'mv -f grub.cfg grub.cfg.bak && mv -f grub.cfg.prev grub.cfg && ' +
+	       'mv -f grub.cfg.bak grub.cfg.prev)');
+	shcall('(sync && sleep 1 && reboot) &');
+	return { code: 0 };
+}
+
+function m_check_upfiles() {
+	const t = readfile(LOG_UPFILES) ?? '';
+	return { value: trim(t) };
+}
+
+// Pick upload directory using exactly the same heuristic as the Lua version
+function compute_upload_path() {
+	const root_pt = sh("df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}'");
+	if (root_pt != '' && match(root_pt, /^mmcblk[0-4]p[1-4]$/)) {
+		const emmc = sh('echo ' + shq(root_pt) + " | awk '{print substr($1,1,length($1)-2)}'");
+		return '/mnt/' + emmc + 'p4/';
+	}
+	if (root_pt != '' && match(root_pt, /^[hsv]d[a-z][0-9]+$/)) {
+		const emmc = sh('echo ' + shq(root_pt) + " | awk '{print substr($1,1,length($1)-1)}'");
+		return '/mnt/' + emmc + '4/';
+	}
+	return '/tmp/upload/';
+}
+
+function m_upload_path() {
+	const p = compute_upload_path();
+	mkdir(p);
+	return { path: p };
+}
+
+function _human_size(n) {
+	const units = [' kB', ' MB', ' GB', ' TB'];
+	let i = -1;
+	let s = +n;
+	while (s > 1024 && i < length(units) - 1) {
+		s = s / 1024;
+		i++;
+	}
+	if (i < 0) { s = n / 1024; i = 0; }
+	return sprintf('%.1f', s) + units[i];
+}
+
+function m_list_uploads() {
+	const dir = compute_upload_path();
+	mkdir(dir);
+	const items = [];
+	let firmware = false, boot = false, dtb = false, modules = false, cfg = false;
+	const files = glob(dir + '*') ?? [];
+	for (let f in files) {
+		const st = stat(f);
+		if (!st || st.type != 'file') continue;
+		const base = replace(f, /^.*\//, '');
+		const lcname = lc(base);
+		if (match(lcname, /\.img\.gz$/) || match(lcname, /\.img\.xz$/) ||
+		    match(lcname, /\.7z$/) || match(lcname, /\.img$/))
+			firmware = true;
+		if (match(lcname, /^boot-/)) boot = true;
+		if (match(lcname, /^dtb-/)) dtb = true;
+		if (match(lcname, /^modules-/)) modules = true;
+		if (lcname == 'openwrt_config.tar.gz') cfg = true;
+		push(items, {
+			name:    base,
+			mtime:   sprintf('%s', sh('date -d @' + st.mtime + ' +"%Y-%m-%d %H:%M:%S"')),
+			modestr: st.modestr ?? '',
+			size:    _human_size(st.size),
+			ipk:     match(lcname, /\.(ipk|apk)$/) ? true : false,
+			cfg:     (lcname == 'openwrt_config.tar.gz')
+		});
+	}
+	// Match the Lua page side-effect: write the upfiles status flag.
+	ensure_dirs();
+	if (firmware) writefile(LOG_UPFILES, 'firmware\n');
+	else if (boot && dtb && modules) writefile(LOG_UPFILES, 'kernel\n');
+	else writefile(LOG_UPFILES, '');
+	return { path: dir, items, has_firmware: firmware,
+	         has_kernel: (boot && dtb && modules),
+	         has_config: cfg };
+}
+
+function _safe_basename(s) {
+	const b = replace(s ?? '', /^.*[\\\/]/, '');
+	// Permissive basename check: only reject empty, dot/dotdot and anything
+	// still containing path separators after the strip. Strict allowlists
+	// rejected legitimate filenames (e.g. some i18n packages) on certain
+	// runtimes where the regex character class behaved unexpectedly.
+	if (b == '' || b == '.' || b == '..') return null;
+	if (index(b, '/') >= 0 || index(b, '\\') >= 0) return null;
+	return b;
+}
+
+// Chunked upload helper. The browser-side view splits the file into base64
+// chunks and calls this method N times. The first call (append=false)
+// truncates / creates the file; later calls append. Implemented through our
+// own ubus method so it bypasses the cgi-upload ACL flow entirely (the
+// ucode runs as root and owns the upload dir).
+function m_upload_chunk(req) {
+	const dir = compute_upload_path();
+	mkdir(dir);
+	const b = _safe_basename(req.args?.name);
+	if (!b) return { ok: false, error: 'invalid name: ' + (req.args?.name ?? '') };
+	const full = dir + b;
+	const data = b64dec(req.args?.data ?? '');
+	if (data === null) return { ok: false, error: 'invalid data' };
+	const append = !!req.args?.append;
+	const fp = fsopen(full, append ? 'a' : 'w');
+	if (!fp) return { ok: false, error: 'open failed: ' + (fserror() ?? '') };
+	const n = fp.write(data);
+	fp.close();
+	if (n === null) return { ok: false, error: 'write failed: ' + (fserror() ?? '') };
+	return { ok: true, written: n };
+}
+
+function m_delete_upload(req) {
+	const dir = compute_upload_path();
+	const b = _safe_basename(req.args?.name);
+	if (!b) return { error: 'invalid name' };
+	return { ok: (unlink(dir + b) ? true : false) };
+}
+
+function m_install_upload(req) {
+	const dir = compute_upload_path();
+	const b = _safe_basename(req.args?.name);
+	if (!b) return { error: 'invalid name' };
+	const full = dir + b;
+	const lc_b = lc(b);
+	if (lc_b == 'openwrt_config.tar.gz') {
+		shcall('chmod +x /usr/sbin/openwrt-backup');
+		// Use shbg so the restore+reboot does not block the rpcd thread.
+		shbg('/usr/sbin/openwrt-backup -r > ' + LOG_FILE + ' 2>&1 && sync');
+		return { code: 0, kind: 'config' };
+	}
+	if (match(lc_b, /\.ipk$/) || match(lc_b, /\.apk$/)) {
+		let out = '';
+		if (shcall('command -v opkg') == 0)
+			out = sh('opkg --force-reinstall --force-downgrade install ' + shq(full) + ' 2>&1');
+		else if (shcall('command -v apk') == 0)
+			out = sh('apk add --force-overwrite --allow-untrusted ' + shq(full) + ' 2>&1');
+		else
+			out = "Error: Neither 'opkg' nor 'apk' package manager found on the system.";
+		shcall('rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/*');
+		return { code: 0, kind: 'package', output: out };
+	}
+	return { error: 'unsupported file type' };
+}
+
+function m_backup_create() {
+	ensure_dirs();
+	shcall('chmod +x /usr/sbin/openwrt-backup');
+	shcall('/usr/sbin/openwrt-backup -b > ' + LOG_FILE + ' && sync');
+	const path = '/.reserved/openwrt_config.tar.gz';
+	const ok = access(path);
+	return { ok: ok ? true : false, path };
+}
+
+function m_save_backup_list(req) {
+	let v = req.args?.content ?? '';
+	// strip leading whitespace per line
+	v = replace(v, /\r/g, '');
+	const lines = split(v, '\n');
+	const out = [];
+	for (let l in lines) {
+		let t = replace(l, /^\s+/, '');
+		// strip trailing backslash continuation
+		t = replace(t, /\s*\\\s*$/, '');
+		if (t != '') push(out, t);
+	}
+	writefile(BACKUP_LIST, join('\n', out) + '\n');
+	return { ok: true };
+}
+
+function m_reload_cpu() {
+	shcall('(sleep 1 && /etc/init.d/amlogic start) &');
+	return { code: 0 };
+}
+
+// Sync menu visibility UCI flags from runtime platform detection.
+// Called from info.js on every page load so the sidebar reflects the
+// current hardware state without requiring the user to visit Plugin Settings.
+function m_sync_menu() {
+	const p = platform();
+	const m = show_install_menu();
+	// Detect whether OpenWrt has already been installed to internal storage
+	const root_pt = sh("df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}'");
+	const is_installed = (root_pt != '' &&
+		(match(root_pt, /^mmcblk[0-9]+p[1-4]$/) ||
+		 match(root_pt, /^[hsv]d[a-z][0-9]+$/) ||
+		 match(root_pt, /^nvme[0-9]+n[0-9]+p[0-9]+$/)));
+	const can_install = (index(p, 'amlogic') >= 0 || index(p, 'allwinner') >= 0 || index(m, 'yes') >= 0);
+	const show_install = (can_install && !is_installed) ? 'yes' : 'no';
+	const show_armcpu  = (index(p, 'qemu') < 0) ? 'yes' : 'no';
+	shcall('uci -q set amlogic.config.menu_install=' + shq(show_install) +
+	       ' && uci -q set amlogic.config.menu_armcpu=' + shq(show_armcpu) +
+	       ' && uci commit amlogic');
+	return { code: 0, show_install, show_armcpu };
+}
+
+// Enumerate cpufreq policies + their available freqs/governors so the armcpu
+// view can render a tab per CPU policy (mirrors the Lua dynamic taboption
+// loop in amlogic_armcpu.lua).
+function m_cpu_policies() {
+	const policies_str = sh("ls /sys/devices/system/cpu/cpufreq 2>/dev/null | grep -E 'policy[0-9]{1,3}' | xargs");
+	let names = split(policies_str, ' ');
+	if (length(names) == 1 && names[0] == '') names = ['policy0'];
+	const out = [];
+	for (let n in names) {
+		const name = trim(n);
+		if (name == '') continue;
+		const id = replace(name, 'policy', '');
+		const freqs_raw = readfile('/sys/devices/system/cpu/cpufreq/' + name + '/scaling_available_frequencies') ?? '';
+		const govs_raw  = readfile('/sys/devices/system/cpu/cpufreq/' + name + '/scaling_available_governors') ?? '';
+		const freqs = []; for (let v in split(trim(freqs_raw), ' ')) if (v != '') push(freqs, v);
+		const govs  = []; for (let v in split(trim(govs_raw),  ' ')) if (v != '') push(govs, v);
+		const core_type = sh('cat /sys/devices/system/cpu/cpu' + id + "/uevent | grep -E '^OF_COMPATIBLE_0' | sed 's/^OF_COMPATIBLE_0=//' | xargs");
+		push(out, { name, id, freqs, governors: govs, core_type: core_type != '' ? core_type : 'Unknown' });
+	}
+	return { policies: out };
+}
+
+const methods = {
+	state:           { call: m_state },
+	author:          { call: m_author },
+	platform_info:   { call: m_platform_info },
+	model_database:  { call: m_model_database },
+	snapshot_list:   { call: m_snapshot_list },
+	snapshot_create: { call: m_snapshot_create },
+	snapshot_delete: { args: { name: '' }, call: m_snapshot_delete },
+	snapshot_restore:{ args: { name: '' }, call: m_snapshot_restore },
+	check_plugin:    { args: { options: '' }, call: m_check_plugin },
+	check_kernel:    { args: { options: '' }, call: m_check_kernel },
+	check_firmware:  { args: { options: '' }, call: m_check_firmware },
+	start_plugin:    { call: m_start_plugin },
+	start_kernel:    { call: m_start_kernel },
+	start_update:    { args: { amlogic_update_sel: '' }, call: m_start_update },
+	start_install:   { args: { amlogic_install_sel: '' }, call: m_start_install },
+	start_rescue:    { call: m_start_rescue },
+	read_log_tail:   { args: { name: '' }, call: m_read_log_tail },
+	read_log_full:   { args: { name: '' }, call: m_read_log_full },
+	del_log:         { call: m_del_log },
+	poweroff:        { call: m_poweroff },
+	kvm_switch:      { call: m_kvm_switch },
+	check_upfiles:   { call: m_check_upfiles },
+	upload_path:     { call: m_upload_path },
+	upload_chunk:    { args: { name: '', data: '', append: false }, call: m_upload_chunk },
+	list_uploads:    { call: m_list_uploads },
+	delete_upload:   { args: { name: '' }, call: m_delete_upload },
+	install_upload:  { args: { name: '' }, call: m_install_upload },
+	backup_create:   { call: m_backup_create },
+	save_backup_list:{ args: { content: '' }, call: m_save_backup_list },
+	prime_backup_list:{ call: m_prime_backup_list },
+	reload_cpu:      { call: m_reload_cpu },
+	sync_menu:       { call: m_sync_menu },
+	cpu_policies:    { call: m_cpu_policies }
+};
+
+return { 'luci.amlogic': methods };

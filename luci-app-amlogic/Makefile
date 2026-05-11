@@ -16,8 +16,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-amlogic
-PKG_VERSION:=3.1.301
-PKG_RELEASE:=1
+PKG_VERSION:=3.1.303
+PKG_RELEASE:=2
 
 PKG_LICENSE:=GPL-2.0 License
 PKG_MAINTAINER:=ophub <https://github.com/ophub/luci-app-amlogic>
@@ -25,7 +25,8 @@ PKG_MAINTAINER:=ophub <https://github.com/ophub/luci-app-amlogic>
 LUCI_TITLE:=LuCI support for custom TV boxes
 LUCI_PKGARCH:=all
 LUCI_DEPENDS:= \
-	@(aarch64||arm) +bash +blkid +block-mount +curl +dosfstools +e2fsprogs \
+	@(aarch64||arm) +luci-base +rpcd +rpcd-mod-ucode \
+	+bash +blkid +block-mount +curl +dosfstools +e2fsprogs \
 	+fdisk +jq +losetup +lsblk +parted +perl +pv +uuidgen
 
 define Package/$(PKG_NAME)/conffiles

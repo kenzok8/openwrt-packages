@@ -425,14 +425,14 @@ msgstr "Укажите ветку версии для файлов OpenWrt и я
 msgid "Set plugin branch:"
 msgstr "Ветка плагина:"
 
-msgid "Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. Default (empty) uses the main (Lua) branch."
-msgstr "Укажите ветку плагина luci-app-amlogic для раздела [Только обновить сервис Amlogic]. По умолчанию (пусто) используется ветка main (Lua)."
+msgid "Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. Default (empty) uses the main (JavaScript) branch."
+msgstr "Укажите ветку плагина luci-app-amlogic для раздела [Только обновить сервис Amlogic]. По умолчанию (пусто) используется ветка main (JavaScript)."
 
-msgid "main [Lua version]"
-msgstr "main [Lua версия]"
+msgid "main [JavaScript version]"
+msgstr "main [JavaScript версия]"
 
-msgid "js [JavaScript version]"
-msgstr "js [JavaScript версия]"
+msgid "lua [Lua version]"
+msgstr "lua [Lua версия]"
 
 msgid "Keep config update:"
 msgstr "Сохранять конфигурацию при обновлении:"
@@ -598,3 +598,60 @@ msgstr "Ожидание завершения выключения..."
 
 msgid "The device has been turned off"
 msgstr "Устройство выключено"
+
+msgid "Are you sure you want to power off the device?"
+msgstr "Вы уверены, что хотите выключить устройство?"
+
+msgid "Back"
+msgstr "Назад"
+
+msgid "Click the button below to safely power off the device."
+msgstr "Нажмите кнопку ниже, чтобы безопасно выключить устройство."
+
+msgid "Display the log of plug-in service operation."
+msgstr "Показать журнал работы службы плагина."
+
+msgid "Edit list of backup files"
+msgstr "Изменить список файлов резервной копии"
+
+msgid "Enter the dtb file name:"
+msgstr "Введите имя файла dtb:"
+
+msgid "In this list, you can manually add the file or directory list of files that need to be backed up. Please confirm that the format and content of the file are correct."
+msgstr "В этом списке можно вручную добавить файлы или каталоги, которые нужно резервировать. Пожалуйста, проверьте корректность формата и содержимого."
+
+msgid "Please refresh the page to see the changes."
+msgstr "Пожалуйста, обновите страницу, чтобы увидеть изменения."
+
+msgid "Power Off"
+msgstr "Выключить"
+
+msgid "Powered off."
+msgstr "Выключено."
+
+msgid "Powering off, please wait..."
+msgstr "Выключение, пожалуйста, подождите..."
+
+msgid "Running"
+msgstr "Работает"
+
+msgid "Save Failed"
+msgstr "Ошибка сохранения"
+
+msgid "Service Log"
+msgstr "Журнал службы"
+
+msgid "Start Refresh"
+msgstr "Начать обновление"
+
+msgid "Stop Refresh"
+msgstr "Остановить обновление"
+
+msgid "Stopped"
+msgstr "Остановлено"
+
+msgid "Successfully saved."
+msgstr "Сохранено успешно."
+
+msgid "Upload file..."
+msgstr "Загрузить файл..."

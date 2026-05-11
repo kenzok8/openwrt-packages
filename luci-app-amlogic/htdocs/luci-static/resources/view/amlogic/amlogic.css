@@ -1,0 +1,84 @@
+/* SPDX-License-Identifier: GPL-2.0
+ *
+ * Theme-aware styles for luci-app-amlogic JS views.
+ */
+
+/* --- Status text ------------------------------------ */
+.amlogic-status-ok   { color: #1a7f37; }
+.amlogic-status-err  { color: #c0392b; }
+.amlogic-status-info { color: #1f6feb; }
+
+/* --- Spacious row table -----------------------------------------------
+ * Used by views that lay out a single button + status text per row
+ * (check / backup / upload). border-collapse:collapse avoids the visible
+ * blank band that border-spacing would otherwise add around the table
+ * edges; row breathing room comes purely from cell padding.
+ * ---------------------------------------------------------------------- */
+.amlogic-row-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+.amlogic-row-table > tbody > tr > td,
+.amlogic-row-table > tr > td {
+	padding: 10px 12px;
+	vertical-align: middle;
+	line-height: 1.6;
+}
+
+/* --- Snapshot grid (cards) --------------------------------------------- */
+.amlogic-snap-list {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+	width: 100%;
+	background: transparent;
+}
+.amlogic-snap-list:after,
+.amlogic-snap-list .amlogic-snap-item:not(:nth-child(3n)) {
+	content: "";
+}
+.amlogic-snap-item {
+	box-sizing: border-box;
+	width: 150px;
+	height: 130px;
+	margin: 8px;
+	padding: 4px;
+	text-align: center;
+	font-size: 14px;
+	color: inherit;
+	background: transparent;
+	border: 1px solid rgba(127, 127, 127, 0.35);
+	border-radius: 4px;
+	transition: background-color 0.15s ease-in-out;
+}
+.amlogic-snap-item:hover {
+	background: rgba(127, 127, 127, 0.15);
+}
+.amlogic-snap-line {
+	line-height: 40px;
+}
+
+/* --- Info-page logo / author tiles ------------------------------------- */
+.amlogic-info-logo {
+	max-width: 100%;
+	height: auto;
+}
+
+/* --- Dark mode overrides (system / browser preference) -----------------
+ * Reads prefers-color-scheme from the system / browser. When the user has
+ * picked a dark theme, switch to brighter colors to keep readable contrast.
+ * LuCI itself only adjusts the background, so this stylesheet fills in the
+ * status text and snapshot border colors that the upstream theme leaves
+ * untouched.
+ * ---------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+	.amlogic-status-ok   { color: #4ade80; }
+	.amlogic-status-err  { color: #f87171; }
+	.amlogic-status-info { color: #60a5fa; }
+	.amlogic-snap-item {
+		border-color: rgba(200, 200, 200, 0.25);
+	}
+	.amlogic-snap-item:hover {
+		background: rgba(255, 255, 255, 0.08);
+	}
+}

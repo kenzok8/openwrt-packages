@@ -1,12 +1,34 @@
 #!/bin/sh
+# luci-app-amlogic-js: post-install configuration tweaks.
 
-sed -i 's/cbi.submit\"] = true/cbi.submit\"] = \"1\"/g' /usr/lib/lua/luci/dispatcher.lua
+# Detect running platform from /etc/flippy-openwrt-release. The original Lua
+# controller hid the "Install OpenWrt" menu unless platform=="amlogic" or
+# SHOW_INSTALL_MENU=="yes", and hid "CPU Settings" on the qemu platform.
+# Since menu.d JSON cannot run shell logic, we mirror those checks once here
+# and store the result as uci flags that the menu entries depend on.
+
+PLATFORM=$(grep -E '^PLATFORM=' /etc/flippy-openwrt-release 2>/dev/null | \
+           awk -F= '{print $2}' | tr -d '"' | xargs)
+SHOW_INSTALL=$(grep -E '^SHOW_INSTALL_MENU=' /etc/flippy-openwrt-release 2>/dev/null | \
+               awk -F= '{print $2}' | tr -d '"' | xargs)
+
+case "$PLATFORM" in
+	*amlogic*) MENU_INSTALL=yes ;;
+	*)         [ "$SHOW_INSTALL" = "yes" ] && MENU_INSTALL=yes || MENU_INSTALL=no ;;
+esac
+case "$PLATFORM" in
+	*qemu*) MENU_ARMCPU=no ;;
+	*)      MENU_ARMCPU=yes ;;
+esac
 
 uci -q batch <<-EOF >/dev/null
 	delete ucitrack.@amlogic[-1]
 	add ucitrack amlogic
 	set ucitrack.@amlogic[-1].init=amlogic
 	commit ucitrack
+	set amlogic.config.menu_install=${MENU_INSTALL}
+	set amlogic.config.menu_armcpu=${MENU_ARMCPU}
+	commit amlogic
 EOF
 
 rm -rf /tmp/luci-*
