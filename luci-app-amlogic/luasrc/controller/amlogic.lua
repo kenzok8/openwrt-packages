@@ -14,9 +14,19 @@ function index()
 
 	local platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)' | xargs") or "Unknown"
 	local install_menu = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep SHOW_INSTALL_MENU | awk -F'=' '{print $2}' | grep -oE '(yes|no)' | xargs") or "Unknown"
+	-- Detect whether root fs is already on internal storage (eMMC/NVMe/disk).
+	-- If so, OpenWrt is already installed and the Install menu should be hidden.
+	local root_pt = luci.sys.exec("df / | tail -n1 | awk '{print $1}' | awk -F'/' '{print $3}'") or ""
+	root_pt = root_pt:gsub("%s+", "")
+	local is_installed = (root_pt ~= "" and (
+		root_pt:match("^mmcblk%d+p%d+$") or
+		root_pt:match("^[hsv]d[a-z]%d+$") or
+		root_pt:match("^nvme%d+n%d+p%d+$")
+	)) and true or false
 
 	entry({ "admin", "system", "amlogic", "info" }, form("amlogic/amlogic_info"), _("Amlogic Service"), 1).leaf = true
-	if (string.find(platfrom, "amlogic")) ~= nil or (string.find(install_menu, "yes")) ~= nil then
+	local can_install = (string.find(platfrom, "amlogic") ~= nil or string.find(platfrom, "allwinner") ~= nil or string.find(install_menu, "yes") ~= nil)
+	if can_install and not is_installed then
 		entry({ "admin", "system", "amlogic", "install" }, form("amlogic/amlogic_install"), _("Install OpenWrt"), 2).leaf = true
 	end
 	entry({ "admin", "system", "amlogic", "upload" }, form("amlogic/amlogic_upload"), _("Manually Upload Update"), 3).leaf = true
@@ -62,52 +72,51 @@ function trim(str)
 	return (string.gsub(str, "%s+", ""))
 end
 
---Create a temporary folder
-local tmp_upload_dir = luci.sys.exec("[ -d /tmp/upload ] || mkdir -p /tmp/upload >/dev/null")
-local tmp_amlogic_dir = luci.sys.exec("[ -d /tmp/amlogic ] || mkdir -p /tmp/amlogic >/dev/null")
+--Create a temporary folder (fire-and-forget, result not needed)
+luci.sys.exec("[ -d /tmp/upload ] || mkdir -p /tmp/upload >/dev/null")
+luci.sys.exec("[ -d /tmp/amlogic ] || mkdir -p /tmp/amlogic >/dev/null")
 
---Whether to automatically restore the firmware config
-local amlogic_firmware_config = luci.sys.exec("uci get amlogic.config.amlogic_firmware_config 2>/dev/null") or "1"
-if tonumber(amlogic_firmware_config) == 0 then
-	update_restore_config = "no-restore"
-else
-	update_restore_config = "restore"
-end
+-- Read per-request UCI config and platform info.
+-- Defined as a function so values are always fresh (not stale from module load).
+local function get_config()
+	local amlogic_firmware_config = luci.sys.exec("uci get amlogic.config.amlogic_firmware_config 2>/dev/null") or "1"
+	local update_restore_config = (tonumber(amlogic_firmware_config) == 0) and "no-restore" or "restore"
 
---Whether to automatically write to the bootLoader
-local amlogic_write_bootloader = luci.sys.exec("uci get amlogic.config.amlogic_write_bootloader 2>/dev/null") or "1"
-if tonumber(amlogic_write_bootloader) == 0 then
-	auto_write_bootloader = "no"
-else
-	auto_write_bootloader = "yes"
-end
+	local amlogic_write_bootloader = luci.sys.exec("uci get amlogic.config.amlogic_write_bootloader 2>/dev/null") or "1"
+	local auto_write_bootloader = (tonumber(amlogic_write_bootloader) == 0) and "no" or "yes"
 
---Set the file system type of the shared partition
-local amlogic_shared_fstype = luci.sys.exec("uci get amlogic.config.amlogic_shared_fstype 2>/dev/null") or ""
-if trim(amlogic_shared_fstype) == "" then
-	auto_shared_fstype = "ext4"
-else
-	auto_shared_fstype = trim(amlogic_shared_fstype)
-end
+	local amlogic_shared_fstype = trim(luci.sys.exec("uci get amlogic.config.amlogic_shared_fstype 2>/dev/null") or "")
+	local auto_shared_fstype = (amlogic_shared_fstype == "") and "ext4" or amlogic_shared_fstype
 
---Device identification
-device_platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)' | xargs") or "Unknown"
-if (string.find(device_platfrom, "rockchip")) ~= nil then
-	device_install_script = ""
-	device_update_script = "openwrt-update-rockchip"
-	device_kernel_script = "openwrt-kernel"
-elseif (string.find(device_platfrom, "allwinner")) ~= nil then
-	device_install_script = "openwrt-install-allwinner"
-	device_update_script = "openwrt-update-allwinner"
-	device_kernel_script = "openwrt-kernel"
-elseif (string.find(device_platfrom, "qemu")) ~= nil then
-	device_install_script = ""
-	device_update_script = "openwrt-update-kvm"
-	device_kernel_script = "openwrt-kernel"
-else
-	device_install_script = "openwrt-install-amlogic"
-	device_update_script = "openwrt-update-amlogic"
-	device_kernel_script = "openwrt-kernel"
+	local device_platfrom = luci.sys.exec("cat /etc/flippy-openwrt-release 2>/dev/null | grep PLATFORM | awk -F'=' '{print $2}' | grep -oE '(amlogic|rockchip|allwinner|qemu)' | xargs") or "Unknown"
+	local device_install_script, device_update_script, device_kernel_script
+	if string.find(device_platfrom, "rockchip") then
+		device_install_script = ""
+		device_update_script  = "openwrt-update-rockchip"
+		device_kernel_script  = "openwrt-kernel"
+	elseif string.find(device_platfrom, "allwinner") then
+		device_install_script = "openwrt-install-allwinner"
+		device_update_script  = "openwrt-update-allwinner"
+		device_kernel_script  = "openwrt-kernel"
+	elseif string.find(device_platfrom, "qemu") then
+		device_install_script = ""
+		device_update_script  = "openwrt-update-kvm"
+		device_kernel_script  = "openwrt-kernel"
+	else
+		device_install_script = "openwrt-install-amlogic"
+		device_update_script  = "openwrt-update-amlogic"
+		device_kernel_script  = "openwrt-kernel"
+	end
+
+	return {
+		update_restore_config = update_restore_config,
+		auto_write_bootloader = auto_write_bootloader,
+		auto_shared_fstype    = auto_shared_fstype,
+		device_platfrom       = device_platfrom,
+		device_install_script = device_install_script,
+		device_update_script  = device_update_script,
+		device_kernel_script  = device_kernel_script,
+	}
 end
 
 --General array functions
@@ -191,9 +200,31 @@ function start_amlogic_plugin()
 		-- SUCCESS
 		luci.sys.call("echo 'Installation successful. Finalizing...' >> " .. log_file)
 		luci.sys.call(string.format("[ -f %s ] && cp -vf %s %s >> %s 2>&1", config_bak, config_bak, config_file, log_file))
+		luci.sys.call("rm -f /etc/config/amlogic.apk-new /etc/config/amlogic.ipk-old >> " .. log_file .. " 2>&1")
 		luci.sys.call("rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/* " .. config_bak)
 		luci.sys.call("echo '' > " .. running_lock)
 		luci.sys.call("echo 'Successful Update' > " .. log_file)
+		-- Cross-branch cleanup: run in background after a delay so the browser
+		-- can poll "Successful Update" before any files are removed.
+		local cleanup_cmd = table.concat({
+			"(sleep 3",
+			"new_release=''",
+			"if command -v opkg >/dev/null 2>&1; then",
+			"  new_release=\"$(opkg list-installed | grep '^luci-app-amlogic ' | awk '{print $3}' | cut -d'-' -f2)\"",
+			"elif command -v apk >/dev/null 2>&1; then",
+			"  new_release=\"$(apk list --installed 2>/dev/null | grep '^luci-app-amlogic-' | awk '{print $1}' | cut -d'-' -f5 | sed 's/^r//')\"",
+			"fi",
+			"if [ \"${new_release}\" = '2' ]; then",
+			"  rm -f /usr/lib/lua/luci/controller/amlogic.lua",
+			"  rm -rf /usr/lib/lua/luci/model/cbi/amlogic",
+			"  rm -rf /usr/lib/lua/luci/view/amlogic",
+			"elif [ \"${new_release}\" = '1' ]; then",
+			"  rm -f /usr/share/rpcd/ucode/luci.amlogic",
+			"  rm -f /www/luci-static/resources/view/amlogic/*.js",
+			"  rm -f /usr/share/luci/menu.d/luci-app-amlogic.json",
+			"fi) &"
+		}, "\n")
+		luci.sys.call(cleanup_cmd)
 		return 0
 	else
 		-- FAILURE
@@ -208,47 +239,52 @@ end
 
 --Upgrade the kernel
 function start_amlogic_kernel()
+	local cfg = get_config()
 	luci.sys.call("echo '2@Kernel update in progress, try again later!' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
-	luci.sys.call("chmod +x /usr/sbin/" .. device_kernel_script .. " >/dev/null 2>&1")
-	local state = luci.sys.call("/usr/sbin/" .. device_kernel_script .. " " .. auto_write_bootloader .. " > /tmp/amlogic/amlogic_check_kernel.log && sync >/dev/null 2>&1")
+	luci.sys.call("chmod +x /usr/sbin/" .. cfg.device_kernel_script .. " >/dev/null 2>&1")
+	local state = luci.sys.call("/usr/sbin/" .. cfg.device_kernel_script .. " " .. cfg.auto_write_bootloader .. " > /tmp/amlogic/amlogic_check_kernel.log && sync >/dev/null 2>&1")
 	return state
 end
 
 --Upgrade amlogic openwrt firmware
 function start_amlogic_update()
+	local cfg = get_config()
 	luci.sys.call("echo '3@OpenWrt update in progress, try again later!' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
-	luci.sys.call("chmod +x /usr/sbin/" .. device_update_script .. " >/dev/null 2>&1")
+	luci.sys.call("chmod +x /usr/sbin/" .. cfg.device_update_script .. " >/dev/null 2>&1")
 	local amlogic_update_sel = luci.http.formvalue("amlogic_update_sel")
 	local res = string.split(amlogic_update_sel, "@")
 	local update_firmware_name = res[1] or "auto"
 	local update_firmware_updated = res[2] or "updated"
 	local update_write_path = res[3] or "/tmp"
 	luci.sys.call("echo " .. update_firmware_updated .. " > " .. update_write_path .. "/.luci-app-amlogic/op_release_code 2>/dev/null && sync")
-	local state = luci.sys.call("/usr/sbin/" .. device_update_script .. " " .. update_firmware_name .. " " .. auto_write_bootloader .. " " .. update_restore_config .. " > /tmp/amlogic/amlogic_check_firmware.log && sync 2>/dev/null")
+	local state = luci.sys.call("/usr/sbin/" .. cfg.device_update_script .. " " .. update_firmware_name .. " " .. cfg.auto_write_bootloader .. " " .. cfg.update_restore_config .. " > /tmp/amlogic/amlogic_check_firmware.log && sync 2>/dev/null")
 	return state
 end
 
---Read rescue kernel log
+--Rescue kernel
 local function start_amlogic_rescue()
+	local cfg = get_config()
 	luci.sys.call("echo '4@Kernel rescue in progress, try again later!' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
-	luci.sys.call("chmod +x /usr/sbin/" .. device_kernel_script .. " >/dev/null 2>&1")
-	local state = luci.sys.call("/usr/sbin/" .. device_kernel_script .. " -s > /tmp/amlogic/amlogic_check_rescue.log && sync >/dev/null 2>&1")
+	luci.sys.call("chmod +x /usr/sbin/" .. cfg.device_kernel_script .. " >/dev/null 2>&1")
+	local state = luci.sys.call("/usr/sbin/" .. cfg.device_kernel_script .. " -s > /tmp/amlogic/amlogic_check_rescue.log && sync >/dev/null 2>&1")
 	luci.sys.call("echo '' > /tmp/amlogic/amlogic_running_script.log && sync >/dev/null 2>&1")
 	return state
 end
 
 --Install amlogic openwrt firmware
 function start_amlogic_install()
-	luci.sys.exec("chmod +x /usr/sbin/" .. device_install_script .. " >/dev/null 2>&1")
+	local cfg = get_config()
+	luci.sys.exec("chmod +x /usr/sbin/" .. cfg.device_install_script .. " >/dev/null 2>&1")
 	local amlogic_install_sel = luci.http.formvalue("amlogic_install_sel")
 	local res = string.split(amlogic_install_sel, "@")
-	soc_id = res[1] or "99"
+	local soc_id = res[1] or "99"
+	local dtb_filename
 	if tonumber(res[1]) == 99 then
 		dtb_filename = res[2] or "auto_dtb"
 	else
 		dtb_filename = "auto_dtb"
 	end
-	local state = luci.sys.call("/usr/sbin/" .. device_install_script .. " " .. auto_write_bootloader .. " " .. soc_id .. " " .. dtb_filename .. " " .. auto_shared_fstype .. " > /tmp/amlogic/amlogic_check_install.log && sync 2>/dev/null")
+	local state = luci.sys.call("/usr/sbin/" .. cfg.device_install_script .. " " .. cfg.auto_write_bootloader .. " " .. soc_id .. " " .. dtb_filename .. " " .. cfg.auto_shared_fstype .. " > /tmp/amlogic/amlogic_check_install.log && sync 2>/dev/null")
 	return state
 end
 
@@ -287,10 +323,11 @@ end
 function check_kernel()
 	luci.sys.exec("chmod +x /usr/share/amlogic/amlogic_check_kernel.sh >/dev/null 2>&1")
 	local kernel_options = luci.http.formvalue("kernel_options")
+	local state
 	if kernel_options == "check" then
-		local state = luci.sys.call("/usr/share/amlogic/amlogic_check_kernel.sh -check >/dev/null 2>&1")
+		state = luci.sys.call("/usr/share/amlogic/amlogic_check_kernel.sh -check >/dev/null 2>&1")
 	else
-		local state = luci.sys.call("/usr/share/amlogic/amlogic_check_kernel.sh -download " .. kernel_options .. " >/dev/null 2>&1")
+		state = luci.sys.call("/usr/share/amlogic/amlogic_check_kernel.sh -download " .. kernel_options .. " >/dev/null 2>&1")
 	end
 	return state
 end
@@ -307,10 +344,11 @@ end
 function check_firmware()
 	luci.sys.exec("chmod +x /usr/share/amlogic/amlogic_check_firmware.sh >/dev/null 2>&1")
 	local firmware_options = luci.http.formvalue("firmware_options")
+	local state
 	if firmware_options == "check" then
-		local state = luci.sys.call("/usr/share/amlogic/amlogic_check_firmware.sh -check >/dev/null 2>&1")
+		state = luci.sys.call("/usr/share/amlogic/amlogic_check_firmware.sh -check >/dev/null 2>&1")
 	else
-		local state = luci.sys.call("/usr/share/amlogic/amlogic_check_firmware.sh -download " .. firmware_options .. " >/dev/null 2>&1")
+		state = luci.sys.call("/usr/share/amlogic/amlogic_check_firmware.sh -download " .. firmware_options .. " >/dev/null 2>&1")
 	end
 	return state
 end
@@ -514,7 +552,8 @@ end
 
 --Read external model database
 local function my_model_database()
-	if (string.find(device_platfrom, "allwinner")) ~= nil then
+	local cfg = get_config()
+	if string.find(cfg.device_platfrom, "allwinner") then
 		return luci.sys.exec("cat /etc/model_database.txt 2>/dev/null | grep -E '^w[0-9]{1,9}.*:' | awk -F ':' '{print $1,$2}' OFS='###' ORS='@@@' | tr ' ' '~' 2>&1")
 	else
 		return luci.sys.exec("cat /etc/model_database.txt 2>/dev/null | grep -E '^[0-9]{1,9}.*:' | awk -F ':' '{print $1,$2}' OFS='###' ORS='@@@' | tr ' ' '~' 2>&1")

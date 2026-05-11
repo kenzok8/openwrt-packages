@@ -81,12 +81,23 @@ sleep 1
 get_plugin_info() {
     package_manager=""
     current_plugin_v=""
+    current_plugin_release=""
     if command -v opkg >/dev/null 2>&1; then
         package_manager="ipk"
-        current_plugin_v="$(opkg list-installed | grep '^luci-app-amlogic ' | awk '{print $3}' | cut -d'-' -f1)"
+        # Full version string e.g. "3.1.295-1" or "3.1.295-2"
+        local full_v
+        full_v="$(opkg list-installed | grep '^luci-app-amlogic ' | awk '{print $3}')"
+        current_plugin_v="$(echo "${full_v}" | cut -d'-' -f1)"
+        current_plugin_release="$(echo "${full_v}" | cut -d'-' -f2)"
     elif command -v apk >/dev/null 2>&1; then
         package_manager="apk"
-        current_plugin_v="$(apk list --installed | grep '^luci-app-amlogic-' | awk '{print $1}' | cut -d'-' -f4)"
+        # Package name e.g. "luci-app-amlogic-3.1.295-r2"
+        # Fields: luci(1) app(2) amlogic(3) 3.1.295(4) r2(5)
+        local pkg_name
+        pkg_name="$(apk list --installed | grep '^luci-app-amlogic-' | awk '{print $1}')"
+        current_plugin_v="$(echo "${pkg_name}" | cut -d'-' -f4)"
+        # Extract release number: "r2" -> "2"
+        current_plugin_release="$(echo "${pkg_name}" | cut -d'-' -f5 | sed 's/^r//')"
     fi
 }
 
@@ -97,7 +108,7 @@ check_plugin() {
     if [[ -z "${package_manager}" || -z "${current_plugin_v}" ]]; then
         tolog "01.01 Plugin 'luci-app-amlogic' not found or package manager unknown." "1"
     else
-        tolog "01.01 Using [${package_manager}]. Current version: ${current_plugin_v}"
+        tolog "01.01 Using [${package_manager}]. Current version: ${current_plugin_v}, Release: ${current_plugin_release:-unknown}"
     fi
     sleep 2
 
@@ -125,10 +136,22 @@ check_plugin() {
     tolog "02.01 Current version: ${current_plugin_v}, Latest version: ${latest_version}"
     sleep 2
 
-    # Strip variant suffix (e.g. "-js") from latest_version for comparison,
-    # because installed package version only contains the numeric part (e.g. 3.1.295).
+    # Strip variant suffix (e.g. "-js") from latest_version to get the numeric part.
     latest_version_base="${latest_version%%-*}"
-    if [[ "${current_plugin_v}" == "${latest_version_base}" ]]; then
+
+    # Determine target PKG_RELEASE for the selected branch:
+    #   js branch  -> release 2
+    #   lua branch -> release 1
+    if [[ "${plugin_branch}" == "js" ]]; then
+        target_release="2"
+    else
+        target_release="1"
+    fi
+
+    # Only report "already latest" when BOTH the version number AND the installed
+    # branch (PKG_RELEASE) match the selected branch. If the user switched branches
+    # (same version number but different release), we still offer an update.
+    if [[ "${current_plugin_v}" == "${latest_version_base}" && "${current_plugin_release}" == "${target_release}" ]]; then
         tolog "02.02 Already the latest version, no need to update." "1"
     else
         tolog '<input type="button" class="cbi-button cbi-button-reload" value="Download" onclick="return b_check_plugin(this, '"'download_${latest_version}'"')"/> Latest version: '${latest_version}'' "1"
