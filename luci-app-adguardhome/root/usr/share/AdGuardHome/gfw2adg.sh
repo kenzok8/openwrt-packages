@@ -15,7 +15,6 @@ checkmd5(){
 	fi
 }
 
-configpath
 configpath="$(uci get AdGuardHome.AdGuardHome.configpath 2>/dev/null)"
 if [ -z "$configpath" ]; then
 	configpath="/etc/AdGuardHome.yaml"
@@ -34,30 +33,30 @@ if [ -z "$gfwupstream" ]; then
 fi
 
 if [ ! -f "$configpath" ]; then
-	echo "Error: config file not found, please create config first"
+	echo "错误：配置文件未找到，请先创建配置"
 	exit 1
 fi
 
-echo "Downloading gfwlist..."
+echo "正在下载 gfwlist..."
 GFWLIST_URL="https://gitlab.com/gfwlist/gfwlist/raw/master/gfwlist.txt"
 if curl -sL -k --retry 2 --connect-timeout 20 -o /tmp/gfwlist.txt "$GFWLIST_URL" 2>/dev/null; then
 	:
 elif wget-ssl --no-check-certificate -t 2 -T 20 -O /tmp/gfwlist.txt "$GFWLIST_URL" 2>/dev/null; then
 	:
 else
-	echo "Error: failed to download gfwlist"
+	echo "错误：gfwlist 下载失败"
 	exit 1
 fi
 
 if [ ! -s /tmp/gfwlist.txt ]; then
-	echo "Error: gfwlist download is empty"
+	echo "错误：gfwlist 下载内容为空"
 	rm -f /tmp/gfwlist.txt
 	exit 1
 fi
 
 base64 -d < /tmp/gfwlist.txt > /tmp/gfwlist_decoded.txt 2>/dev/null
 if [ $? -ne 0 ] || [ ! -s /tmp/gfwlist_decoded.txt ]; then
-	echo "Error: failed to decode gfwlist"
+	echo "错误：gfwlist 解码失败"
 	rm -f /tmp/gfwlist.txt
 	exit 1
 fi

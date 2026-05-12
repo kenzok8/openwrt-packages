@@ -155,10 +155,10 @@ msgid "log file"
 msgstr "日志文件"
 
 msgid "sessions.db"
-msgstr ""
+msgstr "会话数据库"
 
 msgid "stats.db"
-msgstr ""
+msgstr "统计数据库"
 
 msgid "querylog.json"
 msgstr "审计日志.json"
@@ -276,3 +276,18 @@ msgstr "载入计算模块"
 
 msgid "Reveal/hide password"
 msgstr "显示/隐藏密码"
+
+msgid "Error: bin path is a directory"
+msgstr "错误：执行文件路径是一个目录"
+
+msgid "Error: config path is a directory"
+msgstr "错误：配置文件路径是一个目录"
+
+msgid "Error: work dir is a file"
+msgstr "错误：工作目录是一个文件"
+
+msgid "Error: log file is a directory"
+msgstr "错误：日志文件是一个目录"
+
+msgid "Error: backup dir is a file"
+msgstr "错误：备份目录是一个文件"

@@ -85,7 +85,7 @@ o.validate = function(self, value)
 		fs.rmdir(value)
 	end
 	if fs.stat(value, "type") == "dir" then
-		m.message = (m.message or "") .. "\nerror: bin path is a directory"
+		m.message = (m.message or "") .. "\n" .. translate("Error: bin path is a directory")
 		return nil
 	end
 	return value
@@ -113,7 +113,7 @@ o.validate = function(self, value)
 		fs.rmdir(value)
 	end
 	if fs.stat(value, "type") == "dir" then
-		m.message = (m.message or "") .. "\nerror: config path is a directory"
+		m.message = (m.message or "") .. "\n" .. translate("Error: config path is a directory")
 		return nil
 	end
 	return value
@@ -127,7 +127,7 @@ o.rmempty = false
 o.validate = function(self, value)
 	if value == "" then return nil end
 	if fs.stat(value, "type") == "reg" then
-		m.message = (m.message or "") .. "\nerror: work dir is a file"
+		m.message = (m.message or "") .. "\n" .. translate("Error: work dir is a file")
 		return nil
 	end
 	if value:sub(-1) == "/" then
@@ -144,7 +144,7 @@ o.validate = function(self, value)
 		fs.rmdir(value)
 	end
 	if value and value ~= "" and fs.stat(value, "type") == "dir" then
-		m.message = (m.message or "") .. "\nerror: log file is a directory"
+		m.message = (m.message or "") .. "\n" .. translate("Error: log file is a directory")
 		return nil
 	end
 	return value
@@ -239,7 +239,7 @@ o1.datatype = "string"
 o1.optional = false
 o1.validate = function(self, value)
 	if value and value ~= "" and fs.stat(value, "type") == "reg" then
-		m.message = (m.message or "") .. "\nerror: backup dir is a file"
+		m.message = (m.message or "") .. "\n" .. translate("Error: backup dir is a file")
 		return nil
 	end
 	if value and value:sub(-1) == "/" then
