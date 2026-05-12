@@ -154,6 +154,53 @@ o = s:option(Flag, "verbose", translate("Verbose log"))
 o.default = "0"
 o.optional = true
 
+o = s:option(Value, "user", translate("Service user"), translate("User the service runs under. If empty, defaults to 'adguardhome'."))
+o.placeholder = "adguardhome"
+o.datatype = "string"
+o.optional = true
+
+o = s:option(Value, "group", translate("Service group"), translate("Group the service runs under. If empty, defaults to 'adguardhome'."))
+o.placeholder = "adguardhome"
+o.datatype = "string"
+o.optional = true
+
+o = s:option(TextValue, "jail_mount", translate("Read-only file access"), translate("Directories or files AdGuardHome can read. One path per line."))
+o.rows = 4
+o.wrap = "off"
+o.optional = true
+o.rmempty = true
+
+o = s:option(TextValue, "jail_mount_rw", translate("Read-write file access"), translate("Directories or files AdGuardHome can write. One path per line."))
+o.rows = 4
+o.wrap = "off"
+o.optional = true
+o.rmempty = true
+
+o = s:option(Flag, "advanced_settings", translate("Show advanced settings"))
+o.default = "0"
+o.optional = true
+
+o = s:option(Value, "gc", "GOGC", translate("Tunes the garbage collector. If empty, defaults to 100."))
+o.datatype = "uinteger"
+o.placeholder = "0"
+o.optional = true
+o.rmempty = true
+o:depends("advanced_settings", "1")
+
+o = s:option(Value, "maxprocs", "GOMAXPROCS", translate("Max number of OS threads for Go. If empty, defaults to matching number of CPUs."))
+o.datatype = "uinteger"
+o.placeholder = "0"
+o.optional = true
+o.rmempty = true
+o:depends("advanced_settings", "1")
+
+o = s:option(Value, "memlimit", "GOMEMLIMIT", translate("Soft memory cap for Go runtime. If empty, defaults to unset."))
+o.datatype = "uinteger"
+o.placeholder = "0"
+o.optional = true
+o.rmempty = true
+o:depends("advanced_settings", "1")
+
 local gfw_status
 if fs.access(configpath) and luci.sys.call("grep -q 'programaddstart' " .. configpath .. " 2>/dev/null") == 0 then
 	gfw_status = translate("Added")

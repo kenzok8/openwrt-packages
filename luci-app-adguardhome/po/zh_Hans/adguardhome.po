@@ -291,3 +291,39 @@ msgstr "错误：日志文件是一个目录"
 
 msgid "Error: backup dir is a file"
 msgstr "错误：备份目录是一个文件"
+
+msgid "Service user"
+msgstr "服务用户"
+
+msgid "User the service runs under. If empty, defaults to 'adguardhome'."
+msgstr "服务运行的用户。留空则默认为 'adguardhome'。"
+
+msgid "Service group"
+msgstr "服务用户组"
+
+msgid "Group the service runs under. If empty, defaults to 'adguardhome'."
+msgstr "服务运行的用户组。留空则默认为 'adguardhome'。"
+
+msgid "Read-only file access"
+msgstr "只读文件访问"
+
+msgid "Directories or files AdGuardHome can read. One path per line."
+msgstr "AdGuardHome 可读取的目录或文件。每行一个路径。"
+
+msgid "Read-write file access"
+msgstr "读写文件访问"
+
+msgid "Directories or files AdGuardHome can write. One path per line."
+msgstr "AdGuardHome 可写入的目录或文件。每行一个路径。"
+
+msgid "Show advanced settings"
+msgstr "显示高级设置"
+
+msgid "Tunes the garbage collector. If empty, defaults to 100."
+msgstr "调优垃圾回收器。留空则默认为 100。"
+
+msgid "Max number of OS threads for Go. If empty, defaults to matching number of CPUs."
+msgstr "Go 可使用的最大系统线程数。留空则默认匹配 CPU 数量。"
+
+msgid "Soft memory cap for Go runtime. If empty, defaults to unset."
+msgstr "Go 运行时的软内存上限。留空则默认不限制。"
