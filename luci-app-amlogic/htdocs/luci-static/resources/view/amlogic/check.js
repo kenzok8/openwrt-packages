@@ -461,9 +461,10 @@ return view.extend({
 			dom.content(verKernel, s && s.current_kernel_version
 				? E('span', { class: 'amlogic-status-ok' }, _('Current Version') + ' [ ' + s.current_kernel_version + ' ] ')
 				: E('span', { class: 'amlogic-status-err' }, _('Invalid value.')));
-			dom.content(branchSpan, s && s.current_kernel_branch
-				? ' [ ' + s.current_kernel_branch + '.y ] '
-				: ' [ ' + _('Invalid value.') + ' ]');
+			var branchLabel = s && s.plugin_branch
+				? (s.plugin_branch === 'lua' ? 'Lua' : 'JavaScript')
+				: (s && s.has_luci_js ? 'JavaScript' : 'Lua');
+			dom.content(branchSpan, ' [ ' + branchLabel + ' ] ');
 
 			// Rescue row: show same kernel version directly via the verRescue span
 			dom.content(verRescue, s && s.current_kernel_version
