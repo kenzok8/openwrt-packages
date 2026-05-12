@@ -131,13 +131,13 @@ return view.extend({
 		const pbranch = o.option(form.ListValue, 'amlogic_plugin_branch',
 			_('Set plugin branch:'),
 			state.has_luci_js
-				? _('Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. Default (empty) uses the main (JavaScript) branch.')
+				? _('Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. Select main for JavaScript version or lua for Lua version.')
 				: _('Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. This system does not have JS LuCI, only the Lua branch is available.'));
 		if (state.has_luci_js)
-			pbranch.value('', _('main [JavaScript version]'));
+			pbranch.value('main', _('main [JavaScript version]'));
 		pbranch.value('lua', _('lua [Lua version]'));
-		pbranch.default = state.has_luci_js ? '' : 'lua';
-		pbranch.rmempty = true;
+		pbranch.default = state.has_luci_js ? 'main' : 'lua';
+		pbranch.rmempty = false;
 
 		// 9. Keep config
 		const fcfg = o.option(form.Flag, 'amlogic_firmware_config',

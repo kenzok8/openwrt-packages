@@ -425,8 +425,8 @@ msgstr "Укажите ветку версии для файлов OpenWrt и я
 msgid "Set plugin branch:"
 msgstr "Ветка плагина:"
 
-msgid "Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. Default (empty) uses the main (JavaScript) branch."
-msgstr "Укажите ветку плагина luci-app-amlogic для раздела [Только обновить сервис Amlogic]. По умолчанию (пусто) используется ветка main (JavaScript)."
+msgid "Set the branch of the luci-app-amlogic plugin used in [Only update Amlogic Service]. Select main for JavaScript version or lua for Lua version."
+msgstr "Укажите ветку плагина luci-app-amlogic для раздела [Только обновить сервис Amlogic]. Выберите main для JavaScript версии или lua для Lua версии."
 
 msgid "main [JavaScript version]"
 msgstr "main [JavaScript версия]"
