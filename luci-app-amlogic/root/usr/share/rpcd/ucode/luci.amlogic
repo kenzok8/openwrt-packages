@@ -475,7 +475,12 @@ function m_start_plugin() {
 		+ '      uci set amlogic.config.amlogic_plugin_branch=\'lua\' 2>/dev/null\n'
 		+ '    fi\n'
 		+ '    uci commit amlogic 2>/dev/null\n'
-		+ '  fi) &\n'
+		+ '  fi\n'
+		+ '  # Restart services so the newly installed files take effect immediately,\n'
+		+ '  # avoiding the need for users to manually clear browser cache.\n'
+		+ '  /etc/init.d/rpcd restart >> "$LOG" 2>&1\n'
+		+ '  /etc/init.d/uhttpd restart >> "$LOG" 2>&1\n'
+		+ '  ) &\n'
 		+ 'else\n'
 		+ '  echo "--- INSTALLATION FAILED! ---" >> "$LOG"\n'
 		+ '  [ -f "$cfg_bak" ] && cp -f "$cfg_bak" "$cfg"\n'
@@ -747,7 +752,8 @@ function m_sync_menu() {
 	const show_armcpu  = (index(p, 'qemu') < 0) ? 'yes' : 'no';
 	shcall('uci -q set amlogic.config.menu_install=' + shq(show_install) +
 	       ' && uci -q set amlogic.config.menu_armcpu=' + shq(show_armcpu) +
-	       ' && uci commit amlogic');
+	       ' && uci commit amlogic' +
+	       ' && rm -f /tmp/luci-indexcache* && rm -rf /tmp/luci-modulecache/*');
 	return { code: 0, show_install, show_armcpu };
 }
 

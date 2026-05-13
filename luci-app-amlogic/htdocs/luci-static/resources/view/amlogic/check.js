@@ -283,7 +283,6 @@ return view.extend({
 		var verPlugin   = E('span', _('Collecting data...'));
 		var verKernel   = E('span', _('Collecting data...'));
 		var verRescue   = E('span', _('Collecting data...'));
-		var branchSpan  = E('span');
 
 		// Per-action status spans (right side, updated by poll)
 		var statusFw = E('span');
@@ -419,8 +418,7 @@ return view.extend({
 			E('p', _('Provide OpenWrt Firmware, Kernel and Plugin online check, download and update service.')),
 			E('div', { class: 'cbi-section' }, [
 				E('p', { style: 'text-align:center' }, [
-					_('Update plugins first, then update the kernel or firmware. More options can be configured in [Plugin Settings].'),
-					' ', branchSpan
+					_('Update plugins first, then update the kernel or firmware. More options can be configured in [Plugin Settings].')
 				]),
 				E('table', { class: 'amlogic-row-table' }, [
 					E('tr', [
@@ -461,10 +459,6 @@ return view.extend({
 			dom.content(verKernel, s && s.current_kernel_version
 				? E('span', { class: 'amlogic-status-ok' }, _('Current Version') + ' [ ' + s.current_kernel_version + ' ] ')
 				: E('span', { class: 'amlogic-status-err' }, _('Invalid value.')));
-			var branchLabel = s && s.plugin_branch
-				? (s.plugin_branch === 'lua' ? 'Lua' : 'JavaScript')
-				: (s && s.has_luci_js ? 'JavaScript' : 'Lua');
-			dom.content(branchSpan, ' [ ' + branchLabel + ' ] ');
 
 			// Rescue row: show same kernel version directly via the verRescue span
 			dom.content(verRescue, s && s.current_kernel_version

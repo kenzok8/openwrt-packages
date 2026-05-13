@@ -23,6 +23,9 @@ const callAuthor = rpc.declare({
 // Called on every info page load so the sidebar menu is correct from first visit.
 const callSyncMenu = rpc.declare({ object: 'luci.amlogic', method: 'sync_menu' });
 
+// Get runtime state to determine plugin_branch for the language badge.
+const callState = rpc.declare({ object: 'luci.amlogic', method: 'state' });
+
 // Static list of supported boxes (display only, not used in any logic).
 const SUPPORTED_BOXES = [
 	_('Amlogic s922x --- [ Beelink, Beelink-Pro, Ugoos-AM6-Plus, ODROID-N2, Khadas-VIM3, Ali-CT2000 ]'),
@@ -57,15 +60,50 @@ return view.extend({
 	handleReset:     null,
 
 	load: function () {
-		// Fire sync_menu in background (don't block render on it).
-		callSyncMenu().catch(function () {});
-		return callAuthor();
+		// Call sync_menu and wait for it. sync_menu writes menu_install /
+		// menu_armcpu into UCI and clears the LuCI index cache on the server.
+		// On first boot from USB the install menu may be missing from the
+		// browser-side navigation (built before sync_menu ran). After the RPC
+		// returns we check if the sidebar already has an install link; if not,
+		// reload once so the browser re-fetches the updated menu tree.
+		// A URL hash flag (#menu-synced) prevents an infinite reload loop.
+		const alreadyReloaded = window.location.hash === '#menu-synced';
+		const syncMenuPromise = callSyncMenu().then(function (res) {
+			if (alreadyReloaded) return;
+			if (res && res.show_install === 'yes') {
+				// Check if the sidebar navigation already contains the install link.
+				const installLink = document.querySelector('a[href*="amlogic/install"]');
+				if (!installLink) {
+					// Server has updated the index cache; reload to pick up new nav.
+					window.location.replace(window.location.pathname + '#menu-synced');
+					window.location.reload();
+				}
+			}
+		}).catch(function () {});
+		return Promise.all([callAuthor(), syncMenuPromise]).then(function (r) { return r[0]; });
 	},
 
 	render: function (authorUrl) {
 		// Inject the theme stylesheet on first entry so amlogic-* classes work.
 		amlogicShared.ensureCss();
 		const res = L.resource('amlogic');
+
+		// Language badge image — default to javascript.svg (JS version),
+		// will be confirmed/corrected after the state RPC resolves.
+		var langsImg = E('img', {
+			id: 'Langs',
+			src: res + '/javascript.svg', alt: 'javascript',
+			width: '86', height: '20',
+			style: 'margin:0 5px; vertical-align:middle; border-radius:3px'
+		});
+
+		// Fetch plugin_branch from state and update the language badge.
+		callState().then(function (s) {
+			var isLua = s && s.plugin_branch === 'lua';
+			langsImg.src = res + (isLua ? '/lua.svg' : '/javascript.svg');
+			langsImg.alt = isLua ? 'lua' : 'javascript';
+			langsImg.setAttribute('width', isLua ? '46' : '86');
+		}).catch(function () {});
 
 		// Flatten the supported-boxes list to [text, <br>, text, <br>, ...].
 		const boxRows = [];
@@ -86,13 +124,13 @@ return view.extend({
 						E('img', {
 							src: res + '/packit.svg', alt: 'Packit',
 							width: '168', height: '20',
-							style: 'cursor:pointer; margin:0 5px',
+							style: 'cursor:pointer; margin:0 5px; vertical-align:middle; border-radius:3px',
 							click: function () { openExternal('https://github.com/unifreq/openwrt_packit'); }
 						}),
 						E('img', {
 							src: res + '/author.svg', alt: 'Author',
 							width: '168', height: '20',
-							style: 'cursor:pointer; margin:0 5px',
+							style: 'cursor:pointer; margin:0 5px; vertical-align:middle; border-radius:3px',
 							click: function () {
 								callAuthor().then(function (repo) {
 									let url = String(repo || '').trim();
@@ -106,9 +144,10 @@ return view.extend({
 						E('img', {
 							src: res + '/plugin.svg', alt: 'luci-app-amlogic',
 							width: '160', height: '20',
-							style: 'cursor:pointer; margin:0 5px',
+							style: 'cursor:pointer; margin:0 5px; vertical-align:middle; border-radius:3px',
 							click: function () { openExternal('https://github.com/ophub/luci-app-amlogic'); }
-						})
+						}),
+						langsImg
 					])
 				]),
 				E('tr', [
