@@ -69,7 +69,7 @@ return view.extend({
 			value: _('Update OpenWrt firmware'), style: 'display:none',
 			click: ui.createHandlerFn(this, function (ev) {
 				return doButton(ev.currentTarget,
-					_('Updating...'), _('Successful Update'), _('Update Failed'),
+					_('Updating...'), _('Update Failed'),
 					function () { return callStartUpd('auto@updated@/tmp'); });
 			})
 		});
@@ -78,7 +78,7 @@ return view.extend({
 			value: _('Replace OpenWrt Kernel'), style: 'display:none; margin-left:5px',
 			click: ui.createHandlerFn(this, function (ev) {
 				return doButton(ev.currentTarget,
-					_('Updating...'), _('Successful Update'), _('Update Failed'),
+					_('Updating...'), _('Update Failed'),
 					function () { return callStartKnl(); });
 			})
 		});
@@ -86,13 +86,23 @@ return view.extend({
 		const knLog = E('span');
 		const fwVer = E('span', _('Collecting data...'));
 
-		function doButton(btn, busyText, ok, fail, fn) {
-			// Shared button state machine: disabled -> RPC -> success/fail label.
+		function doButton(btn, busyText, fail, fn) {
+			// Shared button state machine: disabled -> RPC -> updating/fail label.
+			// On success (code==0) the button stays in busyText state and
+			// remains disabled — the device is about to reboot, so there is
+			// nothing to restore.  Only on failure do we surface an error and
+			// re-enable the button so the user can retry.
 			btn.disabled = true; btn.value = busyText;
 			return Promise.resolve(fn()).then(function (r) {
-				btn.value = (r && r.code == 0) ? ok : fail;
-			}).catch(function () { btn.value = fail; })
-			.finally(function () { btn.disabled = false; });
+				if (!r || r.code !== 0) {
+					btn.value = fail;
+					btn.disabled = false;
+				}
+				// code == 0 → keep busyText + disabled (update in progress)
+			}).catch(function () {
+				btn.value = fail;
+				btn.disabled = false;
+			});
 		}
 
 		function refreshList() {
