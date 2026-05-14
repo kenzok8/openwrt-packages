@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0
 // Manually Upload Update
 //
-// Features:
-//   1. Use ui.uploadFile() to open the browser-native file picker and upload
-//      to the path returned by the backend (default /tmp/upload/);
-//   2. Show a table of files in the upload directory (name / mtime / mode /
-//      size) with Remove, Install (ipk) and Restore (config backup) actions;
-//   3. Dynamically reveal "Update firmware" / "Replace kernel" buttons based
-//      on which file types are currently present in the upload dir; all
-//      buttons share doButton() to keep disabled / text / status transitions
-//      consistent;
-//   4. Concurrently poll the firmware/kernel log tails and display the
-//      current firmware version.
+// Purpose: upload local files (firmware / kernel / ipk / config backup) to the server,
+// list them, and trigger install / restore / update actions. Chunked upload uses
+// a custom ubus RPC instead of cgi-upload to avoid session ACL issues.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (upload_path, list_uploads, upload_chunk,
+//   delete_upload, install_upload, start_update, start_kernel, read_log_tail, state).
 
 'use strict';
 'require view';
@@ -22,43 +16,40 @@
 'require fs';
 'require view.amlogic.shared as amlogicShared';
 
-// Query the upload directory the backend allows (default /tmp/upload/, the
-// backend ensures it exists).
-const callUploadPath = rpc.declare({ object: 'luci.amlogic', method: 'upload_path',
-                                     expect: { path: '/tmp/upload/' } });
+// Query the upload directory the backend allows (default /tmp/upload/, the backend ensures it exists).
+const callUploadPath = rpc.declare({ object: 'luci.amlogic', method: 'upload_path', expect: { path: '/tmp/upload/' } });
 // List files in the upload dir plus flags about installable firmware/kernel/cfg.
 const callList       = rpc.declare({ object: 'luci.amlogic', method: 'list_uploads' });
 // Delete a named file in the upload dir.
-const callDelete     = rpc.declare({ object: 'luci.amlogic', method: 'delete_upload',
-                                     params: ['name'] });
-// Install one uploaded file (ipk) or restore a config backup; the backend
-// dispatches by suffix.
-const callInstall    = rpc.declare({ object: 'luci.amlogic', method: 'install_upload',
-                                     params: ['name'] });
+const callDelete     = rpc.declare({ object: 'luci.amlogic', method: 'delete_upload', params: ['name'] });
+// Install one uploaded file (ipk) or restore a config backup; the backend dispatches by suffix.
+const callInstall    = rpc.declare({ object: 'luci.amlogic', method: 'install_upload', params: ['name'] });
 // Chunked upload via our own RPC (sidesteps cgi-upload's session ACL flow).
-const callUploadChunk = rpc.declare({ object: 'luci.amlogic', method: 'upload_chunk',
-                                      params: ['name', 'data', 'append'] });
+const callUploadChunk = rpc.declare({ object: 'luci.amlogic', method: 'upload_chunk', params: ['name', 'data', 'append'] });
 // Run the full firmware update flow with parameters auto@updated@/tmp.
-const callStartUpd   = rpc.declare({ object: 'luci.amlogic', method: 'start_update',
-                                     params: ['amlogic_update_sel'] });
+const callStartUpd   = rpc.declare({ object: 'luci.amlogic', method: 'start_update', params: ['amlogic_update_sel'] });
 // Run the kernel-only replace flow.
 const callStartKnl   = rpc.declare({ object: 'luci.amlogic', method: 'start_kernel' });
 // Tail a named log to surface progress during install/update.
-const callLogTail    = rpc.declare({ object: 'luci.amlogic', method: 'read_log_tail',
-                                     params: ['name'], expect: { line: '' } });
+const callLogTail    = rpc.declare({ object: 'luci.amlogic', method: 'read_log_tail', params: ['name'], expect: { line: '' } });
 // Read system state (this page only uses current_firmware_version).
 const callState      = rpc.declare({ object: 'luci.amlogic', method: 'state' });
 
+// This page uses its own Upload/Install buttons and does not need the default Save/Apply/Reset buttons,
+// so we disable them by setting the handlers to null.
 return view.extend({
 	handleSave:      null,
 	handleSaveApply: null,
 	handleReset:     null,
 
+	// On load, ensure the CSS is injected and load the upload path from the backend.
 	load: function () {
 		amlogicShared.ensureCss();
 		return callUploadPath();
 	},
 
+	// Render the upload page: file input + upload button, table of existing uploads with Remove + Install/Restore buttons,
+	// and firmware/kernel update buttons if applicable. Also start polling the install/update log tails.
 	render: function (path) {
 		const view = this;
 
@@ -87,11 +78,9 @@ return view.extend({
 		const fwVer = E('span', _('Collecting data...'));
 
 		function doButton(btn, busyText, fail, fn) {
-			// Shared button state machine: disabled -> RPC -> updating/fail label.
-			// On success (code==0) the button stays in busyText state and
-			// remains disabled — the device is about to reboot, so there is
-			// nothing to restore.  Only on failure do we surface an error and
-			// re-enable the button so the user can retry.
+			// Shared button state machine: disabled → RPC → busyText or fail label.
+			// On success (code==0) the button stays in busyText state (device rebooting);
+			// on failure, re-enable so the user can retry.
 			btn.disabled = true; btn.value = busyText;
 			return Promise.resolve(fn()).then(function (r) {
 				if (!r || r.code !== 0) {
@@ -106,9 +95,8 @@ return view.extend({
 		}
 
 		function refreshList() {
-			// Refresh the file table and the hint text; the firmware / kernel
-			// buttons are shown or hidden based on the has_firmware / has_kernel
-			// flags reported by the backend.
+			// Refresh the file table; show/hide firmware/kernel update buttons
+			// based on has_firmware / has_kernel flags from the backend.
 			return callList().then(function (info) {
 				dom.content(tableContainer, buildTable(info.items || [], info.path));
 				let parts = [];
@@ -124,10 +112,9 @@ return view.extend({
 			});
 		}
 
+		// Helper to build the file table with Remove + Install/Restore buttons per row.
 		function buildTable(items, dir) {
-			// We expose three actions per row: remove any file, install ipk, and
-			// restore a config backup. Other types (firmware, kernel archive)
-			// are listed but have no individual install entry.
+			// File table: expose Remove + Install (ipk) / Restore (config backup) per row.
 			const tbl = E('table', { class: 'table cbi-section-table' }, [
 				E('tr', { class: 'tr cbi-section-table-titles' }, [
 					E('th', { class: 'th' }, _('File name')),
@@ -200,27 +187,13 @@ return view.extend({
 			return tbl;
 		}
 
-		// File upload widget. We deliberately avoid /cgi-bin/cgi-upload here
-		// because it requires the LuCI session to carry a `file` ACL entry
-		// for the chosen target path, which depends on rpcd ACL bookkeeping
-		// being live for this session — historically a fragile path.
-		// Instead we slice the picked file into ~256 KB chunks, base64-encode
-		// each chunk and POST them through our own ubus method
-		// `luci.amlogic.upload_chunk`. The ucode handler runs as root and
-		// owns the upload directory, so no separate file-write ACL is
-		// involved. Permission is governed solely by the existing
-		// `upload_chunk` entry in the rpcd ACL `write.ubus` block.
-		// Chunk size for ubus payload. ubus has a per-request size limit
-		// (~64 KB) — at 256 KB raw → ~344 KB base64 the request was silently
-		// dropped and luci returned "No related RPC reply". 32 KB raw →
-		// ~44 KB base64 leaves comfortable headroom.
+		// Chunked file upload via luci.amlogic.upload_chunk RPC (avoids cgi-upload session ACL).
+		// 32 KB raw per chunk → ~44 KB base64, safely under the ubus per-request size limit.
 		const CHUNK_SIZE = 32 * 1024;
 		const uploadStatus = E('span');
 		const uploadFileName = E('span', { style: 'margin-right:1em' });
 
-		// Encode a Uint8Array as base64. btoa() expects a binary string, so
-		// we walk through the bytes in 32k slices to avoid argument-list
-		// limits in browsers.
+		// Encode a Uint8Array as base64 in 32 KB slices to avoid call-stack limits.
 		function bytesToB64(buf) {
 			let s = '';
 			for (let i = 0; i < buf.length; i += 0x8000)
@@ -228,6 +201,7 @@ return view.extend({
 			return btoa(s);
 		}
 
+		// Upload a file in chunks; on success, refresh the file list to show the new upload.
 		function uploadFile(file, target, basename) {
 			const total = file.size;
 			let offset = 0;
@@ -256,6 +230,7 @@ return view.extend({
 			return step();
 		}
 
+		// Hidden file input to trigger the file picker dialog; on file selection, start the chunked upload.
 		const hiddenFileInput = E('input', {
 			type: 'file', style: 'display:none',
 			change: ui.createHandlerFn(this, function (ev) {
@@ -279,8 +254,7 @@ return view.extend({
 			click: function () { hiddenFileInput.click(); }
 		});
 
-		// Polling: log tails + version
-		// Pull the last line of both firmware and kernel logs once per second.
+		// Polling: pull firmware and kernel log tails once per second.
 		poll.add(function () {
 			return Promise.all([
 				callLogTail('firmware').then(function (l) {
@@ -315,8 +289,7 @@ return view.extend({
 			E('div', { class: 'cbi-section' }, [
 				E('p', { style: 'text-align:center' },
 				  _('After uploading firmware (.img/.img.gz/.img.xz/.7z suffix) or kernel files (3 kernel files), the update button will be displayed.')),
-				// Single centered cell: when fwBtn / knBtn are hidden the row
-				// would otherwise show an empty left column.
+				// Single centered cell: when fwBtn / knBtn are hidden the row would otherwise show an empty left column.
 				E('div', { style: 'text-align:center' },
 				  [fwBtn, knBtn, ' ', fwVer, '　', fwLog, knLog])
 			])

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 // Safe Power Off page
 //
-// On click, calls the backend poweroff RPC (which finally executes the system
-// `poweroff` command) and runs a 5-second on-page countdown so the user knows
-// the device is shutting down. When the countdown ends, the status switches
-// to "Powered off" and a power-off icon is shown.
+// Purpose: call the backend poweroff RPC then run a 5-second on-page countdown;
+// switch status to "Powered off" and show a power-off icon when done.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (poweroff).
 
 'use strict';
 'require view';
@@ -15,15 +14,16 @@
 // Trigger the backend poweroff RPC.
 const callPoweroff = rpc.declare({ object: 'luci.amlogic', method: 'poweroff' });
 
+// This page uses its own PowerOff button and does not need the default Save/Apply/Reset buttons,
+// so we disable them by setting the handlers to null.
 return view.extend({
-	handleSave:      null,
-	handleSaveApply: null,
-	handleReset:     null,
+    handleSave:      null,
+    handleSaveApply: null,
+    handleReset:     null,
 
 	render: function () {
 		amlogicShared.ensureCss();
-		// Status text: uses the warning color amlogic-status-err which adapts
-		// to dark mode automatically.
+		// Status text; amlogic-status-err color adapts to dark mode automatically.
 		const status = E('span', { class: 'amlogic-status-err', style: 'margin-left:1em' });
 		// Power-off icon, hidden by default; shown only after the countdown ends.
 		const icon = E('img', {
@@ -32,7 +32,8 @@ return view.extend({
 			style: 'width:32px; height:32px; max-width:32px; display:none; margin-left:1em; vertical-align:middle'
 		});
 
-		const btn = E('input', {
+		// PowerOff button click handler: confirm twice, then call RPC and start countdown on success.
+        const btn = E('input', {
 			type: 'button', class: 'cbi-button cbi-button-remove',
 			value: _('Perform PowerOff'),
 			click: ui.createHandlerFn(this, function (ev) {
@@ -41,7 +42,7 @@ return view.extend({
 					return;
 				ev.currentTarget.disabled = true;
 				return callPoweroff().then(function () {
-					// Backend has fired poweroff; show a 5-second countdown to the user.
+					// Show a 5-second countdown; replace with "Powered off" and icon when done.
 					status.textContent = _('Powering off, please wait...');
 					let n = 5;
 					const t = setInterval(function () {

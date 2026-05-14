@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
 // Plugin Settings
 //
-// Uses form.Map to maintain the `config` section in /etc/config/amlogic,
-// covering:
-//   - OpenWrt firmware GitHub repo, tag keyword, file suffix
-//   - Kernel download repo / tag / version branch
-//   - Keep config, auto-write bootloader, shared partition fs type
-// This page uses the default form.Map Save / Apply buttons; saving only
-// writes UCI, while other pages (Online Update / Manual Upload) read these
-// values to drive the actual operations.
+// Purpose: configure the `config` section in /etc/config/amlogic via form.Map,
+// covering firmware/kernel GitHub repos, tags, version branch, plugin branch,
+// keep-config flag, bootloader write flag, and shared partition fs type.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (platform_info, state).
 
 'use strict';
 'require view';
@@ -18,12 +14,13 @@
 
 // Get platform info; only used to display the device PLATFORM tag.
 const callPlatform = rpc.declare({ object: 'luci.amlogic', method: 'platform_info' });
-// Get runtime state; only kernel_release is used here, to derive default
-// values for kernel tags / version branch.
+// Query runtime state; kernel_release is used to derive default kernel tag and branch.
 const callState    = rpc.declare({ object: 'luci.amlogic', method: 'state' });
 
+// This page uses its own Save button; hide LuCI's default Save/Apply/Reset.
 return view.extend({
-	load: function () {
+	// Load platform info + state in parallel, along with the UCI config (we will read/write it).
+    load: function () {
 		return Promise.all([
 			callPlatform(),
 			callState(),
@@ -31,7 +28,8 @@ return view.extend({
 		]);
 	},
 
-	render: function (data) {
+	// Render form options bound to the amlogic.config NamedSection, and pre-fill some defaults based on platform/state.
+    render: function (data) {
 		const platform = data[0] || {};
 		const state    = data[1] || {};
 
@@ -40,7 +38,8 @@ return view.extend({
 			uci.add('amlogic', 'amlogic', 'config');
 		}
 
-		const m = new form.Map('amlogic', _('Plugin Settings'),
+		// Build a form.Map bound to the amlogic.config NamedSection, with options for various plugin settings.
+        const m = new form.Map('amlogic', _('Plugin Settings'),
 			_('You can customize the github.com download repository of OpenWrt files and kernels in [Online Download Update].') +
 			'<br />' + _('Tip: The same files as the current OpenWrt system\'s BOARD (such as rock5b) and kernel (such as 5.10) will be downloaded.'));
 		const o = m.section(form.NamedSection, 'config', 'amlogic');
@@ -82,11 +81,8 @@ return view.extend({
 		kpath.default = 'https://github.com/breakingbadboy/OpenWrt';
 		kpath.rmempty = false;
 
-		// 6. Kernel tags - the list depends on currently saved kpath value.
-		// The breakingbadboy/OpenWrt repo only ships rk3588/rk35xx/stable;
-		// ophub/kernel additionally ships flippy/h6/beta. The default value is
-		// auto-derived from -rk3588 / -rk35xx / -h6 keywords in `uname` so the
-		// user does not have to pick the wrong tag.
+		// 6. Kernel tags; available tags depend on the selected kernel repo.
+		// Default is auto-derived from kernel_release suffixes (-rk3588/-rk35xx/-h6).
 		const currentKpath = uci.get('amlogic', 'config', 'amlogic_kernel_path') ||
 		                     'https://github.com/breakingbadboy/OpenWrt';
 		const knownTags = {
@@ -99,7 +95,7 @@ return view.extend({
 			knownTags.kernel_h6     = 'kernel_h6 [Allwinner H6 Kernel]';
 			knownTags.kernel_beta   = 'kernel_beta [Beta Kernel]';
 		}
-		// Determine default tag from existing config or uname
+		// Determine default tag from saved config or kernel_release uname string.
 		let kernelTagDefault = uci.get('amlogic', 'config', 'amlogic_kernel_tags') || '';
 		if (!kernelTagDefault) {
 			const u = state.kernel_release || '';

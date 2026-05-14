@@ -1,16 +1,10 @@
 #!/bin/bash
-#==================================================================
-# This file is licensed under the terms of the GNU General Public
-# License version 2. This program is licensed "as is" without any
-# warranty of any kind, whether express or implied.
+# SPDX-License-Identifier: GPL-2.0
+# amlogic_check_plugin.sh — check and download luci-app-amlogic plugin updates.
 #
-# This file is a part of the luci-app-amlogic plugin
-# https://github.com/ophub/luci-app-amlogic
-#
-# Description: Check and update luci-app-amlogic plugin
-# Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
-# Copyright (C) 2021- https://github.com/ophub/luci-app-amlogic
-#==================================================================
+# Purpose: query the configured GitHub repository for the latest plugin
+# release (JS or Lua branch), compare with the installed version, and
+# download the IPK/APK package to /tmp/amlogic if a newer version is available.
 
 # Set a fixed value
 check_option="${1}"

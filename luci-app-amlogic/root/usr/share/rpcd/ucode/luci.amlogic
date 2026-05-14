@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
+// luci.amlogic — ucode RPC bridge for luci-app-amlogic (JS branch).
 //
-// luci.amlogic - ucode RPC bridge for the JS-based luci-app-amlogic.
-//
-// Helpers
+// Purpose: expose all plugin operations (install, update, backup, snapshot,
+// CPU policy, log read, upload) as ubus methods consumed by the JS views.
+// Each method is registered in the `methods` table at the bottom of this file.
 'use strict';
 
 import { popen, readfile, writefile, mkstemp, stat, glob, error as fserror,
@@ -44,19 +45,14 @@ function sh(cmd) {
 
 // Run a shell command, return exit code (0 on success)
 function shcall(cmd) {
-	// `sh -c "...; echo $?"` — last line is exit code.
 	const out = sh('(' + cmd + ') >/dev/null 2>&1; echo $?');
 	const lines = split(out, '\n');
 	const last = lines[length(lines) - 1] ?? '1';
 	return int(last);
 }
 
-// Run a shell command in the background (fire-and-forget).
-// Returns immediately so rpcd is not blocked, allowing concurrent
-// read_log_tail / read_log_full polls to succeed.
+// Run cmd in the background; close stdin so shbg does not block rpcd.
 function shbg(cmd) {
-	// Detach from rpcd: close stdin so interactive prompts don't block,
-	// but let the command manage its own stdout/stderr (e.g. redirect to log).
 	const wrapper = '(' + cmd + ') </dev/null &';
 	const p = popen(wrapper, 'r');
 	if (p) p.close();
@@ -67,8 +63,7 @@ function shq(s) {
 	return "'" + replace(s ?? '', "'", "'\\''") + "'";
 }
 
-// Ensure the runtime tmp dirs exist (mirrors the luci.sys.exec calls in the
-// original controller's index() function).
+// Ensure runtime tmp dirs exist.
 function ensure_dirs() {
 	mkdir(LOG_DIR);
 	mkdir(UPLOAD_TMP);
@@ -92,13 +87,8 @@ function show_install_menu() {
 	return m ? m[1] : 'Unknown';
 }
 
-// Detect whether OpenWrt's root fs is on internal storage (eMMC/NVMe/fixed disk).
-// Returns true  → already installed, hide the Install menu.
-// Returns false → running from USB/SD, show the Install menu.
-//
-// sd* devices can be either USB (removable=1) or internal SATA (removable=0);
-// we read /sys/block/<base_dev>/removable to distinguish them.
-// mmcblk* and nvme* are always internal storage on these platforms.
+// Detect whether the root fs is on internal storage (eMMC/NVMe/fixed disk).
+// Returns true if already installed; sd* removable flag distinguishes USB vs SATA.
 function root_on_internal_storage() {
 	const root_pt = trim(sh("df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}'"));
 	if (!root_pt) return false;
@@ -108,17 +98,15 @@ function root_on_internal_storage() {
 		return true;
 	}
 	if (match(root_pt, /^[hsv]d[a-z][0-9]+$/)) {
-		// Strip trailing partition digit(s) to get base device (e.g. sda2 → sda)
+		// Strip partition digit(s) to get base device (e.g. sda2 → sda); check removable flag.
 		const base_dev = replace(root_pt, /[0-9]+$/, '');
 		const removable = trim(sh('cat /sys/block/' + shq(base_dev) + '/removable 2>/dev/null'));
-		// removable=0 → internal SATA/fixed disk; removable=1 → USB/removable
-		return (removable == '0');
+		return (removable == '0'); // 0 = internal SATA; 1 = USB/removable
 	}
 	return false;
 }
 
-// Pick the helper script names for the current platform (as the original
-// controller did).
+// Return platform-specific helper script names for install/update/kernel operations.
 function platform_scripts() {
 	const p = platform();
 	if (index(p, 'rockchip') >= 0)
@@ -192,8 +180,7 @@ function read_log_tail(name) {
 function read_log_full(name) {
 	const p = _safe_log_path(name ?? 'main');
 	if (!p) return '';
-	// Use popen+cat for consistency with read_log_tail; readfile() may be
-	// stale inside the long-lived rpcd ucode process.
+	// Use popen+cat to bypass rpcd process-level file cache.
 	const pipe = popen('cat ' + p + ' 2>/dev/null', 'r');
 	if (!pipe) return '';
 	const t = pipe.read('all') ?? '';
@@ -268,9 +255,7 @@ function m_platform_info() {
 	const can_install = (index(p, 'amlogic') >= 0 || index(p, 'allwinner') >= 0 || index(m, 'yes') >= 0);
 	// can_armcpu: all platforms except qemu support CPU frequency settings
 	const can_armcpu = (index(p, 'qemu') < 0);
-	// is_installed: root fs is on an internal storage device (eMMC/NVMe/fixed disk).
-	// sd* devices may be USB (removable=1) or internal SATA (removable=0); check
-	// /sys/block/<dev>/removable to distinguish. When true the Install menu is hidden.
+	// is_installed: root fs on internal storage means already installed; hide Install menu.
 	const is_installed = root_on_internal_storage();
 	return {
 		platform:     p,
@@ -312,16 +297,13 @@ function m_snapshot_list() {
 	return { names };
 }
 
-// Mirrors the Lua "Edit List" button's side-effect: if the backup-list file is
-// missing or empty, pre-populate it from the BACKUP_LIST shell variable inside
-// /usr/sbin/openwrt-backup.
+// Seed /etc/amlogic_backup_list.conf from the default BACKUP_LIST in openwrt-backup if absent.
 function m_prime_backup_list() {
 	shcall("[ -s " + BACKUP_LIST + " ] || sed -n \"/BACKUP_LIST='/,/.*'$/p\" /usr/sbin/openwrt-backup | sed -e \"s/BACKUP_LIST=\\(.*\\)/\\1/; s/'//g; s/\\\\\\\\//g; s/ //g\" > " + BACKUP_LIST + " 2>/dev/null");
 	return { code: 0 };
 }
 
-// Create a read-only snapshot of /etc into /.snapshots/etc-<MM.DD.HHMMSS>.
-// Mirrors the `Create Snapshot` button in amlogic_backup.lua.
+// Create a read-only btrfs snapshot of /etc into /.snapshots/.
 function m_snapshot_create() {
 	shcall("btrfs subvolume snapshot -r /etc /.snapshots/etc-$(date +%m.%d.%H%M%S) && sync");
 	return { code: 0 };
@@ -368,9 +350,7 @@ function m_check_kernel(req) {
 		shbg('/usr/share/amlogic/amlogic_check_kernel.sh -check');
 		return { code: 0 };
 	}
-	// download option: pass the full param string directly to the script
-	// (it may contain underscores, dots, and digits — safe to pass verbatim
-	// since shbg wraps the whole command in single-quoted sh -c)
+	// download option: pass the full param string verbatim to the script.
 	shbg('/usr/share/amlogic/amlogic_check_kernel.sh -download ' + shq(opt));
 	return { code: 0 };
 }
@@ -396,9 +376,7 @@ function m_start_plugin() {
 	const script_path = LOG_DIR + '/amlogic_install_plugin.sh';
 	writefile(LOG_RUNNING, '1@Plugin update in progress, try again later!\n');
 	writefile(LOG_PLUGIN, '');
-	// Write install script to a file so shbg (which redirects stdin from
-	// /dev/null) can execute it — heredoc via shbg does not work because
-	// shbg closes stdin before sh can read the here-document.
+	// Write install script to a temp file; shbg closes stdin so heredoc cannot be used.
 	const script = '#!/bin/sh\n'
 		+ 'LOG=' + shq(LOG_PLUGIN) + '\n'
 		+ 'LOG_RUNNING=' + shq(LOG_RUNNING) + '\n'
@@ -643,22 +621,16 @@ function m_list_uploads() {
 	         has_config: cfg };
 }
 
+// Strip directory prefix; reject empty, dot/dotdot, or paths still containing separators.
 function _safe_basename(s) {
 	const b = replace(s ?? '', /^.*[\\\/]/, '');
-	// Permissive basename check: only reject empty, dot/dotdot and anything
-	// still containing path separators after the strip. Strict allowlists
-	// rejected legitimate filenames (e.g. some i18n packages) on certain
-	// runtimes where the regex character class behaved unexpectedly.
 	if (b == '' || b == '.' || b == '..') return null;
 	if (index(b, '/') >= 0 || index(b, '\\') >= 0) return null;
 	return b;
 }
 
-// Chunked upload helper. The browser-side view splits the file into base64
-// chunks and calls this method N times. The first call (append=false)
-// truncates / creates the file; later calls append. Implemented through our
-// own ubus method so it bypasses the cgi-upload ACL flow entirely (the
-// ucode runs as root and owns the upload dir).
+// Receive one base64-encoded chunk and write (or append) it to the upload file.
+// First call (append=false) truncates/creates; subsequent calls append.
 function m_upload_chunk(req) {
 	const dir = compute_upload_path();
 	mkdir(dir);
@@ -739,9 +711,7 @@ function m_reload_cpu() {
 	return { code: 0 };
 }
 
-// Sync menu visibility UCI flags from runtime platform detection.
-// Called from info.js on every page load so the sidebar reflects the
-// current hardware state without requiring the user to visit Plugin Settings.
+// Sync menu_install and menu_armcpu UCI flags based on runtime platform detection.
 function m_sync_menu() {
 	const p = platform();
 	const m = show_install_menu();
@@ -757,9 +727,7 @@ function m_sync_menu() {
 	return { code: 0, show_install, show_armcpu };
 }
 
-// Enumerate cpufreq policies + their available freqs/governors so the armcpu
-// view can render a tab per CPU policy (mirrors the Lua dynamic taboption
-// loop in amlogic_armcpu.lua).
+// Enumerate cpufreq policies and their available frequencies and governors.
 function m_cpu_policies() {
 	const policies_str = sh("ls /sys/devices/system/cpu/cpufreq 2>/dev/null | grep -E 'policy[0-9]{1,3}' | xargs");
 	let names = split(policies_str, ' ');

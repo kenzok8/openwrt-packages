@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0
 // Plugin landing / info page
 //
-// Renders the plugin LOGO, three quick-link badges (packit project, author
-// homepage, plugin repository), the feature summary and the list of
-// supported boxes. The page does not read or write any UCI config; it only
-// calls the author RPC to obtain the author's repository URL.
+// Purpose: render the plugin logo, badge links, feature summary, and supported-box list.
+// Calls sync_menu on load to update sidebar menu flags from runtime platform detection.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (author, sync_menu, state).
 
 'use strict';
 'require view';
 'require rpc';
 'require view.amlogic.shared as amlogicShared';
 
-// Extract OPENWRT_AUTHOR from /usr/sbin/openwrt-update-amlogic and return the
-// author's GitHub repo URL, used when the user clicks author.svg.
+// Extract OPENWRT_AUTHOR from /usr/sbin/openwrt-update-amlogic and return the author's GitHub repo URL.
 const callAuthor = rpc.declare({
 	object: 'luci.amlogic',
 	method: 'author',
@@ -20,7 +18,6 @@ const callAuthor = rpc.declare({
 });
 
 // Sync menu_install / menu_armcpu UCI flags from runtime platform detection.
-// Called on every info page load so the sidebar menu is correct from first visit.
 const callSyncMenu = rpc.declare({ object: 'luci.amlogic', method: 'sync_menu' });
 
 // Get runtime state to determine plugin_branch for the language badge.
@@ -53,20 +50,18 @@ function openExternal(url) {
 	if (!w) window.location.href = url;
 }
 
+// This is a read-only info page, so we disable the top Save / Apply / Reset buttons by setting the handlers to null.
 return view.extend({
 	// Read-only info page: disable the top Save / Apply / Reset buttons.
 	handleSave:      null,
 	handleSaveApply: null,
 	handleReset:     null,
 
-	load: function () {
-		// Call sync_menu and wait for it. sync_menu writes menu_install /
-		// menu_armcpu into UCI and clears the LuCI index cache on the server.
-		// On first boot from USB the install menu may be missing from the
-		// browser-side navigation (built before sync_menu ran). After the RPC
-		// returns we check if the sidebar already has an install link; if not,
-		// reload once so the browser re-fetches the updated menu tree.
-		// A URL hash flag (#menu-synced) prevents an infinite reload loop.
+	// On load, call sync_menu to update sidebar menu flags from runtime platform detection. If the install menu becomes
+    // visible but is not in the current nav, reload once to pick up the new menu (guarded by #menu-synced hash).
+    load: function () {
+		// Call sync_menu; if the install menu is now visible on the server but
+		// absent in the browser nav, reload once (guarded by #menu-synced hash).
 		const alreadyReloaded = window.location.hash === '#menu-synced';
 		const syncMenuPromise = callSyncMenu().then(function (res) {
 			if (alreadyReloaded) return;
@@ -74,7 +69,7 @@ return view.extend({
 				// Check if the sidebar navigation already contains the install link.
 				const installLink = document.querySelector('a[href*="amlogic/install"]');
 				if (!installLink) {
-					// Server has updated the index cache; reload to pick up new nav.
+					// Server-side index cache updated; reload to pick up new nav.
 					window.location.replace(window.location.pathname + '#menu-synced');
 					window.location.reload();
 				}
@@ -83,7 +78,8 @@ return view.extend({
 		return Promise.all([callAuthor(), syncMenuPromise]).then(function (r) { return r[0]; });
 	},
 
-	render: function (authorUrl) {
+	// Render the plugin info: logo, badge links, feature summary, and supported-box list.
+    render: function (authorUrl) {
 		// Inject the theme stylesheet on first entry so amlogic-* classes work.
 		amlogicShared.ensureCss();
 		const res = L.resource('amlogic');

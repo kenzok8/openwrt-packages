@@ -27,7 +27,9 @@ return view.extend({
 		]);
 	},
 
-	render: function (data) {
+	// Render a tabbed form section per CPU policy (cluster), with options to
+    // set the governor and min/max frequency. The form is bound to the amlogic.armcpu UCI section.
+    render: function (data) {
 		const policies = data[0] || [];
 
 		// Auto-create the armcpu section when missing, so that on a fresh

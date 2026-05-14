@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
 // Backup file list editor
 //
-// Edits /etc/amlogic_backup_list.conf, which controls which files / directories
-// the openwrt-backup script archives. On load, if the file does not exist or
-// is empty, the backend prime_backup_list extracts the default BACKUP_LIST
-// from /usr/sbin/openwrt-backup as a starting template.
+// Purpose: edit /etc/amlogic_backup_list.conf which controls which files/dirs
+// the openwrt-backup script archives. If the file is missing or empty, the
+// backend seeds it from the default BACKUP_LIST in /usr/sbin/openwrt-backup.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (save_backup_list, prime_backup_list).
 
 'use strict';
 'require view';
@@ -15,24 +15,27 @@
 // Persist the user-edited content back to /etc/amlogic_backup_list.conf.
 const callSave = rpc.declare({ object: 'luci.amlogic', method: 'save_backup_list',
                                params: ['content'] });
-// Pre-fill: if the list file is missing or empty, seed it from the defaults
-// embedded in the openwrt-backup script (idempotent: existing content stays).
+// Seed the list file from defaults embedded in openwrt-backup if missing or empty.
 const callPrime = rpc.declare({ object: 'luci.amlogic', method: 'prime_backup_list' });
 
+// This page uses its own Save button; hide LuCI's default Save/Apply/Reset.
 return view.extend({
 	// This page uses its own Save button; hide LuCI's default Save/Apply/Reset.
 	handleSave:      null,
 	handleSaveApply: null,
 	handleReset:     null,
 
-	load: function () {
+	// Load the existing backup list content to pre-fill the editor. If the file is
+    load: function () {
 		// Run prime first (idempotent), then read the file content.
 		return callPrime().then(function () {
 			return fs.read('/etc/amlogic_backup_list.conf').catch(function () { return ''; });
 		});
 	},
 
-	render: function (text) {
+	// Render a full-width textarea pre-filled with the existing content, and a Save button
+    // that persists the changes via RPC. Also include a Back button to return to the main Backup page.
+    render: function (text) {
 		// Full-width multi-line editor pre-filled with the existing list.
 		const ta = E('textarea', {
 			rows: '30',
@@ -50,7 +53,7 @@ return view.extend({
 				return callSave(ta.value).then(function (r) {
 					if (r && (r.ok || r.code == 0)) {
 						status.textContent = _('Successfully saved.');
-						// Wait 0.7s before navigating back so the success text is visible.
+						// Navigate back after a short delay so the success message is visible.
 						setTimeout(function () {
 							location.href = L.url('admin/system/amlogic/backup');
 						}, 700);

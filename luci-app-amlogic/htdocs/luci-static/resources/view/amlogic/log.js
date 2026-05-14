@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
 // Service log viewer
 //
-// Reads the full content of the amlogic service log (name=main) into a
-// read-only textarea and refreshes it every 2 seconds. Provides controls to
-// stop / restart polling, clear the log, and download the current contents
-// as a Blob in the browser.
+// Purpose: read the full amlogic service log into a read-only textarea and
+// refresh it every 2 seconds; provide controls to pause/resume polling, clear
+// the log, and download the current contents as a plain-text file.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (read_log_full, del_log).
 
 'use strict';
 'require view';
@@ -19,6 +19,8 @@ const callLogFull = rpc.declare({ object: 'luci.amlogic', method: 'read_log_full
 // Clear the service main log.
 const callDelLog  = rpc.declare({ object: 'luci.amlogic', method: 'del_log' });
 
+// This page uses its own Start/Stop Refresh buttons and does not need the default Save/Apply/Reset buttons,
+// so we disable them by setting the handlers to null.
 return view.extend({
 	handleSave:      null,
 	handleSaveApply: null,
@@ -66,8 +68,7 @@ return view.extend({
 			type: 'button', class: 'cbi-button cbi-button-save',
 			value: _('Download Log'),
 			click: function () {
-				// Wrap the textarea content in a Blob and trigger a browser
-				// download via a temporary <a>; avoids a second server fetch.
+				// Wrap textarea content in a Blob and trigger a browser download via a temporary <a>.
 				const blob = new Blob([ta.value || ''], { type: 'text/plain' });
 				const url = URL.createObjectURL(blob);
 				const a = document.createElement('a');

@@ -1,16 +1,10 @@
 #!/bin/bash
-#==================================================================
-# This file is licensed under the terms of the GNU General Public
-# License version 2. This program is licensed "as is" without any
-# warranty of any kind, whether express or implied.
+# SPDX-License-Identifier: GPL-2.0
+# amlogic_check_kernel.sh — check and download OpenWrt kernel updates.
 #
-# This file is a part of the luci-app-amlogic plugin
-# https://github.com/ophub/luci-app-amlogic
-#
-# Description: Check and update OpenWrt Kernel
-# Copyright (C) 2021- https://github.com/unifreq/openwrt_packit
-# Copyright (C) 2021- https://github.com/ophub/luci-app-amlogic
-#==================================================================
+# Purpose: query the configured GitHub repository for the latest kernel
+# packages, compare with the running kernel version, and download to
+# /tmp/amlogic if a newer version is available.
 
 # Set a fixed value
 check_option="${1}"

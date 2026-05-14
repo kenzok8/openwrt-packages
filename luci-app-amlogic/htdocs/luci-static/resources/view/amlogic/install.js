@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 // Install OpenWrt to EMMC
 //
-// The dropdown lists common devices from the backend model database, plus an
-// "Enter the dtb file name" option. When the user picks the manual option and
-// fills in dtb / soc / uboot_overload, the frontend assembles the string
-// "id@dtb:soc:uboot" and passes it to the start_install RPC, which invokes
-// openwrt-install-amlogic to perform the actual installation. The install log
-// tail is polled while the work runs.
+// Purpose: let the user select a device model (or enter dtb/soc/uboot manually),
+// then invoke start_install and poll the log tail until success or failure.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (model_database, start_install, read_log_tail).
 
 'use strict';
 'require view';
@@ -16,18 +13,17 @@
 'require poll';
 'require view.amlogic.shared as amlogicShared';
 
-// Read the model database (parsed by the backend from
-// /usr/share/amlogic/model_database.txt).
+// Read the model database (parsed by the backend from /usr/share/amlogic/model_database.txt).
 const callDB         = rpc.declare({ object: 'luci.amlogic', method: 'model_database',
                                      expect: { entries: [] } });
-// Start install; the parameter is the composed string "id@dtb:soc:uboot",
-// kept compatible with the original Lua plugin.
+// Start install; parameter is the composed string "id@dtb:soc:uboot".
 const callStartInst  = rpc.declare({ object: 'luci.amlogic', method: 'start_install',
                                      params: ['amlogic_install_sel'] });
 // Read the last line of the named log (here we use the 'install' log).
 const callLogTail    = rpc.declare({ object: 'luci.amlogic', method: 'read_log_tail',
                                      params: ['name'], expect: { line: '' } });
 
+// This page uses its own Install button; hide LuCI's default Save/Apply/Reset.
 return view.extend({
 	handleSave:      null,
 	handleSaveApply: null,
@@ -37,10 +33,10 @@ return view.extend({
 		return callDB();
 	},
 
-	render: function (entries) {
+	// Render the plugin info: logo, badge links, feature summary, and supported-box list.
+    render: function (entries) {
 		amlogicShared.ensureCss();
-		// Model dropdown: 0 = placeholder, 99 = manual entry, anything in between
-		// is a model from the database.
+		// Model dropdown: 0 = placeholder, 99 = manual entry, others from database.
 		const sel = E('select', { style: 'width:auto', name: 'amlogic_soc', id: 'amlogic_soc' });
 		sel.appendChild(E('option', { value: '0' }, _('Select List')));
 		(entries || []).forEach(function (e) {
@@ -89,12 +85,10 @@ return view.extend({
 			click: ui.createHandlerFn(this, function (ev) {
 				if (installing) return;
 				const text = sel.options[sel.selectedIndex].text;
-				// Confirm twice: install only proceeds after the user clicks
-				// "Start install?".
+				// Confirm dialog; install proceeds only after user confirms.
 				if (!confirm(_('You have chosen:') + ' ' + text + ', ' + _('Start install?')))
 					return;
-				// When manual entries are blank, dtb falls back to auto_dtb so the
-				// backend can autodetect.
+				// dtb falls back to auto_dtb when the manual field is blank.
 				const dtbVal = dtbInput.value || 'auto_dtb';
 				const socVal = socInput.value || '';
 				const ubVal  = ubootInput.value || '';
@@ -114,8 +108,7 @@ return view.extend({
 			})
 		});
 
-		// Poll the install log tail once per second to surface backend progress
-		// and detect terminal success/failure keywords.
+		// Poll the install log once per second; detect success/failure keywords.
 		poll.add(function () {
 			return callLogTail('install').then(function (line) {
 				if (!line || line === '\n') {

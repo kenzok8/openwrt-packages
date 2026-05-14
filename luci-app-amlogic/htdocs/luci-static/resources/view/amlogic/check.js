@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0
 // Online Download Update + Rescue Kernel
 //
-// Flow matches the Lua version: check_* RPCs write progress logs; the final
-// log line is a raw HTML <input> button string that we parse and render as a
-// real DOM button so the user can explicitly click Download → then Update.
+// Purpose: check / download / install plugin, kernel, and firmware updates online.
+// Log tail is polled at 1 Hz; the last log line drives a state machine
+// (idle → checking → button → installing → done). Terminal log lines contain
+// raw HTML <input> button strings which are parsed and rendered as DOM buttons.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (state, check_*, start_*, read_log_tail).
 
 'use strict';
 'require view';
@@ -13,8 +15,10 @@
 'require poll';
 'require view.amlogic.shared as amlogicShared';
 
-// ── RPCs ────────────────────────────────────────────────────────────────────
+// ── RPCs ─────────────────────────────────────────────────────────────────────
+// Query system state (firmware / plugin / kernel versions).
 const callState         = rpc.declare({ object: 'luci.amlogic', method: 'state' });
+// Run plugin / kernel / firmware version check and write progress to the log.
 const callCheckPlugin   = rpc.declare({ object: 'luci.amlogic', method: 'check_plugin',   params: ['options'] });
 const callCheckKernel   = rpc.declare({ object: 'luci.amlogic', method: 'check_kernel',   params: ['options'] });
 const callCheckFirmware = rpc.declare({ object: 'luci.amlogic', method: 'check_firmware', params: ['options'] });
@@ -22,14 +26,12 @@ const callStartPlugin   = rpc.declare({ object: 'luci.amlogic', method: 'start_p
 const callStartKernel   = rpc.declare({ object: 'luci.amlogic', method: 'start_kernel' });
 const callStartUpdate   = rpc.declare({ object: 'luci.amlogic', method: 'start_update',   params: ['amlogic_update_sel'] });
 const callStartRescue   = rpc.declare({ object: 'luci.amlogic', method: 'start_rescue' });
+// Read the last line (up to 4096 bytes) of the named log file.
 const callLogTail       = rpc.declare({ object: 'luci.amlogic', method: 'read_log_tail',  params: ['name'], expect: { line: '' } });
 
 // ── Log-line HTML button parser ──────────────────────────────────────────────
-// Returns null when the line is plain text, or an object when it is a button:
-//   { type: 'firmware-download'|'kernel-download'|'firmware-update'|
-//            'kernel-update'|'plugin-update',
-//     param: string|null,   // extracted onclick argument (if any)
-//     label: string }        // text after the closing />
+// Parse an <input> button string from the log; return null for plain-text lines.
+// Returned object: { type, param, label } where type identifies the action.
 function parseButtonLine(line) {
 	if (!line || line.indexOf('<input') === -1) return null;
 
@@ -82,12 +84,10 @@ function parseButtonLine(line) {
 	return null;
 }
 
-// ── Per-action state machine ─────────────────────────────────────────────────
+// ── Per-action state machine ──────────────────────────────────────────────────
 // States: 'idle' | 'checking' | 'button' | 'installing' | 'done'
-//
-// statusEl  – the span shown in the right column
-// Each machine is a plain object; we keep one per action.
 
+// Action object factory: { name, statusEl, state, subBtn }
 function makeAction(name, statusEl) {
 	return { name: name, statusEl: statusEl, state: 'idle', subBtn: null };
 }
@@ -123,16 +123,13 @@ function showSubButton(el, btnLabel, labelText, onClick) {
 }
 
 // ── Poll handler (called at 1 Hz) ────────────────────────────────────────────
+// Inspect the last non-empty log line and advance the action state machine.
 function handlePoll(action) {
 	if (action.state === 'done') return;
 
 	return callLogTail(action.name).then(function (raw) {
-		// read_log_tail returns up to 4096 bytes (multi-line).  Only inspect
-		// the last non-empty line so that intermediate opkg/apk output
-		// (e.g. "Collected errors:", dependency warnings) cannot trigger a
-		// false-positive 'Failed'/'error' match before the final result is
-		// written.  The terminal keywords ("Successful Update", "FAILED",
-		// etc.) are always written as the very last log line.
+		// Only inspect the last non-empty line to avoid false-positive
+		// 'Failed'/'error' matches from intermediate opkg/apk output.
 		var lines = (raw || '').split('\n');
 		var line = '';
 		for (var i = lines.length - 1; i >= 0; i--) {
@@ -182,8 +179,7 @@ function handlePoll(action) {
 	});
 }
 
-// Render the sub-button extracted from the log line.  The onClick triggers the
-// appropriate second-phase RPC and transitions to 'installing'.
+// Render the sub-button parsed from the log line and wire up the second-phase RPC.
 function renderParsedButton(action) {
 	var parsed = action._parsed;
 	var el     = action.statusEl;
@@ -194,8 +190,7 @@ function renderParsedButton(action) {
 		showSubButton(el, _('Download'), parsed.label, function (ev) {
 			ev.currentTarget.disabled = true;
 			ev.currentTarget.value = _('Downloading...');
-			action.state = 'checking'; // re-enter checking loop, wait for Update button
-			// parsed.param is e.g. "download_3.1.290" — pass directly to the script
+			action.state = 'checking';
 			callCheckPlugin(parsed.param).then(function () {});
 		});
 		break;
@@ -204,10 +199,8 @@ function renderParsedButton(action) {
 		showSubButton(el, _('Download'), parsed.label, function (ev) {
 			ev.currentTarget.disabled = true;
 			ev.currentTarget.value = _('Downloading...');
-			action.state = 'checking'; // will re-enter checking loop
-			callCheckFirmware(parsed.param).then(function () {
-				// After download, keep polling; log will emit Update button
-			});
+			action.state = 'checking';
+			callCheckFirmware(parsed.param).then(function () {});
 		});
 		break;
 
@@ -224,10 +217,7 @@ function renderParsedButton(action) {
 		showSubButton(el, _('Update'), parsed.label, function (ev) {
 			ev.currentTarget.disabled = true;
 			ev.currentTarget.value = _('Updating...');
-			// Transition to 'installing': poll will show log lines and detect
-			// the terminal result. callStartUpdate fires the background script
-			// and returns {code:0} immediately — do NOT use its return value
-			// to judge success/failure.
+			// Transition to 'installing'; terminal result comes via log polling.
 			action.state = 'installing';
 			dom.content(el, E('span', { class: 'amlogic-status-info' }, _('Starting update...')));
 			callStartUpdate(parsed.param).catch(function () {
@@ -307,7 +297,9 @@ return view.extend({
 			btn.value = idleLabel;
 		}
 
-		var btnPlugin = E('input', {
+		// Each button triggers the first-phase RPC to start the check/download/install process,
+        // then the poll handler picks up log lines to advance the state machine and render sub-buttons as needed.
+        var btnPlugin = E('input', {
 			type: 'button', class: 'cbi-button cbi-button-reload',
 			value: _('Only update Amlogic Service'),
 			click: ui.createHandlerFn(this, function (ev) {
@@ -332,7 +324,8 @@ return view.extend({
 			})
 		});
 
-		var btnKernel = E('input', {
+		// The kernel and firmware buttons have similar logic, just different RPCs and labels.
+        var btnKernel = E('input', {
 			type: 'button', class: 'cbi-button cbi-button-reload',
 			value: _('Update system kernel only'),
 			click: ui.createHandlerFn(this, function (ev) {
@@ -356,7 +349,8 @@ return view.extend({
 			})
 		});
 
-		var btnFirmware = E('input', {
+		// Firmware update may include both kernel and plugin updates, so it has a more generic label.
+        var btnFirmware = E('input', {
 			type: 'button', class: 'cbi-button cbi-button-reload',
 			value: _('Complete system update'),
 			click: ui.createHandlerFn(this, function (ev) {
@@ -380,7 +374,8 @@ return view.extend({
 			})
 		});
 
-		var btnRescue = E('input', {
+		// Rescue button: triggers the rescue RPC which starts mutual recovery; the log will show progress and terminal status.
+        var btnRescue = E('input', {
 			type: 'button', class: 'cbi-button cbi-button-reload',
 			value: _('Rescue the original system kernel'),
 			click: ui.createHandlerFn(this, function (ev) {
@@ -390,16 +385,10 @@ return view.extend({
 				if (actRescue.state !== 'idle') return;
 				btn.disabled = true;
 				btn.value = _('Rescuing...');
-				// Set installing state BEFORE the call so the poller picks up
-				// log lines. The script runs in the background (shbg); the RPC
-				// returns {code:0} immediately and we do NOT use it to judge
-				// success/failure — the poll loop reads LOG_RESCUE and detects
-				// the terminal line.
+				// Set installing state before the call so the poller picks up log lines.
 				actRescue.state = 'installing';
 				showInfo(actRescue.statusEl, _('Starting rescue...'));
 				return callStartRescue().then(function () {
-					// RPC triggered OK; result comes via log polling.
-					// Re-enable the button so the user can retry if needed.
 					btn.disabled = false;
 					btn.value = _('Rescue the original system kernel');
 				}).catch(function () {

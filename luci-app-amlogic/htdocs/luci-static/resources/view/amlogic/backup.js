@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
 // Backup Firmware Config + Snapshot management + (optional) KVM switch
 //
-// This page exposes three groups of capabilities:
-//   1. Pack the current config into openwrt_config.tar.gz and let the user
-//      download it;
-//   2. List / create / restore / delete etc snapshots (etc-000 / etc-001 are
-//      the read-only initial / update snapshots and cannot be deleted);
-//   3. If the backend reports has_kvm, render the KVM dual-system switch
-//      button.
+// Purpose: pack current /etc config into openwrt_config.tar.gz and download it;
+// manage system snapshots (list / create / restore / delete); optionally show
+// KVM dual-partition switch when the platform reports has_kvm.
+// Backend RPC: /usr/share/rpcd/ucode/luci.amlogic (backup_create, snapshot_*, platform_info, kvm_switch).
 
 'use strict';
 'require view';
@@ -36,17 +33,19 @@ const callPlatform   = rpc.declare({ object: 'luci.amlogic', method: 'platform_i
 // Switch active KVM partition.
 const callKvmSwitch  = rpc.declare({ object: 'luci.amlogic', method: 'kvm_switch' });
 
+// The view object for the Backup & Snapshot page.
 return view.extend({
 	handleSave:      null,
 	handleSaveApply: null,
 	handleReset:     null,
 
+	// Load in parallel: platform info + current snapshot list.
 	load: function () {
-		// Load in parallel: platform info + current snapshot list.
 		amlogicShared.ensureCss();
 		return Promise.all([callPlatform(), callSnapList()]);
 	},
 
+	// Render the page: backup config section + snapshot management section + (optional) KVM switch section.
 	render: function (data) {
 		const platform = data[0] || {};
 		const snapNames = data[1] || [];
@@ -61,8 +60,7 @@ return view.extend({
 			}
 		});
 
-		// Download status hint: uses the warning color; replaced by the
-		// success message after a successful generation.
+		// Download status hint; updated to success color after generation completes.
 		const downloadStatus = E('span', { class: 'amlogic-status-err' });
 		const downloadBtn = E('input', {
 			type: 'button', class: 'cbi-button cbi-button-save',
@@ -80,10 +78,7 @@ return view.extend({
 					// Switch to success color before streaming the blob
 					downloadStatus.className = 'amlogic-status-ok';
 					downloadStatus.textContent = _('The file Will download automatically.') + ' ' + r.path;
-					// Step 2: fetch the file as a Blob via cgi-download (bypasses
-					// ubus message-size limits) and trigger a browser download.
-					// We use fs.read_direct which internally POST to cgi-download
-					// with the correct sessionid.
+					// Fetch the file blob via fs.read_direct and trigger browser download.
 					return fs.read_direct(r.path, 'blob').then(function (blob) {
 						const url = URL.createObjectURL(blob);
 						const a = document.createElement('a');
@@ -104,7 +99,8 @@ return view.extend({
 			})
 		});
 
-		const restoreBtn = E('input', {
+		// Navigate to the upload page where the user can upload a backup file to restore.
+        const restoreBtn = E('input', {
 			type: 'button', class: 'cbi-button cbi-button-save',
 			value: _('Upload Backup'),
 			click: function () {
@@ -112,16 +108,11 @@ return view.extend({
 			}
 		});
 
-		// Snapshots
-		// Snapshot grid: uses amlogic-snap-list / amlogic-snap-item /
-		// amlogic-snap-line classes whose styles adapt to the current theme
-		// (see amlogic.css).
+		// Snapshot grid; styles adapt to the current theme via amlogic-snap-* classes.
 		const snapDiv = E('div', { class: 'amlogic-snap-list' });
 
-		// Rebuild the snapshot cards from a list of names:
-		//   - etc-000 / etc-001 are read-only and do not get a Delete button;
-		//   - other snapshots get both Restore and Delete buttons.
-		// The backend takes the short name (without the "etc-" prefix).
+		// Render snapshot cards; etc-000/001 are read-only (no Delete button).
+		// Backend expects the short name without the "etc-" prefix.
 		function renderSnapshots(names) {
 			snapDiv.innerHTML = '';
 			if (!names || !names.length) {
@@ -143,8 +134,7 @@ return view.extend({
 						if (!confirm(_('You selected a snapshot:') + ' [ ' + n + ' ] , ' +
 						             _('Confirm recovery and restart OpenWrt?')))
 							return;
-						// Capture the button now: ev.currentTarget is null once the
-						// promise chain resumes asynchronously.
+						// Capture btn before entering async chain; ev.currentTarget becomes null after await.
 						const btn = ev.currentTarget;
 						btn.disabled = true;
 						btn.value = _('Restoring...');
@@ -176,8 +166,7 @@ return view.extend({
 							if (!confirm(_('You selected a snapshot:') + ' [ ' + n + ' ] , ' +
 							             _('Confirm delete?')))
 								return;
-							// Capture the button: ev.currentTarget is null in the
-							// async then() that runs after the RPC resolves.
+							// Capture btn before entering async chain; ev.currentTarget becomes null after await.
 							const btn = ev.currentTarget;
 							btn.disabled = true;
 							btn.value = _('Deleting...');
@@ -198,7 +187,8 @@ return view.extend({
 		}
 		renderSnapshots(snapNames);
 
-		const createSnapBtn = E('input', {
+		// Create snapshot button above the grid.
+        const createSnapBtn = E('input', {
 			type: 'button', class: 'cbi-button cbi-button-save',
 			value: _('Create Snapshot'),
 			click: ui.createHandlerFn(view, function (ev) {
@@ -212,7 +202,8 @@ return view.extend({
 			})
 		});
 
-		const sections = [
+		// If the platform supports KVM dual partitions, show a button to trigger partition switch.
+        const sections = [
 			E('h2', _('Backup Firmware Config')),
 			E('p', _('Backup OpenWrt config (openwrt_config.tar.gz). Use this file to restore the config in [Manually Upload Update].')),
 			E('div', { class: 'cbi-section' }, [
@@ -239,7 +230,8 @@ return view.extend({
 			])
 		];
 
-		if (platform.has_kvm) {
+		// If the platform supports KVM dual partitions, show a button to trigger partition switch.
+        if (platform.has_kvm) {
 			const kvmBtn = E('input', {
 				type: 'button', class: 'cbi-button cbi-button-save',
 				value: _('Switch System'),
