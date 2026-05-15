@@ -84,9 +84,10 @@ function act_status()
 	local binpath = uci:get("AdGuardHome", "AdGuardHome", "binpath") or "/usr/bin/AdGuardHome"
 
 	if fs.access(binpath) then
-		-- Security fix: binpath 来自 UCI 用户数据，用单引号包裹防止命令注入
+		-- 用进程名匹配，避免 pgrep -f 匹配到 shell 自身
 		local safe_bin = binpath:gsub("'", "'\\''")
-		result.running = (luci.sys.call("pgrep -f '" .. safe_bin .. "' >/dev/null 2>&1") == 0)
+		local binname = safe_bin:match("([^/]+)$") or "AdGuardHome"
+			result.running = (luci.sys.call("pgrep '" .. binname .. "' >/dev/null 2>&1") == 0)
 	else
 		result.running = false
 	end

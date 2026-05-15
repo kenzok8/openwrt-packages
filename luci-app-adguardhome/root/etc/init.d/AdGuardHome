@@ -130,7 +130,8 @@ isrunning(){
 _isrunning(){
 	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
 	[ ! -f "$binpath" ] && return 2
-	pgrep -f "$binpath" >/dev/null 2>&1 && return 0
+	# 用进程名匹配，避免 pgrep -f 自匹配
+	pgrep "${binpath##*/}" >/dev/null 2>&1 && return 0
 	return 1
 }
 
@@ -177,9 +178,9 @@ rm_port53()
 
 	config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
 	local binname="${binpath##*/}"
-	pkill -TERM -f "$binname" 2>/dev/null
+	pkill -TERM "$binname" 2>/dev/null
 	sleep 2
-	pkill -KILL -f "$binname" 2>/dev/null
+	pkill -KILL "$binname" 2>/dev/null
 	/etc/init.d/dnsmasq restart
 }
 
@@ -434,6 +435,15 @@ start_service() {
 
 	if [ "$enabled" = "0" ]; then
 		_do_redirect 0
+		local binpid
+		config_get binpath $CONFIGURATION binpath "/usr/bin/AdGuardHome"
+		# 用进程名匹配，避免 pgrep -f 自匹配
+		binpid=$(pgrep "${binpath##*/}" 2>/dev/null | head -1)
+		if [ -n "$binpid" ]; then
+			kill -TERM "$binpid" 2>/dev/null
+			sleep 1
+			kill -KILL "$binpid" 2>/dev/null
+		fi
 		return
 	fi
 
@@ -541,7 +551,7 @@ start_service() {
 	echo "AdGuardHome service enabled (switch=$enabled)"
 
 	(sleep 10 && \
-		pgrep -f "$binpath" >/dev/null 2>&1 || { \
+		pgrep "${binpath##*/}" >/dev/null 2>&1 || { \
 			logger -t AdGuardHome "no process found after 10s, canceling redirect"; \
 			_do_redirect 0; \
 		}) &
