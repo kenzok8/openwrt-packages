@@ -2441,14 +2441,6 @@ body.sidebar-open header {
 	background: transparent;
 }
 
-.nav .dropdown-menu,
-header {
-	border: none;
-	backdrop-filter: blur(15px);
-	-webkit-backdrop-filter: blur(15px);
-	background: var(--md-sys-color-surface-translucent);
-}
-
 .nav .dropdown-menu>li {
 	position: relative;
 	border-radius: 2rem;
