@@ -19,9 +19,11 @@ cleanup() {
 }
 
 check_already_running(){
-	local running_tasks
-	running_tasks="$(ps | grep -E "AdGuardHome|update_core" | grep -v grep | wc -l)"
-	[ "${running_tasks}" -gt "2" ] && echo "已有任务在运行，退出" && cleanup 2
+	# 先检查锁，再 touch（顺序关键：touch 在函数调用之后执行）
+	if [ -f /var/run/update_core ]; then
+		echo "已有任务在运行，退出"
+		exit 2
+	fi
 }
 
 check_wgetcurl(){
@@ -264,8 +266,9 @@ update_core(){
 }
 
 trap "cleanup 1" SIGTERM SIGINT
+
+check_already_running
 touch /var/run/update_core
 rm -f /var/run/update_core_error 2>/dev/null
 
-check_already_running
 check_latest_version "$1"
