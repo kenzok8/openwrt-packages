@@ -1,6 +1,18 @@
-<link rel="stylesheet" href="<%=resource%>/adguardhome/adg.css">
 <script>
 (function () {
+	// Load our CSS (CBI strips <link> tags; inject via JS)
+	var link = document.createElement('link');
+	link.rel = 'stylesheet';
+	link.href = '<%=resource%>/adguardhome/adg.css';
+	document.head.appendChild(link);
+
+	// Add .adg-wrap to the Argon main container (exists at page load)
+	(function addWrap() {
+		var el = document.querySelector('.main') || document.querySelector('#maincontent') || document.body;
+		el.classList.add('adg-wrap');
+	})();
+
+	// Collapsible sections — wait for CBI to render (Argon loads it async)
 	var COLLAPSE_KEYS = ['路径与日志', '高级设置', 'Paths & Logs', 'Advanced Settings'];
 	var STORE_KEY = 'adg-collapsed';
 
@@ -12,35 +24,18 @@
 		try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {}
 	}
 
-	function paint() {
-		// 1. add wrapper class
-		var nodes = document.querySelectorAll('.cbi-map, .cbi-form');
-		var wrapped = false;
-		for (var i = 0; i < nodes.length && !wrapped; i++) {
-			var n = nodes[i];
-			while (n && n !== document.body) {
-				if (n.id === 'maincontent' || n.classList.contains('main') || n.classList.contains('main-content')) {
-					n.classList.add('adg-wrap');
-					wrapped = true;
-					break;
-				}
-				n = n.parentNode;
-			}
-		}
-		if (!wrapped) document.body.classList.add('adg-wrap');
-
-		// 2. mark collapsible sections by title text
+	function applyCollapse() {
 		var store = getStore();
-		var sections = document.querySelectorAll('.cbi-section');
+		var sections = document.querySelectorAll('.adg-wrap .cbi-section');
+		if (sections.length === 0) return false;
 		sections.forEach(function (sec) {
 			var head = sec.querySelector(':scope > h3, :scope > legend');
 			if (!head) return;
 			var title = (head.textContent || '').trim();
 			if (COLLAPSE_KEYS.indexOf(title) === -1) return;
+			if (sec.classList.contains('adg-collapsible')) return;
 			sec.classList.add('adg-collapsible');
-			// default collapsed unless user explicitly expanded before
-			var explicit = (title in store);
-			var collapsed = explicit ? store[title] : true;
+			var collapsed = (title in store) ? store[title] : true;
 			if (collapsed) sec.classList.add('adg-collapsed');
 			head.addEventListener('click', function () {
 				sec.classList.toggle('adg-collapsed');
@@ -48,9 +43,19 @@
 				setStore(store);
 			});
 		});
+		return true;
 	}
 
-	if (document.readyState !== 'loading') paint();
-	else document.addEventListener('DOMContentLoaded', paint);
+	// Try immediately, then retry up to 20 times (10 seconds total)
+	var tries = 0;
+	function retry() {
+		if (applyCollapse()) return;
+		if (++tries < 40) setTimeout(retry, 250);
+	}
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', function () { setTimeout(retry, 100); });
+	} else {
+		setTimeout(retry, 100);
+	}
 })();
 </script>

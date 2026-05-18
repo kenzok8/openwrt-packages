@@ -516,20 +516,28 @@ start_service() {
 	[ "$maxprocs" != "0" ] && procd_set_param env GOMAXPROCS="$maxprocs"
 	[ -n "$memlimit" ] && [ "$memlimit" != "0" ] && procd_set_param env GOMEMLIMIT="${memlimit}MiB"
 
-	config_get jail_mount $CONFIGURATION jail_mount ""
-	if [ -n "$jail_mount" ]; then
-		# pipe 右侧 while 运行在子 shell，但 procd_add_jail_mount 通过继承的 fd 写入 JSON，不受影响
-		printf '%s\n' "$jail_mount" | while IFS= read -r mp; do
-			[ -n "$mp" ] && procd_add_jail_mount "$mp"
-		done
-	fi
+	# DynamicList 写入 uci 是 `list jail_mount '...'` 格式
+	config_list_foreach $CONFIGURATION jail_mount procd_add_jail_mount
+	config_list_foreach $CONFIGURATION jail_mount_rw procd_add_jail_mount_rw
 
-	config_get jail_mount_rw $CONFIGURATION jail_mount_rw ""
-	if [ -n "$jail_mount_rw" ]; then
-		printf '%s\n' "$jail_mount_rw" | while IFS= read -r mp; do
-			[ -n "$mp" ] && procd_add_jail_mount_rw "$mp"
-		done
-	fi
+	# 兼容旧的 newline-separated `option jail_mount '...'` 格式（迁移期）
+	local jm jmrw
+	jm="$(uci -q get AdGuardHome.AdGuardHome.jail_mount 2>/dev/null)"
+	case "$jm" in
+		*$'\n'*)
+			printf '%s\n' "$jm" | while IFS= read -r mp; do
+				[ -n "$mp" ] && procd_add_jail_mount "$mp"
+			done
+			;;
+	esac
+	jmrw="$(uci -q get AdGuardHome.AdGuardHome.jail_mount_rw 2>/dev/null)"
+	case "$jmrw" in
+		*$'\n'*)
+			printf '%s\n' "$jmrw" | while IFS= read -r mp; do
+				[ -n "$mp" ] && procd_add_jail_mount_rw "$mp"
+			done
+			;;
+	esac
 
 	procd_set_param command $binpath $ADDITIONAL_ARGS
 	procd_set_param file "$configpath" "/etc/hosts" "/etc/config/AdGuardHome"

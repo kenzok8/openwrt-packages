@@ -21,7 +21,7 @@ m = Map("AdGuardHome", "AdGuard Home")
 m.description = translate("Free and open source, powerful network-wide ads & trackers blocking DNS server.")
 
 -- Inject card-style CSS for AGH pages
-m:section(SimpleSection).template = "AdGuardHome/head"
+
 
 -- ============================================================
 -- Section 1: Basic Settings
@@ -42,36 +42,10 @@ o.default = "3000"
 o.datatype = "port"
 o.optional = false
 
-local binmtime = uci:get("AdGuardHome", "AdGuardHome", "binmtime") or "0"
-local version_info = ""
-
-if not fs.access(configpath) then
-	version_info = translate("no config")
-end
-
-if not fs.access(binpath) then
-	version_info = version_info .. " " .. translate("no core")
-else
-	local version = uci:get("AdGuardHome", "AdGuardHome", "version")
-	local testtime = fs.stat(binpath, "mtime")
-	if testtime ~= tonumber(binmtime) or not version then
-		local tmp = luci.sys.exec(binpath .. " --version 2>/dev/null | grep -oE 'v[0-9.]+' | head -1")
-		version = tmp:match("v[0-9.]+") or "core error"
-		if version == "core error" or version == "" then
-			version = "core error"
-		end
-		uci:set("AdGuardHome", "AdGuardHome", "version", version)
-		uci:set("AdGuardHome", "AdGuardHome", "binmtime", testtime)
-		uci:save("AdGuardHome")
-	end
-	version_info = version .. version_info
-end
-
 o = s:option(Button, "restart", translate("Update"))
 o.inputtitle = translate("Update core version")
 o.template = "AdGuardHome/AdGuardHome_check"
 o.showfastconfig = not fs.access(configpath)
-o.description = string.format(translate("core version:") .. "<strong><font id=\"updateversion\" color=\"green\">%s</font></strong>", version_info)
 
 local port = luci.sys.exec("awk '/^  port:/{print $2;exit}' " .. configpath .. " 2>/dev/null")
 if not port or port == "" then
@@ -187,15 +161,33 @@ o.placeholder = "adguardhome"
 o.datatype = "string"
 o.rmempty = true
 
-o = s:option(TextValue, "jail_mount", translate("Read-only file access"), translate("Directories or files AdGuardHome can read. One path per line."))
-o.rows = 4
-o.wrap = "off"
-o.rmempty = true
+-- Helper：兼容把旧的 newline-separated 字符串读成 table（仅一次性迁移期需要）
+local function split_legacy_list(value)
+	if type(value) ~= "string" or value == "" then return value end
+	if not value:find("[\r\n]") then return value end
+	local t = {}
+	for line in value:gmatch("[^\r\n]+") do
+		line = line:match("^%s*(.-)%s*$")
+		if line ~= "" then t[#t+1] = line end
+	end
+	return t
+end
 
-o = s:option(TextValue, "jail_mount_rw", translate("Read-write file access"), translate("Directories or files AdGuardHome can write. One path per line."))
-o.rows = 4
-o.wrap = "off"
+o = s:option(DynamicList, "jail_mount", translate("只读文件访问"),
+	translate("AdGuardHome 可以读取的目录或文件路径，每行一项。"))
+o.placeholder = "/etc/hosts"
 o.rmempty = true
+o.cfgvalue = function(self, section)
+	return split_legacy_list(uci:get("AdGuardHome", section, "jail_mount"))
+end
+
+o = s:option(DynamicList, "jail_mount_rw", translate("读写文件访问"),
+	translate("AdGuardHome 可以读写的目录或文件路径，每行一项。"))
+o.placeholder = "/var/log/AdGuardHome"
+o.rmempty = true
+o.cfgvalue = function(self, section)
+	return split_legacy_list(uci:get("AdGuardHome", section, "jail_mount_rw"))
+end
 
 -- Probe system memory to suggest a sane MiB cap (≈50% of total RAM)
 local total_mem_kb = tonumber(luci.sys.exec("awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null")) or 0

@@ -1,62 +1,27 @@
 <%
 local fs = require "nixio.fs"
 local uci = require "luci.model.uci".cursor()
-local sys = require "luci.sys"
 
-local binpath = uci:get("AdGuardHome", "AdGuardHome", "binpath") or "/usr/bin/AdGuardHome"
 local logfile = uci:get("AdGuardHome", "AdGuardHome", "logfile") or ""
-
-local running = false
-if fs.access(binpath) then
-	running = (sys.call("/etc/init.d/AdGuardHome status >/dev/null 2>&1") == 0)
-end
-
 local no_logfile = (logfile == "")
 %>
 
 <% if no_logfile then %>
 <div class="adg-empty-state warn">
-	<div class="adg-empty-icon">⚠</div>
+	<div class="adg-empty-icon">!</div>
 	<div class="adg-empty-body">
 		<div class="adg-empty-title"><%:运行日志未配置%></div>
 		<div class="adg-empty-desc"><%:请在「基础设置 → 路径与日志 → 运行日志」填入日志路径（如 /tmp/AdGuardHome.log），或填 syslog 写入系统日志。%></div>
 		<a class="btn cbi-button cbi-button-apply" href="<%=luci.dispatcher.build_url('admin','services','AdGuardHome','base')%>"><%:去设置%></a>
 	</div>
 </div>
-<% elseif not running then %>
-<div class="adg-empty-state info">
-	<div class="adg-empty-icon">○</div>
-	<div class="adg-empty-body">
-		<div class="adg-empty-title"><%:AdGuardHome 未运行%></div>
-		<div class="adg-empty-desc"><%:服务未启动，下方日志窗口将保持为空。启动服务后可在此查看运行日志。%></div>
-		<a class="btn cbi-button cbi-button-apply" href="<%=luci.dispatcher.build_url('admin','services','AdGuardHome','base')%>"><%:去启用%></a>
-	</div>
-</div>
-<% end %>
-
 <style>
-.adg-empty-state {
-	display: flex;
-	align-items: flex-start;
-	gap: 14px;
-	padding: 14px 18px;
-	margin: 6px 0 14px 0;
-	border-radius: 10px;
-	background: rgba(128,128,128,0.05);
-	border: 1px solid rgba(128,128,128,0.18);
-}
-.adg-empty-state.warn { border-color: rgba(224,160,47,0.4); background: rgba(224,160,47,0.06); }
-.adg-empty-state.info { border-color: rgba(0,122,255,0.35);  background: rgba(0,122,255,0.05); }
-.adg-empty-icon {
-	font-size: 22px;
-	line-height: 1;
-	flex: 0 0 auto;
-	padding-top: 2px;
-}
-.adg-empty-state.warn .adg-empty-icon { color: #e0a02f; }
-.adg-empty-state.info .adg-empty-icon { color: #007aff; }
-.adg-empty-body { flex: 1; }
-.adg-empty-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-.adg-empty-desc { font-size: 13px; opacity: .8; margin-bottom: 10px; line-height: 1.55; }
-.adg-empty-state a.btn { display: inline-block; }
+.adg-empty-state { display:flex; align-items:flex-start; gap:14px; padding:14px 18px; margin:6px 0 14px 0; border-radius:10px; background:rgba(128,128,128,0.05); border:1px solid rgba(128,128,128,0.18); }
+.adg-empty-state.warn { border-color:rgba(224,160,47,0.4); background:rgba(224,160,47,0.06); }
+.adg-empty-icon { font-size:22px; line-height:1; flex:0 0 auto; padding-top:2px; color:#e0a02f; }
+.adg-empty-body { flex:1; }
+.adg-empty-title { font-weight:600; font-size:14px; margin-bottom:4px; }
+.adg-empty-desc { font-size:13px; opacity:.8; margin-bottom:10px; line-height:1.55; }
+.adg-empty-state a.btn { display:inline-block; }
 </style>
+<% end %>

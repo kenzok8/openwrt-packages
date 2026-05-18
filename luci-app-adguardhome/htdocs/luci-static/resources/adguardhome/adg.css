@@ -25,13 +25,11 @@
 	}
 }
 
-/* page-wide width cap */
-.adg-wrap .cbi-map,
-.adg-wrap .cbi-map > form,
-.adg-wrap > form {
-	max-width: 980px;
-	margin-left: auto;
-	margin-right: auto;
+/* Cards are constrained for comfortable reading; form fills its natural width.
+   Bootstrap theme has sidebar; Argon is full-width. Let the theme decide the
+   outer container width — we only cap the card content. */
+.adg-wrap .cbi-section {
+	max-width: 1000px;
 }
 
 /* every CBI section becomes a card */
@@ -115,6 +113,29 @@
 	border-bottom: 0 !important;
 	padding: 8px 0;
 }
+
+/* MultiValue checkbox groups — let items flow inline and wrap naturally */
+.adg-wrap .cbi-value-field .cbi-checkbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-right: 16px;
+	margin-bottom: 4px;
+	font-size: 13px;
+	white-space: nowrap;
+}
+.adg-wrap .cbi-value-field .cbi-checkbox input[type="checkbox"] {
+	width: auto;
+	height: auto;
+	margin: 0;
+	flex-shrink: 0;
+}
+
+/* DynamicList — compact row layout */
+.adg-wrap .cbi-dynlist .cbi-value-title { display: none; }
+.adg-wrap .cbi-dynlist .cbi-value { padding: 4px 0; }
+.adg-wrap .cbi-dynlist .cbi-value-field { flex: 1; max-width: 420px; }
+.adg-wrap .cbi-dynlist .cbi-value-field input[type="text"] { max-width: 100%; }
 
 /* AdGuardHome custom status row */
 .adg-status-row {
@@ -213,20 +234,30 @@
 	display: none;
 }
 
-/* mobile tweaks */
+/* mobile tweaks — reset table/flex layout entirely */
 @media (max-width: 720px) {
 	.adg-wrap .cbi-section {
-		padding: 14px 14px;
-		margin: 12px 0;
+		padding: 12px 10px;
+		margin: 8px 0;
 	}
+	/* force flex column, kill any theme table layout */
 	.adg-wrap .cbi-value {
+		display: flex !important;
 		flex-direction: column;
 		align-items: stretch;
+		border-bottom: 0 !important;
+		padding: 6px 0;
 	}
 	.adg-wrap .cbi-value > .cbi-value-title {
-		width: 100%;
-		min-width: 0;
-		padding: 0 0 4px 0;
+		width: 100% !important;
+		min-width: 0 !important;
+		padding: 0 0 3px 0 !important;
+		flex: none;
+		text-align: left;
+	}
+	.adg-wrap .cbi-value > .cbi-value-field {
+		width: 100% !important;
+		flex: none;
 	}
 	.adg-wrap .cbi-value-field input[type="text"],
 	.adg-wrap .cbi-value-field input[type="password"],
@@ -234,7 +265,20 @@
 	.adg-wrap .cbi-value-field select {
 		max-width: 100%;
 	}
-	/* hide the tooltip ? icons on touch screens (they don't open) */
+	.adg-wrap .cbi-value-field > div {
+		width: 100%;
+	}
+	/* checkboxes — single column */
+	.adg-wrap .cbi-value-field .cbi-checkbox {
+		display: flex;
+		white-space: normal;
+		margin-right: 0;
+		margin-bottom: 6px;
+		width: 100%;
+	}
+	/* DynamicList — expand */
+	.adg-wrap .cbi-dynlist .cbi-value-field { max-width: 100%; }
+	/* hide tooltips on touch */
 	.adg-wrap .cbi-tooltip-container,
 	.adg-wrap .cbi-tooltip {
 		display: none !important;

@@ -10,7 +10,7 @@ local workdir = uci:get("AdGuardHome", "AdGuardHome", "workdir") or "/etc/AdGuar
 m = Map("AdGuardHome", translate("工具与任务"))
 m.description = translate("一次性动作与计划任务：改密、备份、Crontab、下载源")
 
-m:section(SimpleSection).template = "AdGuardHome/head"
+
 
 s = m:section(NamedSection, "AdGuardHome", "AdGuardHome", "")
 s.anonymous = true
