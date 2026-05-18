@@ -4,31 +4,47 @@
 		"order": 10,
 		"action": {
 			"type": "alias",
-			"path": "admin/services/AdGuardHome/base"
+			"path": "admin/services/AdGuardHome/overview"
 		},
 		"depends": {
 			"acl": [ "luci-app-adguardhome" ]
 		}
 	},
-	"admin/services/AdGuardHome/base": {
-		"title": "Base Setting",
+	"admin/services/AdGuardHome/overview": {
+		"title": "概览",
 		"order": 1,
+		"action": {
+			"type": "cbi",
+			"path": "AdGuardHome/overview"
+		}
+	},
+	"admin/services/AdGuardHome/base": {
+		"title": "基础设置",
+		"order": 2,
 		"action": {
 			"type": "cbi",
 			"path": "AdGuardHome/base"
 		}
 	},
+	"admin/services/AdGuardHome/tools": {
+		"title": "工具与任务",
+		"order": 3,
+		"action": {
+			"type": "cbi",
+			"path": "AdGuardHome/tools"
+		}
+	},
 	"admin/services/AdGuardHome/log": {
-		"title": "Log",
-		"order": 2,
+		"title": "日志",
+		"order": 4,
 		"action": {
 			"type": "form",
 			"path": "AdGuardHome/log"
 		}
 	},
 	"admin/services/AdGuardHome/manual": {
-		"title": "Manual Config",
-		"order": 3,
+		"title": "手动配置",
+		"order": 5,
 		"action": {
 			"type": "cbi",
 			"path": "AdGuardHome/manual"

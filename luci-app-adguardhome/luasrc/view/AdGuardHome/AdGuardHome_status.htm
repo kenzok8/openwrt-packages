@@ -1,27 +1,145 @@
+<style>
+/* === AdGuardHome Status Bar === */
+.adg-status-bar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+	padding: 4px 0;
+}
+.adg-status-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 10px;
+	border-radius: 12px;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.5;
+}
+.adg-status-badge::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+.adg-status-running {
+	background: rgba(74,160,101,.15);
+	color: #2d7d46;
+}
+.adg-status-running::before {
+	background: #2d7d46;
+	box-shadow: 0 0 0 2px rgba(74,160,101,.3);
+}
+.adg-status-stopped {
+	background: rgba(220,80,80,.12);
+	color: #b03030;
+}
+.adg-status-stopped::before {
+	background: #b03030;
+	box-shadow: 0 0 0 2px rgba(220,80,80,.25);
+}
+.adg-status-redirect-yes {
+	background: rgba(64,128,196,.12);
+	color: #2864a0;
+}
+.adg-status-redirect-yes::before {
+	background: #2864a0;
+	box-shadow: 0 0 0 2px rgba(64,128,196,.25);
+}
+.adg-status-redirect-no {
+	background: rgba(160,160,160,.10);
+	color: #888;
+}
+.adg-status-redirect-no::before {
+	background: #888;
+}
+
+/* === NamedSection card styling === */
+.adg-section-card {
+	background: var(--cbi-background, #fff);
+	border: 1px solid var(--cbi-border, #e0e0e0);
+	border-radius: 8px;
+	margin-bottom: 16px;
+	overflow: hidden;
+}
+.adg-section-card .cbi-section-title {
+	background: var(--cbi-section-heading-bg, #f5f7fa);
+	padding: 10px 14px;
+	font-size: 14px;
+	font-weight: 600;
+	border-bottom: 1px solid var(--cbi-border, #e0e0e0);
+	margin: 0;
+}
+.adg-section-card .cbi-section-title h3 {
+	margin: 0;
+	font-size: inherit;
+}
+
+/* === TextValue inputs — match text input width === */
+.cbi-value-field textarea.cbi-input-textarea {
+	max-width: 280px;
+	width: auto;
+	box-sizing: border-box;
+}
+
+/* === Mobile responsive === */
+@media screen and (max-width: 600px) {
+	.adg-status-bar {
+		gap: 6px;
+	}
+	.adg-status-badge {
+		font-size: 12px;
+		padding: 2px 8px;
+	}
+	.adg-status-badge::before {
+		width: 6px;
+		height: 6px;
+	}
+	.adg-section-card {
+		border-radius: 6px;
+		margin-bottom: 10px;
+	}
+	.cbi-value-field .cbi-input-textarea {
+		max-width: 100%;
+		box-sizing: border-box;
+	}
+	/* fix download links textarea on mobile */
+	#cbid\\.AdGuardHome\\.AdGuardHome\\.downloadlinks {
+		max-width: 100% !important;
+		width: 100% !important;
+		box-sizing: border-box;
+	}
+}
+</style>
 <script type="text/javascript">//<![CDATA[
 XHR.poll(3, '<%=url([[admin]], [[services]], [[AdGuardHome]], [[status]])%>', null,
 	function(x, data) {
 		var tb = document.getElementById('AdGuardHome_status');
 		if (data && tb) {
+			var html = '<div class="adg-status-bar">';
 			if (data.running) {
-				tb.innerHTML = '<em><b><font color=green>AdGuardHome <%:RUNNING%></font></b></em>';
+				html += '<span class="adg-status-badge adg-status-running">AdGuardHome <%:RUNNING%></span>';
 			} else {
-				tb.innerHTML = '<em><b><font color=red>AdGuardHome <%:NOT RUNNING%></font></b></em>';
+				html += '<span class="adg-status-badge adg-status-stopped">AdGuardHome <%:NOT RUNNING%></span>';
 			}
-			if (data.redirect)
-			{
-				tb.innerHTML+='<em><b><font color=green><%:Redirected%></font></b></em>'
+			if (data.redirect) {
+				html += '<span class="adg-status-badge adg-status-redirect-yes"><%:Redirected%></span>';
 			} else {
-				tb.innerHTML+='<em><b><font color=red><%:Not redirect%></font></b></em>'	
+				html += '<span class="adg-status-badge adg-status-redirect-no"><%:Not redirect%></span>';
 			}
+			html += '</div>';
+			tb.innerHTML = html;
 		}
 	}
 );
 //]]>
 </script>
-<style>.mar-10 {margin-left: 50px; margin-right: 10px;}</style>
 <fieldset class="cbi-section">
-	<p id="AdGuardHome_status">
-		<em><%:Collecting data...%></em>
-	</p>
+	<div id="AdGuardHome_status">
+		<div class="adg-status-bar">
+			<span class="adg-status-badge adg-status-stopped"><%:Collecting data...%></span>
+		</div>
+	</div>
 </fieldset>

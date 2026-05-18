@@ -514,7 +514,7 @@ start_service() {
 	[ -n "$group" ] && procd_set_param group "$group"
 	[ "$gc" != "0" ] && procd_set_param env GOGC="$gc"
 	[ "$maxprocs" != "0" ] && procd_set_param env GOMAXPROCS="$maxprocs"
-	[ "$memlimit" != "0" ] && procd_set_param env GOMEMLIMIT="$memlimit"
+	[ -n "$memlimit" ] && [ "$memlimit" != "0" ] && procd_set_param env GOMEMLIMIT="${memlimit}MiB"
 
 	config_get jail_mount $CONFIGURATION jail_mount ""
 	if [ -n "$jail_mount" ]; then
@@ -650,11 +650,6 @@ do_crontab(){
 	findstr="/usr/share/AdGuardHome/addhost.sh"
 	default="0 * * * * /usr/share/AdGuardHome/addhost.sh"
 	[ "$enabled" = "0" ] || [ "${crontab//autohost/}" = "$crontab" ] && cronenable=0 || cronenable=1
-	crontab_editor
-
-	findstr="/usr/share/AdGuardHome/gfw2adg.sh"
-	default="30 3 * * * /usr/share/AdGuardHome/gfw2adg.sh"
-	[ "$enabled" = "0" ] || [ "${crontab//autogfw/}" = "$crontab" ] && cronenable=0 || cronenable=1
 	crontab_editor
 
 	[ "$cronreload" -gt 0 ] && /etc/init.d/cron restart

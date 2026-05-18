@@ -1,0 +1,242 @@
+/* luci-app-adguardhome card-style theme (inspired by luci-app-clashoo) */
+.adg-wrap {
+	--adg-primary-rgb: 0, 122, 255;
+	--adg-primary: rgba(var(--adg-primary-rgb), 0.9);
+	--adg-card-bg: rgba(128, 128, 128, 0.04);
+	--adg-card-border: rgba(128, 128, 128, 0.16);
+	--adg-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+	--adg-card-shadow-hover: 0 6px 24px rgba(0, 0, 0, 0.07);
+	--adg-radius: 12px;
+	--adg-label-muted: rgba(80, 88, 100, 0.7);
+	--adg-input-bg: rgba(128, 128, 128, 0.05);
+	--adg-input-border: rgba(128, 128, 128, 0.2);
+	--adg-ok: #2db84a;
+	--adg-warn: #e0a02f;
+	--adg-bad: #d05050;
+}
+
+@media (prefers-color-scheme: dark) {
+	.adg-wrap {
+		--adg-card-bg: rgba(255, 255, 255, 0.04);
+		--adg-card-border: rgba(255, 255, 255, 0.1);
+		--adg-input-bg: rgba(255, 255, 255, 0.05);
+		--adg-input-border: rgba(255, 255, 255, 0.16);
+		--adg-label-muted: rgba(200, 210, 220, 0.65);
+	}
+}
+
+/* page-wide width cap */
+.adg-wrap .cbi-map,
+.adg-wrap .cbi-map > form,
+.adg-wrap > form {
+	max-width: 980px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* every CBI section becomes a card */
+.adg-wrap .cbi-section {
+	background: var(--adg-card-bg);
+	border: 1px solid var(--adg-card-border);
+	border-radius: var(--adg-radius);
+	box-shadow: var(--adg-card-shadow);
+	padding: 18px 22px;
+	margin: 16px 0;
+	transition: box-shadow .2s ease;
+}
+.adg-wrap .cbi-section:hover {
+	box-shadow: var(--adg-card-shadow-hover);
+}
+
+/* section heading inside card */
+.adg-wrap .cbi-section > h3,
+.adg-wrap .cbi-section > legend {
+	background: transparent !important;
+	border: 0 !important;
+	box-shadow: none !important;
+	padding: 0 0 12px 0 !important;
+	margin: 0 0 12px 0 !important;
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: .2px;
+	border-bottom: 1px solid var(--adg-card-border) !important;
+}
+
+/* label column slimmer (default LuCI is ~280px) */
+.adg-wrap .cbi-value > .cbi-value-title {
+	width: 170px;
+	min-width: 170px;
+	padding-right: 12px;
+	color: var(--adg-label-muted);
+	font-weight: 500;
+}
+
+/* inputs */
+.adg-wrap .cbi-value-field input[type="text"],
+.adg-wrap .cbi-value-field input[type="password"],
+.adg-wrap .cbi-value-field input[type="number"],
+.adg-wrap .cbi-value-field select,
+.adg-wrap .cbi-value-field textarea {
+	background: var(--adg-input-bg);
+	border: 1px solid var(--adg-input-border);
+	border-radius: 8px;
+	padding: 6px 10px;
+	max-width: 420px;
+	width: 100%;
+	box-shadow: none;
+}
+.adg-wrap .cbi-value-field textarea {
+	max-width: 420px;
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+/* long-form textareas need full width (URL lists / YAML editor) */
+.adg-wrap .cbi-value-field textarea[id$="downloadlinks"],
+.adg-wrap .cbi-value-field textarea[id$="escconf"],
+.adg-wrap .cbi-value-field textarea#cbid\.logview\.1\.conf {
+	max-width: 100%;
+}
+.adg-wrap .cbi-value-field input:focus,
+.adg-wrap .cbi-value-field select:focus,
+.adg-wrap .cbi-value-field textarea:focus {
+	border-color: var(--adg-primary);
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(var(--adg-primary-rgb), 0.15);
+}
+
+/* help text */
+.adg-wrap .cbi-value-description {
+	color: var(--adg-label-muted);
+	font-size: 12.5px;
+	margin-top: 4px;
+}
+
+/* between-row separator gone (the card itself is the boundary) */
+.adg-wrap .cbi-value {
+	border-bottom: 0 !important;
+	padding: 8px 0;
+}
+
+/* AdGuardHome custom status row */
+.adg-status-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	margin: 6px 0 18px 0;
+}
+.adg-status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 12px;
+	border-radius: 999px;
+	background: var(--adg-card-bg);
+	border: 1px solid var(--adg-card-border);
+	font-size: 13px;
+	color: var(--adg-label-muted);
+}
+.adg-status-pill .dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--adg-label-muted);
+}
+.adg-status-pill.ok .dot   { background: var(--adg-ok); }
+.adg-status-pill.warn .dot { background: var(--adg-warn); }
+.adg-status-pill.bad .dot  { background: var(--adg-bad); }
+.adg-status-pill.ok        { color: var(--adg-ok); border-color: rgba(45,184,74,.3); }
+.adg-status-pill.bad       { color: var(--adg-bad); border-color: rgba(208,80,80,.3); }
+
+/* CBI button color fallback — ensure visibility on themes that use
+   transparent backgrounds (e.g. Argon light) */
+.adg-wrap input.cbi-button-apply,
+.adg-wrap button.cbi-button-apply {
+	background: #007aff !important;
+	border-color: #007aff !important;
+	color: #fff !important;
+}
+.adg-wrap input.cbi-button-apply:hover,
+.adg-wrap button.cbi-button-apply:hover {
+	background: #0064d2 !important;
+	border-color: #0064d2 !important;
+}
+.adg-wrap input.cbi-button-remove,
+.adg-wrap button.cbi-button-remove {
+	background: #d05050 !important;
+	border-color: #d05050 !important;
+	color: #fff !important;
+}
+.adg-wrap input.cbi-button-remove:hover,
+.adg-wrap button.cbi-button-remove:hover {
+	background: #b03d3d !important;
+	border-color: #b03d3d !important;
+}
+.adg-wrap input.cbi-button-save,
+.adg-wrap button.cbi-button-save {
+	background: #2d7d46 !important;
+	border-color: #2d7d46 !important;
+	color: #fff !important;
+}
+.adg-wrap input.cbi-button-save:hover,
+.adg-wrap button.cbi-button-save:hover {
+	background: #226434 !important;
+	border-color: #226434 !important;
+}
+
+/* collapsible sections */
+.adg-wrap .cbi-section.adg-collapsible > h3,
+.adg-wrap .cbi-section.adg-collapsible > legend {
+	cursor: pointer;
+	position: relative;
+	padding-right: 28px !important;
+	user-select: none;
+}
+.adg-wrap .cbi-section.adg-collapsible > h3::after,
+.adg-wrap .cbi-section.adg-collapsible > legend::after {
+	content: "";
+	position: absolute;
+	right: 4px;
+	top: 50%;
+	width: 8px;
+	height: 8px;
+	border-right: 2px solid var(--adg-label-muted);
+	border-bottom: 2px solid var(--adg-label-muted);
+	transform: translateY(-65%) rotate(45deg);
+	transition: transform .2s ease;
+}
+.adg-wrap .cbi-section.adg-collapsible.adg-collapsed > h3::after,
+.adg-wrap .cbi-section.adg-collapsible.adg-collapsed > legend::after {
+	transform: translateY(-30%) rotate(-45deg);
+}
+.adg-wrap .cbi-section.adg-collapsible.adg-collapsed > .cbi-value,
+.adg-wrap .cbi-section.adg-collapsible.adg-collapsed > div.cbi-section-node,
+.adg-wrap .cbi-section.adg-collapsible.adg-collapsed > fieldset {
+	display: none;
+}
+
+/* mobile tweaks */
+@media (max-width: 720px) {
+	.adg-wrap .cbi-section {
+		padding: 14px 14px;
+		margin: 12px 0;
+	}
+	.adg-wrap .cbi-value {
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.adg-wrap .cbi-value > .cbi-value-title {
+		width: 100%;
+		min-width: 0;
+		padding: 0 0 4px 0;
+	}
+	.adg-wrap .cbi-value-field input[type="text"],
+	.adg-wrap .cbi-value-field input[type="password"],
+	.adg-wrap .cbi-value-field input[type="number"],
+	.adg-wrap .cbi-value-field select {
+		max-width: 100%;
+	}
+	/* hide the tooltip ? icons on touch screens (they don't open) */
+	.adg-wrap .cbi-tooltip-container,
+	.adg-wrap .cbi-tooltip {
+		display: none !important;
+	}
+}

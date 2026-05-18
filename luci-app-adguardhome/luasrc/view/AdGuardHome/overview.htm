@@ -1,0 +1,285 @@
+<%
+local fs  = require "nixio.fs"
+local uci = require "luci.model.uci".cursor()
+local sys = require "luci.sys"
+local dsp = require "luci.dispatcher"
+
+local binpath    = uci:get("AdGuardHome", "AdGuardHome", "binpath")    or "/usr/bin/AdGuardHome"
+local configpath = uci:get("AdGuardHome", "AdGuardHome", "configpath") or "/etc/AdGuardHome.yaml"
+local httpport   = uci:get("AdGuardHome", "AdGuardHome", "httpport")   or "3000"
+local redirect   = uci:get("AdGuardHome", "AdGuardHome", "redirect")   or "none"
+local version    = uci:get("AdGuardHome", "AdGuardHome", "version")    or "-"
+
+local has_bin    = fs.access(binpath)
+local has_config = fs.access(configpath)
+
+local toggle_url = dsp.build_url("admin", "services", "AdGuardHome", "toggle")
+local base_url   = dsp.build_url("admin", "services", "AdGuardHome", "base")
+local tools_url  = dsp.build_url("admin", "services", "AdGuardHome", "tools")
+local log_url    = dsp.build_url("admin", "services", "AdGuardHome", "log")
+
+local redirect_label = {
+	none               = translate("未启用"),
+	["dnsmasq-upstream"] = translate("作为 dnsmasq 上游"),
+	redirect           = translate("53 端口劫持"),
+	exchange           = translate("替代 dnsmasq")
+}
+local redirect_text = redirect_label[redirect] or redirect
+%>
+
+<style>
+/* hide LuCI form footer (Save/Apply/Reset) on this read-only dashboard */
+body:has(.adg-ov-root) .cbi-page-actions,
+body:has(.adg-ov-root) form .cbi-section + .cbi-page-actions { display: none !important; }
+
+.adg-ov-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 14px;
+	margin-bottom: 16px;
+}
+.adg-ov-card {
+	background: var(--adg-card-bg, rgba(128,128,128,0.04));
+	border: 1px solid var(--adg-card-border, rgba(128,128,128,0.16));
+	border-radius: 12px;
+	padding: 16px 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.adg-ov-card .head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+.adg-ov-card .title {
+	font-size: 13px;
+	color: var(--adg-label-muted, #666);
+	font-weight: 500;
+}
+.adg-ov-card .value {
+	font-size: 18px;
+	font-weight: 600;
+	letter-spacing: .2px;
+}
+.adg-ov-card .sub {
+	font-size: 12.5px;
+	color: var(--adg-label-muted, #888);
+}
+
+/* status dot */
+.adg-ov-dot {
+	display: inline-block;
+	width: 10px; height: 10px;
+	border-radius: 50%;
+	background: #b03030;
+	margin-right: 6px;
+	vertical-align: middle;
+	box-shadow: 0 0 0 3px rgba(176,48,48,.18);
+}
+.adg-ov-dot.ok   { background: #2d7d46; box-shadow: 0 0 0 3px rgba(45,125,70,.18); }
+.adg-ov-dot.warn { background: #e0a02f; box-shadow: 0 0 0 3px rgba(224,160,47,.18); }
+
+/* big enable switch (iOS-ish) */
+.adg-ov-switch {
+	position: relative;
+	display: inline-block;
+	width: 52px; height: 30px;
+	flex: 0 0 auto;
+}
+.adg-ov-switch input { display: none; }
+.adg-ov-switch .track {
+	position: absolute;
+	inset: 0;
+	border-radius: 999px;
+	background: rgba(128,128,128,0.25);
+	transition: background .2s;
+	cursor: pointer;
+}
+.adg-ov-switch .knob {
+	position: absolute;
+	top: 3px; left: 3px;
+	width: 24px; height: 24px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 2px 4px rgba(0,0,0,.2);
+	transition: transform .2s;
+}
+.adg-ov-switch input:checked + .track { background: #2d7d46; }
+.adg-ov-switch input:checked + .track .knob { transform: translateX(22px); }
+.adg-ov-switch.busy .track { opacity: .6; cursor: wait; }
+
+/* quick actions */
+.adg-ov-actions {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin: 10px 0 18px 0;
+}
+.adg-ov-actions a, .adg-ov-actions button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 8px 14px;
+	border-radius: 8px;
+	font-size: 13px;
+	border: 1px solid var(--adg-card-border, rgba(128,128,128,0.18));
+	background: var(--adg-card-bg, rgba(128,128,128,0.04));
+	color: inherit;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background .15s;
+}
+.adg-ov-actions a:hover, .adg-ov-actions button:hover {
+	background: rgba(0,122,255,0.08);
+	border-color: rgba(0,122,255,0.4);
+}
+.adg-ov-actions a.primary {
+	background: #007aff;
+	border-color: #007aff;
+	color: #fff;
+}
+.adg-ov-actions a.primary:hover { background: #0064d2; }
+
+@media (max-width: 720px) {
+	.adg-ov-card .value { font-size: 16px; }
+	.adg-ov-actions a, .adg-ov-actions button { flex: 1 1 calc(50% - 5px); justify-content: center; }
+}
+</style>
+
+<div class="cbi-section adg-ov-root">
+	<!-- Card grid -->
+	<div class="adg-ov-grid">
+		<!-- Status + Enable -->
+		<div class="adg-ov-card">
+			<div class="head">
+				<div>
+					<div class="title"><%:服务状态%></div>
+					<div class="value" id="adg-ov-status">
+						<span class="adg-ov-dot"></span><%:正在检测…%>
+					</div>
+				</div>
+				<label class="adg-ov-switch" id="adg-ov-switch">
+					<input type="checkbox" id="adg-ov-toggle">
+					<span class="track"><span class="knob"></span></span>
+				</label>
+			</div>
+			<div class="sub" id="adg-ov-status-sub">&nbsp;</div>
+		</div>
+
+		<!-- Redirect mode -->
+		<div class="adg-ov-card">
+			<div class="title"><%:重定向模式%></div>
+			<div class="value" id="adg-ov-redir">
+				<%= redirect_text %>
+			</div>
+			<div class="sub" id="adg-ov-redir-sub">
+				<%:配置「基础设置 → 5553 重定向」%>
+			</div>
+		</div>
+
+		<!-- Core version -->
+		<div class="adg-ov-card">
+			<div class="title"><%:核心版本%></div>
+			<div class="value">
+				<% if has_bin then %>
+					<%= version %>
+				<% else %>
+					<span style="color:#b03030;"><%:未安装%></span>
+				<% end %>
+			</div>
+			<div class="sub">
+				<% if not has_config then %>
+					<span style="color:#e0a02f;"><%:配置文件缺失%></span>
+				<% elseif not has_bin then %>
+					<%:点击「基础设置 → 更新核心版本」下载%>
+				<% else %>
+					<%= binpath %>
+				<% end %>
+			</div>
+		</div>
+	</div>
+
+	<!-- Quick actions -->
+	<div class="adg-ov-actions">
+		<a class="primary" id="adg-ov-webui" target="_blank" rel="noopener"
+		   href="http://<%=luci.http.getenv('SERVER_NAME') or ''%>:<%=httpport%>/">
+			<%:打开 Web 控制台%> :<%=httpport%>
+		</a>
+		<a href="<%=base_url%>"><%:基础设置%></a>
+		<a href="<%=tools_url%>"><%:工具与任务%></a>
+		<a href="<%=log_url%>"><%:查看日志%></a>
+	</div>
+</div>
+
+<script>
+(function () {
+	var STATUS_URL = '<%=dsp.build_url("admin","services","AdGuardHome","status")%>';
+	var TOGGLE_URL = '<%=toggle_url%>';
+
+	var elStatus    = document.getElementById('adg-ov-status');
+	var elStatusSub = document.getElementById('adg-ov-status-sub');
+	var elToggle    = document.getElementById('adg-ov-toggle');
+	var elSwitch    = document.getElementById('adg-ov-switch');
+	var elRedir     = document.getElementById('adg-ov-redir');
+	var elRedirSub  = document.getElementById('adg-ov-redir-sub');
+	var elWebUI     = document.getElementById('adg-ov-webui');
+
+	// patch the webui link to use current hostname
+	if (elWebUI) {
+		var host = window.location.hostname;
+		elWebUI.href = 'http://' + host + ':<%=httpport%>/';
+	}
+
+	function paint(data) {
+		if (!data) return;
+		// status
+		if (data.running) {
+			elStatus.innerHTML = '<span class="adg-ov-dot ok"></span><%:运行中%>';
+			elStatusSub.textContent = '<%:AdGuardHome 正在处理 DNS 请求%>';
+			elToggle.checked = true;
+		} else {
+			elStatus.innerHTML = '<span class="adg-ov-dot"></span><%:未运行%>';
+			elStatusSub.textContent = data.message || '<%:服务未启动%>';
+			elToggle.checked = false;
+		}
+		// redirect
+		if (data.redirect) {
+			elRedir.innerHTML = '<span class="adg-ov-dot ok"></span><%= redirect_text %>';
+		} else {
+			elRedir.innerHTML = '<span class="adg-ov-dot warn"></span><%:未重定向%>';
+		}
+	}
+
+	function poll() {
+		XHR.get(STATUS_URL, null, function (x, data) { paint(data); });
+	}
+
+	elToggle.addEventListener('change', function (ev) {
+		var want = elToggle.checked ? '1' : '0';
+		elSwitch.classList.add('busy');
+		elToggle.disabled = true;
+		XHR.post(TOGGLE_URL, { enabled: want, token: L && L.env ? L.env.token : '' }, function (x, data) {
+			elSwitch.classList.remove('busy');
+			elToggle.disabled = false;
+			if (data) paint(data);
+			poll();
+		});
+	});
+
+	// hide bottom form action bar (Save/Apply/Reset) — fallback for browsers without :has
+	(function hideFooter() {
+		var bar = document.querySelector('.cbi-page-actions');
+		if (bar) bar.style.display = 'none';
+	})();
+
+	// initial fetch + 3s poll
+	poll();
+	if (typeof XHR.poll === 'function') {
+		XHR.poll(3, STATUS_URL, null, function (x, data) { paint(data); });
+	} else {
+		setInterval(poll, 3000);
+	}
+})();
+</script>

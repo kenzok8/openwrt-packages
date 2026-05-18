@@ -1,0 +1,56 @@
+<link rel="stylesheet" href="<%=resource%>/adguardhome/adg.css">
+<script>
+(function () {
+	var COLLAPSE_KEYS = ['路径与日志', '高级设置', 'Paths & Logs', 'Advanced Settings'];
+	var STORE_KEY = 'adg-collapsed';
+
+	function getStore() {
+		try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }
+		catch (e) { return {}; }
+	}
+	function setStore(s) {
+		try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {}
+	}
+
+	function paint() {
+		// 1. add wrapper class
+		var nodes = document.querySelectorAll('.cbi-map, .cbi-form');
+		var wrapped = false;
+		for (var i = 0; i < nodes.length && !wrapped; i++) {
+			var n = nodes[i];
+			while (n && n !== document.body) {
+				if (n.id === 'maincontent' || n.classList.contains('main') || n.classList.contains('main-content')) {
+					n.classList.add('adg-wrap');
+					wrapped = true;
+					break;
+				}
+				n = n.parentNode;
+			}
+		}
+		if (!wrapped) document.body.classList.add('adg-wrap');
+
+		// 2. mark collapsible sections by title text
+		var store = getStore();
+		var sections = document.querySelectorAll('.cbi-section');
+		sections.forEach(function (sec) {
+			var head = sec.querySelector(':scope > h3, :scope > legend');
+			if (!head) return;
+			var title = (head.textContent || '').trim();
+			if (COLLAPSE_KEYS.indexOf(title) === -1) return;
+			sec.classList.add('adg-collapsible');
+			// default collapsed unless user explicitly expanded before
+			var explicit = (title in store);
+			var collapsed = explicit ? store[title] : true;
+			if (collapsed) sec.classList.add('adg-collapsed');
+			head.addEventListener('click', function () {
+				sec.classList.toggle('adg-collapsed');
+				store[title] = sec.classList.contains('adg-collapsed');
+				setStore(store);
+			});
+		});
+	}
+
+	if (document.readyState !== 'loading') paint();
+	else document.addEventListener('DOMContentLoaded', paint);
+})();
+</script>

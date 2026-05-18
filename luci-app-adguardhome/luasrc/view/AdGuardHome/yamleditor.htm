@@ -8,27 +8,65 @@
 <script src="/luci-static/resources/codemirror/addon/fold/foldgutter.js"></script>
 <script src="/luci-static/resources/codemirror/addon/fold/indent-fold.js"></script>
 <script type="text/javascript">//<![CDATA[
-var editor = CodeMirror.fromTextArea(document.getElementById("cbid.AdGuardHome.AdGuardHome.escconf"), {
-mode: "text/yaml",    //实现groovy代码高亮
-styleActiveLine: true,
-lineNumbers: true,	//显示行号
-theme: "dracula",	//设置主题
-lineWrapping: true,	//代码折叠
-foldGutter: true,
-gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
-matchBrackets: true //括号匹配
+var editor = null;
+try {
+	if (typeof CodeMirror !== 'undefined') {
+		editor = CodeMirror.fromTextArea(document.getElementById("cbid.AdGuardHome.AdGuardHome.escconf"), {
+			mode: "text/yaml",
+			styleActiveLine: true,
+			lineNumbers: true,
+			theme: "dracula",
+			lineWrapping: true,
+			foldGutter: true,
+			gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+			matchBrackets: true
+		});
+	}
+} catch (e) {
+	console.warn('CodeMirror init skipped:', e);
 }
-);
 function reload_config(){
 	XHR.get('<%=url([[admin]], [[services]], [[AdGuardHome]], [[reloadconfig]])%>', null,
 	function(x, data) {
 	location.reload();
 	});}
 function use_template(){
+	if (!confirm("<%:即将用模板覆盖当前 YAML，未保存的修改将丢失，是否继续？%>")) return;
 	XHR.get('<%=url([[admin]], [[services]], [[AdGuardHome]], [[gettemplateconfig]])%>', null,
 	function(x, data) {
-	editor.setValue(x.responseText)
+		if (editor) editor.setValue(x.responseText);
+		else document.getElementById("cbid.AdGuardHome.AdGuardHome.escconf").value = x.responseText;
 	});}
+
+// Confirm before "保存并应用" / "保存" on the manual page.
+// Buttons are rendered after this script by LuCI form footer, so we
+// poll for them and wrap their inline onclick handlers.
+(function () {
+	var msg = "<%:即将覆盖 AdGuardHome.yaml，请确认已备份配置。继续保存？%>";
+	function wrap() {
+		var targets = document.querySelectorAll('.cbi-button-save, .cbi-button-apply');
+		var wrapped = 0;
+		targets.forEach(function (btn) {
+			if (btn.__adgWrapped) return;
+			btn.__adgWrapped = true;
+			wrapped++;
+			var original = btn.onclick;
+			btn.onclick = function (ev) {
+				if (!confirm(msg)) {
+					if (ev) ev.preventDefault();
+					return false;
+				}
+				if (typeof original === 'function') return original.call(btn, ev);
+			};
+		});
+		return wrapped;
+	}
+	var attempts = 0;
+	var iv = setInterval(function () {
+		attempts++;
+		if (wrap() > 0 || attempts > 40) clearInterval(iv);
+	}, 100);
+})();
 //]]>
 </script> 
 <%fs=require"nixio.fs"%>

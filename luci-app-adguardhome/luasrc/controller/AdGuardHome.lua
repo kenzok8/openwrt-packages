@@ -18,17 +18,21 @@ function index()
 	-- luci 23.05+ 已通过 menu.d JSON 注册菜单，无需重复注册
 	if not nixio.fs.access("/usr/share/luci/menu.d/luci-app-adguardhome.json") then
 		local page = entry({"admin", "services", "AdGuardHome"},
-			alias("admin", "services", "AdGuardHome", "base"),
+			alias("admin", "services", "AdGuardHome", "overview"),
 			_("AdGuard Home"), 10)
 		page.dependent = true
 		page.acl_depends = { "luci-app-adguardhome" }
 
+		entry({"admin", "services", "AdGuardHome", "overview"},
+			cbi("AdGuardHome/overview"), _("概览"), 1).leaf = true
 		entry({"admin", "services", "AdGuardHome", "base"},
-			cbi("AdGuardHome/base"), _("Base Setting"), 1).leaf = true
+			cbi("AdGuardHome/base"), _("基础设置"), 2).leaf = true
+		entry({"admin", "services", "AdGuardHome", "tools"},
+			cbi("AdGuardHome/tools"), _("工具与任务"), 3).leaf = true
 		entry({"admin", "services", "AdGuardHome", "log"},
-			form("AdGuardHome/log"), _("Log"), 2).leaf = true
+			form("AdGuardHome/log"), _("日志"), 4).leaf = true
 		entry({"admin", "services", "AdGuardHome", "manual"},
-			cbi("AdGuardHome/manual"), _("Manual Config"), 3).leaf = true
+			cbi("AdGuardHome/manual"), _("手动配置"), 5).leaf = true
 	end
 
 	-- API 路由在新旧版本均需注册

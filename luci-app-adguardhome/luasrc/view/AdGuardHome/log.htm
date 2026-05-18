@@ -1,21 +1,48 @@
 <%+cbi/valueheader%>
-<input type="checkbox" name="NAME" value="reverse" onclick=" return reverselog()" style="vertical-align:middle;height: auto;" checked><%:reverse%></input>
-<%if self.timereplace then%>
-<input type="checkbox" name="NAME" value="localtime" onclick=" return chlogtime()" style="vertical-align:middle;height: auto;" checked><%:localtime%></input><br>
-<%end%>
-<textarea id="cbid.logview.1.conf" class="cbi-input-textarea" style="width: 100%;display:inline" data-update="change" rows="32" cols="60" readonly="readonly" > </textarea>
-<input type="button" class="btn cbi-button cbi-button-apply" id="apply_update_button" value="<%:dellog%>" onclick=" return apply_del_log() "/>
-<input type="button" class="btn cbi-button cbi-button-apply" value="<%:download log%>" style=" display:inline;" onclick=" return download_log()" />
+<%+AdGuardHome/head%>
+<%+AdGuardHome/log_empty%>
+<style>
+.adg-log-controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+.adg-log-controls label {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	font-size: 13px;
+	cursor: pointer;
+}
+.adg-log-controls input[type="checkbox"] {
+	vertical-align: middle;
+	height: auto;
+	margin: 0;
+}
+</style>
+<div class="adg-log-controls">
+	<label><input type="checkbox" value="reverse" onclick="return reverselog()" checked><%:reverse%></input></label>
+	<%if self.timereplace then%>
+	<label><input type="checkbox" value="localtime" onclick="return chlogtime()" checked><%:localtime%></input></label>
+	<%end%>
+</div>
+<textarea id="cbid.logview.1.conf" class="cbi-input-textarea" style="width:100%;display:inline" data-update="change" rows="28" cols="60" readonly="readonly"></textarea>
+<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+	<input type="button" class="btn cbi-button cbi-button-apply" id="apply_update_button" value="<%:dellog%>" onclick="return apply_del_log()"/>
+	<input type="button" class="btn cbi-button cbi-button-apply" value="<%:download log%>" onclick="return download_log()"/>
+</div>
 <script type="text/javascript">//<![CDATA[
 var islogreverse = true;
 var isutc2local = <%=tostring(self.timereplace)%>;
 function createAndDownloadFile(fileName, content) {
-    var aTag = document.createElement('a');
-    var blob = new Blob([content]);
-    aTag.download = fileName;
-    aTag.href = URL.createObjectURL(blob);
-    aTag.click();
-    URL.revokeObjectURL(blob);
+	var aTag = document.createElement('a');
+	var blob = new Blob([content]);
+	aTag.download = fileName;
+	aTag.href = URL.createObjectURL(blob);
+	aTag.click();
+	URL.revokeObjectURL(blob);
 }
 function download_log(){
 	var lv = document.getElementById('cbid.logview.1.conf');
@@ -54,7 +81,7 @@ function reverselog(){
 	return
 }
 function p(s) {
-        return s < 10 ? '0' + s: s;
+	return s < 10 ? '0' + s: s;
 }
 function line_tolocal(str){
 var strt=new Array();
@@ -107,5 +134,5 @@ var lv = document.getElementById('cbid.logview.1.conf');
 lv.innerHTML="<%:Please add log path in config to enable log%>"
 <%end%>
 //]]>
-</script>	
+</script>
 <%+cbi/valuefooter%>
