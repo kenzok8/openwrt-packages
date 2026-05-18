@@ -53,7 +53,6 @@ if not port or port == "" then
 end
 
 o = s:option(ListValue, "redirect", port .. translate("Redirect"), translate("AdGuardHome redirect mode"))
-o.placeholder = "none"
 o:value("none", translate("不启用"))
 o:value("dnsmasq-upstream", translate("作为 dnsmasq 上游服务器"))
 o:value("redirect", translate("将 53 端口劫持到 AdGuardHome"))

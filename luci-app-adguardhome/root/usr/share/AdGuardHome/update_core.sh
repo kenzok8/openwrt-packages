@@ -126,8 +126,20 @@ check_latest_version(){
 
 	echo "本地版本：${now_ver:-无}，云端版本：${latest_ver}"
 
-	if [ "${latest_ver}" != "${now_ver}" ] || [ "$1" = "force" ]; then
+	if [ "$1" = "force" ]; then
 		update_core
+	elif [ -z "$now_ver" ]; then
+		update_core
+	elif [ "$(echo "$latest_ver" | sed 's/[^0-9.]//g')" != "$(echo "$now_ver" | sed 's/[^0-9.]//g')" ]; then
+		# 只有云端版本号严格大于本地时才更新
+		local newer
+		newer="$(printf '%s\n%s' "$latest_ver" "$now_ver" | sed 's/^v//' | sort -Vr | head -1 | sed 's/^/v/')"
+		if [ "$newer" = "$latest_ver" ] && [ "$latest_ver" != "$now_ver" ]; then
+			update_core
+		else
+			echo "已是最新版本（本地版本更高或相同）"
+			cleanup 0
+		fi
 	else
 		echo "已是最新版本"
 		cleanup 0
