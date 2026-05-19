@@ -1,0 +1,10 @@
+{
+	"luci-app-quickfile": {
+		"description": "Grant UCI access for luci-app-openlist",
+		"read": {
+			"file": {
+				"/usr/bin/quickfile": [ "exec" ]
+			}
+		}
+	}
+}

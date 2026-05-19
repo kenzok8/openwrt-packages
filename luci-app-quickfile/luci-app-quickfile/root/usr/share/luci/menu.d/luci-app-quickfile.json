@@ -1,0 +1,13 @@
+{
+	"admin/system/quickfile": {
+		"title": "Quick File Manager",
+		"order": 80,
+		"action": {
+			"type": "view",
+			"path": "system/quickfile"
+		},
+		"depends": {
+			"acl": [ "luci-app-quickfile" ]
+		}
+	}
+}
