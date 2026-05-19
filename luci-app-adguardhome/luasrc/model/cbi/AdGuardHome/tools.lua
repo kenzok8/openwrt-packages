@@ -7,8 +7,8 @@ local uci = require "luci.model.uci".cursor()
 
 local workdir = uci:get("AdGuardHome", "AdGuardHome", "workdir") or "/etc/AdGuardHome"
 
-m = Map("AdGuardHome", translate("工具与任务"))
-m.description = translate("一次性动作与计划任务：改密、备份、Crontab、下载源")
+m = Map("AdGuardHome", translate("运维"))
+m.description = translate("改密、备份、计划任务、下载源")
 
 
 

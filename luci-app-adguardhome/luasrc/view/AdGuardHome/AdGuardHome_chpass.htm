@@ -1,50 +1,51 @@
 <%+AdGuardHome/head%>
 <%+cbi/valueheader%>
-<script type="text/javascript">//<![CDATA[
-var hashpassFieldId = '<%=cbid%>';
-function chpass(btn)
-	{
-		btn.disabled = true;
-		btn.value    = '<%:loading...%>';
-		if (typeof bcryptloaded == 'undefined' ){
-		var theHead = document.getElementsByTagName('head').item(0);
-		var myScript = document.createElement('script');
-		myScript.src = '<%=resource%>/twin-bcrypt.min.js';
-		myScript.type = 'text/javascript';
-		myScript.defer = true;
-		theHead.appendChild(myScript);
-		bcryptloaded=1;
-		btn.value    = '<%:Culculate%>';
-		btn.disabled = false;
-		return
-		}
-		var lv = document.getElementById(hashpassFieldId);
-		if (lv.value != ""){
-		var hash = TwinBcrypt.hashSync(lv.value);
-		lv.value=hash;
-		btn.value    = '<%:Please save/apply%>';
-		}else{
-		btn.value    = '<%:is empty%>';
-		btn.disabled = false;
-		}
-	}
-//]]>
-</script>
-		<input data-update="change"<%=
-		attr("id", cbid) ..
-		attr("name", cbid) ..
-		attr("type", self.password and "password" or "text") ..
-		attr("class", self.password and "cbi-input-password" or "cbi-input-text") ..
-		attr("value", self:cfgvalue(section) or self.default) ..
-		ifattr(self.size, "size") ..
-		ifattr(self.placeholder, "placeholder") ..
-		ifattr(self.readonly, "readonly") ..
-		ifattr(self.maxlength, "maxlength") ..
-		ifattr(self.datatype, "data-type", self.datatype) ..
-		ifattr(self.datatype, "data-optional", self.optional or self.rmempty) ..
-		ifattr(self.combobox_manual, "data-manual", self.combobox_manual) ..
-		ifattr(#self.keylist > 0, "data-choices", { self.keylist, self.vallist })
+<script src="<%=resource%>/twin-bcrypt.min.js"></script>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+	<input data-update="change"<%=
+	attr("id", cbid) ..
+	attr("name", cbid) ..
+	attr("type", self.password and "password" or "text") ..
+	attr("class", self.password and "cbi-input-password" or "cbi-input-text") ..
+	attr("value", self:cfgvalue(section) or self.default) ..
+	ifattr(self.size, "size") ..
+	ifattr(self.placeholder, "placeholder") ..
+	ifattr(self.readonly, "readonly") ..
+	ifattr(self.maxlength, "maxlength") ..
+	ifattr(self.datatype, "data-type", self.datatype) ..
+	ifattr(self.datatype, "data-optional", self.optional or self.rmempty) ..
+	ifattr(self.combobox_manual, "data-manual", self.combobox_manual) ..
+	ifattr(#self.keylist > 0, "data-choices", { self.keylist, self.vallist })
 	%> />
 	<% if self.password then %><img src="<%=resource%>/cbi/reload.gif" style="vertical-align:middle" title="<%:Reveal/hide password%>" onclick="var e = document.getElementById('<%=cbid%>'); e.type = (e.type=='password') ? 'text' : 'password';" /><% end %>
 	<input type="button" class="btn cbi-button cbi-button-apply" id="<%=cbid%>.applychpass" value="<%:Load culculate model%>" onclick="return chpass(this)"/>
+	<input type="button" class="btn cbi-button cbi-button-save" id="<%=cbid%>.copypass" value="<%:Copy%>" style="display:none" onclick="return copypass()"/>
+</div>
+<script type="text/javascript">//<![CDATA[
+var hashpassFieldId = '<%=cbid%>';
+function chpass(btn) {
+	var lv = document.getElementById(hashpassFieldId);
+	if (!lv || lv.value === '') { btn.value = '<%:is empty%>'; return; }
+	if (typeof TwinBcrypt === 'undefined') { btn.value = '<%:loading...%>'; return; }
+	btn.disabled = true;
+	var hash = TwinBcrypt.hashSync(lv.value);
+	lv.value = hash;
+	lv.readOnly = true;
+	btn.style.display = 'none';
+	var copyBtn = document.getElementById(hashpassFieldId + '.copypass');
+	copyBtn.style.display = '';
+	copyBtn.value = '<%:Copy%>';
+}
+function copypass() {
+	var lv = document.getElementById(hashpassFieldId);
+	if (!lv) return;
+	lv.select();
+	try { document.execCommand('copy'); }
+	catch(e) { navigator.clipboard.writeText(lv.value).catch(function(){}); }
+	var copyBtn = document.getElementById(hashpassFieldId + '.copypass');
+	copyBtn.value = '<%:Copied%>';
+	setTimeout(function(){ copyBtn.value = '<%:Copy%>'; }, 2000);
+}
+//]]>
+</script>
 <%+cbi/valuefooter%>

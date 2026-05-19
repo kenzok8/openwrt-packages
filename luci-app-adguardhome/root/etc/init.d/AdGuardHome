@@ -190,6 +190,8 @@ use_port53()
 	AdGuardHome_PORT="$(config_editor "dns.port" "" "$configpath" "1")"
 	local dnsmasq_port="$(uci get dhcp.@dnsmasq[0].port 2>/dev/null)"
 	[ -z "$dnsmasq_port" ] && dnsmasq_port="53"
+	# AGH 端口未配置或无法读取时，使用默认 1745 作为 dnsmasq 的新端口
+	[ -z "$AdGuardHome_PORT" ] && AdGuardHome_PORT="1745"
 
 	if [ "$dnsmasq_port" = "$AdGuardHome_PORT" ]; then
 		[ "$dnsmasq_port" = "53" ] && AdGuardHome_PORT="1745"
@@ -333,24 +335,15 @@ config_editor()
 			}
 		}' "$file"
 	else
-		awk -v yaml="$yaml" -v value="$value" -v file="$file" '
-		BEGIN {
-			split(yaml, part, "\\.")
-			i = 1
-			l = length(part)
-			s = ""
-		}
-		{
-			if (match($0, s "" part[i] ":")) {
-				if (i == l) {
-					sub(/^[^:]+:.*$/, t[1] ": " value)
-					print > file
-					exit
-				}
-				s = s "[- ]{2}"
-				i++
-			}
-		}' "$file"
+		# 安全写入：用 sed 只改匹配行，不改其他内容
+		# yaml 路径如 "dns.port" → 匹配带缩进的 "port:" 行
+		local last_key
+		last_key="${yaml##*.}"
+		if grep -qE "^[[:space:]]*${last_key}:" "$file" 2>/dev/null; then
+			sed -i "s|^\\([[:space:]]*${last_key}:\\).*|\\1 ${value}|" "$file"
+		else
+			echo "${last_key}: ${value}" >> "$file"
+		fi
 	fi
 }
 

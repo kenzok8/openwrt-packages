@@ -28,7 +28,7 @@ function index()
 		entry({"admin", "services", "AdGuardHome", "base"},
 			cbi("AdGuardHome/base"), _("基础设置"), 2).leaf = true
 		entry({"admin", "services", "AdGuardHome", "tools"},
-			cbi("AdGuardHome/tools"), _("工具与任务"), 3).leaf = true
+			cbi("AdGuardHome/tools"), _("运维"), 3).leaf = true
 		entry({"admin", "services", "AdGuardHome", "log"},
 			form("AdGuardHome/log"), _("日志"), 4).leaf = true
 		entry({"admin", "services", "AdGuardHome", "manual"},

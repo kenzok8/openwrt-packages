@@ -27,7 +27,7 @@
 		}
 	},
 	"admin/services/AdGuardHome/tools": {
-		"title": "工具与任务",
+		"title": "运维",
 		"order": 3,
 		"action": {
 			"type": "cbi",
