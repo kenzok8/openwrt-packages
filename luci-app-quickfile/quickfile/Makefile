@@ -7,12 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=quickfile
-PKG_VERSION:=1.0.13
+PKG_VERSION:=1.0.14
 PKG_RELEASE:=1
 
 PKG_SOURCE:=quickfile-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://r2.cooluc.com/source
-PKG_HASH:=901576a9da888dff4008aa12c98691d3fb7044b6daac5fe3ecb5cee04120bf66
+PKG_HASH:=ffc90a64802c59c5baac256f8dabecc9dbc979ad8fa849e33d55ba6192331453
 
 PKG_MAINTAINER:=sbwml <admin@cooluc.com>
 
