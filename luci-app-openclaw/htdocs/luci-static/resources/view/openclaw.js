@@ -23,8 +23,22 @@ function fmtMem(kb) {
 	return kb + ' KB';
 }
 
-/* ── Logo: 官方 SVG 从 gateway static 资源动态加载 ── */
-var LOGO_SVG = '<img src="/luci-static/openclaw/logo.svg" width="44" height="44" style="vertical-align:middle;border-radius:8px" onerror="this.style.display=\'none\'">';
+function modeLabel(mode) {
+	if (mode === 'source') return _('源码本机模式');
+	if (mode === 'local') return _('本机运行模式');
+	return _('远端 Gateway 模式');
+}
+
+function buildTokenUrl(base, tokenName, token) {
+	if (!base) return '';
+	var url = base;
+	if (url.indexOf('://') < 0) url = 'http://' + url;
+	if (token) url += (url.indexOf('?') >= 0 ? '&' : '?') + tokenName + '=' + encodeURIComponent(token);
+	return url;
+}
+
+/* ── Logo: reuse bundled OpenClaw icon ── */
+var LOGO_HTML = '<img src="/luci-static/openclaw/icon_64.png" width="44" height="44" style="vertical-align:middle;border-radius:8px" onerror="this.style.display=\'none\'">';
 
 /* ── CSS: inherit page theme, zero custom dark rules ── */
 var CSS = '\
@@ -194,7 +208,7 @@ return view.extend({
 	/* ═══ Header ═══ */
 	_header: function() {
 		var h = E('div', { 'class': 'oc-header' });
-		h.innerHTML = LOGO_SVG +
+		h.innerHTML = LOGO_HTML +
 			'<div><h2>OpenClaw AI Gateway</h2>' +
 			'<div class="sub">' + _('OpenWrt 路由器智能 AI 网关') + '</div></div>';
 		return h;
@@ -269,6 +283,7 @@ return view.extend({
 
 	_badge: function(st) {
 		if (!st || !st.enabled) return '<span class="oc-badge oc-badge-off">' + _('未知') + '</span>';
+		if ((st.mode || 'remote') === 'remote') return '<span class="oc-badge oc-badge-run"><span class="oc-dot oc-dot-g"></span>' + _('远端模式') + '</span>';
 		if (st.enabled !== '1') return '<span class="oc-badge oc-badge-off"><span class="oc-dot oc-dot-x"></span>' + _('已禁用') + '</span>';
 		if (st.gateway_running) return '<span class="oc-badge oc-badge-run"><span class="oc-dot oc-dot-g"></span>' + _('运行中') + '</span>';
 		if (st.gateway_starting) return '<span class="oc-badge oc-badge-start"><span class="oc-dot oc-dot-y"></span>' + _('启动中') + '</span>';
@@ -277,6 +292,7 @@ return view.extend({
 
 	_infoTable: function(st) {
 		var rows = [
+			[_('运行模式'),       'oc-i-mode',     modeLabel(st.mode || 'remote')],
 			[_('Node.js'),      'oc-i-node',     st.node_version || _('未安装')],
 			[_('OpenClaw'),     'oc-i-oc',       st.oc_version || _('未安装')],
 			[_('插件'),          'oc-i-plugin',   st.plugin_version || '-'],
@@ -337,7 +353,7 @@ return view.extend({
 		}, ['⚙']));
 
 		gearWrap.appendChild(E('div', { 'class': 'oc-more-menu', 'id': 'oc-more-menu' }, [
-			E('div', { 'class': 'oc-more-item', 'click': function() { self._closeMenu(); self._showSetupDialog(); } }, ['📦 ' + _('安装环境')]),
+			E('div', { 'class': 'oc-more-item danger', 'click': function() { self._closeMenu(); self._showSetupDialog(); } }, ['📦 ' + _('源码安装（高级）')]),
 			E('div', { 'class': 'oc-more-sep' }),
 			E('div', { 'class': 'oc-more-item', 'click': function() { self._closeMenu(); self._uninstall(); } }, ['🗑️ ' + _('卸载')])
 		]));
@@ -366,15 +382,25 @@ return view.extend({
 	_settings: function() {
 		var self = this;
 		var enabled = uci.get('openclaw', 'main', 'enabled') === '1';
+		var mode = uci.get('openclaw', 'main', 'mode') || 'remote';
 		var port = uci.get('openclaw', 'main', 'port') || '18789';
 		var bind = uci.get('openclaw', 'main', 'bind') || 'lan';
+		var remoteUrl = uci.get('openclaw', 'main', 'remote_url') || '';
+		var remoteToken = uci.get('openclaw', 'main', 'remote_token') || '';
 		var ptyPort = uci.get('openclaw', 'main', 'pty_port') || '18793';
 
 		return E('div', { 'class': 'oc-panel', 'data-panel': 'settings' }, [
 			E('div', { 'class': 'oc-form' }, [
 				E('div', { 'class': 'oc-form-title' }, [_('基本设置')]),
 				E('div', { 'class': 'oc-form-body' }, [
-					this._formRow(_('启用服务'), this._toggle('oc-f-enabled', enabled)),
+					this._formRow(_('运行模式'), this._select('oc-f-mode', mode, [
+						['remote', _('远端 Gateway（推荐）')],
+						['source', _('源码本机（高级）')],
+						['local', _('预置本机运行时')]
+					])),
+					this._formRow(_('远端地址'), this._input('oc-f-remote-url', remoteUrl, 'text', _('例如: http://192.168.3.10:18789/'))),
+					this._formRow(_('远端 Token'), this._input('oc-f-remote-token', remoteToken, 'password', _('远端 Gateway 的 token，可留空'))),
+					this._formRow(_('启用本机服务'), this._toggle('oc-f-enabled', enabled)),
 					this._formRow(_('网关端口'), this._input('oc-f-port', port, 'number', _('默认: 18789'))),
 					this._formRow(_('监听接口'), this._select('oc-f-bind', bind, [
 						['lan', 'LAN'],
@@ -425,8 +451,26 @@ return view.extend({
 	_console: function(st) {
 		var panel = E('div', { 'class': 'oc-panel', 'data-panel': 'console' });
 		var container = E('div', { 'class': 'oc-iframe-wrap' });
+		var mode = st.mode || 'remote';
 
-		if (st.gateway_running) {
+		if (mode === 'remote') {
+			var remoteUrl = st.remote_url || uci.get('openclaw', 'main', 'remote_url') || '';
+			var remoteToken = uci.get('openclaw', 'main', 'remote_token') || '';
+			if (remoteUrl) {
+				container.appendChild(E('iframe', {
+					'src': buildTokenUrl(remoteUrl, 'token', remoteToken),
+					'id': 'oc-console-iframe',
+					'allow': 'clipboard-read; clipboard-write',
+					'style': 'width:100%;height:650px;border:none;display:block',
+					'loading': 'lazy'
+				}));
+			} else {
+				container.innerHTML = '<div class="oc-iframe-msg">' +
+					'<div class="icon">🖥️</div>' +
+					'<div>' + _('当前为远端 Gateway 模式。') + '</div>' +
+					'<div style="margin-top:8px;font-size:12px;color:#aaa">' + _('请在设置中填写远端地址后打开控制台。') + '</div></div>';
+			}
+		} else if (st.gateway_running) {
 			var proto = window.location.protocol;
 			var host = window.location.hostname;
 			var base = proto + '//' + host + ':' + (st.port || '18789') + '/';
@@ -459,8 +503,14 @@ return view.extend({
 	_terminal: function(st) {
 		var panel = E('div', { 'class': 'oc-panel', 'data-panel': 'terminal' });
 		var container = E('div', { 'class': 'oc-iframe-wrap' });
+		var mode = st.mode || 'remote';
 
-		if (st.pty_running) {
+		if (mode === 'remote') {
+			container.innerHTML = '<div class="oc-iframe-msg">' +
+				'<div class="icon">⌨️</div>' +
+				'<div>' + _('远端模式不启动本机配置终端。') + '</div>' +
+				'<div style="margin-top:8px;font-size:12px;color:#aaa">' + _('需要终端时请在远端 Gateway 主机上操作。') + '</div></div>';
+		} else if (st.pty_running) {
 			var proto = window.location.protocol;
 			var host = window.location.hostname;
 			var ptyPort = st.pty_port || '18793';
@@ -516,6 +566,7 @@ return view.extend({
 		if (el) el.textContent = st.uptime || '-';
 		/* Info rows */
 		var map = {
+			'oc-i-mode': modeLabel(st.mode || 'remote'),
 			'oc-i-node': st.node_version || _('未安装'),
 			'oc-i-oc': st.oc_version || _('未安装'),
 			'oc-i-plugin': st.plugin_version || '-',
@@ -531,18 +582,44 @@ return view.extend({
 		/* Button states */
 		var startBtn = document.getElementById('oc-btn-start');
 		var stopBtn = document.getElementById('oc-btn-stop');
-		if (startBtn) startBtn.disabled = !!st.gateway_running;
-		if (stopBtn) stopBtn.disabled = !st.gateway_running;
+		var restartBtn = document.getElementById('oc-btn-restart');
+		var remoteMode = (st.mode || 'remote') === 'remote';
+		if (startBtn) startBtn.disabled = !remoteMode && !!st.gateway_running;
+		if (stopBtn) stopBtn.disabled = !remoteMode && !st.gateway_running;
+		if (restartBtn) restartBtn.disabled = !remoteMode && !st.gateway_running;
 	},
 
 	/* ═══ Service Control ═══ */
 	_svcCtl: function(action) {
 		var self = this;
+		if (this._st && (this._st.mode || 'remote') === 'remote') {
+			ui.showModal(_('远端模式'), [
+				E('p', {}, [_('当前是远端 Gateway 模式，路由器上没有本机 OpenClaw 服务可启动或停止。')]),
+				E('p', {}, [_('如需控制本机服务，请先在设置中切换到“源码本机”或“预置本机运行时”，并确认设备资源充足。')]),
+				E('div', { 'style': 'display:flex;gap:10px;justify-content:flex-end;margin-top:16px' }, [
+					E('button', { 'class': 'oc-btn oc-btn-g', 'click': function() { ui.hideModal(); } }, [_('关闭')]),
+					E('button', { 'class': 'oc-btn oc-btn-p', 'click': function() { ui.hideModal(); self._switchTab('settings'); } }, [_('去设置')])
+				])
+			]);
+			return Promise.resolve();
+		}
 		ui.showModal(_('服务控制'), [
 			E('p', {}, [_('正在执行: ') + action + '...']),
 			E('div', { 'class': 'spinning' })
 		]);
-		return fs.exec('/etc/init.d/openclaw', [action]).then(function() {
+		var prep = Promise.resolve();
+		if (action === 'start' || action === 'restart') {
+			uci.set('openclaw', 'main', 'enabled', '1');
+			prep = uci.save().then(function() { return uci.apply(); });
+		}
+		return prep.then(function() {
+			return fs.exec('/etc/init.d/openclaw', [action]);
+		}).then(function() {
+			if (action === 'stop') {
+				uci.set('openclaw', 'main', 'enabled', '0');
+				return uci.save().then(function() { return uci.apply(); });
+			}
+		}).then(function() {
 			return new Promise(function(resolve) { window.setTimeout(resolve, 2500); });
 		}).then(function() {
 			return self._poll();
@@ -561,7 +638,9 @@ return view.extend({
 
 		var overlay = E('div', { 'class': 'oc-dialog-overlay', 'id': 'oc-setup-dlg' });
 		var dlg = E('div', { 'class': 'oc-dialog' }, [
-			E('h3', {}, ['📦 ' + _('安装环境')]),
+			E('h3', {}, ['📦 ' + _('源码安装（高级）')]),
+			E('p', {}, [_('源码安装会下载 Node.js 与 npm 包，对存储、内存和 swap 要求较高。资源预检不通过时会拒绝安装。')]),
+			E('p', { 'style': 'color:#c62828' }, [_('安装完成后不会自动启用或启动本机服务，需要你手动切换并确认。')]),
 			E('div', {
 				'class': 'oc-dialog-opt sel', 'id': 'oc-opt-stable',
 				'click': function() { choice = 'stable'; self._selOpt('stable'); }
@@ -594,6 +673,28 @@ return view.extend({
 
 	_doSetup: function(version) {
 		var self = this;
+		callHelper(['preflight_setup']).then(function(pre) {
+			if (!pre || pre.status !== 'ok') {
+				ui.addNotification(null, E('p', {}, [_('源码安装预检失败: ') + ((pre && pre.message) || _('资源不足'))]));
+				return;
+			}
+			if (pre.level === 'warn') {
+				ui.showModal(_('资源预检警告'), [
+					E('p', {}, [pre.message || _('当前设备资源偏紧。')]),
+					E('p', {}, [_('推荐继续使用远端 Gateway 模式。确认后才会开始源码安装。')]),
+					E('div', { 'style': 'display:flex;gap:10px;justify-content:flex-end;margin-top:16px' }, [
+						E('button', { 'class': 'oc-btn oc-btn-g', 'click': function() { ui.hideModal(); } }, [_('取消')]),
+						E('button', { 'class': 'oc-btn oc-btn-p', 'click': function() { ui.hideModal(); self._startSetup(version); } }, [_('继续源码安装')])
+					])
+				]);
+				return;
+			}
+			self._startSetup(version);
+		});
+	},
+
+	_startSetup: function(version) {
+		var self = this;
 		var logWrap = document.getElementById('oc-log-wrap');
 		var logEl = document.getElementById('oc-log');
 		var stEl = document.getElementById('oc-log-st');
@@ -604,7 +705,12 @@ return view.extend({
 		if (stEl) stEl.innerHTML = '<span style="color:#1565c0">⏳ ' + _('安装中...') + '</span>';
 		if (resultEl) { resultEl.innerHTML = ''; resultEl.className = ''; }
 
-		callHelper(['setup', version]).then(function() {
+		callHelper(['setup', version]).then(function(r) {
+			if (r && r.status === 'error') {
+				if (stEl) stEl.innerHTML = '<span style="color:#c62828">❌ ' + _('预检失败') + '</span>';
+				if (logEl) logEl.textContent += (r.message || _('资源不足')) + '\n';
+				return;
+			}
 			self._pollSetupLog();
 		});
 	},
@@ -635,7 +741,7 @@ return view.extend({
 					if (resultEl) {
 						resultEl.className = 'oc-log-result oc-log-ok';
 						resultEl.innerHTML = '<strong>🎉 ' + _('安装成功！') + '</strong><br>' +
-							'<span style="font-size:12px">' + _('刷新页面查看最新状态。') + '</span>' +
+							'<span style="font-size:12px">' + _('已切换为源码模式，但未自动启用或启动本机服务。确认资源后可在设置中启用。') + '</span>' +
 							'<br><button class="oc-btn oc-btn-p" style="margin-top:10px" onclick="location.reload()">🔄 ' + _('刷新') + '</button>';
 					}
 				} else if (r.state === 'failed') {
@@ -747,13 +853,19 @@ return view.extend({
 	_saveSettings: function() {
 		var self = this;
 		var enabled = document.getElementById('oc-f-enabled');
+		var mode = document.getElementById('oc-f-mode');
 		var port = document.getElementById('oc-f-port');
 		var bind = document.getElementById('oc-f-bind');
+		var remoteUrl = document.getElementById('oc-f-remote-url');
+		var remoteToken = document.getElementById('oc-f-remote-token');
 		var ptyPort = document.getElementById('oc-f-pty-port');
 
 		uci.set('openclaw', 'main', 'enabled', enabled && enabled.checked ? '1' : '0');
+		if (mode) uci.set('openclaw', 'main', 'mode', mode.value);
 		if (port) uci.set('openclaw', 'main', 'port', port.value);
 		if (bind) uci.set('openclaw', 'main', 'bind', bind.value);
+		if (remoteUrl) uci.set('openclaw', 'main', 'remote_url', remoteUrl.value);
+		if (remoteToken) uci.set('openclaw', 'main', 'remote_token', remoteToken.value);
 		if (ptyPort) uci.set('openclaw', 'main', 'pty_port', ptyPort.value);
 
 		return uci.save().then(function() {

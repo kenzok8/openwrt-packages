@@ -1,6 +1,6 @@
 # luci-app-openclaw
 
-OpenWrt LuCI 插件，为 [OpenClaw AI Gateway](https://openclaw.ai) 提供 Web 管理界面。
+OpenWrt LuCI 插件，为 [OpenClaw AI Gateway](https://openclaw.ai) 提供 Web 管理界面。默认使用远端 Gateway 模式，不在路由器上启动 Node.js/OpenClaw。
 
 [![Release](https://img.shields.io/github/v/release/kenzok8/luci-app-openclaw)](https://github.com/kenzok8/luci-app-openclaw/releases)
 [![Build IPK](https://img.shields.io/github/actions/workflow/status/kenzok8/luci-app-openclaw/build-ipk.yml?label=build-ipk)](https://github.com/kenzok8/luci-app-openclaw/actions/workflows/build-ipk.yml)
@@ -8,10 +8,11 @@ OpenWrt LuCI 插件，为 [OpenClaw AI Gateway](https://openclaw.ai) 提供 Web 
 
 ## 功能特性
 
-- **一键安装**：自动下载 Node.js musl 版本 + 安装 OpenClaw，适配 OpenWrt/ImmortalWrt
+- **默认轻量模式**：默认连接远端 Gateway，路由器只运行 LuCI 插件
+- **源码安装（高级）**：可选下载 Node.js musl 版本 + npm 安装 OpenClaw，带资源预检
 - **Web 管理界面**：概况、设置、Web 控制台、配置终端 全中文 UI
 - **配置终端**：内嵌 xterm.js + WebSocket PTY，支持完整交互式配置
-- **资源自适应**：根据设备内存自动限制 Node.js 堆大小，防止 OOM
+- **资源保护**：源码安装要求 `/opt/openclaw` 至少 2GB 可用空间、根分区至少 300MB 可用空间，并限制低内存设备启动本机服务
 - **磁盘空间优化**：安装前预检空间，双 registry 重试（npmmirror → npmjs.org）
 - **BusyBox 兼容**：完整适配 OpenWrt BusyBox 环境（无 `usleep`、`stat`、`ldd` 等）
 - **libstdc++ 自动修复**：opkg 失败时从 Alpine 镜像自动提取安装
@@ -63,22 +64,24 @@ make package/luci-app-openclaw/compile V=s
 ## 安装后配置
 
 1. 打开 LuCI → **服务** → **OpenClaw AI Gateway**
-2. 点击 **更多** → **重装环境**，等待 Node.js + OpenClaw 安装完成（约 5~15 分钟）
-3. 启用服务后在 **Web 控制台** 中配置 AI 模型和消息渠道
+2. 默认运行模式为 **远端 Gateway（推荐）**
+3. 在 **设置** 中填写远端 Gateway 地址和 token
+4. 打开 **Web 控制台** 连接远端 Gateway
+
+### 源码安装（高级）
+
+仅在设备存储和内存足够时使用。源码安装会下载 Node.js 和 npm 包，对软路由资源压力较大。
+
+- `/opt/openclaw` 所在分区可用空间必须不少于 2GB
+- 根分区可用空间必须不少于 300MB
+- 内存低于 768MB 且 swap 低于 1GB 时会拒绝安装
+- 安装完成后不会自动启用或启动本机服务，需要手动确认后再启用
 
 ## 磁盘空间不足解决方案
 
-OpenWrt 设备 root 分区通常只有 1GB 以下，OpenClaw 安装包约 600MB。
+OpenWrt 设备 root 分区通常很小。推荐优先使用 **远端 Gateway 模式**，把 OpenClaw 运行在 NAS、PVE LXC/VM、Linux 主机或内存/存储更充足的设备上。
 
-**解决方案：bind mount tmpfs**
-
-```bash
-# 在 /etc/rc.local 中添加（开机自动执行）
-mkdir -p /tmp/openclaw
-mount --bind /tmp/openclaw /opt/openclaw
-```
-
-> `/tmp` 通常挂载为 tmpfs，大小约为物理内存的 50%，重启后数据丢失，需重新安装
+不建议把 `/opt/openclaw` bind 到 tmpfs；这会占用内存并且重启后数据丢失，低内存设备容易卡死。
 
 ---
 
@@ -140,10 +143,10 @@ A: 插件会自动从 Alpine Linux 镜像下载安装，无需手动操作。
 A: ImmortalWrt 新版仓库已切换为 apk v3 格式，与 opkg 不兼容。libstdc++ 走 Alpine 回退路径安装。
 
 **Q: 安装完成后 Gateway 不启动**
-A: 检查磁盘空间：`df -h /opt`，若已满需配置 bind mount 到 tmpfs。
+A: 源码安装完成后默认不会自动启用或启动本机服务。请确认设备资源充足，再在设置中切换到源码本机模式并启用本机服务。
 
 **Q: 内存不足设备如何使用**
-A: 插件自动根据内存设置 Node.js 堆限制（512MB RAM → 限制 256MB 堆），无需手动配置。
+A: 使用默认的远端 Gateway 模式。源码本机模式会在低内存设备上拒绝安装或启动，避免把路由器拖死。
 
 **Q: npm 安装时 ENOSPC 错误**
 A: openclaw-env 已将 npm logs 和 cache 全部重定向到 `/tmp`，避免写满根分区。如仍出现，手动执行 `df -h` 确认 `/tmp` 空间充足（建议 > 300MB）。

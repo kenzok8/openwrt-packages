@@ -33,6 +33,56 @@ pid_by_port() {
 	fi
 }
 
+df_avail_mb() {
+	local path="$1"
+	mkdir -p "$path" 2>/dev/null || true
+	df -Pk "$path" 2>/dev/null | awk 'NR==2{print int($4/1024)}'
+}
+
+mem_total_mb() {
+	awk '/MemTotal/{print int($2/1024)}' /proc/meminfo 2>/dev/null
+}
+
+swap_total_mb() {
+	awk '/SwapTotal/{print int($2/1024)}' /proc/meminfo 2>/dev/null
+}
+
+preflight_source_setup() {
+	local root_free opt_free mem_mb swap_mb level message
+	root_free=$(df_avail_mb /)
+	opt_free=$(df_avail_mb /opt/openclaw)
+	mem_mb=$(mem_total_mb)
+	swap_mb=$(swap_total_mb)
+	[ -n "$root_free" ] || root_free=0
+	[ -n "$opt_free" ] || opt_free=0
+	[ -n "$mem_mb" ] || mem_mb=0
+	[ -n "$swap_mb" ] || swap_mb=0
+
+	if [ "$opt_free" -lt 2048 ] 2>/dev/null; then
+		message="源码安装需要 /opt/openclaw 所在分区至少 2GB 可用空间，当前约 ${opt_free}MB。建议改用远端 Gateway 模式。"
+		printf '{"status":"error","message":"%s","root_free_mb":%s,"opt_free_mb":%s,"mem_total_mb":%s,"swap_total_mb":%s}\n' "$(json_esc "$message")" "$root_free" "$opt_free" "$mem_mb" "$swap_mb"
+		return 1
+	fi
+	if [ "$root_free" -lt 300 ] 2>/dev/null; then
+		message="源码安装需要根分区至少 300MB 可用空间，当前约 ${root_free}MB。"
+		printf '{"status":"error","message":"%s","root_free_mb":%s,"opt_free_mb":%s,"mem_total_mb":%s,"swap_total_mb":%s}\n' "$(json_esc "$message")" "$root_free" "$opt_free" "$mem_mb" "$swap_mb"
+		return 1
+	fi
+	if [ "$mem_mb" -lt 768 ] && [ "$swap_mb" -lt 1024 ] 2>/dev/null; then
+		message="内存不足：源码安装至少需要 768MB 内存或 1GB swap，当前内存约 ${mem_mb}MB、swap 约 ${swap_mb}MB。"
+		printf '{"status":"error","message":"%s","root_free_mb":%s,"opt_free_mb":%s,"mem_total_mb":%s,"swap_total_mb":%s}\n' "$(json_esc "$message")" "$root_free" "$opt_free" "$mem_mb" "$swap_mb"
+		return 1
+	fi
+
+	level="ok"
+	message="资源预检通过。源码安装完成后不会自动启用或启动服务。"
+	if [ "$mem_mb" -lt 1536 ] || [ "$swap_mb" -lt 2048 ] 2>/dev/null; then
+		level="warn"
+		message="资源预检通过，但当前内存约 ${mem_mb}MB、swap 约 ${swap_mb}MB，源码运行仍可能吃紧。建议优先使用远端 Gateway 模式。"
+	fi
+	printf '{"status":"ok","level":"%s","message":"%s","root_free_mb":%s,"opt_free_mb":%s,"mem_total_mb":%s,"swap_total_mb":%s}\n' "$level" "$(json_esc "$message")" "$root_free" "$opt_free" "$mem_mb" "$swap_mb"
+}
+
 case "$1" in
 
 # ═══════════════════════════════════════════
@@ -40,24 +90,30 @@ case "$1" in
 # ═══════════════════════════════════════════
 status)
 	enabled=$(uci -q get openclaw.main.enabled || echo "0")
+	mode=$(uci -q get openclaw.main.mode || echo "remote")
 	port=$(uci -q get openclaw.main.port || echo "18789")
 	pty_port=$(uci -q get openclaw.main.pty_port || echo "18793")
+	remote_url=$(uci -q get openclaw.main.remote_url || echo "")
+	remote_token=$(uci -q get openclaw.main.remote_token || echo "")
 
 	# Validate ports
 	case "$port" in *[!0-9]*) port="18789" ;; esac
 	case "$pty_port" in *[!0-9]*) pty_port="18793" ;; esac
+	case "$mode" in remote|source|local) ;; *) mode="remote" ;; esac
 
 	# Gateway check
 	gw_running=false
 	gw_starting=false
-	port_listening "$port" && gw_running=true
-	if [ "$gw_running" = "false" ] && [ "$enabled" = "1" ]; then
+	if [ "$mode" != "remote" ]; then
+		port_listening "$port" && gw_running=true
+	fi
+	if [ "$mode" != "remote" ] && [ "$gw_running" = "false" ] && [ "$enabled" = "1" ]; then
 		pgrep -f 'openclaw.*gateway' >/dev/null 2>&1 && gw_starting=true
 	fi
 
 	# PTY check
 	pty_running=false
-	port_listening "$pty_port" && pty_running=true
+	[ "$mode" != "remote" ] && port_listening "$pty_port" && pty_running=true
 
 	# Node.js version
 	node_ver=""
@@ -122,8 +178,12 @@ process.stdout.write(c.join(', '));}catch(e){}" 2>/dev/null)
 	cat <<JSON
 {
 	"enabled": "$enabled",
+	"mode": "$mode",
 	"port": "$port",
 	"pty_port": "$pty_port",
+	"remote_url": "$(json_esc "$remote_url")",
+	"remote_configured": $([ -n "$remote_url" ] && echo true || echo false),
+	"remote_token_set": $([ -n "$remote_token" ] && echo true || echo false),
 	"gateway_running": $gw_running,
 	"gateway_starting": $gw_starting,
 	"pty_running": $pty_running,
@@ -140,10 +200,21 @@ JSON
 	;;
 
 # ═══════════════════════════════════════════
+# PREFLIGHT_SETUP — validate source install resources
+# ═══════════════════════════════════════════
+preflight_setup)
+	preflight_source_setup
+	;;
+
+# ═══════════════════════════════════════════
 # SETUP — install Node.js + OpenClaw
 # ═══════════════════════════════════════════
 setup)
 	version="${2:-stable}"
+	preflight_source_setup >/tmp/openclaw-setup-preflight.json || {
+		cat /tmp/openclaw-setup-preflight.json 2>/dev/null
+		exit 1
+	}
 	# Clean old state
 	: > /tmp/openclaw-setup.log
 	: > /tmp/openclaw-setup.exit
@@ -162,11 +233,10 @@ setup)
 	  RC=$?
 	  echo $RC > /tmp/openclaw-setup.exit
 	  if [ $RC -eq 0 ]; then
-	    uci set openclaw.main.enabled=1
+	    uci set openclaw.main.mode='source'
+	    uci set openclaw.main.enabled=0
 	    uci commit openclaw
-	    /etc/init.d/openclaw enable 2>/dev/null
-	    sleep 1
-	    /etc/init.d/openclaw start >> /tmp/openclaw-setup.log 2>&1
+	    echo "源码安装完成。已切换到 source 模式，但未自动启用或启动服务；请确认资源后手动启用。" >> /tmp/openclaw-setup.log
 	  fi
 	) &
 	echo $! > /tmp/openclaw-setup.pid

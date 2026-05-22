@@ -68,6 +68,11 @@ mkdir -p /opt/openclaw/global
 chown -R openclaw:openclaw /opt/openclaw 2>/dev/null || true
 
 # 生成随机 Token (如果尚未设置)
+[ -z "$(uci -q get openclaw.main.mode)" ] && uci set openclaw.main.mode='remote'
+[ -z "$(uci -q get openclaw.main.remote_url)" ] && uci set openclaw.main.remote_url=''
+[ -z "$(uci -q get openclaw.main.remote_token)" ] && uci set openclaw.main.remote_token=''
+uci commit openclaw
+
 CURRENT_TOKEN=$(uci -q get openclaw.main.token)
 if [ -z "$CURRENT_TOKEN" ]; then
 	TOKEN=$(head -c 24 /dev/urandom | hexdump -e '24/1 "%02x"' 2>/dev/null || dd if=/dev/urandom bs=24 count=1 2>/dev/null | od -An -tx1 | tr -d ' \n' | head -c 48)

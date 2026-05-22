@@ -163,12 +163,21 @@ chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
 }
 
 start_service() {
-local enabled port bind pty_port
+local enabled mode port bind pty_port
 config_load openclaw
 config_get enabled main enabled "0"
+config_get mode main mode "remote"
 config_get port main port "18789"
 config_get bind main bind "lan"
 config_get pty_port main pty_port "18793"
+
+case "$mode" in
+source|local) ;;
+*)
+echo "openclaw 当前为远端模式，不启动本机 Node/OpenClaw 服务。"
+return 0
+;;
+esac
 
 [ "$enabled" = "1" ] || {
 echo "openclaw 已禁用。请在 /etc/config/openclaw 中设置 enabled 为 1"
@@ -302,17 +311,19 @@ _ensure_port_free "$port"
 # 2GB 设备建议 512MB，1GB 设备建议 256MB，根据 uci mem_limit 可覆盖
 local mem_limit
 mem_limit=$(uci -q get openclaw.main.mem_limit || echo "")
+local total_kb
+total_kb=$(awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null || echo "0")
+if [ "$total_kb" -lt 786432 ] 2>/dev/null; then
+	echo "内存不足：本机 OpenClaw 服务至少需要 768MB 内存。当前设备建议使用远端模式。"
+	return 1
+fi
 if [ -z "$mem_limit" ]; then
-	local total_kb
-	total_kb=$(awk '/MemTotal/{print $2}' /proc/meminfo 2>/dev/null || echo "0")
 	if [ "$total_kb" -ge 3000000 ] 2>/dev/null; then
 		mem_limit=1024
 	elif [ "$total_kb" -ge 1500000 ] 2>/dev/null; then
-		mem_limit=512
-	elif [ "$total_kb" -ge 700000 ] 2>/dev/null; then
-		mem_limit=256
+		mem_limit=768
 	else
-		mem_limit=128
+		mem_limit=384
 	fi
 fi
 procd_open_instance "gateway"
@@ -327,7 +338,6 @@ NODE_ICU_DATA="${NODE_BASE}/share/icu" \
 NODE_BASE="$NODE_BASE" \
 OC_GLOBAL="$OC_GLOBAL" \
 OC_DATA="$OC_DATA" \
-NODE_OPTIONS="--max-old-space-size=${mem_limit}" \
 PATH="${NODE_BASE}/bin:${OC_GLOBAL}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 procd_set_param user openclaw
 procd_set_param respawn 3600 10 5
