@@ -33,7 +33,6 @@ header h3 a {
 	.tabs>li>a,
 	.cbi-tabmenu>li>a {
 		padding: 0 12px;
-		line-height: 32px;
 		border-radius: var(--material3-card-radius);
 	}
 

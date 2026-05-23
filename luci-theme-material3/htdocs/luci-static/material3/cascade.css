@@ -2640,7 +2640,6 @@ li.menu,
 	color: inherit;
 	text-decoration: none;
 	border-radius: var(--material3-card-radius);
-	line-height: 32px;
 	outline: none;
 }
 
