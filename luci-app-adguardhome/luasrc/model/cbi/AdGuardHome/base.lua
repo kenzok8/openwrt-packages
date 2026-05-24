@@ -47,6 +47,13 @@ o.inputtitle = translate("Update core version")
 o.template = "AdGuardHome/AdGuardHome_check"
 o.showfastconfig = not fs.access(configpath)
 
+o = s:option(ListValue, "release_channel", translate("更新通道"),
+	translate("正式版稳定；预发布版抢先体验 AdGuard 团队 beta 构建。"))
+o:value("stable", translate("正式版 (stable)"))
+o:value("beta", translate("预发布版 (beta)"))
+o.default = "stable"
+o.rmempty = false
+
 local port = luci.sys.exec("awk '/^  port:/{print $2;exit}' " .. configpath .. " 2>/dev/null")
 if not port or port == "" then
 	port = "?"

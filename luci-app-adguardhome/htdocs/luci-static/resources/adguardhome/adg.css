@@ -7,7 +7,7 @@
 	--adg-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 	--adg-card-shadow-hover: 0 6px 24px rgba(0, 0, 0, 0.07);
 	--adg-radius: 12px;
-	--adg-label-muted: rgba(80, 88, 100, 0.7);
+	--adg-label-muted: rgba(60, 66, 76, 0.85);
 	--adg-input-bg: rgba(128, 128, 128, 0.05);
 	--adg-input-border: rgba(128, 128, 128, 0.2);
 	--adg-ok: #2db84a;
@@ -15,14 +15,49 @@
 	--adg-bad: #d05050;
 }
 
+/* Dark mode: triggered either by OS preference, or by an explicit class
+   set from head.htm when the active LuCI theme renders a dark background
+   regardless of OS preference (Argon mode=dark, bootstrap-dark, etc.) */
 @media (prefers-color-scheme: dark) {
 	.adg-wrap {
-		--adg-card-bg: rgba(255, 255, 255, 0.04);
-		--adg-card-border: rgba(255, 255, 255, 0.1);
-		--adg-input-bg: rgba(255, 255, 255, 0.05);
-		--adg-input-border: rgba(255, 255, 255, 0.16);
-		--adg-label-muted: rgba(200, 210, 220, 0.65);
+		--adg-card-bg: rgba(255, 255, 255, 0.05);
+		--adg-card-border: rgba(255, 255, 255, 0.16);
+		--adg-input-bg: rgba(255, 255, 255, 0.06);
+		--adg-input-border: rgba(255, 255, 255, 0.22);
+		--adg-label-muted: rgba(220, 226, 232, 0.88);
 	}
+}
+.adg-wrap.adg-dark {
+	--adg-card-bg: rgba(255, 255, 255, 0.05);
+	--adg-card-border: rgba(255, 255, 255, 0.16);
+	--adg-input-bg: rgba(255, 255, 255, 0.06);
+	--adg-input-border: rgba(255, 255, 255, 0.22);
+	--adg-label-muted: rgba(220, 226, 232, 0.88);
+}
+/* Some Argon dark rules set transparent input bg with !important — override
+   so our inputs stay visible. */
+.adg-wrap.adg-dark .cbi-value-field input[type="text"],
+.adg-wrap.adg-dark .cbi-value-field input[type="password"],
+.adg-wrap.adg-dark .cbi-value-field input[type="number"],
+.adg-wrap.adg-dark .cbi-value-field select,
+.adg-wrap.adg-dark .cbi-value-field textarea {
+	background: var(--adg-input-bg) !important;
+	border-color: var(--adg-input-border) !important;
+	color: #e6eaf0 !important;
+}
+/* Help text + section descriptions — Argon paints them #ccc, bootstrap-dark
+   leaves them as default gray-on-dark which is also low-contrast. */
+.adg-wrap.adg-dark .cbi-value-description,
+.adg-wrap.adg-dark .cbi-section-descr,
+.adg-wrap.adg-dark .cbi-map-descr {
+	color: rgba(220, 226, 232, 0.78) !important;
+}
+.adg-wrap.adg-dark .cbi-value > .cbi-value-title {
+	color: var(--adg-label-muted) !important;
+}
+.adg-wrap.adg-dark .cbi-section > h3,
+.adg-wrap.adg-dark .cbi-section > legend {
+	color: #e6eaf0 !important;
 }
 
 /* Cards are constrained for comfortable reading; form fills its natural width.

@@ -7,10 +7,32 @@
 	document.head.appendChild(link);
 
 	// Add .adg-wrap to the Argon main container (exists at page load)
+	var wrapEl;
 	(function addWrap() {
-		var el = document.querySelector('.main') || document.querySelector('#maincontent') || document.body;
-		el.classList.add('adg-wrap');
+		wrapEl = document.querySelector('.main') || document.querySelector('#maincontent') || document.body;
+		wrapEl.classList.add('adg-wrap');
 	})();
+
+	// Dark-mode detection: the LuCI theme (Argon dark / bootstrap-dark) may
+	// render a dark page regardless of OS prefers-color-scheme. Sample the
+	// body background and flip .adg-dark when luminance is low.
+	function detectDark() {
+		try {
+			var bg = getComputedStyle(document.body).backgroundColor || '';
+			var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+			if (!m) return;
+			var lum = 0.2126 * +m[1] + 0.7152 * +m[2] + 0.0722 * +m[3];
+			wrapEl.classList.toggle('adg-dark', lum < 128);
+		} catch (e) {}
+	}
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', detectDark);
+	} else {
+		detectDark();
+	}
+	// Re-check shortly after — Argon injects dark CSS late on some pages.
+	setTimeout(detectDark, 300);
+	setTimeout(detectDark, 1200);
 
 	// Collapsible sections — wait for CBI to render (Argon loads it async)
 	var COLLAPSE_KEYS = ['路径与日志', '高级设置', 'Paths & Logs', 'Advanced Settings'];

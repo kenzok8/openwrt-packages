@@ -107,10 +107,21 @@ detect_arch(){
 
 check_latest_version(){
 	check_wgetcurl
-	echo "正在检查最新版本..."
+
+	release_channel="$(uci get AdGuardHome.AdGuardHome.release_channel 2>/dev/null)"
+	[ -z "$release_channel" ] && release_channel="stable"
+
+	if [ "$release_channel" = "beta" ]; then
+		echo "正在检查最新版本（预发布通道）..."
+		# /releases 返回时间倒序的所有 release，含 prerelease。取第一条 = 最新 beta。
+		local api_url="https://api.github.com/repos/AdguardTeam/AdGuardHome/releases"
+	else
+		echo "正在检查最新版本（正式版通道）..."
+		local api_url="https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest"
+	fi
 
 	local api_result
-	api_result="$($downloader - "https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest" 2>/dev/null)"
+	api_result="$($downloader - "$api_url" 2>/dev/null)"
 	latest_ver="$(echo "$api_result" | grep -oE '"tag_name": *"v[^"]+"' | head -1 | sed 's/.*"v\(.*\)".*/v\1/')"
 
 	if [ -z "${latest_ver}" ]; then
@@ -119,7 +130,8 @@ check_latest_version(){
 	fi
 
 	if [ -x "$binpath" ]; then
-		now_ver="$($binpath -c /dev/null --check-config 2>&1 | grep -oE 'v[0-9.]+' | head -1)"
+		now_ver="$($binpath --version 2>/dev/null | grep -oE 'v[0-9.]+(-[A-Za-z0-9.]+)?' | head -1)"
+		[ -z "$now_ver" ] && now_ver="$($binpath -c /dev/null --check-config 2>&1 | grep -oE 'v[0-9.]+(-[A-Za-z0-9.]+)?' | head -1)"
 	else
 		now_ver=""
 	fi
@@ -229,7 +241,18 @@ update_core(){
 
 	echo "正在获取下载链接..."
 	mkdir -p /tmp/run
-	grep -v "^#" /usr/share/AdGuardHome/links.txt > /tmp/run/AdHlinks.txt
+	# 按通道生成下载源：beta 优先 static beta；stable 优先 static release
+	if [ "$release_channel" = "beta" ]; then
+		{
+			echo "https://static.adguard.com/adguardhome/beta/AdGuardHome_linux_${Arch}.tar.gz"
+			echo "https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_linux_${Arch}.tar.gz"
+		} > /tmp/run/AdHlinks.txt
+	else
+		{
+			echo "https://static.adguard.com/adguardhome/release/AdGuardHome_linux_${Arch}.tar.gz"
+			echo "https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_linux_${Arch}.tar.gz"
+		} > /tmp/run/AdHlinks.txt
+	fi
 
 	local downloadbin=""
 	local success=""
