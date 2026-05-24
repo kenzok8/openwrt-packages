@@ -1229,6 +1229,22 @@ body {
 	-webkit-tap-highlight-color: transparent;
 }
 
+a,
+button,
+input,
+select,
+textarea,
+label[for],
+.btn,
+.cbi-button,
+.cbi-dropdown,
+.menu-btn,
+header [data-indicator],
+.tabs a,
+.cbi-tabmenu a {
+	touch-action: manipulation;
+}
+
 .container {
 	width: 100%;
 	max-width: 1180px;
@@ -2260,16 +2276,26 @@ body.sidebar-open header {
 		visibility: visible;
 	}
 
-	.cbi-dropdown[open],
-	.cbi-dropdown[open]>ul.dropdown {
+	.cbi-dropdown[open]:not(.btn):not(.cbi-button),
+	.cbi-dropdown[open]:not(.btn):not(.cbi-button)>ul.dropdown {
 		max-width: 100%;
 	}
 
-	.cbi-dropdown[open]>ul.dropdown {
+	.cbi-dropdown[open]:not(.btn):not(.cbi-button)>ul.dropdown {
 		box-sizing: border-box;
 		width: 100%;
 		min-width: 100%;
 	}
+
+	.cbi-dropdown[open].btn>ul.dropdown,
+	.cbi-dropdown[open].cbi-button>ul.dropdown {
+		left: 0 !important;
+		right: auto !important;
+		width: max-content;
+		max-width: calc(100vw - 24px);
+		min-width: 100%;
+	}
+
 }
 
 .nav {
