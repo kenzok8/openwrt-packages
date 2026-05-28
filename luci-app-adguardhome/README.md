@@ -17,21 +17,21 @@
 
 ## 截图
 
+### 概览
+
+![概览](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/01-overview.png)
+
 ### 基础设置
 
-![基础设置](screenshots/01-overview.png)
+![基础设置](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/02-base-setting.png)
 
 ### 工具规则
 
-![工具](screenshots/02-base-setting.png)
+![工具](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/03-tools.png)
 
-### 页面
+### 日志
 
-![页面](screenshots/03-tools.png)
-
-### 概览
-
-![概览](screenshots/04-log.png)
+![日志](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/04-log.png)
 
 ## 近期变更
 

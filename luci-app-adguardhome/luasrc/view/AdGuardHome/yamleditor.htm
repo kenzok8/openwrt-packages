@@ -2,6 +2,11 @@
 <%+cbi/valueheader%>
 <script src="/luci-static/resources/codemirror/lib/codemirror.js"></script>
 <link rel="stylesheet" href="/luci-static/resources/codemirror/lib/codemirror.css"/>
+<style>
+.CodeMirror { line-height: 1.3; font-size: 11.5px; }
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like { line-height: 1.3; }
+</style>
 <script src="/luci-static/resources/codemirror/mode/yaml/yaml.js"></script>
 <link rel="stylesheet" href="/luci-static/resources/codemirror/theme/dracula.css"/>
 <link rel="stylesheet" href="/luci-static/resources/codemirror/addon/fold/foldgutter.css"/>
@@ -22,6 +27,7 @@ try {
 			gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
 			matchBrackets: true
 		});
+		editor.setSize("100%", null);
 	}
 } catch (e) {
 	console.warn('CodeMirror init skipped:', e);
@@ -69,7 +75,7 @@ function use_template(){
 	}, 100);
 })();
 //]]>
-</script> 
+</script>
 <%fs=require"nixio.fs"%>
 <%if fs.access("/tmp/AdGuardHometmpconfig.yaml") then%>
 <input type="button" id="apply_update_button" value="<%:Reload Config%>" onclick=" return reload_config() "/>

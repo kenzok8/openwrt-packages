@@ -21,6 +21,28 @@
 	height: auto;
 	margin: 0;
 }
+.adg-log-pane {
+	height: 60vh;
+	min-height: 360px;
+	overflow: auto;
+	padding: 8px 10px;
+	border: 1px solid rgba(0,0,0,.08);
+	border-radius: 7px;
+	background: #1a1d21;
+	color: #cfd6df;
+	font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+	font-size: 11.5px;
+	line-height: 1.35 !important;
+	white-space: pre-wrap;
+	word-break: break-all;
+	width: 100%;
+}
+.adg-log-pane .adg-line { padding: 0 4px; border-radius: 3px; display: block; }
+.adg-log-pane .adg-info { color: #cfd6df; }
+.adg-log-pane .adg-warn { color: #e8b95a; }
+.adg-log-pane .adg-error { color: #ea7878; background: rgba(234,120,120,.06); }
+.adg-log-pane .adg-debug { color: #7a8290; opacity: .7; }
+body.dark .adg-log-pane { border-color: rgba(255,255,255,.1); }
 </style>
 <div class="adg-log-controls">
 	<label><input type="checkbox" value="reverse" onclick="return reverselog()" checked><%:reverse%></input></label>
@@ -28,7 +50,7 @@
 	<label><input type="checkbox" value="localtime" onclick="return chlogtime()" checked><%:localtime%></input></label>
 	<%end%>
 </div>
-<textarea id="cbid.logview.1.conf" class="cbi-input-textarea" style="width:100%;display:inline" data-update="change" rows="28" cols="60" readonly="readonly"></textarea>
+<pre id="cbid.logview.1.conf" class="adg-log-pane" style="line-height:1.35 !important"></pre>
 <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
 	<input type="button" class="btn cbi-button cbi-button-apply" id="apply_update_button" value="<%:dellog%>" onclick="return apply_del_log()"/>
 	<input type="button" class="btn cbi-button cbi-button-apply" value="<%:download log%>" onclick="return download_log()"/>
@@ -36,6 +58,20 @@
 <script type="text/javascript">//<![CDATA[
 var islogreverse = true;
 var isutc2local = <%=tostring(self.timereplace)%>;
+
+function hlLine(ln) {
+	var cls = '';
+	var l = ln.toLowerCase();
+	if (l.indexOf('error') >= 0 || l.indexOf('fatal') >= 0 || l.indexOf('panic') >= 0) cls = 'adg-error';
+	else if (l.indexOf('warn') >= 0) cls = 'adg-warn';
+	else if (l.indexOf('debug') >= 0 || l.indexOf('trace') >= 0) cls = 'adg-debug';
+	else cls = 'adg-info';
+	return '<span class="adg-line ' + cls + '">' + ln.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>';
+}
+function hlLines(text) {
+	return text.split('\n').map(hlLine).join('');
+}
+
 function createAndDownloadFile(fileName, content) {
 	var aTag = document.createElement('a');
 	var blob = new Blob([content]);
@@ -48,7 +84,7 @@ function download_log(){
 	var lv = document.getElementById('cbid.logview.1.conf');
 	var dt = new Date();
 	var timestamp = (dt.getMonth()+1)+"-"+dt.getDate()+"-"+dt.getHours()+"_"+dt.getMinutes();
-	createAndDownloadFile("AdGuardHome"+timestamp+".log",lv.innerHTML)
+	createAndDownloadFile("AdGuardHome"+timestamp+".log",lv.textContent)
 	return
 }
 function apply_del_log(){
@@ -61,18 +97,19 @@ function apply_del_log(){
 }
 function chlogtime(){
 	var lv = document.getElementById('cbid.logview.1.conf');
+	var text = lv.textContent;
 	if (isutc2local){
-	lv.innerHTML=line_toUTC(lv.innerHTML).join('\n');
+	lv.innerHTML = hlLines(line_toUTC(text).join('\n'));
 	isutc2local=false;
 	}else{
-	lv.innerHTML=line_tolocal(lv.innerHTML).join('\n');
+	lv.innerHTML = hlLines(line_tolocal(text).join('\n'));
 	isutc2local=true;
 	}
 	return
 }
 function reverselog(){
 	var lv = document.getElementById('cbid.logview.1.conf');
-	lv.innerHTML=lv.innerHTML.split('\n').reverse().join('\n')
+	lv.innerHTML = lv.textContent.split('\n').reverse().map(hlLine).join('');
 	if (islogreverse){
 	islogreverse=false;
 	}else{
@@ -103,26 +140,37 @@ if (dt != "Invalid Date"){
   strt[i]=v;}})
 return strt
 }
+function displayLog(text) {
+	var lv = document.getElementById('cbid.logview.1.conf');
+	if (!lv) return;
+	if (isutc2local) {
+		var lines = line_toUTC(text);
+		if (islogreverse) lines = lines.reverse();
+		text = lines.join('\n');
+		text = line_tolocal(text).join('\n');
+	} else if (islogreverse) {
+		text = text.split('\n').reverse().join('\n');
+	}
+	lv.innerHTML = hlLines(text);
+}
 function poll_check(){
 XHR.poll(3, '<%=url([[admin]], [[services]], [[AdGuardHome]], [[getlog]])%>', null,
 	function(x, data) {
 		var lv = document.getElementById('cbid.logview.1.conf');
 		if (x.responseText && lv) {
-			if (isutc2local)
-			{
-				var lines=line_toUTC(x.responseText);
-				if (islogreverse){
-					lv.innerHTML = lines.reverse().join('\n')+lv.innerHTML;
-				}else{
-					lv.innerHTML += lines.join('\n');
-				}
-			lv.innerHTML=line_tolocal(lv.innerHTML).join('\n');
-			}else{
-				if (islogreverse){
-					lv.innerHTML = x.responseText.split('\n').reverse().join('\n')+lv.innerHTML;
-				}else{
-					lv.innerHTML += x.responseText;
-				}
+			var text = x.responseText;
+			if (isutc2local) {
+				var lines = line_toUTC(text);
+				if (islogreverse) lines = lines.reverse();
+				text = lines.join('\n');
+				text = line_tolocal(text).join('\n');
+			} else if (islogreverse) {
+				text = text.split('\n').reverse().join('\n');
+			}
+			if (islogreverse) {
+				lv.innerHTML = hlLines(text) + lv.innerHTML;
+			} else {
+				lv.innerHTML += hlLines(text);
 			}
 		}
 	}
