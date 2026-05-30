@@ -20,7 +20,7 @@ make package/quickfile/luci-app-quickfile/compile V=s
 
 ## 相关设置
 
- - **禁用不可信的 SSL 证书（浏览器会拒绝通过不可信证书获取 Session ID）**
+ - **禁用不可信的 SSL 证书（程序拒绝通过不可信的证书获取 Session ID）**
 
 ```nginx
 # nginx
@@ -48,21 +48,31 @@ https://github.com/sbwml/luci-app-quickfile/blob/5d863b91bc1d555dea65ecce6e30786
 
 ## 功能简介
 
+### 界面
+- 支持简繁英语言切换。
+- 更多的互交操作在使用中发现...
+
 ### 文件管理
 - 基础操作：支持目录浏览、文件/文件夹的创建、重命名、移动和删除。
 - 便捷传输：提供标准的文件上传与下载功能，并支持通过浏览器拖拽直接上传文件，同时支持在线下载文件。
 - 解压缩：支持 `zip`、`tar.gz`、`tar.xz` 文件的压缩/解压。
+- 属性：支持查看/统计文件或文件夹大小、数量，支持计算文件 MD5/SHA256。
 
 ### 命令终端
 - 实时命令行：内置网页终端功能，支持直接在管理界面中执行当前目录系统命令，便于用户进行快速批量操作文件、调试与系统维护。
+- 快捷键：
+  
+  复制：`Crtl + Shift + C`
+  
+  粘贴：`Crtl + Shift + V`
 
-### 软件包管理 (IPK / APK)
+### 软件包安装 (IPK / APK)
 - 直接安装：支持在网页端直接执行本地上传的 `.ipk` 或 `.apk` 软件包安装。
 - 依赖解析：当出现安装失败或缺少依赖时，支持同步刷新软件源并尝试自动补齐依赖。
 - 状态反馈：内置安装日志捕获，清晰输出安装成功或失败的反馈信息，便于故障排查。
 
 ### 媒体预览
-- 多媒体支持：内置主流格式的图片和视频预览组件，无需下载至本地即可直接在浏览器中查看。
+- 多媒体支持：支持主流格式的图片和视频预览，无需下载至本地即可直接在浏览器中查看。
 
 ### 文本编辑器
 - Monaco 核心：集成轻量化 Monaco Editor 文本编辑器。
@@ -70,4 +80,5 @@ https://github.com/sbwml/luci-app-quickfile/blob/5d863b91bc1d555dea65ecce6e30786
 
 ---
 
-<img width="1600" height="1126" alt="image" src="https://github.com/user-attachments/assets/c31a20eb-d2c9-4be3-bafb-83836295e5a8" />
+<img width="1665" height="1120" alt="image" src="https://github.com/user-attachments/assets/9ec35b5f-b4a8-4e2d-a9fa-9d3ed21a0fb4" />
+
