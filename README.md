@@ -58,7 +58,7 @@ make menuconfig
 | luci-app-amlogic             | Amlogic Service             |  晶晨宝盒   |
 | luci-app-eqos                | Speed ​​limit by IP address       | 依IP地址限速      |
 | luci-app-gost                | https proxy      | 隐蔽的https代理   |
-| luci-app-lucky               | lucky proxy      | lucky代理软件        |
+| luci-app-lucky               | lucky DDNS/port forwarding/reverse proxy | IPv6/4端口转发,DDNS,反向代理,证书 |
 | luci-app-wechatpush          | WeChat/DingTalk Pushed plugins    |   微信/钉钉推送        |
 | luci-theme-tomato            | Modify topic name             |  tomato主题        |
 | luci-app-smartdns            | smartdns dns pollution prevention     |  smartdns DNS防污染       |
