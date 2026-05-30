@@ -58,13 +58,13 @@ make menuconfig
 | luci-app-amlogic             | Amlogic Service             |  晶晨宝盒   |
 | luci-app-eqos                | Speed ​​limit by IP address       | 依IP地址限速      |
 | luci-app-gost                | https proxy      | 隐蔽的https代理   |
-| luci-app-openclash           | openclash proxy            |  clash的图形代理软件      |
-| luci-app-passwall            | passwall proxy      | passwall代理软件        |
+| luci-app-lucky               | lucky proxy      | lucky代理软件        |
 | luci-app-wechatpush          | WeChat/DingTalk Pushed plugins    |   微信/钉钉推送        |
 | luci-theme-tomato            | Modify topic name             |  tomato主题        |
 | luci-app-smartdns            | smartdns dns pollution prevention     |  smartdns DNS防污染       |
-| luci-app-ssr-plus            | ssr-plus proxy              | ssr-plus 代理软件       |
+| luci-app-quickfile           | quickfile              | quickfile 管理       |
 | luci-app-store               | store software repository            |  应用商店   |
+| luci-theme-glass             | glass theme          |  Glass 玻璃主题        |
 | luci-theme-mcat              | Modify topic name          |   mcat主题        |
 | luci-app-mosdns              | mosdns dns offload            |DNS 国内外分流解析与广告过滤        |
 | luci-app-unblockneteasemusic | Unlock NetEase Cloud Music         | 解锁网易云音乐   |
