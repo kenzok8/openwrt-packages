@@ -25,27 +25,17 @@
 
 ![基础设置](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/02-base-setting.png)
 
-### 工具规则
+### 运维
 
-![工具](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/03-tools.png)
+![运维](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/03-tools.png)
 
 ### 日志
 
 ![日志](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/04-log.png)
 
-## 近期变更
+### 手动配置
 
-### 2026-05-18  UI 重构
-
-- **新增「概览」Tab**：三张状态卡（服务/重定向/核心）+ 启用开关 + 快捷入口，作为默认页
-- **拆出「工具与任务」Tab**：改密、备份、Crontab、下载源独立于基础设置
-- **卡片化样式**：参考 luci-app-clashoo 设计语言，每个 section 渲染为圆角卡片，深浅色自适应
-- **路径/进程折叠**：「路径与日志」、「高级设置」默认收起，点击标题切换，localStorage 记忆
-- **Jail 字段升级 DynamicList**：每行独立输入框 + 删除按钮，参考 ImmortalWrt 官方实现
-- **多项字段精简**：删除 GOGC/GOMAXPROCS、「显示高级设置」复选框、GFW 列表功能
-- **日志空态优化**：未配置日志路径时显示提示 + 跳转链接
-- **全中文 Tab**：概览 / 基础设置 / 工具与任务 / 日志 / 手动配置
-- **Argon / Bootstrap 双主题适配**：移动端 + PC 端无溢出
+![手动配置](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/adguardhome/05-manual.png)
 
 ## 功能
 
