@@ -4,6 +4,7 @@
 
 return baseclass.extend({
 	__init__() {
+		this.suppressClick = null;
 		ui.menu.load().then((tree) => this.render(tree));
 		this.initNavigationShell();
 		this.initDashboardTables();
@@ -43,6 +44,66 @@ return baseclass.extend({
 		}
 	},
 
+	shouldSuppressClick(ev) {
+		const click = this.suppressClick;
+
+		if (!click || Date.now() >= click.until)
+			return false;
+
+		const dx = Math.abs(ev.clientX - click.x);
+		const dy = Math.abs(ev.clientY - click.y);
+		const suppress = dx < 24 && dy < 24;
+
+		if (suppress)
+			this.suppressClick = null;
+
+		return suppress;
+	},
+
+	bindFastTap(target, handler) {
+		let startX = 0;
+		let startY = 0;
+		let moved = false;
+
+		target.addEventListener('pointerdown', ev => {
+			if (ev.pointerType == 'mouse' || ev.button)
+				return;
+
+			startX = ev.clientX;
+			startY = ev.clientY;
+			moved = false;
+		}, { passive: true });
+
+		target.addEventListener('pointermove', ev => {
+			if (Math.abs(ev.clientX - startX) > 8 || Math.abs(ev.clientY - startY) > 8)
+				moved = true;
+		}, { passive: true });
+
+		target.addEventListener('pointerup', ev => {
+			if (ev.pointerType == 'mouse' || ev.button || moved)
+				return;
+
+			this.suppressClick = {
+				x: ev.clientX,
+				y: ev.clientY,
+				until: Date.now() + 500
+			};
+			ev.preventDefault();
+			ev.stopPropagation();
+			handler(ev);
+		});
+
+		target.addEventListener('click', ev => {
+			if (this.shouldSuppressClick(ev)) {
+				ev.preventDefault();
+				ev.stopPropagation();
+				return;
+			}
+
+			handler(ev);
+		});
+	},
+
 	closeOtherMenus(currentMenu) {
 		document.querySelectorAll('#topmenu > li.open').forEach(menu => {
 			if (menu === currentMenu)
@@ -80,6 +141,14 @@ return baseclass.extend({
 		if (!button || !sidebar || !overlay)
 			return;
 
+		document.addEventListener('click', ev => {
+			if (!this.shouldSuppressClick(ev))
+				return;
+
+			ev.preventDefault();
+			ev.stopPropagation();
+		}, true);
+
 		const close = () => {
 			sidebar.classList.remove('active');
 			overlay.classList.remove('active');
@@ -89,7 +158,7 @@ return baseclass.extend({
 			button.setAttribute('aria-expanded', 'false');
 		};
 
-		button.addEventListener('click', () => {
+		this.bindFastTap(button, () => {
 			sidebar.classList.toggle('active');
 			overlay.classList.toggle('active');
 			const isOpen = sidebar.classList.contains('active');
@@ -107,24 +176,31 @@ return baseclass.extend({
 				close();
 		});
 
-		sidebar.addEventListener('click', ev => {
+		sidebar.addEventListener('pointerdown', ev => {
 			const link = ev.target.closest('a[href]');
 
 			if (!link)
 				return;
 
 			this.createRipple(ev, link);
+		}, { passive: true });
+
+		sidebar.addEventListener('click', ev => {
+			const link = ev.target.closest('a[href]');
+
+			if (!link)
+				return;
 
 			if (link.getAttribute('href') != '#')
 				close();
 		});
 
-		document.addEventListener('click', ev => {
+		document.addEventListener('pointerdown', ev => {
 			const target = ev.target.closest('.tabs > li, .cbi-tabmenu > li');
 
 			if (target)
 				this.createRipple(ev, target);
-		});
+		}, { passive: true });
 
 		sidebar.addEventListener('mouseover', ev => {
 			const link = ev.target.closest('.nav a');
@@ -180,23 +256,29 @@ return baseclass.extend({
 	updateDashboardTables() {
 		document.querySelectorAll('.Dashboard, .dashboard-bg.box-s1').forEach(scope => {
 			scope.querySelectorAll('.table').forEach(table => {
-				const rows = Array.prototype.filter.call(table.children, child => child.classList && child.classList.contains('tr'));
-				const headerRow = rows.find(row => row.querySelector('.th'));
+				const rows = Array.prototype.filter.call(table.querySelectorAll('.tr, tr'), row =>
+					row.closest('.table') === table);
+				const headerRow = Array.prototype.find.call(table.children, child =>
+					child.querySelector && child.querySelector('.th, th')) ||
+					rows.find(row => row.querySelector('.th, th'));
 
 				if (!headerRow)
 					return;
 
-				const titles = Array.prototype.map.call(headerRow.children, cell =>
-					cell.classList && cell.classList.contains('th') ? cell.textContent.trim() : '');
+				const titleCells = headerRow.querySelectorAll('.th, th');
+				const titles = Array.prototype.map.call(titleCells, cell => cell.textContent.trim());
 
 				headerRow.classList.add('dashboard-table-titles');
 
 				rows.forEach(row => {
-					if (row === headerRow)
+					if (row === headerRow || row.querySelector('.th, th'))
 						return;
 
-					Array.prototype.forEach.call(row.children, (cell, index) => {
-						if (!cell.classList || !cell.classList.contains('td') || !titles[index])
+					const cells = Array.prototype.filter.call(row.children, cell =>
+						(cell.classList && cell.classList.contains('td')) || cell.tagName == 'TD');
+
+					cells.forEach((cell, index) => {
+						if (!titles[index])
 							return;
 
 						if (!cell.getAttribute('data-title'))
@@ -283,19 +365,18 @@ return baseclass.extend({
 				'href': linkurl
 			};
 
-			if (!level && hasSubmenu) {
-				linkAttrs.click = ev => {
-					ev.preventDefault();
-					this.toggleDropdown(ev.currentTarget.parentNode);
-				};
-			}
-
 			const li = E('li', attrs, [
 				E('a', linkAttrs, [
 					E('span', { 'class': 'nav-menu-title' }, [_(child.title)]),
 				]),
 				submenu
 			]);
+
+			if (!level && hasSubmenu)
+				this.bindFastTap(li.firstElementChild, ev => {
+					ev.preventDefault();
+					this.toggleDropdown(li);
+				});
 
 			if (!level && hasSubmenu && isActive)
 				submenu.style.height = 'auto';

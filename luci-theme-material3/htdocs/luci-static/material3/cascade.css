@@ -2081,6 +2081,7 @@ header .brand {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	transition: color .3s ease;
 }
 
 header .pull-right {
@@ -4668,6 +4669,14 @@ div.cbi-value var.cbi-tooltip-container,
 
 :is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard :is(h3, .settings-info) {
 	color: var(--on-surface-variant);
+}
+
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .router-status-info .settings-info p span:nth-child(2) {
+	max-width: none;
+}
+
+:is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard .settings-info p span:nth-child(2) {
+	vertical-align: top;
 }
 
 :is(body[data-page="admin-status-iptables"], body[data-page="admin-status-nftables-iptables"]) .cbi-tabmenu {

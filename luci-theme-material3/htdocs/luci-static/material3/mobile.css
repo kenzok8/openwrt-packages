@@ -148,6 +148,8 @@ header h3 a {
 
 	.tr.table-titles,
 	.tr.dashboard-table-titles,
+	.thead.dashboard-table-titles,
+	thead.dashboard-table-titles,
 	.cbi-section-table-titles,
 	.cbi-section-table-descr {
 		display: none;
