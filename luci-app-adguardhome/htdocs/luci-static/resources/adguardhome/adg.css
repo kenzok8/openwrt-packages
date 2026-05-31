@@ -34,6 +34,45 @@
 	--adg-input-border: rgba(255, 255, 255, 0.22);
 	--adg-label-muted: rgba(220, 226, 232, 0.88);
 }
+/* LuCI's selected theme is authoritative. If the OS/browser prefers dark but
+   Argon/bootstrap is in light mode, keep contrast tuned for a light surface. */
+.adg-wrap:not(.adg-dark) {
+	--adg-card-bg: rgba(255, 255, 255, 0.45);
+	--adg-card-border: rgba(50, 50, 93, 0.12);
+	--adg-input-bg: rgba(255, 255, 255, 0.55);
+	--adg-input-border: rgba(50, 50, 93, 0.18);
+	--adg-label-muted: rgba(50, 50, 93, 0.78);
+	color: #32325d;
+}
+.adg-wrap:not(.adg-dark) .cbi-value-description,
+.adg-wrap:not(.adg-dark) .cbi-section-descr,
+.adg-wrap:not(.adg-dark) .cbi-map-descr,
+.adg-wrap:not(.adg-dark) .adg-ov-card .title,
+.adg-wrap:not(.adg-dark) .adg-ov-card .sub {
+	color: rgba(50, 50, 93, 0.70) !important;
+	opacity: 1 !important;
+}
+.adg-wrap:not(.adg-dark) .cbi-value > .cbi-value-title,
+.adg-wrap:not(.adg-dark) .cbi-checkbox {
+	color: rgba(50, 50, 93, 0.82) !important;
+	opacity: 1 !important;
+}
+.adg-wrap:not(.adg-dark) .cbi-value-field input[type="text"],
+.adg-wrap:not(.adg-dark) .cbi-value-field input[type="password"],
+.adg-wrap:not(.adg-dark) .cbi-value-field input[type="number"],
+.adg-wrap:not(.adg-dark) .cbi-value-field select,
+.adg-wrap:not(.adg-dark) .cbi-value-field textarea {
+	color: #32325d !important;
+	-webkit-text-fill-color: #32325d;
+	opacity: 1 !important;
+}
+.adg-wrap:not(.adg-dark) .cbi-value-field input:disabled,
+.adg-wrap:not(.adg-dark) .cbi-value-field select:disabled,
+.adg-wrap:not(.adg-dark) .cbi-value-field textarea:disabled {
+	color: #5f6f86 !important;
+	-webkit-text-fill-color: #5f6f86;
+	opacity: 1 !important;
+}
 /* Some Argon dark rules set transparent input bg with !important — override
    so our inputs stay visible. */
 .adg-wrap.adg-dark .cbi-value-field input[type="text"],
