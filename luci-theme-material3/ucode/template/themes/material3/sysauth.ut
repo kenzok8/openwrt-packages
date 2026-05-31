@@ -7,7 +7,7 @@
 
 <section hidden>
 	<div class="material3-login-header">
-		<img src="{{ media }}/logo.svg" alt="">
+		<img src="{{ media }}/logo.svg" alt="" class="material3-logo">
 		<div>
 			<h2>{{ _('Authorization Required') }}</h2>
 			<p>{{ _('Sign in to manage this device.') }}</p>

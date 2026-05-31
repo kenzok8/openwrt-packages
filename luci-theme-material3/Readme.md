@@ -72,8 +72,17 @@ This is a personal project based on the LuCI Bootstrap theme, imitating the Mate
 ## 📦 Release
 Download prebuilt packages from [GitHub Releases](https://github.com/KawaiiHachimi/luci-theme-material3/releases).
 
+Install the matching package on your router:
 - `luci-theme-material3-*.apk` -> OpenWrt LuCI 25.12+
+
+  ```sh
+  apk add --allow-untrusted luci-theme-material3-*.apk
+  ```
 - `luci-theme-material3_*.ipk` -> OpenWrt LuCI 23.05~24.10
+
+  ```sh
+  opkg install luci-theme-material3_*.ipk
+  ```
 
 ## 🙏 Credits
 - [OpenWrt Luci](https://github.com/openwrt/luci)

@@ -36,6 +36,24 @@ header h3 a {
 		border-radius: var(--material3-card-radius);
 	}
 
+	body[data-page^="admin-services-dockerman"] #view div[style*="grid-template-columns"][style*="minmax(300px"] {
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+	}
+
+	body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"]>div[style*="min-height: 120px"] {
+		min-height: 96px !important;
+		padding: 10px !important;
+	}
+
+	body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"] img[src*="dockerman/"][src$=".svg"] {
+		width: 52px !important;
+		height: 52px !important;
+	}
+
+	body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"] div[style*="margin-right: 15px"] {
+		margin-right: 8px !important;
+	}
+
 	.table {
 		display: flex;
 		flex-direction: column;

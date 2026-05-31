@@ -2148,8 +2148,8 @@ body.sidebar-open header {
 .menu-btn span::after {
 	display: block;
 	width: 20px;
-	height: 2px;
-	border-radius: 1px;
+	height: 0.1rem;
+	border-radius: 0.05rem;
 	background: currentColor;
 	transition: transform .3s ease, opacity .3s ease;
 }
@@ -2287,16 +2287,15 @@ body.sidebar-open header {
 		width: 100%;
 		min-width: 100%;
 	}
+}
 
-	.cbi-dropdown[open].btn>ul.dropdown,
-	.cbi-dropdown[open].cbi-button>ul.dropdown {
-		left: 0 !important;
-		right: auto !important;
-		width: max-content;
-		max-width: calc(100vw - 24px);
-		min-width: 100%;
-	}
-
+.cbi-dropdown[open].btn>ul.dropdown,
+.cbi-dropdown[open].cbi-button>ul.dropdown {
+	left: 0 !important;
+	right: auto !important;
+	width: max-content;
+	max-width: calc(100vw - 24px);
+	min-width: 100%;
 }
 
 .nav {
@@ -4686,4 +4685,53 @@ div.cbi-value var.cbi-tooltip-container,
 [data-darkmode="true"] :is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard img.svgmonotone,
 [data-mode="dark"] :is(body[data-page="admin-dashboard"], body[data-page="admin"], body[data-page=""]) .Dashboard img.svgmonotone {
 	filter: invert(1) brightness(1.65) contrast(.82) opacity(.86);
+}
+
+[data-darkmode="true"] body[data-page^="admin-services-dockerman"] img[src*="dockerman/"][src$=".svg"],
+[data-mode="dark"] body[data-page^="admin-services-dockerman"] img[src*="dockerman/"][src$=".svg"] {
+	filter: invert(1) brightness(1.65) contrast(.82) opacity(.9);
+}
+
+[data-darkmode="true"] body[data-page^="admin-services-dockerman"] img[src*="dockerman/containers.svg"][src$=".svg"],
+[data-mode="dark"] body[data-page^="admin-services-dockerman"] img[src*="dockerman/containers.svg"][src$=".svg"] {
+	filter: none !important;
+	opacity: .96;
+}
+
+body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"] {
+	color: inherit;
+}
+
+body[data-page^="admin-services-dockerman"] #view div[style*="grid-template-columns"][style*="minmax(300px"] {
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+	gap: 10px !important;
+}
+
+body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"]>div[style*="min-height: 120px"] {
+	border: 1px solid var(--border-color-low) !important;
+	border-radius: 12px !important;
+	background: var(--background-color-high) !important;
+	box-shadow: none !important;
+	transition: background-color .2s ease, border-color .2s ease;
+}
+
+body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"]>div[style*="min-height: 120px"]:hover {
+	border-color: var(--border-color-medium) !important;
+	background: var(--background-color-low) !important;
+}
+
+body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"] div[style*="color: #333"] {
+	color: var(--on-surface) !important;
+}
+
+body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"] span[style*="color: #666"] {
+	color: var(--on-surface-variant) !important;
+}
+
+body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"] strong[style*="color: #0066cc"] {
+	color: var(--primary-color-high) !important;
+}
+
+body[data-page^="admin-services-dockerman"] #view a[href*="/dockerman/"] strong[style*="color: #28a745"] {
+	color: var(--success-color-high) !important;
 }
