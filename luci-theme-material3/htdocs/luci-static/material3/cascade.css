@@ -1548,6 +1548,14 @@ select {
 	color: var(--text-color-high);
 }
 
+.cbi-value[data-widget="CBI.FlagValue"]:has(> .cbi-value-field > .cbi-checkbox) {
+	align-items: center;
+}
+
+.cbi-value[data-widget="CBI.FlagValue"]:has(> .cbi-value-field > .cbi-checkbox)>label.cbi-value-title {
+	padding-top: 0;
+}
+
 .cbi-value>.cbi-section,
 .cbi-value>.cbi-tblsection {
 	width: 100%;
@@ -1555,7 +1563,7 @@ select {
 
 label>input[type="checkbox"],
 label>input[type="radio"] {
-	vertical-align: text-top;
+	vertical-align: middle;
 	margin: 0;
 }
 
@@ -1797,17 +1805,44 @@ input[type="radio"]::before {
 	border-radius: 2px;
 }
 
+input[type="checkbox"] {
+	--switch-track: var(--surface-container-high);
+	--switch-thumb: var(--outline);
+	--switch-checked-track: var(--primary);
+	--switch-checked-thumb: var(--on-primary);
+	width: 44px;
+	height: 24px;
+	vertical-align: middle;
+}
+
+input[type="checkbox"]::before {
+	width: 44px;
+	height: 24px;
+	background: var(--switch-track);
+	border: 1px solid var(--bd-color);
+	border-radius: 12px;
+	transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+input[type="checkbox"]:checked::before {
+	background: var(--switch-checked-track);
+	border-color: var(--switch-checked-track);
+}
+
 input[type="radio"],
 input[type="radio"]::before {
 	border-radius: 50%;
 }
 
-input[type="checkbox"]::after,
 input[type="radio"]::after {
 	top: 2px;
 	left: 2px;
 	width: 10px;
 	height: 10px;
+	border-radius: 50%;
+	transform: scale(0);
+	transform-origin: center;
+	transition: background-color .2s ease, transform .18s cubic-bezier(.2, 0, 0, 1);
 }
 
 input[type="checkbox"]:checked::after,
@@ -1820,6 +1855,47 @@ input[type="radio"]:checked::after {
 
 input[type="radio"]:checked:after {
 	--checkmark-icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><circle cx='10' cy='10' r='7'/></svg>");
+	transform: scale(1);
+}
+
+input[type="checkbox"]::after {
+	top: 3px;
+	left: 3px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: var(--switch-thumb);
+	transition: transform .2s ease, background-color .2s ease;
+}
+
+input[type="checkbox"]:checked::after {
+	-webkit-mask: none;
+	mask: none;
+	background: var(--switch-checked-thumb);
+	transform: translateX(20px);
+}
+
+.cbi-checkbox {
+	position: relative;
+}
+
+.cbi-checkbox input[type="checkbox"]+label {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.cbi-checkbox input[type="checkbox"]:checked+label::before {
+	--switch-check-icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M1.6 4.1 3.1 5.6 6.4 2.4' fill='none' stroke='%23000' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+	content: "";
+	position: absolute;
+	top: 10px;
+	left: 28px;
+	width: 10px;
+	height: 10px;
+	background: var(--primary);
+	-webkit-mask: var(--switch-check-icon) center/contain no-repeat;
+	mask: var(--switch-check-icon) center/contain no-repeat;
 }
 
 input[type="checkbox"].cbi-input-invalid,
@@ -1870,6 +1946,18 @@ select:focus {
 	border-color: rgba(var(--focus-color-rgb), 0.8) !important;
 	box-shadow: inset 0 1px 3px hsla(var(--border-color-low-hsl), .01);
 	text-decoration: none;
+}
+
+input[type="radio"]::before {
+	transition: border-color .2s ease, background-color .2s ease, box-shadow .18s ease;
+	box-shadow: 0 0 0 0 color-mix(in srgb, var(--text-color-high) 0%, transparent);
+}
+
+.cbi-radio:hover input[type="radio"]::before,
+label:hover > input[type="radio"]::before,
+input[type="radio"]:hover::before,
+input[type="radio"]:focus::before {
+	box-shadow: 0 0 0 7px color-mix(in srgb, var(--text-color-high) 10%, transparent);
 }
 
 .btn:hover,
@@ -2532,6 +2620,36 @@ li.menu,
 
 .nav>li:has(> .dropdown-menu > li.active)>a {
 	color: var(--text-color-highest) !important;
+}
+
+@media (hover: none),
+(pointer: coarse),
+(any-pointer: coarse) {
+	.nav>li:not(.active)>a:hover {
+		background: transparent;
+		color: var(--text-color-high);
+	}
+
+	.nav>li:not(.active)>a:hover::before {
+		background-color: var(--text-color-medium);
+	}
+
+	.nav>li:not(.active)>a:hover::after {
+		border-color: var(--text-color-medium);
+	}
+
+	.nav .dropdown-menu>li:not(.active):hover {
+		background: transparent;
+	}
+
+	.nav .dropdown-menu>li:not(.active)>a:hover {
+		color: var(--text-color-medium) !important;
+	}
+
+	.nav a:hover>.nav-menu-title {
+		-webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+		mask-image: linear-gradient(90deg, #000 calc(100% - 24px), transparent);
+	}
 }
 
 .ripple {
