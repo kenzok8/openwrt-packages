@@ -10,8 +10,6 @@ return view.extend({
 		s.anonymous = true;
 
 		s.render = function () {
-			const host = window.location.origin;
-
 			const iframeContainer = E('div', {
 				'class': 'iframe-container',
 				'style': `
@@ -26,7 +24,7 @@ return view.extend({
 				`
 			}, [
 				E('iframe', {
-					'src': `/cgi-bin/luci/quickfile?host=${encodeURIComponent(host)}`,
+					'src': `/cgi-bin/luci/quickfile`,
 					'style': `
 						width: 100%;
 						height: 100%;

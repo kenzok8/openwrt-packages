@@ -1,6 +1,6 @@
 msgid ""
-msgstr "Content-Type: text/plain; charset=UTF-8\n"
+msgstr "Content-Type: text/plain; charset=UTF-8"
 
 #: luci-app-quickfile/root/usr/share/luci/menu.d/luci-app-quickfile.json:3
 msgid "Quick File Manager"
-msgstr "文件管理"
+msgstr ""
