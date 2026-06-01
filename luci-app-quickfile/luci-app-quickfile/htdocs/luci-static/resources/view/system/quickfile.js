@@ -19,7 +19,8 @@ return view.extend({
 					flex-direction: column;
 					width: 100%;
 					max-width: 1600px;
-					height: 800px;
+					height: calc(100vh - 180px);
+					min-height: 800px;
 					overflow: hidden;
 					border-radius: 10px;
 				`
