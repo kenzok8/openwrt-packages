@@ -1889,11 +1889,12 @@ input[type="checkbox"]:checked::after {
 	--switch-check-icon: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M1.6 4.1 3.1 5.6 6.4 2.4' fill='none' stroke='%23000' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/></svg>");
 	content: "";
 	position: absolute;
-	top: 10px;
-	left: 28px;
+	top: 50%;
+	left: 32px;
 	width: 10px;
 	height: 10px;
 	background: var(--primary);
+	transform: translate(-50%, -50%);
 	-webkit-mask: var(--switch-check-icon) center/contain no-repeat;
 	mask: var(--switch-check-icon) center/contain no-repeat;
 }
