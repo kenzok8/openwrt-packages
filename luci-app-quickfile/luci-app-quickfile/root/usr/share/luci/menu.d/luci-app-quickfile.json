@@ -5,9 +5,6 @@
 		"action": {
 			"type": "view",
 			"path": "system/quickfile"
-		},
-		"depends": {
-			"acl": [ "luci-app-quickfile" ]
 		}
 	}
 }
