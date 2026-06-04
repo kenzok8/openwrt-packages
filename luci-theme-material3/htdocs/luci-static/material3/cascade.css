@@ -1955,7 +1955,7 @@ input[type="radio"]::before {
 }
 
 .cbi-radio:hover input[type="radio"]::before,
-label:hover > input[type="radio"]::before,
+label:hover>input[type="radio"]::before,
 input[type="radio"]:hover::before,
 input[type="radio"]:focus::before {
 	box-shadow: 0 0 0 7px color-mix(in srgb, var(--text-color-high) 10%, transparent);
@@ -2345,16 +2345,26 @@ body.sidebar-open header {
 
 	.sidebar {
 		position: fixed;
-		height: auto;
+		height: calc(100vh - var(--material3-header-height));
+		height: calc(100dvh - var(--material3-header-height));
 		float: none;
 		margin-bottom: 0;
 		transform: translateX(-100%);
 		z-index: 900;
 		border-radius: 0 1rem 1rem 0;
+		overflow: hidden;
 	}
 
 	.sidebar.active {
 		transform: translateX(0);
+	}
+
+	.sidebar>.nav {
+		height: 100%;
+		overflow-x: hidden;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable;
 	}
 
 	.sidebar-overlay {
@@ -2623,9 +2633,7 @@ li.menu,
 	color: var(--text-color-highest) !important;
 }
 
-@media (hover: none),
-(pointer: coarse),
-(any-pointer: coarse) {
+@media (hover: none) and (pointer: coarse) and (any-hover: none) {
 	.nav>li:not(.active)>a:hover {
 		background: transparent;
 		color: var(--text-color-high);
