@@ -1549,11 +1549,11 @@ select {
 }
 
 .cbi-value[data-widget="CBI.FlagValue"]:has(> .cbi-value-field > .cbi-checkbox) {
-	align-items: center;
+	align-items: flex-start;
 }
 
 .cbi-value[data-widget="CBI.FlagValue"]:has(> .cbi-value-field > .cbi-checkbox)>label.cbi-value-title {
-	padding-top: 0;
+	padding-top: 6px;
 }
 
 .cbi-value>.cbi-section,
@@ -4079,6 +4079,7 @@ th[data-sort-direction="desc"]::after {
 
 	position: absolute;
 	left: -1.25em;
+	top: .2em;
 	content: "\a0";
 	display: inline-block;
 	width: 1em;
