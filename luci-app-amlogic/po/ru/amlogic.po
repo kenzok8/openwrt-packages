@@ -410,9 +410,6 @@ msgstr "kernel_stable [Стабильное ядро из mainline]"
 msgid "kernel_flippy [Mainline Stable Kernel by Flippy]"
 msgstr "kernel_flippy [Стабильное ядро от Flippy]"
 
-msgid "kernel_h6 [Allwinner H6 Kernel]"
-msgstr "kernel_h6 [Ядро для Allwinner H6]"
-
 msgid "kernel_beta [Beta Kernel]"
 msgstr "kernel_beta [Бета-версия ядра]"
 

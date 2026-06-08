@@ -82,7 +82,7 @@ return view.extend({
 		kpath.rmempty = false;
 
 		// 6. Kernel tags; available tags depend on the selected kernel repo.
-		// Default is auto-derived from kernel_release suffixes (-rk3588/-rk35xx/-h6).
+		// Default is auto-derived from kernel_release suffixes (-rk3588/-rk35xx).
 		const currentKpath = uci.get('amlogic', 'config', 'amlogic_kernel_path') ||
 		                     'https://github.com/breakingbadboy/OpenWrt';
 		const knownTags = {
@@ -92,7 +92,6 @@ return view.extend({
 		};
 		if (currentKpath.indexOf('ophub/kernel') >= 0) {
 			knownTags.kernel_flippy = 'kernel_flippy [Mainline Stable Kernel by Flippy]';
-			knownTags.kernel_h6     = 'kernel_h6 [Allwinner H6 Kernel]';
 			knownTags.kernel_beta   = 'kernel_beta [Beta Kernel]';
 		}
 		// Determine default tag from saved config or kernel_release uname string.
@@ -101,7 +100,7 @@ return view.extend({
 			const u = state.kernel_release || '';
 			if (u.indexOf('-rk3588') >= 0) kernelTagDefault = 'kernel_rk3588';
 			else if (u.indexOf('-rk35xx') >= 0) kernelTagDefault = 'kernel_rk35xx';
-			else if (u.indexOf('-h6') >= 0 || u.indexOf('-zicai') >= 0) kernelTagDefault = 'kernel_h6';
+			else if (u.indexOf('-beta') >= 0) kernelTagDefault = 'kernel_beta';
 			else kernelTagDefault = 'kernel_stable';
 		}
 		const ktags = o.option(form.ListValue, 'amlogic_kernel_tags',
@@ -116,7 +115,7 @@ return view.extend({
 		const kbranch = o.option(form.ListValue, 'amlogic_kernel_branch',
 			_('Set version branch:'),
 			_('Set the version branch of the OpenWrt files and kernel selected in [Online Download Update].'));
-		['5.4', '5.10', '5.15', '6.1', '6.6', '6.12', '6.18'].forEach(function (b) {
+		['5.10', '5.15', '6.1', '6.6', '6.12', '6.18'].forEach(function (b) {
 			kbranch.value(b, _(b));
 		});
 		const m2 = (state.kernel_release || '').match(/^(\d+\.\d+)/);

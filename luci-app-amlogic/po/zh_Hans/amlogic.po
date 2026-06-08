@@ -410,9 +410,6 @@ msgstr "kernel_stable [主线稳定内核]"
 msgid "kernel_flippy [Mainline Stable Kernel by Flippy]"
 msgstr "kernel_flippy [Flippy 的主线稳定内核]"
 
-msgid "kernel_h6 [Allwinner H6 Kernel]"
-msgstr "kernel_h6 [Allwinner H6 内核]"
-
 msgid "kernel_beta [Beta Kernel]"
 msgstr "kernel_beta [测试版内核]"
 
@@ -598,8 +595,6 @@ msgstr "等待设备关机..."
 
 msgid "The device has been turned off"
 msgstr "设备已经关机"
-
-
 
 msgid "Are you sure you want to power off the device?"
 msgstr "确定要关闭设备吗？"

@@ -129,8 +129,8 @@ else
         kernel_tag="rk35xx"
     elif [[ "${kernel_uname}" =~ -flippy ]]; then
         kernel_tag="flippy"
-    elif [[ "${kernel_uname}" =~ -h6|-zicai ]]; then
-        kernel_tag="h6"
+    elif [[ "${kernel_uname}" =~ -beta ]]; then
+        kernel_tag="beta"
     else
         kernel_tag="stable"
     fi
