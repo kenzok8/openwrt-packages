@@ -155,7 +155,10 @@
 			if (status)
 				status.innerHTML = '';
 			setState(previous);
-			notify(data && data.message ? data.message : '<%:Operation failed%>');
+			var fallback = '<%:Operation failed%>';
+			if (x && x.status && x.status !== 200)
+				fallback += ' (HTTP ' + x.status + ')';
+			notify(data && data.message ? data.message : fallback);
 		});
 
 		return false;

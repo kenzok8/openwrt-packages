@@ -113,6 +113,23 @@ function toggle_service()
 		enabled = (enabled == "1")
 	}
 
+	-- Preflight: when enabling, make sure the binary is actually present.
+	-- Without this, init.d reload silently fails and the UI only sees an
+	-- opaque "Operation failed" toast (issue #254).
+	if enabled == "1" then
+		local binpath = uci:get("AdGuardHome", "AdGuardHome", "binpath") or "/usr/bin/AdGuardHome"
+		if not fs.access(binpath) then
+			result.success = false
+			result.enabled = (old_enabled == "1")
+			result.running = false
+			result.message = "找不到 AdGuardHome 二进制文件（" .. binpath ..
+				"），请先在「运维」页面下载。"
+			http.prepare_content("application/json")
+			http.write_json(result)
+			return
+		end
+	end
+
 	uci:set("AdGuardHome", "AdGuardHome", "enabled", enabled)
 	uci:commit("AdGuardHome")
 
