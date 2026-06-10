@@ -93,15 +93,12 @@ function root_on_internal_storage() {
 	const root_pt = trim(sh("df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}'"));
 	if (!root_pt) return false;
 
-	if (match(root_pt, /^mmcblk[0-9]+p[0-9]+$/) || match(root_pt, /^nvme[0-9]+n[0-9]+p[0-9]+$/)) {
-		// eMMC and NVMe are always internal
-		return true;
-	}
-	if (match(root_pt, /^[hsv]d[a-z][0-9]+$/)) {
-		// Strip partition digit(s) to get base device (e.g. sda2 → sda); check removable flag.
-		const base_dev = replace(root_pt, /[0-9]+$/, '');
-		const removable = trim(sh('cat /sys/block/' + shq(base_dev) + '/removable 2>/dev/null'));
-		return (removable == '0'); // 0 = internal SATA; 1 = USB/removable
+	// Only hide the install menu when root is already on eMMC (device/type == "MMC").
+	// All other boot media (TF/SD, NVMe, SATA, USB) should still show the install menu.
+	if (match(root_pt, /^mmcblk[0-9]+p[0-9]+$/)) {
+		const base_dev = replace(root_pt, /p[0-9]+$/, ''); // e.g. mmcblk1p2 → mmcblk1
+		const mmc_type = trim(sh('cat /sys/block/' + shq(base_dev) + '/device/type 2>/dev/null'));
+		return (mmc_type == 'MMC');
 	}
 	return false;
 }
