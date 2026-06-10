@@ -118,23 +118,23 @@ elif [ $(ls *.img -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
 elif [ $(ls *.img.xz -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
     xz_file=$(ls *.img.xz | head -n 1)
     echo -e "Update using [ ${xz_file} ] file. Please wait a moment ..."
-    xz -d ${xz_file} 2>/dev/null
+    xz -d "${xz_file}" 2>/dev/null
     IMG_NAME=$(ls *.img | head -n 1)
 elif [ $(ls *.img.gz -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
     gz_file=$(ls *.img.gz | head -n 1)
     echo -e "Update using [ ${gz_file} ] file. Please wait a moment ..."
-    gzip -df ${gz_file} 2>/dev/null
+    gzip -df "${gz_file}" 2>/dev/null
     IMG_NAME=$(ls *.img | head -n 1)
 elif [ $(ls *.7z -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
     gz_file=$(ls *.7z | head -n 1)
     echo -e "Update using [ ${gz_file} ] file. Please wait a moment ..."
-    bsdtar -xmf ${gz_file} 2>/dev/null
-    [ $? -eq 0 ] || 7z x ${gz_file} -aoa -y 2>/dev/null
+    bsdtar -xmf "${gz_file}" 2>/dev/null
+    [ $? -eq 0 ] || 7z x "${gz_file}" -aoa -y 2>/dev/null
     IMG_NAME=$(ls *.img | head -n 1)
 elif [ $(ls *.zip -l 2>/dev/null | grep "^-" | wc -l) -ge 1 ]; then
     zip_file=$(ls *.zip | head -n 1)
     echo -e "Update using [ ${zip_file} ] file. Please wait a moment ..."
-    unzip -o ${zip_file} 2>/dev/null
+    unzip -o "${zip_file}" 2>/dev/null
     IMG_NAME=$(ls *.img | head -n 1)
 else
     echo -e "Please upload or specify the update openwrt firmware file."
