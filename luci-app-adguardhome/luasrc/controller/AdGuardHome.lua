@@ -135,7 +135,12 @@ function toggle_service()
 
 	local rc
 	if enabled == "1" then
-		rc = luci.sys.call("/sbin/start-stop-daemon -S -b -x /bin/sh -- -c '/etc/init.d/AdGuardHome reload >/dev/null 2>&1'")
+		-- Detach the reload from the CGI request so the HTTP call returns
+		-- immediately while the daemon comes up. Fully redirecting fds + `&`
+		-- is enough — avoid start-stop-daemon, whose busybox applet is not
+		-- enabled on some images (e.g. immortalwrt 25.10), where it would
+		-- exit 127 and make the toggle wrongly report a start failure (#254).
+		rc = luci.sys.call("/etc/init.d/AdGuardHome reload >/dev/null 2>&1 &")
 	else
 		rc = luci.sys.call("/etc/init.d/AdGuardHome stop >/dev/null 2>&1")
 	end
