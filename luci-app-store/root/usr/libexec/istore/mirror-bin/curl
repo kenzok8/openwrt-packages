@@ -1,0 +1,18 @@
+#!/bin/sh
+
+newpath=$(echo ":$PATH:" | sed -e 's#:/usr/libexec/istore/mirror-bin:#:#g' -e 's/^:*//' -e 's/:*$//')
+[ -z "$newpath" ] && newpath="/usr/sbin:/usr/bin:/sbin:/bin"
+
+export PATH="$newpath"
+
+# if url starts with $IS_ORIG_SERVER, replace it with $IS_MIRROR_SERVER
+if [ -n "$IS_ORIG_SERVER" ] && [ -n "$IS_MIRROR_SERVER" ]; then
+    for i in "$@"; do
+        if [[ "$i" == "$IS_ORIG_SERVER"* ]]; then
+            set -- "${@/$i/$IS_MIRROR_SERVER${i#$IS_ORIG_SERVER}}"
+        fi
+    done
+fi
+export -n IS_ORIG_SERVER IS_MIRROR_SERVER
+
+exec curl "$@"

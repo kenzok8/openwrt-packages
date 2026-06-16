@@ -5,10 +5,11 @@
 IS_ROOT=/tmp/is-backup
 APP_LIST_FILE=/etc/istore/app.list
 BACKUP_CONFIG_FILE=/etc/config/istore
+USE_APK=false
+[[ -s /etc/apk/arch ]] && USE_APK=true
 
 action=${1}
 shift
-
 
 is_init() {
     mkdir -p ${IS_ROOT}
@@ -90,23 +91,23 @@ ipk_build() {
 
 # if arg is NULL, use light backup, otherwise use local backup
 backup() {
-    [ -n "$1" ] && BACKUP_PATH=$1
+    if [ -n "$1" ]; then
+        if $USE_APK; then
+            echo "does not support apk package manager" >&2
+            exit 1
+        fi
+        BACKUP_PATH=$1
+    fi
 
-    #1.add all istore self data to sysupgrade config file,
-    #sysupgrade will backup/restore it auto when flash new firmware
-    echo "/etc/.app_store.id" > /lib/upgrade/keep.d/luci-app-store
-    cat /usr/lib/opkg/info/luci-app-store.list >> /lib/upgrade/keep.d/luci-app-store
-    echo "/etc/rc.d/S45istore" >> /lib/upgrade/keep.d/luci-app-store
-    echo "/etc/istore/uci-defaults_bak" >> /lib/upgrade/keep.d/luci-app-store
-    echo "${APP_LIST_FILE}" >> /lib/upgrade/keep.d/luci-app-store
-    echo "${BACKUP_CONFIG_FILE}" >> /lib/upgrade/keep.d/luci-app-store
-
-    #write user installed package list to file
-    opkg_list_installed_packages "userinstalled" 2>/dev/null | sort -u > ${IS_ROOT}/user_installed_package.list
-
-    #write installed package list by istore feed to file
-    cat ${IS_ROOT}/user_installed_package.list | \
-        grep '^app-meta-' > ${IS_ROOT}/istore_installed_package.list
+    if $USE_APK; then
+        ( cd /lib/apk/packages && ls *.list ) | grep '^app-meta-' | sed 's/.list$//' | sort -u > ${IS_ROOT}/istore_installed_package.list
+    else
+        #write user installed package list to file
+        opkg_list_installed_packages "userinstalled" 2>/dev/null | sort -u > ${IS_ROOT}/user_installed_package.list
+        #write installed package list by istore feed to file
+        cat ${IS_ROOT}/user_installed_package.list | \
+            grep '^app-meta-' > ${IS_ROOT}/istore_installed_package.list
+    fi
 
     #if no input backup path, only back app.list
     mkdir -p /etc/istore
@@ -186,6 +187,10 @@ backup() {
 # if arg is NULL, use light backup, otherwise use local backup
 restore() {
     if [ -n "$1" ]; then
+        if $USE_APK; then
+            echo "does not support apk package manager" >&2
+            exit 1
+        fi
         BACKUP_PATH_FILE=$1
     else
         echo "install package by ${APP_LIST_FILE}"
@@ -233,7 +238,7 @@ restore() {
 get_support_backup_features() {
     echo "light_backup"
     #istore custom img mean support local_backup
-    if [ -f /etc/istore_img_flag ];then
+    if ! $USE_APK; then
         echo "local_backup"
     fi
 }

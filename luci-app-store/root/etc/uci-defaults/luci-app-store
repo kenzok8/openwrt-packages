@@ -9,4 +9,7 @@ if [ -z "`uci -q get istore.istore.hide_docker`" ] && ! which docker >/dev/null;
 EOF
 fi
 
+# remove tmp keys that used for self-installation, which is not needed after installation
+rm -f /etc/apk/keys/istore-tmp.pem
+
 rm -rf /tmp/luci-indexcache /tmp/luci-modulecache

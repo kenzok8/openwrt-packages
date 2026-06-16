@@ -166,6 +166,11 @@ end
 function store_index()
     local fs   = require "nixio.fs"
     local features = { "_lua_force_array_" }
+    if fs.access("/etc/apk/arch") then
+        features[#features+1] = "apk"
+    else
+        features[#features+1] = "opkg"
+    end
     if fs.access("/usr/libexec/istore/backup") then
         features[#features+1] = "backup"
     end
@@ -251,7 +256,7 @@ function validate_pkgname(val)
 end
 
 local function get_installed_and_cache()
-    local metadir = "/usr/lib/opkg/meta"
+    local metadir = "/tmp/run/istore-meta/meta"
     local cachedir = "/tmp/cache/istore"
     local cachefile = cachedir .. "/installed.json"
     local nixio = require "nixio"
@@ -321,7 +326,7 @@ local function get_installed_and_cache()
 end
 
 function store_action(param)
-    local metadir = "/usr/lib/opkg/meta"
+    local metadir = "/tmp/run/istore-meta/meta"
     local metapkgpre = "app-meta-"
     local code, out, err, ret
     local fs = require "nixio.fs"
