@@ -10,6 +10,7 @@ if [ "${action:0:9}" = "AUTOCONF=" ]; then
 fi
 
 IS_ROOT=/tmp/is-root
+TMP_SELF_COPY=/var/run/cloned-is-opkg
 DL_DIR=${IS_ROOT}/tmp/dl
 LISTS_DIR_O=/tmp/opkg-lists
 LISTS_DIR=${IS_ROOT}${LISTS_DIR_O}
@@ -344,6 +345,12 @@ usage() {
     echo "      unrun {id}                      Remove installed packages by .run/.ipk"
     exit 1
 }
+
+if [[ "$action" = "do_self_upgrade" && "$0" != "$TMP_SELF_COPY" ]]; then
+    echo "copy self $0 to $TMP_SELF_COPY when self upgrade"
+    cp -af "$0" "$TMP_SELF_COPY" || exit 1
+    exec "$TMP_SELF_COPY" do_self_upgrade "$@" || exit 1
+fi
 
 is_init >/dev/null 2>&1
 
