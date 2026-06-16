@@ -1,0 +1,13 @@
+{
+	"admin/system/alpha-config": {
+		"title": "Alpha Config",
+		"order": 89,
+		"action": {
+			"type": "view",
+			"path": "alpha-config"
+		},
+		"depends": {
+			"acl": [ "luci-app-alpha-config" ]
+		}
+	}
+}
