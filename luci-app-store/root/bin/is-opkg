@@ -160,6 +160,16 @@ wrapped_in_update() {
     eval "$@"
 }
 
+refresh_installed() {
+    local pkg
+    for pkg in $@; do
+        [[ $pkg == app-meta-* ]] || continue
+        pkg="/usr/lib/opkg/meta/${pkg#app-meta-}.json"
+        [[ -f "$pkg" ]] && touch "$pkg"
+    done
+    return 0
+}
+
 step_upgrade() {
     local pkg
     local pkgs=""
@@ -176,6 +186,7 @@ step_upgrade() {
     fi
     if [ -n "$metapkg" ]; then
         opkg_wrap_mirrors upgrade $metapkg || return 1
+        refresh_installed $metapkg
     fi
     return 0
 }
@@ -352,7 +363,7 @@ case $action in
     ;;
     "install")
         check_space
-        wrapped_in_update opkg_wrap_mirrors install "$@" && try_upgrade_depends "$1" && try_autoconf
+        wrapped_in_update opkg_wrap_mirrors install "$@" && refresh_installed "$1" && try_upgrade_depends "$1" && try_autoconf
     ;;
     "autoconf")
         try_autoconf

@@ -254,10 +254,8 @@ local function get_installed_and_cache()
     local metadir = "/usr/lib/opkg/meta"
     local cachedir = "/tmp/cache/istore"
     local cachefile = cachedir .. "/installed.json"
-    local metapkgpre = "app-meta-"
     local nixio = require "nixio"
     local fs   = require "nixio.fs"
-    local ipkg = require "luci.model.ipkg"
     local jsonc = require "luci.jsonc"
     local result = {}
     local lock, msg = flock("/var/lock/istore-installed.lock", "lock")
@@ -274,7 +272,8 @@ local function get_installed_and_cache()
             local pkg
             for pkg in itr do
                 if pkg:match("^.*%.json$") then
-                    local metadata = fs.readfile(metadir .. "/" .. pkg)
+                    local metafile = metadir .. "/" .. pkg
+                    local metadata = fs.readfile(metafile)
                     if metadata ~= nil then
                         local meta = jsonc.parse(metadata)
                         if meta == nil then
@@ -291,15 +290,10 @@ local function get_installed_and_cache()
                             }
                         end
                         local time = nil
-                        local metapkg = metapkgpre .. meta.name
-                        local status = ipkg.status(metapkg)
-                        if next(status) ~= nil then
-                            time = status[metapkg]["Installed-Time"]
+                        local istat = fs.stat(metafile)
+                        if istat ~= nil then
+                            time = istat["mtime"]
                         else
-                            local istat = fs.stat("/usr/lib/opkg/info/" .. metapkg .. ".list")
-                            if istat ~= nil then
-                                time = istat["mtime"]
-                            end
                             cacheable = false
                         end
                         if time ~= nil then
@@ -313,7 +307,7 @@ local function get_installed_and_cache()
         result = data
         if cacheable then
             fs.mkdirr(cachedir)
-            local oflags = nixio.open_flags("rdwr", "creat")
+            local oflags = nixio.open_flags("wronly", "creat", "trunc")
             local mfile, code, msg = nixio.open(cachefile, oflags)
             mfile:writeall(jsonc.stringify(result))
             mfile:close()
@@ -331,7 +325,6 @@ function store_action(param)
     local metapkgpre = "app-meta-"
     local code, out, err, ret
     local fs = require "nixio.fs"
-    local ipkg = require "luci.model.ipkg"
     local jsonc = require "luci.jsonc"
     local json_parse = jsonc.parse
     local action = param.action or ""
@@ -342,18 +335,22 @@ function store_action(param)
             luci.http.status(400, "Bad Request")
             return
         end
-        local metapkg = metapkgpre .. pkg
         local meta = {}
-        local metadata = fs.readfile(metadir .. "/" .. pkg .. ".json")
+        local metafile = metadir .. "/" .. pkg .. ".json"
+        local metadata = fs.readfile(metafile)
 
         if metadata ~= nil then
             meta = json_parse(metadata) or {}
         end
         meta.installed = false
-        local status = ipkg.status(metapkg)
-        if next(status) ~= nil then
+        local time = nil
+        local istat = fs.stat(metafile)
+        if istat ~= nil then
+            time = istat["mtime"]
+        end
+        if time ~= nil then
             meta.installed=true
-            meta.time=tonumber(status[metapkg]["Installed-Time"])
+            meta.time=tonumber(time)
         end
 
         ret = meta
@@ -571,7 +568,7 @@ function entrysh()
                         errors[#errors+1] = {app=meta.name, code=500, msg="json parse failed: " .. o}
                     else
                         results[#results+1] = status
-                        local oflags = nixio.open_flags("rdwr", "creat")
+                        local oflags = nixio.open_flags("wronly", "creat", "trunc")
                         local mfile, code, msg = nixio.open(cachefile, oflags)
                         mfile:writeall(jsonc.stringify(status))
                         mfile:close()
