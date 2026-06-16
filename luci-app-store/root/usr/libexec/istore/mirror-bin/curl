@@ -7,10 +7,18 @@ export PATH="$newpath"
 
 # if url starts with $IS_ORIG_SERVER, replace it with $IS_MIRROR_SERVER
 if [ -n "$IS_ORIG_SERVER" ] && [ -n "$IS_MIRROR_SERVER" ]; then
-    for i in "$@"; do
-        if [[ "$i" == "$IS_ORIG_SERVER"* ]]; then
-            set -- "${@/$i/$IS_MIRROR_SERVER${i#$IS_ORIG_SERVER}}"
-        fi
+    n=$#
+    while [ "$n" -gt 0 ]; do
+        i="$1"
+        shift
+        case "$i" in
+            "$IS_ORIG_SERVER"/*.apk|\
+            "$IS_ORIG_SERVER"/*.ipk)
+                i="$IS_MIRROR_SERVER/${i#$IS_ORIG_SERVER/}"
+                ;;
+        esac
+        set -- "$@" "$i"
+        n=$((n - 1))
     done
 fi
 export -n IS_ORIG_SERVER IS_MIRROR_SERVER
