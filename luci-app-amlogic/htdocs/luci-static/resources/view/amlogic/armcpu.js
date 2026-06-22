@@ -80,14 +80,12 @@ return view.extend({
 			maxF.rmempty = false;
 		});
 
-		// Wrap the default saveApply: after a successful UCI commit, trigger
-		// reload_cpu so the new governor and frequency limits take effect
-		// without the user manually restarting the service.
-		const origHandle = m.handleSaveApply;
-		m.handleSaveApply = function () {
-			return origHandle.apply(this, arguments)
-				.then(function (r) { callReloadCpu(); return r; });
-		};
+		// Reload CPU settings after the LuCI apply mechanism commits UCI to disk.
+		// The standard apply flow (apply_rollback → ucitrack → init.d restart)
+		// reads UCI before the new values are fully written, so we re-apply here.
+		document.addEventListener('uci-applied', function () {
+			callReloadCpu();
+		});
 
 		return m.render();
 	}

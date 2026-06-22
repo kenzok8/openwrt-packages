@@ -704,8 +704,10 @@ function m_save_backup_list(req) {
 }
 
 function m_reload_cpu() {
-	shcall('(sleep 1 && /etc/init.d/amlogic start) &');
-	return { code: 0 };
+	// Apply governor / freq settings synchronously so they take effect before
+	// the RPC response is sent back to the browser.
+	const rc = shcall('/etc/init.d/amlogic start');
+	return { code: rc };
 }
 
 // Sync menu_install and menu_armcpu UCI flags based on runtime platform detection.
