@@ -70,6 +70,17 @@ local function method_not_allowed()
   write_json({ ok = false, error = "method not allowed" })
 end
 
+local function conflict_request(msg, detail, code)
+  local http = require "luci.http"
+  http.status(409, msg or "conflict")
+  write_json({
+    ok = false,
+    error = msg or "conflict",
+    detail = detail or "",
+    code = code or "conflict",
+  })
+end
+
 local function read_json_body()
   local http = require "luci.http"
   local jsonc = require "luci.jsonc"
@@ -121,6 +132,203 @@ local function fetch_device_id(index)
   local idx = normalize_index(index)
   local cmd = string.format("/usr/sbin/ddnstod -x %s -w", idx)
   return parse_device_id(get_command(cmd))
+end
+
+local function shell_quote(value)
+  local raw = tostring(value or "")
+  return "'" .. raw:gsub("'", [['"'"']]) .. "'"
+end
+
+local function read_file(path, binary)
+  local mode = binary and "rb" or "r"
+  local fp = io.open(path, mode)
+  if not fp then
+    return nil
+  end
+  local data = fp:read("*a")
+  fp:close()
+  return data
+end
+
+local function remove_file(path)
+  if path and #path > 0 then
+    os.remove(path)
+  end
+end
+
+local function temp_path(suffix)
+  local random = tostring(math.random(100000, 999999))
+  return string.format("/tmp/ddnsto-luci-%d-%s%s", os.time(), random, suffix or "")
+end
+
+local function file_exists(path)
+  local fp = io.open(path, "rb")
+  if fp then
+    fp:close()
+    return true
+  end
+  return false
+end
+
+local function service_running()
+  local sys = require "luci.sys"
+  local jsonc = require "luci.jsonc"
+  local raw = sys.exec([[ubus call service list '{"name":"ddnsto"}' 2>/dev/null]]) or ""
+  local ok, obj = pcall(jsonc.parse, raw)
+  if ok and type(obj) == "table" and type(obj.ddnsto) == "table" and type(obj.ddnsto.instances) == "table" then
+    for _, inst in pairs(obj.ddnsto.instances) do
+      if type(inst) == "table" and inst.running == true then
+        return true
+      end
+    end
+  end
+  return false
+end
+
+local function read_identity_state()
+  local uci = require "luci.model.uci".cursor()
+  local state = {
+    router_id = "",
+    identity_mode = "",
+    device_uuid = "",
+  }
+  uci:foreach("ddnsto", "ddnsto", function(s)
+    state.router_id = s.router_id or state.router_id
+    state.identity_mode = s.identity_mode or state.identity_mode
+    state.device_uuid = s.device_uuid or state.device_uuid
+  end)
+  return state
+end
+
+local function run_init_action(action)
+  local sys = require "luci.sys"
+  return sys.call(string.format("/etc/init.d/ddnsto %s >/dev/null 2>&1", shell_quote(action)))
+end
+
+local function run_capture(cmd)
+  local sys = require "luci.sys"
+  local stdout_path = temp_path(".stdout")
+  local stderr_path = temp_path(".stderr")
+  local wrapped = string.format("%s >%s 2>%s", cmd, shell_quote(stdout_path), shell_quote(stderr_path))
+  local rc = sys.call(wrapped)
+  local stdout = read_file(stdout_path, true) or ""
+  local stderr = read_file(stderr_path, true) or ""
+  remove_file(stdout_path)
+  remove_file(stderr_path)
+  return rc, stdout, stderr
+end
+
+local function diagnostics_logs_via_cli(lines)
+  local jsonc = require "luci.jsonc"
+  local cmd = string.format("/usr/sbin/ddnsto diagnostics logs --tail %d", tonumber(lines) or 200)
+  local rc, stdout = run_capture(cmd)
+  if rc ~= 0 or stdout == "" then
+    return nil
+  end
+  local ok, parsed = pcall(jsonc.parse, stdout)
+  if not ok or type(parsed) ~= "table" or type(parsed.lines) ~= "table" then
+    return nil
+  end
+  return parsed.lines
+end
+
+local function diagnostics_bundle_via_cli(output_path)
+  local cmd = string.format(
+    "/usr/sbin/ddnsto diagnostics bundle --output %s --reason %s",
+    shell_quote(output_path),
+    shell_quote("luci-support")
+  )
+  local rc, stdout, stderr = run_capture(cmd)
+  if rc == 0 and file_exists(output_path) then
+    return true, stdout
+  end
+  return false, stderr ~= "" and stderr or stdout
+end
+
+local function diagnostics_bundle_via_http(output_path)
+  local jsonc = require "luci.jsonc"
+  local request_body = [[{"reason":"luci-support","tail":500}]]
+  local request_cmd = string.format(
+    "curl -fsS -X POST -H 'Content-Type: application/json' --data %s %s",
+    shell_quote(request_body),
+    shell_quote("http://127.0.0.1:18333/diagnostics/bundle")
+  )
+  local rc, stdout, stderr = run_capture(request_cmd)
+  if rc ~= 0 or stdout == "" then
+    return false, stderr ~= "" and stderr or stdout
+  end
+
+  local ok, parsed = pcall(jsonc.parse, stdout)
+  local download_path = ok and type(parsed) == "table" and parsed.downloadPath or nil
+  if type(download_path) ~= "string" or download_path == "" then
+    return false, "missing downloadPath"
+  end
+
+  local download_cmd = string.format(
+    "curl -fsS %s -o %s",
+    shell_quote("http://127.0.0.1:18333" .. download_path),
+    shell_quote(output_path)
+  )
+  local download_rc, _, download_stderr = run_capture(download_cmd)
+  if download_rc == 0 and file_exists(output_path) then
+    return true, "http"
+  end
+
+  return false, download_stderr ~= "" and download_stderr or "bundle download failed"
+end
+
+local function offline_diagnosis_via_http()
+  local jsonc = require "luci.jsonc"
+  local cmd = string.format("curl -fsS %s", shell_quote("http://127.0.0.1:18333/offline-diagnosis"))
+  local rc, stdout, stderr = run_capture(cmd)
+  if rc ~= 0 or stdout == "" then
+    return nil, stderr ~= "" and stderr or stdout
+  end
+
+  local ok, parsed = pcall(jsonc.parse, stdout)
+  if not ok or type(parsed) ~= "table" then
+    return nil, "invalid offline diagnosis response"
+  end
+  return parsed, "http_status"
+end
+
+local function offline_diagnosis_via_cli()
+  local jsonc = require "luci.jsonc"
+  local rc, stdout, stderr = run_capture("/usr/sbin/ddnsto offline-diagnosis --json")
+  if rc ~= 0 or stdout == "" then
+    return nil, stderr ~= "" and stderr or stdout
+  end
+
+  local ok, parsed = pcall(jsonc.parse, stdout)
+  if not ok or type(parsed) ~= "table" then
+    return nil, "invalid offline diagnosis response"
+  end
+  return parsed, "cli_fallback"
+end
+
+local function stream_download(path, filename, content_type)
+  local http = require "luci.http"
+  local fp = io.open(path, "rb")
+  if not fp then
+    http.status(500, "open failed")
+    http.prepare_content("application/json")
+    http.write('{"ok":false,"error":"bundle open failed"}')
+    return
+  end
+
+  http.header("Content-Disposition", string.format('attachment; filename="%s"', filename))
+  http.header("Cache-Control", "no-store")
+  http.prepare_content(content_type or "application/octet-stream")
+
+  while true do
+    local chunk = fp:read(8192)
+    if not chunk then
+      break
+    end
+    http.write(chunk)
+  end
+
+  fp:close()
 end
 
 local function param(body, key)
@@ -287,6 +495,7 @@ function index()
   -- entry({"admin", "ddnsto_dev"}, call("action_ddnsto_dev"), _("DDNSTO (Dev)"), 99).leaf = true
   
   entry({"admin", "services", "ddnsto", "api", "config"},  call("api_config")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "migrate_identity"}, call("api_migrate_identity")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "service"}, call("api_service")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "run"},     call("api_run")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "restart"}, call("api_restart")).leaf = true
@@ -296,6 +505,8 @@ function index()
   entry({"admin", "services", "ddnsto", "api", "connectivity"},  call("api_connectivity")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "status"},  call("api_status")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "logs"},    call("api_logs")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "offline_diagnosis"}, call("api_offline_diagnosis")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "support_bundle"}, call("api_support_bundle")).leaf = true
 end
 
 function action_page()
@@ -425,6 +636,120 @@ function api_config()
   sys.call("/etc/init.d/ddnsto restart >/dev/null 2>&1")
 
   write_json({ ok = true })
+end
+
+function api_migrate_identity()
+  local http = require "luci.http"
+  local uci = require "luci.model.uci".cursor()
+  local method = http.getenv("REQUEST_METHOD") or ""
+
+  if method ~= "POST" then
+    method_not_allowed()
+    return
+  end
+
+  if not require_csrf() then return end
+
+  local body = read_json_body()
+  local enabled      = param(body, "enabled")
+  local ddnsto_token = param(body, "ddnsto_token")
+  local index        = param(body, "index")
+  local logger       = param(body, "logger")
+  local feat_enabled = param(body, "feat_enabled")
+  local feat_port    = param(body, "feat_port")
+  local feat_username = param(body, "feat_username")
+  local feat_password = param(body, "feat_password")
+  local feat_disk_path_selected = param(body, "feat_disk_path_selected")
+  local confirm_reidentity = param(body, "confirm_reidentity")
+
+  if confirm_reidentity ~= "1" then
+    return bad_request("missing identity migration confirmation")
+  end
+  if enabled and not is_bool01(enabled) then return bad_request("bad enabled") end
+  if logger and not is_bool01(logger) then return bad_request("bad logger") end
+  if feat_enabled and not is_bool01(feat_enabled) then return bad_request("bad feat_enabled") end
+  if ddnsto_token ~= nil and has_space(ddnsto_token) then
+    return bad_request("令牌勿包含空格")
+  end
+  if not is_uint(index) then
+    return bad_request("请填写正确的设备编号，仅允许数字")
+  end
+  local index_num = tonumber(index)
+  if index_num < 0 or index_num > 99 then
+    return bad_request("请填写正确的设备编号，仅允许数字")
+  end
+
+  local enabled_on = enabled == "1"
+  local feat_on = feat_enabled == "1"
+  if enabled_on and is_empty(ddnsto_token) then
+    return bad_request("请填写正确用户Token（令牌）")
+  end
+  if feat_on then
+    if not is_uint(feat_port) then
+      return bad_request("请填写正确的端口")
+    end
+    local port_num = tonumber(feat_port)
+    if not port_num or port_num == 0 or port_num > 65535 then
+      return bad_request("请填写正确的端口")
+    end
+    if is_empty(feat_username) then
+      return bad_request("请填写授权用户名")
+    end
+    if has_space(feat_username) then
+      return bad_request("用户名请勿包含空格")
+    end
+    if is_empty(feat_password) then
+      return bad_request("请填写授权用户密码")
+    end
+    if has_space(feat_password) then
+      return bad_request("用户密码请勿包含空格")
+    end
+    if is_empty(feat_disk_path_selected) then
+      return bad_request("请填写共享磁盘路径")
+    end
+  end
+
+  local old_identity = read_identity_state()
+  local current = read_config()
+  local old_index = tostring(current.index or "0")
+  local identity_missing = is_empty(old_identity.router_id)
+  if tostring(index) == old_index and not identity_missing then
+    return conflict_request("identity migration not required", "index unchanged", "identity_migration_not_required")
+  end
+  local sid = ensure_ddnsto_section()
+
+  run_init_action("stop")
+
+  if enabled then uci:set("ddnsto", sid, "enabled", enabled) end
+  if ddnsto_token ~= nil then uci:set("ddnsto", sid, "token", ddnsto_token) end
+  if index then uci:set("ddnsto", sid, "index", index) end
+  if logger then uci:set("ddnsto", sid, "logger", logger) end
+  if feat_enabled then uci:set("ddnsto", sid, "feat_enabled", feat_enabled) end
+  if feat_port then uci:set("ddnsto", sid, "feat_port", feat_port) end
+  if feat_username then uci:set("ddnsto", sid, "feat_username", feat_username) end
+  if feat_password then uci:set("ddnsto", sid, "feat_password", feat_password) end
+  if feat_disk_path_selected then uci:set("ddnsto", sid, "feat_disk_path_selected", feat_disk_path_selected) end
+
+  uci:delete("ddnsto", sid, "router_id")
+  uci:delete("ddnsto", sid, "identity_mode")
+  uci:delete("ddnsto", sid, "device_uuid")
+  uci:commit("ddnsto")
+
+  local restart_rc = 0
+  if enabled ~= "0" then
+    restart_rc = run_init_action("start")
+  end
+
+  write_json({
+    ok = true,
+    data = {
+      old_index = old_index,
+      new_index = tostring(index),
+      old_router_id = old_identity.router_id or "",
+      service_started = restart_rc == 0 and enabled ~= "0" or false,
+      message = "设备身份已重置，服务正在使用新的设备编号重新生成设备 ID",
+    }
+  })
 end
 
 -- ==========
@@ -696,6 +1021,12 @@ function api_logs()
   if lines < 10 then lines = 10 end
   if lines > 2000 then lines = 2000 end
 
+  local cli_lines = diagnostics_logs_via_cli(lines)
+  if cli_lines ~= nil then
+    write_json({ ok = true, data = { lines = cli_lines, total = #cli_lines, source = "diagnostics_cli" } })
+    return
+  end
+
   local cmd = string.format("logread 2>/dev/null | grep -E 'ddnsto|ddnstod' | tail -n %d", lines)
   local out = sys.exec(cmd) or ""
   local arr = {}
@@ -706,7 +1037,69 @@ function api_logs()
     end
   end
 
-  write_json({ ok = true, data = { lines = arr, total = #arr } })
+  write_json({ ok = true, data = { lines = arr, total = #arr, source = "logread_fallback" } })
+end
+
+function api_offline_diagnosis()
+  local http = require "luci.http"
+  local method = http.getenv("REQUEST_METHOD") or ""
+
+  if method ~= "GET" then
+    method_not_allowed()
+    return
+  end
+
+  if not service_running() then
+    write_json({
+      ok = false,
+      error = "offline diagnosis unavailable",
+      detail = "ddnsto not running",
+      code = "ddnsto_not_running",
+    })
+    return
+  end
+
+  local data, source = offline_diagnosis_via_http()
+  if data ~= nil then
+    write_json({ ok = true, data = data, source = source })
+    return
+  end
+
+  write_json({ ok = false, error = "offline diagnosis unavailable" })
+end
+
+function api_support_bundle()
+  local http = require "luci.http"
+  local method = http.getenv("REQUEST_METHOD") or ""
+
+  if method ~= "GET" then
+    method_not_allowed()
+    return
+  end
+
+  if not service_running() then
+    http.status(409, "ddnsto not running")
+    write_json({
+      ok = false,
+      error = "diagnostics bundle unavailable",
+      detail = "ddnsto not running",
+      code = "ddnsto_not_running",
+    })
+    return
+  end
+
+  local output_path = temp_path(".zip")
+  local ok, err = diagnostics_bundle_via_http(output_path)
+  if not ok then
+    remove_file(output_path)
+    http.status(500, "bundle failed")
+    write_json({ ok = false, error = "diagnostics bundle unavailable", detail = err or "" })
+    return
+  end
+
+  local filename = string.format("ddnsto-openwrt-support-%d.zip", os.time())
+  stream_download(output_path, filename, "application/zip")
+  remove_file(output_path)
 end
 
 function action_ddnsto_dev()
