@@ -556,7 +556,6 @@ case $action in
     ;;
     "link_meta")
         [[ -d "$META_DIR/meta" ]] || mkdir -p "$META_DIR/meta"
-        mkdir -p /tmp/run/istore
         ln -sf "$META_DIR" /tmp/run/istore-meta
     ;;
     *)
