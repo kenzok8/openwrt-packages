@@ -19,7 +19,7 @@ location /cgi-bin/luci/quickfile {
 		proxy_set_header Connection "upgrade";
 		proxy_set_header X-Real-IP $remote_addr;
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_pass http://unix:/tmp/run/quickfile/quickfile.sock:;
+		proxy_pass http://unix:/tmp/run/quickfile/quickfile.sock;
 }
 
 location /cgi-bin/luci/quickfile/api/ {
@@ -36,7 +36,7 @@ location /cgi-bin/luci/quickfile/api/ {
 		proxy_set_header X-Real-IP $remote_addr;
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 		rewrite ^/cgi-bin/luci/quickfile/api/(.*) /api/$1?host=$scheme://$host break;
-		proxy_pass http://unix:/tmp/run/quickfile/quickfile.sock:/api/;
+		proxy_pass http://unix:/tmp/run/quickfile/quickfile.sock;
 }
 
 location /cgi-bin/luci/quickfile-static/ {
@@ -44,5 +44,5 @@ location /cgi-bin/luci/quickfile-static/ {
 		proxy_set_header X-Real-IP $remote_addr;
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 		rewrite ^/cgi-bin/luci/quickfile-static/(.*) /static/$1?host=$scheme://$host break;
-		proxy_pass http://unix:/tmp/run/quickfile/quickfile.sock:/static/;
+		proxy_pass http://unix:/tmp/run/quickfile/quickfile.sock;
 }
