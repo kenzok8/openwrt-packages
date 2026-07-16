@@ -25,7 +25,6 @@
 [en-us-release-log]: /RELEASE.md
 [zh-cn-release-log]: /RELEASE_ZH.md
 [config-link]: https://github.com/jerrykuku/luci-app-argon-config/releases
-[lede]: https://github.com/coolsnowwolf/lede
 [official]: https://github.com/openwrt/openwrt
 [immortalwrt]: https://github.com/immortalwrt/immortalwrt
 
@@ -49,7 +48,7 @@ It also supports automatic and manual switching between light and dark modes.
 [简体中文][zh-cn-link]
 
 [Key Features](#key-features) •
-[Branch](#branch-introduction) •
+[Compatibility](#compatibility) •
 [Version History](#version-history) •
 [Getting started](#getting-started) •
 [Screenshots](#screenshots) •
@@ -61,27 +60,17 @@ It also supports automatic and manual switching between light and dark modes.
 
 ## Key Features
 
-- Clean Layout.
-- Adapted to mobile display.
-- Customizable theme colors.
-- Support for using Bing images as login background.
-- Support for custom uploading of images or videos as login background.
-- Automatically switch between light and dark modes with the system, and can also be set to a fixed mode.
-- Settings plugin with extensions [luci-app-argon-config][config-link]
+- Clean and modern Argon-style interface design.
+- Fully adapted for both desktop and mobile displays.
+- Supports automatic or manual switching between light and dark modes.
+- Supports custom theme colors, along with adjustable blur and transparency effects.
+- The login page supports local images, videos, and online wallpapers as backgrounds.
+- Works with [luci-app-argon-config][config-link] for a more complete theme configuration experience.
 
-> **Upcoming Version **
->
-> "The current theme uses Less for CSS construction, and the method for switching between light and dark modes is relatively primitive. Meanwhile, the official theme has already switched to the UT template. I am exploring a way to build the theme template using modern front-end development tools, initially settling on a solution using Vite + UnoCSS. This approach will utilize a proxy server for debugging and also support HMR (Hot Module Replacement), significantly improving development speed. Currently, the basic development framework has been set up, but due to a busy schedule, I still need some time to migrate the existing styles. Stay tuned!"
+## Compatibility
 
-## Branch Introduction
-
-There are currently two main branches that are adapted to different versions of the **OpenWrt** source code.  
-The table below will provide a detailed introduction:
-
-| Branch | Version | Description                        | Matching source                                           |
-| ------ | ------- | ---------------------------------- | --------------------------------------------------------- |
-| master | v2.x.x  | Support the latest version of LuCI | [Official OpenWrt][official] • [ImmortalWrt][immortalwrt] |
-| 18.06 (deprecated) | v1.x.x  | Support the 18.06 version of LuCI   | [Lean's LEDE][lede]                                         |
+Only the `master` branch is maintained now.  
+Support is focused on modern LuCI environments based on [Official OpenWrt][official] and [ImmortalWrt][immortalwrt].
 
 ## Version History
 
@@ -89,17 +78,7 @@ The latest version is v2.4.3 [Click here][en-us-release-log] to view the full ve
 
 ## Getting started
 
-### Build for Lean's LEDE project (deprecated)
-
-```bash
-cd lede/package/lean
-rm -rf luci-theme-argon
-git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git luci-theme-argon
-make menuconfig #choose LUCI->Theme->Luci-theme-argon
-make -j1 V=s
-```
-
-### Build for OpenWrt official SnapShots and ImmortalWrt
+### Build from source
 
 ```bash
 cd openwrt/package
@@ -108,34 +87,23 @@ make menuconfig #choose LUCI->Theme->Luci-theme-argon
 make -j1 V=s
 ```
 
-### Install for LuCI 18.06 ( Lean's LEDE )
+### Install release packages (`ipk`)
 
 ```bash
-wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v1.8.2/luci-theme-argon_1.8.2-20230609_all.ipk
-opkg install luci-theme-argon*.ipk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.3/luci-theme-argon_2.4.3-1_all.ipk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.3/luci-app-argon-config_2.4.3-1_all.ipk
+opkg install ./luci-theme-argon_2.4.3-1_all.ipk ./luci-app-argon-config_2.4.3-1_all.ipk
 ```
 
-### Install for OpenWrt official SnapShots and ImmortalWrt
+### Install release packages (`apk`)
 
 ```bash
-opkg install luci-compat
-opkg install luci-lib-ipkg
-wget --no-check-certificate https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.3.2/luci-theme-argon_2.3.2-r20250207_all.ipk
-opkg install luci-theme-argon*.ipk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.3/luci-theme-argon-2.4.3-r1.apk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.3/luci-app-argon-config-2.4.3-r1.apk
+apk add --allow-untrusted ./luci-theme-argon-2.4.3-r1.apk ./luci-app-argon-config-2.4.3-r1.apk
 ```
 
-### Install luci-app-argon-config
-
-```bash
-wget --no-check-certificate -O luci-app-argon-config_0.9_all.ipk https://github.com/jerrykuku/luci-app-argon-config/releases/download/v0.9/luci-app-argon-config_0.9_all.ipk
-opkg install luci-app-argon-config*.ipk
-```
-
-## Notice
-
-- Chrome browser is highly recommended. There are some new css3 features used in this theme, currently only Chrome has the best compatibility.
-- Microsoft has officially retired Internet Explorer, RIP IE🙏<del>Currently, the mainline version of the IE series has bugs that need to be addressed.</del>
-- FireFox does not enable the backdrop-filter by default, [see here](https://developer.mozilla.org/zh-CN/docs/Web/CSS/backdrop-filter) for the opening method.
+Replace `v2.4.3` and the package filenames above with the assets from the target [Release][release].
 
 ## Screenshots
 
@@ -152,9 +120,9 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 ## Related Projects
 
-- [luci-app-argon-config](https://github.com/jerrykuku/luci-app-argon-config): Argon theme config plugin
-- [openwrt-package](https://github.com/jerrykuku/openwrt-package): My OpenWrt package
-- [CasaOS](https://github.com/IceWhaleTech/CasaOS): A simple, easy-to-use, elegant open-source Personal Cloud system (My current main project)
+- [luci-app-argon-config](https://github.com/jerrykuku/luci-app-argon-config): Configuration plugin for the Argon theme
+- [openwrt-package](https://github.com/jerrykuku/openwrt-package): My OpenWrt package collection
+- [CasaOS](https://github.com/IceWhaleTech/CasaOS): A simple, elegant open-source personal cloud system and my current primary project
 
 ## Credits
 
