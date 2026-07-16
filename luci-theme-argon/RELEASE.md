@@ -1,5 +1,44 @@
 # Update log for master branch
 
+## v2.4.4 [ 2026.07.16 ]
+
+### What's Changed
+* Dynlist indicate drop target by @jjm2473 in https://github.com/jerrykuku/luci-theme-argon/pull/590
+* feat(online_wallpaper): get rid of curl by @1715173329 in https://github.com/jerrykuku/luci-theme-argon/pull/603
+* chore(template): rewrite into ucode by @msylgj in https://github.com/jerrykuku/luci-theme-argon/pull/602
+* fix some css style error by @msylgj in https://github.com/jerrykuku/luci-theme-argon/pull/607
+* WIP: fix(css): fix some css issues by @msylgj in https://github.com/jerrykuku/luci-theme-argon/pull/617
+* 修复luci-app-poweroffdevice、admin-system-reboot的按钮宽度问题，修复首页/状态页的 Hide、Show 按钮 by @yhl452493373 in https://github.com/jerrykuku/luci-theme-argon/pull/622
+* 修复两处样式异常 by @guowenju in https://github.com/jerrykuku/luci-theme-argon/pull/632
+* Wallhaven.cc loading fix by @AcidSlide in https://github.com/jerrykuku/luci-theme-argon/pull/634
+* MWAN3 specific only - css fix by @AcidSlide in https://github.com/jerrykuku/luci-theme-argon/pull/633
+* 优化openclash的公告栏边距 by @yhl452493373 in https://github.com/jerrykuku/luci-theme-argon/pull/637
+* fix(nlbw): 修复`带宽监控`页面选择器并优化按钮布局 by @guowenju in https://github.com/jerrykuku/luci-theme-argon/pull/649
+* fix: smartdns: fix padding loss in layout style by @sydnkj in https://github.com/jerrykuku/luci-theme-argon/pull/650
+* luci-static/menu-argon: add missing ModeMenu handling by @feckert in https://github.com/jerrykuku/luci-theme-argon/pull/651
+* fix(nftables): 修复`检测到旧版规则` `alert-message` 弹窗点击关闭按钮无效的问题 by @guowenju in https://github.com/jerrykuku/luci-theme-argon/pull/652
+* 修复某些弹窗loading图标位置问题 by @yhl452493373 in https://github.com/jerrykuku/luci-theme-argon/pull/659
+* Comment out X-Frame-Options meta tag by @yws112358 in https://github.com/jerrykuku/luci-theme-argon/pull/663
+* 修复在最新openwrt上的一些问题 by @yhl452493373 in https://github.com/jerrykuku/luci-theme-argon/pull/666
+* 修复OpenWrt 25.12主页样式异常 by @guowenju in https://github.com/jerrykuku/luci-theme-argon/pull/658
+* 修复一些发现的问题 by @yhl452493373 in https://github.com/jerrykuku/luci-theme-argon/pull/668
+* Fix Safari rendering issues on login and LuCI pages by @Nonosword in https://github.com/jerrykuku/luci-theme-argon/pull/670
+* Update LUCI_DEPENDS to use wget-any by @1-1-2 in https://github.com/jerrykuku/luci-theme-argon/pull/671
+* Revert "Update LUCI_DEPENDS to use wget-any" by @jerrykuku in https://github.com/jerrykuku/luci-theme-argon/pull/673
+* 修复主页(dashboard)DHCP设备表格布局异常 by @guowenju in https://github.com/jerrykuku/luci-theme-argon/pull/674
+* fix(css): remove transform on tooltip by @ckorber in https://github.com/jerrykuku/luci-theme-argon/pull/678
+
+### New Contributors
+* @1715173329 made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/603
+* @guowenju made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/632
+* @sydnkj made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/650
+* @feckert made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/651
+* @yws112358 made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/663
+* @Nonosword made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/670
+* @1-1-2 made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/671
+* @ckorber made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/678
+
+**Full Changelog**: https://github.com/jerrykuku/luci-theme-argon/compare/v2.4.3...v2.4.4
 ## v2.4.3 [ 2025.07.22 ]
 
 - **Refactor**: Remove jQuery dependency, fully replace with vanilla JavaScript

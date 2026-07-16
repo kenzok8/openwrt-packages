@@ -74,7 +74,7 @@ Support is focused on modern LuCI environments based on [Official OpenWrt][offic
 
 ## Version History
 
-The latest version is v2.4.3 [Click here][en-us-release-log] to view the full version history record.
+The latest version is v2.4.4 [Click here][en-us-release-log] to view the full version history record.
 
 ## Getting started
 
@@ -90,16 +90,16 @@ make -j1 V=s
 ### Install release packages (`ipk`)
 
 ```bash
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.3/luci-theme-argon_2.4.3-1_all.ipk
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.3/luci-app-argon-config_2.4.3-1_all.ipk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.4/luci-theme-argon_2.4.4-1_all.ipk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.4/luci-app-argon-config_2.4.4-1_all.ipk
 opkg install ./luci-theme-argon_2.4.3-1_all.ipk ./luci-app-argon-config_2.4.3-1_all.ipk
 ```
 
 ### Install release packages (`apk`)
 
 ```bash
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.3/luci-theme-argon-2.4.3-r1.apk
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.3/luci-app-argon-config-2.4.3-r1.apk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.4/luci-theme-argon-2.4.4-r1.apk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.4/luci-app-argon-config-2.4.4-r1.apk
 apk add --allow-untrusted ./luci-theme-argon-2.4.3-r1.apk ./luci-app-argon-config-2.4.3-r1.apk
 ```
 

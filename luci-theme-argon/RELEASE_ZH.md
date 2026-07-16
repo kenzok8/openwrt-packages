@@ -1,5 +1,9 @@
 # Master 分支的更新日志
 
+## v2.4.4 [ 2026.07.16 ]
+
+- GitHub Release: https://github.com/jerrykuku/luci-theme-argon/releases/tag/v2.4.4
+- 详细更新内容请以 Release 页面为准。
 ## v2.4.3 [ 2025.07.22 ]
 
 - **重构**: 移除了对 jQuery 库的依赖，全面使用原生 JavaScript 替代
