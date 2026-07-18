@@ -1,5 +1,18 @@
 # Update log for master branch
 
+## v2.4.5 [ 2026.07.18 ]
+
+### What's Changed
+* 修复输入框显示不全 by @Rain-Maple in https://github.com/jerrykuku/luci-theme-argon/pull/684
+* fix(apk): avoid replacing uclient-fetch with wget-nossl by @jelipo in https://github.com/jerrykuku/luci-theme-argon/pull/685
+* fix(openclash): align CBI zebra row spacing by @Aethersailor in https://github.com/jerrykuku/luci-theme-argon/pull/686
+
+### New Contributors
+* @Rain-Maple made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/684
+* @jelipo made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/685
+* @Aethersailor made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/686
+
+**Full Changelog**: https://github.com/jerrykuku/luci-theme-argon/compare/v2.4.4...v2.4.5
 ## v2.4.4 [ 2026.07.16 ]
 
 ### What's Changed

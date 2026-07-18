@@ -74,7 +74,7 @@ Argon 是**一款干净整洁的 OpenWrt LuCI 主题**，
 
 ## 版本历史
 
-当前最新的版本为 v2.4.4 [点击这里][zh-cn-release-log]查看完整的版本历史日志.
+当前最新的版本为 v2.4.5 [点击这里][zh-cn-release-log]查看完整的版本历史日志.
 
 ## 快速开始
 
@@ -90,20 +90,20 @@ make -j1 V=s
 ### 安装 release 包 (`ipk`)
 
 ```bash
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.4/luci-theme-argon_2.4.4-1_all.ipk
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.4/luci-app-argon-config_2.4.4-1_all.ipk
-opkg install ./luci-theme-argon_2.4.3-1_all.ipk ./luci-app-argon-config_2.4.3-1_all.ipk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.5/luci-theme-argon_2.4.5-1_all.ipk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.5/luci-app-argon-config_2.4.5-1_all.ipk
+opkg install ./luci-theme-argon_2.4.5-1_all.ipk ./luci-app-argon-config_2.4.5-1_all.ipk
 ```
 
 ### 安装 release 包 (`apk`)
 
 ```bash
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.4/luci-theme-argon-2.4.4-r1.apk
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.4/luci-app-argon-config-2.4.4-r1.apk
-apk add --allow-untrusted ./luci-theme-argon-2.4.3-r1.apk ./luci-app-argon-config-2.4.3-r1.apk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.5/luci-theme-argon-2.4.5-r1.apk
+wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.5/luci-app-argon-config-2.4.5-r1.apk
+apk add --allow-untrusted ./luci-theme-argon-2.4.5-r1.apk ./luci-app-argon-config-2.4.5-r1.apk
 ```
 
-请将上面的 `v2.4.3` 和文件名替换为目标 [Release][release] 页面中的实际附件名称。
+请将上面的 `v2.4.5` 和文件名替换为目标 [Release][release] 页面中的实际附件名称。
 
 ## 屏幕截图
 

@@ -1,5 +1,9 @@
 # Master 分支的更新日志
 
+## v2.4.5 [ 2026.07.18 ]
+
+- GitHub Release: https://github.com/jerrykuku/luci-theme-argon/releases/tag/v2.4.5
+- 详细更新内容请以 Release 页面为准。
 ## v2.4.4 [ 2026.07.16 ]
 
 - GitHub Release: https://github.com/jerrykuku/luci-theme-argon/releases/tag/v2.4.4
