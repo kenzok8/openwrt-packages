@@ -1627,6 +1627,7 @@ footer>a {
 .alert.error,
 .alert-message.error {
   background-color: var(--warning);
+  color: var(--yellow);
 }
 
 .alert h4,
@@ -3843,6 +3844,7 @@ pre.command-output {
 
 [data-page="admin-system-system"] .control-group {
   gap: 0.875rem;
+  margin: 0.25rem 0;
 }
 
 [data-page="admin-system-system"] .cbi-dynlist {
@@ -4268,6 +4270,14 @@ pre.command-output {
 
 .cbi-section.fade-in .cbi-title {
   position: relative;
+}
+
+.cbi-section.fade-in .cbi-title .label {
+  cursor: pointer;
+}
+
+.cbi-section.fade-in .cbi-title .label:hover {
+  color: var(--light);
 }
 
 .cbi-section.fade-in .cbi-title>div:last-child {
