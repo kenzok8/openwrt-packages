@@ -4400,6 +4400,15 @@ pre.command-output {
   white-space: normal;
 }
 
+[data-page^="admin-services-openclash"] .tabs > #tool_label {
+  padding-top: 0;
+  padding-bottom: 0;
+  vertical-align: middle;
+}
+[data-page^="admin-services-openclash"] .tabs > #tool_label .tool_label_span {
+  display: inline-flex;
+  align-items: center;
+}
 [data-page^="admin-services-openclash"] .cbi-section-node-tabbed > .cbi-tabcontainer {
   gap: 0;
 }

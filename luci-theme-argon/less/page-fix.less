@@ -712,6 +712,18 @@
 
 // Services - OpenClash
 [data-page^="admin-services-openclash"] {
+    // Normalize the OpenClash config switcher and top-level tab bar height
+    .tabs>#tool_label {
+        padding-top: 0;
+        padding-bottom: 0;
+        vertical-align: middle;
+
+        .tool_label_span {
+            display: inline-flex;
+            align-items: center;
+        }
+    }
+
     .cbi-section-node-tabbed>.cbi-tabcontainer {
         gap: 0;
 
