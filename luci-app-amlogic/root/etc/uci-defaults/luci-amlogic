@@ -12,10 +12,28 @@ PLATFORM=$(grep -E '^PLATFORM=' /etc/flippy-openwrt-release 2>/dev/null | \
 SHOW_INSTALL=$(grep -E '^SHOW_INSTALL_MENU=' /etc/flippy-openwrt-release 2>/dev/null | \
                awk -F= '{print $2}' | tr -d '"' | xargs)
 
-case "$PLATFORM" in
-	*amlogic*) MENU_INSTALL=yes ;;
-	*)         [ "$SHOW_INSTALL" = "yes" ] && MENU_INSTALL=yes || MENU_INSTALL=no ;;
+# Detect whether the root fs is already on eMMC (mmcblk*p* with device/type == "MMC").
+# Mirrors root_on_internal_storage() in luci.amlogic: all other boot media
+# (TF/SD, NVMe, SATA, USB) keep the install menu visible.
+ROOT_PT=$(df / | tail -n1 | awk '{print $1}' | awk -F '/' '{print $3}')
+IS_INSTALLED=0
+case "$ROOT_PT" in
+	mmcblk*p*)
+		BASE_DEV="${ROOT_PT%p*}"
+		[ "$(cat /sys/block/${BASE_DEV}/device/type 2>/dev/null | xargs)" = "MMC" ] && IS_INSTALLED=1
+		;;
 esac
+
+case "$PLATFORM" in
+	*amlogic*|*allwinner*) CAN_INSTALL=yes ;;
+	*)         [ "$SHOW_INSTALL" = "yes" ] && CAN_INSTALL=yes || CAN_INSTALL=no ;;
+esac
+if [ "$CAN_INSTALL" = "yes" ] && [ "$IS_INSTALLED" = "0" ]; then
+	MENU_INSTALL=yes
+else
+	MENU_INSTALL=no
+fi
+
 case "$PLATFORM" in
 	*qemu*) MENU_ARMCPU=no ;;
 	*)      MENU_ARMCPU=yes ;;

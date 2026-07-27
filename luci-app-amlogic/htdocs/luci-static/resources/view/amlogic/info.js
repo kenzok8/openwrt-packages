@@ -57,22 +57,24 @@ return view.extend({
 	handleSaveApply: null,
 	handleReset:     null,
 
-	// On load, call sync_menu to update sidebar menu flags from runtime platform detection. If the install menu becomes
-    // visible but is not in the current nav, reload once to pick up the new menu (guarded by #menu-synced hash).
-    load: function () {
-		// Call sync_menu; if the install menu is now visible on the server but
-		// absent in the browser nav, reload once (guarded by #menu-synced hash).
+	// On load, call sync_menu to update sidebar menu flags from runtime platform detection. If the sidebar nav is out of
+	// sync with the server-side menu flags, reload once to pick up the new menu (guarded by #menu-synced hash).
+	load: function () {
+		// Call sync_menu; reload once when the sidebar nav disagrees with the
+		// server-side menu flags in either direction (guarded by #menu-synced hash).
 		const alreadyReloaded = window.location.hash === '#menu-synced';
 		const syncMenuPromise = callSyncMenu().then(function (res) {
-			if (alreadyReloaded) return;
-			if (res && res.show_install === 'yes') {
-				// Check if the sidebar navigation already contains the install link.
-				const installLink = document.querySelector('a[href*="amlogic/install"]');
-				if (!installLink) {
-					// Server-side index cache updated; reload to pick up new nav.
-					window.location.replace(window.location.pathname + '#menu-synced');
-					window.location.reload();
-				}
+			if (alreadyReloaded || !res) return;
+			// Check if the sidebar navigation already contains the install link.
+			const installLink = document.querySelector('a[href*="amlogic/install"]');
+			// Menu became visible on the server but is absent in the browser nav.
+			const needShow = (res.show_install === 'yes' && !installLink);
+			// Menu became hidden on the server but is still present in the browser nav.
+			const needHide = (res.show_install === 'no' && installLink);
+			if (needShow || needHide) {
+				// Server-side index cache updated; reload to pick up new nav.
+				window.location.replace(window.location.pathname + '#menu-synced');
+				window.location.reload();
 			}
 		}).catch(function () {});
 		return Promise.all([callAuthor(), syncMenuPromise]).then(function (r) { return r[0]; });
