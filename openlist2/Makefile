@@ -27,7 +27,7 @@ define Download/openlist-frontend
   HASH:=74f6487dd73c130ecd396a8d005dab815f6e838e0520447ed54910a0059cfbca
 endef
 
-PKG_BUILD_DEPENDS:=golang/host fuse
+PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 PKG_BUILD_FLAGS:=no-mips16
@@ -73,8 +73,12 @@ ifeq ($(ARCH),arm)
   endif
 endif
 
-ifneq ($(CONFIG_USE_MUSL),)
-  TARGET_CFLAGS += -D_LARGEFILE64_SOURCE
+# drop unused fuse
+GO_PKG_EXCLUDES:=internal/fuse
+
+# fix build for 32-bit architecture
+ifneq ($(CONFIG_ARCH_64BIT),y)
+  GO_PKG_EXCLUDES+=drivers/lark
 endif
 
 define Build/Prepare
