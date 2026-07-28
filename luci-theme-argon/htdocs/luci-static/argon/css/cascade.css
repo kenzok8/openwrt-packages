@@ -4276,10 +4276,6 @@ pre.command-output {
   cursor: pointer;
 }
 
-.cbi-section.fade-in .cbi-title .label:hover {
-  color: var(--light);
-}
-
 .cbi-section.fade-in .cbi-title>div:last-child {
   position: absolute;
   right: 1.25rem;
