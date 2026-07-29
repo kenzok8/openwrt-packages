@@ -73,14 +73,6 @@ ifeq ($(ARCH),arm)
   endif
 endif
 
-# drop unused fuse
-GO_PKG_EXCLUDES:=internal/fuse
-
-# fix build for 32-bit architecture
-ifneq ($(CONFIG_ARCH_64BIT),y)
-  GO_PKG_EXCLUDES+=drivers/lark
-endif
-
 define Build/Prepare
 	$(call Build/Prepare/Default)
 	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/public/dist -xzf $(DL_DIR)/openlist-frontend-dist-lite-v$(PKG_WEB_VERSION).tar.gz
