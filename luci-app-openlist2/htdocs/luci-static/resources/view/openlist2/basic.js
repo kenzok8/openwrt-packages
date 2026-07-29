@@ -113,6 +113,7 @@ return view.extend({
 		s.tab('s3', _('Object Storage'));
 		s.tab('ftp', _('FTP'));
 		s.tab('sftp', _('SFTP'));
+		s.tab('mcp', _('MCP'));
 
 		// init
 		o = s.taboption('basic', form.Flag, 'enabled', _('Enabled'));
@@ -295,13 +296,13 @@ return view.extend({
 			_('SSL key file path'));
 		o.rmempty = false;
 		o.depends('ssl', '1');
+		o = s.taboption('scheme', form.Flag, 'enable_h3', _('Enable HTTP/3'),
+			_('Enable HTTP/3 (QUIC) protocol.'));
+		o.rmempty = false;
+		o.depends('ssl', '1');
 
 		o = s.taboption('scheme', form.Flag, 'enable_h2c', _('Enable H2C'),
 			_('Enable HTTP/2 over cleartext (h2c).'));
-		o.rmempty = false;
-
-		o = s.taboption('scheme', form.Flag, 'enable_h3', _('Enable HTTP/3'),
-			_('Enable HTTP/3 (QUIC) protocol.'));
 		o.rmempty = false;
 
 		// tasks
