@@ -22,6 +22,10 @@ get_config() {
 	config_get max_connections $1 max_connections 0
 	config_get max_concurrency $1 max_concurrency 64
 	config_get tls_insecure_skip_verify $1 tls_insecure_skip_verify 1
+	config_get auto_memory_limit $1 auto_memory_limit 4
+	config_get min_free_memory $1 min_free_memory 0
+	config_get max_block_limit $1 max_block_limit 0
+	config_get proxy_address $1 proxy_address ""
 
 	# log
 	config_get log $1 log 1
@@ -36,6 +40,8 @@ get_config() {
 	config_get force_https $1 force_https 0
 	config_get ssl_cert $1 ssl_cert ""
 	config_get ssl_key $1 ssl_key ""
+	config_get enable_h2c $1 enable_h2c 0
+	config_get enable_h3 $1 enable_h3 0
 
 	# database
 	config_get database_type $1 database_type "sqlite3"
@@ -57,6 +63,13 @@ get_config() {
 	config_get upload_max_retry $1 upload_max_retry 0
 	config_get copy_workers $1 copy_workers 5
 	config_get copy_max_retry $1 copy_max_retry 2
+	config_get move_workers $1 move_workers 5
+	config_get move_max_retry $1 move_max_retry 2
+	config_get decompress_workers $1 decompress_workers 5
+	config_get decompress_max_retry $1 decompress_max_retry 2
+	config_get decompress_upload_workers $1 decompress_upload_workers 5
+	config_get decompress_upload_max_retry $1 decompress_upload_max_retry 2
+	config_get allow_retry_canceled $1 allow_retry_canceled 0
 
 	# cors
 	config_get cors_allow_origins $1 cors_allow_origins '*'
@@ -83,6 +96,9 @@ get_config() {
 	# sftp
 	config_get sftp $1 sftp 0
 	config_get sftp_port $1 sftp_port 5222
+
+	# mcp
+	config_get mcp $1 mcp 0
 
 	# init jwt_secret
 	[ -z "$jwt_secret" ] && jwt_secret=$(tr -cd "a-zA-Z0-9" < "/dev/urandom" | head -c16)
@@ -156,7 +172,7 @@ start_service() {
 	json_add_object "meilisearch"
 		json_add_string "host" "http://localhost:7700"
 		json_add_string "api_key" ""
-		json_add_string "index_prefix" ""
+		json_add_string "index" "openlist"
 	json_close_object
 
 	# scheme
@@ -169,6 +185,8 @@ start_service() {
 		json_add_string "key_file" "$ssl_key"
 		json_add_string "unix_file" ""
 		json_add_string "unix_file_perm" ""
+		json_add_boolean "enable_h2c" "$enable_h2c"
+		json_add_boolean "enable_h3" "$enable_h3"
 	json_close_object
 
 	json_add_string "temp_dir" "$temp_dir"
@@ -186,9 +204,13 @@ start_service() {
 	json_close_object
 
 	json_add_int "delayed_start" "$delayed_start"
+	json_add_int "auto_memory_limit" "$auto_memory_limit"
+	json_add_int "min_free_memory" "$min_free_memory"
+	json_add_int "max_block_limit" "$max_block_limit"
 	json_add_int "max_connections" "$max_connections"
 	json_add_int "max_concurrency" "$max_concurrency"
 	json_add_boolean "tls_insecure_skip_verify" "$tls_insecure_skip_verify"
+	json_add_string "proxy_address" "$proxy_address"
 
 	# tasks
 	json_add_object "tasks"
@@ -200,7 +222,7 @@ start_service() {
 			json_add_int "workers" "$transfer_workers"
 			json_add_int "max_retry" "$transfer_max_retry"
 		json_close_object
-			json_add_object "upload"
+		json_add_object "upload"
 			json_add_int "workers" "$upload_workers"
 			json_add_int "max_retry" "$upload_max_retry"
 		json_close_object
@@ -208,6 +230,19 @@ start_service() {
 			json_add_int "workers" "$copy_workers"
 			json_add_int "max_retry" "$copy_max_retry"
 		json_close_object
+		json_add_object "move"
+			json_add_int "workers" "$move_workers"
+			json_add_int "max_retry" "$move_max_retry"
+		json_close_object
+		json_add_object "decompress"
+			json_add_int "workers" "$decompress_workers"
+			json_add_int "max_retry" "$decompress_max_retry"
+		json_close_object
+		json_add_object "decompress_upload"
+			json_add_int "workers" "$decompress_upload_workers"
+			json_add_int "max_retry" "$decompress_upload_max_retry"
+		json_close_object
+		json_add_boolean "allow_retry_canceled" "$allow_retry_canceled"
 	json_close_object
 
 	# cors
@@ -248,6 +283,11 @@ start_service() {
 	json_add_object "sftp"
 		json_add_boolean "enable" "$sftp"
 		json_add_string "listen" ":$sftp_port"
+	json_close_object
+
+	# mcp
+	json_add_object "mcp"
+		json_add_boolean "enable" "$mcp"
 	json_close_object
 
 	json_dump > "$data_dir/config.json"
