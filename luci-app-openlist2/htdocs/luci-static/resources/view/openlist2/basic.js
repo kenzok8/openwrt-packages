@@ -181,6 +181,28 @@ return view.extend({
 		o.default = true;
 		o.rmempty = false;
 
+		o = s.taboption('global', form.Value, 'auto_memory_limit', _('Auto Memory Limit (GB)'),
+			_('Automatically set memory limit based on device memory size, in GB. 0 to disable.'));
+		o.datatype = 'uinteger';
+		o.default = '4';
+		o.rmempty = false;
+
+		o = s.taboption('global', form.Value, 'min_free_memory', _('Min Free Memory (MB)'),
+			_('Minimum free memory to keep, in MB. The program will try to free memory when below this value.'));
+		o.datatype = 'uinteger';
+		o.default = '0';
+		o.rmempty = false;
+
+		o = s.taboption('global', form.Value, 'max_block_limit', _('Max Block Limit'),
+			_('Maximum number of blocking goroutines. 0 is unlimited.'));
+		o.datatype = 'uinteger';
+		o.default = '0';
+		o.rmempty = false;
+
+		o = s.taboption('global', form.Value, 'proxy_address', _('Proxy Address'),
+			_('HTTP proxy address for outgoing requests, e.g. http://127.0.0.1:7890'));
+		o.default = '';
+
 		// Logs
 		o = s.taboption('log', form.Flag, 'log', _('Enable Logs'));
 		o.default = 1;
@@ -274,6 +296,14 @@ return view.extend({
 		o.rmempty = false;
 		o.depends('ssl', '1');
 
+		o = s.taboption('scheme', form.Flag, 'enable_h2c', _('Enable H2C'),
+			_('Enable HTTP/2 over cleartext (h2c).'));
+		o.rmempty = false;
+
+		o = s.taboption('scheme', form.Flag, 'enable_h3', _('Enable HTTP/3'),
+			_('Enable HTTP/3 (QUIC) protocol.'));
+		o.rmempty = false;
+
 		// tasks
 		o = s.taboption('tasks', form.Value, 'download_workers', _('Download Workers'));
 		o.datatype = 'uinteger';
@@ -313,6 +343,40 @@ return view.extend({
 		o = s.taboption('tasks', form.Value, 'copy_max_retry', _('Copy Max Retry'));
 		o.datatype = 'uinteger';
 		o.default = '2';
+		o.rmempty = false;
+
+		o = s.taboption('tasks', form.Value, 'move_workers', _('Move Workers'));
+		o.datatype = 'uinteger';
+		o.default = '5';
+		o.rmempty = false;
+
+		o = s.taboption('tasks', form.Value, 'move_max_retry', _('Move Max Retry'));
+		o.datatype = 'uinteger';
+		o.default = '2';
+		o.rmempty = false;
+
+		o = s.taboption('tasks', form.Value, 'decompress_workers', _('Decompress Workers'));
+		o.datatype = 'uinteger';
+		o.default = '5';
+		o.rmempty = false;
+
+		o = s.taboption('tasks', form.Value, 'decompress_max_retry', _('Decompress Max Retry'));
+		o.datatype = 'uinteger';
+		o.default = '2';
+		o.rmempty = false;
+
+		o = s.taboption('tasks', form.Value, 'decompress_upload_workers', _('Decompress Upload Workers'));
+		o.datatype = 'uinteger';
+		o.default = '5';
+		o.rmempty = false;
+
+		o = s.taboption('tasks', form.Value, 'decompress_upload_max_retry', _('Decompress Upload Max Retry'));
+		o.datatype = 'uinteger';
+		o.default = '2';
+		o.rmempty = false;
+
+		o = s.taboption('tasks', form.Flag, 'allow_retry_canceled', _('Allow Retry Canceled Tasks'),
+			_('Allow retrying tasks that have been canceled.'));
 		o.rmempty = false;
 
 		// cors
@@ -364,7 +428,7 @@ return view.extend({
 
 		o = s.taboption('ftp', form.Value, 'connection_timeout', _('Connection timeout (seconds)'));
 		o.datatype = 'uinteger';
-		o.default = '900';
+		o.default = '30';
 		o.rmempty = false;
 
 		o = s.taboption('ftp', form.Flag, 'disable_active_mode', _('Disable active transfer mode'));
@@ -386,6 +450,10 @@ return view.extend({
 		o = s.taboption('sftp', form.Value, 'sftp_port', _('SFTP Port'));
 		o.datatype = 'and(port,min(1))';
 		o.default = 5222;
+		o.rmempty = false;
+
+		// mcp
+		o = s.taboption('mcp', form.Flag, 'mcp', _('Enabled MCP'), _('Enable MCP (Model Context Protocol) server.'));
 		o.rmempty = false;
 
 		return m.render();
