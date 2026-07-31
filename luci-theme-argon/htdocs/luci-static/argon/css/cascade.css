@@ -1881,6 +1881,15 @@ body:not([data-page="admin-dashboard"]) #cbi-wireless>#wifi_assoclist_table>.tr:
   padding: 1.1em 1.25rem;
 }
 
+@media (prefers-color-scheme: dark) {
+  body:not([data-page="admin-dashboard"]) tr>td,
+  body:not([data-page="admin-dashboard"]) tr>th,
+  body:not([data-page="admin-dashboard"]) .tr>.td,
+  body:not([data-page="admin-dashboard"]) .tr>.th {
+    border-top: thin solid #444 !important;
+  }
+}
+
 #cbi-wireless .td,
 .table[width="100%"]>.tr:first-child>.td,
 [data-page="admin-network-diagnostics"] .tr>.td,

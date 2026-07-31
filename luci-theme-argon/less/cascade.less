@@ -487,6 +487,17 @@ body:not([data-page="admin-dashboard"]) {
   }
 }
 
+@media (prefers-color-scheme: dark) {
+  body:not([data-page="admin-dashboard"]) {
+    tr>td,
+    tr>th,
+    .tr>.td,
+    .tr>.th {
+      border-top: thin solid #444 !important;
+    }
+  }
+}
+
 #cbi-wireless .td,
 .table[width="100%"]>.tr:first-child>.td,
 [data-page="admin-network-diagnostics"] .tr>.td,
