@@ -40,7 +40,6 @@
   --gray-dark: #32325d;
   --light: #ced4da;
   --lighter: #e9ecef;
-
   --success: #2dce89;
   --info: #11cdef;
   --warning: #fb6340;
@@ -274,6 +273,31 @@ select[multiple="multiple"] {
 
 .alert-message .btn {
   padding: .3rem .6rem;
+}
+
+/* LuCI's ui.js dismisses notification banners by adding the .fade-out
+   class and removing the banner node once a transitionend event fires
+   on it. Without a transitioned opacity on .alert-message the Dismiss
+   button has no visible effect and the banner stays open forever. */
+.alert-message {
+  transition: opacity .4s ease;
+
+  &.fade-out {
+    opacity: 0;
+  }
+
+  &.fade-in {
+    animation: alert-message-fade-in .4s ease;
+  }
+}
+
+@keyframes alert-message-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 #maincontent > .alert-message {

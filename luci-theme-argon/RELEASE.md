@@ -1,5 +1,15 @@
 # Update log for master branch
 
+## v2.4.6 [ 2026.07.31 ]
+
+### What's Changed
+* 修改警告提示对比度弱、系统设置按钮组间距，新增新版隐藏按钮样式 by @sydnkj in https://github.com/jerrykuku/luci-theme-argon/pull/688
+* fix(openclash): normalize config switcher tab height by @Aethersailor in https://github.com/jerrykuku/luci-theme-argon/pull/689
+* fix(pr) 修复#688，仅修改了编译产物，没有修改less源代码的问题 by @sydnkj in https://github.com/jerrykuku/luci-theme-argon/pull/692
+* fix(issues) 解决#691提到的暗黑主题白色线问题 by @sydnkj in https://github.com/jerrykuku/luci-theme-argon/pull/693
+
+
+**Full Changelog**: https://github.com/jerrykuku/luci-theme-argon/compare/v2.4.5...v2.4.6
 ## v2.4.5 [ 2026.07.18 ]
 
 ### What's Changed
