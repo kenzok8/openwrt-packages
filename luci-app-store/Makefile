@@ -8,7 +8,6 @@ include $(TOPDIR)/rules.mk
 LUCI_TITLE:=LuCI based ipk/apk store
 LUCI_DESCRIPTION:=luci-app-store is a ipk/apk store developed by LinkEase team
 LUCI_DEPENDS:=+curl +tar +libuci-lua +mount-utils +luci-lib-taskd
-LUCI_DEPENDS+=$(if $(CONFIG_USE_APK),+apk +luci-compat,+opkg)
 
 LUCI_EXTRA_DEPENDS:=luci-lib-taskd (>=1.0.19)
 LUCI_PKGARCH:=all
