@@ -738,6 +738,37 @@
         }
     }
 
+    // Keep non-tabbed OpenClash forms away from their card edges.
+    &[data-page="admin-services-openclash-config"],
+    &[data-page="admin-services-openclash-config-subscribe"],
+    &[data-page^="admin-services-openclash-custom-dns-edit"],
+    &[data-page^="admin-services-openclash-config-subscribe-edit"],
+    &[data-page^="admin-services-openclash-groups-config"],
+    &[data-page^="admin-services-openclash-proxy-provider-config"],
+    &[data-page^="admin-services-openclash-servers-config"],
+    &[data-page^="admin-services-openclash-other-file-edit"] {
+        .cbi-map>.cbi-section>.cbi-section-node:not(.cbi-section-node-tabbed) {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+    }
+
+    // Keep the only OpenClash MultiValue field usable across LuCI renderers.
+    &[data-page^="admin-services-openclash-config-subscribe-edit"] {
+        [id^="cbi-openclash-"][id$="-de_ex_keyword"] {
+            >.cbi-value-field {
+                >div:not([class])>span.cbi-checkbox {
+                    display: inline-flex;
+                    vertical-align: middle;
+                }
+
+                >.cbi-dropdown[multiple] {
+                    max-width: 100%;
+                }
+            }
+        }
+    }
+
     .oc {
         --bg-light: #fff;
         --bg-gray: #fff;
@@ -847,6 +878,18 @@
         }
     }
 
+    // Preserve the spacing and borders owned by OpenClash's custom tables.
+    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li {
+        margin: 0 !important;
+        border-right: 1px solid var(--border-light, #e2e8f0) !important;
+    }
+
+    [id^="tab-header-openclash-"]+[id="tab-content"] {
+        .td.cbi-section-table-cell>p {
+            padding: 0;
+        }
+    }
+
     #tab-content .dom {
         padding: 0 1rem 1rem 1rem;
     }
@@ -891,6 +934,34 @@
     select#CORE_VERSION,
     select#RELEASE_BRANCH {
         width: auto;
+    }
+
+    @media screen and (max-width: 600px) {
+        &[data-page^="admin-services-openclash-config-subscribe-edit"] {
+            [id^="cbi-openclash-"][id$="-de_ex_keyword"] {
+                display: flex;
+                flex-direction: column;
+
+                >label.cbi-value-title {
+                    display: block;
+                    float: none;
+                    width: 100%;
+                    padding-right: 0;
+                    text-align: left;
+                }
+
+                >.cbi-value-field {
+                    width: 100%;
+                    min-width: 0;
+
+                    >.cbi-dropdown[multiple] {
+                        width: 100%;
+                        min-width: 0;
+                        max-width: 100%;
+                    }
+                }
+            }
+        }
     }
 }
 

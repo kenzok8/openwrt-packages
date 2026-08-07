@@ -3768,6 +3768,24 @@ pre.command-output {
   padding-top: 0.4375rem;
   padding-bottom: 0.4375rem;
 }
+[data-page^="admin-services-openclash"][data-page="admin-services-openclash-config"] .cbi-map > .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-services-openclash"][data-page="admin-services-openclash-config-subscribe"] .cbi-map > .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-services-openclash"][data-page^="admin-services-openclash-custom-dns-edit"] .cbi-map > .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-services-openclash"][data-page^="admin-services-openclash-config-subscribe-edit"] .cbi-map > .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-services-openclash"][data-page^="admin-services-openclash-groups-config"] .cbi-map > .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-services-openclash"][data-page^="admin-services-openclash-proxy-provider-config"] .cbi-map > .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-services-openclash"][data-page^="admin-services-openclash-servers-config"] .cbi-map > .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-services-openclash"][data-page^="admin-services-openclash-other-file-edit"] .cbi-map > .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed) {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+[data-page^="admin-services-openclash"][data-page^="admin-services-openclash-config-subscribe-edit"] [id^="cbi-openclash-"][id$="-de_ex_keyword"] > .cbi-value-field > div:not([class]) > span.cbi-checkbox {
+  display: inline-flex;
+  vertical-align: middle;
+}
+[data-page^="admin-services-openclash"][data-page^="admin-services-openclash-config-subscribe-edit"] [id^="cbi-openclash-"][id$="-de_ex_keyword"] > .cbi-value-field > .cbi-dropdown[multiple] {
+  max-width: 100%;
+}
 [data-page^="admin-services-openclash"] .oc {
   --bg-light: #fff;
   --bg-gray: #fff;
@@ -3854,6 +3872,13 @@ pre.command-output {
 [data-page^="admin-services-openclash"] .cbi-tabmenu > li:last-child {
   margin-right: 0 !important;
 }
+[data-page^="admin-services-openclash"] [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li {
+  margin: 0 !important;
+  border-right: 1px solid var(--border-light, #e2e8f0) !important;
+}
+[data-page^="admin-services-openclash"] [id^="tab-header-openclash-"] + [id="tab-content"] .td.cbi-section-table-cell > p {
+  padding: 0;
+}
 [data-page^="admin-services-openclash"] #tab-content .dom {
   padding: 0 1rem 1rem 1rem;
 }
@@ -3891,6 +3916,28 @@ pre.command-output {
 [data-page^="admin-services-openclash"] select#CORE_VERSION,
 [data-page^="admin-services-openclash"] select#RELEASE_BRANCH {
   width: auto;
+}
+@media screen and (max-width: 600px) {
+  [data-page^="admin-services-openclash"][data-page^="admin-services-openclash-config-subscribe-edit"] [id^="cbi-openclash-"][id$="-de_ex_keyword"] {
+    display: flex;
+    flex-direction: column;
+  }
+  [data-page^="admin-services-openclash"][data-page^="admin-services-openclash-config-subscribe-edit"] [id^="cbi-openclash-"][id$="-de_ex_keyword"] > label.cbi-value-title {
+    display: block;
+    float: none;
+    width: 100%;
+    padding-right: 0;
+    text-align: left;
+  }
+  [data-page^="admin-services-openclash"][data-page^="admin-services-openclash-config-subscribe-edit"] [id^="cbi-openclash-"][id$="-de_ex_keyword"] > .cbi-value-field {
+    width: 100%;
+    min-width: 0;
+  }
+  [data-page^="admin-services-openclash"][data-page^="admin-services-openclash-config-subscribe-edit"] [id^="cbi-openclash-"][id$="-de_ex_keyword"] > .cbi-value-field > .cbi-dropdown[multiple] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
 }
 [data-page="admin-vpn-passwall"] h4 {
   background: transparent;

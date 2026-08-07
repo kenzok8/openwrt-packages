@@ -1089,6 +1089,20 @@ input,
         border-color: #3c3c3c;
     }
 
+    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li {
+        border-right-color: #374151 !important;
+    }
+
+    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li:not(.cbi-tab):hover,
+    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li:not(.cbi-tab):focus {
+        border-right-color: #3b82f6 !important;
+        border-bottom: 1px solid #3b82f6 !important;
+    }
+
+    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li[class~="cbi-tab"] {
+        border-bottom: 1px solid #374151 !important;
+    }
+
     #diag-rc-output > pre,
     #dns-rc-output > pre {
         color: #ccc;
