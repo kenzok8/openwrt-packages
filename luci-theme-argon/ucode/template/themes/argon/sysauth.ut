@@ -25,9 +25,16 @@
 {%
 	import * as fs from 'fs';
 	import { cursor } from 'uci';
-	import { rand } from 'math';
 
 	let cfg = cursor();
+	// Per-request pseudo-random state for selecting local backgrounds.
+	let lcgState = (+time()) % 2147483648;
+
+	function randomIndex(limit) {
+		lcgState = (lcgState * 1103515245 + 12345) % 2147483648;
+
+		return lcgState % limit;
+	}
 
 	//Fetch Local Background Media
 
@@ -67,7 +74,7 @@
 
 		let background = fetchMedia("/www" + themeDir, themeDir);
 		if ( length(background) > 0 ) {
-			let currentBg = background[(rand() % length(background))];
+			let currentBg = background[randomIndex(length(background))];
 			bgUrl = currentBg.url;
 			if (index(videoTypes, " " + currentBg.type + " ") != -1) {
 				backgroundType = "Video";
