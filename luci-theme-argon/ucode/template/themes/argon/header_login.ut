@@ -49,7 +49,7 @@
 <html lang="{{ dispatcher.lang }}">
 
 <head>
-	{% include("themes/" + theme + "/head_meta") %}
+	{% include("themes/" + theme + "/head_meta", { hostname: hostname, node: node, bar_color: bar_color, media: media }) %}
 
 	<link rel="stylesheet" href="{{ media }}/css/cascade.css{# ?v=PKG_VERSION #}">
 	<style title="text/css">
