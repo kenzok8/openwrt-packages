@@ -210,6 +210,14 @@ case $MYDEVICE_NAME in
     fi
     SOC="ht2"
     ;;
+"XYLink XR3528")
+    if [ -n "${CURRENT_FDTFILE}" ]; then
+        MYDTB_FDTFILE="${CURRENT_FDTFILE}"
+    else
+        MYDTB_FDTFILE="rk3528-xylink-xr3528.dtb"
+    fi
+    SOC="xylink-xr3528"
+    ;;
 "Radxa E20C")
     if [ -n "${CURRENT_FDTFILE}" ]; then
         MYDTB_FDTFILE="${CURRENT_FDTFILE}"
