@@ -1,3 +1,4 @@
+# Internet Service Providers Hijacking
 DOMAIN-SUFFIX,17gouwuba.com
 DOMAIN-SUFFIX,186078.com
 DOMAIN-SUFFIX,189key.com
@@ -119,6 +120,7 @@ IP-CIDR,39.107.15.115/32,no-resolve
 IP-CIDR,47.89.59.182/32,no-resolve
 IP-CIDR,103.49.209.27/32,no-resolve
 IP-CIDR,123.56.152.96/32,no-resolve
+# > ChinaTelecom
 IP-CIDR,61.160.200.223/32,no-resolve
 IP-CIDR,61.160.200.242/32,no-resolve
 IP-CIDR,61.160.200.252/32,no-resolve
@@ -137,14 +139,18 @@ IP-CIDR,222.186.61.91/32,no-resolve
 IP-CIDR,222.186.61.95/32,no-resolve
 IP-CIDR,222.186.61.96/32,no-resolve
 IP-CIDR,222.186.61.97/32,no-resolve
+# > ChinaUnicom
 IP-CIDR,106.75.231.48/32,no-resolve
 IP-CIDR,119.4.249.166/32,no-resolve
 IP-CIDR,220.196.52.141/32,no-resolve
 IP-CIDR,221.6.4.148/32,no-resolve
+# > ChinaMobile
 IP-CIDR,114.247.28.96/32,no-resolve
 IP-CIDR,120.240.95.37/32,no-resolve
 IP-CIDR,221.179.131.72/32,no-resolve
 IP-CIDR,221.179.140.145/32,no-resolve
+# > Dr.Peng
+# IP-CIDR,10.72.25.0/24,no-resolve
 IP-CIDR,115.182.16.79/32,no-resolve
 IP-CIDR,118.144.88.126/32,no-resolve
 IP-CIDR,118.144.88.215/32,no-resolve
@@ -157,12 +163,23 @@ IP-CIDR,211.161.101.106/32,no-resolve
 IP-CIDR,211.161.101.110/32,no-resolve
 IP-CIDR,220.115.251.25/32,no-resolve
 IP-CIDR,222.73.156.235/32,no-resolve
+
+# Malware
+# > Huawei AspiegelBot
 IP-CIDR,114.119.160.0/21,no-resolve
+# > KuaiZip
+# https://zhuanlan.zhihu.com/p/39534279
 DOMAIN-SUFFIX,kuaizip.com
+# > MacKeeper
+# https://www.lizhi.io/blog/40002904
 DOMAIN-SUFFIX,mackeeper.com
 DOMAIN-SUFFIX,zryydi.com
+# > Adobe Flash China Special Edition
+# https://www.zhihu.com/question/281163698/answer/441388130
 DOMAIN-SUFFIX,flash.cn
 DOMAIN,geo2.adobe.com
+# > C&J Marketing
+# https://www.zhihu.com/question/46746200
 DOMAIN-SUFFIX,4009997658.com
 DOMAIN-SUFFIX,abbyychina.com
 DOMAIN-SUFFIX,alienskins.cn
@@ -212,7 +229,6 @@ DOMAIN-SUFFIX,mycleanmymac.com
 DOMAIN-SUFFIX,nicelabel.cc
 DOMAIN-SUFFIX,ntfsformac.cc
 DOMAIN-SUFFIX,ntfsformac.cn
-DOMAIN-SUFFIX,officesoftcn.com
 DOMAIN-SUFFIX,overturechina.com
 DOMAIN-SUFFIX,passwordrecovery.cn
 DOMAIN-SUFFIX,pdfexpert.cc

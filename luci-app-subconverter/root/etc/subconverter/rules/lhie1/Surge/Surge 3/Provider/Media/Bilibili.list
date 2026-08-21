@@ -1,3 +1,4 @@
+# > Bilibili
 USER-AGENT,bili*
 DOMAIN-SUFFIX,acg.tv
 DOMAIN-SUFFIX,acgvideo.com
@@ -9,6 +10,6 @@ DOMAIN-SUFFIX,biliapi.com
 DOMAIN-SUFFIX,bilivideo.com
 DOMAIN-SUFFIX,hdslb.com
 DOMAIN,upos-hz-mirrorakam.akamaized.net
-// Hong Kong, Macau, Taiwan
+// Hong Kong,Macau,Taiwan
 USER-AGENT,bili-inter*
 DOMAIN,apiintl.biliapi.net

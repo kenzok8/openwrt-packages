@@ -8,6 +8,9 @@ function index()
   subconverter.leaf = true
   subconverter.dependent = true
   
-  prefini = entry({"admin", "services", "subconverter", "prefini"}, template("subconverter/prefini"), _("pref.ini"), 2)
+  subweb = entry({"admin", "services", "subconverter", "subweb"}, template("subconverter/subweb"), _("Subweb"), 2)
+  subweb.dependent = true
+  
+  prefini = entry({"admin", "services", "subconverter", "prefini"}, template("subconverter/prefini"), _("pref.ini"), 3)
   prefini.dependent = true
 end

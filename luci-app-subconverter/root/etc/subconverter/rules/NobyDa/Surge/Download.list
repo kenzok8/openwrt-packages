@@ -1,3 +1,4 @@
+# Mac Download
 PROCESS-NAME,aria2c
 PROCESS-NAME,fdm
 PROCESS-NAME,Folx
@@ -9,6 +10,8 @@ PROCESS-NAME,WebTorrent
 PROCESS-NAME,WebTorrent Helper
 PROCESS-NAME,DownloadService
 PROCESS-NAME,Weiyun
+
+# bt
 DOMAIN-KEYWORD,aria2
 DOMAIN-KEYWORD,xunlei
 DOMAIN-KEYWORD,yunpan
