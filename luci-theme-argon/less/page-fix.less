@@ -717,7 +717,308 @@
 
 // Services - OpenClash
 [data-page^="admin-services-openclash"] {
-    // Normalize the OpenClash config switcher and top-level tab bar height
+    // One adapter contract for OpenClash's current component set.
+    // Semantic colours remain owned by OpenClash; primary interactions and
+    // neutral surfaces follow Argon's runtime-configurable palette.
+    --oc-accent: var(--primary);
+    --oc-accent-hover: var(--primary);
+    --oc-accent-strong: var(--primary);
+    --oc-accent-a5: transparent;
+    --oc-accent-a10: transparent;
+    --oc-accent-a20: transparent;
+    --oc-accent-a30: transparent;
+    --oc-accent-a40: transparent;
+    --oc-accent-a50: transparent;
+    --oc-accent-a60: transparent;
+    --oc-surface: #fff;
+    --oc-surface-muted: #f6f9fc;
+    --oc-control-bg: #fff;
+    --oc-border: #dee2e6;
+    --oc-text: #525f7f;
+    --oc-text-muted: #8898aa;
+    --oc-neutral: #8898aa;
+    --oc-scrollbar: #f6f9fc;
+
+    @supports (color: color-mix(in srgb, red, blue)) {
+        --oc-accent-hover: color-mix(in srgb, var(--oc-accent) 88%, black);
+        --oc-accent-strong: color-mix(in srgb, var(--oc-accent) 78%, black);
+        --oc-accent-a5: color-mix(in srgb, var(--oc-accent) 5%, transparent);
+        --oc-accent-a10: color-mix(in srgb, var(--oc-accent) 10%, transparent);
+        --oc-accent-a20: color-mix(in srgb, var(--oc-accent) 20%, transparent);
+        --oc-accent-a30: color-mix(in srgb, var(--oc-accent) 30%, transparent);
+        --oc-accent-a40: color-mix(in srgb, var(--oc-accent) 40%, transparent);
+        --oc-accent-a50: color-mix(in srgb, var(--oc-accent) 50%, transparent);
+        --oc-accent-a60: color-mix(in srgb, var(--oc-accent) 60%, transparent);
+    }
+
+    .oc {
+        --bg-white: var(--oc-surface) !important;
+        --bg-light: var(--oc-surface) !important;
+        --bg-gray: var(--oc-surface) !important;
+        --bg-dark: var(--oc-surface) !important;
+        --hover-bg: var(--oc-surface-muted) !important;
+        --editor-bg: var(--oc-control-bg) !important;
+        --card-bg-start: var(--oc-surface) !important;
+        --border-color: var(--oc-border) !important;
+        --border-light: var(--oc-border) !important;
+        --border-dark: var(--oc-border) !important;
+        --tab-border: var(--oc-border) !important;
+        --divider: var(--oc-border) !important;
+        --text-primary: var(--oc-text) !important;
+        --text-secondary: var(--oc-text-muted) !important;
+        --text-title: var(--oc-text) !important;
+        --primary-color: var(--oc-accent) !important;
+        --primary-bright: var(--oc-accent) !important;
+        --btn-primary-hover: var(--oc-accent-hover) !important;
+        --announcement-end: var(--oc-accent-strong) !important;
+        --card-btn-bg: var(--oc-accent) !important;
+        --card-accent: var(--oc-accent) !important;
+        --primary-a5: var(--oc-accent-a5) !important;
+        --primary-a10: var(--oc-accent-a10) !important;
+        --primary-a20: var(--oc-accent-a20) !important;
+        --primary-a30: var(--oc-accent-a30) !important;
+        --primary-a40: var(--oc-accent-a40) !important;
+        --primary-a50: var(--oc-accent-a50) !important;
+        --primary-a60: var(--oc-accent-a60) !important;
+        --radio-hover-bg: var(--oc-accent-a10) !important;
+        --tab-hover-dark-bg: var(--oc-accent-a10) !important;
+        --scrollbar-thumb: var(--oc-neutral) !important;
+        --scrollbar-thumb-hover: var(--oc-text-muted) !important;
+        border-radius: 8px;
+
+        .developer-container,
+        .subscription-info-container {
+            background: transparent !important;
+        }
+
+        .announcement-card {
+            width: auto !important;
+            margin: 10px !important;
+        }
+
+        .config-upload-content {
+            background: var(--oc-surface) !important;
+        }
+    }
+
+    // Standard LuCI controls
+    .cbi-button.cbi-button-add,
+    .cbi-button.cbi-button-apply,
+    .cbi-button.cbi-button-edit,
+    .cbi-button.cbi-button-link,
+    .cbi-button.cbi-button-positive,
+    .cbi-button.cbi-button-reload,
+    .cbi-button.cbi-button-save,
+    .cbi-button.cbi-button-action,
+    input.cbi-input-apply,
+    input.cbi-input-reload,
+    input.cbi-input-save,
+    .btn.primary {
+        color: #fff !important;
+        border-color: var(--oc-accent) !important;
+        background: var(--oc-accent) !important;
+    }
+
+    .cbi-button.cbi-button-remove,
+    .cbi-button.cbi-button-negative,
+    input.cbi-input-remove {
+        color: #fff !important;
+        border-color: var(--danger) !important;
+        background: var(--danger) !important;
+    }
+
+    .cbi-button.cbi-button-reset {
+        color: #fff !important;
+        border-color: var(--warning) !important;
+        background: var(--warning) !important;
+    }
+
+    .cbi-button.cbi-button-find,
+    input.cbi-input-find {
+        color: #fff !important;
+        border-color: var(--oc-neutral) !important;
+        background-color: var(--oc-neutral) !important;
+    }
+
+    // Sorting controls are compact icon buttons. A neutral outline keeps the
+    // bundled gray arrow legible on light surfaces without implying disabled.
+    #cbi-openclash .cbi-button-up,
+    #cbi-openclash .cbi-button-down {
+        border-color: var(--oc-neutral) !important;
+        background-color: var(--oc-control-bg) !important;
+    }
+
+    #cbi-openclash .cbi-button-up:not(:disabled):hover,
+    #cbi-openclash .cbi-button-up:not(:disabled):focus,
+    #cbi-openclash .cbi-button-down:not(:disabled):hover,
+    #cbi-openclash .cbi-button-down:not(:disabled):focus {
+        border-color: var(--oc-accent) !important;
+        background-color: var(--oc-accent-a10) !important;
+        box-shadow: 0 0 0 2px var(--oc-accent-a10) !important;
+    }
+
+    input[type="checkbox"] {
+        border-color: var(--oc-accent) !important;
+
+        &:checked {
+            border-color: var(--oc-accent) !important;
+            background-color: var(--oc-accent) !important;
+        }
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="search"],
+    input[type="url"],
+    select,
+    textarea,
+    .cbi-dropdown,
+    .oc .oc-input-textarea,
+    .oc .sub-info-url-form-textarea,
+    .oc .select-class,
+    .oc .custom-option-input {
+        color: var(--oc-text) !important;
+        border-color: var(--oc-border) !important;
+        background-color: var(--oc-control-bg) !important;
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="number"]:focus,
+    input[type="search"]:focus,
+    input[type="url"]:focus,
+    select:focus,
+    textarea:focus,
+    .cbi-dropdown:focus,
+    .cbi-dropdown[open],
+    .oc .oc-input-textarea:focus,
+    .oc .sub-info-url-form-textarea:focus,
+    .oc .select-class:focus,
+    .oc .custom-option-input:focus {
+        border-color: var(--oc-accent) !important;
+        box-shadow: 0 0 0 2px var(--oc-accent-a10) !important;
+        outline: 0 !important;
+    }
+
+    .CodeMirror,
+    .oc .cm-editor {
+        color: var(--oc-text) !important;
+        border: 1px solid var(--oc-border) !important;
+        background: var(--oc-control-bg) !important;
+    }
+
+    .CodeMirror-gutters,
+    .oc .cm-gutters {
+        border-color: var(--oc-border) !important;
+        background: var(--oc-surface-muted) !important;
+    }
+
+    .CodeMirror.CodeMirror-focused,
+    .oc .cm-editor.cm-focused {
+        border-color: var(--oc-accent) !important;
+        box-shadow: 0 0 0 2px var(--oc-accent-a10) !important;
+        outline: 0 !important;
+    }
+
+    // Both tab classes are current component variants, not version branches.
+    .oc .radio-button input[type="radio"]:checked+label,
+    .oc #tab-header>ul.cbi-tabmenu>li.cbi-tab,
+    .oc #tab-header>ul.oc-tabmenu>li.oc-tab {
+        color: #fff !important;
+        border-color: var(--oc-accent) !important;
+        background: var(--oc-accent) !important;
+    }
+
+    .oc .radio-button input[type="radio"]:checked+label {
+        box-shadow: 0 1px 2px var(--oc-accent-a10) !important;
+    }
+
+    .oc .radio-button label:hover,
+    .oc #tab-header>ul.cbi-tabmenu>li:not(.cbi-tab):hover,
+    .oc #tab-header>ul.cbi-tabmenu>li:not(.cbi-tab):focus,
+    .oc #tab-header>ul.oc-tabmenu>li:not(.oc-tab):hover,
+    .oc #tab-header>ul.oc-tabmenu>li:not(.oc-tab):focus {
+        color: var(--oc-accent) !important;
+        border-color: var(--oc-accent) !important;
+        background: var(--oc-accent-a10) !important;
+    }
+
+    .oc #tab-header>ul.cbi-tabmenu>li:not(.cbi-tab):hover>a,
+    .oc #tab-header>ul.cbi-tabmenu>li:not(.cbi-tab):focus>a,
+    .oc #tab-header>ul.oc-tabmenu>li:not(.oc-tab):hover>a,
+    .oc #tab-header>ul.oc-tabmenu>li:not(.oc-tab):focus>a {
+        color: var(--oc-accent) !important;
+    }
+
+    .oc .card .general .btn:hover,
+    .oc #addCustomOption:hover {
+        background: var(--oc-accent-hover) !important;
+    }
+
+    .oc .help-link:hover {
+        background: var(--oc-accent-a10) !important;
+    }
+
+    .oc .select-option[data-value="custom"] {
+        border-color: var(--oc-accent-a20) !important;
+        background: var(--oc-accent-a10) !important;
+
+        &:hover {
+            background: var(--oc-accent-a20) !important;
+        }
+    }
+
+    .oc .announcement-banner,
+    .oc .oix-announcement {
+        background: linear-gradient(275deg, var(--oc-accent), var(--oc-accent-strong)) !important;
+    }
+
+    .oc .announcement-banner::before,
+    .oc .oix-announcement::before {
+        background: var(--oc-accent-strong) !important;
+    }
+
+    // The literal fill is a JavaScript state marker; change presentation only.
+    .oc #mode-icon rect[fill="#2F88FF"] {
+        fill: var(--oc-accent) !important;
+    }
+
+    // Argon cards use colour and shadow for hover feedback, not layout motion.
+    .oc .sub-card:hover,
+    .oc .myip-ip-item:hover,
+    .oc .myip-check-item:hover,
+    .oc .myip-card-item:hover,
+    .oc .card:hover,
+    .oc .oix-header:hover,
+    .oc .oix-card:hover,
+    .oc .config-upload-btn-large:hover {
+        transform: none !important;
+    }
+
+    // Legacy help text is primary emphasis; success and error remain semantic.
+    b[style*="color:green"],
+    b[style*="color: green"],
+    b[color="green"] {
+        color: var(--oc-accent) !important;
+    }
+
+    font[style*="color:green"],
+    font[style*="color: green"],
+    font[color="green"] {
+        color: var(--success) !important;
+    }
+
+    b[style*="color:red"],
+    b[style*="color: red"],
+    b[color="red"],
+    font[style*="color:red"],
+    font[style*="color: red"],
+    font[color="red"] {
+        color: var(--danger) !important;
+    }
+
+    // Normalize the config switcher and top-level navigation height.
     .tabs>#tool_label {
         padding-top: 0;
         padding-bottom: 0;
@@ -738,7 +1039,6 @@
         }
     }
 
-    // Keep non-tabbed OpenClash forms away from their card edges.
     &[data-page="admin-services-openclash-config"],
     &[data-page="admin-services-openclash-config-subscribe"],
     &[data-page^="admin-services-openclash-custom-dns-edit"],
@@ -753,7 +1053,6 @@
         }
     }
 
-    // Keep the only OpenClash MultiValue field usable across LuCI renderers.
     &[data-page^="admin-services-openclash-config-subscribe-edit"] {
         [id^="cbi-openclash-"][id$="-de_ex_keyword"] {
             >.cbi-value-field {
@@ -766,21 +1065,6 @@
                     max-width: 100%;
                 }
             }
-        }
-    }
-
-    .oc {
-        --bg-light: #fff;
-        --bg-gray: #fff;
-        border-radius: 8px;
-
-        .developer-container {
-            background: transparent;
-        }
-
-        .announcement-card {
-            width: auto!important;
-            margin: 10px!important;
         }
     }
 
@@ -815,15 +1099,6 @@
 
     .sub-card .card-title {
         margin-top: 5px;
-    }
-
-    .oc .sub-card:hover {
-      transform: none;
-    }
-
-    .oc .myip-ip-item:hover,
-    .oc .myip-check-item:hover {
-      transform: none;
     }
 
     .oc .main-cards-container {
@@ -861,14 +1136,6 @@
         min-width: auto !important;
     }
 
-    .oc .config-upload-content {
-        background: #fff !important;
-    }
-
-    .oc .subscription-info-container {
-        background: transparent !important;
-    }
-
     .cbi-tabmenu>li {
         border-right: none !important;
         margin: 0 0.4rem 0 0 !important;
@@ -878,10 +1145,55 @@
         }
     }
 
-    // Preserve the spacing and borders owned by OpenClash's custom tables.
+    // The custom table renderer carries release-owned inline colours. Keep its
+    // layout, but make colour and row rhythm match ordinary Argon pages.
+    #cbi-openclash .cbi-section-table-row,
+    #cbi-openclash .cbi-rowstyle-1,
+    #cbi-openclash .cbi-rowstyle-2,
+    #cbi-openclash .cbi-tabcontainer>.cbi-value:nth-of-type(2n),
+    #cbi-openclash table>tbody>tr:nth-of-type(2n) {
+        background: var(--oc-surface) !important;
+    }
+
+    #cbi-openclash [id^="tab-header-openclash-"] {
+        border-bottom-color: var(--oc-border) !important;
+        background: var(--oc-surface) !important;
+
+        >ul.cbi-tabmenu {
+            background: var(--oc-surface) !important;
+
+            >li {
+                color: var(--oc-text-muted) !important;
+                border-color: var(--oc-border) !important;
+                background: var(--oc-surface) !important;
+
+                &.cbi-tab {
+                    color: #fff !important;
+                    border-color: var(--oc-accent) !important;
+                    background: var(--oc-accent) !important;
+
+                    >a {
+                        color: #fff !important;
+                    }
+                }
+
+                &:not(.cbi-tab):hover,
+                &:not(.cbi-tab):focus {
+                    color: var(--oc-accent) !important;
+                    border-color: var(--oc-accent) !important;
+                    background: var(--oc-accent-a10) !important;
+
+                    >a {
+                        color: var(--oc-accent) !important;
+                    }
+                }
+            }
+        }
+    }
+
     [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li {
         margin: 0 !important;
-        border-right: 1px solid var(--border-light, #e2e8f0) !important;
+        border-right: 1px solid var(--oc-border) !important;
     }
 
     [id^="tab-header-openclash-"]+[id="tab-content"] {
@@ -892,6 +1204,16 @@
 
     #tab-content .dom {
         padding: 0 1rem 1rem 1rem;
+    }
+
+    #cbi-openclash-dns_servers .cbi-section-table-row>
+    .cbi-section-table-cell:last-child {
+        min-width: 7.25rem;
+        white-space: nowrap;
+
+        >.cbi-button {
+            margin: 0 0.125rem !important;
+        }
     }
 
     .cbi-input-file {
@@ -907,9 +1229,9 @@
     #diag-rc-output>pre,
     #dns-rc-output>pre {
         font-size: 0.875rem;
-        color: #8898aa;
-        border: 1px solid #dee2e6;
-        background-color: transparent;
+        color: var(--oc-text-muted);
+        border: 1px solid var(--oc-border);
+        background-color: var(--oc-control-bg);
         border-radius: 0.25rem;
         font-family: 'Google Sans' !important;
         box-shadow: none;
@@ -919,7 +1241,8 @@
         font-family: 'Google Sans' !important;
     }
 
-    .CodeMirror {
+    .CodeMirror,
+    .cm-editor {
         font-size: inherit;
         font-family: 'Google Sans' !important;
     }
@@ -927,7 +1250,6 @@
     .cbi-button-up,
     .cbi-button-down {
         padding: 0.8rem 1.5rem;
-        background-color: #f1f1f1;
         font-size: 0;
     }
 

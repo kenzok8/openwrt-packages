@@ -1064,51 +1064,15 @@ input,
 }
 
 [data-page^="admin-services-openclash"] {
-    .oc {
-        --bg-light: #1e1e1e !important;
-        --bg-gray: #1e1e1e !important;
-
-        .developer-container {
-            background: transparent !important;
-        }
-
-        .config-upload-content{
-          background: #1e1e1e !important;
-        }
-    }
-
-    .cbi-tabmenu::-webkit-scrollbar-thumb {
-        background-color: #5b5b5b;
-    }
-
-    .cbi-tabmenu::-webkit-scrollbar-track {
-        background-color: rgba(60, 60, 60, 0.75);
-    }
-
-    #tab {
-        border-color: #3c3c3c;
-    }
-
-    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li {
-        border-right-color: #374151 !important;
-    }
-
-    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li:not(.cbi-tab):hover,
-    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li:not(.cbi-tab):focus {
-        border-right-color: #3b82f6 !important;
-        border-bottom: 1px solid #3b82f6 !important;
-    }
-
-    [id^="tab-header-openclash-"]>ul.cbi-tabmenu>li[class~="cbi-tab"] {
-        border-bottom: 1px solid #374151 !important;
-    }
-
-    #diag-rc-output > pre,
-    #dns-rc-output > pre {
-        color: #ccc;
-        border: 1px solid #3c3c3c !important;
-        background-color: #1e1e1e;
-    }
+    --oc-accent: var(--dark-primary);
+    --oc-surface: #1e1e1e;
+    --oc-surface-muted: #252526;
+    --oc-control-bg: #1e1e1e;
+    --oc-border: #3c3c3c;
+    --oc-text: #ccc;
+    --oc-text-muted: #a1a1aa;
+    --oc-neutral: #5b5b5b;
+    --oc-scrollbar: #5b5b5b;
 
     img[src$="arrow-clockwise-light.svg"],
     img[src$="wrench-light.svg"],

@@ -3752,6 +3752,267 @@ pre.command-output {
 [data-page="admin-services-npc"] div.cbi-value.nowrap {
   white-space: normal;
 }
+[data-page^="admin-services-openclash"] {
+  --oc-accent: var(--primary);
+  --oc-accent-hover: var(--primary);
+  --oc-accent-strong: var(--primary);
+  --oc-accent-a5: transparent;
+  --oc-accent-a10: transparent;
+  --oc-accent-a20: transparent;
+  --oc-accent-a30: transparent;
+  --oc-accent-a40: transparent;
+  --oc-accent-a50: transparent;
+  --oc-accent-a60: transparent;
+  --oc-surface: #fff;
+  --oc-surface-muted: #f6f9fc;
+  --oc-control-bg: #fff;
+  --oc-border: #dee2e6;
+  --oc-text: #525f7f;
+  --oc-text-muted: #8898aa;
+  --oc-neutral: #8898aa;
+  --oc-scrollbar: #f6f9fc;
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  [data-page^="admin-services-openclash"] {
+    --oc-accent-hover: color-mix(in srgb, var(--oc-accent) 88%, black);
+    --oc-accent-strong: color-mix(in srgb, var(--oc-accent) 78%, black);
+    --oc-accent-a5: color-mix(in srgb, var(--oc-accent) 5%, transparent);
+    --oc-accent-a10: color-mix(in srgb, var(--oc-accent) 10%, transparent);
+    --oc-accent-a20: color-mix(in srgb, var(--oc-accent) 20%, transparent);
+    --oc-accent-a30: color-mix(in srgb, var(--oc-accent) 30%, transparent);
+    --oc-accent-a40: color-mix(in srgb, var(--oc-accent) 40%, transparent);
+    --oc-accent-a50: color-mix(in srgb, var(--oc-accent) 50%, transparent);
+    --oc-accent-a60: color-mix(in srgb, var(--oc-accent) 60%, transparent);
+  }
+}
+[data-page^="admin-services-openclash"] .oc {
+  --bg-white: var(--oc-surface) !important;
+  --bg-light: var(--oc-surface) !important;
+  --bg-gray: var(--oc-surface) !important;
+  --bg-dark: var(--oc-surface) !important;
+  --hover-bg: var(--oc-surface-muted) !important;
+  --editor-bg: var(--oc-control-bg) !important;
+  --card-bg-start: var(--oc-surface) !important;
+  --border-color: var(--oc-border) !important;
+  --border-light: var(--oc-border) !important;
+  --border-dark: var(--oc-border) !important;
+  --tab-border: var(--oc-border) !important;
+  --divider: var(--oc-border) !important;
+  --text-primary: var(--oc-text) !important;
+  --text-secondary: var(--oc-text-muted) !important;
+  --text-title: var(--oc-text) !important;
+  --primary-color: var(--oc-accent) !important;
+  --primary-bright: var(--oc-accent) !important;
+  --btn-primary-hover: var(--oc-accent-hover) !important;
+  --announcement-end: var(--oc-accent-strong) !important;
+  --card-btn-bg: var(--oc-accent) !important;
+  --card-accent: var(--oc-accent) !important;
+  --primary-a5: var(--oc-accent-a5) !important;
+  --primary-a10: var(--oc-accent-a10) !important;
+  --primary-a20: var(--oc-accent-a20) !important;
+  --primary-a30: var(--oc-accent-a30) !important;
+  --primary-a40: var(--oc-accent-a40) !important;
+  --primary-a50: var(--oc-accent-a50) !important;
+  --primary-a60: var(--oc-accent-a60) !important;
+  --radio-hover-bg: var(--oc-accent-a10) !important;
+  --tab-hover-dark-bg: var(--oc-accent-a10) !important;
+  --scrollbar-thumb: var(--oc-neutral) !important;
+  --scrollbar-thumb-hover: var(--oc-text-muted) !important;
+  border-radius: 8px;
+}
+[data-page^="admin-services-openclash"] .oc .developer-container,
+[data-page^="admin-services-openclash"] .oc .subscription-info-container {
+  background: transparent !important;
+}
+[data-page^="admin-services-openclash"] .oc .announcement-card {
+  width: auto !important;
+  margin: 10px !important;
+}
+[data-page^="admin-services-openclash"] .oc .config-upload-content {
+  background: var(--oc-surface) !important;
+}
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-add,
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-apply,
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-edit,
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-link,
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-positive,
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-reload,
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-save,
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-action,
+[data-page^="admin-services-openclash"] input.cbi-input-apply,
+[data-page^="admin-services-openclash"] input.cbi-input-reload,
+[data-page^="admin-services-openclash"] input.cbi-input-save,
+[data-page^="admin-services-openclash"] .btn.primary {
+  color: #fff !important;
+  border-color: var(--oc-accent) !important;
+  background: var(--oc-accent) !important;
+}
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-remove,
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-negative,
+[data-page^="admin-services-openclash"] input.cbi-input-remove {
+  color: #fff !important;
+  border-color: var(--danger) !important;
+  background: var(--danger) !important;
+}
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-reset {
+  color: #fff !important;
+  border-color: var(--warning) !important;
+  background: var(--warning) !important;
+}
+[data-page^="admin-services-openclash"] .cbi-button.cbi-button-find,
+[data-page^="admin-services-openclash"] input.cbi-input-find {
+  color: #fff !important;
+  border-color: var(--oc-neutral) !important;
+  background-color: var(--oc-neutral) !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-button-up,
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-button-down {
+  border-color: var(--oc-neutral) !important;
+  background-color: var(--oc-control-bg) !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-button-up:not(:disabled):hover,
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-button-up:not(:disabled):focus,
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-button-down:not(:disabled):hover,
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-button-down:not(:disabled):focus {
+  border-color: var(--oc-accent) !important;
+  background-color: var(--oc-accent-a10) !important;
+  box-shadow: 0 0 0 2px var(--oc-accent-a10) !important;
+}
+[data-page^="admin-services-openclash"] input[type="checkbox"] {
+  border-color: var(--oc-accent) !important;
+}
+[data-page^="admin-services-openclash"] input[type="checkbox"]:checked {
+  border-color: var(--oc-accent) !important;
+  background-color: var(--oc-accent) !important;
+}
+[data-page^="admin-services-openclash"] input[type="text"],
+[data-page^="admin-services-openclash"] input[type="password"],
+[data-page^="admin-services-openclash"] input[type="number"],
+[data-page^="admin-services-openclash"] input[type="search"],
+[data-page^="admin-services-openclash"] input[type="url"],
+[data-page^="admin-services-openclash"] select,
+[data-page^="admin-services-openclash"] textarea,
+[data-page^="admin-services-openclash"] .cbi-dropdown,
+[data-page^="admin-services-openclash"] .oc .oc-input-textarea,
+[data-page^="admin-services-openclash"] .oc .sub-info-url-form-textarea,
+[data-page^="admin-services-openclash"] .oc .select-class,
+[data-page^="admin-services-openclash"] .oc .custom-option-input {
+  color: var(--oc-text) !important;
+  border-color: var(--oc-border) !important;
+  background-color: var(--oc-control-bg) !important;
+}
+[data-page^="admin-services-openclash"] input[type="text"]:focus,
+[data-page^="admin-services-openclash"] input[type="password"]:focus,
+[data-page^="admin-services-openclash"] input[type="number"]:focus,
+[data-page^="admin-services-openclash"] input[type="search"]:focus,
+[data-page^="admin-services-openclash"] input[type="url"]:focus,
+[data-page^="admin-services-openclash"] select:focus,
+[data-page^="admin-services-openclash"] textarea:focus,
+[data-page^="admin-services-openclash"] .cbi-dropdown:focus,
+[data-page^="admin-services-openclash"] .cbi-dropdown[open],
+[data-page^="admin-services-openclash"] .oc .oc-input-textarea:focus,
+[data-page^="admin-services-openclash"] .oc .sub-info-url-form-textarea:focus,
+[data-page^="admin-services-openclash"] .oc .select-class:focus,
+[data-page^="admin-services-openclash"] .oc .custom-option-input:focus {
+  border-color: var(--oc-accent) !important;
+  box-shadow: 0 0 0 2px var(--oc-accent-a10) !important;
+  outline: 0 !important;
+}
+[data-page^="admin-services-openclash"] .CodeMirror,
+[data-page^="admin-services-openclash"] .oc .cm-editor {
+  color: var(--oc-text) !important;
+  border: 1px solid var(--oc-border) !important;
+  background: var(--oc-control-bg) !important;
+}
+[data-page^="admin-services-openclash"] .CodeMirror-gutters,
+[data-page^="admin-services-openclash"] .oc .cm-gutters {
+  border-color: var(--oc-border) !important;
+  background: var(--oc-surface-muted) !important;
+}
+[data-page^="admin-services-openclash"] .CodeMirror.CodeMirror-focused,
+[data-page^="admin-services-openclash"] .oc .cm-editor.cm-focused {
+  border-color: var(--oc-accent) !important;
+  box-shadow: 0 0 0 2px var(--oc-accent-a10) !important;
+  outline: 0 !important;
+}
+[data-page^="admin-services-openclash"] .oc .radio-button input[type="radio"]:checked + label,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.cbi-tabmenu > li.cbi-tab,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.oc-tabmenu > li.oc-tab {
+  color: #fff !important;
+  border-color: var(--oc-accent) !important;
+  background: var(--oc-accent) !important;
+}
+[data-page^="admin-services-openclash"] .oc .radio-button input[type="radio"]:checked + label {
+  box-shadow: 0 1px 2px var(--oc-accent-a10) !important;
+}
+[data-page^="admin-services-openclash"] .oc .radio-button label:hover,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.cbi-tabmenu > li:not(.cbi-tab):hover,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.cbi-tabmenu > li:not(.cbi-tab):focus,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.oc-tabmenu > li:not(.oc-tab):hover,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.oc-tabmenu > li:not(.oc-tab):focus {
+  color: var(--oc-accent) !important;
+  border-color: var(--oc-accent) !important;
+  background: var(--oc-accent-a10) !important;
+}
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.cbi-tabmenu > li:not(.cbi-tab):hover > a,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.cbi-tabmenu > li:not(.cbi-tab):focus > a,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.oc-tabmenu > li:not(.oc-tab):hover > a,
+[data-page^="admin-services-openclash"] .oc #tab-header > ul.oc-tabmenu > li:not(.oc-tab):focus > a {
+  color: var(--oc-accent) !important;
+}
+[data-page^="admin-services-openclash"] .oc .card .general .btn:hover,
+[data-page^="admin-services-openclash"] .oc #addCustomOption:hover {
+  background: var(--oc-accent-hover) !important;
+}
+[data-page^="admin-services-openclash"] .oc .help-link:hover {
+  background: var(--oc-accent-a10) !important;
+}
+[data-page^="admin-services-openclash"] .oc .select-option[data-value="custom"] {
+  border-color: var(--oc-accent-a20) !important;
+  background: var(--oc-accent-a10) !important;
+}
+[data-page^="admin-services-openclash"] .oc .select-option[data-value="custom"]:hover {
+  background: var(--oc-accent-a20) !important;
+}
+[data-page^="admin-services-openclash"] .oc .announcement-banner,
+[data-page^="admin-services-openclash"] .oc .oix-announcement {
+  background: linear-gradient(275deg, var(--oc-accent), var(--oc-accent-strong)) !important;
+}
+[data-page^="admin-services-openclash"] .oc .announcement-banner::before,
+[data-page^="admin-services-openclash"] .oc .oix-announcement::before {
+  background: var(--oc-accent-strong) !important;
+}
+[data-page^="admin-services-openclash"] .oc #mode-icon rect[fill="#2F88FF"] {
+  fill: var(--oc-accent) !important;
+}
+[data-page^="admin-services-openclash"] .oc .sub-card:hover,
+[data-page^="admin-services-openclash"] .oc .myip-ip-item:hover,
+[data-page^="admin-services-openclash"] .oc .myip-check-item:hover,
+[data-page^="admin-services-openclash"] .oc .myip-card-item:hover,
+[data-page^="admin-services-openclash"] .oc .card:hover,
+[data-page^="admin-services-openclash"] .oc .oix-header:hover,
+[data-page^="admin-services-openclash"] .oc .oix-card:hover,
+[data-page^="admin-services-openclash"] .oc .config-upload-btn-large:hover {
+  transform: none !important;
+}
+[data-page^="admin-services-openclash"] b[style*="color:green"],
+[data-page^="admin-services-openclash"] b[style*="color: green"],
+[data-page^="admin-services-openclash"] b[color="green"] {
+  color: var(--oc-accent) !important;
+}
+[data-page^="admin-services-openclash"] font[style*="color:green"],
+[data-page^="admin-services-openclash"] font[style*="color: green"],
+[data-page^="admin-services-openclash"] font[color="green"] {
+  color: var(--success) !important;
+}
+[data-page^="admin-services-openclash"] b[style*="color:red"],
+[data-page^="admin-services-openclash"] b[style*="color: red"],
+[data-page^="admin-services-openclash"] b[color="red"],
+[data-page^="admin-services-openclash"] font[style*="color:red"],
+[data-page^="admin-services-openclash"] font[style*="color: red"],
+[data-page^="admin-services-openclash"] font[color="red"] {
+  color: var(--danger) !important;
+}
 [data-page^="admin-services-openclash"] .tabs > #tool_label {
   padding-top: 0;
   padding-bottom: 0;
@@ -3786,18 +4047,6 @@ pre.command-output {
 [data-page^="admin-services-openclash"][data-page^="admin-services-openclash-config-subscribe-edit"] [id^="cbi-openclash-"][id$="-de_ex_keyword"] > .cbi-value-field > .cbi-dropdown[multiple] {
   max-width: 100%;
 }
-[data-page^="admin-services-openclash"] .oc {
-  --bg-light: #fff;
-  --bg-gray: #fff;
-  border-radius: 8px;
-}
-[data-page^="admin-services-openclash"] .oc .developer-container {
-  background: transparent;
-}
-[data-page^="admin-services-openclash"] .oc .announcement-card {
-  width: auto!important;
-  margin: 10px!important;
-}
 [data-page^="admin-services-openclash"] #cbi-openclash > fieldset {
   background: none;
   padding: 0;
@@ -3824,13 +4073,6 @@ pre.command-output {
 }
 [data-page^="admin-services-openclash"] .sub-card .card-title {
   margin-top: 5px;
-}
-[data-page^="admin-services-openclash"] .oc .sub-card:hover {
-  transform: none;
-}
-[data-page^="admin-services-openclash"] .oc .myip-ip-item:hover,
-[data-page^="admin-services-openclash"] .oc .myip-check-item:hover {
-  transform: none;
 }
 [data-page^="admin-services-openclash"] .oc .main-cards-container {
   margin: 0 !important;
@@ -3859,12 +4101,6 @@ pre.command-output {
   flex: 0 !important;
   min-width: auto !important;
 }
-[data-page^="admin-services-openclash"] .oc .config-upload-content {
-  background: #fff !important;
-}
-[data-page^="admin-services-openclash"] .oc .subscription-info-container {
-  background: transparent !important;
-}
 [data-page^="admin-services-openclash"] .cbi-tabmenu > li {
   border-right: none !important;
   margin: 0 0.4rem 0 0 !important;
@@ -3872,15 +4108,59 @@ pre.command-output {
 [data-page^="admin-services-openclash"] .cbi-tabmenu > li:last-child {
   margin-right: 0 !important;
 }
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-section-table-row,
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-rowstyle-1,
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-rowstyle-2,
+[data-page^="admin-services-openclash"] #cbi-openclash .cbi-tabcontainer > .cbi-value:nth-of-type(2n),
+[data-page^="admin-services-openclash"] #cbi-openclash table > tbody > tr:nth-of-type(2n) {
+  background: var(--oc-surface) !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] {
+  border-bottom-color: var(--oc-border) !important;
+  background: var(--oc-surface) !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] > ul.cbi-tabmenu {
+  background: var(--oc-surface) !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li {
+  color: var(--oc-text-muted) !important;
+  border-color: var(--oc-border) !important;
+  background: var(--oc-surface) !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li.cbi-tab {
+  color: #fff !important;
+  border-color: var(--oc-accent) !important;
+  background: var(--oc-accent) !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li.cbi-tab > a {
+  color: #fff !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li:not(.cbi-tab):hover,
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li:not(.cbi-tab):focus {
+  color: var(--oc-accent) !important;
+  border-color: var(--oc-accent) !important;
+  background: var(--oc-accent-a10) !important;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li:not(.cbi-tab):hover > a,
+[data-page^="admin-services-openclash"] #cbi-openclash [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li:not(.cbi-tab):focus > a {
+  color: var(--oc-accent) !important;
+}
 [data-page^="admin-services-openclash"] [id^="tab-header-openclash-"] > ul.cbi-tabmenu > li {
   margin: 0 !important;
-  border-right: 1px solid var(--border-light, #e2e8f0) !important;
+  border-right: 1px solid var(--oc-border) !important;
 }
 [data-page^="admin-services-openclash"] [id^="tab-header-openclash-"] + [id="tab-content"] .td.cbi-section-table-cell > p {
   padding: 0;
 }
 [data-page^="admin-services-openclash"] #tab-content .dom {
   padding: 0 1rem 1rem 1rem;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash-dns_servers .cbi-section-table-row > .cbi-section-table-cell:last-child {
+  min-width: 7.25rem;
+  white-space: nowrap;
+}
+[data-page^="admin-services-openclash"] #cbi-openclash-dns_servers .cbi-section-table-row > .cbi-section-table-cell:last-child > .cbi-button {
+  margin: 0 0.125rem !important;
 }
 [data-page^="admin-services-openclash"] .cbi-input-file {
   padding: 0.2813rem;
@@ -3893,9 +4173,9 @@ pre.command-output {
 [data-page^="admin-services-openclash"] #diag-rc-output > pre,
 [data-page^="admin-services-openclash"] #dns-rc-output > pre {
   font-size: 0.875rem;
-  color: #8898aa;
-  border: 1px solid #dee2e6;
-  background-color: transparent;
+  color: var(--oc-text-muted);
+  border: 1px solid var(--oc-border);
+  background-color: var(--oc-control-bg);
   border-radius: 0.25rem;
   font-family: 'Google Sans' !important;
   box-shadow: none;
@@ -3903,14 +4183,14 @@ pre.command-output {
 [data-page^="admin-services-openclash"] #debug-rc-output > textarea {
   font-family: 'Google Sans' !important;
 }
-[data-page^="admin-services-openclash"] .CodeMirror {
+[data-page^="admin-services-openclash"] .CodeMirror,
+[data-page^="admin-services-openclash"] .cm-editor {
   font-size: inherit;
   font-family: 'Google Sans' !important;
 }
 [data-page^="admin-services-openclash"] .cbi-button-up,
 [data-page^="admin-services-openclash"] .cbi-button-down {
   padding: 0.8rem 1.5rem;
-  background-color: #f1f1f1;
   font-size: 0;
 }
 [data-page^="admin-services-openclash"] select#CORE_VERSION,

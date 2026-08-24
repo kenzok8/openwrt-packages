@@ -1,5 +1,16 @@
 # Update log for master branch
 
+## v2.4.7 [ 2026.08.24 ]
+
+### What's Changed
+* fix(openclash): correct form spacing and custom table styles by @Aethersailor in https://github.com/jerrykuku/luci-theme-argon/pull/698
+* fixed: Issue where browser tabs were displayed incorrectly. by @smallprogram in https://github.com/jerrykuku/luci-theme-argon/pull/700
+* refactor(openclash): unify Argon theme integration by @Aethersailor in https://github.com/jerrykuku/luci-theme-argon/pull/702
+
+### New Contributors
+* @smallprogram made their first contribution in https://github.com/jerrykuku/luci-theme-argon/pull/700
+
+**Full Changelog**: https://github.com/jerrykuku/luci-theme-argon/compare/v2.4.6...v2.4.7
 ## v2.4.6 [ 2026.07.31 ]
 
 ### What's Changed
