@@ -199,8 +199,7 @@ get_online_version() {
     local pkg="$2"
     if $USE_APK; then
         apk --cache-dir $LISTS_DIR --cache-max-age 0 --repositories-file /dev/null --repository "$index" update >/dev/null 2>&1
-        local ver=$(apk --cache-dir $LISTS_DIR --cache-max-age 0 --repositories-file /dev/null --repository "$index" query --available --fields version "$pkg" 2>/dev/null | grep -Fm1 'Version: ' | sed 's/^Version: //')
-        echo "${ver:-0.2.0-r1}"
+        apk --cache-dir $LISTS_DIR --cache-max-age 0 --repositories-file /dev/null --repository "$index" query --available --fields version "$pkg" 2>/dev/null | grep -Fm1 'Version: ' | sed 's/^Version: //'
     else
         curl --connect-timeout 2 --max-time 5 -s "$index" | gunzip | grep -FA10 "Package: $pkg" | grep -Fm1 'Version: ' | sed 's/^Version: //'
     fi
