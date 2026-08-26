@@ -435,6 +435,7 @@ fi
 unrun() {
     local id="$1"
     [ -s "/usr/share/istore/run-records/$id.txt" ] || { echo "record not found: $id" >&2; return 1; }
+    mkdir -p /tmp/is-root/tmp
     echo "The following packages will be removed:"
     tail -n +2 "/usr/share/istore/run-records/$id.txt" > "/tmp/is-root/tmp/to_unrun_$id.txt"
     cat "/tmp/is-root/tmp/to_unrun_$id.txt"
