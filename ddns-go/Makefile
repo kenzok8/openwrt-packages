@@ -1,8 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-only
 #
-# Copyright (C) 2021-2023  sirpdboy  <herboy2008@gmail.com>
-# 
-# This is free software, licensed under the Apache License, Version 2.0 .
+# Copyright (C) 2021-2026 sirpdboy  <herboy2008@gmail.com>
 #
 
 include $(TOPDIR)/rules.mk
@@ -44,14 +42,18 @@ define Package/ddns-go/description
   support Alidns Dnspod Cloudflare Hicloud Callback Baiducloud porkbun GoDaddy Google Domains.
 endef
 
+define Package/ddns-go/conffiles
+/etc/config/ddns-go
+/etc/ddns-go/ddns-go-config.yaml
+endef
+
 define Package/ddns-go/install
 	$(call GoPackage/Package/Install/Bin,$(1))
 
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(CURDIR)/file/ddns-go.init $(1)/etc/init.d/ddns-go
-
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) $(CURDIR)/file/luci-ddns-go.uci-default $(1)/etc/uci-defaults/luci-ddns-go
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_BIN) $(CURDIR)/files/ddns-go.init $(1)/etc/init.d/ddns-go
+	$(INSTALL_CONF) $(CURDIR)/files/ddns-go.conf $(1)/etc/config/ddns-go
 endef
 
 $(eval $(call GoBinPackage,ddns-go))
