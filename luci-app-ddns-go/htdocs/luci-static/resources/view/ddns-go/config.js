@@ -316,10 +316,6 @@ return view.extend({
         o.default = o.disabled;
         o.rmempty = false;
 
-        o = s.option(form.Flag, 'logger', _('Enable logging'));
-        o.default = o.enabled;
-        o.rmempty = false;
-
         o = s.option(form.Value, 'port', _('Listen port'));
         o.default = '9876';
         o.rmempty = false;
@@ -355,7 +351,7 @@ return view.extend({
         o.rmempty = false;
 
         o = s.option(form.Value, 'delay', _('Delayed Start (seconds)'));
-        o.default = '0';
+        o.default = '60';
     
         o = s.option(form.Button, '_newpassword', _('Reset account password'));
         o.inputtitle = _('Reset');
