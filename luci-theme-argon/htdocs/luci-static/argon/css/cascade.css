@@ -2044,6 +2044,12 @@ td > table > tbody > tr > td,
 .cbi-section-node > [id^="cbi-config-"]:last-child {
   padding-bottom: 1rem;
 }
+.cbi-section-node > [id^="cbi-argon-"]:first-child {
+  padding-top: 1rem;
+}
+.cbi-section-node > [id^="cbi-argon-"]:last-child {
+  padding-bottom: 1rem;
+}
 .cbi-section .cbi-section-remove:nth-of-type(2n),
 .container > .cbi-section .cbi-section-node:nth-of-type(2n) {
   background-color: #f9f9f9;
