@@ -854,10 +854,6 @@ select[multiple="multiple"] {
   box-shadow: 0 3px 2px rgba(233, 236, 239, 0.05);
   transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-.login-page .login-container .login-form .form-login .input-group input:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
 .login-page .login-container .login-form .form-login .input-group input:focus + .border {
   transform: scaleX(1);
 }
