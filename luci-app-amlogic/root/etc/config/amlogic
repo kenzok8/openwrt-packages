@@ -1,8 +1,8 @@
 
 config amlogic 'config'
 	option enable '1'
-	option amlogic_firmware_repo 'https://github.com/breakingbadboy/OpenWrt'
-	option amlogic_firmware_tag 'ARMv8'
+	option amlogic_firmware_repo 'https://github.com/ophub/amlogic-s9xxx-openwrt'
+	option amlogic_firmware_tag 'OpenWrt_lede_'
 	option amlogic_firmware_suffix '.img.gz'
 	option amlogic_kernel_path 'https://github.com/ophub/kernel'
 	option amlogic_kernel_tags ''

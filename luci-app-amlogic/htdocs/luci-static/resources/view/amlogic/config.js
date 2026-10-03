@@ -54,14 +54,14 @@ return view.extend({
 		const repo = o.option(form.Value, 'amlogic_firmware_repo',
 			_('OpenWrt download repository:'),
 			_('Set the OpenWrt files download repository on github.com in [Online Download Update].'));
-		repo.default = 'https://github.com/breakingbadboy/OpenWrt';
+		repo.default = 'https://github.com/ophub/amlogic-s9xxx-openwrt';
 		repo.rmempty = false;
 
 		// 3. Tags keyword
 		const tag = o.option(form.Value, 'amlogic_firmware_tag',
 			_('OpenWrt download tags keyword:'),
 			_('Set the OpenWrt files download tags keyword for github.com in [Online Download Update].'));
-		tag.default = 'ARMv8';
+		tag.default = 'OpenWrt_lede_';
 		tag.rmempty = false;
 
 		// 4. File suffix
@@ -76,15 +76,14 @@ return view.extend({
 		const kpath = o.option(form.ListValue, 'amlogic_kernel_path',
 			_('Kernel download repository:'),
 			_('Set the kernel files download repository on github.com in [Online Download Update].'));
-		kpath.value('https://github.com/breakingbadboy/OpenWrt');
 		kpath.value('https://github.com/ophub/kernel');
-		kpath.default = 'https://github.com/breakingbadboy/OpenWrt';
+		kpath.default = 'https://github.com/ophub/kernel';
 		kpath.rmempty = false;
 
 		// 6. Kernel tags; available tags depend on the selected kernel repo.
 		// Default is auto-derived from kernel_release suffixes (-rk3588/-rk35xx).
 		const currentKpath = uci.get('amlogic', 'config', 'amlogic_kernel_path') ||
-		                     'https://github.com/breakingbadboy/OpenWrt';
+		                     'https://github.com/ophub/kernel';
 		const knownTags = {
 			kernel_rk3588: 'kernel_rk3588 [Rockchip RK3588 Kernel]',
 			kernel_rk35xx: 'kernel_rk35xx [Rockchip RK35xx Kernel]',
