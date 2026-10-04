@@ -25,7 +25,7 @@
   - 上传管理面板：实时进度、速率显示、传输取消及同名覆盖/重命名策略
   - 远程 URL 离线下载
 - **归档与压缩**
-  - 支持格式：`zip`、`tar`、`tar.gz`、`tar.xz`、`tar.zst`、`ipk`、`apk`
+  - 支持格式：`zip`、`gz`、`tar`、`tar.gz`、`tar.xz`、`tar.zst`、`ipk`、`apk`、`img`、`ext4`、`squashfs`
   - ZIP 归档支持 WinZip AES-256 加密与解密
 - **多媒体与文档预览**
   - 图片浏览器：支持平移、无级缩放与前后切换
@@ -55,7 +55,7 @@ make menuconfig
 make package/quickfile/luci-app-quickfile/compile V=s
 ```
 
-> **⚠**：本项目使用 OpenWrt 原生 Token 验证，Web 服务依赖 `nginx` 反向代理，非开发人员不建议自行编译使用。
+**⚠** 本项目使用 OpenWrt 原生 Token 验证，Web 服务依赖 `nginx` 反向代理，非开发人员不建议自行编译使用。
 
 ---
 
