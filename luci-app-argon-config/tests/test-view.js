@@ -13,8 +13,13 @@ String.prototype.format = function(...values) {
 String.format = format => format;
 
 function fixture(options = {}) {
-	const state = { notifications: [], reloads: 0, cleanups: [], events: [], ...options };
-	const E = (tag, attrs, children) => ({ tag, attrs, children });
+	const state = { notifications: [], reloads: 0, cleanups: [], events: [], nodes: {}, ...options };
+	const E = (tag, attrs, children) => {
+		const node = { tag, attrs, children };
+		if (attrs && attrs.id)
+			state.nodes[attrs.id] = node;
+		return node;
+	};
 	const ui = {
 		changes: { apply() { state.events.push('apply'); } },
 		addNotification(title, node) { state.notifications.push(node.attrs); },
@@ -32,7 +37,15 @@ function fixture(options = {}) {
 		}
 		section() {
 			const section = { map: this, option: (type, name) => {
-				const option = { map: this, name, value() {} };
+				const option = {
+					map: this, name, choices: {},
+					value(key, label) { this.choices[key] = label; },
+					cbid(section) { return 'cbid.argon.' + section + '.' + name; },
+					super(method, args) {
+						assert.equal(method, 'renderWidget');
+						return { value: args[2], disabled: this.map.readonly };
+					}
+				};
 				this.options.push(option);
 				return option;
 			} };
@@ -55,10 +68,11 @@ function fixture(options = {}) {
 		list() { return state.listError ? Promise.reject(state.listError) : Promise.resolve([{ name: 'background.jpg', size: 10, mtime: 0 }]); },
 		remove(filename) { state.cleanups.push(filename); return Promise.resolve(); }
 	};
-	const L = { bind: (fn, context) => fn.bind(context), resolveDefault: (promise, value) => Promise.resolve(promise).catch(() => value) };
-	state.view = new Function('form', 'fs', 'rpc', 'uci', 'ui', 'view', 'L', 'E', '_', 'cbi_update_table', 'location', source)(
+	const L = { bind: (fn, context) => fn.bind(context), resolveDefault: (promise, value) => Promise.resolve(promise).catch(() => value), resource: name => '/luci-static/resources/' + name };
+	state.view = new Function('form', 'fs', 'rpc', 'uci', 'ui', 'view', 'L', 'E', '_', 'cbi_update_table', 'location', 'document', source)(
 		form, fileApi, rpc, { load: () => Promise.resolve() }, ui, { extend: value => value }, L, E,
-		value => value, (table, rows) => { state.rows = rows; }, { reload() { state.reloads++; } }
+		value => value, (table, rows) => { state.rows = rows; }, { reload() { state.reloads++; } },
+		{ getElementById: id => state.nodes[id] }
 	);
 	state.render = async () => state.view.render(await state.view.load());
 	state.button = name => state.map.options.find(option => option.name === name);
@@ -74,6 +88,30 @@ test('apply starts only after saving finishes', async () => {
 	finish();
 	await task;
 	assert.deepEqual(state.events, ['save-start', 'save-complete', 'apply']);
+});
+
+test('login style selector previews supported values and falls back for old configs', async () => {
+	const state = fixture({ readonly: true });
+	await state.render();
+	const option = state.button('login_style');
+	assert.deepEqual(Object.keys(option.choices), ['classic', 'centered']);
+	assert.equal(option.default, 'classic');
+	assert.equal(option.rmempty, false);
+	for (const value of [undefined, '', 'classic', 'centered', '../invalid']) {
+		const style = value === 'centered' ? 'centered' : 'classic';
+		const node = option.renderWidget('global', 0, value);
+		assert.equal(node.children[0].value, style);
+		assert.equal(node.children[0].disabled, true);
+		assert.equal(node.children[1].attrs.src, '/luci-static/resources/argon-config/login-' + style + '.svg');
+		assert.equal(node.children[1].attrs.alt, option.choices[style]);
+		assert.ok(fs.existsSync(path.join(__dirname, '../htdocs/luci-static/resources/argon-config/login-' + style + '.svg')));
+	}
+	const preview = state.nodes[option.cbid('global') + '-preview'];
+	for (const style of ['centered', 'classic']) {
+		option.onchange(null, 'global', style);
+		assert.equal(preview.src, '/luci-static/resources/argon-config/login-' + style + '.svg');
+		assert.equal(preview.alt, option.choices[style]);
+	}
 });
 
 test('failed saves are reported and never applied', async () => {

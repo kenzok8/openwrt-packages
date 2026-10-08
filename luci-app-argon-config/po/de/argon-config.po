@@ -192,3 +192,19 @@ msgstr "[Heller Modus] Transparenz"
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "valid HEX color value"
 msgstr "gültiger HEX-Farbwert"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Login page style"
+msgstr "Stil der Anmeldeseite"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Classic sidebar"
+msgstr "Klassische Seitenleiste"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Centered card"
+msgstr "Zentrierte Karte"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Applies the next time you open the login page."
+msgstr "Wird beim nächsten Öffnen der Anmeldeseite angewendet."

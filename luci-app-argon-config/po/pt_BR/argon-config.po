@@ -194,3 +194,19 @@ msgstr "[Modo claro] Transparência"
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "valid HEX color value"
 msgstr "um valor de cor HEX válido"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Login page style"
+msgstr "Estilo da página de login"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Classic sidebar"
+msgstr "Barra lateral clássica"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Centered card"
+msgstr "Cartão centralizado"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Applies the next time you open the login page."
+msgstr "Aplicado na próxima vez que você abrir a página de login."

@@ -51,6 +51,12 @@ and manage the background pictures and videos.
 <img src="https://raw.githubusercontent.com/jerrykuku/staff/master/argon2.gif">
 </div>
 
+## Login page styles
+
+In **System → Argon Config**, choose **Classic sidebar** (default) or **Centered card**. The preview updates as you select a style. Save the settings, then reopen the login page to see the change. Wallpaper, light/dark mode, blur and transparency settings apply to both layouts.
+
+This feature requires a theme version supporting `login_style`. Update the theme and this plugin together. Existing configurations without this option continue to use the classic layout.
+
 ## Branch Introduction
 
 There are currently two main branches that are adapted to different versions of the **OpenWrt** source code.  

@@ -192,3 +192,19 @@ msgstr "[라이트 모드] 투명도"
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "valid HEX color value"
 msgstr "유효한 16진수 색상 값"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Login page style"
+msgstr "로그인 페이지 스타일"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Classic sidebar"
+msgstr "클래식 사이드바"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Centered card"
+msgstr "가운데 카드"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+msgid "Applies the next time you open the login page."
+msgstr "다음에 로그인 페이지를 열 때 적용됩니다."

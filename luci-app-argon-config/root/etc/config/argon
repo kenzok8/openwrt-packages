@@ -1,4 +1,5 @@
 config global
+	option login_style 'classic'
 	option primary '#5e72e4'
 	option dark_primary '#483d8b'
 	option blur '10'

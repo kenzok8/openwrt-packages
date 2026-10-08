@@ -49,6 +49,12 @@
 <img src="https://raw.githubusercontent.com/jerrykuku/staff/master/argon2.gif">
 </div>
 
+## 登录页样式
+
+进入 **系统 → Argon 主题设置**，选择默认的**经典侧栏**或**居中卡片**。切换选项时会更新预览缩略图；保存后，重新打开登录页即可看到变化。两种布局共用壁纸、深浅色、模糊度和透明度设置。
+
+此功能需要支持 `login_style` 的主题版本，请同时更新主题和本插件。已有配置未设置该选项时，继续使用经典布局。
+
 ## Branch Introduction
 
 目前有两个主要的分支，适应于不同版本的**OpenWrt**源代码。  
