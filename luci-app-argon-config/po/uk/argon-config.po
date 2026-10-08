@@ -1,186 +1,194 @@
 msgid ""
 msgstr ""
+"Project-Id-Version: luci-app-argon-config\n"
+"PO-Revision-Date: 2026-10-08 00:00+0800\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: uk\n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:112
 msgid "0 transparent - 1 opaque (suggest: black translucent preset: 0.5)."
-msgstr ""
+msgstr "0 — прозорий, 1 — непрозорий (рекомендовано: напівпрозорий чорний: 0.5)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:88
 msgid "0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: 0.5)."
-msgstr ""
+msgstr "0 — прозорий, 1 — непрозорий (рекомендовано: прозорий: 0 або напівпрозорий: 0.5)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:101
 msgid "A HEX Color (default: #483d8b)."
-msgstr ""
+msgstr "Колір у форматі HEX (типово: #483d8b)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
 msgid "A HEX color (default: #5e72e4)."
-msgstr ""
+msgstr "Колір у форматі HEX (типово: #5e72e4)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:171
 msgid "Action"
-msgstr ""
+msgstr "Дія"
 
 #: applications/luci-app-argon-config/root/usr/share/luci/menu.d/luci-app-argon-config.json:3
 msgid "Argon Config"
-msgstr ""
+msgstr "Налаштування Argon"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:55
 msgid "Argon theme configuration"
-msgstr ""
+msgstr "Налаштування теми Argon"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:197
 msgid "Background file list"
-msgstr ""
+msgstr "Список файлів тла"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:64
 msgid "Bing"
-msgstr ""
+msgstr "Bing"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:63
 msgid "Built-in"
-msgstr ""
+msgstr "Вбудоване"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:73
 msgid "Dark mode"
-msgstr ""
+msgstr "Темний режим"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:192
 msgid "Delete"
-msgstr ""
+msgstr "Видалити"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:83
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "Expecting: %s"
-msgstr ""
+msgstr "Очікується: %s"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:187
 msgid "Failed to delete file: %s."
-msgstr ""
+msgstr "Не вдалося видалити файл: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:46
 msgid "Failed to list background files: %s."
-msgstr ""
+msgstr "Не вдалося отримати список файлів тла: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:42
 msgid "Failed to read available space: %s."
-msgstr ""
+msgstr "Не вдалося визначити доступний простір: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:153
 msgid "Failed to upload file: %s."
-msgstr ""
+msgstr "Не вдалося вивантажити файл: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:168
 msgid "Filename"
-msgstr ""
+msgstr "Назва файлу"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:142
 msgid "Files will be uploaded to <code>%s</code>."
-msgstr ""
+msgstr "Файли буде вивантажено до <code>%s</code>."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:71
 msgid "Follow system"
-msgstr ""
+msgstr "Як у системі"
 
 #: applications/luci-app-argon-config/root/usr/share/rpcd/acl.d/luci-app-argon-config.json:3
 msgid "Grant UCI access for luci-app-argon-config"
-msgstr ""
+msgstr "Надати доступ до UCI для luci-app-argon-config"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:56
 msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos. Chrome is recommended."
-msgstr ""
+msgstr "Тут можна налаштувати розмиття та прозорість сторінки входу теми Argon, а також керувати фоновими зображеннями та відео. Рекомендовано використовувати Chrome."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:95
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:119
 msgid "Larger value will more blurred (suggest: clear: 1 or blur preset: 10)."
-msgstr ""
+msgstr "Більше значення посилює розмиття (рекомендовано: чітко: 1 або розмито: 10)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:72
 msgid "Light mode"
-msgstr ""
+msgstr "Світлий режим"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:169
 msgid "Modified date"
-msgstr ""
+msgstr "Дата зміни"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:194
 msgid "No files found."
-msgstr ""
+msgstr "Файлів не знайдено."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:126
 msgid "Save current settings"
-msgstr ""
+msgstr "Зберегти поточні налаштування"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:124
 msgid "Save settings"
-msgstr ""
+msgstr "Зберегти налаштування"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:170
 msgid "Size"
-msgstr ""
+msgstr "Розмір"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:58
 msgid "Theme configuration"
-msgstr ""
+msgstr "Налаштування теми"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:70
 msgid "Theme mode"
-msgstr ""
+msgstr "Режим теми"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:65
 msgid "Unsplash"
-msgstr ""
+msgstr "Unsplash"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:141
 msgid "Upload background"
-msgstr ""
+msgstr "Вивантажити тло"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:135
 msgid "Upload background (available space: %1024.2mB)"
-msgstr ""
+msgstr "Вивантажити тло (доступний простір: %1024.2mB)"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:144
 msgid "Upload..."
-msgstr ""
+msgstr "Вивантажити..."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:66
 msgid "Wallhaven"
-msgstr ""
+msgstr "Wallhaven"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:62
 msgid "Wallpaper source"
-msgstr ""
+msgstr "Джерело шпалер"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:137
 msgid "You can upload files such as gif/jpg/mp4/png/webm/webp files, to change the login page background."
-msgstr ""
+msgstr "Ви можете вивантажити файли у форматах gif/jpg/mp4/png/webm/webp, щоб змінити тло сторінки входу."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:118
 msgid "[Dark mode] Frosted Glass Radius"
-msgstr ""
+msgstr "[Темний режим] Радіус розмиття ефекту матового скла"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:100
 msgid "[Dark mode] Primary Color"
-msgstr ""
+msgstr "[Темний режим] Основний колір"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:111
 msgid "[Dark mode] Transparency"
-msgstr ""
+msgstr "[Темний режим] Прозорість"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:94
 msgid "[Light mode] Frosted Glass Radius"
-msgstr ""
+msgstr "[Світлий режим] Радіус розмиття ефекту матового скла"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
 msgid "[Light mode] Primary Color"
-msgstr ""
+msgstr "[Світлий режим] Основний колір"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:87
 msgid "[Light mode] Transparency"
-msgstr ""
+msgstr "[Світлий режим] Прозорість"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:83
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "valid HEX color value"
-msgstr ""
+msgstr "коректне значення кольору у форматі HEX"

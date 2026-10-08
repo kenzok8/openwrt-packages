@@ -1,186 +1,194 @@
 msgid ""
 msgstr ""
+"Project-Id-Version: luci-app-argon-config\n"
+"PO-Revision-Date: 2026-10-08 00:00+0800\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: vi\n"
+"Language: vi\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:112
 msgid "0 transparent - 1 opaque (suggest: black translucent preset: 0.5)."
-msgstr ""
+msgstr "0 trong suốt - 1 không trong suốt (đề xuất: màu đen bán trong suốt: 0.5)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:88
 msgid "0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: 0.5)."
-msgstr ""
+msgstr "0 trong suốt - 1 không trong suốt (đề xuất: trong suốt: 0 hoặc bán trong suốt: 0.5)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:101
 msgid "A HEX Color (default: #483d8b)."
-msgstr ""
+msgstr "Mã màu HEX (mặc định: #483d8b)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
 msgid "A HEX color (default: #5e72e4)."
-msgstr ""
+msgstr "Mã màu HEX (mặc định: #5e72e4)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:171
 msgid "Action"
-msgstr ""
+msgstr "Thao tác"
 
 #: applications/luci-app-argon-config/root/usr/share/luci/menu.d/luci-app-argon-config.json:3
 msgid "Argon Config"
-msgstr ""
+msgstr "Cấu hình Argon"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:55
 msgid "Argon theme configuration"
-msgstr ""
+msgstr "Cấu hình giao diện Argon"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:197
 msgid "Background file list"
-msgstr ""
+msgstr "Danh sách tệp nền"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:64
 msgid "Bing"
-msgstr ""
+msgstr "Bing"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:63
 msgid "Built-in"
-msgstr ""
+msgstr "Tích hợp sẵn"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:73
 msgid "Dark mode"
-msgstr ""
+msgstr "Chế độ tối"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:192
 msgid "Delete"
-msgstr ""
+msgstr "Xóa"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:83
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "Expecting: %s"
-msgstr ""
+msgstr "Giá trị yêu cầu: %s"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:187
 msgid "Failed to delete file: %s."
-msgstr ""
+msgstr "Không thể xóa tệp: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:46
 msgid "Failed to list background files: %s."
-msgstr ""
+msgstr "Không thể liệt kê các tệp nền: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:42
 msgid "Failed to read available space: %s."
-msgstr ""
+msgstr "Không thể xác định dung lượng trống: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:153
 msgid "Failed to upload file: %s."
-msgstr ""
+msgstr "Không thể tải tệp lên: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:168
 msgid "Filename"
-msgstr ""
+msgstr "Tên tệp"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:142
 msgid "Files will be uploaded to <code>%s</code>."
-msgstr ""
+msgstr "Các tệp sẽ được tải lên <code>%s</code>."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:71
 msgid "Follow system"
-msgstr ""
+msgstr "Theo hệ thống"
 
 #: applications/luci-app-argon-config/root/usr/share/rpcd/acl.d/luci-app-argon-config.json:3
 msgid "Grant UCI access for luci-app-argon-config"
-msgstr ""
+msgstr "Cấp quyền truy cập UCI cho luci-app-argon-config"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:56
 msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos. Chrome is recommended."
-msgstr ""
+msgstr "Tại đây, bạn có thể thiết lập độ mờ và độ trong suốt của trang đăng nhập giao diện Argon, đồng thời quản lý hình ảnh và video nền. Khuyến nghị sử dụng Chrome."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:95
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:119
 msgid "Larger value will more blurred (suggest: clear: 1 or blur preset: 10)."
-msgstr ""
+msgstr "Giá trị càng lớn thì càng mờ (đề xuất: rõ nét: 1 hoặc làm mờ: 10)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:72
 msgid "Light mode"
-msgstr ""
+msgstr "Chế độ sáng"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:169
 msgid "Modified date"
-msgstr ""
+msgstr "Ngày sửa đổi"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:194
 msgid "No files found."
-msgstr ""
+msgstr "Không tìm thấy tệp nào."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:126
 msgid "Save current settings"
-msgstr ""
+msgstr "Lưu cài đặt hiện tại"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:124
 msgid "Save settings"
-msgstr ""
+msgstr "Lưu cài đặt"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:170
 msgid "Size"
-msgstr ""
+msgstr "Kích thước"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:58
 msgid "Theme configuration"
-msgstr ""
+msgstr "Cấu hình giao diện"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:70
 msgid "Theme mode"
-msgstr ""
+msgstr "Chế độ giao diện"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:65
 msgid "Unsplash"
-msgstr ""
+msgstr "Unsplash"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:141
 msgid "Upload background"
-msgstr ""
+msgstr "Tải nền lên"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:135
 msgid "Upload background (available space: %1024.2mB)"
-msgstr ""
+msgstr "Tải nền lên (dung lượng trống: %1024.2mB)"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:144
 msgid "Upload..."
-msgstr ""
+msgstr "Tải lên..."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:66
 msgid "Wallhaven"
-msgstr ""
+msgstr "Wallhaven"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:62
 msgid "Wallpaper source"
-msgstr ""
+msgstr "Nguồn hình nền"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:137
 msgid "You can upload files such as gif/jpg/mp4/png/webm/webp files, to change the login page background."
-msgstr ""
+msgstr "Bạn có thể tải lên các tệp định dạng gif/jpg/mp4/png/webm/webp để thay đổi nền của trang đăng nhập."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:118
 msgid "[Dark mode] Frosted Glass Radius"
-msgstr ""
+msgstr "[Chế độ tối] Bán kính làm mờ của hiệu ứng kính mờ"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:100
 msgid "[Dark mode] Primary Color"
-msgstr ""
+msgstr "[Chế độ tối] Màu chủ đạo"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:111
 msgid "[Dark mode] Transparency"
-msgstr ""
+msgstr "[Chế độ tối] Độ trong suốt"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:94
 msgid "[Light mode] Frosted Glass Radius"
-msgstr ""
+msgstr "[Chế độ sáng] Bán kính làm mờ của hiệu ứng kính mờ"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
 msgid "[Light mode] Primary Color"
-msgstr ""
+msgstr "[Chế độ sáng] Màu chủ đạo"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:87
 msgid "[Light mode] Transparency"
-msgstr ""
+msgstr "[Chế độ sáng] Độ trong suốt"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:83
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "valid HEX color value"
-msgstr ""
+msgstr "mã màu HEX hợp lệ"

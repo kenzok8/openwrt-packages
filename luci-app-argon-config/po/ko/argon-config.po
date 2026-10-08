@@ -1,186 +1,194 @@
 msgid ""
 msgstr ""
+"Project-Id-Version: luci-app-argon-config\n"
+"PO-Revision-Date: 2026-10-08 00:00+0800\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: ko\n"
+"Language: ko\n"
+"MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:112
 msgid "0 transparent - 1 opaque (suggest: black translucent preset: 0.5)."
-msgstr ""
+msgstr "0은 투명, 1은 불투명입니다(권장: 검은색 반투명은 0.5)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:88
 msgid "0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: 0.5)."
-msgstr ""
+msgstr "0은 투명, 1은 불투명입니다(권장: 투명은 0, 반투명은 0.5)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:101
 msgid "A HEX Color (default: #483d8b)."
-msgstr ""
+msgstr "16진수 색상 코드(기본값: #483d8b)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
 msgid "A HEX color (default: #5e72e4)."
-msgstr ""
+msgstr "16진수 색상 코드(기본값: #5e72e4)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:171
 msgid "Action"
-msgstr ""
+msgstr "작업"
 
 #: applications/luci-app-argon-config/root/usr/share/luci/menu.d/luci-app-argon-config.json:3
 msgid "Argon Config"
-msgstr ""
+msgstr "Argon 설정"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:55
 msgid "Argon theme configuration"
-msgstr ""
+msgstr "Argon 테마 설정"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:197
 msgid "Background file list"
-msgstr ""
+msgstr "배경 파일 목록"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:64
 msgid "Bing"
-msgstr ""
+msgstr "Bing"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:63
 msgid "Built-in"
-msgstr ""
+msgstr "내장"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:73
 msgid "Dark mode"
-msgstr ""
+msgstr "다크 모드"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:192
 msgid "Delete"
-msgstr ""
+msgstr "삭제"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:83
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "Expecting: %s"
-msgstr ""
+msgstr "필요한 값: %s"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:187
 msgid "Failed to delete file: %s."
-msgstr ""
+msgstr "파일을 삭제하지 못했습니다: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:46
 msgid "Failed to list background files: %s."
-msgstr ""
+msgstr "배경 파일 목록을 불러오지 못했습니다: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:42
 msgid "Failed to read available space: %s."
-msgstr ""
+msgstr "사용 가능한 공간을 확인하지 못했습니다: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:153
 msgid "Failed to upload file: %s."
-msgstr ""
+msgstr "파일을 업로드하지 못했습니다: %s."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:168
 msgid "Filename"
-msgstr ""
+msgstr "파일 이름"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:142
 msgid "Files will be uploaded to <code>%s</code>."
-msgstr ""
+msgstr "파일은 <code>%s</code>에 업로드됩니다."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:71
 msgid "Follow system"
-msgstr ""
+msgstr "시스템 설정 따르기"
 
 #: applications/luci-app-argon-config/root/usr/share/rpcd/acl.d/luci-app-argon-config.json:3
 msgid "Grant UCI access for luci-app-argon-config"
-msgstr ""
+msgstr "luci-app-argon-config에 UCI 접근 권한 부여"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:56
 msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos. Chrome is recommended."
-msgstr ""
+msgstr "Argon 테마 로그인 페이지의 흐림 효과와 투명도를 설정하고 배경 이미지와 동영상을 관리할 수 있습니다. Chrome 사용을 권장합니다."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:95
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:119
 msgid "Larger value will more blurred (suggest: clear: 1 or blur preset: 10)."
-msgstr ""
+msgstr "값이 클수록 더 흐려집니다(권장: 선명하게는 1, 흐리게는 10)."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:72
 msgid "Light mode"
-msgstr ""
+msgstr "라이트 모드"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:169
 msgid "Modified date"
-msgstr ""
+msgstr "수정 날짜"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:194
 msgid "No files found."
-msgstr ""
+msgstr "파일이 없습니다."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:126
 msgid "Save current settings"
-msgstr ""
+msgstr "현재 설정 저장"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:124
 msgid "Save settings"
-msgstr ""
+msgstr "설정 저장"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:170
 msgid "Size"
-msgstr ""
+msgstr "크기"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:58
 msgid "Theme configuration"
-msgstr ""
+msgstr "테마 설정"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:70
 msgid "Theme mode"
-msgstr ""
+msgstr "테마 모드"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:65
 msgid "Unsplash"
-msgstr ""
+msgstr "Unsplash"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:141
 msgid "Upload background"
-msgstr ""
+msgstr "배경 업로드"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:135
 msgid "Upload background (available space: %1024.2mB)"
-msgstr ""
+msgstr "배경 업로드(사용 가능한 공간: %1024.2mB)"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:144
 msgid "Upload..."
-msgstr ""
+msgstr "업로드..."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:66
 msgid "Wallhaven"
-msgstr ""
+msgstr "Wallhaven"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:62
 msgid "Wallpaper source"
-msgstr ""
+msgstr "배경 화면 소스"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:137
 msgid "You can upload files such as gif/jpg/mp4/png/webm/webp files, to change the login page background."
-msgstr ""
+msgstr "gif/jpg/mp4/png/webm/webp 형식의 파일을 업로드하여 로그인 페이지의 배경을 변경할 수 있습니다."
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:118
 msgid "[Dark mode] Frosted Glass Radius"
-msgstr ""
+msgstr "[다크 모드] 반투명 유리 효과의 흐림 반경"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:100
 msgid "[Dark mode] Primary Color"
-msgstr ""
+msgstr "[다크 모드] 기본 색상"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:111
 msgid "[Dark mode] Transparency"
-msgstr ""
+msgstr "[다크 모드] 투명도"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:94
 msgid "[Light mode] Frosted Glass Radius"
-msgstr ""
+msgstr "[라이트 모드] 반투명 유리 효과의 흐림 반경"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
 msgid "[Light mode] Primary Color"
-msgstr ""
+msgstr "[라이트 모드] 기본 색상"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:87
 msgid "[Light mode] Transparency"
-msgstr ""
+msgstr "[라이트 모드] 투명도"
 
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:83
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "valid HEX color value"
-msgstr ""
+msgstr "유효한 16진수 색상 값"

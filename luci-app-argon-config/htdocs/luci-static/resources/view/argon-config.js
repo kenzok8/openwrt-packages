@@ -8,13 +8,16 @@
 
 var callAvailSpace = rpc.declare({
 	object: 'luci.argon',
-	method: 'avail'
+	method: 'avail',
+	raise: true,
+	expect: { '': { avail: 0 } }
 });
 
 var callRemoveArgon = rpc.declare({
 	object: 'luci.argon',
 	method: 'remove',
 	params: ['filename'],
+	raise: true,
 	expect: { '': {} }
 });
 
@@ -22,6 +25,7 @@ var callRenameArgon = rpc.declare({
 	object: 'luci.argon',
 	method: 'rename',
 	params: ['newname'],
+	raise: true,
 	expect: { '': {} }
 });
 
@@ -34,8 +38,14 @@ return view.extend({
 	load: function() {
 		return Promise.all([
 			uci.load('argon'),
-			L.resolveDefault(callAvailSpace(), {}),
-			L.resolveDefault(fs.list(bg_path), {})
+			callAvailSpace().catch(function(e) {
+				ui.addNotification(null, E('p', _('Failed to read available space: %s.').format(e.message)));
+				return { avail: 0 };
+			}),
+			fs.list(bg_path).catch(function(e) {
+				ui.addNotification(null, E('p', _('Failed to list background files: %s.').format(e.message)));
+				return [];
+			})
 		]);
 	},
 
@@ -64,7 +74,7 @@ return view.extend({
 		o.default = 'normal';
 		o.rmempty = false;
 
-		o = s.option(form.Value, 'primary', _('[Light mode] Primary Color'), _('A HEX color (default: #5e72e4).'))
+		o = s.option(form.Value, 'primary', _('[Light mode] Primary Color'), _('A HEX color (default: #5e72e4).'));
 		o.default = '#5e72e4';
 		o.rmempty = false;
 		o.validate = function(section_id, value) {
@@ -72,7 +82,7 @@ return view.extend({
 				return /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value) ||
 					_('Expecting: %s').format(_('valid HEX color value'));
 			return true;
-		}
+		};
 
 		o = s.option(form.ListValue, 'transparency', _('[Light mode] Transparency'),
 			_('0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: 0.5).'));
@@ -88,7 +98,7 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.option(form.Value, 'dark_primary', _('[Dark mode] Primary Color'),
-			_('A HEX Color (default: #483d8b).'))
+			_('A HEX Color (default: #483d8b).'));
 		o.default = '#483d8b';
 		o.rmempty = false;
 		o.validate = function(section_id, value) {
@@ -96,7 +106,7 @@ return view.extend({
 				return /(^#[0-9A-F]{6}$)|(^#[0-9A-F]{3}$)/i.test(value) ||
 					_('Expecting: %s').format(_('valid HEX color value'));
 			return true;
-		}
+		};
 
 		o = s.option(form.ListValue, 'transparency_dark', _('[Dark mode] Transparency'),
 			_('0 transparent - 1 opaque (suggest: black translucent preset: 0.5).'));
@@ -106,7 +116,7 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.option(form.Value, 'blur_dark', _('[Dark mode] Frosted Glass Radius'),
-			_('Larger value will more blurred (suggest: clear: 1 or blur preset: 10).'))
+			_('Larger value will more blurred (suggest: clear: 1 or blur preset: 10).'));
 		o.datatype = 'ufloat';
 		o.default = '10';
 		o.rmempty = false;
@@ -115,9 +125,12 @@ return view.extend({
 		o.inputstyle = 'apply';
 		o.inputtitle = _('Save current settings');
 		o.onclick = function() {
-			ui.changes.apply(true);
-			return this.map.save(null, true);
-		}
+			return this.map.save(null, true).then(function() {
+				ui.changes.apply(true);
+			}).catch(function(e) {
+				ui.addNotification(null, E('p', e.message));
+			});
+		};
 
 		s = m.section(form.TypedSection, null, _('Upload background (available space: %1024.2mB)')
 			.format(data[1].avail * 1024),
@@ -131,17 +144,20 @@ return view.extend({
 		o.inputtitle = _('Upload...');
 		o.onclick = function(ev, section_id) {
 			var file = '/tmp/argon_background.tmp';
+			var uploaded = false;
 			return ui.uploadFile(file, ev.target).then(function(res) {
-				return L.resolveDefault(callRenameArgon(res.name), {}).then(function(ret) {
+				uploaded = true;
+				return callRenameArgon(res.name).then(function(ret) {
 					if (ret.result === 0)
 						return location.reload();
-					else {
-						ui.addNotification(null, E('p', _('Failed to upload file: %s.').format(res.name)));
-						return L.resolveDefault(fs.remove(file), {});
-					}
+					throw new Error(_('Failed to upload file: %s.').format(res.name));
 				});
 			})
-			.catch(function(e) { ui.addNotification(null, E('p', e.message)); });
+			.catch(function(e) {
+				ui.addNotification(null, E('p', e.message));
+				if (uploaded)
+					return L.resolveDefault(fs.remove(file));
+			});
 		};
 		o.modalonly = true;
 
@@ -163,9 +179,15 @@ return view.extend({
 					String.format('%1024.2mB', file.size),
 					E('button', {
 						'class': 'btn cbi-button cbi-button-remove',
+						'disabled': this.map.readonly || null,
 						'click': ui.createHandlerFn(this, function() {
-							return L.resolveDefault(callRemoveArgon(file.name), {})
-							.then(function() { return location.reload(); });
+							return callRemoveArgon(file.name).then(function(ret) {
+								if (ret.result === 0)
+									return location.reload();
+								throw new Error(_('Failed to delete file: %s.').format(file.name));
+							}).catch(function(e) {
+								ui.addNotification(null, E('p', e.message));
+							});
 						})
 					}, [ _('Delete') ])
 				];

@@ -6,13 +6,16 @@
 				"/www/luci-static/argon/background/*": [ "list" ]
 			},
 			"ubus": {
-				"luci.argon": [ "avail", "remove", "rename" ]
+				"luci.argon": [ "avail" ]
 			},
 			"uci": [ "argon" ]
 		},
 		"write": {
 			"file": {
 				"/tmp/argon_background.tmp": [ "write" ]
+			},
+			"ubus": {
+				"luci.argon": [ "remove", "rename" ]
 			},
 			"uci": [ "argon" ]
 		}

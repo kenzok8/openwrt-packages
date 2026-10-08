@@ -1,25 +1,31 @@
 msgid ""
-msgstr "Content-Type: text/plain; charset=UTF-8"
+msgstr ""
+"Project-Id-Version: luci-app-argon-config 1.0\n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:102
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:112
 msgid "0 transparent - 1 opaque (suggest: black translucent preset: 0.5)."
 msgstr "0 — прозрачно, 1 — непрозрачно (рекомендуется: чёрный полупрозрачный, предустановка: 0.5)."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:78
-msgid ""
-"0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: "
-"0.5)."
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:88
+msgid "0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: 0.5)."
 msgstr "0 — прозрачно, 1 — непрозрачно (рекомендуется: прозрачный 0 или полупрозрачный, предустановка: 0.5)."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:91
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:101
 msgid "A HEX Color (default: #483d8b)."
 msgstr "HEX-цвет (родной: #483d8b)."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:67
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
 msgid "A HEX color (default: #5e72e4)."
 msgstr "HEX-цвет (родной: #5e72e4)."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:155
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:171
 msgid "Action"
 msgstr "Действие"
 
@@ -27,48 +33,60 @@ msgstr "Действие"
 msgid "Argon Config"
 msgstr "тема Argon"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:45
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:55
 msgid "Argon theme configuration"
 msgstr "Конфигурация темы Argon"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:175
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:197
 msgid "Background file list"
 msgstr "Список файлов фона"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:54
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:64
 msgid "Bing"
 msgstr "Bing"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:53
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:63
 msgid "Built-in"
 msgstr "Встроенные"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:63
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:73
 msgid "Dark mode"
 msgstr "Тёмная тема"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:170
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:192
 msgid "Delete"
 msgstr "Удалить"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:73
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:97
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:83
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "Expecting: %s"
 msgstr "Ожидалось: %s"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:139
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:187
+msgid "Failed to delete file: %s."
+msgstr "Не удалось удалить файл: %s."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:46
+msgid "Failed to list background files: %s."
+msgstr "Не удалось получить список файлов фона: %s."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:42
+msgid "Failed to read available space: %s."
+msgstr "Не удалось определить свободное место: %s."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:153
 msgid "Failed to upload file: %s."
 msgstr "Не удалось загрузить файл: %s."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:152
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:168
 msgid "Filename"
 msgstr "Имя файла"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:129
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:142
 msgid "Files will be uploaded to <code>%s</code>."
 msgstr "Файлы будут загружены в <code>%s</code>."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:61
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:71
 msgid "Follow system"
 msgstr "Как в системе"
 
@@ -76,105 +94,100 @@ msgstr "Как в системе"
 msgid "Grant UCI access for luci-app-argon-config"
 msgstr "Предоставить доступ к UCI для luci-app-argon-config"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:46
-msgid ""
-"Here you can set the blur and transparency of the login page of argon theme, "
-"and manage the background pictures and videos. Chrome is recommended."
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:56
+msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos. Chrome is recommended."
 msgstr "Здесь можно настроить размытие и прозрачность страницы логина темы Argon, управлять фоновыми изображениями и видео. Рекомендуется использовать Chrome."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:85
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:109
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:95
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:119
 msgid "Larger value will more blurred (suggest: clear: 1 or blur preset: 10)."
 msgstr "Выше цифра, сильнее размыто (от чёткого: 1 к размытому: 10)."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:62
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:72
 msgid "Light mode"
 msgstr "Светлая тема"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:153
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:169
 msgid "Modified date"
 msgstr "Дата изменения"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:172
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:194
 msgid "No files found."
 msgstr "Файлы не найдены."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:116
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:126
 msgid "Save current settings"
 msgstr "Сохранить текущие настройки"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:114
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:124
 msgid "Save settings"
 msgstr "Сохранить настройки"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:154
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:170
 msgid "Size"
 msgstr "Размер"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:48
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:58
 msgid "Theme configuration"
 msgstr "Конфигурация темы"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:60
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:70
 msgid "Theme mode"
 msgstr "Режим темы"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:55
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:65
 msgid "Unsplash"
 msgstr "Unsplash"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:128
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:141
 msgid "Upload background"
 msgstr "Загрузить фон"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:122
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:135
 msgid "Upload background (available space: %1024.2mB)"
 msgstr "Загрузить фон (доступно: %1024.2mB)"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:131
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:144
 msgid "Upload..."
 msgstr "Загрузить..."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:56
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:66
 msgid "Wallhaven"
 msgstr "Wallhaven"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:52
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:62
 msgid "Wallpaper source"
 msgstr "Обои"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:124
-msgid ""
-"You can upload files such as gif/jpg/mp4/png/webm/webp files, to change the "
-"login page background."
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:137
+msgid "You can upload files such as gif/jpg/mp4/png/webm/webp files, to change the login page background."
 msgstr "Вы можете загрузить файлы gif/jpg/mp4/png/webm/webp, чтобы изменить фон страницы входа."
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:108
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:118
 msgid "[Dark mode] Frosted Glass Radius"
 msgstr "[Тёмная тема] Радиус матового стекла"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:90
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:100
 msgid "[Dark mode] Primary Color"
 msgstr "[Тёмная тема] Основной цвет"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:101
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:111
 msgid "[Dark mode] Transparency"
 msgstr "[Тёмная тема] Прозрачность"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:84
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:94
 msgid "[Light mode] Frosted Glass Radius"
 msgstr "[Светлая тема] Радиус матового стекла"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:67
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
 msgid "[Light mode] Primary Color"
 msgstr "[Светлая тема] Основной цвет"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:77
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:87
 msgid "[Light mode] Transparency"
 msgstr "[Светлая тема] Прозрачность"
 
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:73
-#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:97
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:83
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js:107
 msgid "valid HEX color value"
 msgstr "корректное значение HEX-цвета"
-
