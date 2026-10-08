@@ -278,3 +278,120 @@
         }
     }
 }
+
+// Keep all authentication markup shared; only the centered layout differs.
+.login-page[data-login-style="centered"] {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 2rem 1rem;
+    box-sizing: border-box;
+    align-items: center;
+
+    .main-bg,
+    .video {
+        position: fixed;
+        height: 100%;
+        width: 100%;
+    }
+
+    .login-container {
+        flex: 0 0 auto;
+        width: 26rem;
+        max-width: 100%;
+        height: auto;
+        margin: auto 0;
+        border-radius: .75rem;
+
+        .login-form {
+            min-height: 0;
+
+            .brand {
+                max-width: 100%;
+                margin: 0;
+                padding: 2rem 1.5rem 1.5rem;
+                box-sizing: border-box;
+                gap: 1rem;
+
+                .icon {
+                    width: 2.5rem;
+                    margin: 0;
+                    flex-shrink: 0;
+                }
+
+                .brand-text {
+                    min-width: 0;
+                    margin: 0;
+                    overflow-wrap: anywhere;
+                }
+            }
+
+            .form-login {
+                padding: 0 2rem;
+
+                .input-group input {
+                    margin: 0;
+                }
+
+                .errorbox {
+                    padding-bottom: 1.25rem;
+                    overflow-wrap: anywhere;
+                }
+
+                .auth-plugin {
+                    max-width: 100%;
+                    overflow-wrap: anywhere;
+                    overflow-x: auto;
+                }
+            }
+
+            .cbi-button-apply {
+                margin: .5rem 0 0;
+                padding: .75rem 1rem;
+                height: auto;
+                letter-spacing: .1rem;
+                white-space: normal;
+            }
+        }
+
+        footer {
+            position: static;
+            display: block;
+            width: auto;
+            margin: 0;
+            padding: 1.5rem 2rem;
+
+            > div {
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
+
+            .luci-link {
+                display: inline;
+            }
+
+            .login-footer-detail {
+                display: none;
+            }
+
+            a + a::before {
+                content: " · ";
+            }
+        }
+    }
+
+    @media screen and (max-width: 480px) {
+        padding: 1rem;
+
+        .login-container {
+            .login-form .form-login {
+                padding: 0 1.25rem;
+            }
+
+            footer {
+                padding: 1.25rem;
+            }
+        }
+    }
+}

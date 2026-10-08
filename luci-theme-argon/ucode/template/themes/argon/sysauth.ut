@@ -27,6 +27,14 @@
 	import { cursor } from 'uci';
 
 	let cfg = cursor();
+	// Only known layouts may select login page styles; old configs stay classic.
+	let login_style = 'classic';
+	if (fs.access('/etc/config/argon')) {
+		let configured_style = cfg.get_first('argon', 'global', 'login_style');
+		if (configured_style == 'classic' || configured_style == 'centered')
+			login_style = configured_style;
+	}
+
 	// Per-request pseudo-random state for selecting local backgrounds.
 	let lcgState = (+time()) % 2147483648;
 
@@ -93,7 +101,7 @@
 
 %}
 <!-- Login Page Start -->
-<div class="login-page">
+<div class="login-page" data-login-style="{{ login_style }}">
 	{% if ( bgArry.backgroundType == "Video" ): %}
 	<!-- Video Player Start -->
 	<div class="video">

@@ -37,6 +37,7 @@
   --gray: #8898aa;
   --gray-dark: #32325d;
   --lighter: #e9ecef;
+  --table-border: thin solid #ddd;
   --success: #2dce89;
   --info: #11cdef;
   --warning: #fb6340;
@@ -915,6 +916,102 @@ select[multiple="multiple"] {
 .login-page .login-container footer .luci-link {
   display: block;
 }
+.login-page[data-login-style="centered"] {
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 2rem 1rem;
+  box-sizing: border-box;
+  align-items: center;
+}
+.login-page[data-login-style="centered"] .main-bg,
+.login-page[data-login-style="centered"] .video {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+}
+.login-page[data-login-style="centered"] .login-container {
+  flex: 0 0 auto;
+  width: 26rem;
+  max-width: 100%;
+  height: auto;
+  margin: auto 0;
+  border-radius: 0.75rem;
+}
+.login-page[data-login-style="centered"] .login-container .login-form {
+  min-height: 0;
+}
+.login-page[data-login-style="centered"] .login-container .login-form .brand {
+  max-width: 100%;
+  margin: 0;
+  padding: 2rem 1.5rem 1.5rem;
+  box-sizing: border-box;
+  gap: 1rem;
+}
+.login-page[data-login-style="centered"] .login-container .login-form .brand .icon {
+  width: 2.5rem;
+  margin: 0;
+  flex-shrink: 0;
+}
+.login-page[data-login-style="centered"] .login-container .login-form .brand .brand-text {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.login-page[data-login-style="centered"] .login-container .login-form .form-login {
+  padding: 0 2rem;
+}
+.login-page[data-login-style="centered"] .login-container .login-form .form-login .input-group input {
+  margin: 0;
+}
+.login-page[data-login-style="centered"] .login-container .login-form .form-login .errorbox {
+  padding-bottom: 1.25rem;
+  overflow-wrap: anywhere;
+}
+.login-page[data-login-style="centered"] .login-container .login-form .form-login .auth-plugin {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  overflow-x: auto;
+}
+.login-page[data-login-style="centered"] .login-container .login-form .cbi-button-apply {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem 1rem;
+  height: auto;
+  letter-spacing: 0.1rem;
+  white-space: normal;
+}
+.login-page[data-login-style="centered"] .login-container footer {
+  position: static;
+  display: block;
+  width: auto;
+  margin: 0;
+  padding: 1.5rem 2rem;
+}
+.login-page[data-login-style="centered"] .login-container footer > div {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.login-page[data-login-style="centered"] .login-container footer .luci-link {
+  display: inline;
+}
+.login-page[data-login-style="centered"] .login-container footer .login-footer-detail {
+  display: none;
+}
+.login-page[data-login-style="centered"] .login-container footer a + a::before {
+  content: " · ";
+}
+@media screen and (max-width: 480px) {
+  .login-page[data-login-style="centered"] {
+    padding: 1rem;
+  }
+  .login-page[data-login-style="centered"] .login-container .login-form .form-login {
+    padding: 0 1.25rem;
+  }
+  .login-page[data-login-style="centered"] .login-container footer {
+    padding: 1.25rem;
+  }
+}
 .main {
   position: relative;
   width: 100%;
@@ -1487,8 +1584,38 @@ footer > a {
   }
 }
 #maincontent > .alert-message {
-  position: fixed;
-  transform: translate(-50%, -50%);
+  position: static;
+  width: auto;
+  left: auto;
+  top: auto;
+  transform: none;
+  z-index: auto;
+  margin: 0 1.25rem 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  line-height: 1.5;
+}
+#maincontent > .alert-message > div {
+  min-width: 0;
+  margin: 0;
+}
+#maincontent > .alert-message > div:first-child > * {
+  margin: 0;
+}
+#maincontent > .alert-message > div:first-child > * + * {
+  margin-top: 0.75rem;
+}
+#maincontent > .alert-message h4 {
+  padding: 0.5rem 0.75rem;
+}
+#maincontent > .alert-message .btn {
+  max-width: 100%;
+  white-space: normal;
+}
+@media screen and (max-width: 600px) {
+  #maincontent > .alert-message {
+    flex-direction: column;
+  }
 }
 .container .alert,
 .container .alert-message {
@@ -1499,10 +1626,6 @@ footer > a {
   top: 0;
   transform: translate(-50%, 0);
   width: 100%;
-}
-#mwan3-service-status > .alert-message {
-  left: 0.5rem;
-  transform: none;
 }
 .lg {
   margin: 0;
@@ -1664,16 +1787,8 @@ body:not([data-page="admin-dashboard"]) .tr > .td,
 body:not([data-page="admin-dashboard"]) .tr > .th,
 body:not([data-page="admin-dashboard"]) .cbi-section-table-row::before,
 body:not([data-page="admin-dashboard"]) #cbi-wireless > #wifi_assoclist_table > .tr:nth-child(2) {
-  border-top: thin solid #ddd;
+  border-top: var(--table-border);
   padding: 1.1em 1.25rem;
-}
-@media (prefers-color-scheme: dark) {
-  body:not([data-page="admin-dashboard"]) tr > td,
-  body:not([data-page="admin-dashboard"]) tr > th,
-  body:not([data-page="admin-dashboard"]) .tr > .td,
-  body:not([data-page="admin-dashboard"]) .tr > .th {
-    border-top: thin solid #444 !important;
-  }
 }
 #cbi-wireless .td,
 .table[width="100%"] > .tr:first-child > .td,
@@ -2550,7 +2665,6 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   align-items: center;
   flex-grow: 1;
 }
-.cbi-dropdown[empty] > ul > li,
 .cbi-dropdown[optional][open] > ul.dropdown > li[placeholder],
 .cbi-dropdown[multiple][open] > ul.dropdown > li > form {
   display: block;
@@ -3443,6 +3557,12 @@ pre.command-output {
 [data-page="admin-system-attendedsysupgrade-configuration"] .cbi-map .cbi-map-descr {
   padding-bottom: 0;
 }
+[data-page="admin-system-flash"] .modal .btn {
+  height: auto;
+  min-height: 2.5rem;
+  max-width: 100%;
+  white-space: normal;
+}
 [data-page="admin-system-flash"] .cbi-value {
   padding: 0 1rem;
 }
@@ -3626,6 +3746,72 @@ pre.command-output {
   border: 1px solid #dee2e6 !important;
   border-radius: 4px;
 }
+[data-page="admin-network-switch-vlan"] #switch-vlan-view {
+  --background-color-medium: #f4f5f7;
+  --background-color-high: #fff;
+  --text-color-high: var(--gray-dark);
+  --text-color-low: #626b7a;
+  --border-color-low: #dee2e6;
+  --border-color-medium: #cbd5e1;
+  --border-color-high: #8898aa;
+  --primary-color-high: var(--primary);
+  --svc-row-bg: var(--background-color-medium);
+  --svc-row-hover-bg: var(--background-color-high);
+  --svc-row-add-bg: var(--background-color-medium);
+  --svc-port-selected-bg: #e8ecff;
+  --svc-port-selected-hover-bg: #dfe4ff;
+  --svc-port-selected-border: var(--primary);
+  --svc-port-selected-ring: rgba(94, 114, 228, 0.28);
+  --svc-vlan-tagged: #8c4800;
+  --svc-vlan-untagged: #06685f;
+  --svc-vlan-checked-text: #fff;
+  color: var(--text-color-high);
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view input[type="text"],
+[data-page="admin-network-switch-vlan"] #switch-vlan-view input[type="number"] {
+  background-color: var(--background-color-high) !important;
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view input[type="text"]::placeholder,
+[data-page="admin-network-switch-vlan"] #switch-vlan-view input[type="number"]::placeholder {
+  color: var(--text-color-low);
+  opacity: 1;
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view input[type="text"]:focus,
+[data-page="admin-network-switch-vlan"] #switch-vlan-view input[type="number"]:focus {
+  border-color: var(--primary-color-high) !important;
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-port-tile.selected:hover {
+  background: var(--svc-port-selected-hover-bg);
+  border-color: var(--svc-port-selected-border);
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-btn-tagged,
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-btn-assign-tagged {
+  --svc-role-color: var(--svc-vlan-tagged);
+  --svc-role-bg: var(--svc-vlan-tagged-bg);
+  --svc-role-stripe: var(--svc-vlan-tagged-stripe);
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-btn-untagged,
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-btn-assign-untagged {
+  --svc-role-color: var(--svc-vlan-untagged);
+  --svc-role-bg: var(--svc-vlan-untagged-bg);
+  --svc-role-stripe: var(--svc-vlan-untagged-stripe);
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-btn-tagged:not(:disabled),
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-btn-untagged:not(:disabled),
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-assign-btn:not(.svc-vlan-assign-disabled) {
+  color: var(--svc-role-color) !important;
+  border-color: var(--svc-role-color) !important;
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-assign-btn.svc-vlan-assign-checked {
+  background: var(--svc-role-color);
+  color: var(--svc-vlan-checked-text) !important;
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-assign-btn.svc-vlan-assign-mixed {
+  background: repeating-linear-gradient(135deg, var(--svc-role-stripe) 0 0.5rem, var(--svc-role-bg) 0.5rem 1rem);
+}
+[data-page="admin-network-switch-vlan"] #switch-vlan-view .svc-vlan-assign-btn.svc-vlan-assign-checked .svc-vlan-btn-prefix {
+  color: inherit;
+}
 [data-page="admin-network-dhcp"] .cbi-value {
   padding: 0;
 }
@@ -3733,6 +3919,11 @@ pre.command-output {
 [data-page="admin-status-overview"] #view > div:first-child {
   gap: 0 !important;
 }
+[data-page="admin-status-channel_analysis"] [data-tab-title]:not([data-tab-active="true"]) {
+  display: block !important;
+  visibility: hidden;
+  padding: 0;
+}
 [data-page="admin-status-iptables"] .right {
   margin-bottom: 0 !important;
 }
@@ -3764,6 +3955,20 @@ pre.command-output {
 }
 [data-page="admin-services-ttyd"] #view iframe {
   height: 100%;
+}
+[data-page="admin-docker-overview"] .cbi-section-table {
+  table-layout: fixed;
+}
+[data-page="admin-docker-overview"] .cbi-section-table .th,
+[data-page="admin-docker-overview"] .cbi-section-table .td {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: left !important;
+  vertical-align: top;
+}
+[data-page="admin-docker-overview"] .cbi-section-table .th:first-child {
+  width: 30% !important;
 }
 #cbi-dockerd .cbi-section {
   box-sizing: border-box;
@@ -4407,13 +4612,18 @@ div[style*="display:grid;grid-template-columns:repeat"] .ifacebox .ifacebox-body
 }
 #mwan3-service-status {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: stretch;
   flex-wrap: wrap;
 }
-#mwan3-service-status > .alert-message {
+#mwan3-service-status > div.alert-message {
   position: static;
   transform: none;
+  z-index: auto;
+  height: auto;
+  min-height: 6rem;
+  max-width: calc(100% - 2rem);
+  overflow-wrap: anywhere;
 }
 /* responsive */
 @media all and (-ms-high-contrast: none) {

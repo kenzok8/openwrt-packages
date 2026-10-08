@@ -118,6 +118,19 @@ for (const template of ['header.ut', 'header_login.ut']) {
 	});
 }
 
+test('login layouts allow supported styles and fall back for old or invalid configs', () => {
+	const selected = (value, hasConfig = true) => runUcodeSnippet(
+		'ucode/template/themes/argon/sysauth.ut',
+		"let login_style = 'classic';", '\n\t// Per-request',
+		configSetup + '\nlet fs = { access };', 'login_style', { login_style: value }, hasConfig
+	);
+	assert.equal(selected('classic'), 'classic');
+	assert.equal(selected('centered'), 'centered');
+	assert.equal(selected('centered', false), 'classic');
+	for (const value of [undefined, null, '', 'unknown', 'CENTERED', '" onclick="alert(1)', '../centered', 1, ['centered'], {}])
+		assert.equal(selected(value), 'classic');
+});
+
 test('local backgrounds accept dotted names and encode spaces', () => {
 	const setup = `
 let fs = { lsdir: path => ['photo.jpg', 'my.photo.jpg', 'space name.webp', 'hash#name.jpg', 'what?.png', 'VIDEO.MP4', 'notes.txt'] };

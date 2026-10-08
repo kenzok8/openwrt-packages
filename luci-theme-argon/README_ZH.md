@@ -67,6 +67,8 @@ Argon 是**一款干净整洁的 OpenWrt LuCI 主题**，
 - 登录页支持本地图片、视频和在线壁纸背景。
 - 可搭配 [luci-app-argon-config][config-link] 实现更完整的主题设置体验。
 
+在 **系统 → Argon 主题设置 → 登录页样式** 中，可选择默认的**经典侧栏**或**居中卡片**。两种布局共用壁纸、配色和认证设置。请同时更新主题和配置插件以使用此选项；未配置或不支持的 `login_style` 值会回退到 `classic`。
+
 Unsplash 在线壁纸需要 Unsplash API Access Key。当前 `luci-app-argon-config` 界面尚未提供此设置；选择 Unsplash 后，可通过 UCI 配置：
 
 ```sh
@@ -83,7 +85,7 @@ uci commit argon
 
 ## 版本历史
 
-当前最新的版本为 v2.4.7 [点击这里][zh-cn-release-log]查看完整的版本历史日志.
+当前最新的版本为 v2.4.8 [点击这里][zh-cn-release-log]查看完整的版本历史日志.
 
 ## 快速开始
 
@@ -96,21 +98,52 @@ make menuconfig #choose LUCI->Theme->Luci-theme-argon
 make -j1 V=s
 ```
 
+### 选择安装包
+
+请按固件原生使用的包管理器选择格式，不能仅根据系统中是否有 `apk` 命令判断：
+
+| 固件的包管理器 | Release 附件 | 安装命令 |
+| --- | --- | --- |
+| `opkg`（如 OpenWrt 23.05、24.10，以及基于这些版本的 GL.iNet 固件） | `.ipk` | `opkg install` |
+| 原生使用 APK v3 的 OpenWrt / ImmortalWrt（`apk-tools 3.x`） | `.apk` | `apk add --allow-untrusted` |
+
+本项目的 APK 使用 **APK v3 格式**，`apk-tools 2.x`（包括 `2.14.0`）无法读取。`--allow-untrusted` 只跳过签名信任检查，不能解决格式不兼容；`apk` 也不能安装 IPK。
+
+对于 [#705](https://github.com/jerrykuku/luci-theme-argon/issues/705) 中的 GL.iNet / OpenWrt 23.05 环境，应下载 IPK 并使用固件原有的 `opkg` 安装，无需替换系统包管理器。
+
+从 [Release][release] 下载主题包 `luci-theme-argon`、配置插件包 `luci-app-argon-config`，以及需要的 `luci-i18n-argon-config-<语言>` 语言包。所有包必须选择相同格式，以附件的实际文件名为准，不要自行拼接版本号或修改扩展名。
+
+将文件放在同一个空目录中，每个包只保留一个版本，然后在该目录执行下面对应的命令。
+
 ### 安装 release 包 (`ipk`)
 
 ```bash
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.7/luci-theme-argon_2.4.7-1_all.ipk
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.7/luci-app-argon-config_2.4.7-1_all.ipk
-opkg install ./luci-theme-argon_2.4.7-1_all.ipk ./luci-app-argon-config_2.4.7-1_all.ipk
+opkg update
+opkg install ./luci-theme-argon_*.ipk ./luci-app-argon-config_*.ipk
+```
+
+如已下载相同格式的语言包，再执行：
+
+```bash
+opkg install ./luci-i18n-argon-config-*.ipk
 ```
 
 ### 安装 release 包 (`apk`)
 
+仅适用于固件原生使用 `apk-tools 3.x` 的环境，可用 `apk --version` 查看版本。
+
 ```bash
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.7/luci-theme-argon-2.4.7-r1.apk
-wget https://github.com/jerrykuku/luci-theme-argon/releases/download/v2.4.7/luci-app-argon-config-2.4.7-r1.apk
-apk add --allow-untrusted ./luci-theme-argon-2.4.7-r1.apk ./luci-app-argon-config-2.4.7-r1.apk
+apk update
+apk add --allow-untrusted ./luci-theme-argon-*.apk ./luci-app-argon-config-*.apk
 ```
+
+如已下载相同格式的语言包，再执行：
+
+```bash
+apk add --allow-untrusted ./luci-i18n-argon-config-*.apk
+```
+
+遇到 `IO ERROR` 时，先用 `ls -l ./*.apk` 核对文件确实存在、名称正确且下载完整，再检查 `apk --version`；不要通过强制安装绕过包格式或依赖问题。
 
 
 ## 屏幕截图

@@ -156,6 +156,14 @@
 
 // System - Flash Firmware
 [data-page="admin-system-flash"] {
+    // Upgrade options use button-styled labels with multiline text.
+    .modal .btn {
+        height: auto;
+        min-height: 2.5rem;
+        max-width: 100%;
+        white-space: normal;
+    }
+
     .cbi-value {
         padding: 0 1rem;
     }
@@ -445,6 +453,86 @@
     }
 }
 
+// Network - Switch / VLAN (LuCI's page stylesheet loads after the theme)
+[data-page="admin-network-switch-vlan"] #switch-vlan-view {
+    --background-color-medium: #f4f5f7;
+    --background-color-high: #fff;
+    --text-color-high: var(--gray-dark);
+    --text-color-low: #626b7a;
+    --border-color-low: #dee2e6;
+    --border-color-medium: #cbd5e1;
+    --border-color-high: #8898aa;
+    --primary-color-high: var(--primary);
+    --svc-row-bg: var(--background-color-medium);
+    --svc-row-hover-bg: var(--background-color-high);
+    --svc-row-add-bg: var(--background-color-medium);
+    --svc-port-selected-bg: #e8ecff;
+    --svc-port-selected-hover-bg: #dfe4ff;
+    --svc-port-selected-border: var(--primary);
+    --svc-port-selected-ring: rgba(94, 114, 228, 0.28);
+    --svc-vlan-tagged: #8c4800;
+    --svc-vlan-untagged: #06685f;
+    --svc-vlan-checked-text: #fff;
+
+    color: var(--text-color-high);
+
+    input[type="text"],
+    input[type="number"] {
+        background-color: var(--background-color-high) !important;
+
+        &::placeholder {
+            color: var(--text-color-low);
+            opacity: 1;
+        }
+
+        &:focus {
+            border-color: var(--primary-color-high) !important;
+        }
+    }
+
+    .svc-port-tile.selected:hover {
+        background: var(--svc-port-selected-hover-bg);
+        border-color: var(--svc-port-selected-border);
+    }
+
+    .svc-vlan-btn-tagged,
+    .svc-vlan-btn-assign-tagged {
+        --svc-role-color: var(--svc-vlan-tagged);
+        --svc-role-bg: var(--svc-vlan-tagged-bg);
+        --svc-role-stripe: var(--svc-vlan-tagged-stripe);
+    }
+
+    .svc-vlan-btn-untagged,
+    .svc-vlan-btn-assign-untagged {
+        --svc-role-color: var(--svc-vlan-untagged);
+        --svc-role-bg: var(--svc-vlan-untagged-bg);
+        --svc-role-stripe: var(--svc-vlan-untagged-stripe);
+    }
+
+    // Preserve T/U colors against Argon's generic button color and border rules.
+    .svc-vlan-btn-tagged:not(:disabled),
+    .svc-vlan-btn-untagged:not(:disabled),
+    .svc-vlan-assign-btn:not(.svc-vlan-assign-disabled) {
+        color: var(--svc-role-color) !important;
+        border-color: var(--svc-role-color) !important;
+    }
+
+    .svc-vlan-assign-btn.svc-vlan-assign-checked {
+        background: var(--svc-role-color);
+        color: var(--svc-vlan-checked-text) !important;
+    }
+
+    .svc-vlan-assign-btn.svc-vlan-assign-mixed {
+        background: repeating-linear-gradient(135deg,
+            var(--svc-role-stripe) 0 0.5rem,
+            var(--svc-role-bg) 0.5rem 1rem);
+    }
+
+    .svc-vlan-assign-btn.svc-vlan-assign-checked .svc-vlan-btn-prefix {
+        color: inherit;
+    }
+}
+
 // Network - DHCP and DNS
 [data-page="admin-network-dhcp"] {
     .cbi-value {
@@ -592,6 +680,15 @@
     }
 }
 
+// Status - Channel Analysis
+[data-page="admin-status-channel_analysis"] [data-tab-title]:not([data-tab-active="true"]) {
+    // LuCI measures every band's graph before its tab is activated. Preserve
+    // the width of inactive panes while the shared tab rules collapse height.
+    display: block !important;
+    visibility: hidden;
+    padding: 0;
+}
+
 // Status - IPTables
 [data-page="admin-status-iptables"] {
     .right {
@@ -652,6 +749,24 @@
 }
 
 // Services - Dockerman
+[data-page="admin-docker-overview"] .cbi-section-table {
+    // Keep long JSON values inside the Version and Environment tables.
+    table-layout: fixed;
+
+    .th,
+    .td {
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: left !important;
+        vertical-align: top;
+    }
+
+    .th:first-child {
+        width: 30% !important;
+    }
+}
+
 #cbi-dockerd {
     .cbi-section {
         box-sizing: border-box;
@@ -1475,15 +1590,21 @@ div[style*="display:grid;grid-template-columns:repeat"] {
     display: none;
 }
 
-// overview & mwan3
+// MultiWAN cards in the system overview and the mwan3 overview.
 #mwan3-service-status {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: stretch;
     flex-wrap: wrap;
-}
 
-#mwan3-service-status > .alert-message { 
-    position: static;
-    transform: none;
+    // Override mwan3.css even when the view loads it after the theme.
+    >div.alert-message {
+        position: static;
+        transform: none;
+        z-index: auto;
+        height: auto;
+        min-height: 6rem;
+        max-width: calc(100% - 2rem);
+        overflow-wrap: anywhere;
+    }
 }

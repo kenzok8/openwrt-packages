@@ -17,12 +17,15 @@
 -#}
 
 </div>
-<!-- added style="text-wrap: auto" but on this page it is still not the best solution. I will take it to consideration next time :) -->
-<footer style="text-wrap: auto">
-	<div>
-		<a class="luci-link" href="https://github.com/openwrt/luci" target="_blank">Powered by {{ version.luciname }} ({{ version.luciversion }})</a>
+{%
+	const luci_info = 'Powered by ' + version.luciname + ' (' + version.luciversion + ')';
+	const firmware_info = version.distname + ' ' + version.distversion + '-' + version.distrevision;
+%}
+<footer>
+	<div title="{{ entityencode(luci_info + ' · ArgonTheme · ' + firmware_info, true) }}">
+		<a class="luci-link" href="https://github.com/openwrt/luci" target="_blank" title="{{ entityencode(luci_info, true) }}"><span class="login-footer-detail">Powered by </span>{{ version.luciname }}<span class="login-footer-detail"> ({{ version.luciversion }})</span></a>
 		<a href="https://github.com/jerrykuku/luci-theme-argon" target="_blank">ArgonTheme {# vPKG_VERSION #}</a>
-		<a class="luci-link" href="{{ version.disturl }}" target="_blank">{{ version.distname }} {{ version.distversion }}-{{ version.distrevision }}</a>
+		<a class="luci-link" href="{{ version.disturl }}" target="_blank" title="{{ entityencode(firmware_info, true) }}">{{ version.distname }} {{ version.distversion }}<span class="login-footer-detail">-{{ version.distrevision }}</span></a>
 	</div>
 </footer>
 </div>

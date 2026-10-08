@@ -39,6 +39,7 @@
   --gray: #8898aa;
   --gray-dark: #32325d;
   --lighter: #e9ecef;
+  --table-border: thin solid #ddd;
   --success: #2dce89;
   --info: #11cdef;
   --warning: #fb6340;
@@ -323,8 +324,43 @@ select[multiple="multiple"] {
 }
 
 #maincontent > .alert-message {
-  position: fixed;
-  transform: translate(-50%, -50%);
+  // LuCI inserts notification banners before the view container.
+  position: static;
+  width: auto;
+  left: auto;
+  top: auto;
+  transform: none;
+  z-index: auto;
+  margin: 0 1.25rem 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  line-height: 1.5;
+
+  > div {
+    min-width: 0;
+    margin: 0;
+  }
+
+  > div:first-child > * {
+    margin: 0;
+
+    + * {
+      margin-top: .75rem;
+    }
+  }
+
+  h4 {
+    padding: .5rem .75rem;
+  }
+
+  .btn {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  @media screen and (max-width: 600px) {
+    flex-direction: column;
+  }
 }
 
 .container .alert,
@@ -336,11 +372,6 @@ select[multiple="multiple"] {
   top: 0;
   transform:translate(-50%, 0);
   width: 100%;
-}
-
-#mwan3-service-status > .alert-message {
-  left: 0.5rem;
-  transform: none;
 }
 
 .lg {
@@ -528,19 +559,8 @@ body:not([data-page="admin-dashboard"]) {
   .tr>.th,
   .cbi-section-table-row::before,
   #cbi-wireless>#wifi_assoclist_table>.tr:nth-child(2) {
-    border-top: thin solid #ddd;
+    border-top: var(--table-border);
     padding: 1.1em 1.25rem;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  body:not([data-page="admin-dashboard"]) {
-    tr>td,
-    tr>th,
-    .tr>.td,
-    .tr>.th {
-      border-top: thin solid #444 !important;
-    }
   }
 }
 
@@ -1549,6 +1569,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   border-left: thin solid #ccc;
 }
 
+// Empty selections use .more; list items stay hidden until the menu opens.
 .cbi-dropdown[empty]>ul {
   max-width: 1px;
 }
@@ -1612,7 +1633,6 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 
 }
 
-.cbi-dropdown[empty]>ul>li,
 .cbi-dropdown[optional][open]>ul.dropdown>li[placeholder],
 .cbi-dropdown[multiple][open]>ul.dropdown>li>form {
   display: block;

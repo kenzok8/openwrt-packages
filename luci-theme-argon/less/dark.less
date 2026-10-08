@@ -29,6 +29,11 @@
  */
 
 
+// Follow the active theme stylesheet, including forced dark mode.
+:root {
+    --table-border: 0;
+}
+
 body {
     background: #1e1e1e;
     color: #cccccc;
@@ -833,18 +838,14 @@ div[style="width:100%;height:300px;border:1px solid #000;background:#fff"] {
             border-color: #fff !important;
         }
 
-        .btn {
-            white-space: normal !important;
-            background-color: darkseagreen;
-        }
-
         .alert-message {
             background-color: transparent !important;
         }
 
         .danger {
             border: thin solid darkorange !important;
-            background-color: darkorange !important;
+            background-color: #784f00 !important;
+            color: #fff;
         }
     }
 }
@@ -1079,6 +1080,30 @@ input,
     img[src$="eye-light.svg"] {
         filter: invert(0.9);
     }
+}
+
+// The switch-vlan page uses Bootstrap variables and its own dark-mode marker.
+// Map its palette here so forced and system-following Argon modes both work.
+[data-page="admin-network-switch-vlan"] #switch-vlan-view {
+    --background-color-medium: #252526;
+    --background-color-high: #333;
+    --text-color-high: #ccc;
+    --text-color-low: #adb5bd;
+    --border-color-low: #3c3c3c;
+    --border-color-medium: #515151;
+    --border-color-high: #8898aa;
+    --primary-color-high: var(--dark-primary);
+    --svc-port-selected-bg: #34314b;
+    --svc-port-selected-hover-bg: #413c60;
+    --svc-port-selected-border: #a5b2ff;
+    --svc-port-selected-ring: rgba(165, 178, 255, 0.28);
+    --svc-vlan-untagged: #2dd4bf;
+    --svc-vlan-tagged: #fbbf24;
+    --svc-vlan-untagged-bg: rgba(45, 212, 191, 0.08);
+    --svc-vlan-tagged-bg: rgba(251, 191, 36, 0.1);
+    --svc-vlan-untagged-stripe: rgba(45, 212, 191, 0.16);
+    --svc-vlan-tagged-stripe: rgba(251, 191, 36, 0.18);
+    --svc-vlan-checked-text: #1e1e1e;
 }
 
 [data-page="admin-network-diagnostics"] {
