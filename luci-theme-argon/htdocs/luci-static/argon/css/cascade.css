@@ -785,7 +785,9 @@ select[multiple="multiple"] {
 }
 .login-page .login-container .login-form .brand .icon {
   width: 50px;
-  height: auto;
+  height: 50px;
+  object-fit: contain;
+  flex-shrink: 0;
   margin-right: 25px;
 }
 .login-page .login-container .login-form .brand .brand-text {
@@ -950,6 +952,7 @@ select[multiple="multiple"] {
 }
 .login-page[data-login-style="centered"] .login-container .login-form .brand .icon {
   width: 2.5rem;
+  height: 2.5rem;
   margin: 0;
   flex-shrink: 0;
 }

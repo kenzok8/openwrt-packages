@@ -78,6 +78,14 @@ uci commit argon
 
 未配置密钥时，登录页会使用本地背景。Bing 和 Wallhaven 壁纸选项不受影响。
 
+## 自定义网站图标与登录 Logo
+
+在 **系统 → Argon 主题设置 → 自定义图标** 中，可以分别上传网站图标和登录页 Logo，也可以将同一张图片同时用于两处；每项都可恢复默认。支持 PNG 格式，每边 16–1024 像素，最大 1 MiB。网站图标需为正方形；登录 Logo 按原比例缩放，兼容经典侧栏和居中卡片。
+
+请同时更新主题和配置插件。上传或恢复后立即生效，无需保存其他设置；已打开的页面需要刷新才能更新图标。自定义网站图标也用于手机桌面图标和 manifest，已添加到桌面的快捷方式可能需要重新添加。
+
+自定义文件保存在 `/www/luci-static/argon/branding/`，不会覆盖主题内置图标。配置插件通过 `keep.d` 将此目录纳入保留配置升级的备份；不保留配置时不会保留自定义图标。
+
 ## 兼容性
 
 目前仅维护 `master` 分支。  
@@ -108,6 +116,8 @@ make -j1 V=s
 | 原生使用 APK v3 的 OpenWrt / ImmortalWrt（`apk-tools 3.x`） | `.apk` | `apk add --allow-untrusted` |
 
 本项目的 APK 使用 **APK v3 格式**，`apk-tools 2.x`（包括 `2.14.0`）无法读取。`--allow-untrusted` 只跳过签名信任检查，不能解决格式不兼容；`apk` 也不能安装 IPK。
+
+APK 构建使用 OpenWrt **25.12.5 稳定版 SDK**，主题模板保留源码以兼容目标运行时。原始 v2.4.8 APK 使用 snapshot SDK 构建，要求 `ucode>=2026.02.27`，而 OpenWrt 25.12.5 不提供该版本（[#715](https://github.com/jerrykuku/luci-theme-argon/issues/715)）。该附件需要包含本次修复后重新构建；更新仓库代码不会替换已经发布的安装包。请勿绕过依赖检查安装不兼容的字节码。
 
 对于 [#705](https://github.com/jerrykuku/luci-theme-argon/issues/705) 中的 GL.iNet / OpenWrt 23.05 环境，应下载 IPK 并使用固件原有的 `opkg` 安装，无需替换系统包管理器。
 

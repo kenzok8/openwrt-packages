@@ -260,3 +260,67 @@ jsonfilter() { return 1; }
 		rmSync(dir, { recursive: true, force: true });
 	}
 });
+
+// Exercise the real filesystem module, including malformed state and stale files.
+test('custom branding accepts only published assets and safely falls back', () => {
+	const dir = mkdtempSync(path.join(tmpdir(), 'argon-branding-test-'));
+	const assets = path.join(dir, 'branding');
+	const module = path.join(dir, 'luci', 'argon-branding.uc');
+	fs.mkdirSync(path.dirname(module));
+	const source = fs.readFileSync(path.join(root, 'root/usr/share/ucode/luci/argon-branding.uc'), 'utf8');
+	writeFileSync(module, source.replace('/www/luci-static/argon/branding/', assets + '/'));
+	const ucode = process.env.UCODE_BIN || 'ucode';
+	const args = ['-L', path.join(path.dirname(ucode), '*.so'), '-L', path.join(dir, '*.uc')];
+	const read = () => JSON.parse(execFileSync(ucode, [...args, '-e',
+		"import { get_branding } from 'luci.argon-branding'; print(sprintf('%J', get_branding()));"
+	], { encoding: 'utf8' }));
+	const image = 'image-' + 'a'.repeat(64) + '.png';
+	const manifest = image.replace('.png', '.webmanifest');
+	const index = path.join(assets, 'current.json');
+	try {
+		assert.deepEqual(read(), {});
+		fs.mkdirSync(assets);
+		writeFileSync(path.join(assets, image), Buffer.alloc(100));
+		writeFileSync(path.join(assets, manifest), '{}');
+		writeFileSync(index, JSON.stringify({ favicon: image, logo: image }));
+		assert.deepEqual(read(), { favicon: image, logo: image, manifest });
+		for (const bad of ['broken', 'null', '[]', '123', '"text"', '{"logo":"../elsewhere.png"}', ' '.repeat(1025)]) {
+			writeFileSync(index, bad);
+			assert.deepEqual(read(), {});
+		}
+		writeFileSync(index, JSON.stringify({ logo: image, favicon: '../outside.png' }));
+		assert.deepEqual(read(), { logo: image });
+		fs.unlinkSync(path.join(assets, image));
+		assert.deepEqual(read(), {});
+		writeFileSync(path.join(dir, 'outside.png'), Buffer.alloc(100));
+		fs.symlinkSync(path.join(dir, 'outside.png'), path.join(assets, image));
+		assert.deepEqual(read(), {});
+		fs.unlinkSync(index);
+		fs.symlinkSync(path.join(dir, 'outside.png'), index);
+		assert.deepEqual(read(), {});
+		fs.renameSync(assets, path.join(dir, 'saved'));
+		fs.symlinkSync(path.join(dir, 'saved'), assets);
+		assert.deepEqual(read(), {});
+	} finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('custom head icons replace every default candidate and restore as a group', () => {
+	const dir = mkdtempSync(path.join(tmpdir(), 'argon-head-test-'));
+	const source = fs.readFileSync(path.join(root, 'ucode/template/themes/argon/head_meta.ut'), 'utf8')
+		.replace("import { get_branding } from 'luci.argon-branding';", 'function get_branding() { return fixture; }');
+	const file = path.join(dir, 'head.ut');
+	writeFileSync(file, '{% let media="/luci-static/argon"; let hostname="Router"; let node={}; let bar_color="#123456"; %}' + source);
+	const render = fixture => execFileSync(process.env.UCODE_BIN || 'ucode', ['-T,', '-Dfixture=' + JSON.stringify(fixture), file], { encoding: 'utf8' });
+	try {
+		const defaults = render({});
+		assert.match(defaults, /favicon\.ico/);
+		assert.match(defaults, /apple-icon-144x144\.png/);
+		assert.match(defaults, /icon\/manifest\.json/);
+		const custom = render({ favicon: 'custom.png', manifest: 'custom.webmanifest' });
+		assert.match(custom, /rel="icon" type="image\/png" href="\/luci-static\/argon\/branding\/custom.png"/);
+		assert.match(custom, /rel="apple-touch-icon" href="\/luci-static\/argon\/branding\/custom.png"/);
+		assert.match(custom, /branding\/custom.webmanifest/);
+		assert.doesNotMatch(custom, /favicon\.ico|icon\/favicon|icon\/android|icon\/apple|icon\/manifest/);
+		assert.equal(render({ logo: 'custom.png' }), defaults);
+	} finally { rmSync(dir, { recursive: true, force: true }); }
+});
