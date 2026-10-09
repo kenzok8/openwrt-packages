@@ -6,16 +6,19 @@
 				"/www/luci-static/argon/background/*": [ "list" ]
 			},
 			"ubus": {
-				"luci.argon": [ "avail" ]
+				"luci.argon": [ "avail" ],
+				"luci.argon_branding": [ "get" ]
 			},
 			"uci": [ "argon" ]
 		},
 		"write": {
 			"file": {
-				"/tmp/argon_background.tmp": [ "write" ]
+				"/tmp/argon_background.tmp": [ "write" ],
+				"/tmp/argon_branding_*.png": [ "write" ]
 			},
 			"ubus": {
-				"luci.argon": [ "remove", "rename" ]
+				"luci.argon": [ "remove", "rename" ],
+				"luci.argon_branding": [ "set", "reset" ]
 			},
 			"uci": [ "argon" ]
 		}

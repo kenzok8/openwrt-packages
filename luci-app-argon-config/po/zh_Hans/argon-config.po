@@ -209,3 +209,51 @@ msgstr "居中卡片"
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
 msgid "Applies the next time you open the login page."
 msgstr "下次打开登录页时生效。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Browser icon"
+msgstr "网站图标"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Login logo"
+msgstr "登录页 Logo"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Invalid PNG image or dimensions."
+msgstr "PNG 图片或尺寸不符合要求。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Another update is running. Please try again."
+msgstr "有其他更新正在进行，请稍后重试。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Unable to save custom branding."
+msgstr "无法保存自定义图标。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Upload PNG..."
+msgstr "上传 PNG…"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Restore default"
+msgstr "恢复默认"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Custom branding"
+msgstr "自定义图标"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "PNG images, 16–1024 pixels per side, up to 1 MiB. Browser icons must be square."
+msgstr "支持 PNG，每边 16–1024 像素，最大 1 MiB。网站图标须为正方形。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Upload for both..."
+msgstr "同时用于两处…"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Changes apply immediately. Reload open pages to update their icons."
+msgstr "更改立即生效。请刷新已打开的页面以更新图标。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Unable to load custom branding. Update the theme and configuration packages."
+msgstr "无法加载自定义图标。请更新主题和配置插件。"

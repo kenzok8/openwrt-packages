@@ -210,3 +210,51 @@ msgstr "Cartão centralizado"
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
 msgid "Applies the next time you open the login page."
 msgstr "Aplicado na próxima vez que você abrir a página de login."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Browser icon"
+msgstr "Ícone do navegador"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Login logo"
+msgstr "Logotipo de login"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Invalid PNG image or dimensions."
+msgstr "Imagem PNG ou dimensões inválidas."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Another update is running. Please try again."
+msgstr "Outra atualização está em andamento. Tente novamente mais tarde."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Unable to save custom branding."
+msgstr "Não foi possível salvar os ícones personalizados."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Upload PNG..."
+msgstr "Enviar PNG…"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Restore default"
+msgstr "Restaurar padrão"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Custom branding"
+msgstr "Ícones personalizados"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "PNG images, 16–1024 pixels per side, up to 1 MiB. Browser icons must be square."
+msgstr "Imagens PNG, 16–1024 pixels por lado, até 1 MiB. Os ícones do navegador devem ser quadrados."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Upload for both..."
+msgstr "Enviar para ambos…"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Changes apply immediately. Reload open pages to update their icons."
+msgstr "As alterações são aplicadas imediatamente. Recarregue as páginas abertas para atualizar seus ícones."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Unable to load custom branding. Update the theme and configuration packages."
+msgstr "Não foi possível carregar os ícones personalizados. Atualize o tema e o pacote de configuração."

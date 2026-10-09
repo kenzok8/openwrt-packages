@@ -57,6 +57,14 @@ In **System → Argon Config**, choose **Classic sidebar** (default) or **Center
 
 This feature requires a theme version supporting `login_style`. Update the theme and this plugin together. Existing configurations without this option continue to use the classic layout.
 
+## Custom browser icon and login logo
+
+Under **System → Argon Config → Custom branding**, upload a browser icon and login logo separately, or use one image for both. Each can be restored to its default. PNG images must be 16–1024 pixels per side and at most 1 MiB. Browser icons must be square; login logos retain their aspect ratio in both login layouts.
+
+Update both the theme and configuration plugin. Uploads and resets apply immediately without saving other settings; reload open pages to update their icons. The custom browser icon also supplies the touch icon and web manifest. Existing home-screen shortcuts may need to be added again.
+
+Files are stored in `/www/luci-static/argon/branding/` without replacing packaged assets. The configuration plugin includes this directory in `keep.d` backups for upgrades that preserve configuration. Upgrades without configuration preservation reset the icons.
+
 ## Branch Introduction
 
 There are currently two main branches that are adapted to different versions of the **OpenWrt** source code.  

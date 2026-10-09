@@ -208,3 +208,51 @@ msgstr "가운데 카드"
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
 msgid "Applies the next time you open the login page."
 msgstr "다음에 로그인 페이지를 열 때 적용됩니다."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Browser icon"
+msgstr "브라우저 아이콘"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Login logo"
+msgstr "로그인 로고"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Invalid PNG image or dimensions."
+msgstr "PNG 이미지 또는 크기가 올바르지 않습니다."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Another update is running. Please try again."
+msgstr "다른 업데이트가 진행 중입니다. 나중에 다시 시도하세요."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Unable to save custom branding."
+msgstr "사용자 지정 아이콘을 저장할 수 없습니다."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Upload PNG..."
+msgstr "PNG 업로드…"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Restore default"
+msgstr "기본값 복원"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Custom branding"
+msgstr "사용자 지정 아이콘"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "PNG images, 16–1024 pixels per side, up to 1 MiB. Browser icons must be square."
+msgstr "PNG 이미지, 각 변 16–1024픽셀, 최대 1 MiB. 브라우저 아이콘은 정사각형이어야 합니다."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Upload for both..."
+msgstr "두 곳 모두에 업로드…"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Changes apply immediately. Reload open pages to update their icons."
+msgstr "변경 사항은 즉시 적용됩니다. 열려 있는 페이지를 새로 고쳐 아이콘을 업데이트하세요."
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Unable to load custom branding. Update the theme and configuration packages."
+msgstr "사용자 지정 아이콘을 불러올 수 없습니다. 테마와 설정 패키지를 업데이트하세요."

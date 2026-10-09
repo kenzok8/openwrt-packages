@@ -208,3 +208,51 @@ msgstr "中央カード"
 #: applications/luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
 msgid "Applies the next time you open the login page."
 msgstr "次にログインページを開いたときに適用されます。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Browser icon"
+msgstr "ブラウザーアイコン"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Login logo"
+msgstr "ログインロゴ"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Invalid PNG image or dimensions."
+msgstr "PNG 画像またはサイズが無効です。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Another update is running. Please try again."
+msgstr "別の更新が進行中です。後でもう一度お試しください。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Unable to save custom branding."
+msgstr "カスタムアイコンを保存できません。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Upload PNG..."
+msgstr "PNG をアップロード…"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Restore default"
+msgstr "既定値に戻す"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Custom branding"
+msgstr "カスタムアイコン"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "PNG images, 16–1024 pixels per side, up to 1 MiB. Browser icons must be square."
+msgstr "PNG 画像、各辺 16–1024 ピクセル、最大 1 MiB。ブラウザーアイコンは正方形にしてください。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Upload for both..."
+msgstr "両方にアップロード…"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Changes apply immediately. Reload open pages to update their icons."
+msgstr "変更はすぐに適用されます。開いているページを再読み込みしてアイコンを更新してください。"
+
+#: applications/luci-app-argon-config/htdocs/luci-static/resources/argon/branding.js
+msgid "Unable to load custom branding. Update the theme and configuration packages."
+msgstr "カスタムアイコンを読み込めません。テーマと設定パッケージを更新してください。"

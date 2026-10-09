@@ -69,10 +69,11 @@ function fixture(options = {}) {
 		remove(filename) { state.cleanups.push(filename); return Promise.resolve(); }
 	};
 	const L = { bind: (fn, context) => fn.bind(context), resolveDefault: (promise, value) => Promise.resolve(promise).catch(() => value), resource: name => '/luci-static/resources/' + name };
-	state.view = new Function('form', 'fs', 'rpc', 'uci', 'ui', 'view', 'L', 'E', '_', 'cbi_update_table', 'location', 'document', source)(
+	state.view = new Function('form', 'fs', 'rpc', 'uci', 'ui', 'view', 'L', 'E', '_', 'cbi_update_table', 'location', 'document', 'branding', source)(
 		form, fileApi, rpc, { load: () => Promise.resolve() }, ui, { extend: value => value }, L, E,
 		value => value, (table, rows) => { state.rows = rows; }, { reload() { state.reloads++; } },
-		{ getElementById: id => state.nodes[id] }
+		{ getElementById: id => state.nodes[id] },
+		{ load: () => Promise.resolve({ result: 0 }), render: () => E('div', {}, []) }
 	);
 	state.render = async () => state.view.render(await state.view.load());
 	state.button = name => state.map.options.find(option => option.name === name);

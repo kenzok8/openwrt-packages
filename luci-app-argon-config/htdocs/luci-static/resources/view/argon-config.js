@@ -1,5 +1,6 @@
 'use strict';
 'require form';
+'require argon.branding as branding';
 'require fs';
 'require rpc';
 'require uci';
@@ -45,7 +46,8 @@ return view.extend({
 			fs.list(bg_path).catch(function(e) {
 				ui.addNotification(null, E('p', _('Failed to list background files: %s.').format(e.message)));
 				return [];
-			})
+			}),
+			branding.load()
 		]);
 	},
 
@@ -164,6 +166,9 @@ return view.extend({
 				ui.addNotification(null, E('p', e.message));
 			});
 		};
+
+		s = m.section(form.TypedSection);
+		s.render = function() { return branding.render(this.map, data[3]); };
 
 		s = m.section(form.TypedSection, null, _('Upload background (available space: %1024.2mB)')
 			.format(data[1].avail * 1024),

@@ -1,0 +1,132 @@
+#!/bin/sh
+
+. /usr/share/libubox/jshn.sh
+
+readonly branding_dir='/www/luci-static/argon/branding'
+readonly lock_dir='/tmp/argon_branding.lock'
+readonly upload_prefix='/tmp/argon_branding_'
+
+valid_destination() {
+	[ ! -L "$1" ] && { [ ! -e "$1" ] || [ -f "$1" ]; }
+}
+
+valid_asset() {
+	printf '%s\n' "$1" | grep -Eq '^image-[0-9a-f]{64}\.png$' &&
+		[ -f "$branding_dir/$1" ] && [ ! -L "$branding_dir/$1" ]
+}
+
+read_state() {
+	favicon=''
+	logo=''
+	[ -d "$branding_dir" ] && [ ! -L "$branding_dir" ] || return 0
+	if [ -f "$branding_dir/current.json" ] && [ ! -L "$branding_dir/current.json" ] &&
+		[ "$(wc -c < "$branding_dir/current.json")" -le 1024 ] &&
+		json_load "$(cat "$branding_dir/current.json")"; then
+		json_get_var favicon favicon
+		json_get_var logo logo
+	fi
+	valid_asset "$favicon" || favicon=''
+	valid_asset "$logo" || logo=''
+}
+
+status() {
+	json_init
+	json_add_int result "$1"
+	json_add_string favicon "$favicon"
+	json_add_string logo "$logo"
+	json_dump
+}
+
+# Check the PNG header, bounded dimensions, IDAT presence and complete IEND.
+# Images are served as PNG only, never as user-supplied filenames or SVG/HTML.
+validate_png() {
+	local size header ending
+	size="$(wc -c < "$1")"
+	[ "$size" -ge 67 ] && [ "$size" -le 1048576 ] || return 1
+	header="$(od -An -v -tu1 -N 29 "$1")"
+	set -- $header
+	[ "$#" -eq 29 ] || return 1
+	[ "$1 $2 $3 $4 $5 $6 $7 $8" = '137 80 78 71 13 10 26 10' ] || return 1
+	shift 8
+	[ "$1 $2 $3 $4 $5 $6 $7 $8" = '0 0 0 13 73 72 68 82' ] || return 1
+	shift 8
+	width=$(( $1 * 16777216 + $2 * 65536 + $3 * 256 + $4 ))
+	height=$(( $5 * 16777216 + $6 * 65536 + $7 * 256 + $8 ))
+	[ "$width" -ge 16 ] && [ "$height" -ge 16 ] &&
+		[ "$width" -le 1024 ] && [ "$height" -le 1024 ] || return 1
+	[ "$target" = logo ] || [ "$width" -eq "$height" ] || return 1
+	shift 8
+	case "$1:$2" in 1:0|2:0|4:0|8:0|16:0|8:2|16:2|1:3|2:3|4:3|8:3|8:4|16:4|8:6|16:6) ;; *) return 1 ;; esac
+	[ "$3 $4" = '0 0' ] && [ "$5" -le 1 ] || return 1
+	ending="$(tail -c 12 "$work/image.png" | od -An -v -tx1 | tr -d ' \n')"
+	[ "$ending" = '0000000049454e44ae426082' ] && LC_ALL=C grep -q 'IDAT' "$work/image.png"
+}
+
+cleanup() {
+	[ -z "$work" ] || rm -rf "$work"
+	rmdir "$lock_dir" 2>/dev/null
+}
+
+case "$1" in
+list)
+	printf '%s\n' '{"get":{},"set":{"target":"","token":""},"reset":{"target":""}}'
+	;;
+call)
+	method="$2"
+	case "$method" in
+	get) read_state; status 0; exit 0 ;;
+	set|reset) ;;
+	*) exit 1 ;;
+	esac
+	read -r input
+	json_load "$input" || { status 2; exit 0; }
+	json_get_var target target
+	json_get_var token token
+	case "$target" in favicon|logo|both) ;; *) status 2; exit 0 ;; esac
+	if [ "$method" = set ]; then
+		printf '%s\n' "$token" | grep -Eq '^[0-9a-f]{32}$' || { status 2; exit 0; }
+		upload="${upload_prefix}${token}.png"
+		[ -f "$upload" ] && [ ! -L "$upload" ] || { status 2; exit 0; }
+	fi
+	mkdir "$lock_dir" 2>/dev/null || { status 3; exit 0; }
+	work=''
+	trap cleanup EXIT
+	trap 'exit 1' HUP INT TERM
+	umask 077
+	[ ! -L "$branding_dir" ] && mkdir -p "$branding_dir" && chmod 0755 "$branding_dir" || { status 1; exit 0; }
+	work="$(mktemp -d "$branding_dir/.upload.XXXXXX")" || { status 1; exit 0; }
+	read_state
+	old_favicon="$favicon"
+	old_logo="$logo"
+	if [ "$method" = set ]; then
+		mv "$upload" "$work/image.png" || { status 1; exit 0; }
+		validate_png "$work/image.png" || { status 2; exit 0; }
+		hash="$(sha256sum "$work/image.png")"
+		hash="${hash%% *}"
+		printf '%s\n' "$hash" | grep -Eq '^[0-9a-f]{64}$' || { status 1; exit 0; }
+		asset="image-$hash.png"
+		manifest="image-$hash.webmanifest"
+		valid_destination "$branding_dir/$asset" && valid_destination "$branding_dir/$manifest" || { status 1; exit 0; }
+		printf '{"name":"OpenWrt","display":"standalone","icons":[{"src":"%s","sizes":"%sx%s","type":"image/png"}]}\n' "$asset" "$width" "$height" > "$work/manifest"
+		chmod 0644 "$work/image.png" "$work/manifest" &&
+			mv -f "$work/image.png" "$branding_dir/$asset" &&
+			mv -f "$work/manifest" "$branding_dir/$manifest" || { status 1; exit 0; }
+	else
+		asset=''
+	fi
+	case "$target" in favicon) favicon="$asset" ;; logo) logo="$asset" ;; both) favicon="$asset"; logo="$asset" ;; esac
+	json_init
+	json_add_string favicon "$favicon"
+	json_add_string logo "$logo"
+	json_dump > "$work/current.json"
+	valid_destination "$branding_dir/current.json" && chmod 0644 "$work/current.json" &&
+		mv -f "$work/current.json" "$branding_dir/current.json" || { status 1; exit 0; }
+	# Keep the active images and one previous generation for pages already open.
+	for file in "$branding_dir"/image-*.png; do
+		name="${file##*/}"
+		case "$name" in "$favicon"|"$logo"|"$old_favicon"|"$old_logo") continue ;; esac
+		rm -f "$file" "${file%.png}.webmanifest"
+	done
+	status 0
+	;;
+esac

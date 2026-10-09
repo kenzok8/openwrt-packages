@@ -188,7 +188,7 @@ fi
 
 class TranslationTests(unittest.TestCase):
     def test_catalogs_cover_current_messages_and_preserve_placeholders(self):
-        source = (ROOT / 'htdocs/luci-static/resources/view/argon-config.js').read_text()
+        source = '\n'.join(path.read_text() for path in (ROOT / 'htdocs/luci-static/resources').rglob('*.js'))
         acl = json.loads((ROOT / 'root/usr/share/rpcd/acl.d/luci-app-argon-config.json').read_text())
         messages = set(re.findall(r"_\('([^']*)'\)", source)) | {'Argon Config', acl['luci-app-argon-config']['description']}
         catalogs = sorted((ROOT / 'po').glob('*/argon-config.po'))
