@@ -59,13 +59,33 @@ json_dump() { printf '%s\\n' "$FIXTURE_JSON"; }
                                 capture_output=True, text=True, check=True, env=env)
         return json.loads(result.stdout)
 
-    def upload(self, target='both', data=None):
+    def upload(self, target='both', data=None, env=None):
         token = secrets.token_hex(16)
         Path(self.prefix + token + '.png').write_bytes(data if data is not None else png())
-        result = self.call('set', {'target': target, 'token': token})
+        result = self.call('set', {'target': target, 'token': token}, env=env)
         self.assertFalse(self.lock.exists())
         self.assertFalse(list(self.directory.glob('.upload.*')))
         return result
+
+    def test_upload_without_od(self):
+        # OpenWrt enables hexdump by default, but does not enable od.
+        fakebin = self.root / 'bin'
+        fakebin.mkdir()
+        (fakebin / 'od').write_text('#!/bin/sh\nexit 127\n')
+        (fakebin / 'od').chmod(0o755)
+        env = dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ['PATH'])
+        for target, width, height in [('favicon', 99, 99), ('logo', 192, 48), ('both', 64, 64)]:
+            with self.subTest(target=target):
+                data = png(width, height)
+                result = self.upload(target, data, env=env)
+                self.assertEqual(result['result'], 0)
+                asset = 'image-' + hashlib.sha256(data).hexdigest() + '.png'
+                for kind in (['favicon', 'logo'] if target == 'both' else [target]):
+                    self.assertEqual(result[kind], asset)
+                self.assertEqual((self.directory / asset).read_bytes(), data)
+                manifest = json.loads((self.directory / asset.replace('.png', '.webmanifest')).read_text())
+                self.assertEqual(manifest['icons'][0]['sizes'], f'{width}x{height}')
+        self.assertEqual(self.call('get', env=env), result)
 
     def test_independent_upload_reset_and_manifest(self):
         self.assertEqual(self.call('get'), {'result': 0, 'favicon': '', 'logo': ''})

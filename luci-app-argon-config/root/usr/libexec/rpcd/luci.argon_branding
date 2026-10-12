@@ -43,7 +43,8 @@ validate_png() {
 	local size header ending
 	size="$(wc -c < "$1")"
 	[ "$size" -ge 67 ] && [ "$size" -le 1048576 ] || return 1
-	header="$(od -An -v -tu1 -N 29 "$1")"
+	# OpenWrt enables hexdump, but od is absent or lacks -A/-t/-N.
+	header="$(hexdump -v -n 29 -e '1/1 "%u "' "$1")" || return 1
 	set -- $header
 	[ "$#" -eq 29 ] || return 1
 	[ "$1 $2 $3 $4 $5 $6 $7 $8" = '137 80 78 71 13 10 26 10' ] || return 1
@@ -58,7 +59,7 @@ validate_png() {
 	shift 8
 	case "$1:$2" in 1:0|2:0|4:0|8:0|16:0|8:2|16:2|1:3|2:3|4:3|8:3|8:4|16:4|8:6|16:6) ;; *) return 1 ;; esac
 	[ "$3 $4" = '0 0' ] && [ "$5" -le 1 ] || return 1
-	ending="$(tail -c 12 "$work/image.png" | od -An -v -tx1 | tr -d ' \n')"
+	ending="$(tail -c 12 "$work/image.png" | hexdump -v -e '1/1 "%02x"')" || return 1
 	[ "$ending" = '0000000049454e44ae426082' ] && LC_ALL=C grep -q 'IDAT' "$work/image.png"
 }
 
