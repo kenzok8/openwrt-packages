@@ -19,16 +19,30 @@ test('stable versions retain their package versions and preview suffixes use nat
 		const result = metadata(tag);
 		assert.equal(result.tag, tag);
 		assert.equal(result.prerelease, 'false');
+		assert.equal(result.package_release, '1');
 		assert.equal(result.apk_version, tag.replace(/^v/, ''));
 		assert.equal(result.ipk_version, result.apk_version);
 	}
 	for (const stage of ['alpha', 'beta', 'rc']) {
 		const result = metadata(`v2.5.0-${stage}.12`);
 		assert.equal(result.prerelease, 'true');
+		assert.equal(result.package_release, '1');
 		assert.equal(result.version, `2.5.0-${stage}.12`);
 		assert.equal(result.apk_version, `2.5.0_${stage}12`);
 		assert.equal(result.ipk_version, `2.5.0~${stage}12-1`);
 	}
+});
+
+test('rebuilt beta.1 packages upgrade the original revision in both package formats', () => {
+	for (const tag of ['v2.5.0-beta.1', '2.5.0-beta.1']) {
+		const result = metadata(tag);
+		assert.equal(result.prerelease, 'true');
+		assert.equal(result.package_release, '2');
+		assert.equal(result.apk_version, '2.5.0_beta1');
+		assert.equal(result.ipk_version, '2.5.0~beta1-2');
+	}
+	assert.equal(metadata('v2.5.0-beta.2').package_release, '1');
+	assert.equal(metadata('v2.5.0-beta.2').ipk_version, '2.5.0~beta2-1');
 });
 
 test('invalid and unsupported tags fail before producing release outputs', () => {
