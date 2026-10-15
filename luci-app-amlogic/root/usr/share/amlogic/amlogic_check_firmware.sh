@@ -181,25 +181,40 @@ check_updated() {
             https://github.com/${server_firmware_url}/releases/expanded_assets/${firmware_releases_tag}
     )"
 
-    # Set the regular expression for the OpenWrt filename
-    op_file_pattern=".*_${BOARD}_.*k${main_line_version}\.[0-9]+.*${firmware_suffix}"
-    # Find the <li> list item where the OpenWrt file is located
-    li_block=$(awk -v pattern="${op_file_pattern}" -v RS='</li>' '$0 ~ pattern { print $0 "</li>"; exit }' <<<"${html_code}")
-    [[ -z "${li_block}" ]] && tolog "02.03.01 No matching download links found." "1"
+    # Find the <li> list items where the OpenWrt file is located.
+    asset_records="$(awk -v board="${BOARD}" -v kver="${main_line_version}" -v suffix="${firmware_suffix}" -v RS='</li>' '
+        BEGIN {
+            href_pattern = "/releases/download/[^\"]*_" board "_[^\"]*k" kver "\\.[0-9]+[^\"]*" suffix
+            block_pattern = ".*_" board "_.*k" kver "\\.[0-9]+.*" suffix
+        }
+        $0 ~ block_pattern {
+            file_name = ""; file_date = ""; file_sha256 = ""
+            if (match($0, href_pattern)) {
+                file_path = substr($0, RSTART, RLENGTH)
+                file_name = file_path; sub(/.*\//, "", file_name)
+            }
+            if (match($0, /datetime="[^"]*"/))    { file_date   = substr($0, RSTART + 10, RLENGTH - 11) }
+            if (match($0, /value="sha256:[^"]*/)) { file_sha256 = substr($0, RSTART + 14, RLENGTH - 14) }
+            if (file_name != "") { printf "%s\t%s\t%s\n", file_date, file_name, file_sha256 }
+        }' <<<"${html_code}")"
+    [[ -z "${asset_records}" ]] && tolog "02.03.01 No matching download links found." "1"
+
+    # Select the OpenWrt file with the newest upload date.
+    latest_record="$(echo "${asset_records}" | sort -t$'\t' -k1,1 | tail -n 1)"
 
     # Find the OpenWrt filename
-    latest_url=$(echo "${li_block}" | grep -oE "/[^\"]*_${BOARD}_.*k${main_line_version}\.[0-9]+[^\"]*${firmware_suffix}" | sort -urV | head -n 1 | xargs basename 2>/dev/null)
+    latest_url="$(echo "${latest_record}" | cut -f2)"
     tolog "02.03.02 OpenWrt file: ${latest_url}"
 
     # Find the date of the latest update
-    latest_updated_at=$(echo "${li_block}" | grep -o 'datetime="[^"]*"' | sed 's/datetime="//; s/"//')
+    latest_updated_at="$(echo "${latest_record}" | cut -f1)"
     tolog "02.03.03 Latest updated at: ${latest_updated_at}"
     # Format the date for display
     date_display_format="$(echo ${latest_updated_at} | tr 'T' '(' | tr 'Z' ')')"
     [[ -z "${latest_url}" || -z "${latest_updated_at}" ]] && tolog "02.03.04 The download URL or date is invalid." "1"
 
     # Find the firmware sha256 value
-    latest_firmware_sha256="$(echo "${li_block}" | grep -o 'value="sha256:[^"]*' | sed 's/value="sha256://')"
+    latest_firmware_sha256="$(echo "${latest_record}" | cut -f3)"
     tolog "02.03.05 OpenWrt sha256: ${latest_firmware_sha256}"
 
     # Check the firmware update code
