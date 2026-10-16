@@ -1,0 +1,46 @@
+// out: false
+
+[data-page^="admin-system-diskman"] {
+    .dkm-card {
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--section-shadow);
+    }
+
+    .dkm-card-header {
+        flex-wrap: wrap;
+        gap: var(--control-gap);
+        border-bottom-color: var(--border-color);
+    }
+
+    .dkm-card-title,
+    .dkm-item-value {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .dkm-card-actions {
+        flex-wrap: wrap;
+        max-width: 100%;
+        gap: var(--control-gap);
+        margin-inline-start: auto;
+
+        select {
+            min-width: 0;
+            max-width: 100%;
+        }
+    }
+
+    .dkm-card-body {
+        grid-template-columns: ~"repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr))";
+    }
+
+    .dkm-item-label,
+    .dm-part-free {
+        color: var(--muted-text);
+    }
+
+    .dm-part-bar {
+        background: var(--surface-muted);
+    }
+}

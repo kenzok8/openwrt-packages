@@ -1,0 +1,66 @@
+// out: false
+
+// System - Power Management
+[data-page="admin-system-reboot"] {
+    p {
+        padding-left: 1.5rem;
+    }
+
+    p>span {
+        position: relative;
+        top: 0.1rem;
+        left: 1rem;
+    }
+
+    .cbi-button {
+        background: var(--warning-action-bg) !important;
+        border-color: var(--warning-action-bg) !important;
+        color: var(--text-on-accent) !important;
+        margin-left: 0 !important;
+    }
+
+    .cbi-button.cbi-button-action.important {
+        align-self: flex-end;
+    }
+}
+
+/* applyreboot fix */
+#applyreboot-container {
+    margin: 2rem;
+}
+
+#applyreboot-section {
+    line-height: 300%;
+    margin: 2rem;
+}
+
+[data-page="admin-system-poweroff"] {
+    .container {
+        h2+br+p {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+    }
+}
+
+[data-page="admin-system-poweroffdevice"] {
+    .container {
+        h2 {
+            margin: 0;
+        }
+
+        h2+p {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        button+div {
+            display: none;
+        }
+    }
+
+
+    .btn.cbi-button.cbi-button-negative {
+        align-self: flex-end;
+    }
+}

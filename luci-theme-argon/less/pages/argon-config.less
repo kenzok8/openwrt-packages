@@ -1,0 +1,127 @@
+// out: false
+
+[data-page="admin-system-argon-config"] {
+  .argon-color-picker {
+    display: flex;
+    align-items: center;
+    gap: var(--control-gap);
+    width: var(--form-control-min-width);
+    max-width: 100%;
+
+    > input[type="text"] {
+      flex: 1 1 0;
+      min-width: 0;
+      width: 0;
+      margin: 0;
+    }
+
+    > .argon-color-swatch {
+      flex: 0 0 2.5rem;
+      width: 2.5rem;
+      min-width: 0;
+      height: 2.5rem;
+      padding: .25rem;
+      margin: 0;
+      cursor: pointer;
+
+      &::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+
+      &::-webkit-color-swatch {
+        border: 0;
+        border-radius: calc(var(--radius-control) - .25rem - 1px);
+      }
+
+      &::-moz-color-swatch {
+        border: 0;
+        border-radius: calc(var(--radius-control) - .25rem - 1px);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: .5;
+      }
+    }
+  }
+
+  // This file list contains plain actions, so rounding the final table is safe.
+  #cbi-filelist > .table:last-child {
+    border-collapse: separate;
+    border-end-start-radius: inherit;
+    border-end-end-radius: inherit;
+    overflow: hidden;
+
+    @media screen and (max-width: 1152px) {
+      overflow-x: auto;
+    }
+  }
+
+  .argon-login-preview {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-block-start: var(--field-gap);
+    border-radius: var(--radius-panel);
+  }
+
+  .argon-branding-content {
+    padding: var(--field-gap) var(--section-inset) var(--section-inset);
+
+    > p {
+      margin: 0 0 var(--field-gap);
+      padding: 0;
+      line-height: 1.5;
+    }
+
+    > .cbi-button + p {
+      margin: var(--field-gap) 0 0;
+    }
+
+    .cbi-button {
+      max-width: 100%;
+      height: auto;
+      white-space: normal;
+    }
+  }
+
+  .argon-branding-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--section-gap);
+    margin-block-end: var(--field-gap);
+  }
+
+  .argon-branding-card {
+    flex: 1 1 18rem;
+    min-width: 0;
+
+    h4 {
+      margin: 0 0 var(--control-gap);
+      padding: 0;
+    }
+  }
+
+  .argon-branding-row,
+  .argon-branding-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--control-gap);
+    min-width: 0;
+  }
+
+  .argon-branding-row {
+    gap: var(--field-gap);
+
+    > img {
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+  }
+}

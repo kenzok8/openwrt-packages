@@ -1,0 +1,243 @@
+// out: false
+
+html.argon-theme-changing,
+html.argon-theme-changing *,
+html.argon-theme-changing *::before,
+html.argon-theme-changing *::after {
+  transition: none !important;
+}
+
+header .header-actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  margin-inline-start: auto;
+  gap: var(--action-gap);
+}
+
+#argon-appearance {
+  position: relative;
+  flex: 0 0 auto;
+  z-index: 60;
+
+  &[hidden],
+  [hidden] {
+    display: none;
+  }
+
+  .argon-appearance-trigger {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-circle);
+    background: var(--surface-raised);
+    color: var(--text-strong);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color .15s ease-out;
+
+    &::before {
+      content: '';
+      width: 1rem;
+      height: 1rem;
+      background-color: currentColor;
+      mask: url('../icon/monitor.svg') center / contain no-repeat;
+    }
+
+    // Keep a 40px hit area around the smaller visible toolbar control.
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 2.5rem;
+      height: 2.5rem;
+      transform: translate(-50%, -50%);
+      border-radius: inherit;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: -2px;
+    }
+
+    &[aria-expanded="true"] {
+      background-color: var(--surface-active);
+    }
+  }
+
+  &[data-mode="light"] .argon-appearance-trigger::before {
+    mask-image: url('../icon/sun.svg');
+  }
+
+  &[data-mode="dark"] .argon-appearance-trigger::before {
+    mask-image: url('../icon/moon.svg');
+  }
+
+  .argon-appearance-panel {
+    position: absolute;
+    inset-block-start: calc(100% + var(--control-gap));
+    inset-inline-end: 0;
+    width: 11rem;
+    max-width: calc(100vw - 2 * var(--page-gutter));
+    min-width: 0;
+    max-height: calc(100dvh - 5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    // Inset the compact options evenly, including around the rounded corners.
+    padding: calc(var(--radius-card) - var(--radius-small) - 1px);
+    margin: 0;
+    color: var(--dropdown-text);
+    background: var(--surface-panel);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card);
+    box-shadow: var(--dropdown-shadow);
+    font-size: .8125rem;
+    text-align: start;
+    opacity: 1;
+    transition: opacity .15s ease-out;
+
+    @media (prefers-reduced-motion: no-preference) {
+      transform: translateY(0);
+      transition: opacity .2s cubic-bezier(.2, 0, 0, 1), transform .2s cubic-bezier(.2, 0, 0, 1);
+    }
+
+    .argon-appearance-option {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      min-height: 2.125rem;
+      margin: 0;
+      padding: .375rem .5rem;
+      border-radius: var(--radius-small);
+      line-height: 1.5;
+      cursor: pointer;
+      transition: background-color .15s ease-out;
+
+      & + .argon-appearance-option {
+        margin-block-start: .25rem;
+      }
+
+      @media (pointer: coarse) {
+        min-height: 2.5rem;
+      }
+
+      &::before,
+      &::after {
+        content: '';
+        flex-shrink: 0;
+        background-color: currentColor;
+      }
+
+      &::before {
+        width: 1rem;
+        height: 1rem;
+        mask: url('../icon/monitor.svg') center / contain no-repeat;
+      }
+
+      &[data-mode="light"]::before {
+        mask-image: url('../icon/sun.svg');
+      }
+
+      &[data-mode="dark"]::before {
+        mask-image: url('../icon/moon.svg');
+      }
+
+      &::after {
+        width: .75rem;
+        height: .75rem;
+        mask: url('../icon/check.svg') center / contain no-repeat;
+        visibility: hidden;
+      }
+
+      > span {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+
+      &:has(input:checked) {
+        color: var(--dropdown-selected-text);
+        background: var(--dropdown-selected-bg);
+
+        &::after {
+          visibility: visible;
+        }
+      }
+
+      &:has(input:focus-visible) {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: -2px;
+      }
+
+      &:has(input:disabled) {
+        cursor: default;
+        opacity: .6;
+      }
+    }
+
+    input[type="radio"] {
+      // Keep native radio semantics and arrow keys; the row draws its focus.
+      outline: none;
+      box-shadow: none;
+    }
+
+    p {
+      margin: var(--control-gap) .75rem;
+      color: var(--muted-text);
+      font-size: .875rem;
+      line-height: 1.5;
+    }
+  }
+
+  @media (hover: hover) {
+    .argon-appearance-trigger:hover {
+      background-color: var(--surface-active);
+    }
+
+    .argon-appearance-option:has(input:not(:disabled)):not(:has(input:checked)):hover {
+      background: var(--dropdown-hover-bg);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .argon-appearance-trigger {
+      transition: scale .15s ease-out, background-color .15s ease-out;
+
+      &:active {
+        scale: .96;
+      }
+    }
+  }
+
+  @media (forced-colors: active) {
+    .argon-appearance-trigger::before,
+    .argon-appearance-option::before,
+    .argon-appearance-option::after {
+      forced-color-adjust: none;
+      background-color: CanvasText;
+    }
+  }
+}
+
+// Explicit selectors keep these rules scoped when compiled with Less 4.
+// Native hidden semantics still remove the closed menu from focus and hit testing.
+@starting-style {
+  #argon-appearance .argon-appearance-panel {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @starting-style {
+    #argon-appearance .argon-appearance-panel {
+      transform: translateY(-.375rem);
+    }
+  }
+}

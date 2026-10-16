@@ -1,5 +1,64 @@
 #!/bin/sh
 
+# The empty legacy package saves its conffile before releasing file ownership.
+if [ -f /etc/argon-config-migration/argon ]; then
+	cp -p /etc/argon-config-migration/argon /etc/config/argon || exit 1
+	rm -f /etc/argon-config-migration/argon
+	rmdir /etc/argon-config-migration 2>/dev/null || true
+fi
+
+# Preserve configured values and migrate the old Bing switch only when needed.
+[ -e /etc/config/argon ] || touch /etc/config/argon || exit 1
+if ! uci -q get 'argon.@global[0]' >/dev/null; then
+	uci -q add argon global >/dev/null
+fi
+old_bing="$(uci -q get 'argon.@global[0].bing_background')"
+if [ -n "$old_bing" ]; then
+	if ! uci -q get 'argon.@global[0].online_wallpaper' >/dev/null; then
+		if [ "$old_bing" = 1 ]; then
+			uci set 'argon.@global[0].online_wallpaper=bing'
+		else
+			uci set 'argon.@global[0].online_wallpaper=none'
+		fi
+	fi
+	uci -q delete 'argon.@global[0].bing_background'
+fi
+# Missing selectors identify old installations; preserve their separate choices.
+if ! uci -q get 'argon.@global[0].dark_primary_mode' >/dev/null; then
+	if [ -n "$(uci -q get 'argon.@global[0].dark_primary')" ]; then
+		uci set 'argon.@global[0].dark_primary_mode=custom'
+	else
+		uci set 'argon.@global[0].dark_primary_mode=auto'
+	fi
+fi
+if ! uci -q get 'argon.@global[0].dark_glass_mode' >/dev/null; then
+	light_blur="$(uci -q get 'argon.@global[0].blur')"
+	light_opacity="$(uci -q get 'argon.@global[0].transparency')"
+	dark_blur="$(uci -q get 'argon.@global[0].blur_dark')"
+	dark_opacity="$(uci -q get 'argon.@global[0].transparency_dark')"
+	if [ "${dark_blur:-${light_blur:-10}}" != "${light_blur:-10}" ] ||
+		[ "${dark_opacity:-${light_opacity:-0.5}}" != "${light_opacity:-0.5}" ]; then
+		uci set 'argon.@global[0].dark_glass_mode=custom'
+	else
+		uci set 'argon.@global[0].dark_glass_mode=inherit'
+	fi
+fi
+while read -r option value; do
+	uci -q get "argon.@global[0].$option" >/dev/null ||
+		uci set "argon.@global[0].$option=$value"
+done <<'DEFAULTS'
+login_style classic
+primary #5e72e4
+dark_primary #483d8b
+blur 10
+blur_dark 10
+transparency 0.5
+transparency_dark 0.5
+mode normal
+online_wallpaper none
+DEFAULTS
+uci commit argon
+
 if [ "$PKG_UPGRADE" != 1 ]; then
 	uci get luci.themes.Argon >/dev/null 2>&1 || \
 	uci batch <<-EOF

@@ -1,0 +1,48 @@
+// out: false
+
+// Inline keys, hashes and addresses must fit narrow cards and dialogs.
+code {
+  overflow-wrap: anywhere;
+}
+
+.cbi-input-textarea {
+  font-family: inherit;
+  width: 100%;
+  font-size: 0.875rem;
+  min-height: 14rem;
+  padding: .8rem;
+  color: var(--control-text);
+  background-color: var(--input-bg);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--control-border);
+  min-width: 0;
+  max-width: 100%;
+}
+
+#content_syslog {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+}
+
+#syslog {
+  font-size: small;
+  font-family: 'Google Sans';
+  line-height: 1.25;
+  overflow-y: hidden;
+  width: 100%;
+  min-height: 15rem;
+  padding: 1rem;
+  resize: none;
+  color: var(--log-text);
+  border: 0;
+  border-radius: var(--radius-panel);
+  background-color: var(--surface-color);
+
+}
+
+#syslog:focus {
+  outline: 0;
+}
+
+#cbi-ddns #syslog {
+  overflow: auto;
+}

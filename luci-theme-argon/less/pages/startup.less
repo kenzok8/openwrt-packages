@@ -1,0 +1,55 @@
+// out: false
+
+// System - Startup Scripts
+[data-page="admin-system-startup"] {
+    #view {
+        &>div:first-child {
+            div[data-initialized="true"] {
+                margin-top: 0;
+            }
+        }
+    }
+
+    [data-tab-title] p {
+        margin-left: 0;
+        margin-bottom: 0;
+        display: block;
+    }
+
+    [data-tab="rc"] {
+        > p {
+            margin: 0;
+            padding-inline: var(--section-inset);
+        }
+
+        > .cbi-page-actions {
+            padding: var(--field-gap) var(--section-inset);
+        }
+    }
+
+    textarea {
+        display: block;
+        direction: ltr;
+        unicode-bidi: plaintext;
+        text-align: start;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        line-height: 1.5;
+        overflow-y: auto;
+        width: 100%;
+        min-height: 15rem;
+        margin: 0;
+        padding: 1rem;
+        resize: none;
+        color: var(--muted-text);
+        border-radius: var(--radius-control);
+        border: 1px solid var(--control-border);
+        background-color: var(--input-bg);
+    }
+
+    @media screen and (max-width: 1152px) {
+        .td[data-title] {
+            flex-basis: 50%;
+        }
+
+    }
+}

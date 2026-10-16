@@ -1,0 +1,412 @@
+// out: false
+
+.cbi-dynlist {
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
+  line-height: 1.3;
+  flex-direction: column;
+  min-height: 30px;
+  cursor: text;
+  gap: var(--control-gap);
+
+  &>.item {
+    display: inline-flex;
+    // Native DynamicList removes an item only in its physical right hit area.
+    direction: ltr;
+    unicode-bidi: isolate;
+    flex-wrap: nowrap;
+    position: relative;
+    min-width: 0;
+    max-width: min(25rem, 100%);
+    pointer-events: none;
+    color: var(--muted-text);
+    outline: 0;
+
+    &::after {
+      flex: 0 0 2.5rem;
+      content: "\00D7";
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem !important;
+      height: 2.5rem;
+      margin: 0;
+      font-weight: normal;
+      font-size: 1rem;
+      line-height: 1.5rem;
+
+      color: var(--text-on-accent);
+      border: 1px solid var(--danger-bg);
+      border-radius: 0;
+      border-start-end-radius: var(--radius-control);
+      border-end-end-radius: var(--radius-control);
+      outline: 0;
+
+      background-color: var(--danger-bg);
+      background-image: none;
+      box-shadow: none;
+      box-sizing: border-box;
+    }
+
+    &>span {
+      display: block;
+      padding: 0.5rem 0.75rem;
+      box-sizing: border-box;
+      flex: 0 1 15.5rem;
+      min-width: 0;
+      width: 15.5rem;
+      height: 2.5rem;
+      transition: box-shadow 0.15s ease;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: text;
+
+      white-space: nowrap;
+      word-break: break-word;
+      line-height: 1.5em;
+
+      color: var(--muted-text);
+      border: 1px solid var(--border-color);
+      border-start-start-radius: var(--radius-control);
+      border-end-start-radius: var(--radius-control);
+      outline: 0;
+      background-image: none;
+      box-shadow: none;
+      box-sizing: border-box;
+      transition: box-shadow .15s ease;
+
+    }
+  }
+
+  &>.add-item {
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    max-width: min(18rem, 100%);
+    flex-wrap: nowrap;
+
+    input {
+      flex: 1 1 15.5rem;
+      display: block;
+      padding: 0.5rem 0.75rem;
+      box-sizing: border-box;
+      min-width: 0;
+      width: 15.5rem;
+      transition: box-shadow 0.15s ease;
+
+      white-space: nowrap;
+      word-break: break-word;
+      font-size: .875rem;
+      line-height: 1.5rem;
+
+      color: var(--muted-text);
+      border: 1px solid var(--control-border);
+      // The join follows the list's UI direction, even for LTR data inputs.
+      border-radius: var(--radius-control) 0 0 var(--radius-control);
+      border-right-width: 0;
+
+      [dir="rtl"] &:first-child {
+        border-radius: 0 var(--radius-control) var(--radius-control) 0;
+        border-left-width: 0;
+        border-right-width: 1px;
+      }
+      outline: 0;
+      background-image: none;
+      box-shadow: none;
+    }
+
+    .cbi-button {
+      flex: 0 0 auto;
+      display: flex;
+      width: auto !important;
+      padding-left: 0.8rem;
+      padding-right: 0.8rem;
+      margin-left: 0;
+      align-items: center;
+      justify-content: center;
+
+      font-size: 0.875rem;
+      line-height: 1.5rem;
+
+      outline: 0;
+      background-image: none;
+      background-color: var(--action-muted-solid);
+      box-shadow: none;
+      color: var(--text-on-accent);
+      border-color: var(--action-muted-solid);
+      border-radius: 0;
+      border-start-end-radius: var(--radius-control);
+      border-end-end-radius: var(--radius-control);
+    }
+
+    .cbi-button-add {
+      width: 2.5rem !important;
+      padding: 0.5rem 0 !important;
+
+      font-weight: normal;
+      font-size: 1.2rem;
+
+      color: var(--accent-text);
+      background-color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+
+    &:not([ondrop]) {
+      &>input {
+        overflow: hidden;
+        min-width: 0;
+        width: 15.5rem;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+
+.cbi-dynlist>.item.drag-over,
+.cbi-dynlist>.add-item:has(.drag-over) {
+  border-top: 1px solid var(--danger);
+  margin-top: -1px;
+}
+
+.cbi-dynlist > .item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+.cbi-dynlist[name="sshkeys"]>.item {
+  max-width: none;
+}
+
+.cbi-dynlist>.cbi-dynlist>.add-item[ondrop]>input {
+  min-width: 13rem;
+}
+
+.cbi-dynlist,
+.cbi-dropdown {
+  position: relative;
+  display: inline-flex;
+  padding-right: 0.25rem;
+  min-height: 2.1875rem;
+}
+
+.cbi-dropdown {
+  align-items: center;
+}
+
+.cbi-dropdown.btn>ul:not(.dropdown),
+.cbi-dropdown.cbi-button>ul:not(.dropdown) {
+  margin: 0 0.75rem;
+}
+
+.cbi-dropdown[placeholder*="select"] {
+  max-width: 25rem;
+  height: auto;
+  margin-top: -3px;
+}
+
+.cbi-dropdown>ul {
+  display: flex;
+  overflow-x: hidden;
+  overflow-y: auto;
+  width: 100%;
+  padding: 0;
+  list-style: none;
+  outline: 0;
+}
+
+.cbi-dropdown>ul.preview {
+  display: none;
+
+}
+
+.cbi-dropdown.cbi-button-apply,
+.cbi-dropdown.cbi-button-action {
+  padding: 0;
+}
+
+.cbi-button-apply>ul.preview {
+  display: none;
+
+  li {
+    color: var(--accent-text);
+  }
+
+}
+
+.cbi-button-apply>ul:first-child {
+  li {
+    color: var(--accent-text);
+  }
+
+}
+
+.cbi-dropdown>.open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: auto;
+  padding: 0;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0;
+
+  // Mask the decorative glyph, keeping the entire span as the native hit area.
+  &::after {
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    background-color: currentColor;
+    -webkit-mask: var(--dropdown-arrow-icon) center / contain no-repeat;
+    mask: var(--dropdown-arrow-icon) center / contain no-repeat;
+    pointer-events: none;
+  }
+}
+
+// Native LuCI ComboButton: the label applies, span.open opens the choices.
+.cbi-dropdown:is(.btn, .cbi-button):not([multiple]) {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 2.5rem;
+  height: auto;
+  padding: 0;
+  line-height: 1.25rem;
+
+  > ul:not(.dropdown) {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    min-height: calc(2.5rem - 2px);
+    margin: 0;
+    padding: .5rem .75rem;
+    overflow: visible;
+
+    > li {
+      padding: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  // ComboButton has one selected action, so its overflow summary is unused.
+  > .more {
+    display: none;
+  }
+
+  > .open {
+    flex-basis: 2.5rem;
+    width: 2.5rem;
+    border-inline-start: 1px solid currentColor;
+  }
+}
+
+.cbi-dropdown>.more,
+.cbi-dropdown>ul>li[placeholder] {
+  display: none;
+}
+
+.cbi-dropdown>ul>li {
+  display: none;
+  overflow: hidden;
+  align-items: center;
+  align-self: center;
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 20px;
+  padding: 0.125rem .25em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+}
+
+.cbi-dropdown>ul>li .hide-open {
+  display: initial;
+}
+
+.cbi-dropdown>ul>li .hide-close {
+  display: none;
+}
+
+.cbi-dropdown>ul>li[display]:not([display="0"]) {
+  border-left: thin solid #ccc;
+}
+
+// Empty selections use .more; list items stay hidden until the menu opens.
+.cbi-dropdown[empty]>ul {
+  max-width: 1px;
+}
+
+.cbi-dropdown>ul>li>form {
+  display: none;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.cbi-dropdown>ul>li img {
+  margin-right: .25em;
+  vertical-align: middle;
+}
+
+.cbi-dropdown>ul>li>form>input[type="checkbox"] {
+  height: auto;
+  margin: 0;
+}
+
+.cbi-dropdown>ul>li input[type="text"] {
+  height: 2rem;
+  min-width: 16rem;
+  padding: 0 .5rem;
+}
+
+.cbi-dropdown>ul>li[display],
+.cbi-dropdown[open]>ul.preview,
+.cbi-dropdown[open]>ul.dropdown>li,
+.cbi-dropdown[multiple]>ul>li>label,
+.cbi-dropdown[multiple][open]>ul.dropdown>li,
+.cbi-dropdown[multiple][more]>.more,
+.cbi-dropdown[multiple][empty]>.more {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+
+}
+
+.cbi-dropdown[optional][open]>ul.dropdown>li[placeholder],
+.cbi-dropdown[multiple][open]>ul.dropdown>li>form {
+  display: block;
+}
+
+.cbi-dropdown[open]>ul.dropdown>li .hide-open {
+  display: none;
+}
+
+.cbi-dropdown[open]>ul.dropdown>li .hide-close {
+  display: initial;
+}
+
+.cbi-dropdown.cbi-button-positive>ul:not(.dropdown)>li[display="0"] {
+  color: var(--accent-text);
+}
+
+.cbi-dropdown[disabled] {
+  pointer-events: none;
+  opacity: .6;
+}
+
+.cbi-dropdown .zonebadge {
+  width: 100%;
+}
+
+.cbi-dropdown[open] .zonebadge {
+  width: auto;
+}

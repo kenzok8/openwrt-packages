@@ -17,86 +17,11 @@
 -#}
 
 {%
-	import { access } from 'fs';
-	import { cursor } from 'uci';
 	import { getuid, getspnam } from 'luci.core';
 
-	const boardinfo = ubus.call("system", "board");
-	const hostname = striptags(boardinfo?.hostname ?? '?');
-
-	let cfg = cursor();
-
-	//send as HTML5
-	http.prepare_content('text/html; charset=UTF-8');
-
-	//Custom settings
-	function validColor(value, fallback) {
-		return type(value) == 'string' && match(value, /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/) ? value : fallback;
-	}
-
-	function validNumber(value, fallback, maximum) {
-		return type(value) == 'string' && match(value, /^(0|[1-9][0-9]*)(\.[0-9]+)?$/) && +value <= maximum ? value : fallback;
-	}
-
-	let mode = 'normal';
-	let primary = '#5e72e4';
-	let dark_primary = '#483d8b';
-	let blur_radius = '10';
-	let blur_radius_dark = '10';
-	let blur_opacity = '0.5';
-	let blur_opacity_dark = '0.5';
-	const has_argon_config = access('/etc/config/argon');
-	if (has_argon_config) {
-		primary = validColor(cfg.get_first('argon', 'global', 'primary'), primary);
-		dark_primary = validColor(cfg.get_first('argon', 'global', 'dark_primary'), dark_primary);
-		blur_radius = validNumber(cfg.get_first('argon', 'global', 'blur'), blur_radius, 100);
-		blur_radius_dark = validNumber(cfg.get_first('argon', 'global', 'blur_dark'), blur_radius_dark, 100);
-		blur_opacity = validNumber(cfg.get_first('argon', 'global', 'transparency'), blur_opacity, 1);
-		blur_opacity_dark = validNumber(cfg.get_first('argon', 'global', 'transparency_dark'), blur_opacity_dark, 1);
-		let configured_mode = cfg.get_first('argon', 'global', 'mode');
-		if (configured_mode == 'normal' || configured_mode == 'dark' || configured_mode == 'light')
-			mode = configured_mode;
-	}
-	const bar_color = mode == 'dark' ? dark_primary : primary;
-
--%}
-<!DOCTYPE html>
-<html lang="{{ dispatcher.lang }}">
-
-<head>
-	{% include("themes/" + theme + "/head_meta", { hostname: hostname, node: node, bar_color: bar_color, media: media }) %}
-
-	<link rel="stylesheet" href="{{ media }}/css/cascade.css{# ?v=PKG_VERSION #}">
-	{% if (mode == 'normal'): %}
-	<link rel="stylesheet" href="{{ media }}/css/dark.css{# ?v=PKG_VERSION #}" media="(prefers-color-scheme: dark)">
-	{% elif (mode == 'dark'): %}
-	<link rel="stylesheet" href="{{ media }}/css/dark.css{# ?v=PKG_VERSION #}">
-	{% endif %}
-	<style title="text/css">
-		{% if (has_argon_config): %}
-		:root {
-			--primary: {{ primary }};
-			--dark-primary: {{ dark_primary }};
-			--blur-radius:{{ blur_radius }}px;
-			--blur-opacity:{{ blur_opacity }};
-			--blur-radius-dark:{{ blur_radius_dark }}px;
-			--blur-opacity-dark:{{ blur_opacity_dark }};
-		}
-		{% endif -%}
-	</style>
-	<!-- Stylesheets -->
-	{% if (node?.css): %}
-	<link rel="stylesheet" href="{{ resource }}/{{ node.css}}">
-	{% endif -%}
-	{% if (css): %}
-	<style title="text/css">
-		{{ css }}
-	</style>
-	{% endif -%}
-	<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}?v={{ version.luciversion }}"></script>
-	<script src="{{ resource }}/cbi.js?v={{ version.luciversion }}"></script>
-	<script src="{{ resource }}/luci.js?v={{ version.luciversion }}"></script>
-</head>
+	const hostname = striptags(ubus.call('system', 'board')?.hostname ?? '?');
+	include('themes/' + theme + '/head', { hostname: hostname, is_login: false });
+%}
 
 <body
 	class="lang_{{ dispatcher.lang }} {{ node?.title ? ` - ${striptags(node.title)}` : '' }} {% if (ctx.authsession): %}logged-in{% endif %}"
@@ -125,9 +50,12 @@
 					<div class="container">
 						<div class="flex1">
 							<button type="button" class="showSide" aria-label="{{ entityencode(_('Toggle navigation'), true) }}" aria-controls="mainmenu" aria-expanded="false"></button>
-							<a class="brand" href="#">{{ hostname }}</a>
+							<a class="brand" href="#" title="{{ entityencode(hostname, true) }}">{{ hostname }}</a>
 						</div>
-						<div class="status" id="indicators"></div>
+						<div class="header-actions">
+							<div class="status" id="indicators"></div>
+							<div id="argon-appearance" hidden></div>
+						</div>
 					</div>
 				</div>
 			</header>

@@ -31,7 +31,7 @@ body {
 
 body {
     background-color: var(--background-color);
-    color: var(--gray-dark);
+    color: var(--text-strong);
     -webkit-tap-highlight-color: transparent;
     font-size: 0.875rem;
 }
@@ -60,7 +60,7 @@ h5,
 h6 {
     font-family: inherit;
     font-weight: normal;
-    line-height: 1.1 !important;
+    line-height: 1.4;
     color: inherit;
 }
 
@@ -68,28 +68,28 @@ h1 {
     font-size: 2rem;
     margin: 0.67em 0;
     padding-bottom: 0.5rem;
-    border-bottom: thin solid var(--lighter);
+    border-bottom: thin solid var(--border-muted);
 }
 
 h2 {
-    padding: 1rem 1.25rem;
+    padding: var(--field-gap) var(--section-inset);
     font-size: 1.25rem;
     font-weight: bold;
-    color: var(--gray-dark);
-    border-radius: 0.25rem;
-    background: var(--white);
+    color: var(--text-strong);
+    border-radius: var(--radius-card);
+    background: var(--surface-raised);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
 }
 
 h3 {
     margin: 0;
-    padding: 0.8755rem 1.25rem;
+    padding: var(--field-gap) var(--section-inset);
     font-size: 1.1rem;
     font-weight: bold;
-    line-height: 1;
-    color: var(--gray-dark);
-    border-radius: 0.25rem;
-    background: var(--white);
+    line-height: 1.4;
+    color: var(--text-strong);
+    border-radius: var(--radius-card);
+    background: var(--surface-raised);
     display: block;
     width: 100%;
 }
@@ -122,7 +122,7 @@ a {
 abbr {
     cursor: help;
     text-decoration: underline;
-    color: var(--primary);
+    color: var(--help-text);
 }
 
 abbr[title] {
@@ -143,9 +143,9 @@ samp {
     font-family: inherit;
     font-size: inherit;
     padding: 1px 3px;
-    color: var(--dark);
-    border-radius: 0.5rem;
-    background: var(--lighter);
+    color: var(--code-text);
+    border-radius: var(--radius-small);
+    background: var(--surface-contrast);
 }
 
 small {
@@ -179,7 +179,7 @@ hr {
     margin: 1rem 0;
     overflow: visible;
     opacity: 0.1;
-    border-color: var(--lighter);
+    border-color: var(--border-muted);
 }
 
 pre {
@@ -277,30 +277,34 @@ button:-moz-focusring {
 input[type="checkbox"] {
     appearance: none !important;
     -webkit-appearance: none !important;
-    border: 1px solid var(--primary);
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-small);
 
     width: 1rem !important;
     height: 1rem !important;
     padding: 0;
     cursor: pointer;
-    transition: all 0.2s;
 }
 
 input[type="checkbox"]:checked {
-    border: 1px solid var(--primary);
-    background-image: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 8 8\'%3e%3cpath fill=\'%23fff\' d=\'M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z\'/%3e%3c/svg%3e') !important;
+    border: 1px solid var(--accent-border);
+    background-image: var(--checkmark-icon) !important;
     background-color: var(--primary);
     background-size: 70%;
     background-repeat: no-repeat;
     background-position: center;
 }
 
+// Radio Styles
+input[type="radio"] {
+    border-radius: var(--radius-circle);
+}
+
 // Select Styles
 select {
     padding: 0.36rem 0.8rem;
-    color: var(--gray-dark);
-    border: thin solid var(--lighter);
-    background-color: var(--white);
+    color: var(--text-strong);
+    border: thin solid var(--border-muted);
     background-image: none;
 }
 
@@ -308,10 +312,11 @@ select {
 textarea {
     padding: 0.25rem;
     overflow: auto;
+    border-radius: var(--radius-control);
+    outline: none;
 
     &:focus-visible {
-        outline: none;
-        border: 1px solid var(--primary);
+        border: 1px solid var(--control-focus);
     }
 }
 
@@ -369,17 +374,17 @@ li {
 
 ::selection {
     background-color: var(--primary);
-    color: var(--white);
+    color: var(--accent-text);
 }
 
 ::placeholder {
-    color: var(--lighter);
+    color: var(--placeholder-color);
 }
 
 a:link,
 a:visited,
 a:active {
-    color: var(--primary);
+    color: var(--link-color);
     text-decoration: none;
 }
 

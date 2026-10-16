@@ -1,0 +1,28 @@
+// out: false
+
+[data-page="admin-system-syscontrol-log"] {
+    .cbi-section > pre:only-child {
+        margin: 0;
+        padding: var(--field-gap) var(--section-inset);
+        max-height: ~"min(32rem, 65vh)";
+        overflow: auto;
+        overscroll-behavior: contain;
+        border-radius: inherit;
+        color: var(--log-text);
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        font-size: .875rem;
+        line-height: 1.5;
+        direction: ltr;
+        unicode-bidi: plaintext;
+        text-align: start;
+    }
+}
+
+[data-page="admin-system-syscontrol-shutdown"] {
+    .cbi-section > .cbi-section-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--control-gap);
+        padding: 0 var(--section-inset) var(--field-gap);
+    }
+}

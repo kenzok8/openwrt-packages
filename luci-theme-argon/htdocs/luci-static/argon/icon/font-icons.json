@@ -1,0 +1,451 @@
+{
+  "source": "argon.woff2",
+  "sourceIncluded": false,
+  "sourceSha256": "a2b317e0113b0e5eb3ffe4ec7559d784564f02e8624ba29bbc44d7afd74585a4",
+  "unitsPerEm": 1024,
+  "ascent": 960,
+  "descent": -64,
+  "glyphCount": 33,
+  "iconCount": 28,
+  "icons": [
+    {
+      "name": "chevron-down",
+      "glyph": "uniE20B",
+      "codepoints": [
+        "U+E20B"
+      ],
+      "file": "chevron-down.svg",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "sourceViewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "designOverride": "Shared 24px outline chevron, 2px stroke with round caps and joins"
+    },
+    {
+      "name": "menu",
+      "glyph": "uniE20E",
+      "codepoints": [
+        "U+E20E"
+      ],
+      "file": "menu.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "heart",
+      "glyph": "uniE291",
+      "codepoints": [
+        "U+E291"
+      ],
+      "file": "heart.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "ring",
+      "glyph": "uniE603",
+      "codepoints": [
+        "U+E603"
+      ],
+      "file": "ring.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "delete",
+      "glyph": "uniE900",
+      "codepoints": [
+        "U+E900"
+      ],
+      "file": "delete.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "edit",
+      "glyph": "uniE901",
+      "codepoints": [
+        "U+E901"
+      ],
+      "file": "edit.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "check",
+      "glyph": "uniE902",
+      "codepoints": [
+        "U+E902"
+      ],
+      "file": "check.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "loading",
+      "glyph": "uniE903",
+      "codepoints": [
+        "U+E903"
+      ],
+      "file": "loading.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "transfer",
+      "glyph": "uniE904",
+      "codepoints": [
+        "U+E904"
+      ],
+      "file": "transfer.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "close",
+      "glyph": "uniE905",
+      "codepoints": [
+        "U+E905"
+      ],
+      "file": "close.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "status",
+      "glyph": "uniE906",
+      "codepoints": [
+        "U+E906"
+      ],
+      "file": "status.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "logout",
+      "glyph": "uniE907",
+      "codepoints": [
+        "U+E907"
+      ],
+      "file": "logout.svg",
+      "viewBox": [
+        0,
+        0,
+        1030,
+        1024
+      ]
+    },
+    {
+      "name": "network",
+      "glyph": "uniE908",
+      "codepoints": [
+        "U+E908"
+      ],
+      "file": "network.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "services",
+      "glyph": "uniE909",
+      "codepoints": [
+        "U+E909"
+      ],
+      "file": "services.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1029
+      ]
+    },
+    {
+      "name": "system",
+      "glyph": "uniE90A",
+      "codepoints": [
+        "U+E90A"
+      ],
+      "file": "system.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "vpn",
+      "glyph": "uniE90B",
+      "codepoints": [
+        "U+E90B"
+      ],
+      "file": "vpn.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "nas",
+      "glyph": "uniE90C",
+      "codepoints": [
+        "U+E90C"
+      ],
+      "file": "nas.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "bandwidth_monitor",
+      "glyph": "uniE90D",
+      "codepoints": [
+        "U+E90D"
+      ],
+      "file": "bandwidth_monitor.svg",
+      "viewBox": [
+        -1,
+        0,
+        1025,
+        1024
+      ]
+    },
+    {
+      "name": "hello-world",
+      "glyph": "uniE90E",
+      "codepoints": [
+        "U+E90E"
+      ],
+      "file": "hello-world.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "chevron-right",
+      "glyph": "uniE90F",
+      "codepoints": [
+        "U+E90F"
+      ],
+      "file": "chevron-right.svg",
+      "viewBox": [
+        0,
+        0,
+        24,
+        24
+      ],
+      "sourceViewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ],
+      "designOverride": "Shared 24px outline chevron, 2px stroke with round caps and joins"
+    },
+    {
+      "name": "password",
+      "glyph": "uniE910",
+      "codepoints": [
+        "U+E910"
+      ],
+      "file": "password.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "docker",
+      "glyph": "uniE911",
+      "codepoints": [
+        "U+E911"
+      ],
+      "file": "docker.svg",
+      "viewBox": [
+        0,
+        0,
+        1110,
+        1024
+      ]
+    },
+    {
+      "name": "control",
+      "glyph": "uniE912",
+      "codepoints": [
+        "U+E912"
+      ],
+      "file": "control.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "statistics",
+      "glyph": "uniE913",
+      "codepoints": [
+        "U+E913"
+      ],
+      "file": "statistics.svg",
+      "viewBox": [
+        0,
+        0,
+        1025,
+        1024
+      ]
+    },
+    {
+      "name": "asterisk",
+      "glyph": "uniE914",
+      "codepoints": [
+        "U+E914"
+      ],
+      "file": "asterisk.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "default",
+      "glyph": "uniE915",
+      "codepoints": [
+        "U+E915"
+      ],
+      "file": "default.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1025
+      ]
+    },
+    {
+      "name": "user",
+      "glyph": "uniE971",
+      "codepoints": [
+        "U+E971"
+      ],
+      "file": "user.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "help",
+      "glyph": "uniF059",
+      "codepoints": [
+        "U+F059"
+      ],
+      "file": "help.svg",
+      "viewBox": [
+        0,
+        0,
+        1024,
+        1024
+      ]
+    }
+  ],
+  "skippedGlyphs": [
+    {
+      "glyph": ".notdef",
+      "codepoints": [],
+      "reason": "no visible outline"
+    },
+    {
+      "glyph": "uni0000",
+      "codepoints": [
+        "U+0000"
+      ],
+      "reason": "no visible outline"
+    },
+    {
+      "glyph": "nonmarkingreturn",
+      "codepoints": [],
+      "reason": "no visible outline"
+    },
+    {
+      "glyph": "uni0001",
+      "codepoints": [
+        "U+0001"
+      ],
+      "reason": "no visible outline"
+    },
+    {
+      "glyph": "space",
+      "codepoints": [
+        "U+0020"
+      ],
+      "reason": "no visible outline"
+    }
+  ]
+}

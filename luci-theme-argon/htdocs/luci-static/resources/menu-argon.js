@@ -201,7 +201,25 @@ return baseclass.extend({
 	 * Load menu data and trigger rendering
 	 */
 	__init__: function () {
+		this.patchDynamicListFocus();
 		ui.menu.load().then(L.bind(this.render, this));
+	},
+
+	patchDynamicListFocus: function () {
+		var prototype = ui.Dropdown && ui.Dropdown.prototype;
+		var setFocus = prototype && prototype.setFocus;
+		if (typeof setFocus !== 'function' || setFocus.argonDynamicListGuard)
+			return;
+
+		var guardedFocus = function (node, item) {
+			// A DynamicList change handler can consume a newly created option
+			// before Dropdown.createItems() tries to scroll and focus it.
+			if (item && !item.parentNode && node && node.closest('.cbi-dynlist'))
+				return;
+			return setFocus.apply(this, arguments);
+		};
+		guardedFocus.argonDynamicListGuard = true;
+		prototype.setFocus = guardedFocus;
 	},
 
 	/**
@@ -250,7 +268,8 @@ return baseclass.extend({
 	 * @param {Event} ev - Click event from menu item
 	 */
 	handleMenuExpand: function (ev) {
-		var target = ev.target;
+		// The click may originate on the SVG icon inside the navigation link.
+		var target = ev.currentTarget;
 		var slide = target.parentNode;
 		var slideMenu = target.nextElementSibling;
 		var shouldCollapse = false;
@@ -302,6 +321,20 @@ return baseclass.extend({
 	 * @param {number} level - Current nesting level (0-based)
 	 * @returns {Element} - Generated menu element
 	 */
+	renderMenuIcon: function (name) {
+		var catalog = document.querySelector('meta[name="argon-menu-icons"]');
+		var icons = catalog ? (catalog.getAttribute('content') || '').split(/\s+/) : [];
+		var filename = /^[a-zA-Z0-9_-]+$/.test(name) && icons.indexOf(name + '.svg') !== -1
+			? name + '.svg' : 'default.svg';
+
+		return E('span', {
+			'class': 'menu-icon',
+			'aria-hidden': 'true',
+			'data-icon': filename.slice(0, -4),
+			'style': '--menu-icon: url("' + L.media('icon', filename) + '")'
+		});
+	},
+
 	renderMainMenu: function (tree, url, level) {
 		var currentLevel = (level || 0) + 1;
 		var menuContainer = E('ul', { 'class': level ? 'slide-menu' : 'nav' });
@@ -341,7 +374,7 @@ return baseclass.extend({
 					'click': (currentLevel === 1) ? ui.createHandlerFn(this, 'handleMenuExpand') : null,
 					'class': menuClass,
 					'data-title': child.title.replace(/ /g, "_"), // More robust space replacement
-				}, [_(child.title)]),
+				}, currentLevel === 1 ? [this.renderMenuIcon(child.name), _(child.title)] : [_(child.title)]),
 				submenu
 			]);
 			

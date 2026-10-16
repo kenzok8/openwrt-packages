@@ -36,120 +36,15 @@
 			login_style = configured_style;
 	}
 
-	// Per-request pseudo-random state for selecting local backgrounds.
-	let lcgState = (+time()) % 2147483648;
-
-	function randomIndex(limit) {
-		lcgState = (lcgState * 1103515245 + 12345) % 2147483648;
-
-		return lcgState % limit;
-	}
-
-	//Fetch Local Background Media
-
-	const imageTypes = " jpg jpeg png gif webp ";
-	const videoTypes = " mp4 webm ";
-	const allTypes = imageTypes + videoTypes;
-
-	function fetchMedia(path, themeDir) {
-		let backgroundTable = [];
-		for (f in (fs.lsdir(path))) {
-			let parts = split(f, '.');
-			let ext = lc(parts?.[length(parts) - 1]);
-			if (ext && index(allTypes, " " + ext + " ") != -1) {
-				let bg = {};
-				bg.type = ext;
-				bg.url = themeDir + http.urlencode(f);
-				push(backgroundTable, bg);
-			}
-		}
-		return backgroundTable;
-	}
-
-	function selectBackground(themeDir) {
-		let bgUrl = media + "/img/bg1.jpg";
-		let backgroundType = "Image";
-		let mimeType = "";
-
-		if (fs.access("/etc/config/argon")) {
-			let online_wallpaper = cfg.get_first('argon', 'global', 'online_wallpaper') ?? (cfg.get_first('argon', 'global', 'bing_background') == '1' ? 'bing' : null);
-			if (online_wallpaper && online_wallpaper != "none") {
-				const picurl = ubus.call("luci.argon_wallpaper", "get_url") ?? {};
-				if (type(picurl?.url) == 'string' && match(picurl.url, /^https:\/\/[^[:space:]"'<>]+$/)) {
-					bgUrl = picurl.url;
-					return {bgUrl, backgroundType, mimeType};
-				}
-			}
-		}
-
-		let background = fetchMedia("/www" + themeDir, themeDir);
-		if ( length(background) > 0 ) {
-			let currentBg = background[randomIndex(length(background))];
-			bgUrl = currentBg.url;
-			if (index(videoTypes, " " + currentBg.type + " ") != -1) {
-				backgroundType = "Video";
-				mimeType = "video/" + currentBg.type;
-			}
-		}
-
-		return {bgUrl, backgroundType, mimeType};
-	}
-
 	const boardinfo = ubus.call("system", "board");
 	const hostname = striptags(boardinfo?.hostname ?? '?');
-	const themeDir = media + "/background/";
-	const bgArry = selectBackground(themeDir);
 	const branding = get_branding();
 	const logo_url = branding.logo ? media + '/branding/' + branding.logo : media + '/img/argon.svg';
 
 %}
 <!-- Login Page Start -->
 <div class="login-page" data-login-style="{{ login_style }}">
-	{% if ( bgArry.backgroundType == "Video" ): %}
-	<!-- Video Player Start -->
-	<div class="video">
-		<video loop muted playsinline id="video" poster="{{ media }}/img/bg1.jpg">
-			<source src="{{ entityencode(bgArry.bgUrl, true) }}" type="{{ bgArry.mimeType }}">
-		</video>
-	</div>
-	<button type="button" class="volume-control mute" aria-label="{{ entityencode(_('Mute background video'), true) }}" aria-pressed="true"></button>
-	<script>
-		var backgroundVideo = document.getElementById("video");
-		var motionPreference = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
-		function updateBackgroundMotion() {
-			if (motionPreference && motionPreference.matches)
-				backgroundVideo.pause();
-			else {
-				var playResult = backgroundVideo.play();
-				if (playResult && playResult.catch)
-					playResult.catch(function() {});
-			}
-		}
-		updateBackgroundMotion();
-		if (motionPreference) {
-			if (motionPreference.addEventListener)
-				motionPreference.addEventListener('change', updateBackgroundMotion);
-			else if (motionPreference.addListener)
-				motionPreference.addListener(updateBackgroundMotion);
-		}
-		document.querySelector(".volume-control").addEventListener("click", function(){
-			if(this.classList.contains("mute")){
-				this.classList.remove("mute");
-				backgroundVideo.muted = false;
-				this.setAttribute('aria-pressed', 'false');
-			}else{
-				this.classList.add("mute");
-				backgroundVideo.muted = true;
-				this.setAttribute('aria-pressed', 'true');
-			}
-		});
-	</script>
-	<!-- Video Player End -->
-	{% else %}
-	<!-- Image Background Start -->
-	<div class="main-bg" id="main-bg"><img src="{{ entityencode(bgArry.bgUrl, true) }}" data-fallback="{{ media }}/img/bg1.jpg" onerror="this.onerror=null;this.src=this.dataset.fallback" alt=""></div>
-	<!-- Image Background End -->
-	{% endif %}
+	{% include('themes/' + theme + '/login_background', { cfg: cfg }) %}
 	<!-- Login Container Start -->
 	<div class="login-container">
 		<div class="login-form">
@@ -159,75 +54,5 @@
 			</a>
 			<!-- Logo End -->
 			<!-- Login Form Start -->
-			<form class="form-login" method="post" action="{{ entityencode(http.getenv("REQUEST_URI"), true) }}">
-
-				{#-
-				 `auth_plugin` is set only on the render that follows an ACCEPTED password
-				 (dispatcher.uc), so it is what separates "the password was wrong" from "the
-				 password was right and a plugin wants more". Gating the credentials alert on
-				 `!auth_plugin` and showing `auth_message` beside it rather than instead of it
-				 covers all four states: a wrong password, a wrong password with a challenge
-				 already pending, the challenge prompt itself, and a failed challenge.
-				-#}
-				{%- if (fuser && !auth_plugin): %}
-				<div class="errorbox">{{ _('Invalid username and/or password! Please try again.') }}</div>
-				{% endif -%}
-
-				{%- if (auth_message): %}
-				<div class="errorbox">{{ auth_message }}</div>
-				{% endif -%}
-
-				<div class="input-container">
-					<div class="input-group user-icon">
-						<label class="visually-hidden" for="cbi-input-user">{{ _('Username') }}</label>
-						<input class="cbi-input-user" id="cbi-input-user" type="text" name="luci_username" value="{{ entityencode(duser, true) }}" />
-						<span class="border" aria-hidden="true"></span>
-					</div>
-					<div class="input-group pass-icon">
-						<label class="visually-hidden" for="cbi-input-password">{{ _('Password') }}</label>
-						<input class="cbi-input-password" id="cbi-input-password" type="password" name="luci_password" />
-						<span class="border" aria-hidden="true"></span>
-					</div>
-					{%- if (auth_fields): %}
-					{%- for (let field in auth_fields): %}
-					{#- Keep a plugin's format hint as the placeholder, while its label or
-					 field name provides an accessible name for the input. -#}
-						<div class="input-group pass-icon">
-							<label class="visually-hidden" for="{{ entityencode(field.name, true) }}">{{ entityencode(_(field.label || field.name)) }}</label>
-							<input class="cbi-input-text" id="{{ entityencode(field.name, true) }}" type="{{ entityencode(field.type ?? 'text', true) }}" name="{{ entityencode(field.name, true) }}"
-								placeholder="{{ entityencode(_(field.label ?? field.placeholder ?? field.name), true) }}"
-								{% if (field.placeholder): %}title="{{ entityencode(field.placeholder, true) }}"{% endif %}
-								{% if (field.inputmode): %}inputmode="{{ entityencode(field.inputmode, true) }}"{% endif %}
-								{% if (field.pattern): %}pattern="{{ entityencode(field.pattern, true) }}"{% endif %}
-								{% if (field.maxlength): %}maxlength="{{ entityencode('' + field.maxlength, true) }}"{% endif %}
-								{% if (field.autocomplete): %}autocomplete="{{ entityencode(field.autocomplete, true) }}"{% endif %}
-								{% if (field.required): %}required{% endif %} />
-							<span class="border" aria-hidden="true"></span>
-					</div>
-					{%- endfor %}
-					{%- endif %}
-				</div>
-				{%- if (auth_html): %}
-				<div class="auth-plugin">{{ auth_html }}</div>
-				{% endif -%}
-
-				<div>
-					<input type="submit" value="{{ _('Log in') }}" class="cbi-button cbi-button-apply" />
-				</div>
-				{#- Loaded last so the markup a plugin emitted through `auth_html` is already
-				 in the document when its script runs. -#}
-				{%- if (auth_assets): %}
-				{%- for (let asset in auth_assets): %}
-				{%- if (asset.type == 'script'): %}
-				<script src="{{ asset.src }}"></script>
-				{%- endif %}
-				{%- endfor %}
-				{%- endif %}
-			</form>
-			<!-- Login Form End -->
-			<script type="text/javascript">//<![CDATA[
-				var input = document.getElementsByName('luci_password')[0];
-				if (input)
-					input.focus();
-			//]]></script>
+			{% include('themes/' + theme + '/login_form') %}
 {% include("themes/" + theme + "/footer_login") %}

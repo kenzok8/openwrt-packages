@@ -1,0 +1,55 @@
+// out: false
+
+// wireless
+/* wireless overview */
+#cbi-wireless {
+    >#wifi_assoclist_table {
+        >.tr {
+            box-shadow: inset 1px -1px 0 var(--border-subtle), inset -1px -1px 0 var(--border-subtle);
+
+            &.placeholder {
+                >.td {
+                    right: 2rem;
+                    bottom: 2rem;
+                    left: 2rem;
+                    border-top: thin solid var(--border-subtle) !important;
+                }
+            }
+
+            &.table-titles {
+                box-shadow: inset 1px 0 0 var(--border-subtle), inset -1px 0 0 var(--border-subtle);
+
+                >.th {
+                    border-bottom: thin solid var(--border-subtle);
+                    box-shadow: 0 -1px 0 0 var(--border-subtle);
+                }
+            }
+        }
+    }
+}
+
+#wifi_assoclist_table {
+    >.tr {
+        >.td[data-title="RX Rate / TX Rate"] {
+            width: 23rem;
+        }
+    }
+}
+
+#cbi-wireless,
+#cbi-wireless *,
+#wifi_assoclist_table,
+#wifi_assoclist_table * {
+    overflow: visible !important;
+    max-height: none !important;
+    transform: none !important;
+    filter: none !important;
+    contain: none !important;
+    clip-path: none !important;
+}
+
+#cbi-wireless,
+#wifi_assoclist_table {
+    height: auto !important;
+    min-height: 0 !important;
+}

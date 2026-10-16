@@ -1,0 +1,84 @@
+// out: false
+
+// System - Flash Firmware
+[data-page="admin-system-flash"] {
+    [data-tab="config"] {
+        textarea {
+            display: block;
+        }
+
+        > .cbi-section-node {
+            padding-bottom: 0;
+        }
+
+        > .cbi-page-actions {
+            padding: var(--field-gap) 1rem;
+        }
+    }
+
+    .modal.cbi-modal > ul {
+        direction: ltr;
+        unicode-bidi: isolate;
+        text-align: start;
+        overflow-wrap: anywhere;
+    }
+
+    textarea {
+        direction: ltr;
+        unicode-bidi: plaintext;
+        text-align: start;
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        line-height: 1.5;
+    }
+
+    // Upgrade options use button-styled labels with multiline text.
+    .modal .btn {
+        height: auto;
+        min-height: 2.5rem;
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    .cbi-value {
+        padding: 0 1rem;
+    }
+
+    .cbi-section {
+        .cbi-section {
+            margin-top: 0;
+        }
+    }
+
+    .cbi-map-tabbed {
+        border-radius: var(--radius-card);
+    }
+
+    .cbi-section-node {
+        padding-top: 0;
+        padding-bottom: 0.5rem;
+    }
+
+    legend {
+        font-size: 1.2rem;
+        width: 100%;
+        display: block;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        line-height: 1.5;
+        margin-bottom: 0;
+        letter-spacing: 0.1rem;
+        color: var(--text-strong);
+        font-weight: bold;
+        padding: 1rem 0 1rem 1rem;
+    }
+
+    .cbi-section-descr {
+        font-weight: 600;
+        padding: 1rem 0 1rem 1rem;
+        color: var(--text-color);
+    }
+
+    .modal label>input[type="checkbox"] {
+        vertical-align: text-top;
+        top: auto;
+    }
+}

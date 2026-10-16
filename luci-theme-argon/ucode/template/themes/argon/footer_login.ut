@@ -22,17 +22,14 @@
 	const firmware_info = version.distname + ' ' + version.distversion + '-' + version.distrevision;
 %}
 <footer>
-	<div title="{{ entityencode(luci_info + ' · ArgonTheme · ' + firmware_info, true) }}">
-		<a class="luci-link" href="https://github.com/openwrt/luci" target="_blank" title="{{ entityencode(luci_info, true) }}"><span class="login-footer-detail">Powered by </span>{{ version.luciname }}<span class="login-footer-detail"> ({{ version.luciversion }})</span></a>
+	<div class="login-footer-links">
+		<a href="https://github.com/openwrt/luci" target="_blank" title="{{ entityencode(luci_info, true) }}">{{ split(version.luciname, ' (')[0] }}</a>
 		<a href="https://github.com/jerrykuku/luci-theme-argon" target="_blank">ArgonTheme {# vPKG_VERSION #}</a>
-		<a class="luci-link" href="{{ version.disturl }}" target="_blank" title="{{ entityencode(firmware_info, true) }}">{{ version.distname }} {{ version.distversion }}<span class="login-footer-detail">-{{ version.distrevision }}</span></a>
 	</div>
+	<a href="{{ version.disturl }}" target="_blank" title="{{ entityencode(firmware_info, true) }}">{{ firmware_info }}</a>
 </footer>
 </div>
 </div>
-	<script>
-		// thanks for Jo-Philipp Wich <jow@openwrt.org>
-		var luciLocation = {{ ctx.path }};
-	</script>
+{% include('themes/' + theme + '/page_scripts', { is_login: true }) %}
 </body>
 </html>

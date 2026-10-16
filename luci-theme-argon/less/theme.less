@@ -1,0 +1,281 @@
+// out: false
+// Private LESS primitives: only semantic token declarations consume these values.
+// Components consume semantic roles rather than the private sRGB primitives.
+@neutral-0: #fff;
+@neutral-50: #f9f9f9;
+@neutral-100: #f6f9fc;
+@neutral-150: #f4f5f7;
+@neutral-200: #eee;
+@neutral-250: #e9ecef;
+@neutral-275: #e6e6e6;
+@neutral-300: #ddd;
+@neutral-350: #ccc;
+@neutral-400: #adb5bd;
+@neutral-500: #8898aa;
+@neutral-550: #808080;
+@neutral-600: #666;
+@neutral-650: #5b5b5b;
+@neutral-700: #515151;
+@neutral-750: #3c3c3c;
+@neutral-800: #333;
+@neutral-825: #2d2d2d;
+@neutral-850: #252526;
+@neutral-900: #1e1e1e;
+@neutral-950: #181819;
+@neutral-1000: #000;
+@red-500: #f5365c;
+@red-300: #ffa9ae;
+@red-600: #c73850;
+@orange-500: #fb6340;
+@amber-300: #f6c177;
+@amber-700: #906521;
+@green-500: #2dce89;
+@green-700: #028453;
+@cyan-500: #11cdef;
+@blue-300: #85adff;
+@green-300: #64d9a3;
+@orange-300: #ffb789;
+
+// Each role is declared once: light, dark. A single value applies to both.
+// Keep different roles separate even when they currently share a primitive.
+@theme-palette: {
+  // Accent and status
+  primary: var(--light-primary), var(--dark-primary);
+  success: @green-500;
+  info: @cyan-500;
+  warning: @orange-500, @amber-300;
+  danger: @red-500, @red-300;
+  error-text: #ffd600, var(--danger);
+  strength-weak-text: #b42318, #ffb4ab;
+  strength-medium-text: #805600, #f5c24b;
+  strength-strong-text: #166534, #86efac;
+
+  // Text roles
+  text-strong: #32325d, @neutral-275;
+  text-color: #525f7f, @neutral-350;
+  muted-text: #626f80, @neutral-400;
+  control-text: var(--text-color);
+  soft-text: #ced4da, @neutral-350;
+  text-on-accent: @neutral-0;
+  accent-text: var(--text-on-accent), var(--dark-on-primary);
+  accent-border: var(--primary), var(--dark-link-color);
+  accent-shadow-color: rgba(94, 114, 228, .1), var(--dark-accent-shadow);
+  neutral-action-text: var(--text-on-accent), var(--accent-text);
+  notice-text: var(--text-on-accent), var(--accent-text);
+  text-inverse: @neutral-0;
+  placeholder-color: #626f80, @neutral-400;
+  focus-ring: #3446ab, var(--dark-focus-ring);
+  control-focus: var(--primary), var(--dark-control-focus);
+  link-color: var(--primary), var(--dark-link-color);
+  help-text: var(--primary), var(--dark-link-color);
+  code-text: #212529, @neutral-350;
+  data-token-text: #0069d6, var(--link-color);
+  log-text: #242424, @neutral-350;
+  overlay-text: #172b4d, @neutral-400;
+
+  // Surfaces
+  background-color: @neutral-150, @neutral-950;
+  main-bg: transparent, var(--background-color);
+  surface-color: @neutral-0, @neutral-850;
+  surface-raised: @neutral-0, @neutral-800;
+  surface-panel: @neutral-0, @neutral-825;
+  surface-muted: @neutral-100, @neutral-825;
+  surface-inset: @neutral-150, @neutral-900;
+  surface-active: #e4e9ee, @neutral-750;
+  surface-contrast: @neutral-250, @neutral-750;
+  row-color: #f4f4f4, var(--surface-color);
+  row-alt: @neutral-50, @neutral-825;
+  media-bg: @neutral-1000;
+
+  // Borders and separators
+  border-color: #dee2e6, @neutral-750;
+  control-border: var(--border-color), @neutral-550;
+  control-subtle-border: var(--border-muted), var(--control-border);
+  border-subtle: @neutral-300, @neutral-850;
+  border-muted: @neutral-250, @neutral-750;
+  border-strong: #cbd5e1, @neutral-700;
+  border-emphasis: @neutral-500, @neutral-400;
+  border-inverse: @neutral-0;
+  separator-color: @neutral-150, @neutral-900;
+  table-border: thin solid var(--border-subtle), 0;
+  overlay-focus: #172b4d, @neutral-400;
+
+  // Intentional component variants
+  header-bg: var(--primary), @neutral-900;
+  menu-color: #5f6368, @neutral-350;
+  main-menu-color: #202124, @neutral-350;
+  sidebar-brand-color: var(--primary), @neutral-350;
+  invalid-bg: #fce6e6, @neutral-900;
+  command-bg: @neutral-200, @neutral-850;
+  input-bg: @neutral-0, @neutral-900;
+  select-bg: var(--surface-color), var(--input-bg);
+  dropdown-control-bg: transparent, var(--input-bg);
+  neutral-button-bg: #f0f0f0, var(--primary);
+  neutral-action-bg: @neutral-500, var(--primary);
+  action-muted-solid: @neutral-500, @neutral-650;
+  status-neutral-bg: #32325d;
+  plain-button-bg: #f0f0f0, #707070;
+  plain-button-text: @neutral-500, @neutral-0;
+  tab-color: var(--primary), var(--link-color);
+  tab-item-bg: #dce3e9, @neutral-825;
+  tab-inactive-color: #404040, @neutral-350;
+  progress-bg: @neutral-250, var(--surface-inset);
+  progress-fill: var(--primary), var(--dark-progress-fill);
+  chart-series-1: #0000ff, @blue-300;
+  chart-series-2: #008000, @green-300;
+  chart-series-3: #ff0000, @red-300;
+  chart-series-4: #ff6600, @orange-300;
+  chart-series-5: #ffaa00, @amber-300;
+  chart-area-opacity: .4, .18;
+  iface-bg: @neutral-50, transparent;
+  iface-head-bg: @neutral-200, @neutral-600;
+  iface-head-text: var(--text-strong), @neutral-0;
+  iface-body-bg: transparent, @neutral-800;
+  iface-border: 0, 1px solid var(--separator-color);
+  badge-bg: @neutral-200, @neutral-800;
+  label-bg: #bfbfbf, @neutral-650;
+  dropdown-text: var(--text-strong);
+  dropdown-selected-text: var(--text-strong);
+  dropdown-selected-bg: #e8ecff, var(--dark-selected-bg);
+  dropdown-hover-bg: var(--surface-active);
+  sidebar-scrollbar: @neutral-100, @neutral-850;
+  login-panel-rgb: ~"244, 245, 247", ~"0, 0, 0";
+  login-text: #101828, @neutral-400;
+  login-input-border: @neutral-0, @neutral-400;
+
+  // Feedback and pending changes
+  positive-bg: var(--primary);
+  danger-bg: var(--danger), @red-600;
+  success-bg: var(--success), @green-700;
+  feedback-text: inherit, var(--text-on-accent);
+  negative-bg: var(--danger), var(--danger-bg);
+  reset-bg: #f0ad4e, var(--warning-bg);
+  reset-border: #eea236, var(--warning-bg);
+  reset-action-bg: var(--danger), var(--reset-bg);
+  success-action-bg: #5cb85c, var(--success-bg);
+  success-action-border: #4cae4c, var(--success-bg);
+  warning-action-bg: var(--warning), var(--warning-bg);
+  warning-badge-bg: #f0ad4e, var(--warning-bg);
+  notice-bg: var(--info), var(--primary);
+  warning-bg: var(--warning), @amber-700;
+  error-bg: @orange-500, #49252d;
+  warning-heading-bg: transparent, #784f00;
+  warning-heading-color: #8c6900, var(--warning);
+  feedback-heading-bg: var(--warning-heading-bg), transparent;
+  feedback-heading-text: var(--warning-heading-color), inherit;
+  change-added-bg: #cfc, #1f3e30;
+  change-added-border: #0f0, var(--success);
+  change-removed-bg: #fcc, #49252d;
+  change-removed-border: #f00, var(--danger);
+  change-modified-bg: @neutral-200, @neutral-800;
+  change-modified-border: @neutral-350, @neutral-600;
+
+  // Plugin contracts: VLAN roles, zone RGB values and legacy adapters
+  plugin-card-bg: @neutral-0, @neutral-750;
+  vlan-text-muted: #626b7a, @neutral-400;
+  vlan-selected-bg: #e8ecff, var(--dark-selected-bg);
+  vlan-selected-hover-bg: #dfe4ff, var(--dark-selected-hover-bg);
+  vlan-selected-border: var(--primary), var(--link-color);
+  vlan-selected-ring: rgba(94, 114, 228, .28), var(--dark-accent-ring);
+  checkmark-icon: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 8 8\'%3e%3cpath fill=\'%23fff\' d=\'M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z\'/%3e%3c/svg%3e'), var(--dark-checkmark-icon);
+  vlan-tagged-rgb: ~"140, 72, 0", ~"251, 191, 36";
+  vlan-untagged-rgb: ~"6, 104, 95", ~"45, 212, 191";
+  vlan-checked-text: @neutral-0, @neutral-900;
+  zone-positive-rgb: ~"144, 240, 144", ~"73, 126, 73";
+  zone-negative-rgb: ~"240, 144, 144", ~"156, 79, 79";
+  zone-neutral-rgb: ~"238, 238, 238", ~"112, 112, 112";
+  zone-label-color: @neutral-800, @neutral-0;
+  plugin-text-muted: @neutral-500, #a1a1aa;
+  plugin-neutral: @neutral-500, @neutral-650;
+  plugin-scrollbar: @neutral-100, @neutral-650;
+
+  // Appearance effects
+  command-shadow: ~"inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 2px rgba(0, 0, 0, .05)", ~"inset 0 1px 0 rgba(0, 0, 0, .2), 0 1px 2px rgba(255, 255, 255, .05)";
+  section-shadow: 0 0 1rem rgba(136, 152, 170, .15), 0 0 .5rem rgba(0, 0, 0, .35);
+  sidebar-shadow: rgba(0, 0, 0, .75) 0 0 15px -5px, 0 0 .5rem rgba(0, 0, 0, .15);
+  dropdown-shadow: ~"0 4px 8px rgba(0, 0, 0, .06), 0 12px 24px rgba(0, 0, 0, .12)", ~"0 4px 8px rgba(0, 0, 0, .2), 0 12px 24px rgba(0, 0, 0, .32)";
+  button-hover-shadow: ~"0 2px 4px rgba(0, 0, 0, .16), 0 4px 12px var(--accent-shadow-color)", ~"0 2px 4px rgba(0, 0, 0, .5), 0 4px 12px var(--accent-shadow-color)";
+  control-focus-shadow: ~"0 3px 9px rgba(50, 50, 9, 0), 3px 4px 8px var(--accent-shadow-color)", ~"0 0 0 2px var(--dark-control-ring)";
+  file-icon-filter: none, invert(.7);
+  image-filter: none, invert(.9);
+};
+
+// Emit only changed values in dark mode. Both mode selectors use this map.
+.theme-palette(@mode) {
+  each(@theme-palette, {
+    @light: extract(@value, 1);
+    @dark: if(length(@value) > 1, extract(@value, 2), @light);
+    // Compare CSS text: LESS otherwise treats different var() calls as equal.
+    @light-css: ~"@{light}";
+    @dark-css: ~"@{dark}";
+    .emit() when (@mode = light) { --@{key}: @light; }
+    .emit() when (@mode = dark) and not (@light-css = @dark-css) { --@{key}: @dark; }
+    .emit();
+  });
+}
+
+:root {
+  color-scheme: light;
+  // Runtime settings injected by LuCI; names are part of the configuration API.
+  --light-primary: #5e72e4;
+  // Fallbacks generated by luci.argon-palette from the default light seed.
+  --dark-primary: #5a6cc5;
+  --dark-on-primary: #ffffff;
+  --dark-link-color: #b0c1ff;
+  --dark-focus-ring: #d3ddff;
+  --dark-control-focus: #7a91ff;
+  --dark-progress-fill: #8fa4ff;
+  --dark-control-ring: rgba(122, 145, 255, .18);
+  --dark-selected-bg: #262e4f;
+  --dark-selected-hover-bg: #333d64;
+  --dark-accent-ring: rgba(176, 193, 255, .28);
+  --dark-accent-shadow: rgba(176, 193, 255, .1);
+  --dark-checkmark-icon: url('data:image/svg+xml,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 8 8\'%3e%3cpath fill=\'%23fff\' d=\'M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z\'/%3e%3c/svg%3e');
+  --blur-radius-light: 10px;
+  --blur-opacity-light: .5;
+  --blur-radius-dark: 10px;
+  --blur-opacity-dark: .5;
+  --blur-radius: var(--blur-radius-light);
+  --blur-opacity: var(--blur-opacity-light);
+  .theme-palette(light);
+
+  // Legacy LuCI colour API. New component rules use semantic tokens only.
+  --header-color: var(--text-on-accent);
+  --menu-bg-color: var(--surface-raised);
+  --red: var(--danger);
+  --orange: @orange-500;
+  --yellow: var(--error-text);
+  --green: var(--success);
+  --teal: var(--info);
+  --white: @neutral-0;
+  --gray: var(--muted-text);
+  --gray-dark: var(--text-strong);
+  --lighter: var(--surface-contrast);
+  --light: @neutral-400;
+  --dark: var(--code-text);
+  --default: var(--overlay-text);
+  --darker: var(--media-bg);
+
+  // Non-colour resources are shared between appearances.
+  --font-family-sans-serif: "Google Sans", "Microsoft Yahei", "WenQuanYi Micro Hei", "sans-serif", "Helvetica Neue", "Helvetica", "Hiragino Sans GB";
+  --chevron-down-icon: url("../icon/chevron-down.svg");
+  --chevron-right-icon: url("../icon/chevron-right.svg");
+  --dropdown-arrow-icon: var(--chevron-down-icon);
+}
+
+.dark-palette() {
+  color-scheme: dark;
+  .theme-palette(dark);
+  --blur-radius: var(--blur-radius-dark);
+  --blur-opacity: var(--blur-opacity-dark);
+}
+
+:root[data-argon-mode="dark"] {
+  .dark-palette();
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-argon-mode="light"]):not([data-argon-mode="dark"]) {
+    .dark-palette();
+  }
+}

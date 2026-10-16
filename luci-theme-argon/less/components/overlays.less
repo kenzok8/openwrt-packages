@@ -1,0 +1,295 @@
+// out: false
+
+.cbi-progressbar {
+  position: relative;
+  display: flex;
+  width: 100%;
+  font-size: 0.75rem;
+  background: none;
+  border-radius: var(--radius-pill);
+  min-height: .5rem;
+  height: auto;
+  overflow: visible;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: .5rem;
+    border-radius: inherit;
+    background-color: var(--progress-bg);
+  }
+
+  &>div {
+    display: block;
+    position: absolute;
+    top: 0;
+    height: .5rem;
+    background-color: var(--progress-fill);
+    border-radius: inherit;
+  }
+
+  &::after {
+    content: attr(title);
+    direction: ltr;
+    unicode-bidi: isolate;
+    position: relative;
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-strong);
+    width: 100%;
+    padding-top: .75rem;
+    text-align: center;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    z-index: 2;
+  }
+}
+
+#modal_overlay {
+  position: fixed;
+  z-index: 900;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: opacity .125s ease-in;
+  opacity: 0;
+  background: rgba(0, 0, 0, .7);
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal {
+  --modal-inset: clamp(1rem, 3vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--field-gap);
+  width: calc(100% - 2 * var(--page-gutter));
+  min-width: 0;
+  max-width: 40rem;
+  min-height: 32px;
+  margin: clamp(1rem, 4vh, 2rem) auto;
+  padding: var(--modal-inset);
+  line-height: 1.6;
+  container-name: argon-modal;
+  container-type: inline-size;
+  border-radius: var(--radius-dialog) !important;
+  background: var(--surface-color);
+  box-shadow: var(--section-shadow);
+
+  &>* {
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+    line-height: inherit;
+  }
+
+  &>pre,
+  &>textarea {
+    font-size: 1rem;
+    font-size-adjust: .35;
+    overflow: auto;
+    padding: 0.5rem;
+    cursor: auto;
+    white-space: pre-wrap;
+    color: var(--code-text);
+    outline: 0;
+    border-radius: var(--radius-control);
+    border: 1px solid var(--border-muted);
+    transition: box-shadow .15s ease;
+
+    &:focus {
+      border: 1px solid var(--control-focus);
+      box-shadow: var(--control-focus-shadow);
+    }
+  }
+
+  &>pre {
+    direction: ltr;
+    unicode-bidi: plaintext;
+  }
+
+  &>textarea {
+    border-color: var(--control-subtle-border);
+  }
+
+  &>h4 {
+    display: block;
+    padding: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-strong);
+    overflow-wrap: anywhere;
+  }
+
+  h5 {
+    margin-top: 1rem;
+    font-weight: 600;
+  }
+
+  label>input[type="checkbox"] {
+    top: 0;
+  }
+
+  // Only prose lists get markers; tab bars and dropdowns are controls.
+  > ul:not(.cbi-tabmenu):not(.tabs) > li {
+    list-style-type: square;
+    color: var(--text-color);
+  }
+
+  p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  :is(div, section, article)>p+p {
+    margin-block-start: var(--field-gap);
+  }
+
+  .label {
+    font-size: .6rem;
+    font-weight: normal;
+    padding: .1rem .3rem;
+    padding-bottom: 0;
+    cursor: default;
+    border-radius: var(--radius-small);
+  }
+
+  .label.warning {
+    background-color: var(--warning-badge-bg) !important;
+  }
+
+  .btn {
+    padding: 0.45rem 0.8rem;
+  }
+
+  // LuCI uses both .button-row and .right for dialog actions.
+  .right:has(> :is(.btn, .cbi-button)),
+  .button-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+    gap: var(--action-gap);
+
+    > .btn,
+    > .cbi-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      max-width: 100%;
+      min-height: 2.5rem;
+      height: auto;
+      margin: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+
+      &:focus-visible {
+        outline: 2px solid var(--control-focus);
+        outline-offset: 2px;
+      }
+    }
+
+    // Unclassified actions stay neutral; semantic action classes keep their colors.
+    > [class="btn"] {
+      color: var(--text-strong);
+      border: 1px solid var(--border-color);
+      background-color: var(--surface-muted);
+
+      @media (hover: hover) {
+        &:hover {
+          background-color: var(--surface-active);
+        }
+      }
+    }
+  }
+
+  > .right:has(> :is(.btn, .cbi-button)),
+  > .button-row {
+    padding-block-start: var(--control-gap);
+  }
+
+  &.cbi-modal {
+    max-width: 90%;
+    max-height: none;
+  }
+
+  // Brief notices, including LuCI's session-expiry prompt, need less space
+  // than forms and data tables. Match the native message/action structure.
+  &:has(> .alert-message + .right:last-child):not(:has(.cbi-map, .table, table, pre, textarea)) {
+    max-width: 32rem;
+  }
+
+  > .alert-message {
+    // Inline feedback is part of the dialog, rather than an elevated toast.
+    --dialog-feedback-accent: var(--link-color);
+    position: static;
+    inset: auto;
+    transform: none;
+    width: auto;
+    margin: 0;
+    padding: .75rem 1rem;
+    border: 1px solid transparent;
+    border-inline-start: 3px solid var(--dialog-feedback-accent);
+    border-radius: var(--radius-panel) !important;
+    background-color: color-mix(in srgb, var(--dialog-feedback-accent) 10%, var(--surface-color)) !important;
+    color: var(--text-strong);
+    box-shadow: none;
+    font-size: .875rem;
+    font-weight: 400;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+
+    &.warning {
+      --dialog-feedback-accent: var(--warning-heading-color);
+    }
+
+    &.error,
+    &.danger {
+      --dialog-feedback-accent: var(--danger);
+    }
+
+    &.success {
+      --dialog-feedback-accent: var(--success);
+    }
+
+    > :first-child {
+      margin-block-start: 0;
+    }
+
+    > :last-child {
+      margin-block-end: 0;
+    }
+  }
+
+  .cbi-map {
+    margin-bottom: 0;
+  }
+}
+
+@container argon-modal (max-width: 28rem) {
+  .modal .right:has(> :is(.btn, .cbi-button)),
+  .modal .button-row {
+    > .btn,
+    > .cbi-button {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+body.modal-overlay-active {
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+}
+
+body.modal-overlay-active #modal_overlay {
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+}

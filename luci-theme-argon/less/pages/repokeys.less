@@ -1,0 +1,102 @@
+// out: false
+
+[data-page="admin-system-admin-repokeys"] {
+  textarea {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    resize: vertical;
+    padding: .5rem .75rem;
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius-control);
+    background: var(--input-bg);
+    color: var(--control-text);
+    font-size: .8125rem;
+  }
+
+  textarea,
+  [data-name="filename"] output {
+    direction: ltr;
+    unicode-bidi: plaintext;
+    text-align: start;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    line-height: 1.5;
+  }
+
+  [data-name="filename"] output {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+
+  [data-name="key"] textarea {
+    min-height: 6.5rem;
+  }
+
+  [data-name="_newkey"] {
+    padding: var(--field-gap) var(--section-inset);
+    line-height: 1.5;
+
+    > output {
+      display: block;
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+
+    .cbi-section-descr {
+      padding: 0;
+    }
+
+    // Native view uses a blank 20px div; the node's gap already separates fields.
+    .cbi-section-node > div[style="height: 20px"] {
+      display: none;
+    }
+
+    .right {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+
+  @media screen and (min-width: 1153px) {
+    // The native header has only Name/Key, while data rows also have Delete.
+    // A shared track definition aligns both without inventing a header cell.
+    .cbi-section-table,
+    .cbi-section-table > .thead,
+    .cbi-section-table > .tbody {
+      display: block;
+    }
+
+    .cbi-section-table .tr {
+      display: grid;
+      grid-template-columns: 12rem minmax(0, 1fr) 6rem;
+      align-items: stretch;
+    }
+
+    .cbi-section-table :is(.th, .td) {
+      min-width: 0;
+      width: auto !important;
+    }
+
+    .cbi-section-table .td {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .cbi-section-table .cbi-section-actions > div {
+      justify-content: flex-end;
+    }
+  }
+
+  @media screen and (max-width: 1152px) {
+    .cbi-section-table > .tbody {
+      display: block;
+    }
+
+    .td[data-name="filename"],
+    .td[data-name="key"] {
+      flex-basis: 100%;
+      max-width: 100%;
+    }
+  }
+}

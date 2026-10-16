@@ -1,0 +1,84 @@
+// out: false
+
+// Native package-manager controls inject their own flex rules after the theme.
+[data-page="admin-system-package-manager"],
+[data-page="admin-system-opkg"] {
+    .controls {
+        min-width: 0;
+        width: 100%;
+        margin: 0;
+        padding: var(--field-gap) var(--section-inset);
+        gap: var(--field-gap);
+        border-radius: var(--radius-card);
+        background: var(--surface-color);
+
+        > div {
+            flex: 1 1 18rem;
+            min-width: 0;
+            padding: 0;
+            gap: var(--control-gap);
+            white-space: normal;
+        }
+
+        > div:first-child {
+            flex-basis: 100%;
+            min-width: 0;
+        }
+
+        > div > label {
+            min-width: 0;
+        }
+
+        .control-group > input {
+            flex: 1 1 0;
+            min-width: 0;
+            width: 0;
+        }
+
+        .pager {
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+
+        label:has(> input[type="radio"]) {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            vertical-align: middle;
+        }
+
+        input[type="radio"] {
+            flex: 0 0 1rem;
+            width: 1rem;
+            height: 1rem;
+            margin: 0;
+            top: 0;
+            right: 0;
+        }
+    }
+
+    .td.version,
+    .td.size,
+    .td:first-child {
+        direction: ltr;
+        unicode-bidi: isolate;
+        font-variant-numeric: tabular-nums;
+
+        [dir="rtl"] &::before {
+            direction: rtl;
+        }
+    }
+
+    .modal h5,
+    .modal textarea {
+        direction: ltr;
+        unicode-bidi: plaintext;
+        text-align: start;
+        overflow-wrap: anywhere;
+    }
+
+    .modal textarea {
+        font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+        line-height: 1.5;
+    }
+}

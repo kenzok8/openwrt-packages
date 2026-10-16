@@ -4,7 +4,6 @@
 // Main layout components for LuCI admin interface
 // ==========================================================================
 
-
 // 1. Main Container Layout
 // ==========================================================================
 
@@ -21,15 +20,20 @@
 // ==========================================================================
 
 .main-left {
-    width: 15rem;
+    // Category colours are independent of success/warning status colours.
+    --menu-icon-system: @orange-500;
+    --menu-icon-services: @cyan-500;
+    --menu-icon-network: #8965e0;
+    --menu-icon-muted: @neutral-400;
+    --sidebar-width: 15rem;
+    width: var(--sidebar-width);
     height: 100%;
     flex-shrink: 0;
     z-index: 100;
     overflow-x: auto;
     word-break: break-word;
-    background-color: var(--menu-bg-color);
-    box-shadow: rgba(0, 0, 0, 0.75) 0px 0px 15px -5px;
-    transition: all 0.2s;
+    background-color: var(--surface-raised);
+    box-shadow: var(--sidebar-shadow);
 
     // Sidebar Header
     .sidenav-header {
@@ -41,7 +45,7 @@
             margin: 0 2rem;
             font-size: 1.8rem;
             font-family: "TypoGraphica";
-            color: var(--primary);
+            color: var(--sidebar-brand-color);
             text-decoration: none;
             text-align: center;
             cursor: default;
@@ -65,61 +69,64 @@
             padding: 0.675rem 0 0.675rem 2.5rem;
             font-size: 1rem;
             text-decoration: none;
-            border-radius: 0.25rem;
+            border-radius: var(--radius-menu);
             cursor: default;
-            transition: all 0.2s;
 
             // Active state
             &.active {
-                color: #fff;
+                color: var(--accent-text);
                 background: var(--primary);
 
-                &::before {
-                    color: #fff !important;
-                }
-
                 &::after {
-                    transform: rotate(90deg);
-                    color: #fff !important;
+                    transform: rotate(0deg);
+                    color: var(--accent-text);
                 }
             }
 
             // Hover state
-            &:hover {
-                cursor: pointer;
-                color: #fff;
-                background: var(--primary);
+            @media (hover: hover) {
+                transition: background-color .15s ease, color .15s ease;
 
-                &::before {
-                    color: #fff !important;
+                &:hover {
+                    cursor: pointer;
+                    color: var(--accent-text);
+                    background: var(--primary);
                 }
             }
 
-            // Icon before text
-            &::before {
+            .menu-icon {
+                pointer-events: none;
                 position: absolute;
-                left: 0.8rem;
-                padding-top: 3px;
-                font-family: 'argon' !important;
-                font-style: normal;
-                font-weight: normal;
-                font-variant: normal;
-                text-transform: none;
-                line-height: 1;
-                -webkit-font-smoothing: antialiased;
-                -moz-osx-font-smoothing: grayscale;
-                content: "\e915";
-                color: var(--primary);
-                transition: all 0.3s;
+                left: .8rem;
+                top: 50%;
+                width: 1rem;
+                height: 1rem;
+                margin-top: -.5rem;
+                color: var(--link-color);
+                background-color: currentColor;
+                -webkit-mask: var(--menu-icon) center / contain no-repeat;
+                mask: var(--menu-icon) center / contain no-repeat;
             }
-        }
 
-        &>.slide>.menu::before {
-            transition: transform .1s ease-in-out;
-        }
+            .menu-icon[data-icon="system"] { color: var(--menu-icon-system); }
+            .menu-icon[data-icon="services"] { color: var(--menu-icon-services); }
+            .menu-icon[data-icon="network"],
+            .menu-icon[data-icon="vpn"] { color: var(--menu-icon-network); }
+            .menu-icon[data-icon="logout"] { color: var(--menu-icon-muted); }
 
-        &>.slide>.menu.active::before {
-            transition: transform .2s ease-in-out;
+            &.active .menu-icon {
+                color: var(--accent-text);
+            }
+
+            @media (hover: hover) {
+                .menu-icon {
+                    transition: color .15s ease;
+                }
+
+                &:hover .menu-icon {
+                    color: var(--accent-text);
+                }
+            }
         }
 
         // Navigation list items
@@ -158,7 +165,7 @@
                     li {
                         position: relative;
                         margin: 0;
-                        border-radius: 0.25rem;
+                        border-radius: var(--radius-control);
                         background: none;
                         list-style: none;
 
@@ -178,15 +185,16 @@
                             width: 0;
                             height: 2px;
                             content: "";
-                            background-color: var(--primary);
-                            transition: all 0.2s;
+                            background-color: var(--link-color);
                         }
 
-                        &:hover {
-                            background: none;
+                        @media (hover: hover) {
+                            &:hover {
+                                background: none;
 
-                            &::after {
-                                width: 100%;
+                                &::after {
+                                    width: 100%;
+                                }
                             }
                         }
                     }
@@ -207,166 +215,30 @@
                             width: 100%;
                             height: 2px;
                             content: "";
-                            background-color: var(--primary);
-                            transition: all 0.2s;
+                            background-color: var(--link-color);
                         }
 
-                        &:hover {
-                            background: none;
-
-                            &::after {
-                                width: 100%;
-                            }
-                        }
                     }
                 }
             }
 
-            // Main menu items
-            .menu {
-                display: block;
-                position: relative;
-                margin: 0.1rem 0.5rem;
-                padding: 0.675rem 0 0.675rem 2.5rem;
-                font-size: 1rem;
-                text-decoration: none;
-                border-radius: 0.25rem;
-                cursor: default;
-                transition: all 0.2s;
-
-                // Active state
-                &.active {
-                    color: #fff;
-                    background: var(--primary);
-
-                    &::before {
-                        color: #fff !important;
-                    }
-
-                    &::after {
-                        transform: rotate(90deg);
-                        color: #fff !important;
-                    }
-                }
-
-                // Hover state
-                &:hover {
-                    cursor: pointer;
-                    color: #fff;
-                    background: var(--primary);
-
-                    &::before {
-                        color: #fff !important;
-                    }
-                }
-
-                // Icon before text
-                &::before {
-                    position: absolute;
-                    left: 0.8rem;
-                    padding-top: 3px;
-                    font-family: 'argon' !important;
-                    font-style: normal;
-                    font-weight: normal;
-                    font-variant: normal;
-                    text-transform: none;
-                    line-height: 1;
-                    -webkit-font-smoothing: antialiased;
-                    -moz-osx-font-smoothing: grayscale;
-                    content: "\e915";
-                    color: var(--primary);
-                    transition: all 0.3s;
-                }
-
-                // Dropdown arrow
-                &::after {
-                    position: absolute;
-                    right: 0.5rem;
-                    top: 0.8rem;
-                    font-family: 'argon' !important;
-                    font-style: normal;
-                    font-weight: normal;
-                    font-variant: normal;
-                    text-transform: none;
-                    line-height: 1;
-                    -webkit-font-smoothing: antialiased;
-                    -moz-osx-font-smoothing: grayscale;
-                    content: '\e90f';
-                    color: #ced4da;
-                    text-rendering: auto;
-                    transition: all 0.3s;
-                }
+            // SVG disclosure arrow; its colour follows the link.
+            .menu::after {
+                content: "";
+                position: absolute;
+                inset-inline-end: .75rem;
+                top: 50%;
+                width: 1rem;
+                height: 1rem;
+                margin-top: -.5rem;
+                background-color: currentColor;
+                -webkit-mask: var(--chevron-down-icon) center / contain no-repeat;
+                mask: var(--chevron-down-icon) center / contain no-repeat;
+                transform: rotate(-90deg);
+                pointer-events: none;
             }
 
-            // Menu-specific icons and colors
-            .menu[data-title="Status"]:before {
-                content: "\e906";
-                color: var(--primary);
-            }
-
-            .menu[data-title="System"]:before {
-                content: "\e90a";
-                color: #fb6340;
-            }
-
-            .menu[data-title="Services"]:before {
-                content: "\e909";
-                color: #11cdef;
-            }
-
-            .menu[data-title="NAS"]:before {
-                content: "\e90c";
-                color: #f3a4b5;
-            }
-
-            .menu[data-title="VPN"]:before {
-                content: "\e90b";
-                color: #8965e0;
-            }
-
-            .menu[data-title="Network"]:before {
-                content: "\e908";
-                color: #8965e0;
-            }
-
-            .menu[data-title="Bandwidth_Monitor"]:before {
-                content: "\e90d";
-                color: #2dce89;
-            }
-
-            .menu[data-title="Docker"]:before {
-                content: "\e911";
-                color: #6699ff;
-            }
-
-            .menu[data-title="Statistics"]:before {
-                content: "\e913";
-                color: #8965e0;
-            }
-
-            .menu[data-title="Control"]:before {
-                content: "\e912";
-                color: var(--primary);
-            }
-
-            .menu[data-title="Asterisk"]:before {
-                content: "\e914";
-                color: #fb6340;
-            }
-
-            // Logout link styling
-            a[data-title="Log_out"],
-            .food[data-title="Log_out"] {
-                &::before {
-                    content: "\e907";
-                    color: #adb5bd;
-                }
-            }
         }
-    }
-
-    &[style*="overflow: hidden"]>.nav>.slide>.menu::before {
-        display: none;
     }
 
     // Scrollbar Styling
@@ -376,11 +248,11 @@
     }
 
     &::-webkit-scrollbar-thumb {
-        background-color: #f6f9fc;
+        background-color: var(--sidebar-scrollbar);
     }
 
     &::-webkit-scrollbar-track {
-        background-color: #fff;
+        background-color: var(--surface-raised);
     }
 }
 
@@ -388,16 +260,18 @@
 // ==========================================================================
 
 .main-right {
+    background-color: var(--main-bg);
     height: 100%;
-    flex-grow: 1;
+    flex: 1 1 0;
+    min-width: 0;
     overflow-x: hidden;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    transition: all 0.2s;
 
     // Main Content Container
     &>#maincontent {
+        min-width: 0;
         position: relative;
         z-index: 50;
         flex: 1;
@@ -405,19 +279,23 @@
         flex-direction: column;
 
         &>.container {
-            margin: 0 1.25rem 1rem 1.25rem;
+            min-width: 0;
+            margin: 0 var(--page-gutter) var(--section-gap);
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: var(--section-gap);
         }
 
         // Dashboard Specific Styles
         .Dashboard {
-            color: var(--gray-dark) !important;
+            img.svgmonochrome {
+                filter: var(--image-filter);
+            }
+            color: var(--text-strong) !important;
 
             h3 {
-                color: var(--gray-dark);
+                color: var(--text-strong);
             }
 
             p {
@@ -430,7 +308,7 @@
             }
 
             .dashboard-bg {
-                background-color: #fff;
+                background-color: var(--surface-color);
             }
 
             .table {
@@ -463,11 +341,11 @@ header {
     position: relative;
     width: 100%;
     padding: 0;
-    color: var(--header-color);
+    color: var(--text-on-accent);
 
     // Primary background modifier
     &.bg-primary {
-        background-color: var(--primary) !important;
+        background-color: var(--header-bg);
     }
 
     // Header extension background
@@ -476,31 +354,39 @@ header {
         position: absolute;
         width: 100%;
         height: 2rem;
-        background-color: var(--primary) !important;
+        background-color: var(--header-bg);
     }
 
     // Header Content Container
     .fill {
         padding: 0.8rem 0;
         display: flex;
-        border-bottom: 0px solid rgba(255, 255, 255, 0.08) !important;
+        border: 0;
 
         .container {
             width: 100%;
-            height: 2rem;
-            padding: 0 1.25rem;
+            min-width: 0;
+            min-height: 2rem;
+            padding: 0 var(--page-gutter);
             display: flex;
             align-items: center;
 
+            flex-wrap: wrap;
+            gap: var(--control-gap) var(--action-gap);
+
             // Left section (brand and menu toggle)
             .flex1 {
-                flex: 1;
+                display: flex;
+                flex: 1 1 10rem;
+                align-items: center;
+                min-width: 0;
+                gap: var(--action-gap);
 
                 .showSide {
-                    display: none;
+                    flex: 0 0 auto;
                     font-size: 1.4rem;
-                    color: #fff;
-                    border: 0 !important; // Override the dark theme's global button border.
+                    color: var(--text-on-accent);
+                    border: 0;
                     background: none;
                     cursor: pointer;
 
@@ -516,10 +402,15 @@ header {
 
                 .brand {
                     display: none;
-                    padding-left: 1rem;
+                    min-width: 0;
+                    max-width: 100%;
+                    line-height: 1.4;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                     font-size: 1.5rem;
                     font-family: "TypoGraphica";
-                    color: #fff;
+                    color: var(--text-on-accent);
                     text-decoration: none;
                     cursor: default;
                     vertical-align: text-bottom;
@@ -528,48 +419,64 @@ header {
 
             // Right section (status indicators)
             .pull-right {
-                margin-top: 0rem;
-                float: right;
+                margin-inline-start: auto;
                 display: flex;
             }
         }
 
         // Status Indicators
         .status {
+            display: flex;
+            flex: 0 1 auto;
+            flex-wrap: wrap;
+            align-items: center;
+            min-width: 0;
+            max-width: 100%;
+            margin-inline-start: auto;
+            gap: var(--control-gap);
+
             span {
                 display: inline-block;
-                margin: 0 0.25rem;
+                max-width: 100%;
                 padding: 0.3rem 0.8rem;
                 font-size: 0.875rem;
                 font-weight: bold;
-                white-space: nowrap;
+                white-space: normal;
+                overflow-wrap: anywhere;
                 text-decoration: none;
-                text-transform: uppercase;
                 text-shadow: none;
-                border-radius: 4px;
+                border-radius: var(--radius-control);
                 cursor: pointer;
-                transition: all 0.3s;
                 box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.16), 0 0 2px 0 rgba(0, 0, 0, 0.12);
 
-                &:last-child {
-                    margin-right: 0;
-                }
             }
 
             span[data-indicator="poll-status"] {
-                color: #fff;
+                color: var(--text-on-accent);
             }
 
             span[data-style="active"] {
-                background-color: var(--green);
+                background-color: var(--success-bg);
             }
 
             span[data-style="inactive"] {
-                color: #ffffff !important;
-                background-color: #32325d;
+                color: var(--text-on-accent);
+                background-color: var(--status-neutral-bg);
             }
         }
     }
+}
+
+#xhr_poll_status {
+  display: flex;
+
+  * {
+    color: var(--text-on-accent);
+  }
+}
+
+header .showSide {
+    display: none;
 }
 
 // 5. Footer Layout
@@ -589,30 +496,54 @@ footer {
     }
 }
 
-
 // 6. View
 // ==========================================================================
 #view {
-    border-radius: 0.25rem;
+    border-radius: var(--radius-card);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    min-width: 0;
+    gap: var(--section-gap);
 
     &>.spinning {
+        --spinner-inset: 1rem;
         position: fixed;
         top: 50%;
         left: 50%;
         transform: translateX(-50%) translateY(-50%);
         padding: 1rem;
-        border-radius: 0.5rem;
-        background: #ffffff;
-        box-shadow: 0 0 1rem 0 rgba(136, 152, 170, .15);
+        border-radius: var(--radius-panel);
+        background: var(--surface-color);
+        box-shadow: var(--section-shadow);
     }
 
-    &>div:first-child {
+    &>div:first-child:not(.cbi-map) {
         display: flex;
         flex-direction: column;
-        gap: 0.875rem;
+        min-width: 0;
+        gap: var(--field-gap);
 
     }
+}
+
+// Rotate one SVG so opening, closing and reversing remain continuous.
+@media (prefers-reduced-motion: no-preference) {
+    .main-left {
+        transition: width .2s ease;
+    }
+
+    .main-left .nav .menu::after {
+        transition: transform .2s ease;
+    }
+
+    @media (hover: hover) {
+        .main-left .nav .slide-menu li::after {
+            transition: width .2s ease;
+        }
+    }
+}
+
+// Right-facing disclosures follow reading direction; down-facing ones do not.
+[dir="rtl"] .main-left .nav .menu:not(.active)::after {
+    transform: rotate(90deg);
 }

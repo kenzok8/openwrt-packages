@@ -1,0 +1,463 @@
+// out: false
+
+#iwsvg,
+#iwsvg2,
+#bwsvg {
+  background-color: var(--surface-color);
+  border: thin solid #d4d4d4 !important;
+}
+
+#iwsvg {
+  border-top: 0 !important;
+}
+
+.ifacebox {
+  border: var(--iface-border);
+  line-height: 1.25;
+  display: inline-flex;
+  overflow: hidden;
+  flex-direction: column;
+  border-radius: var(--radius-panel);
+  min-width: 100px;
+  background-color: var(--iface-bg);
+  // border-bottom: thin solid #ccc;
+  // box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 1px 2px rgba(0, 0, 0, .2);
+}
+
+.ifacebox-head {
+  padding: .25em;
+  background: var(--iface-head-bg);
+  color: var(--iface-head-text);
+}
+
+.ifacebox-head.active {
+  background: var(--primary);
+
+  * {
+    color: var(--accent-text);
+  }
+
+}
+
+.ifacebox-body {
+  background-color: var(--iface-body-bg);
+  padding: 0.875rem 1rem;
+  line-height: 1.6em;
+}
+
+.cbi-image-button {
+  margin-left: .5rem;
+}
+
+.zonebadge {
+  display: inline-block;
+  padding: .2rem .5rem;
+  border-radius: var(--radius-small);
+}
+
+// LuCI supplies zone colors inline. Map its standard zones in both badge
+// and interface-card markup, including older literal background colors.
+.zonebadge,
+.ifacebox-head {
+  &[style*="--zone-color-rgb"][style*="144, 240, 144"] {
+    --zone-color-rgb: var(--zone-positive-rgb) !important;
+  }
+
+  &[style*="--zone-color-rgb"][style*="240, 144, 144"] {
+    --zone-color-rgb: var(--zone-negative-rgb) !important;
+  }
+
+  &[style*="--zone-color-rgb"][style*="238, 238, 238"] {
+    --zone-color-rgb: var(--zone-neutral-rgb) !important;
+  }
+
+  &[style*="--zone-color-rgb"][style*="144, 240, 144"],
+  &[style*="--zone-color-rgb"][style*="240, 144, 144"],
+  &[style*="--zone-color-rgb"][style*="238, 238, 238"] {
+    background-color: ~"rgb(var(--zone-color-rgb))" !important;
+    color: var(--zone-label-color);
+
+    strong {
+      color: inherit;
+    }
+  }
+}
+
+.zonebadge .ifacebadge {
+  margin: .1rem .2rem;
+  padding: .2rem .3rem;
+  border: thin solid #6c6c6c;
+}
+
+.zonebadge>input[type="text"] {
+  min-width: 10rem;
+  margin-top: .3rem;
+  padding: .16rem 1rem;
+}
+
+.zonebadge>em,
+.zonebadge>strong {
+  display: inline-block;
+  margin: 0 .2rem;
+}
+
+.cbi-value-field .cbi-input-checkbox,
+.cbi-value-field .cbi-input-radio {
+  margin-top: .1rem;
+}
+
+.cbi-value-field>ul>li {
+  display: flex;
+}
+
+.cbi-value-field>ul>li>label {
+  margin-top: .5rem;
+}
+
+.cbi-value-field>ul>li .ifacebadge {
+  margin-top: -.5rem;
+  margin-left: .4rem;
+  background-color: var(--badge-bg);
+}
+
+.cbi-section-table-row>.cbi-value-field .cbi-dropdown {
+  min-width: 3rem;
+}
+
+.cbi-section-create {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+  row-gap: var(--control-gap);
+  padding: .875rem 1rem;
+
+  &:has(> button:first-child) {
+    column-gap: var(--control-gap);
+  }
+
+  > .btn,
+  > .cbi-button {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  &:empty {
+    display: none;
+  }
+
+  &>div:first-child {
+    min-width: 0;
+    max-width: 100%;
+
+    &>input {
+      width: 100%;
+      border-inline-end: none;
+      border-end-end-radius: 0;
+      border-start-end-radius: 0;
+    }
+  }
+
+  &>div:first-child+button {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+}
+
+.cbi-section-remove {
+  padding: .5rem 1rem;
+}
+
+div.cbi-value var,
+td.cbi-value-field var,
+.td.cbi-value-field var {
+  font-style: italic;
+  color: var(--data-token-text);
+}
+
+.cbi-optionals {
+  padding: 1rem 1rem 0 1rem;
+  border-top: thin solid #ccc;
+}
+
+.cbi-dropdown-container {
+  position: relative;
+}
+
+.cbi-filebrowser > p > a {
+  display: inline-block;
+  max-width: 100%;
+  direction: ltr;
+  unicode-bidi: isolate;
+  overflow-wrap: anywhere;
+}
+
+.cbi-tooltip-container,
+span[data-tooltip],
+span[data-tooltip] .label {
+  cursor: help !important;
+}
+
+.cbi-tooltip {
+  position: absolute;
+  z-index: 1000;
+  inset-inline-start: -10000px;
+  box-shadow: 0 3px 9px rgba(50, 50, 9, 0), 3px 4px 8px var(--accent-shadow-color);
+  border-radius: var(--radius-panel);
+  background: var(--surface-color);
+  white-space: pre;
+  padding: 0.5rem;
+  opacity: 0;
+  transition: opacity .15s ease-in;
+}
+
+// ui.js supplies physical left/top coordinates on the shared body tooltip.
+// hideTooltip() also writes opacity alone before a tooltip has ever opened.
+// Release the off-screen inset only when both positioning coordinates exist.
+body > .cbi-tooltip[style*="left:"][style*="top:"] {
+  inset-inline-start: auto;
+}
+
+.cbi-tooltip-container:hover .cbi-tooltip:not(:empty) {
+  inset-inline-start: auto;
+  transition: opacity .15s ease-in;
+  opacity: 1;
+}
+
+.zonebadge .cbi-tooltip {
+  margin: -1.5rem 0 0 -.5rem;
+  padding: .25rem;
+  background: inherit;
+}
+
+.zonebadge-empty {
+  color: var(--text-strong);
+  background: repeating-linear-gradient(45deg, var(--surface-inset), var(--surface-inset) 5px, var(--surface-contrast) 5px, var(--surface-contrast) 10px);
+}
+
+.zone-forwards {
+  display: flex;
+  min-width: 10rem;
+}
+
+.zone-forwards>* {
+  flex: 1 1 45%;
+}
+
+.zone-forwards>span {
+  flex-basis: 10%;
+  padding: 0 .25rem;
+  text-align: center;
+}
+
+.zone-forwards .zone-src,
+.zone-forwards .zone-dest {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: .875rem;
+  font-weight: bold;
+  padding: .3rem .8rem;
+  white-space: nowrap;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: var(--text-inverse) !important;
+  border-radius: var(--radius-small);
+  background-color: var(--label-bg);
+  text-shadow: none;
+}
+
+label>input[type="checkbox"],
+label>input[type="radio"] {
+  position: relative;
+  top: .4rem;
+  right: .2rem;
+  margin: 0;
+  vertical-align: bottom;
+}
+
+label[data-index][data-depends] {
+  padding-right: 2em;
+}
+
+.showSide {
+  display: none;
+}
+
+.darkMask {
+  position: fixed;
+  z-index: 99;
+  display: none;
+  width: 100%;
+  height: 100%;
+  content: "";
+  top: 0;
+  background-color: rgba(0, 0, 0, .56);
+  transition: opacity .15s ease;
+
+  &.active {
+    display: block;
+  }
+}
+
+/* diagnostics */
+#diag-rc-output>pre,
+#command-rc-output>pre,
+[data-page="admin-services-wol"] .notice code {
+  font-size: 1.2rem;
+  font-size-adjust: .35;
+  line-height: normal;
+  display: block;
+  overflow-y: hidden;
+  width: 100%;
+  padding: 8.5px;
+  white-space: pre;
+  color: #eee;
+  background-color: #101010;
+  border-radius: var(--radius-panel);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
+}
+
+input[name="ping"],
+input[name="traceroute"],
+input[name="nslookup"] {
+  width: 80%;
+}
+
+.controls {
+  gap: 0.5rem;
+  margin: 0 var(--section-inset);
+}
+
+.controls>div {
+  gap: 0.5rem;
+}
+
+.controls>*>.btn:not([aria-label$="page"]) {
+  flex-grow: initial !important;
+  margin-top: .25rem;
+}
+
+.controls>#pager>.btn[aria-label$="page"] {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+.controls>*>label {
+  margin-bottom: .2rem;
+}
+
+.td.version,
+.td.size {
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+.cbi-tabmenu+.cbi-section {
+  margin-top: 0;
+}
+
+.cbi-tab-disabled[data-errors]::after {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  content: attr(data-errors);
+  background-color: var(--danger-bg);
+  color: var(--text-on-accent);
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: var(--radius-circle);
+  text-align: center;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: .75em;
+}
+
+/* custom commands */
+.commands {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 0.75rem;
+}
+
+.commandbox {
+  padding: .5rem 1rem;
+  gap: 0.5rem;
+  border-bottom: thin solid var(--border-color);
+  border-radius: var(--radius-panel);
+  background: var(--command-bg);
+  box-shadow: var(--command-shadow);
+
+  h3 {
+    line-height: normal !important;
+    overflow: hidden;
+    margin: 6px 0 !important;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  div {
+    left: auto !important;
+  }
+
+  code {
+    overflow: hidden;
+    max-width: fit-content;
+    padding: 2px 3px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &:hover {
+      overflow-y: auto;
+      max-height: 50px;
+      white-space: normal;
+    }
+  }
+
+  p:first-of-type {
+    margin-top: -6px;
+  }
+
+  p:nth-of-type(2) {
+    margin-top: 2px;
+  }
+}
+
+#command-rc-output .alert-message {
+  line-height: 1.42857143;
+  position: absolute;
+  top: 40px;
+  right: 32px;
+  max-width: 40%;
+  margin: 0;
+  animation: anim-fade-in 1.5s forwards;
+  word-break: break-word;
+  opacity: 0;
+}
+
+@keyframes anim-fade-in {
+  100% {
+    opacity: 1;
+  }
+}
+
+/* other fix */
+
+.fb-container .cbi-button {
+  height: auto !important;
+}
+
+#cbi-usb_printer-printer em {
+  display: block;
+  padding: 1rem;
+  text-align: center;
+}
+
+pre.command-output {
+  padding: 1.5rem;
+}

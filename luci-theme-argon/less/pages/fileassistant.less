@@ -1,0 +1,80 @@
+// out: false
+
+// System - File Assistant
+[data-page="admin-system-fileassistant"] {
+    .fb-container td[class$="-icon"]::before {
+        filter: var(--file-icon-filter);
+    }
+    #upload-toggle {
+        display: none !important;
+    }
+
+    .fb-container .panel-title {
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    .cbi-section.fb-container {
+        padding: 0.5rem;
+
+        label.cbi-value-title {
+            line-height: 1.5rem;
+            padding: 0.5rem 0.75rem;
+            width: 60px;
+            text-align: left;
+        }
+
+        div.cbi-value-field {
+            width: 100%;
+            display: block;
+            padding-left: 60px;
+        }
+
+        div#list-content {
+            table.cbi-section-table {
+
+                thead,
+                tbody {
+                    td.cbi-section-table-cell {
+                        width: 232px;
+                    }
+                }
+            }
+
+            tbody {
+                tr:nth-child(1) {
+                    td.parent-icon {
+                        strong {
+                            margin-left: 0 !important;
+                        }
+                    }
+                }
+
+                td.cbi-value-field.file-icon,
+                td.cbi-value-field.folder-icon {
+                    strong {
+                        vertical-align: middle;
+                        margin-left: 5px;
+                    }
+                }
+            }
+        }
+    }
+
+    .fb-container .panel-container {
+        border-bottom-color: var(--border-color);
+        display: flex;
+
+        .panel-title {
+            flex: 1;
+        }
+    }
+
+    .fb-container .upload-container {
+        display: flex !important;
+
+        .upload-file {
+            flex: 1;
+            margin-right: 0 !important;
+        }
+    }
+}

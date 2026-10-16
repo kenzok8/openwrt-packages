@@ -1,0 +1,207 @@
+// out: false
+
+[data-page="admin-status-nftables"] {
+  .nft-table,
+  .nft-chains {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: var(--section-gap);
+  }
+
+  .nft-chain {
+    min-width: 0;
+    border-radius: var(--radius-card);
+    background: var(--surface-color);
+    box-shadow: var(--section-shadow);
+
+    > h4 {
+      margin: 0;
+      padding: var(--field-gap) var(--section-inset);
+      font-size: .9375rem;
+      line-height: 1.4;
+      color: var(--text-strong);
+      background: var(--surface-raised);
+      border-start-start-radius: inherit;
+      border-start-end-radius: inherit;
+      overflow-wrap: anywhere;
+      scroll-margin-block-start: 1rem;
+
+      &:target {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  .nft-chain-hook {
+    padding: var(--control-gap) var(--section-inset) var(--field-gap);
+    font-size: .8125rem;
+    line-height: 1.5;
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+  }
+
+  // Keep native table semantics and the match/action pairing at every viewport.
+  .nft-rules {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: .8125rem;
+    overflow: visible;
+
+    .tr,
+    .tr.table-titles {
+      display: table-row;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .th,
+    .td {
+      display: table-cell;
+      min-width: 0;
+      // The native view injects a .25em !important cell padding after the theme.
+      padding: var(--control-gap) var(--section-inset) !important;
+      text-align: start !important;
+      vertical-align: top;
+      line-height: 1.5;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .th {
+      font-weight: 600;
+      background: var(--surface-muted);
+    }
+
+    .td {
+      background: var(--surface-color);
+    }
+
+    > .tr:nth-child(2n of :has(> .td)) > .td {
+      background: var(--row-alt);
+    }
+
+    .tr:last-child > .td:first-child {
+      border-end-start-radius: var(--radius-card);
+    }
+
+    .tr:last-child > .td:last-child {
+      border-end-end-radius: var(--radius-card);
+    }
+
+    .ifacebadge {
+      // Expressions contain text nodes, var and strong; flex splits the sentence.
+      display: inline-block;
+      max-width: 100%;
+      margin-block: .125rem;
+      margin-inline: 0 .125rem;
+      padding: .25rem .5rem;
+      vertical-align: top;
+      font-size: inherit;
+      line-height: 1.5;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      color: var(--text-strong);
+      background: var(--badge-bg);
+    }
+
+    a {
+      color: var(--text-strong);
+      text-decoration: underline;
+      text-underline-offset: .15em;
+    }
+
+    .nft-set,
+    .nft-list {
+      max-width: 100%;
+      vertical-align: baseline;
+      direction: ltr;
+      unicode-bidi: isolate;
+      text-align: start;
+    }
+
+    .nft-set-items,
+    .nft-list-items {
+      max-width: 100%;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: clip;
+      overflow-wrap: anywhere;
+    }
+
+    .nft-counter {
+      font-variant-numeric: tabular-nums;
+    }
+
+    // Hidden native tooltips are placed outside the logical start edge.
+    // Keep that positioning direction tied to the page, not a data token.
+    [dir="rtl"] & .cbi-tooltip {
+      direction: rtl;
+    }
+
+    // Keep addresses, identifiers and byte units in their data order even
+    // when translated descriptions and the two columns follow RTL.
+    strong,
+    .nft-counter > var {
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+
+    // Verdict maps have one native div per key/action pair. Give every key
+    // the same column so short labels do not pull their action to the side.
+    .td > div:has(> span:first-child + span.ifacebadge) {
+      display: grid;
+      grid-template-columns: 8em minmax(0, 1fr);
+      align-items: start;
+      gap: 0 var(--control-gap);
+
+      > span {
+        min-width: 0;
+      }
+
+      > span:first-child {
+        padding-block: .25rem;
+        direction: ltr;
+        unicode-bidi: isolate;
+        text-align: match-parent;
+      }
+
+      > .ifacebadge {
+        justify-self: start;
+        margin: 0;
+      }
+
+      + div {
+        margin-block-start: var(--control-gap);
+      }
+
+      @media screen and (max-width: 767px) {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  }
+
+  @media screen and (max-width: 600px) {
+    .nft-rules .th,
+    .nft-rules .td {
+      padding: var(--control-gap) !important;
+    }
+  }
+
+  .alert-message {
+    opacity: 1;
+  }
+
+  .alert-message.fade-out {
+    opacity: 0;
+  }
+}

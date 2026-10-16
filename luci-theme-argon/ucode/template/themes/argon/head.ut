@@ -1,0 +1,119 @@
+{#
+	Argon is a clean HTML5 theme for LuCI. It is based on luci-theme-material Argon Template
+
+	luci-theme-argon
+	Copyright 2020 Jerrykuku <jerrykuku@qq.com>
+
+	Have a bug? Please create an issue here on GitHub!
+	https://github.com/jerrykuku/luci-theme-argon/issues
+
+	luci-theme-material:
+	Copyright 2015 Lutty Yang <lutty@wcan.in>
+
+	Argon Theme
+	https://demos.creative-tim.com/argon-dashboard/index.html
+
+	Licensed to the public under the Apache License 2.0
+-#}
+
+{# Shared document head. Callers supply hostname and is_login explicitly. -#}
+{%
+	import { access, lsdir, lstat } from 'fs';
+	import { cursor } from 'uci';
+	import { dark_palette, appearance_modes } from 'luci.argon-palette';
+
+	let cfg = cursor();
+	http.prepare_content('text/html; charset=UTF-8');
+
+	//Custom settings
+	function validColor(value, fallback) {
+		return type(value) == 'string' && match(value, /^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/) ? value : fallback;
+	}
+
+	function validNumber(value, fallback, maximum) {
+		return type(value) == 'string' && match(value, /^(0|[1-9][0-9]*)(\.[0-9]+)?$/) && +value <= maximum ? value : fallback;
+	}
+
+	let mode = 'normal';
+	let primary = '#5e72e4';
+	let dark_primary = '#483d8b';
+	let blur_radius = '10';
+	let blur_radius_dark = '10';
+	let blur_opacity = '0.5';
+	let blur_opacity_dark = '0.5';
+	const has_argon_config = access('/etc/config/argon');
+	let dark_settings = {};
+	if (has_argon_config) {
+		for (let key in ['dark_primary_mode', 'dark_primary', 'dark_glass_mode', 'blur', 'blur_dark', 'transparency', 'transparency_dark'])
+			dark_settings[key] = cfg.get_first('argon', 'global', key);
+		primary = validColor(cfg.get_first('argon', 'global', 'primary'), primary);
+		dark_primary = validColor(cfg.get_first('argon', 'global', 'dark_primary'), dark_primary);
+		blur_radius = validNumber(cfg.get_first('argon', 'global', 'blur'), blur_radius, 100);
+		blur_radius_dark = validNumber(cfg.get_first('argon', 'global', 'blur_dark'), blur_radius_dark, 100);
+		blur_opacity = validNumber(cfg.get_first('argon', 'global', 'transparency'), blur_opacity, 1);
+		blur_opacity_dark = validNumber(cfg.get_first('argon', 'global', 'transparency_dark'), blur_opacity_dark, 1);
+		let configured_mode = cfg.get_first('argon', 'global', 'mode');
+		if (configured_mode == 'normal' || configured_mode == 'dark' || configured_mode == 'light')
+			mode = configured_mode;
+	}
+	const dark_modes = appearance_modes(dark_settings);
+	const palette = dark_palette(dark_modes.color == 'custom' ? dark_primary : primary, dark_modes.color == 'custom');
+	dark_primary = palette.primary;
+	if (dark_modes.glass == 'inherit') {
+		blur_radius_dark = blur_radius;
+		blur_opacity_dark = blur_opacity;
+	}
+	const bar_color = mode == 'dark' ? dark_primary : primary;
+
+-%}
+<!DOCTYPE html>
+<html lang="{{ dispatcher.lang }}" data-argon-mode="{{ mode }}">
+
+<head>
+	{% if (!is_login): %}
+	{%
+		const icon_dir = '/www/luci-static/argon/icon/';
+		const menu_icons = filter(lsdir(icon_dir) ?? [], name =>
+			match(name, /^[a-zA-Z0-9_-]+\.svg$/) && lstat(icon_dir + name)?.type == 'file');
+	%}
+	<meta name="argon-menu-icons" content="{{ entityencode(join(' ', menu_icons), true) }}">
+	{% endif %}
+	{% include("themes/" + theme + "/head_meta", { hostname: hostname, node: node, bar_color: bar_color, media: media, mode: mode, primary: primary, dark_primary: dark_primary }) %}
+
+	<link rel="stylesheet" href="{{ media }}/css/cascade.css{# ?v=PKG_VERSION #}">
+	<style title="text/css">
+		:root {
+			--light-primary: {{ primary }};
+			--dark-primary: {{ dark_primary }};
+			--dark-on-primary: {{ palette.on_primary }};
+			--dark-link-color: {{ palette.link }};
+			--dark-focus-ring: {{ palette.focus }};
+			--dark-control-focus: {{ palette.control_focus }};
+			--dark-progress-fill: {{ palette.progress }};
+			--dark-control-ring: {{ palette.control_ring }};
+			--dark-selected-bg: {{ palette.selected }};
+			--dark-selected-hover-bg: {{ palette.hover }};
+			--dark-accent-ring: {{ palette.ring }};
+			--dark-accent-shadow: {{ palette.shadow }};
+			--dark-checkmark-icon: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23{{ substr(palette.on_primary, 1) }}' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
+			--blur-radius-light:{{ blur_radius }}px;
+			--blur-opacity-light:{{ blur_opacity }};
+			--blur-radius-dark:{{ blur_radius_dark }}px;
+			--blur-opacity-dark:{{ blur_opacity_dark }};
+		}
+	</style>
+	<!-- Stylesheets -->
+	{% if (node?.css): %}
+	<link rel="stylesheet" href="{{ resource }}/{{ node.css}}">
+	{% endif -%}
+	{% if (css): %}
+	<style title="text/css">
+		{{ css }}
+	</style>
+	{% endif -%}
+	{% if (!is_login): %}
+	<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}?v={{ version.luciversion }}"></script>
+	<script src="{{ resource }}/cbi.js?v={{ version.luciversion }}"></script>
+	<script src="{{ resource }}/luci.js?v={{ version.luciversion }}"></script>
+	{% endif %}
+</head>

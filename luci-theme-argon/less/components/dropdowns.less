@@ -1,0 +1,145 @@
+// out: false
+
+// Network and zone choices share the same compact badges in every view.
+.cbi-dropdown > ul {
+  .zonebadge {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem;
+    min-width: 0;
+    max-width: 100%;
+    padding: .125rem .5rem;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .ifacebadge {
+    flex-wrap: wrap;
+    gap: .375rem;
+    min-width: 0;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 .25rem;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  > li img {
+    flex: 0 0 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    object-fit: contain;
+  }
+
+  // Native device choices are either direct children or inside a multiselect label.
+  > li:has(> img),
+  > li > label:has(> img) {
+    column-gap: .5rem;
+    min-width: 0;
+    line-height: 1.5;
+    white-space: normal;
+    overflow-wrap: anywhere;
+
+    > span {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+}
+
+.cbi-dropdown:not(.btn):not(.cbi-button):has(> ul .zonebadge, > ul .ifacebadge, > ul img) {
+  min-height: 2.5rem;
+  padding-block: .25rem;
+
+  > ul:not(.dropdown) > li {
+    min-height: 1.5rem;
+    padding-block: 0;
+  }
+}
+
+// One expanded-menu surface for Dropdown, Combobox and ComboButton.
+.cbi-dropdown[open] > ul.dropdown {
+  position: absolute;
+  z-index: 1100;
+  display: block;
+  width: auto;
+  min-width: 100%;
+  max-width: 100vw;
+  max-height: 18rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: .25rem 0;
+  left: 0;
+  // 8px panel = 4px option + 3px inset + 1px border at the default scale.
+  padding: calc(var(--radius-panel) - var(--radius-small) - 1px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-panel);
+  background: var(--surface-panel);
+  box-shadow: var(--dropdown-shadow);
+  color: var(--dropdown-text);
+  font-size: .875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: start;
+
+  > li {
+    min-width: 0;
+    min-height: 2.5rem;
+    padding: .5rem .75rem;
+    border: 0;
+    border-radius: var(--radius-small);
+    background: transparent;
+    color: inherit;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+
+    > label {
+      flex: 1 1 auto;
+      min-width: 0;
+      margin-inline-start: .5rem;
+    }
+
+    // Keep wrapped descriptions in one text column, with the icon on its first line.
+    &:has(> img),
+    > label:has(> img) {
+      align-items: flex-start;
+
+      > img {
+        margin-block-start: ~"max(0px, calc((1.5em - 1.25rem) / 2))";
+      }
+    }
+
+    input.create-item-input {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    &[selected] {
+      background: var(--dropdown-selected-bg);
+      color: var(--dropdown-selected-text);
+      font-weight: 500;
+    }
+
+    // LuCI's focus class tracks hover and keyboard movement independently of selection.
+    &.focus:not([selected]):not([unselectable]) {
+      background: var(--dropdown-hover-bg);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--link-color);
+      outline-offset: -2px;
+    }
+
+    &[unselectable]:not(:has(input.create-item-input)) {
+      opacity: .5;
+      cursor: not-allowed;
+    }
+  }
+}

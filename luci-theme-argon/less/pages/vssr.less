@@ -1,0 +1,32 @@
+// out: false
+
+// Older VSSR pages carry their own surface colours. Use the same palette
+// contract as the rest of the theme rather than a separate dark override.
+.node-services-vssr {
+    .block,
+    .cbi-section-table-row {
+        color: var(--text-strong);
+        background-color: var(--plugin-card-bg) !important;
+        box-shadow: var(--section-shadow);
+    }
+
+    .block h4,
+    .ssr-button {
+        color: var(--text-strong) !important;
+    }
+
+    .status-bar {
+        color: var(--text-strong);
+        background-color: var(--surface-color);
+        box-shadow: var(--section-shadow);
+    }
+
+    .cbi-section-table-row.fast {
+        color: var(--accent-text);
+        background: var(--primary) !important;
+    }
+
+    .incon:nth-child(2) {
+        border-right: 1px solid var(--separator-color);
+    }
+}

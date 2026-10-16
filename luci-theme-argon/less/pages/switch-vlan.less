@@ -1,0 +1,85 @@
+// out: false
+
+// Network - Switch / VLAN (LuCI's page stylesheet loads after the theme)
+[data-page="admin-network-switch-vlan"] #switch-vlan-view {
+    --background-color-medium: var(--surface-inset);
+    --background-color-high: var(--surface-raised);
+    --text-color-high: var(--text-strong);
+    --text-color-low: var(--vlan-text-muted);
+    --border-color-low: var(--border-color);
+    --border-color-medium: var(--border-strong);
+    --border-color-high: var(--border-emphasis);
+    --primary-color-high: var(--primary);
+    --svc-row-bg: var(--background-color-medium);
+    --svc-row-hover-bg: var(--background-color-high);
+    --svc-row-add-bg: var(--background-color-medium);
+    --svc-port-selected-bg: var(--vlan-selected-bg);
+    --svc-port-selected-hover-bg: var(--vlan-selected-hover-bg);
+    --svc-port-selected-border: var(--vlan-selected-border);
+    --svc-port-selected-ring: var(--vlan-selected-ring);
+    --svc-vlan-tagged: rgb(var(--vlan-tagged-rgb));
+    --svc-vlan-untagged: rgb(var(--vlan-untagged-rgb));
+    --svc-vlan-checked-text: var(--vlan-checked-text);
+    --svc-vlan-untagged-bg: rgba(var(--vlan-untagged-rgb), .08);
+    --svc-vlan-tagged-bg: rgba(var(--vlan-tagged-rgb), .1);
+    --svc-vlan-untagged-stripe: rgba(var(--vlan-untagged-rgb), .16);
+    --svc-vlan-tagged-stripe: rgba(var(--vlan-tagged-rgb), .18);
+
+    color: var(--text-color-high);
+
+    input[type="text"],
+    input[type="number"] {
+        background-color: var(--background-color-high) !important;
+
+        &::placeholder {
+            color: var(--text-color-low);
+            opacity: 1;
+        }
+
+        &:focus {
+            border-color: var(--primary-color-high) !important;
+        }
+    }
+
+    .svc-port-tile.selected:hover {
+        background: var(--svc-port-selected-hover-bg);
+        border-color: var(--svc-port-selected-border);
+    }
+
+    .svc-vlan-btn-tagged,
+    .svc-vlan-btn-assign-tagged {
+        --svc-role-color: var(--svc-vlan-tagged);
+        --svc-role-bg: var(--svc-vlan-tagged-bg);
+        --svc-role-stripe: var(--svc-vlan-tagged-stripe);
+    }
+
+    .svc-vlan-btn-untagged,
+    .svc-vlan-btn-assign-untagged {
+        --svc-role-color: var(--svc-vlan-untagged);
+        --svc-role-bg: var(--svc-vlan-untagged-bg);
+        --svc-role-stripe: var(--svc-vlan-untagged-stripe);
+    }
+
+    // Preserve T/U colors against Argon's generic button color and border rules.
+    .svc-vlan-btn-tagged:not(:disabled),
+    .svc-vlan-btn-untagged:not(:disabled),
+    .svc-vlan-assign-btn:not(.svc-vlan-assign-disabled) {
+        color: var(--svc-role-color) !important;
+        border-color: var(--svc-role-color) !important;
+    }
+
+    .svc-vlan-assign-btn.svc-vlan-assign-checked {
+        background: var(--svc-role-color);
+        color: var(--svc-vlan-checked-text) !important;
+    }
+
+    .svc-vlan-assign-btn.svc-vlan-assign-mixed {
+        background: repeating-linear-gradient(135deg,
+            var(--svc-role-stripe) 0 0.5rem,
+            var(--svc-role-bg) 0.5rem 1rem);
+    }
+
+    .svc-vlan-assign-btn.svc-vlan-assign-checked .svc-vlan-btn-prefix {
+        color: inherit;
+    }
+}

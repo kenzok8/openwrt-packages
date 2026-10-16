@@ -1,0 +1,39 @@
+#!/bin/sh
+
+. /usr/share/libubox/jshn.sh
+
+readonly config_dir='/etc/config'
+
+status() {
+	printf '{"result":%s,"mode":"%s"}\n' "$1" "${mode:-normal}"
+}
+
+case "$1" in
+list)
+	printf '%s\n' '{"get":{},"set":{"mode":""}}'
+	;;
+call)
+	case "$2" in get|set) ;; *) exit 1 ;; esac
+	if [ "$2" = set ]; then
+		read -r input
+		json_load "$input" || { status 2; exit 0; }
+		json_get_var requested mode
+		case "$requested" in normal|light|dark) ;; *) status 2; exit 0 ;; esac
+	fi
+	# A private delta directory keeps unrelated UCI changes out of this commit.
+	umask 077
+	work="$(mktemp -d /tmp/argon-appearance.XXXXXX)" || { status 1; exit 0; }
+	trap 'rm -rf "$work"' EXIT
+	trap 'exit 1' HUP INT TERM
+	uci -q -c "$config_dir" -t "$work" get 'argon.@global[0]' >/dev/null || { status 1; exit 0; }
+	current="$(uci -q -c "$config_dir" -t "$work" get 'argon.@global[0].mode')"
+	mode="$current"
+	case "$mode" in normal|light|dark) ;; *) mode=normal ;; esac
+	if [ "$2" = set ] && [ "$current" != "$requested" ]; then
+		uci -q -c "$config_dir" -t "$work" set "argon.@global[0].mode=$requested" &&
+			uci -q -c "$config_dir" -t "$work" commit argon || { status 1; exit 0; }
+		mode="$requested"
+	fi
+	status 0
+	;;
+esac

@@ -1,0 +1,22 @@
+// out: false
+
+[data-page="admin-system-system"] {
+  .control-group,
+  .cbi-dynlist {
+    margin: .25rem 0;
+  }
+
+  #localtime,
+  [data-name="hostname"] input,
+  [data-name="log_size"] input,
+  [data-name="log_ip"] input,
+  [data-name="log_port"] input,
+  [data-name="log_file"] input,
+  [data-name="server"] input,
+  [data-name="server"] .item > span {
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: start;
+  }
+
+}

@@ -1,0 +1,279 @@
+// out: false
+
+// table
+
+.table {
+  position: relative;
+  display: table;
+}
+
+.tr {
+  display: table-row;
+}
+
+.thead {
+  display: table-header-group;
+}
+
+.tbody {
+  display: table-row-group;
+}
+
+.tfoot {
+  display: table-footer-group;
+}
+
+.td,
+.th {
+  line-height: normal;
+  display: table-cell;
+  padding: .5em;
+  text-align: center;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+
+// Let descriptive data yield space to the action column before controls wrap.
+.td:not(.cbi-section-actions) .nowrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.td .ifacebadge {
+  max-width: 100%;
+
+  > span {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+
+.th {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.tr.placeholder {
+  height: 4em;
+}
+
+.tr.placeholder>.td {
+  line-height: 3;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 0.4rem 0 !important;
+  text-align: center !important;
+  background: inherit;
+}
+
+.td[width="33%"] {
+  padding: 1.1em 1.5rem;
+}
+
+.table[width="33%"],
+.th[width="33%"],
+.td[width="33%"] {
+  width: 33%;
+}
+
+.table[width="100%"],
+.th[width="100%"],
+.td[width="100%"] {
+  width: 100%;
+}
+
+.cbi-tblsection {
+  overflow-x: auto;
+}
+
+table {
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+table,
+.table {
+  overflow-y: hidden;
+  width: 100%;
+  font-size: 0.75rem;
+}
+
+// A flush table, its final row group, row and edge cells share the card's
+// bottom corners. Rounding the painted layers keeps dropdowns/tooltips free
+// to extend beyond the card without clipping them with overflow: hidden.
+:is(.cbi-section, [data-tab-title]) > .table:last-child,
+:is(.cbi-section, [data-tab-title]) > .table:has(+ .cbi-section-create:empty:last-child),
+:is(.cbi-section, [data-tab-title]) > :not(.table):last-child > .table:only-child,
+#view > .table {
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: visible;
+  border-end-start-radius: var(--radius-card);
+  border-end-end-radius: var(--radius-card);
+
+  > :is(thead, tbody, tfoot, .thead, .tbody, .tfoot):last-child,
+  > :is(thead, tbody, tfoot, .thead, .tbody, .tfoot):last-child > :is(tr, .tr):last-child,
+  > :is(tr, .tr):last-child {
+    border-end-start-radius: inherit;
+    border-end-end-radius: inherit;
+  }
+
+  > :is(thead, tbody, tfoot, .thead, .tbody, .tfoot):last-child > :is(tr, .tr):last-child > :is(td, th, .td, .th):first-child,
+  > :is(tr, .tr):last-child > :is(td, th, .td, .th):first-child {
+    border-end-start-radius: inherit;
+  }
+
+  > :is(thead, tbody, tfoot, .thead, .tbody, .tfoot):last-child > :is(tr, .tr):last-child > :is(td, th, .td, .th):last-child,
+  > :is(tr, .tr):last-child > :is(td, th, .td, .th):last-child {
+    border-end-end-radius: inherit;
+  }
+}
+
+// Status widgets often replace a table inside a single dynamic wrapper.
+// When that wrapper fills its card, the first painted row shares its top edge.
+:is(.cbi-section, [data-tab-title]) > :not(.table):only-child > .table:only-child {
+  border-start-start-radius: var(--radius-card);
+  border-start-end-radius: var(--radius-card);
+
+  > :is(thead, tbody, .thead, .tbody):first-child,
+  > :is(thead, tbody, .thead, .tbody):first-child > :is(tr, .tr):first-child,
+  > :is(tr, .tr):first-child {
+    border-start-start-radius: inherit;
+    border-start-end-radius: inherit;
+  }
+
+  > :is(thead, tbody, .thead, .tbody):first-child > :is(tr, .tr):first-child > :is(td, th, .td, .th),
+  > :is(tr, .tr):first-child > :is(td, th, .td, .th) {
+    border-top: 0;
+
+    &:first-child {
+      border-start-start-radius: inherit;
+    }
+
+    &:last-child {
+      border-start-end-radius: inherit;
+    }
+  }
+}
+
+.table .table-titles th {
+  background-color: var(--surface-contrast);
+}
+
+table>tbody>tr>td,
+table>tbody>tr>th,
+table>tfoot>tr>td,
+table>tfoot>tr>th,
+table>thead>tr>td,
+table>thead>tr>th,
+.table>.tbody>.tr>.td,
+.table>.tbody>.tr>.th,
+.table>.tfoot>.tr>.td,
+.table>.tfoot>.tr>.th,
+.table>.thead>.tr>.td,
+.table>.thead>.tr>.th,
+.table>.tr>.td.cbi-value-field,
+.table>.tr>.th.cbi-section-table-cell {
+  padding: .5rem;
+}
+
+.container>.cbi-section:first-of-type>.table[width="100%"]>.tr>.td {
+  padding: .6rem;
+}
+
+.cbi-section-table-cell {
+  line-height: 1.1;
+  align-self: flex-end;
+  flex: 1 1 auto;
+}
+
+body:not([data-page="admin-dashboard"]) {
+  tr>td,
+  tr>th,
+  .tr>.td,
+  .tr>.th,
+  .cbi-section-table-row::before,
+  #cbi-wireless>#wifi_assoclist_table>.tr:nth-child(2) {
+    border-top: var(--table-border);
+    padding: 1.1em 1.25rem;
+  }
+}
+
+#cbi-wireless .td,
+.table[width="100%"]>.tr:first-child>.td,
+[data-page="admin-network-diagnostics"] .tr>.td,
+.tr.table-titles>.th,
+.tr.cbi-section-table-titles>.th {
+  border-top: 0 !important;
+  background-color: var(--surface-muted);
+  padding: 1.1em 1.25rem;
+  line-height: 1.3rem;
+}
+
+#cbi-network .tr:first-child>.td {
+  border-top: 0;
+}
+
+.table[width="100%"]>.tr:first-child>.td {
+  margin: auto 0;
+}
+
+.cbi-section-table-row {
+  margin-bottom: 1rem;
+  text-align: center !important;
+  background: var(--row-color);
+}
+
+.cbi-section-table-row:last-child {
+  margin-bottom: 0;
+}
+
+.cbi-section-table-row>.cbi-value-field .cbi-dropdown,
+.cbi-section-table-row>.cbi-value-field .cbi-input-select,
+.cbi-section-table-row>.cbi-value-field .cbi-input-text,
+.cbi-section-table-row>.cbi-value-field .cbi-input-password {
+  width: 100%;
+}
+
+.cbi-section-table-row>.cbi-value-field .cbi-input-text,
+.cbi-section-table-row>.cbi-value-field .cbi-input-password {
+  min-width: 80px;
+}
+
+.cbi-section-table-row>.cbi-value-field [data-dynlist]>input,
+.cbi-section-table-row>.cbi-value-field input.cbi-input-password {
+  width: calc(100% - 1.5rem);
+}
+
+.cbi-section-table-row .td {
+  text-align: center !important;
+
+  .cbi-checkbox {
+    input[type="checkbox"] {
+      margin: 0;
+    }
+  }
+}
+
+// Count data rows only: inline headings and separate thead groups must start
+// with the same stripe, distinct from the muted table heading.
+div>table>tbody>tr:nth-child(2n of :has(> td):not(.table-titles, .cbi-section-table-titles, .cbi-section-table-descr)),
+div>.table>.tbody>.tr:nth-child(2n of :has(> .td):not(.table-titles, .cbi-section-table-titles, .cbi-section-table-descr)),
+div>.table>.tr:nth-child(2n of :has(> .td):not(.table-titles, .cbi-section-table-titles, .cbi-section-table-descr)) {
+  background-color: var(--row-alt);
+}
+
+/* fix multiple table */
+table table,
+.table .table,
+.cbi-value-field table,
+.cbi-value-field .table,
+td>table>tbody>tr>td,
+.td>.table>.tbody>.tr>.td,
+.cbi-value-field>table>tbody>tr>td,
+.cbi-value-field>.table>.tbody>.tr>.td {
+  border: 0;
+}

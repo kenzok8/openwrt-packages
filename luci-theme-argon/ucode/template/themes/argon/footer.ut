@@ -34,10 +34,6 @@
 		</footer>
 	</div>
 </div>
-	<script>
-		// thanks for Jo-Philipp Wich <jow@openwrt.org>
-		var luciLocation = {{ ctx.path }};
-	</script>
-<script type="text/javascript">L.require('menu-argon')</script>
+{% include('themes/' + theme + '/page_scripts', { is_login: false }) %}
 </body>
 </html>

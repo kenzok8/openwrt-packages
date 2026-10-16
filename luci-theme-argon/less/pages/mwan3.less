@@ -1,0 +1,20 @@
+// out: false
+
+// MultiWAN cards in the system overview and the mwan3 overview.
+#mwan3-service-status {
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-wrap: wrap;
+
+    // Override mwan3.css even when the view loads it after the theme.
+    >div.alert-message {
+        position: static;
+        transform: none;
+        z-index: auto;
+        height: auto;
+        min-height: 6rem;
+        max-width: calc(100% - 2rem);
+        overflow-wrap: anywhere;
+    }
+}

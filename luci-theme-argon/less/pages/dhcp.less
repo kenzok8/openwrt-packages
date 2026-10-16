@@ -1,0 +1,44 @@
+// out: false
+
+// Network - DHCP and DNS
+[data-page="admin-network-dhcp"] {
+    .cbi-value {
+        padding: 0;
+    }
+
+    // The final lease table reaches the card edge through two form wrappers.
+    [data-tab="__leases__"] > .cbi-section-node > .cbi-value:last-child {
+        border-end-start-radius: var(--radius-card);
+        border-end-end-radius: var(--radius-card);
+
+        > .table:last-child {
+            border-collapse: separate;
+            border-end-start-radius: inherit;
+            border-end-end-radius: inherit;
+            overflow: hidden;
+
+            @media screen and (max-width: 1152px) {
+                overflow-x: auto;
+            }
+        }
+    }
+
+    .cbi-section-node-tabbed > [data-tab-title] {
+        padding-inline: var(--section-inset);
+    }
+
+    // These panes contain whole sections which already own their text inset.
+    .cbi-section-node-tabbed > [data-tab="tagsparent"],
+    .cbi-section-node-tabbed > [data-tab="matchtags"],
+    .cbi-section-node-tabbed > [data-tab="settags"],
+    .cbi-section-node-tabbed > [data-tab="vc"],
+    .cbi-section-node-tabbed > [data-tab="uc"] {
+        padding-inline: 0;
+    }
+
+    .cbi-section-descr code,
+    .cbi-value-description code {
+        direction: ltr;
+        unicode-bidi: isolate;
+    }
+}

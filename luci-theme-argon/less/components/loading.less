@@ -1,0 +1,51 @@
+// out: false
+
+// Shared by view loading, asynchronous actions, scans and status dialogs.
+.spinning {
+  --spinner-size: 1.125rem;
+  --spinner-inset: 0px;
+  --spinner-accent: var(--link-color);
+  --spinner-track: var(--border-color);
+  position: relative;
+  min-height: var(--spinner-size);
+  padding-inline-start: calc(var(--spinner-inset) + var(--spinner-size) + var(--action-gap)) !important;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block-start: calc(50% - var(--spinner-size) / 2);
+    inset-inline-start: var(--spinner-inset);
+    width: var(--spinner-size);
+    height: var(--spinner-size);
+    box-sizing: border-box;
+    border: 2px solid var(--spinner-track);
+    border-block-start-color: var(--spinner-accent);
+    border-radius: var(--radius-circle);
+    background: none;
+    filter: none;
+    pointer-events: none;
+
+    @media (prefers-reduced-motion: no-preference) {
+      animation: argon-loading-spin .9s linear infinite;
+    }
+  }
+}
+
+em.spinning,
+span.spinning {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+:is(button, .btn, .cbi-button).spinning {
+  --spinner-inset: .75rem;
+  --spinner-accent: currentColor;
+  --spinner-track: color-mix(in srgb, currentColor 25%, transparent);
+}
+
+@keyframes argon-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

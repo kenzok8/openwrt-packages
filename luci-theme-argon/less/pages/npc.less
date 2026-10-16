@@ -1,0 +1,31 @@
+// out: false
+
+// Services - NPC
+[data-page="admin-services-npc"] {
+    div[id="cbid.npc.config.vkey"] {
+        white-space: normal;
+
+        input[id="widget.cbid.npc.config.vkey"][type="password"] {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .cbi-button {
+            margin: 0;
+            border: none;
+        }
+    }
+
+    div[id^="cbid.npc."][id$=".server_addr"]:not([id="cbid.npc.config.server_addr"]),
+    div[id^="cbid.npc."][id$=".vkey"]:not([id="cbid.npc.config.vkey"]),
+    div[id^="cbid.npc."][id$=".protocol"]:not([id="cbid.npc.config.protocol"]),
+    div[id^="cbid.npc."][id$=".dns"]:not([id="cbid.npc.config.dns"]) {
+        +br {
+            display: none;
+        }
+    }
+
+    div.cbi-value.nowrap {
+        white-space: normal;
+    }
+}

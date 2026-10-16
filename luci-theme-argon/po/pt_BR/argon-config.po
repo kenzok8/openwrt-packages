@@ -1,0 +1,384 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: luci-theme-argon\n"
+"POT-Creation-Date: 2024-06-24 15:34-0300\n"
+"PO-Revision-Date: 2026-10-15 00:00+0800\n"
+"Last-Translator: Janderson Vieira Santos <jandersonvs79@gmail.com>\n"
+"Language-Team: \n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.0.1\n"
+
+#: htdocs/luci-static/resources/view/argon-config.js:245
+msgid "0 transparent - 1 opaque (suggest: black translucent preset: 0.5)."
+msgstr "0 transparente - 1 opaco (sugestão: preto translúcido: 0.5)."
+
+#: htdocs/luci-static/resources/view/argon-config.js:195
+msgid "0 transparent - 1 opaque (suggest: transparent: 0 or translucent preset: 0.5)."
+msgstr "0 transparente - 1 opaco (sugestão: transparente: 0 ou translúcido: 0.5)."
+
+#: htdocs/luci-static/resources/view/argon-config.js:220
+msgid "A HEX Color (default: #483d8b)."
+msgstr "Uma cor HEX (padrão: #483d8b)."
+
+#: htdocs/luci-static/resources/view/argon-config.js:190
+msgid "A HEX color (default: #5e72e4)."
+msgstr "Uma cor HEX (padrão: #5e72e4)."
+
+#: htdocs/luci-static/resources/view/argon-config.js:315
+msgid "Action"
+msgstr "Ação"
+
+#: htdocs/luci-static/resources/argon/branding.js:62
+msgid "Another update is running. Please try again."
+msgstr "Outra atualização está em andamento. Tente novamente mais tarde."
+
+#: htdocs/luci-static/resources/view/argon-config.js:125
+msgid "Applies the next time you open the login page."
+msgstr "Aplicado na próxima vez que você abrir a página de login."
+
+#: root/usr/share/luci/menu.d/luci-app-argon-config.json:3
+msgid "Argon Config"
+msgstr "Configuração Argon"
+
+#: htdocs/luci-static/resources/view/argon-config.js:113
+msgid "Argon theme configuration"
+msgstr "Configuração do tema Argon"
+
+#: htdocs/luci-static/resources/view/argon-config.js:209
+msgid "Automatic"
+msgstr "Automático"
+
+#: htdocs/luci-static/resources/view/argon-config.js:208
+msgid "Automatically generate dark colors from the primary color, or choose a custom dark color."
+msgstr "Gere automaticamente as cores escuras a partir da cor principal ou escolha uma cor escura personalizada."
+
+#: htdocs/luci-static/resources/view/argon-config.js:343
+msgid "Background file list"
+msgstr "Lista de arquivos de fundo"
+
+#: htdocs/luci-static/resources/view/argon-config.js:155
+msgid "Bing"
+msgstr "Bing"
+
+#: htdocs/luci-static/resources/argon/branding.js:24
+msgid "Browser icon"
+msgstr "Ícone do navegador"
+
+#: htdocs/luci-static/resources/view/argon-config.js:154
+msgid "Built-in"
+msgstr "Integrado"
+
+#: htdocs/luci-static/resources/view/argon-config.js:122
+msgid "Centered card"
+msgstr "Cartão centralizado"
+
+#: htdocs/luci-static/resources/argon/branding.js:107
+msgid "Changes apply immediately. Reload open pages to update their icons."
+msgstr "As alterações são aplicadas imediatamente. Recarregue as páginas abertas para atualizar seus ícones."
+
+#: htdocs/luci-static/resources/view/argon-config.js:121
+msgid "Classic sidebar"
+msgstr "Barra lateral clássica"
+
+#: htdocs/luci-static/resources/view/argon-config.js:210
+#: htdocs/luci-static/resources/view/argon-config.js:229
+msgid "Custom"
+msgstr "Personalizado"
+
+#: htdocs/luci-static/resources/argon/branding.js:113
+msgid "Custom branding"
+msgstr "Ícones personalizados"
+
+#: htdocs/luci-static/resources/argon-appearance.js:43
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Dark mode"
+msgstr "Modo escuro"
+
+#: htdocs/luci-static/resources/view/argon-config.js:207
+msgid "Dark mode colors"
+msgstr "Cores do modo escuro"
+
+#: htdocs/luci-static/resources/view/argon-config.js:226
+msgid "Dark mode login panel"
+msgstr "Painel de login no modo escuro"
+
+#: htdocs/luci-static/resources/argon-sshkeys.js:33
+#: htdocs/luci-static/resources/view/argon-config.js:338
+msgid "Delete"
+msgstr "Excluir"
+
+#: htdocs/luci-static/resources/argon-sshkeys.js:34
+msgid "Delete key"
+msgstr "Apagar chave"
+
+#: htdocs/luci-static/resources/view/argon-config.js:47
+msgid "Expecting: %s"
+msgstr "Esperado: %s"
+
+#: htdocs/luci-static/resources/view/argon-config.js:333
+msgid "Failed to delete file: %s."
+msgstr "Falha ao excluir o arquivo: %s."
+
+#: htdocs/luci-static/resources/view/argon-config.js:103
+msgid "Failed to list background files: %s."
+msgstr "Falha ao listar os arquivos de fundo: %s."
+
+#: htdocs/luci-static/resources/view/argon-config.js:95
+msgid "Failed to read available space: %s."
+msgstr "Falha ao consultar o espaço disponível: %s."
+
+#: htdocs/luci-static/resources/view/argon-config.js:297
+msgid "Failed to upload file: %s."
+msgstr "Falha ao enviar o arquivo: %s."
+
+#: htdocs/luci-static/resources/view/argon-config.js:312
+msgid "Filename"
+msgstr "Nome do arquivo"
+
+#: htdocs/luci-static/resources/view/argon-config.js:284
+msgid "Files will be uploaded to <code>%s</code>."
+msgstr "Os arquivos serão enviados para <code>%s</code>."
+
+#: htdocs/luci-static/resources/view/argon-config.js:228
+msgid "Follow light mode"
+msgstr "Seguir o modo claro"
+
+#: htdocs/luci-static/resources/argon-appearance.js:43
+#: htdocs/luci-static/resources/view/argon-config.js:168
+msgid "Follow system"
+msgstr "Seguir o sistema"
+
+#: ucode/template/themes/argon/header.ut:70
+msgid "Go to password configuration..."
+msgstr "Ir para a configuração de senha..."
+
+#: root/usr/share/rpcd/acl.d/luci-app-argon-config.json:3
+msgid "Grant UCI access for luci-app-argon-config"
+msgstr "Conceder acesso UCI para luci-app-argon-config"
+
+#: root/usr/share/rpcd/acl.d/luci-theme-argon.json:3
+msgid "Grant UCI access for luci-theme-argon"
+msgstr "Permitir acesso à UCI para luci-theme-argon"
+
+#: htdocs/luci-static/resources/view/argon-config.js:114
+msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos. Chrome is recommended."
+msgstr "Aqui você pode configurar o desfoque e a transparência da página de login do tema Argon e gerenciar as imagens e os vídeos de fundo. Recomenda-se o Chrome."
+
+#: htdocs/luci-static/resources/argon/branding.js:60
+msgid "Invalid PNG image or dimensions."
+msgstr "Imagem PNG ou dimensões inválidas."
+
+#: ucode/template/themes/argon/login_form.ut:13
+msgid "Invalid username and/or password! Please try again."
+msgstr "Nome de usuário e/ou senha inválidos! Por favor, tente novamente."
+
+#: ucode/template/themes/argon/header.ut:77
+msgid "JavaScript required!"
+msgstr "É necessário JavaScript!"
+
+#: htdocs/luci-static/resources/view/argon-config.js:202
+#: htdocs/luci-static/resources/view/argon-config.js:254
+msgid "Larger value will more blurred (suggest: clear: 1 or blur preset: 10)."
+msgstr "Um valor maior aumenta o desfoque (sugestão: nítido: 1 ou desfocado: 10)."
+
+#: htdocs/luci-static/resources/argon-appearance.js:43
+#: htdocs/luci-static/resources/view/argon-config.js:169
+msgid "Light mode"
+msgstr "Modo claro"
+
+#: ucode/template/themes/argon/login_form.ut:55
+msgid "Log in"
+msgstr "Entrar"
+
+#: htdocs/luci-static/resources/argon/branding.js:24
+msgid "Login logo"
+msgstr "Logotipo de login"
+
+#: htdocs/luci-static/resources/view/argon-config.js:124
+msgid "Login page style"
+msgstr "Estilo da página de login"
+
+#: htdocs/luci-static/resources/view/argon-config.js:201
+msgid "Login panel blur"
+msgstr "Desfoque do painel de login"
+
+#: htdocs/luci-static/resources/view/argon-config.js:194
+msgid "Login panel opacity"
+msgstr "Opacidade do painel de login"
+
+#: htdocs/luci-static/resources/view/argon-config.js:313
+msgid "Modified date"
+msgstr "Data de modificação"
+
+#: ucode/template/themes/argon/login_background.ut:73
+msgid "Mute background video"
+msgstr "Silenciar o vídeo de fundo"
+
+#: htdocs/luci-static/resources/view/argon-config.js:340
+msgid "No files found."
+msgstr "Nenhum arquivo encontrado."
+
+#: ucode/template/themes/argon/header.ut:67
+msgid "No password set!"
+msgstr "Nenhuma senha definida!"
+
+#: htdocs/luci-static/resources/argon/branding.js:104
+msgid "PNG images, 16–1024 pixels per side, up to 1 MiB. Browser icons must be square."
+msgstr "Imagens PNG, 16–1024 pixels por lado, até 1 MiB. Os ícones do navegador devem ser quadrados."
+
+#: ucode/template/themes/argon/login_form.ut:27
+#: ucode/template/themes/argon/login_form.ut:28
+msgid "Password"
+msgstr "Senha"
+
+#: htdocs/luci-static/resources/view/argon-config.js:190
+msgid "Primary color"
+msgstr "Cor principal"
+
+#: htdocs/luci-static/resources/argon-sshkeys.js:47
+msgid "Public key"
+msgstr "Chave pública"
+
+#: htdocs/luci-static/resources/argon-appearance.js:67
+msgid "Read-only"
+msgstr "Somente leitura"
+
+#: htdocs/luci-static/resources/argon-overview.js:34
+msgid "Received bytes"
+msgstr "Bytes recebidos"
+
+#: htdocs/luci-static/resources/view/argon-config.js:162
+msgid "Required when using Unsplash wallpapers."
+msgstr "Obrigatória ao usar papéis de parede do Unsplash."
+
+#: htdocs/luci-static/resources/argon/branding.js:98
+msgid "Restore default"
+msgstr "Restaurar padrão"
+
+#: htdocs/luci-static/resources/view/argon-config.js:263
+msgid "Save current settings"
+msgstr "Salvar configurações atuais"
+
+#: htdocs/luci-static/resources/view/argon-config.js:261
+msgid "Save settings"
+msgstr "Salvar configurações"
+
+#: htdocs/luci-static/resources/argon-appearance.js:137
+msgid "Saving theme mode…"
+msgstr "Salvando o modo do tema…"
+
+#: htdocs/luci-static/resources/view/argon-config.js:314
+msgid "Size"
+msgstr "Tamanho"
+
+#: htdocs/luci-static/resources/view/argon-config.js:116
+msgid "Theme configuration"
+msgstr "Configuração do tema"
+
+#: htdocs/luci-static/resources/argon-appearance.js:46
+#: htdocs/luci-static/resources/argon-appearance.js:61
+#: htdocs/luci-static/resources/argon-appearance.js:111
+#: htdocs/luci-static/resources/view/argon-config.js:167
+msgid "Theme mode"
+msgstr "Modo do tema"
+
+#: htdocs/luci-static/resources/argon-appearance.js:163
+msgid "Theme mode saved."
+msgstr "Modo do tema salvo."
+
+#: ucode/template/themes/argon/header.ut:68
+msgid "There is no password set on this router. Please configure a root password to protect the web interface."
+msgstr "Não há nenhuma senha definida neste roteador. Por favor, configure uma senha para o usuário root para proteger a interface web."
+
+#: ucode/template/themes/argon/header.ut:52
+msgid "Toggle navigation"
+msgstr "Mostrar ou ocultar a navegação"
+
+#: htdocs/luci-static/resources/argon-overview.js:33
+msgid "Transmitted bytes"
+msgstr "Bytes transmitidos"
+
+#: htdocs/luci-static/resources/argon/branding.js:110
+msgid "Unable to load custom branding. Reload this page or reinstall the theme."
+msgstr "Não foi possível carregar os ícones personalizados. Recarregue esta página ou reinstale o tema."
+
+#: htdocs/luci-static/resources/argon/branding.js:64
+msgid "Unable to save custom branding."
+msgstr "Não foi possível salvar os ícones personalizados."
+
+#: htdocs/luci-static/resources/argon-appearance.js:152
+msgid "Unable to save theme mode. Please try again."
+msgstr "Não foi possível salvar o modo do tema. Tente novamente."
+
+#: htdocs/luci-static/resources/view/argon-config.js:156
+msgid "Unsplash"
+msgstr "Unsplash"
+
+#: htdocs/luci-static/resources/view/argon-config.js:161
+msgid "Unsplash API access key"
+msgstr "Chave de acesso à API do Unsplash"
+
+#: htdocs/luci-static/resources/argon/branding.js:97
+msgid "Upload PNG..."
+msgstr "Enviar PNG…"
+
+#: htdocs/luci-static/resources/view/argon-config.js:283
+msgid "Upload background"
+msgstr "Enviar fundo"
+
+#: htdocs/luci-static/resources/view/argon-config.js:277
+msgid "Upload background (available space: %1024.2mB)"
+msgstr "Enviar fundo (espaço disponível: %1024.2mB)"
+
+#: htdocs/luci-static/resources/argon/branding.js:106
+msgid "Upload for both..."
+msgstr "Enviar para ambos…"
+
+#: htdocs/luci-static/resources/view/argon-config.js:286
+msgid "Upload..."
+msgstr "Enviar..."
+
+#: htdocs/luci-static/resources/view/argon-config.js:227
+msgid "Use the same opacity and blur in both modes, or customize the dark login panel."
+msgstr "Use a mesma opacidade e desfoque nos dois modos ou personalize o painel de login escuro."
+
+#: ucode/template/themes/argon/login_form.ut:22
+#: ucode/template/themes/argon/login_form.ut:23
+msgid "Username"
+msgstr "Nome de usuário"
+
+#: htdocs/luci-static/resources/view/argon-config.js:157
+msgid "Wallhaven"
+msgstr "Wallhaven"
+
+#: htdocs/luci-static/resources/view/argon-config.js:153
+msgid "Wallpaper source"
+msgstr "Fonte do papel de parede"
+
+#: htdocs/luci-static/resources/view/argon-config.js:279
+msgid "You can upload files such as gif/jpg/mp4/png/webm/webp files, to change the login page background."
+msgstr "Você pode enviar arquivos gif/jpg/mp4/png/webm/webp para alterar o fundo da página de login."
+
+#: ucode/template/themes/argon/header.ut:78
+msgid "You must enable JavaScript in your browser or LuCI will not work properly."
+msgstr "Você precisa habilitar o JavaScript no seu navegador ou o LuCI não irá funcionar corretamente."
+
+#: htdocs/luci-static/resources/view/argon-config.js:253
+msgid "[Dark mode] Frosted Glass Radius"
+msgstr "[Modo escuro] Raio de vidro fosco"
+
+#: htdocs/luci-static/resources/view/argon-config.js:219
+msgid "[Dark mode] Primary Color"
+msgstr "[Modo escuro] Cor primária"
+
+#: htdocs/luci-static/resources/view/argon-config.js:244
+msgid "[Dark mode] Transparency"
+msgstr "[Modo escuro] Transparência"
+
+#: htdocs/luci-static/resources/view/argon-config.js:47
+msgid "valid HEX color value"
+msgstr "um valor de cor HEX válido"

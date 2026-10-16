@@ -1,0 +1,29 @@
+// out: false
+
+[data-page="admin-status-processes"] {
+  .th:nth-child(3),
+  .td:nth-child(3) {
+    text-align: start;
+  }
+
+  .td:nth-child(3) > span {
+    display: block;
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: start;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    line-height: 1.5;
+  }
+
+  @media screen and (max-width: 1152px) {
+    .td:nth-child(1),
+    .td:nth-child(2) {
+      flex-basis: 50%;
+    }
+
+    .td:nth-child(3) {
+      flex-basis: 100%;
+      max-width: 100%;
+    }
+  }
+}

@@ -1,0 +1,97 @@
+// out: false
+
+// Bridge the app's custom cards to the active Argon appearance, including
+// manual theme changes that differ from the system's media preference.
+[data-page^="admin-vpn-easytier"] #maincontent {
+    --card-bg: var(--surface-color);
+    --card-shadow: transparent;
+    --text-primary: var(--text-strong);
+    --text-secondary: var(--muted-text);
+    --tab-active: var(--link-color);
+    --tab-hover: var(--surface-active);
+    --gradient-bg: var(--surface-color);
+    --hover-bg: var(--surface-active);
+    --upload-bg: var(--surface-color);
+    --upload-border: var(--border-color);
+    --upload-hover: var(--surface-active);
+    --log-bg: var(--surface-color);
+    --log-text: var(--text-color);
+    --log-border: var(--border-color);
+    --log-header-bg: var(--surface-muted);
+    --log-hover: var(--surface-active);
+    --log-info: var(--link-color);
+    --log-warn: var(--warning);
+    --log-error: var(--danger);
+    --info: var(--primary);
+    --error: var(--danger);
+
+    .et-quick-actions,
+    .et-status-card,
+    .et-conninfo-container,
+    .web-card,
+    .upload-card,
+    .log-container {
+        min-width: 0;
+        max-width: 100%;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-card);
+        box-shadow: var(--section-shadow);
+    }
+
+    .et-tabs-container {
+        min-width: 0;
+        max-width: 100%;
+        overscroll-behavior-inline: contain;
+    }
+
+    .et-tab {
+        flex: 0 0 auto;
+    }
+
+    .et-refresh-btn {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: var(--accent-text);
+    }
+
+    .et-error {
+        color: var(--danger);
+        background: color-mix(in srgb, var(--danger) 10%, var(--surface-color));
+        border-color: color-mix(in srgb, var(--danger) 35%, var(--border-color));
+    }
+
+    // This app uses .modal for its full-screen backdrop; LuCI uses it for
+    // the dialog itself. Keep the two structures independent.
+    .modal:not(.cbi-modal) {
+        width: 100%;
+        max-width: none;
+        min-height: 0;
+        margin: 0;
+        padding: var(--page-gutter);
+        border: 0;
+        border-radius: 0 !important;
+        box-shadow: none;
+        container-type: normal;
+    }
+
+    .modal-content {
+        min-width: 0;
+        max-width: 100%;
+        border-radius: var(--radius-dialog);
+    }
+
+    .modal-buttons {
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-page^="admin-vpn-easytier"] #maincontent {
+        *,
+        *::before,
+        *::after {
+            transition: none !important;
+            animation: none !important;
+        }
+    }
+}

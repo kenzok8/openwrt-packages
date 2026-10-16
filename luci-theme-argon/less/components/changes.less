@@ -1,0 +1,170 @@
+// out: false
+
+.uci-change-list {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: .8125rem;
+  line-height: 1.6;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--control-gap);
+}
+
+.uci-change-list ins,
+.uci-change-legend-label ins {
+  display: block;
+  padding: 2px;
+  text-decoration: none;
+  border: thin solid var(--change-added-border);
+  background-color: var(--change-added-bg);
+}
+
+.uci-change-list del,
+.uci-change-legend-label del {
+  font-style: normal;
+  display: block;
+  padding: 2px;
+  text-decoration: none;
+  border: thin solid var(--change-removed-border);
+  background-color: var(--change-removed-bg);
+}
+
+.uci-change-list var,
+.uci-change-legend-label var {
+  font-style: normal;
+  display: block;
+  padding: 2px;
+  text-decoration: none;
+  border: thin solid var(--change-modified-border);
+  background-color: var(--change-modified-bg);
+}
+
+.uci-change-list var ins,
+.uci-change-list var del {
+  font-style: normal;
+  padding: 0;
+  white-space: pre-wrap;
+  border: 0;
+}
+
+.uci-change-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--control-gap) var(--field-gap);
+  padding: var(--control-gap);
+}
+
+.uci-change-legend-label {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 1 150px;
+  min-width: 0;
+  gap: .25rem;
+  overflow-wrap: anywhere;
+}
+
+.uci-change-legend-label>ins,
+.uci-change-legend-label>del,
+.uci-change-legend-label>var {
+  display: block;
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+}
+
+.uci-change-legend-label var ins,
+.uci-change-legend-label var del {
+  line-height: .4;
+  border: 0;
+}
+
+.uci-change-list > :is(var, del, ins) {
+  padding: .5rem .75rem;
+  border-radius: var(--radius-panel);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+}
+
+.uci-dialog {
+  // This is the dialog body, not a second elevated card.
+  > .cbi-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--field-gap);
+    min-width: 0;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    line-height: inherit;
+
+    > br {
+      display: none;
+    }
+
+    > .button-row {
+      padding-block-start: var(--control-gap);
+    }
+  }
+
+  .uci-change-legend {
+    padding: 0;
+    line-height: 1.5;
+  }
+
+  .uci-change-legend-label {
+    flex: 0 1 auto;
+    gap: var(--control-gap);
+    padding: 0;
+    margin: 0;
+
+    > ins,
+    > del,
+    > var {
+      width: 14px;
+      height: 14px;
+    }
+
+    > var {
+      position: relative;
+
+      ins,
+      del {
+        position: absolute;
+        inset: 2px;
+      }
+    }
+  }
+
+  .uci-change-list {
+    > h5 {
+      margin: var(--field-gap) 0 0;
+      padding: 0;
+      font-size: inherit;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+      direction: ltr;
+      text-align: left;
+      unicode-bidi: isolate;
+
+      &:first-child {
+        margin-block-start: 0;
+      }
+    }
+
+    > br {
+      display: none;
+    }
+  }
+
+  .button-row > .btn.cbi-button:not([class*="cbi-button-"]) {
+    color: var(--text-strong);
+    border: 1px solid var(--border-color);
+    background-color: var(--surface-muted);
+  }
+}

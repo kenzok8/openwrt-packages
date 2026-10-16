@@ -2,6 +2,9 @@
     "luci-theme-argon": {
         "description": "Grant UCI access for luci-theme-argon",
         "read": {
+            "ubus": {
+                "luci.argon_appearance": [ "get" ]
+            },
             "uci": [ "argon" ]
         }
     }

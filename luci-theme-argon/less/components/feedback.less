@@ -1,0 +1,282 @@
+// out: false
+
+// alert
+
+.danger {
+  background-color: var(--danger-bg) !important;
+  color: var(--feedback-text);
+}
+
+.warning {
+  background-color: var(--warning-bg) !important;
+  color: var(--feedback-text);
+}
+
+.success {
+  background-color: var(--success-bg) !important;
+  color: var(--feedback-text);
+}
+
+.notice {
+  background-color: var(--notice-bg) !important;
+  color: var(--notice-text);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.alert,
+.alert-message {
+  position: fixed;
+  width: 20rem;
+  z-index: 9000;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+  padding: var(--field-gap) var(--section-inset);
+  border: 0;
+  border-radius: var(--radius-panel) !important;
+  background-color: var(--surface-raised);
+  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, .16), 0 0 2px 0 rgba(0, 0, 0, .12);
+  text-shadow: none;
+
+  &.error {
+    background-color: var(--error-bg);
+    color: var(--error-text);
+  }
+
+  h4 {
+    background-color: var(--feedback-heading-bg);
+    color: var(--feedback-heading-text);
+    padding: 0.25rem 0rem;
+    border-radius: var(--radius-small);
+  }
+
+  .btn {
+    height: auto;
+  }
+}
+
+.modal.alert-message {
+  // LuCI uses this dialog for apply/confirm/rollback status updates.
+  --status-accent: var(--link-color);
+  --spinner-accent: var(--status-accent);
+  position: static;
+  // An explicit width also preserves the modal's container-query layout.
+  width: calc(100% - 2 * var(--page-gutter));
+  min-width: 0;
+  max-width: 32rem;
+  min-height: 3.5rem;
+  left: auto;
+  top: auto;
+  transform: none;
+  margin: clamp(1rem, 4vh, 2rem) auto;
+  padding: var(--field-gap) var(--section-inset);
+  gap: var(--field-gap);
+  border: 1px solid transparent;
+  border-inline-start: 3px solid var(--status-accent);
+  border-radius: var(--radius-dialog) !important;
+  background-color: var(--surface-raised) !important;
+  color: var(--text-strong);
+  box-shadow: var(--section-shadow);
+  font-size: .875rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+
+  &.warning {
+    --status-accent: var(--warning-heading-color);
+  }
+
+  &.error,
+  &.danger {
+    --status-accent: var(--danger);
+  }
+
+  &.success {
+    --status-accent: var(--success);
+  }
+
+  > * {
+    min-width: 0;
+    margin: 0;
+  }
+
+  > h4 {
+    padding: 0;
+    background: none;
+    color: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  &.spinning {
+    // Reserve an actual column for the icon instead of overlapping the prose.
+    display: grid;
+    grid-template-columns: var(--spinner-size) minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--action-gap);
+    padding: var(--field-gap) var(--section-inset) !important;
+
+    > * {
+      grid-column: 2;
+    }
+
+    &::before {
+      position: static;
+      inset: auto;
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+}
+
+// Notification surfaces keep their inset around the shared loading icon.
+.alert-message.spinning:not(.modal) {
+  --spinner-inset: var(--section-inset);
+  --spinner-accent: currentColor;
+  --spinner-track: color-mix(in srgb, currentColor 25%, transparent);
+  position: relative;
+  inset: auto;
+}
+
+/* LuCI's ui.js dismisses notification banners by adding the .fade-out
+   class and removing the banner node once a transitionend event fires
+   on it. Without a transitioned opacity on .alert-message the Dismiss
+   button has no visible effect and the banner stays open forever. */
+.alert-message {
+  transform: none;
+  position: static;
+  transition: opacity .4s ease;
+
+  &.fade-out {
+    opacity: 0;
+  }
+
+  &.fade-in {
+    animation: alert-message-fade-in .4s ease;
+  }
+}
+
+.alert-message>h4 {
+  font-size: 110%;
+  font-weight: bold;
+}
+
+.alert-message>* {
+  margin: .5rem 0;
+}
+
+.alert-message .btn {
+  padding: .3rem .6rem;
+}
+
+@keyframes alert-message-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+#maincontent > .alert-message {
+  // LuCI inserts notification banners before the view container.
+  position: static;
+  width: auto;
+  left: auto;
+  top: auto;
+  transform: none;
+  z-index: auto;
+  margin: 0 var(--page-gutter) var(--section-gap);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--field-gap);
+  line-height: 1.5;
+
+  &.spinning {
+    // The icon follows the message when actions wrap below it on narrow screens.
+    display: grid !important;
+    grid-template-columns: var(--spinner-size) minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--action-gap);
+    padding: var(--field-gap) var(--section-inset) !important;
+    position: relative;
+
+    &::before {
+      position: static;
+      inset: auto;
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    > div:first-child {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    > div:last-child {
+      grid-column: 3;
+      grid-row: 1;
+    }
+
+    @media screen and (max-width: 600px) {
+      grid-template-columns: var(--spinner-size) minmax(0, 1fr);
+
+      > div:last-child {
+        grid-column: 2;
+        grid-row: 2;
+        justify-self: end;
+      }
+    }
+  }
+
+  > div {
+    min-width: 0;
+    margin: 0;
+  }
+
+  > div:first-child > * {
+    margin: 0;
+
+    + * {
+      margin-top: .75rem;
+    }
+  }
+
+  h4 {
+    padding: .5rem .75rem;
+  }
+
+  .btn {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  @media screen and (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.container .alert,
+.container .alert-message {
+  margin-left: 0;
+  margin-right: 0;
+  margin-top: 0rem;
+  position: relative;
+  top: 0;
+  transform:translate(-50%, 0);
+  width: 100%;
+}
+
+.lg {
+  margin: 0;
+  padding: 0 !important;
+}

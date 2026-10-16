@@ -1,0 +1,145 @@
+// out: false
+
+.tabs,
+.cbi-tabmenu {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  gap: var(--control-gap);
+  white-space: nowrap;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    width: 1px;
+    height: 5px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--surface-muted);
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: var(--surface-color);
+  }
+
+  > li {
+    flex: 0 0 auto;
+  }
+}
+
+.tabs {
+  padding: 0 var(--section-inset);
+  background-color: var(--surface-panel);
+  border-radius: var(--radius-card);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, .03);
+
+  li[class~="active"] {
+    cursor: pointer;
+    border-bottom: 0.18751rem solid var(--tab-color);
+    color: var(--text-strong);
+    background-color: var(--surface-active);
+    margin-bottom: 0;
+
+    a {
+      color: var(--text-strong);
+    }
+  }
+
+  li {
+    font-size: 0.875rem;
+    border-radius: 0;
+    padding: 0.875rem 0rem;
+    border-bottom: 0.18751rem solid rgba(0, 0, 0, 0);
+    margin: 0;
+
+    a {
+      text-decoration: none;
+      color: var(--tab-inactive-color);
+      padding: 0.5rem 0.8rem;
+    }
+  }
+}
+
+.cbi-tabmenu {
+  color: white;
+  padding: var(--control-gap) var(--section-inset) 0;
+
+  li {
+    background: var(--tab-item-bg);
+    font-size: 0.875rem;
+    border-radius: var(--radius-control) var(--radius-control) 0 0;
+    padding: 0.5rem 0rem;
+    border-bottom: 0.18751rem solid rgba(0, 0, 0, 0);
+    margin: 0;
+    position: relative;
+
+    a {
+      text-decoration: none;
+      color: var(--tab-inactive-color);
+      padding: 0.5rem 0.8rem;
+    }
+
+  }
+
+  li[class~="cbi-tab"] {
+    border-bottom: 0.18751rem solid var(--tab-color);
+    color: var(--text-strong);
+    background-color: var(--surface-active);
+    margin-bottom: 0;
+
+    a {
+      color: var(--text-strong);
+    }
+  }
+}
+
+// Keep hover and selection feedback smooth in both native tab styles.
+@media (prefers-reduced-motion: no-preference) {
+  .tabs > li,
+  .cbi-tabmenu > li {
+    transition: background-color .15s ease-out, border-bottom-color .15s ease-out;
+
+    > a {
+      transition: color .15s ease-out;
+    }
+  }
+}
+
+@media (hover: hover) {
+  .tabs > li:hover,
+  .cbi-tabmenu > li:hover {
+    cursor: pointer;
+    border-bottom-color: var(--tab-color);
+    background-color: var(--surface-active);
+
+    > a {
+      color: var(--text-strong);
+    }
+  }
+}
+
+.cbi-tab-descr {
+  padding: 0 var(--section-inset);
+}
+
+// Native tab groups can follow a title/description and need not have a map class.
+// Keep normal spacing between visible siblings, and join each tab bar to its pane.
+.cbi-map:has(> .cbi-tabmenu + div),
+#view:has(> .cbi-tabmenu + div),
+#view > div:first-child:not(.cbi-map):has(> .cbi-tabmenu + div) {
+  --tab-flow-gap: var(--section-gap);
+  row-gap: 0;
+
+  > :where(:not(style, script, [hidden], .hidden, [style*="display:none"], [style*="display: none"]))
+    ~ :where(:not(style, script, [hidden], .hidden, [style*="display:none"], [style*="display: none"])) {
+    margin-block-start: var(--tab-flow-gap);
+  }
+
+  > .cbi-tabmenu + div {
+    margin-block-start: 0;
+  }
+}
+
+#view > div:first-child:not(.cbi-map):has(> .cbi-tabmenu + div) {
+  --tab-flow-gap: var(--field-gap);
+}

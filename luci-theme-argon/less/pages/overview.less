@@ -1,0 +1,156 @@
+// out: false
+
+.cbi-section.fade-in .cbi-title {
+    position: relative;
+
+    > h3 {
+        align-items: center;
+        gap: var(--control-gap);
+        overflow-wrap: anywhere;
+    }
+
+    // Older LuCI places the indicator in a separate header wrapper.
+    > div:last-child {
+        position: absolute;
+        inset-inline-end: var(--section-inset);
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    &:has(> div:last-child .label[data-indicator="poll-status"]) > h3 {
+        padding-inline-end: calc(var(--section-inset) + 2.5rem);
+    }
+
+    // Current LuCI puts the same indicator directly inside the h3.
+    .label[data-indicator="poll-status"] {
+        position: relative;
+        flex: 0 0 2.5rem;
+        width: 2.5rem;
+        min-width: 2.5rem !important;
+        min-height: 2rem;
+        padding: 0;
+        font-size: 0;
+        background: none !important;
+        color: var(--soft-text) !important;
+        cursor: pointer;
+
+        &::after {
+            content: '';
+            width: 1rem;
+            height: 1rem;
+            background-color: currentColor;
+            -webkit-mask: var(--chevron-right-icon) center / contain no-repeat;
+            mask: var(--chevron-right-icon) center / contain no-repeat;
+            pointer-events: none;
+        }
+
+        // Native inactive means Hide (expanded); active means Show (collapsed).
+        &[data-style=inactive]::after {
+            -webkit-mask-image: var(--chevron-down-icon);
+            mask-image: var(--chevron-down-icon);
+        }
+
+        [dir="rtl"] &[data-style=active]::after {
+            transform: scaleX(-1);
+        }
+    }
+}
+
+// Empty overview bodies share the title inset; populated tables keep their full width.
+.cbi-section.fade-in > .cbi-title + div:has(> em:only-child) {
+    padding: var(--field-gap) var(--section-inset);
+}
+
+// Round the progress table itself so striped last rows follow the card corners.
+.cbi-section.fade-in > .cbi-title + div > .table:last-child:has(.cbi-progressbar) {
+    border-collapse: separate;
+    border-end-start-radius: var(--radius-card);
+    border-end-end-radius: var(--radius-card);
+    overflow: hidden;
+}
+
+[data-page="admin-status"],
+[data-page="admin-status-overview"] {
+  #view > div:first-child {
+    gap: 0 !important;
+  }
+
+  // Native port status uses a 70px grid. Keep the counters readable and wrap
+  // whole cards when multiple physical ports are present.
+  div[style*="display:grid;grid-template-columns:repeat"] {
+    display: flex !important;
+    justify-content: space-evenly !important;
+    flex-wrap: wrap;
+
+    .ifacebox {
+      flex: 0 1 8.5rem;
+      min-width: 8rem !important;
+      max-width: 100% !important;
+      text-align: center;
+
+      .ifacebox-body {
+        font-size: .75rem;
+        padding: .75rem .5rem;
+
+        .cbi-tooltip-container {
+          font-size: inherit !important;
+          direction: ltr;
+          unicode-bidi: isolate;
+
+          [dir="rtl"] & .cbi-tooltip {
+            direction: rtl;
+          }
+        }
+      }
+
+      > .ifacebox-body:last-child {
+        padding: .5rem .625rem;
+      }
+    }
+  }
+
+  .argon-port-traffic {
+    display: grid;
+    gap: .375rem;
+    margin: 0;
+    direction: ltr;
+
+    > div {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      line-height: 1.5;
+    }
+
+    dt {
+      display: inline-flex;
+      align-items: center;
+      gap: .25rem;
+      color: var(--muted-text);
+      font-size: .6875rem;
+
+      &::before {
+        content: "";
+        width: .75rem;
+        height: .75rem;
+        background-color: currentColor;
+        mask: var(--chevron-down-icon) center / contain no-repeat;
+        -webkit-mask: var(--chevron-down-icon) center / contain no-repeat;
+      }
+    }
+
+    [data-direction="tx"] dt::before {
+      transform: rotate(180deg);
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text-strong);
+      font-size: .75rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+  }
+}

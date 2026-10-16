@@ -1,0 +1,191 @@
+// out: false
+
+[data-page="admin-status-realtime"],
+[data-page="admin-status-realtime-load"],
+[data-page="admin-status-realtime-bandwidth"],
+[data-page="admin-status-realtime-connections"] {
+  // SVG text coordinates and the time axis are technical data, independent
+  // of the interface reading direction.
+  .cbi-section > div:has(> svg) {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  #scale {
+    display: inline-block;
+    unicode-bidi: plaintext;
+  }
+
+  svg line,
+  svg polyline,
+  svg polygon,
+  svg path {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .td[id^="lb_"],
+  .td[id*="_bw_"] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .td[id*="_bw_"] {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  @media screen and (max-width: 1152px) {
+    .table:has(.td[id^="lb_"]),
+    .table:has(.td[id*="_bw_"]) {
+      .tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        padding-block: var(--control-gap);
+      }
+
+      .td {
+        display: block;
+        min-width: 0;
+        padding: .25rem var(--section-inset);
+        border: 0;
+        text-align: start !important;
+      }
+
+      .td:nth-child(even) {
+        text-align: end !important;
+      }
+    }
+  }
+}
+
+[data-page="admin-status-realtime-connections"] {
+  #settings-row {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--control-gap);
+    padding: var(--field-gap) var(--section-inset);
+
+    > span {
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    > .filter {
+      flex: 1 1 16rem !important;
+    }
+
+    > .right {
+      flex: 0 1 auto !important;
+      margin-inline-start: auto;
+    }
+
+    button {
+      min-height: 2.5rem;
+      height: auto;
+      max-width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  #filter-connections {
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: start;
+  }
+
+  #connections {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-end-start-radius: var(--radius-card);
+    border-end-end-radius: var(--radius-card);
+    overflow: hidden;
+
+    .th {
+      text-align: start !important;
+    }
+
+    .td {
+      direction: ltr;
+      unicode-bidi: isolate;
+      text-align: start !important;
+      font-variant-numeric: tabular-nums;
+
+      [dir="rtl"] & {
+        text-align: end !important;
+      }
+
+      [dir="rtl"] &::before {
+        direction: rtl;
+        text-align: start;
+      }
+    }
+
+    @media screen and (max-width: 1152px) {
+      overflow-x: auto;
+
+      .tr:not(.table-titles):not(.placeholder) {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      }
+
+      .td:nth-child(n + 3) {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+}
+
+[data-page^="admin-status-realtime"] {
+    // Native inline series colors also appear on the legend's underline.
+    svg :is(#rx, #udp) { --chart-series: var(--chart-series-1); }
+    svg :is(#tx, #tcp) { --chart-series: var(--chart-series-2); }
+    svg :is(#load01, #other) { --chart-series: var(--chart-series-3); }
+    svg #load05 { --chart-series: var(--chart-series-4); }
+    svg #load15 { --chart-series: var(--chart-series-5); }
+
+    svg :is(#rx, #udp, #tx, #tcp, #load01, #other, #load05, #load15) {
+        stroke: var(--chart-series) !important;
+        fill: var(--chart-series) !important;
+        fill-opacity: var(--chart-area-opacity) !important;
+    }
+
+    strong:is([style*="solid blue"], [style*="solid #0000ff"], [style*="solid #00f"]) {
+        border-bottom-color: var(--chart-series-1) !important;
+    }
+
+    strong:is([style*="solid green"], [style*="solid #008000"]) {
+        border-bottom-color: var(--chart-series-2) !important;
+    }
+
+    strong:is([style*="solid red"], [style*="solid #ff0000"], [style*="solid #f00"]) {
+        border-bottom-color: var(--chart-series-3) !important;
+    }
+
+    strong:is([style*="solid #ff6600"], [style*="solid #f60"]) {
+        border-bottom-color: var(--chart-series-4) !important;
+    }
+
+    strong:is([style*="solid #ffaa00"], [style*="solid #fa0"]) {
+        border-bottom-color: var(--chart-series-5) !important;
+    }
+
+    .cbi-section > div:has(> svg) {
+        // Native realtime views paint the plot background with inline styles.
+        background: var(--surface-color) !important;
+        border: 0 !important;
+        border-start-start-radius: var(--radius-card);
+        border-start-end-radius: var(--radius-card);
+    }
+
+    #view svg text {
+        fill: var(--text-strong) !important;
+        font-family: inherit !important;
+        font-variant-numeric: tabular-nums;
+        text-shadow: none !important;
+    }
+
+    #view svg line {
+        stroke: var(--border-strong) !important;
+        stroke-width: 1px !important;
+    }
+}

@@ -1,0 +1,297 @@
+// out: false
+
+[data-page="admin-system-filemanager"] {
+    #view > #file-manager-container {
+        gap: 0;
+    }
+
+    .file-manager-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--control-gap);
+        margin-block-end: var(--section-gap);
+
+        h2 {
+            grid-column: 1 / -1;
+        }
+
+        input {
+            min-width: 0;
+            max-width: none;
+            margin: 0 !important;
+            font-size: 1rem;
+        }
+
+        button {
+            margin: 0 !important;
+            font-size: .875rem;
+            white-space: nowrap;
+        }
+    }
+
+    // The plugin puts its tab bar and panes in separate sibling wrappers.
+    #tab-group {
+        padding: var(--control-gap) var(--section-inset) 0;
+        border-start-start-radius: var(--radius-card);
+        border-start-end-radius: var(--radius-card);
+        background: var(--surface-color);
+
+        .cbi-tabmenu > li {
+            margin: 0;
+        }
+
+        // All plugin tabs carry cbi-tab; cbi-tab-active is its selected state.
+        .cbi-tabmenu > li:not(.cbi-tab-active) {
+            border-bottom-color: transparent;
+            background: var(--tab-item-bg);
+
+            > a {
+                color: var(--tab-inactive-color);
+            }
+        }
+
+        @media (hover: hover) {
+            .cbi-tabmenu > li:not(.cbi-tab-active):hover {
+                border-bottom-color: var(--tab-color);
+                background: var(--surface-active);
+
+                > a {
+                    color: var(--text-strong);
+                }
+            }
+        }
+    }
+
+    .cbi-tabcontainer-content {
+        min-width: 0;
+        padding: var(--field-gap) var(--section-inset);
+        border-end-start-radius: var(--radius-card);
+        border-end-end-radius: var(--radius-card);
+        background: var(--surface-color);
+        box-shadow: var(--section-shadow);
+    }
+
+    #file-list-container,
+    #content-editor {
+        // These plugin margins otherwise separate each pane from its tab bar.
+        margin-top: 0 !important;
+    }
+
+    // Keep the app's adjustable columns inside its own horizontal scroll area.
+    #file-list-container {
+        width: 100% !important;
+        min-width: 0;
+        max-width: 100%;
+        border-color: var(--border-color);
+        border-radius: var(--radius-control);
+        background: var(--surface-color);
+        overscroll-behavior: contain;
+
+        &.resizeable {
+            resize: vertical;
+        }
+    }
+
+    th {
+        background: var(--surface-muted);
+        color: var(--text-strong);
+        border-color: var(--border-color);
+    }
+
+    #file-table {
+        display: table;
+        min-width: 45rem;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: .875rem;
+        line-height: 1.5;
+
+        thead {
+            display: table-header-group;
+        }
+
+        tbody {
+            display: table-row-group;
+        }
+
+        th,
+        td {
+            // The app declares a physical left alignment with !important.
+            text-align: start !important;
+            border-color: var(--border-color);
+        }
+
+        th {
+            background: var(--surface-muted);
+            color: var(--text-strong);
+        }
+
+        tr:hover {
+            // Override the app's forced white hover surface in dark mode.
+            background-color: var(--surface-active) !important;
+        }
+
+        th[data-field="actions"],
+        td:has(> .select-checkbox) {
+            // The app's initial 100px column clips its final download action.
+            min-width: 12rem !important;
+            padding-inline: .75rem;
+        }
+
+        th[data-field="actions"] {
+            // A fixed table layout takes column widths from the header.
+            width: 12rem !important;
+        }
+
+        .select-checkbox {
+            vertical-align: middle;
+        }
+    }
+
+    .download-button,
+    .edit-button,
+    .duplicate-button,
+    .delete-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        margin: 0;
+        margin-inline-start: .25rem;
+        border-radius: var(--radius-control);
+        font-size: 0;
+        vertical-align: middle;
+
+        &::before {
+            content: "";
+            width: 1rem;
+            height: 1rem;
+            background: currentColor;
+            -webkit-mask: var(--file-action-icon) center / contain no-repeat;
+            mask: var(--file-action-icon) center / contain no-repeat;
+        }
+
+        &:hover {
+            background: var(--surface-active);
+        }
+    }
+
+    .edit-button {
+        --file-action-icon: url('../icon/edit.svg');
+    }
+
+    .duplicate-button {
+        --file-action-icon: url('../icon/copy.svg');
+    }
+
+    .delete-button {
+        --file-action-icon: url('../icon/delete.svg');
+    }
+
+    .download-button {
+        --file-action-icon: url('../icon/download.svg');
+    }
+
+    .sort-button {
+        height: 2rem;
+        border-color: var(--border-color);
+        background: var(--surface-color);
+        color: var(--link-color);
+
+        &:hover {
+            background: var(--surface-active);
+            color: var(--link-color);
+            border-color: var(--border-color);
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--focus-ring);
+            outline-offset: 1px;
+        }
+    }
+
+    .directory-link,
+    .download-button,
+    .edit-button,
+    .duplicate-button,
+    .status-link {
+        color: var(--link-color);
+    }
+
+    .delete-button {
+        color: var(--danger);
+    }
+
+    #content-editor,
+    .editor-container,
+    #content-help {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .editor-content {
+        min-width: 0;
+    }
+
+    .editor-container,
+    #content-help {
+        width: 100% !important;
+        resize: vertical !important;
+    }
+
+    #content-settings > div:first-child {
+        margin-top: 0 !important;
+    }
+
+    #settings-form label {
+        overflow-wrap: anywhere;
+    }
+
+    #status-bar,
+    .line-numbers {
+        background: var(--surface-muted);
+        color: var(--text-color);
+        border-color: var(--border-color);
+    }
+
+    #status-bar {
+        flex-wrap: wrap;
+        gap: var(--control-gap);
+    }
+
+    #status-info {
+        flex: 1 1 16rem;
+        flex-wrap: wrap;
+        min-width: 0;
+        gap: var(--control-gap);
+
+        > span,
+        > input {
+            min-width: 0;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+        }
+
+        > input {
+            margin: 0 !important;
+        }
+    }
+
+    #status-progress {
+        display: flex;
+        flex: 1 1 12rem;
+        justify-content: flex-end;
+        min-width: 0;
+        width: auto;
+
+        &:empty {
+            display: none;
+        }
+    }
+
+    #editor-textarea {
+        background: var(--input-bg);
+        color: var(--text-color);
+    }
+}

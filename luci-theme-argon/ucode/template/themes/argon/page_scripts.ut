@@ -1,0 +1,23 @@
+{# Shared location bootstrap; LuCI modules are loaded only after the app shell. -#}
+<script>
+	// thanks for Jo-Philipp Wich <jow@openwrt.org>
+	var luciLocation = {{ ctx.path }};
+</script>
+{% if (!is_login): %}
+<script type="text/javascript">L.require('menu-argon')</script>
+<script type="text/javascript">
+	L.require('argon-appearance');
+	if ([ 'admin-status', 'admin-status-overview' ].includes(document.body.dataset.page))
+		L.require('argon-overview');
+	if (document.body.dataset.page === 'admin-system-admin-sshkeys')
+		L.require('argon-sshkeys');
+
+	if ([
+		'admin-status-realtime',
+		'admin-status-realtime-load',
+		'admin-status-realtime-bandwidth',
+		'admin-status-realtime-connections'
+	].includes(document.body.dataset.page))
+		L.require('argon-graphs');
+</script>
+{% endif %}

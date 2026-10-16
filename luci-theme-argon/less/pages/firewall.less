@@ -1,0 +1,85 @@
+// out: false
+
+[data-page="admin-network-firewall-zones"] {
+  #cbi-firewall-defaults > .cbi-section-node:last-child {
+    padding-block-end: var(--field-gap);
+  }
+
+  #cbi-firewall-zone .cbi-input-select {
+    min-width: 6.5rem;
+  }
+
+  [dir="rtl"] & .zone-forwards > span {
+    transform: scaleX(-1);
+  }
+
+  @media screen and (max-width: 1152px) {
+    #cbi-firewall-zone {
+      .td[data-name="_info"] {
+        flex-basis: 100%;
+        max-width: 100%;
+      }
+    }
+  }
+}
+
+[data-page="admin-network-firewall-ipsets"] {
+  [data-name="entry"] input[type="text"],
+  .cbi-value-description code {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  [data-name="entry"] input[type="text"] {
+    text-align: start;
+  }
+}
+
+[data-page="admin-network-firewall-forwards"],
+[data-page="admin-network-firewall-rules"],
+[data-page="admin-network-firewall-snats"] {
+  [data-name$="_ip"],
+  [data-name="src_dip"],
+  [data-name$="_port"],
+  [data-name="src_dport"] {
+    input[type="text"],
+    .cbi-dropdown > ul {
+      direction: ltr;
+      unicode-bidi: isolate;
+      text-align: start;
+    }
+  }
+  .td[data-name="_match"],
+  .td[data-name="_target"] {
+    small {
+      font-size: .75rem;
+      line-height: 1.5;
+    }
+
+    var:not(.cbi-tooltip-container) {
+      direction: ltr;
+      unicode-bidi: isolate;
+    }
+  }
+
+  @media screen and (min-width: 1153px) {
+    .tr[data-title]::before,
+    .tr.cbi-section-table-titles.named::before {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 1152px) {
+    .td.cbi-section-table-titles {
+      display: none;
+    }
+
+    .td[data-name="_match"] {
+      flex-basis: 100%;
+    }
+
+    .tr[data-title]::before {
+      overflow-wrap: anywhere;
+    }
+  }
+}

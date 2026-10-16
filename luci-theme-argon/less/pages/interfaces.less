@@ -1,0 +1,32 @@
+// out: false
+
+// Network - Interfaces
+[data-page="admin-network-network"] {
+    .cbi-value-field {
+        .cbi-dynlist {
+            padding: 0 !important;
+        }
+    }
+
+    .td>.ifacebadge>.cbi-tooltip-container {
+        display: flex;
+
+        img {
+            vertical-align: middle;
+        }
+    }
+
+    div[data-name="_gen_server_keypair"],
+    div[data-name="_gen_peer_keypair"],
+    div[data-name="_gen_psk"] {
+        .cbi-value-title {
+            height: 2.4rem;
+        }
+    }
+
+    #modal_overlay>.modal.cbi-modal>div>p>textarea {
+        height: 20em !important;
+        border: 1px solid var(--control-border) !important;
+        border-radius: var(--radius-control);
+    }
+}

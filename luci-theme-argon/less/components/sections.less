@@ -1,0 +1,172 @@
+// out: false
+
+.cbi-section,
+.cbi-section-error,
+#iptables,
+.Firewall form,
+#cbi-network>.cbi-section-node,
+#cbi-wireless>.cbi-section-node,
+#cbi-wireless>#wifi_assoclist_table,
+[data-tab-title],
+[data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear),
+[data-page="admin-system-opkg"] #maincontent>.container {
+  font-family: inherit;
+  font-weight: normal;
+  font-style: normal;
+  line-height: normal;
+  min-width: inherit;
+  padding: 0;
+  border: 0;
+
+  border-radius: var(--radius-card);
+  background-color: var(--surface-color);
+  box-shadow: var(--section-shadow);
+
+  &:last-child {
+    margin: 0;
+    border: 0;
+  }
+
+}
+
+.cbi-modal .cbi-section,
+.cbi-section .cbi-section {
+  padding: 0;
+  box-shadow: none;
+}
+
+.cbi-modal .cbi-tabmenu {
+  margin-left: 0;
+}
+
+.cbi-map {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  gap: var(--section-gap);
+  container-type: inline-size;
+}
+
+.cbi-map-descr {
+  font-size: small;
+  line-height: 1.5;
+  padding: 0 var(--section-inset);
+}
+
+.cbi-section > .cbi-section-descr:not(:empty) {
+  padding-block: var(--field-gap);
+}
+
+.cbi-section-descr:not(:empty) {
+  font-size: small;
+  line-height: 1.5;
+  padding: 0 var(--section-inset);
+}
+
+.cbi-section-descr:empty {
+  display: none !important;
+}
+
+.cbi-map-descr+fieldset {
+  margin-top: 0;
+}
+
+.cbi-map-descr>abbr {
+  cursor: help;
+  text-decoration: underline;
+}
+
+.cbi-section>legend {
+  display: none !important;
+}
+
+fieldset>fieldset,
+.cbi-section>.cbi-section {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+
+.cbi-section>h3:first-child,
+.panel-title {
+  font-size: 1.1rem;
+  line-height: 1.4;
+  display: block;
+  width: 100%;
+  margin: 0;
+  margin-bottom: 0;
+  padding: var(--field-gap) var(--section-inset);
+  color: var(--text-strong);
+
+}
+
+.cbi-section>h3:first-child,
+.cbi-section>h4:first-child,
+.cbi-section>p:first-child,
+[data-tab-title]>h3:first-child,
+[data-tab-title]>h4:first-child,
+[data-tab-title]>p:first-child {
+  padding: var(--field-gap) var(--section-inset);
+  // These backgrounds meet the card edge, so only the outer corners curve.
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+  border-end-start-radius: 0;
+  border-end-end-radius: 0;
+}
+
+// Anonymous removable sections share one heading before their first instance.
+// Keep its first Delete beside that heading, in normal source order.
+.cbi-section:has(> h3:first-child + .cbi-section-remove + .cbi-section-node) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+
+  > :not(h3, .cbi-section-remove) {
+    grid-column: 1 / -1;
+  }
+
+  > h3 {
+    grid-column: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  > .cbi-section-remove {
+    grid-column: 2;
+    display: flex;
+    justify-content: flex-end;
+    min-width: 0;
+    margin: 0;
+    padding: var(--control-gap) var(--section-inset);
+    padding-inline-start: 0;
+
+    > .cbi-button {
+      min-height: 2.5rem;
+    }
+  }
+
+  // Further actions stay above the fields belonging to their own instance.
+  > .cbi-section-remove ~ .cbi-section-remove {
+    grid-column: 1 / -1;
+    border-block-start: 1px solid var(--border-color);
+  }
+}
+
+.cbi-section p {
+  padding: var(--field-gap) var(--section-inset);
+}
+
+// TypedSection renders its empty-state hint directly as an em element.
+.cbi-section > em {
+  display: block;
+  margin: 0;
+  padding: var(--field-gap) var(--section-inset);
+  color: var(--muted-text);
+  font-size: .875rem;
+  font-style: normal;
+  line-height: 1.5;
+  text-align: start;
+  overflow-wrap: anywhere;
+}

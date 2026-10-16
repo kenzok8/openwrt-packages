@@ -1,0 +1,105 @@
+// out: false
+
+// Network - Diagnostics
+[data-page="admin-network-diagnostics"] {
+    .table {
+        // The toolbar must not become the dropdown's scroll/size boundary.
+        overflow: visible;
+        box-shadow: none;
+    }
+
+    .cbi-section {
+        padding: 1rem;
+        font-family: monospace;
+        background: var(--surface-color) !important;
+    }
+
+    textarea {
+        direction: ltr;
+        unicode-bidi: plaintext;
+        line-height: 1.5;
+        background: transparent;
+        border-radius: var(--radius-control);
+        color: var(--muted-text);
+        border: 1px solid var(--control-border);
+        padding: 0.5rem;
+    }
+
+    .tr {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+
+        .td {
+            background-color: var(--surface-color) !important;
+            border-bottom: 1px solid var(--border-color) !important;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex: 1 1 18rem;
+            min-width: 0;
+
+            input {
+                direction: ltr;
+                unicode-bidi: isolate;
+                text-align: start;
+                flex: 1 1 0;
+                width: 0;
+                min-width: 0;
+                margin: 0 !important;
+                border-left-width: 1px !important;
+                border-right-width: 0 !important;
+                border-radius: var(--radius-control) 0 0 var(--radius-control) !important;
+
+                [dir="rtl"] & {
+                    border-left-width: 0 !important;
+                    border-right-width: 1px !important;
+                    border-radius: 0 var(--radius-control) var(--radius-control) 0 !important;
+                }
+            }
+
+            .diag-action {
+                display: flex;
+                flex: 0 0 auto;
+                min-width: 6rem;
+
+                > .cbi-button {
+                    flex: 1 1 auto;
+                }
+            }
+
+            .cbi-dropdown,
+            .cbi-button {
+                height: 2.5rem;
+                border-inline-start: none !important;
+                border-end-start-radius: 0 !important;
+                border-start-start-radius: 0 !important;
+
+                .more {
+                    display: block;
+                    width: 1px;
+                    height: 100%;
+                    overflow: hidden;
+                    text-indent: 5000px;
+                    background-color: var(--surface-color)
+                }
+            }
+        }
+    }
+
+    .table,
+    .table > tbody {
+        display: block;
+    }
+
+    .diag-action .cbi-dropdown:not([multiple]) > .more {
+        display: none;
+    }
+
+
+    .cbi-dropdown {
+        .open {
+            color: var(--accent-text);
+        }
+    }
+}

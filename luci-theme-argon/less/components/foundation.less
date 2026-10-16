@@ -1,0 +1,61 @@
+// out: false
+
+// Generic controls precede login, header and component variants.
+.btn,
+button,
+select,
+input,
+.cbi-dropdown {
+  line-height: 1.5rem;
+  height: 2.5rem;
+  padding: .5rem .75rem;
+  color: var(--control-text);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-control);
+  outline: 0;
+  background-image: none;
+  box-shadow: none;
+  transition: box-shadow .15s ease;
+}
+
+select {
+  background-color: var(--select-bg);
+  padding-inline-end: 2.5rem;
+  background-image: var(--chevron-down-icon);
+  background-size: 1rem;
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  appearance: none;
+}
+
+input:not(.cbi-button) {
+  background-color: var(--input-bg);
+}
+
+.cbi-dropdown:not(.btn):not(.cbi-button) {
+  background-color: var(--dropdown-control-bg);
+}
+
+select:not([multiple="multiple"]):focus,
+input:not(.cbi-button):focus,
+textarea:focus,
+.cbi-dropdown:focus {
+  // Page-specific field borders also consume this locally focused role.
+  --control-border: var(--control-focus);
+  border-color: var(--control-focus);
+  box-shadow: var(--control-focus-shadow);
+}
+
+.cbi-dropdown,
+select[multiple="multiple"] {
+  height: auto;
+}
+
+select[multiple] {
+  padding-inline-end: .75rem;
+  background-image: none;
+}
+
+[dir="rtl"] select:not([multiple]) {
+  background-position: left .5rem center;
+}

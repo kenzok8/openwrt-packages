@@ -1,0 +1,57 @@
+// out: false
+
+// Legacy firewall and switch tables share this compatibility contract.
+/* firewall */
+#iptables {
+    margin: 0;
+}
+
+.Firewall form {
+    margin: 2rem 2rem 0 0;
+    padding: 0;
+    box-shadow: none;
+}
+
+#cbi-firewall-redirect,
+#cbi-network-switch_vlan,
+#cbi-firewall-zone {
+    table {
+        * {
+            font-size: small;
+        }
+
+        input[type="text"] {
+            width: 5rem;
+        }
+
+        select {
+            min-width: 3.5rem;
+        }
+    }
+}
+
+#cbi-network-switch_vlan {
+
+    .th,
+    .td {
+        flex-basis: 12%;
+    }
+
+    .table {
+        display: block;
+    }
+
+    .td {
+        width: 100%;
+    }
+}
+
+#cbi-firewall-zone {
+    .table {
+        display: block;
+    }
+
+    .td {
+        width: 100%;
+    }
+}

@@ -1,0 +1,32 @@
+// out: false
+
+// Services - Dockerman
+[data-page="admin-docker-overview"] .cbi-section-table {
+    // Keep long JSON values inside the Version and Environment tables.
+    table-layout: fixed;
+
+    .th,
+    .td {
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        text-align: left !important;
+        vertical-align: top;
+    }
+
+    .th:first-child {
+        width: 30% !important;
+    }
+}
+
+#cbi-dockerd {
+    .cbi-section {
+        box-sizing: border-box;
+        padding: 16px;
+    }
+
+    .cbi-section.cbi-tblsection {
+        padding: 0;
+    }
+
+}

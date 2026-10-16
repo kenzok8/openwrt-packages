@@ -1,0 +1,96 @@
+// out: false
+
+[data-page="admin-status-logs"],
+[data-page="admin-status-logs-syslog"],
+[data-page="admin-status-logs-dmesg"] {
+  #syslog {
+    direction: ltr;
+    unicode-bidi: plaintext;
+    text-align: start;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+  }
+}
+
+[data-page="admin-status-logs"],
+[data-page="admin-status-logs-syslog"],
+[data-page="admin-status-logs-dmesg"] {
+  #content_syslog > div:has(> input, > select) {
+    line-height: 2.5rem;
+    margin-block-end: var(--control-gap) !important;
+
+    > label,
+    > input,
+    > select {
+      vertical-align: middle;
+    }
+
+    // Native log filters carry per-input bottom margins; rows own the spacing.
+    > input,
+    > select {
+      margin-block: 0 !important;
+    }
+  }
+}
+
+// Native log filters have several ungrouped inline controls. Keep each label
+// with its field on narrow screens without changing filtering or log wrapping.
+@media screen and (max-width: 600px) {
+    #content_syslog {
+        > div:has(> #logFacilitySelect),
+        > div:has(> #logTextFilter),
+        > div:has(> #logFromTime) {
+            display: grid;
+            grid-template-columns: max-content 1rem max-content minmax(0, 1fr);
+            align-items: center;
+            gap: var(--control-gap);
+
+            > label,
+            > input,
+            > select {
+                margin: 0 !important;
+            }
+
+            > label {
+                white-space: nowrap;
+            }
+
+            > input:not([type="checkbox"]),
+            > select {
+                min-width: 0;
+                width: 100%;
+            }
+
+            > label[for="logMaxRows"] {
+                grid-column: 1 / 4;
+            }
+
+            > #logMaxRows,
+            > #logToTime {
+                grid-column: 4;
+            }
+        }
+
+        > div:has(> #logFromTime) > label[for="logSeveritySelect"] {
+            grid-column: 1 / 4;
+        }
+
+        > div:has(> #invertSeverity) {
+            display: flex;
+            align-items: center;
+            gap: .25rem;
+
+            > label {
+                margin: 0 !important;
+                white-space: nowrap;
+            }
+
+            > select {
+                flex: 1;
+                min-width: 0;
+                width: 0;
+            }
+        }
+    }
+}

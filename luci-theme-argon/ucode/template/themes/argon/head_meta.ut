@@ -16,7 +16,12 @@
 <meta name="apple-mobile-web-app-title" content="{{ hostname }} - LuCI">
 
 <!-- Theme and Colors -->
+{% if (mode == 'normal'): %}
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="{{ primary }}">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="{{ dark_primary }}">
+{% else %}
 <meta name="theme-color" content="{{ bar_color }}">
+{% endif %}
 
 <!-- Icons and Manifest -->
 {% if (branding.favicon): %}

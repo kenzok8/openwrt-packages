@@ -1,0 +1,364 @@
+// out: false
+
+:root {
+  --form-label-width: 23rem;
+  --form-label-padding: 2rem;
+  --form-control-min-width: 18rem;
+  --form-control-width: auto;
+}
+
+.cbi-section-node {
+  display: flex;
+  flex-direction: column;
+  gap: var(--field-gap);
+
+  >[id^="cbi-config-"] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--field-gap);
+
+    &:first-child {
+      padding-top: 1rem;
+    }
+
+    &:last-child {
+      padding-bottom: 1rem;
+    }
+  }
+
+  >[id^="cbi-argon-"]:first-child {
+    padding-top: 1rem;
+  }
+
+  >[id^="cbi-argon-"]:last-child {
+    padding-bottom: 1rem;
+  }
+}
+
+.cbi-section .cbi-section-remove:nth-of-type(2n),
+.container>.cbi-section .cbi-section-node:nth-of-type(2n) {
+  background-color: var(--row-alt);
+}
+
+[data-tab-title] {
+  overflow: hidden;
+  height: 0;
+  opacity: 0;
+  margin: 0;
+  display: none !important;
+
+  p {
+    margin-inline-start: var(--section-inset);
+    margin-bottom: var(--field-gap);
+  }
+}
+
+[data-tab-active="true"] {
+  overflow: visible;
+  height: auto;
+  opacity: 1;
+  display: inherit !important;
+  transition: opacity .15s ease-in;
+  margin: inherit !important;
+}
+
+.cbi-section[id] .cbi-section-remove:nth-of-type(4n+3),
+.cbi-section[id] .cbi-section-node:nth-of-type(4n+4) {
+  background-color: var(--row-alt);
+}
+
+.cbi-section-node-tabbed {
+  margin-top: 0;
+  border: 0 solid #d4d4d4;
+  border-radius: 0 0 var(--radius-card) var(--radius-card);
+
+  // Tab content shares the outer card instead of drawing another rounded card.
+  > [data-tab-title] {
+    // Form fields need an inset; section headings and tables manage their own.
+    padding-block: var(--field-gap);
+    border-radius: inherit;
+    box-shadow: none;
+  }
+
+  &>div {
+    display: flex;
+
+    flex-direction: column;
+    gap: var(--field-gap);
+  }
+}
+
+.cbi-tabcontainer>.cbi-value:nth-of-type(2n) {
+  background-color: var(--row-alt);
+}
+
+.cbi-value-field {
+  min-width: 0;
+
+  & div+br {
+    display: none;
+  }
+}
+
+// SectionValue renders its section directly, without a field wrapper.
+// Give it the available cross-axis width when the form stacks its rows.
+.cbi-value[data-widget="CBI.ContainerValue"] > .cbi-section {
+  width: 100%;
+}
+
+.cbi-value-description {
+  line-height: 1.5;
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  padding: .5rem 0;
+  color: var(--muted-text);
+  font-size: 0.75rem;
+
+  abbr {
+    color: var(--text-strong);
+  }
+
+  &:empty {
+    display: none;
+  }
+}
+
+.cbi-value-title {
+  width: var(--form-label-width);
+  max-width: 100%;
+  padding-block: .5rem;
+  padding-inline-end: var(--form-label-padding);
+  line-height: 1.5;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.cbi-value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  width: 100%;
+  min-width: 0;
+  padding: 0 var(--section-inset);
+  line-height: 2.4rem;
+
+  > .cbi-value-title {
+    flex: 0 0 var(--form-label-width);
+  }
+
+  > .cbi-value-field {
+    flex: 1 1 0;
+  }
+
+  ul {
+    line-height: 1.25;
+  }
+}
+
+.cbi-value-field.cbi-dropdown-open {
+  .cbi-dropdown {
+    border-color: var(--control-focus);
+    box-shadow: var(--control-focus-shadow);
+  }
+}
+
+.cbi-value-field .cbi-dropdown,
+.cbi-value-field .cbi-input-select,
+.cbi-value input[type="text"],
+.cbi-value input[type="password"],
+.cbi-value textarea {
+  width: var(--form-control-width);
+  max-width: 100%;
+  // Preserve the CSS function: LESS otherwise reduces this to 100%.
+  min-width: ~"min(100%, var(--form-control-min-width))";
+}
+
+// The map has a definite width, so size containment cannot collapse a flex item.
+@container (max-width: 40rem) {
+  .cbi-value {
+    flex-direction: column;
+
+    > .cbi-value-title,
+    > .cbi-value-field {
+      flex: 0 1 auto;
+      width: 100%;
+    }
+
+    > .cbi-value-title {
+      padding-inline-end: 0;
+      text-align: start;
+    }
+  }
+}
+
+// Joined inputs shrink before their reveal/action button; other groups wrap.
+.control-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 100%;
+  min-width: 0;
+  gap: var(--control-gap);
+
+  > * {
+    max-width: 100%;
+  }
+}
+
+.control-group:has(> input:first-child + .cbi-button) {
+  flex-wrap: nowrap;
+  gap: 0;
+
+  > input {
+    flex: 0 1 15.5rem;
+    min-width: 0;
+    border-inline-end-width: 0;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+    margin-inline-end: 0;
+  }
+
+  > input + .cbi-button {
+    flex: 0 0 auto;
+    border-inline-start-width: 0;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    margin-inline-start: 0;
+  }
+
+  > .cbi-input-password + .cbi-button {
+    flex-basis: 2.5rem;
+    padding-inline: 0;
+  }
+}
+
+#cbi-firewall-zone .cbi-input-select,
+#cbi-network-switch_vlan .cbi-input-select {
+  min-width: 11rem;
+}
+
+#cbi-network-switch_vlan .cbi-input-text {
+  max-width: 3rem;
+}
+
+.cbi-input-file {
+  appearance: auto !important;
+
+  &::-webkit-file-upload-button {
+    display: inline-block !important;
+  }
+}
+
+.cbi-input-invalid {
+  color: var(--danger) !important;
+  border-color: var(--danger) !important;
+}
+
+.cbi-section-error {
+  font-weight: bold;
+  line-height: 1.42857143;
+  margin: 18px;
+  padding: 6px;
+  border: thin solid var(--danger);
+  border-radius: var(--radius-panel);
+  background-color: var(--invalid-bg);
+}
+
+.cbi-section-error ul {
+  margin: 0 0 0 20px;
+}
+
+.cbi-section-error ul li {
+  font-weight: bold;
+  color: var(--danger);
+}
+
+.td[data-title]::before {
+  font-weight: bold;
+  display: none;
+  padding: .25rem 0;
+  content: attr(data-title) ":\20";
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tr.placeholder .td[data-title]::before {
+  display: none;
+}
+
+.tr[data-title]::before,
+.tr.cbi-section-table-titles.named::before {
+  font-weight: bold;
+  display: table-cell;
+  align-self: center;
+  flex: 1 1 5%;
+  padding: .25rem;
+  content: attr(data-title) "\20";
+  text-align: center;
+  vertical-align: middle;
+  white-space: normal;
+  word-wrap: break-word;
+  background-color: var(--surface-muted);
+}
+
+.cbi-rowstyle-1 {
+  background-color: var(--row-color);
+}
+
+.cbi-rowstyle-2 {
+  background-color: var(--row-alt);
+}
+
+.cbi-rowstyle-2 .cbi-button-up,
+.cbi-rowstyle-2 .cbi-button-down,
+body:not(.Interfaces) .cbi-rowstyle-2:first-child {
+  background-color: var(--surface-color) !important;
+}
+
+.cbi-section-table .cbi-section-table-titles .cbi-section-table-cell {
+  width: auto !important;
+}
+
+.td.cbi-section-actions,
+.td:has(> :is(.btn, .cbi-button):only-child) {
+  // Let the controls determine the minimum column width, including their gaps.
+  // LuCI also writes a measured width inline, which can preserve a wrapped size.
+  width: 1% !important;
+  white-space: nowrap;
+  text-align: end !important;
+  vertical-align: middle;
+}
+
+.td.cbi-section-actions > :not(.btn, .cbi-button) {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  width: max-content;
+  margin-inline-start: auto;
+  gap: var(--control-gap);
+}
+
+.td.cbi-section-actions > :not(.btn, .cbi-button) > *,
+.td.cbi-section-actions > :not(.btn, .cbi-button) > form > * {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.td.cbi-section-actions > :not(.btn, .cbi-button) > form {
+  display: inline-flex;
+  gap: inherit;
+  margin: 0;
+}
+
+.td .cbi-checkbox {
+  justify-content: center;
+}
+
+.cbi-checkbox {
+  display: flex;
+  align-items: center;
+  height: 2.5rem;
+}

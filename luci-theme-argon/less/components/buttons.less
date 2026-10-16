@@ -1,0 +1,253 @@
+// out: false
+
+.btn,
+.cbi-button,
+.item::after {
+  font-size: .875rem;
+  line-height: 1.25rem;
+  display: inline-block;
+  width: auto !important;
+  padding: 0.5rem .75rem;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  transition: box-shadow .15s ease-out;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  text-decoration: none;
+  border: 0;
+  border-radius: var(--radius-control);
+  background-color: var(--neutral-button-bg);
+  background-image: none;
+  appearance: none;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+}
+
+.btn {
+  color: var(--plain-button-text);
+  background-color: var(--plain-button-bg);
+}
+
+.btn:not(button) ul:not(.dropdown) li {
+  padding: 0;
+}
+
+.cbi-button:not(select) {
+  appearance: none !important;
+}
+
+@media (hover: hover) {
+  :is(.btn, .cbi-button):not(:disabled):not([disabled]):not([aria-disabled="true"]):not([disabled] *, [aria-disabled="true"] *):hover,
+  .cbi-dynlist:not([disabled]):not([aria-disabled="true"]) > .item:hover::after {
+    box-shadow: var(--button-hover-shadow);
+  }
+}
+
+.btn:disabled,
+.cbi-button:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: .5;
+  box-shadow: none;
+}
+
+.btn:focus-visible,
+.cbi-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button.btn,
+  button.cbi-button,
+  input.cbi-button {
+    transition: scale .15s ease-out, box-shadow .15s ease-out;
+
+    &:not(:disabled):not([aria-disabled="true"]):not([data-static]):active {
+      scale: .96;
+    }
+  }
+}
+
+/* gray */
+.alert-message [class="btn"],
+.modal div[class="btn"],
+.cbi-button-find,
+.cbi-button-link,
+.cbi-button-up,
+.cbi-button-down,
+.cbi-button-neutral,
+.cbi-button[name="zero"],
+.cbi-button[name="restart"],
+.cbi-button[onclick="hide_empty(this)"] {
+  color: var(--neutral-action-text);
+  border: thin solid var(--neutral-action-bg);
+  background-color: var(--neutral-action-bg);
+}
+
+/* dark blue */
+.btn.primary,
+.cbi-page-actions .cbi-button-save,
+.cbi-page-actions .cbi-button-apply+.cbi-button-save,
+.cbi-button-add,
+.cbi-button-save,
+.cbi-button-positive,
+.cbi-button-link,
+.cbi-button[value="Enable"],
+.cbi-button[value="Scan"],
+.cbi-button[value^="Back"],
+.cbi-button-neutral[onclick="handleConfig(event)"] {
+  font-weight: normal;
+  color: var(--accent-text) !important;
+  // Button edges follow their fill; the brighter accent border is for controls.
+  border: thin solid var(--button-bg, var(--primary));
+  background-color: var(--button-bg, var(--primary));
+}
+
+.cbi-page-actions .cbi-button-save,
+.cbi-page-actions .cbi-button-apply+.cbi-button-save,
+.cbi-button-add,
+.cbi-button-save,
+.cbi-button-positive {
+  --button-bg: var(--positive-bg);
+}
+
+/* light blue */
+.cbi-page-actions .cbi-button-apply,
+.cbi-section-actions .cbi-button-edit,
+.cbi-button-edit,
+.cbi-button-apply,
+.cbi-button-reload,
+.cbi-button-action,
+.cbi-button[value="Submit"],
+.cbi-button[value="Upload"],
+.cbi-button[value$="Apply"],
+.cbi-button[onclick="addKey(event)"] {
+  font-weight: normal;
+  color: var(--accent-text) !important;
+  border: thin solid var(--primary);
+
+  background-color: var(--primary);
+}
+
+/* red */
+.btn.danger,
+.btn.btn-danger,
+.cbi-section-remove>.cbi-button,
+.cbi-button-remove,
+.cbi-button-reset,
+.cbi-button-negative,
+.cbi-button[value="Stop"],
+.cbi-button[value="Kill"],
+.cbi-button[onclick="reboot(this)"],
+.cbi-button-neutral[value="Restart"] {
+  font-weight: normal;
+  color: var(--text-on-accent);
+  border: thin solid var(--negative-bg);
+  background-color: var(--negative-bg);
+}
+
+/* yellow */
+.cbi-button-reset {
+  border-color: var(--reset-action-bg);
+  background-color: var(--reset-action-bg);
+}
+
+.btn[value="Dismiss"],
+.cbi-button[value="Terminate"],
+.cbi-button[value="Reset"],
+.cbi-button[value="Disabled"],
+.cbi-button[onclick^="iface_reconnect"],
+.cbi-button[onclick="handleReset(event)"],
+.cbi-button-neutral[value="Disable"] {
+  font-weight: normal;
+  color: var(--text-on-accent);
+  border: thin solid var(--reset-border);
+  background-color: var(--reset-bg);
+}
+
+/* green */
+.cbi-button-success,
+.cbi-button-download {
+  font-weight: normal;
+  color: var(--text-on-accent);
+  border: thin solid var(--success-action-border);
+  background-color: var(--success-action-bg);
+}
+
+// Inputs cannot host pseudo-elements, so sorting controls use the SVG background.
+.cbi-button-up,
+.cbi-button-down {
+  display: inline-block;
+  min-width: 0;
+  padding: .2rem 1rem;
+  font-size: 0;
+  background-image: var(--chevron-down-icon);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 1rem;
+  background-color: var(--surface-color);
+  border-color: var(--border-color);
+}
+
+.cbi-button-up {
+  transform: rotate(180deg);
+}
+
+.cbi-page-actions,
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+  gap: var(--action-gap);
+
+  .btn,
+  .cbi-button {
+    max-width: 100%;
+    min-height: 2.5rem;
+    height: auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+.cbi-page-actions {
+  // The containing view already owns the page gutter and section spacing.
+  padding: 0;
+  gap: var(--control-gap);
+
+  .cbi-button-link:first-child {
+    margin-inline-end: auto;
+  }
+
+  > form[method="post"] {
+    display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
+    gap: inherit;
+  }
+
+  .cbi-dropdown {
+    .open {
+      color: var(--accent-text);
+    }
+  }
+}
+
+.a-to-btn {
+  text-decoration: none;
+}
+
+.cbi-value-field .cbi-button-add {
+  font-weight: bold;
+  padding: 1px 6px;
+  display: inline-block;
+  align-items: center;
+}
