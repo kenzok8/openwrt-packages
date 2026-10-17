@@ -43,7 +43,6 @@ return view.extend({
 		const m = new form.Map('amlogic', _('CPU Freq Settings'),
 			_('Set CPU Scaling Governor to Max Performance or Balance Mode'));
 		const s = m.section(form.NamedSection, 'armcpu', 'settings');
-		s.anonymous = true;
 
 		// Render an independent tab + form options per CPU cluster (big/little).
 		policies.forEach(function (p) {

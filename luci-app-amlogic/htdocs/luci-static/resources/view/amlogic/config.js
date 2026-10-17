@@ -43,7 +43,17 @@ return view.extend({
 			_('You can customize the github.com download repository of OpenWrt files and kernels in [Online Download Update].') +
 			'<br />' + _('Tip: The same files as the current OpenWrt system\'s BOARD (such as rock5b) and kernel (such as 5.10) will be downloaded.'));
 		const o = m.section(form.NamedSection, 'config', 'amlogic');
-		o.anonymous = true;
+
+		// Load the derived default ourselves whenever the stored value is blank.
+		const orDefault = function (option, defval) {
+			option.default = defval;
+			option.load = function (section_id) {
+				const v = uci.get(this.uciconfig ?? 'amlogic',
+				                  this.ucisection ?? section_id,
+				                  this.ucioption ?? this.option);
+				return (v == null || v === '') ? defval : v;
+			};
+		};
 
 		// 1. Display device platform
 		const dev = o.option(form.DummyValue, 'mydevice', _('Current Device:'),
@@ -94,32 +104,38 @@ return view.extend({
 			knownTags.kernel_flippy = 'kernel_flippy [Mainline Stable Kernel by Flippy]';
 			knownTags.kernel_beta   = 'kernel_beta [Beta Kernel]';
 		}
-		// Determine default tag from saved config or kernel_release uname string.
-		let kernelTagDefault = uci.get('amlogic', 'config', 'amlogic_kernel_tags') || '';
-		if (!kernelTagDefault) {
-			const u = state.kernel_release || '';
-			if (u.indexOf('-rk3588') >= 0) kernelTagDefault = 'kernel_rk3588';
-			else if (u.indexOf('-rk35xx') >= 0) kernelTagDefault = 'kernel_rk35xx';
-			else if (u.indexOf('-beta') >= 0) kernelTagDefault = 'kernel_beta';
-			else kernelTagDefault = 'kernel_stable';
-		}
+		// Derive the default tag from the kernel_release uname string. A value already
+		// saved in UCI wins; orDefault() below only kicks in when that value is blank.
+		const uname = state.kernel_release || '';
+		let kernelTagDefault = 'kernel_stable';
+		if (uname.indexOf('-rk3588') >= 0) kernelTagDefault = 'kernel_rk3588';
+		else if (uname.indexOf('-rk35xx') >= 0) kernelTagDefault = 'kernel_rk35xx';
+		else if (uname.indexOf('-beta') >= 0) kernelTagDefault = 'kernel_beta';
 		const ktags = o.option(form.Value, 'amlogic_kernel_tags',
 			_('Kernel download tags:'),
 			_('Set the kernel files download tags on github.com in [Online Download Update].'));
 		Object.keys(knownTags).forEach(function (k) { ktags.value(k, _(knownTags[k])); });
+		// kernel_beta is only offered for ophub/kernel, but a beta kernel may still be
+		// running, so keep the derived value selectable even when it is not listed.
 		if (!knownTags[kernelTagDefault]) ktags.value(kernelTagDefault, kernelTagDefault);
-		ktags.default = kernelTagDefault;
+		orDefault(ktags, kernelTagDefault);
 		ktags.rmempty = false;
 
 		// 7. Kernel branch
-		const kbranch = o.option(form.ListValue, 'amlogic_kernel_branch',
+		const kbranches = ['5.10', '5.15', '6.1', '6.6', '6.12', '6.18'];
+		const kbranch = o.option(form.Value, 'amlogic_kernel_branch',
 			_('Set version branch:'),
 			_('Set the version branch of the OpenWrt files and kernel selected in [Online Download Update].'));
-		['5.10', '5.15', '6.1', '6.6', '6.12', '6.18'].forEach(function (b) {
-			kbranch.value(b, _(b));
+
+		// Extract the major.minor version from the kernel uname string to determine the default branch.
+		const km = uname.match(/^(\d+\.\d+)/);
+		const kbranchDefault = km ? km[1] : kbranches[0];
+		// If the derived default branch is not in the list, add it so it can be selected.
+		if (kbranches.indexOf(kbranchDefault) < 0) kbranches.push(kbranchDefault);
+		kbranches.forEach(function (b) {
+			kbranch.value(b, b);
 		});
-		const m2 = (state.kernel_release || '').match(/^(\d+\.\d+)/);
-		kbranch.default = m2 ? m2[1] : '5.10';
+		orDefault(kbranch, kbranchDefault);
 		kbranch.rmempty = false;
 
 		// 8. Plugin branch
@@ -141,14 +157,14 @@ return view.extend({
 		fcfg.default = '1';
 		fcfg.rmempty = false;
 
-		// 9. Write bootloader
+		// 10. Write bootloader
 		const wb = o.option(form.Flag, 'amlogic_write_bootloader',
 			_('Auto write bootloader:'),
 			_('[Recommended choice] Set whether to auto write bootloader during install and update OpenWrt.'));
 		wb.default = '0';
 		wb.rmempty = false;
 
-		// 10. Shared partition fs type
+		// 11. Shared partition fs type
 		const fst = o.option(form.ListValue, 'amlogic_shared_fstype',
 			_('Set the file system type:'),
 			_('[Default ext4] Set the file system type of the shared partition (/mnt/mmcblk*p4) when install OpenWrt.'));
