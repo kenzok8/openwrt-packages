@@ -17,7 +17,7 @@ const callPlatform = rpc.declare({ object: 'luci.amlogic', method: 'platform_inf
 // Query runtime state; kernel_release is used to derive default kernel tag and branch.
 const callState    = rpc.declare({ object: 'luci.amlogic', method: 'state' });
 
-// This page uses its own Save button; hide LuCI's default Save/Apply/Reset.
+// Saves go through LuCI's default footer buttons (Save & Apply / Save / Reset).
 return view.extend({
 	// Load platform info + state in parallel, along with the UCI config (we will read/write it).
     load: function () {
@@ -73,10 +73,11 @@ return view.extend({
 		suffix.rmempty = false;
 
 		// 5. Kernel download repository
-		const kpath = o.option(form.ListValue, 'amlogic_kernel_path',
+		const kpath = o.option(form.Value, 'amlogic_kernel_path',
 			_('Kernel download repository:'),
 			_('Set the kernel files download repository on github.com in [Online Download Update].'));
 		kpath.value('https://github.com/ophub/kernel');
+		kpath.value('https://github.com/breakingbadboy/OpenWrt');
 		kpath.default = 'https://github.com/ophub/kernel';
 		kpath.rmempty = false;
 
@@ -102,7 +103,7 @@ return view.extend({
 			else if (u.indexOf('-beta') >= 0) kernelTagDefault = 'kernel_beta';
 			else kernelTagDefault = 'kernel_stable';
 		}
-		const ktags = o.option(form.ListValue, 'amlogic_kernel_tags',
+		const ktags = o.option(form.Value, 'amlogic_kernel_tags',
 			_('Kernel download tags:'),
 			_('Set the kernel files download tags on github.com in [Online Download Update].'));
 		Object.keys(knownTags).forEach(function (k) { ktags.value(k, _(knownTags[k])); });
