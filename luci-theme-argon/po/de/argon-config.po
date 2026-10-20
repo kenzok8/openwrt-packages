@@ -380,3 +380,155 @@ msgstr "[Dunkler Modus] Transparenz"
 #: htdocs/luci-static/resources/view/argon-config.js:47
 msgid "valid HEX color value"
 msgstr "gültiger HEX-Farbwert"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Release notes"
+msgstr "Versionshinweise"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "View release"
+msgstr "Veröffentlichung ansehen"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Download package"
+msgstr "Paket herunterladen"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Check for updates"
+msgstr "Nach Updates suchen"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Current version"
+msgstr "Installierte Version"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Latest stable version"
+msgstr "Neueste stabile Version"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unknown version"
+msgstr "Unbekannte Version"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Not checked yet."
+msgstr "Noch nicht geprüft."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Checking for updates..."
+msgstr "Updates werden gesucht..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Last checked: %s"
+msgstr "Zuletzt geprüft: %s"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "No release notes were published."
+msgstr "Für diese Version wurden keine Versionshinweise veröffentlicht."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to check for updates. Check the router's connection to GitHub and try again."
+msgstr "Updates konnten nicht geprüft werden. Prüfen Sie die Verbindung des Routers zu GitHub und versuchen Sie es erneut."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to compare this version. View the release for details."
+msgstr "Diese Version kann nicht verglichen werden. Details finden Sie auf der Veröffentlichungsseite."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update available."
+msgstr "Ein Update ist verfügbar."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Your theme is up to date."
+msgstr "Ihr Theme ist auf dem neuesten Stand."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The installed version is newer than the latest stable release."
+msgstr "Die installierte Version ist neuer als die neueste stabile Version."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Theme updates"
+msgstr "Theme-Updates"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update now"
+msgstr "Jetzt aktualisieren"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Reload page"
+msgstr "Seite neu laden"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Automatic installation is unavailable. Download the package to update manually."
+msgstr "Die automatische Installation ist nicht verfügbar. Laden Sie das Paket für eine manuelle Aktualisierung herunter."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installation log"
+msgstr "Installationsprotokoll"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Preparing the update..."
+msgstr "Aktualisierung wird vorbereitet..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Downloading the update..."
+msgstr "Aktualisierung wird heruntergeladen..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Verifying the package..."
+msgstr "Paket wird überprüft..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installing the update. Please wait..."
+msgstr "Aktualisierung wird installiert. Bitte warten..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update installed. Reload the page to use the new version."
+msgstr "Aktualisierung installiert. Laden Sie die Seite neu, um die neue Version zu verwenden."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Download failed. Check the router's connection to GitHub and try again."
+msgstr "Download fehlgeschlagen. Prüfen Sie die Verbindung des Routers zu GitHub und versuchen Sie es erneut."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Package verification failed. Check for updates and try again."
+msgstr "Paketprüfung fehlgeschlagen. Suchen Sie erneut nach Aktualisierungen und versuchen Sie es noch einmal."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Not enough free space to install the update."
+msgstr "Nicht genügend freier Speicherplatz für die Aktualisierung."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The installed version has changed. Check for updates again."
+msgstr "Die installierte Version hat sich geändert. Suchen Sie erneut nach Aktualisierungen."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Release information has changed or expired. Check for updates again."
+msgstr "Die Versionsinformationen haben sich geändert oder sind abgelaufen. Suchen Sie erneut nach Aktualisierungen."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The update was interrupted. Check the installed version before trying again."
+msgstr "Die Aktualisierung wurde unterbrochen. Prüfen Sie vor einem erneuten Versuch die installierte Version."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installation failed. See the installation log for details."
+msgstr "Installation fehlgeschlagen. Einzelheiten finden Sie im Installationsprotokoll."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to read update progress. Reconnecting..."
+msgstr "Der Aktualisierungsfortschritt kann nicht gelesen werden. Verbindung wird wiederhergestellt..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to start the update. Check for updates and try again."
+msgstr "Die Aktualisierung kann nicht gestartet werden. Suchen Sie erneut nach Aktualisierungen und versuchen Sie es noch einmal."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update Argon to %s?"
+msgstr "Argon auf %s aktualisieren?"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The theme will be updated using the system package manager. Your Argon settings will be preserved."
+msgstr "Das Theme wird mit der Paketverwaltung des Systems aktualisiert. Ihre Argon-Einstellungen bleiben erhalten."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Cancel"
+msgstr "Abbrechen"

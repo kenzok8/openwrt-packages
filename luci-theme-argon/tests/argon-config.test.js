@@ -97,11 +97,12 @@ function fixture(options = {}) {
 	};
 	const L = { dom: { callClassMethod(node, method, value) { assert.equal(method, 'setValue'); node.value = value; } }, bind: (fn, context) => fn.bind(context), resolveDefault: (promise, value) => Promise.resolve(promise).catch(() => value), resource: name => '/luci-static/resources/' + name };
 	state.window = new EventTarget();
-	state.view = new Function('form', 'fs', 'rpc', 'uci', 'ui', 'view', 'L', 'E', '_', 'cbi_update_table', 'location', 'document', 'branding', 'window', source)(
+	state.view = new Function('form', 'fs', 'rpc', 'uci', 'ui', 'view', 'L', 'E', '_', 'cbi_update_table', 'location', 'document', 'branding', 'window', 'updates', source)(
 		form, fileApi, rpc, { load: () => Promise.resolve(), get: (config, section, key) => state.settings?.[key] }, ui, { extend: value => value }, L, E,
 		value => value, (table, rows) => { state.rows = rows; }, { reload() { state.reloads++; } },
 		{ getElementById: id => state.nodes[id] },
-		{ load: () => Promise.resolve({ result: 0 }), render: () => E('div', {}, []) }, state.window
+		{ load: () => Promise.resolve({ result: 0 }), render: () => E('div', {}, []) }, state.window,
+		{ load: () => Promise.resolve({ result: 0 }), render: () => E('div', {}, []) }
 	);
 	state.render = async () => state.view.render(await state.view.load());
 	state.button = name => state.map.options.find(option => option.name === name);

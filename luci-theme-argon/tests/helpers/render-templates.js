@@ -46,7 +46,7 @@ const env = proto({
     urlencode: value => replace(replace(replace(value, ' ', '%20'), '#', '%23'), '?', '%3F') },
   ubus: { call: (object, method) => object == 'luci.argon_wallpaper'
     ? fixture.wallpaper : { hostname: fixture.hostname ?? 'Router' } },
-  ctx: { path: ['admin', 'status', 'overview'], request_path: ['admin', 'status', 'overview'], authsession: 'session' },
+  ctx: fixture.ctx ?? { path: ['admin', 'status', 'overview'], request_path: ['admin', 'status', 'overview'], authsession: 'session' },
   version: { luciname: 'LuCI', luciversion: 'test-build', distname: 'OpenWrt', distversion: '25.12.5', distrevision: 'test', disturl: 'https://openwrt.org/' },
   _: value => value, entityencode: encode, striptags: value => replace(value, /<[^>]*>/g, ''),
   node: fixture.node ?? {}, css: fixture.css, duser: fixture.duser ?? 'root',

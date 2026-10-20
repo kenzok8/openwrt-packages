@@ -1,12 +1,60 @@
 // out: false
 
 // System - File Transfer
-[data-page="admin-system-filetransfer"] {
+[data-page="admin-system-filetransfer"],
+[data-page="admin-system-fileassistant"] {
+    .legacy-cbi-section-spacing();
+
     #cbi-upload {
         margin-top: 0;
     }
 
     .cbi-section-table {
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    // Legacy upload/download templates use a row class on their labels and
+    // fixed inline widths. Keep each label, field and action in one form row.
+    .cbi-value:has(> :is(#ulfile, #dlfile)) {
+        display: grid;
+        grid-template-columns: fit-content(var(--form-label-width)) minmax(0, 25rem) auto;
+        align-items: center;
+        justify-content: start;
+        gap: var(--control-gap) var(--action-gap);
+
+        > label.cbi-value {
+            display: block !important;
+            width: auto !important;
+            min-width: 0;
+            padding: 0;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        > .cbi-input-file {
+            width: 100% !important;
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        > .cbi-button {
+            justify-self: start;
+            max-width: 100%;
+        }
+    }
+}
+
+// Keep the page selectors explicit inside container queries: Less 4 does not
+// retain an enclosing selector when bubbling a nested @container rule.
+@container (max-width: 40rem) {
+    [data-page="admin-system-filetransfer"],
+    [data-page="admin-system-fileassistant"] {
+        .cbi-value:has(> :is(#ulfile, #dlfile)) {
+            grid-template-columns: minmax(0, 1fr) auto;
+
+            > label.cbi-value {
+                grid-column: 1 / -1;
+            }
+        }
     }
 }

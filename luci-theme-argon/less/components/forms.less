@@ -245,6 +245,33 @@
 .cbi-input-file {
   appearance: auto !important;
 
+  // File pickers include their own button. A text field's vertical padding
+  // leaves too little space for that button and clips its lower edge.
+  &[type="file"] {
+    padding: 0;
+    padding-inline-end: .75rem;
+    line-height: calc(2.5rem - 2px);
+    overflow: hidden;
+    cursor: pointer;
+
+    &::file-selector-button {
+      box-sizing: border-box;
+      height: 100%;
+      margin: 0;
+      margin-inline-end: var(--action-gap);
+      padding: 0 .75rem;
+      border: 0;
+      border-inline-end: 1px solid var(--control-border);
+      border-radius: 0;
+      font: inherit;
+      color: var(--control-text);
+      background-color: var(--surface-active);
+      vertical-align: top;
+      cursor: inherit;
+      appearance: none;
+    }
+  }
+
   &::-webkit-file-upload-button {
     display: inline-block !important;
   }

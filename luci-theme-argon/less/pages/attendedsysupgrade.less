@@ -1,5 +1,134 @@
 // out: false
 
+// The overview's native firmware reminder is inserted outside #view.
+// Match its upgrade link so the styling also applies through the homepage route.
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--action-gap) var(--field-gap);
+    padding: var(--field-gap) var(--section-inset);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-card) !important;
+    background-color: var(--surface-raised) !important;
+    color: var(--text-color);
+    box-shadow: var(--section-shadow);
+    font-size: .875rem;
+    font-weight: 400;
+    line-height: 1.6;
+
+    // Keep LuCI's nodes and handlers; share the heading row with Dismiss.
+    > div:first-child {
+        display: contents;
+
+        > * {
+            grid-column: 1 / -1;
+            min-width: 0;
+            margin: 0;
+
+            + * {
+                margin-top: 0;
+            }
+        }
+
+        > h4 {
+            grid-column: 1;
+            align-self: center;
+            padding: 0;
+            background: none;
+            color: var(--text-strong);
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        > .btn {
+            justify-self: start;
+        }
+    }
+
+    > div:last-child {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: center;
+
+        > .btn {
+            margin: 0 !important;
+        }
+    }
+
+    .btn {
+        min-height: 2.25rem;
+        padding: .375rem .75rem;
+        border: 1px solid var(--border-color);
+        background-color: var(--surface-muted);
+        color: var(--text-strong);
+        font-size: .8125rem;
+        font-weight: 500;
+        line-height: 1.5;
+        overflow-wrap: anywhere;
+    }
+
+    a {
+        color: color-mix(in srgb, var(--link-color) 75%, var(--text-strong));
+        text-decoration: underline;
+        text-underline-offset: .2em;
+        overflow-wrap: anywhere;
+    }
+
+    .table {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-panel);
+        background-color: var(--surface-color);
+        overflow: hidden;
+        font-size: .8125rem;
+        font-variant-numeric: tabular-nums;
+
+        > :is(thead, tbody, tfoot) {
+            display: table-row-group;
+        }
+
+        .tr {
+            display: table-row;
+            background: none;
+        }
+
+        .th,
+        .td {
+            display: table-cell;
+            width: 33.333%;
+            padding: .625rem .75rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-strong);
+            font-weight: 500;
+            line-height: 1.5;
+            text-align: start;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+
+        .th {
+            border-top: 0;
+            background-color: var(--surface-muted);
+        }
+
+        .td:first-child {
+            color: var(--muted-text);
+            font-weight: 400;
+        }
+
+        .td:last-child {
+            font-weight: 600;
+        }
+    }
+}
+
 // System - Attended Sysupgrade
 [data-page="admin-system-attendedsysupgrade"],
 [data-page="admin-system-attendedsysupgrade-overview"] {

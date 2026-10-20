@@ -20,12 +20,14 @@
 	import { getuid, getspnam } from 'luci.core';
 
 	const hostname = striptags(ubus.call('system', 'board')?.hostname ?? '?');
+	// First-child routes keep the entry URL while resolving to a deeper page.
+	const page_path = length(ctx.path) > length(ctx.request_path) ? ctx.path : ctx.request_path;
 	include('themes/' + theme + '/head', { hostname: hostname, is_login: false });
 %}
 
 <body
 	class="lang_{{ dispatcher.lang }} {{ node?.title ? ` - ${striptags(node.title)}` : '' }} {% if (ctx.authsession): %}logged-in{% endif %}"
-	data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
+	data-page="{{ entityencode(join('-', page_path), true) }}">
 
 	<div class="main">
 		<div class="main-left" id="mainmenu" style="display:none">

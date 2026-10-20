@@ -89,6 +89,10 @@ Open **System → Argon Config** for login layouts, colors, glass effects, wallp
 
 Local image and video backgrounds are supported, along with Bing, Unsplash and Wallhaven wallpapers. Unsplash requires an API access key. Browser icons and login logos accept PNG files, 16–1024 pixels per side, up to 1 MiB; browser icons must be square.
 
+Under **Theme updates**, check the latest stable release, read its release notes and download the package matching your firmware's package manager. Checks use the router's connection to GitHub and cache successful results for five minutes.
+
+When a newer version is available, choose **Update now** and confirm to install the theme using the firmware’s native APK or OPKG package manager, preserving your Argon configuration. The page shows download, verification and installation status plus installation logs, and resumes monitoring after a page refresh. Reload the page after installation. Automatic installation requires a matching release package and SHA256 digest and does not perform downgrades. It updates the main theme package; separate translation packages remain managed by the system package manager.
+
 ## Screenshots
 
 Light and dark views of the overview and both login layouts, on desktop and mobile.

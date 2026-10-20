@@ -4,3 +4,241 @@
 [data-page="admin-vpn-passwall"] h4 {
     background: transparent;
 }
+
+[data-page="admin-vpn-passwall"],
+[data-page^="admin-vpn-passwall-"],
+[data-page="admin-services-passwall"],
+[data-page^="admin-services-passwall-"] {
+    .legacy-cbi-section-spacing();
+
+    .lv-dropdown-container {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: var(--control-gap);
+        min-width: 0;
+        max-width: 100%;
+        vertical-align: middle;
+        white-space: normal;
+
+        > .node-actions {
+            margin: 0 !important;
+        }
+    }
+
+    // Passwall snapshots select styles into per-ID rules, including the native
+    // arrow's padding and resolved colors. Keep the custom control responsive
+    // and its colors live when Argon's appearance changes.
+    .lv-dropdown-display {
+        display: inline-flex;
+        flex: 0 1 var(--form-control-min-width);
+        align-items: center;
+        gap: var(--control-gap);
+        width: var(--form-control-min-width) !important;
+        min-width: 0 !important;
+        max-width: 100%;
+        height: 2.5rem !important;
+        min-height: 2.5rem !important;
+        margin: 0 !important;
+        padding: .5rem .75rem !important;
+        line-height: 1.5rem !important;
+        border: 1px solid var(--control-border) !important;
+        border-radius: var(--radius-control) !important;
+        background-color: var(--select-bg) !important;
+        color: var(--control-text) !important;
+
+        &:focus {
+            --control-border: var(--control-focus);
+            outline: 0;
+            box-shadow: var(--control-focus-shadow);
+        }
+    }
+
+    .lv-dropdown-label {
+        flex: 1 1 auto;
+        width: auto;
+        min-width: 0;
+        text-align: start;
+        text-overflow: ellipsis;
+    }
+
+    .lv-arrow-down,
+    .lv-arrow-down-small,
+    .lv-arrow-right {
+        flex: 0 0 1rem;
+        width: 1rem;
+        height: 1rem;
+        margin: 0;
+        border: 0;
+        background-color: currentColor;
+        -webkit-mask: var(--dropdown-arrow-icon) center / contain no-repeat;
+        mask: var(--dropdown-arrow-icon) center / contain no-repeat;
+    }
+
+    .lv-arrow-right {
+        rotate: -90deg;
+    }
+
+    // The plugin moves opened menus to body, outside the form container.
+    .lv-dropdown-panel {
+        max-height: ~"min(50vh, 18rem)" !important;
+        line-height: 1.5 !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: var(--radius-panel) !important;
+        background-color: var(--surface-panel) !important;
+        color: var(--dropdown-text) !important;
+        box-shadow: var(--dropdown-shadow);
+
+        > div:first-child {
+            border-color: var(--border-color) !important;
+        }
+
+        .lv-dropdown-search {
+            padding: .5rem .75rem;
+            border: 1px solid var(--control-border);
+            border-radius: var(--radius-control);
+        }
+
+        &.cbi-listvalue-panel li[data-key] {
+            min-height: 2.5rem;
+            padding: .5rem .75rem;
+            border-radius: var(--radius-small);
+            background-color: transparent;
+            color: inherit;
+            text-align: start !important;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            transition: none;
+
+            &.is-selected,
+            &.is-selected:hover {
+                background-color: var(--dropdown-selected-bg) !important;
+                color: var(--dropdown-selected-text) !important;
+                font-weight: 500 !important;
+            }
+
+            @media (hover: hover) {
+                &:not(.is-selected):hover {
+                    background-color: var(--dropdown-hover-bg);
+                }
+            }
+        }
+
+        .lv-item-label {
+            margin: 0 !important;
+        }
+
+        .lv-group-title {
+            gap: var(--control-gap);
+            padding: .5rem .75rem;
+            border-radius: var(--radius-small);
+            line-height: 1.5;
+            white-space: normal;
+            overflow-wrap: anywhere;
+
+            > b,
+            > span {
+                margin: 0 !important;
+            }
+
+            > span[id^="group-count-"] {
+                margin-inline-start: auto !important;
+                color: var(--muted-text) !important;
+            }
+        }
+
+        .lv-group-list {
+            margin: var(--control-gap) 0 0;
+            padding-inline-start: var(--control-gap);
+        }
+    }
+
+    // Match the ID specificity of the plugin's !important group-title color,
+    // including after the menu has been moved outside #maincontent.
+    &:has(#maincontent) .lv-dropdown-panel .lv-group-title {
+        background-color: var(--surface-active) !important;
+    }
+
+    // The section body supplies the toolbar's vertical inset.
+    .cbi-value-field > .share-toolbar {
+        padding-block: 0;
+    }
+
+    #_passwall_status_fieldset {
+        padding-block: var(--control-gap);
+
+        .status .block {
+            margin-block: var(--control-gap);
+        }
+    }
+
+    #_log_fieldset {
+        display: flex;
+        flex-direction: column;
+        gap: var(--field-gap);
+        padding: var(--field-gap) var(--section-inset);
+
+        > .cbi-button {
+            align-self: flex-start;
+        }
+
+        > textarea {
+            display: block;
+            max-width: 100%;
+            margin: 0 !important;
+        }
+    }
+
+    #app_version {
+        display: flex;
+        flex-direction: column;
+        gap: var(--field-gap);
+
+        > .cbi-value > .cbi-value-field {
+            display: grid;
+            grid-template-columns: minmax(0, 10rem) auto;
+            align-items: center;
+            justify-content: start;
+            gap: var(--control-gap) var(--action-gap);
+
+            > span:first-child {
+                grid-column: 1;
+                grid-row: 1;
+                min-width: 0;
+                line-height: 1.5;
+                overflow-wrap: anywhere;
+                unicode-bidi: plaintext;
+            }
+
+            > input[data-update-app] {
+                grid-column: 2;
+                justify-self: start;
+                max-width: 100%;
+            }
+
+            > span[id$="-detail"] {
+                grid-column: 1 / -1;
+                min-width: 0;
+                line-height: 1.5;
+                overflow-wrap: anywhere;
+
+                &:empty {
+                    display: none;
+                }
+            }
+        }
+    }
+}
+
+@container (max-width: 40rem) {
+    [data-page="admin-vpn-passwall"],
+    [data-page^="admin-vpn-passwall-"],
+    [data-page="admin-services-passwall"],
+    [data-page^="admin-services-passwall-"] {
+        // Its label is an ideographic space in the native template; when
+        // fields stack, it otherwise leaves a blank line above the actions.
+        .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title {
+            display: none;
+        }
+    }
+}

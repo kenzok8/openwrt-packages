@@ -1,6 +1,121 @@
 // out: false
 
 [data-page="admin-system-argon-config"] {
+  #argon-update [hidden] {
+    display: none !important;
+  }
+
+  .argon-update-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--field-gap);
+    padding: var(--field-gap) var(--section-inset);
+
+    > p {
+      margin: 0;
+      padding: 0;
+      line-height: 1.5;
+    }
+  }
+
+  .argon-update-versions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(~"min(100%, 16rem)", 1fr));
+    gap: var(--field-gap);
+    margin: 0;
+
+    dt {
+      margin-bottom: var(--control-gap);
+      color: var(--muted-text);
+      font-size: .8125rem;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text-strong);
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .argon-update-status {
+    display: flex;
+    align-items: center;
+    gap: var(--control-gap);
+    color: var(--text-strong);
+
+    &[data-state="current"],
+    &[data-state="complete"] {
+      font-weight: 600;
+    }
+  }
+
+  .argon-update-status-icon {
+    display: inline-flex;
+    flex: 0 0 1.25rem;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid var(--success);
+    border-radius: 50%;
+    color: var(--success);
+    font-size: .8125rem;
+    line-height: 1;
+  }
+
+  .argon-update-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--control-gap);
+
+    > .cbi-button {
+      min-height: 2.5rem;
+      max-width: 100%;
+      height: auto;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  #argon-update .argon-update-actions > .cbi-button-neutral {
+    color: var(--text-strong);
+    border: 1px solid var(--border-color);
+    background-color: var(--surface-muted);
+  }
+
+  .argon-update-checked {
+    color: var(--muted-text);
+    font-size: .8125rem;
+  }
+
+  .argon-update-details {
+    min-width: 0;
+
+    > summary {
+      cursor: pointer;
+      color: var(--text-strong);
+      line-height: 1.5;
+    }
+  }
+
+  .argon-update-notes {
+    max-height: 22rem;
+    margin: var(--control-gap) 0 0;
+    padding: var(--field-gap);
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-panel);
+    background-color: var(--surface-muted);
+    color: var(--text-strong);
+    font: inherit;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
   .argon-color-picker {
     display: flex;
     align-items: center;

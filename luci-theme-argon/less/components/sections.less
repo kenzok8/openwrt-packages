@@ -68,6 +68,35 @@
   display: none !important;
 }
 
+// Older Lua CBI forms omit the body inset supplied by modern tab containers.
+// Page adapters opt in so headings, descriptions and fields share one rhythm.
+.legacy-cbi-section-spacing() {
+  .cbi-section {
+    > .cbi-section-node:not(.cbi-section-node-tabbed):where(:has(> .cbi-value, > [id] > .cbi-value)) {
+      padding-block: var(--field-gap);
+    }
+
+    // Descriptions already inset the body, but a painted heading is a separate
+    // surface: its bottom padding cannot supply space below that surface.
+    > .cbi-section-descr:not(:empty) ~ .cbi-section-node:not(.cbi-section-node-tabbed) {
+      padding-block-start: 0;
+    }
+
+    > .cbi-value {
+      padding-block: var(--field-gap);
+    }
+
+    > .cbi-value ~ .cbi-value,
+    > .cbi-section-descr:not(:empty) ~ .cbi-value {
+      padding-block-start: 0;
+    }
+
+    > .cbi-section-create {
+      padding: var(--field-gap) var(--section-inset);
+    }
+  }
+}
+
 .cbi-map-descr+fieldset {
   margin-top: 0;
 }

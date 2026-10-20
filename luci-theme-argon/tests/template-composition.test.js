@@ -41,6 +41,22 @@ test('application and login compose the same head with their own resource bounda
 	} finally { renderer.close(); }
 });
 
+test('first-child entry routes identify the resolved page and retain wildcard request suffixes', () => {
+	const renderer = createRenderer(templates);
+	try {
+		for (const request_path of [[], ['admin'], ['admin', 'status'], ['admin', 'status', 'overview']]) {
+			const { html } = renderer.render('application', {
+				ctx: { path: ['admin', 'status', 'overview'], request_path, authsession: 'session' }
+			});
+			assert.match(html, /data-page="admin-status-overview"/);
+		}
+		const { html } = renderer.render('application', {
+			ctx: { path: ['admin', 'network', 'network'], request_path: ['admin', 'network', 'network', 'lan'], authsession: 'session' }
+		});
+		assert.match(html, /data-page="admin-network-network-lan"/);
+	} finally { renderer.close(); }
+});
+
 test('login partials retain image/video, branding and authentication scope and script order', () => {
 	const renderer = createRenderer(templates);
 	try {

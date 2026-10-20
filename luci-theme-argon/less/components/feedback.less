@@ -75,10 +75,9 @@
   margin: clamp(1rem, 4vh, 2rem) auto;
   padding: var(--field-gap) var(--section-inset);
   gap: var(--field-gap);
-  border: 1px solid transparent;
-  border-inline-start: 3px solid var(--status-accent);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-dialog) !important;
-  background-color: var(--surface-raised) !important;
+  background-color: color-mix(in srgb, var(--status-accent) 4%, var(--surface-raised)) !important;
   color: var(--text-strong);
   box-shadow: var(--section-shadow);
   font-size: .875rem;

@@ -1,0 +1,351 @@
+#!/bin/sh
+
+. /usr/share/libubox/jshn.sh
+
+readonly state_dir='/var/run/argon-update'
+readonly cache_file='/var/run/argon-update/release.json'
+readonly release_api='https://api.github.com/repos/jerrykuku/luci-theme-argon/releases/latest'
+
+installed_version() {
+	current_version=''
+	package_manager=''
+	if command -v apk >/dev/null 2>&1; then
+		current_version="$(apk list --installed luci-theme-argon 2>/dev/null |
+			awk '$1 ~ /^luci-theme-argon-/ { sub(/^luci-theme-argon-/, "", $1); print $1; exit }')"
+		[ -z "$current_version" ] || package_manager=apk
+	fi
+	if [ -z "$current_version" ] && command -v opkg >/dev/null 2>&1; then
+		current_version="$(opkg status luci-theme-argon 2>/dev/null | awk '
+			/^Version: / { version=$2 }
+			/^Status: .* installed$/ { installed=1 }
+			END { if (installed) print version }')"
+		[ -z "$current_version" ] || package_manager=opkg
+	fi
+}
+
+valid_tag() {
+	[ "${#1}" -le 48 ] && printf '%s\n' "$1" | grep -Eq '^v?[0-9]+(\.[0-9]+){1,3}$'
+}
+
+read_cache() {
+	[ -f "$cache_file" ] && [ ! -L "$cache_file" ] &&
+		[ "$(wc -c < "$cache_file")" -le 1048576 ] || return 1
+	json_load_file "$cache_file" || return 1
+	json_get_var tag tag
+	json_get_var checked_at checked_at
+	valid_tag "$tag" && printf '%s\n' "$checked_at" | grep -Eq '^[0-9]{1,11}$'
+}
+
+select_package() {
+	case "$package_manager" in apk) format=apk ;; opkg) format=ipk ;; *) return 1 ;; esac
+	json_get_var package "$format"
+	json_get_var digest "${format}_sha256"
+	json_get_var size "${format}_size"
+	json_get_var tag tag
+	valid_tag "$tag" || return 1
+	base="${tag#v}"
+	case "$package_manager:$package" in
+	apk:luci-theme-argon-"$base"-r*.apk)
+		target_version="${package#luci-theme-argon-}"
+		target_version="${target_version%.apk}"
+		revision="${target_version#"$base"-r}" ;;
+	opkg:luci-theme-argon_"$base"*_all.ipk)
+		target_version="${package#luci-theme-argon_}"
+		target_version="${target_version%_all.ipk}"
+		case "$target_version" in "$base") revision=1 ;; "$base"-*) revision="${target_version#"$base"-}" ;; *) return 1 ;; esac ;;
+	*) return 1 ;;
+	esac
+	printf '%s\n' "$revision" | grep -Eq '^[0-9]{1,8}$' &&
+		printf '%s\n' "$digest" | grep -Eq '^[a-f0-9]{64}$' &&
+		printf '%s\n' "$size" | grep -Eq '^[0-9]{1,8}$' &&
+		[ "$size" -gt 0 ] && [ "$size" -le 8388608 ]
+}
+
+is_upgrade() {
+	# Reject unknown/custom version syntax before asking the native comparator.
+	printf '%s\n' "$current_version" | grep -Eq '^[0-9]+(\.[0-9]+){1,3}((~|_)(alpha|beta|rc)[0-9]+|-(alpha|beta|rc)\.[0-9]+)?(-r?[0-9]+)?$' || return 1
+	case "$package_manager" in
+	apk) [ "$(apk version -t "$current_version" "$target_version" 2>/dev/null)" = '<' ] ;;
+	opkg) opkg compare-versions "$current_version" '<<' "$target_version" ;;
+	*) return 1 ;;
+	esac
+}
+
+prepare_state() {
+	[ ! -L "$state_dir" ] && { [ -d "$state_dir" ] || mkdir -m 700 "$state_dir"; } &&
+		command -v flock >/dev/null 2>&1 && command -v sha256sum >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1
+}
+
+add_status() {
+	# Keep release data in the caller's namespace while loading the small job file.
+	json_set_namespace upgrade_status previous_namespace
+	json_init
+	phase=idle
+	job_error=''
+	job_version=''
+	if [ -f "$state_dir/status.json" ] && [ ! -L "$state_dir/status.json" ] &&
+		[ "$(wc -c < "$state_dir/status.json")" -le 4096 ] && json_load_file "$state_dir/status.json"; then
+		json_get_var phase phase
+		json_get_var job_error error
+		json_get_var job_version version
+	fi
+	active=0
+	case "$phase" in
+	starting|downloading|verifying|installing)
+		# A kernel lock survives the initiating RPC and is released on worker exit.
+		if command -v flock >/dev/null 2>&1; then
+			exec 8>"$state_dir/lock"
+			if flock -n 8; then
+				# The worker may have finished between our snapshot and lock probe.
+				# Read its final state while holding the lock against a new start.
+				json_load_file "$state_dir/status.json"
+				json_get_var phase phase
+				json_get_var job_error error
+				json_get_var job_version version
+				case "$phase" in starting|downloading|verifying|installing) phase=failed; job_error=interrupted ;; esac
+			else
+				active=1
+			fi
+			exec 8>&-
+		else
+			phase=failed
+			job_error=interrupted
+		fi ;;
+	esac
+	json_set_namespace "$previous_namespace"
+	json_add_object upgrade
+	json_add_string phase "$phase"
+	json_add_string error "$job_error"
+	json_add_string version "$job_version"
+	json_add_boolean active "$active"
+	if [ -f "$state_dir/log" ] && [ ! -L "$state_dir/log" ]; then
+		json_add_string log "$(tail -c 8192 "$state_dir/log")"
+	fi
+	json_close_object
+}
+
+respond() {
+	add_status
+	# Read after the job snapshot so a completed job reports its installed version.
+	installed_version
+	can_upgrade=0
+	if select_package && is_upgrade && command -v flock >/dev/null 2>&1 && command -v sha256sum >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
+		can_upgrade=1
+	fi
+	json_add_int result "$1"
+	json_add_string current_version "$current_version"
+	json_add_string package_manager "$package_manager"
+	json_add_boolean can_upgrade "$can_upgrade"
+	json_dump
+}
+
+fail() {
+	json_init
+	respond "$1"
+}
+
+write_status() {
+	json_init
+	json_add_string phase "$1"
+	json_add_string error "${2:-}"
+	json_add_string version "$target_version"
+	json_dump > "$state_dir/status.$$" && mv -f "$state_dir/status.$$" "$state_dir/status.json"
+}
+
+run_upgrade() {
+	# Run a private copy, since installing the theme replaces this RPC script.
+	work="${0%/*}"
+	case "$work" in "$state_dir"/job.??????) ;; *) return 1 ;; esac
+	[ -d "$work" ] && [ ! -L "$work" ] && [ -f "$work/release.json" ] || return 1
+	trap 'rm -rf "$work"' EXIT
+	trap 'write_status failed interrupted; exit 1' INT TERM
+	json_load_file "$work/release.json" && select_package || { write_status failed metadata; return; }
+	installed_version
+	is_upgrade || { write_status failed version; return; }
+	# Leave room for download metadata and unpacking. The package manager also
+	# performs its own dependency and storage checks; never force those checks.
+	tmp_free="$(df -Pk "$state_dir" | awk 'END { print $4 }')"
+	root_path=/
+	[ ! -d /overlay ] || root_path=/overlay
+	root_free="$(df -Pk "$root_path" | awk 'END { print $4 }')"
+	if [ "${tmp_free:-0}" -lt "$((size / 1024 + 2048))" ] ||
+		[ "${root_free:-0}" -lt "$((size * 3 / 1024 + 1024))" ]; then
+		write_status failed space
+		return
+	fi
+	write_status downloading
+	url="https://github.com/jerrykuku/luci-theme-argon/releases/download/$tag/$package"
+	(ulimit -f 16384; timeout -k 2 90 wget -T 20 -q -U 'luci-theme-argon' \
+		-O "$work/$package" "$url") 2>/dev/null || { write_status failed network; return; }
+	write_status verifying
+	if [ "$(wc -c < "$work/$package")" -ne "$size" ] ||
+		[ "$(sha256sum "$work/$package" | awk '{ print $1 }')" != "$digest" ]; then
+		write_status failed checksum
+		return
+	fi
+	# Recheck immediately before modifying the package database.
+	installed_version
+	is_upgrade || { write_status failed version; return; }
+	write_status installing
+	# Bound captured output without imposing a file-size limit on the installer.
+	(
+		case "$package_manager" in
+		apk) apk add --allow-untrusted "$work/$package" ;;
+		opkg) opkg install "$work/$package" ;;
+		esac
+		printf '%s\n' "$?" > "$work/exit"
+	) 2>&1 | tail -c 8192 > "$state_dir/log"
+	if [ "$(cat "$work/exit" 2>/dev/null)" != 0 ]; then
+		write_status failed install
+		return
+	fi
+	installed_version
+	if [ "$current_version" != "$target_version" ]; then
+		write_status failed install
+		return
+	fi
+	write_status complete
+}
+
+start_upgrade() {
+	read -r request
+	json_load "$request" || { fail 3; return; }
+	json_get_var requested_tag tag
+	json_get_var requested_package package
+	now="$(date +%s)"
+	read_cache && [ "$now" -ge "$checked_at" ] && [ "$((now - checked_at))" -lt 300 ] &&
+		select_package && [ "$tag" = "$requested_tag" ] && [ "$package" = "$requested_package" ] || { fail 3; return; }
+	is_upgrade || { fail 5; return; }
+	prepare_state || { fail 1; return; }
+	exec 9>"$state_dir/lock"
+	flock -n 9 || { fail 4; return; }
+	work="$(mktemp -d "$state_dir/job.XXXXXX")" || { fail 1; return; }
+	if ! cp "$0" "$work/worker.sh" || ! json_dump > "$work/release.json"; then
+		rm -rf "$work"
+		fail 1
+		return
+	fi
+	: > "$state_dir/log"
+	write_status starting
+	# FD 9 is inherited by the worker, keeping the lock until all installation
+	# work finishes. Detach every stdio stream so rpcd can reply immediately.
+	(trap '' HUP; exec sh "$work/worker.sh" run "$package_manager") </dev/null >/dev/null 2>&1 &
+	json_init
+	respond 0
+}
+
+umask 077
+case "$1" in
+list)
+	printf '%s\n' '{"get":{},"check":{},"status":{},"start":{"tag":"String","package":"String"}}'
+	;;
+run)
+	package_manager="$2"
+	run_upgrade
+	;;
+call)
+	case "$2" in get|check|status|start) ;; *) exit 1 ;; esac
+	if [ "$2" = status ]; then
+		json_init
+		respond 0
+		exit 0
+	fi
+	if [ "$2" = start ]; then
+		installed_version
+		start_upgrade
+		exit 0
+	fi
+	if [ "$2" = get ]; then
+		read_cache || json_init
+		respond 0
+		exit 0
+	fi
+	now="$(date +%s)"
+	if read_cache && [ "$now" -ge "$checked_at" ] && [ "$((now - checked_at))" -lt 300 ]; then
+		respond 0
+		exit 0
+	fi
+	[ -L "$state_dir" ] || [ -d "$state_dir" ] || mkdir -m 700 "$state_dir" 2>/dev/null || :
+	umask 077
+	work="$(mktemp -d /tmp/argon-update.XXXXXX)" || { fail 1; exit 0; }
+	trap 'rm -rf "$work"' EXIT
+	trap 'exit 1' HUP INT TERM
+	# Bound the request to less than rpcd's timeout and limit the response size.
+	(ulimit -f 2048; timeout -k 2 12 wget -T 10 -q -U 'luci-theme-argon' \
+		--header='Accept: application/vnd.github+json' \
+		--header='Cache-Control: no-cache' \
+		-O "$work/release.json" "$release_api") 2>/dev/null || { fail 1; exit 0; }
+	[ "$(wc -c < "$work/release.json")" -le 1048576 ] &&
+		json_load_file "$work/release.json" || { fail 2; exit 0; }
+	json_get_var tag tag_name
+	json_get_var draft draft
+	json_get_var prerelease prerelease
+	valid_tag "$tag" && [ "$draft" = 0 ] && [ "$prerelease" = 0 ] || { fail 2; exit 0; }
+	json_get_var published_at published_at
+	json_get_var notes body
+	base="${tag#v}"
+	ipk=''
+	apk=''
+	ipk_sha256=''
+	apk_sha256=''
+	ipk_size=0
+	apk_size=0
+	ipk_revision=-1
+	apk_revision=-1
+	if json_select assets; then
+		json_get_keys asset_keys
+		for asset_key in $asset_keys; do
+			json_select "$asset_key" || continue
+			json_get_var asset name
+			json_get_var asset_digest digest
+			json_get_var asset_size size
+			# Older releases may not expose a checksum. Keep manual downloads,
+			# but only checksum-backed assets can be installed through this RPC.
+			asset_digest="${asset_digest#sha256:}"
+			printf '%s\n' "$asset_digest" | grep -Eq '^[a-f0-9]{64}$' || asset_digest=''
+			printf '%s\n' "$asset_size" | grep -Eq '^[0-9]{1,8}$' || asset_size=0
+			case "$asset" in
+			"luci-theme-argon_${base}"*_all.ipk)
+				revision="${asset#luci-theme-argon_${base}}"
+				revision="${revision%_all.ipk}"
+				case "$revision" in '') revision=1 ;; -*) revision="${revision#-}" ;; *) revision='' ;; esac
+				if printf '%s\n' "$revision" | grep -Eq '^[0-9]{1,8}$' && [ "$revision" -gt "$ipk_revision" ]; then
+					ipk="$asset"
+					ipk_sha256="$asset_digest"
+					ipk_size="$asset_size"
+					ipk_revision="$revision"
+				fi
+				;;
+			"luci-theme-argon-${base}-r"*.apk)
+				revision="${asset#luci-theme-argon-${base}-r}"
+				revision="${revision%.apk}"
+				if printf '%s\n' "$revision" | grep -Eq '^[0-9]{1,8}$' && [ "$revision" -gt "$apk_revision" ]; then
+					apk="$asset"
+					apk_sha256="$asset_digest"
+					apk_size="$asset_size"
+					apk_revision="$revision"
+				fi
+				;;
+			esac
+			json_select ..
+		done
+	fi
+	json_init
+	json_add_string tag "$tag"
+	json_add_string published_at "$published_at"
+	json_add_string notes "$notes"
+	json_add_string ipk "$ipk"
+	json_add_string apk "$apk"
+	json_add_string ipk_sha256 "$ipk_sha256"
+	json_add_string apk_sha256 "$apk_sha256"
+	json_add_int ipk_size "$ipk_size"
+	json_add_int apk_size "$apk_size"
+	json_add_int checked_at "$now"
+	json_dump > "$work/cache.json"
+	# Cache only successful checks, atomically; a failed cache write is nonfatal.
+	if [ ! -L "$cache_file" ] && { [ ! -e "$cache_file" ] || [ -f "$cache_file" ]; }; then
+		mv -f "$work/cache.json" "$cache_file" 2>/dev/null || :
+	fi
+	respond 0
+	;;
+esac

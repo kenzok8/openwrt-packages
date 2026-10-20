@@ -1210,9 +1210,9 @@ select[multiple] {
 .login-page .login-form .form-login .errorbox {
   padding: 0.75rem 1rem;
   overflow-wrap: anywhere;
-  border-inline-start: 3px solid var(--warning);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-control);
-  background: var(--surface-color);
+  background: color-mix(in srgb, var(--warning) 6%, var(--surface-color));
   color: var(--text-strong);
   line-height: 1.5;
   text-align: start;
@@ -1927,10 +1927,9 @@ span.spinning {
   margin: clamp(1rem, 4vh, 2rem) auto;
   padding: var(--field-gap) var(--section-inset);
   gap: var(--field-gap);
-  border: 1px solid transparent;
-  border-inline-start: 3px solid var(--status-accent);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-dialog) !important;
-  background-color: var(--surface-raised) !important;
+  background-color: color-mix(in srgb, var(--status-accent) 4%, var(--surface-raised)) !important;
   color: var(--text-strong);
   box-shadow: var(--section-shadow);
   font-size: 0.875rem;
@@ -3241,6 +3240,29 @@ header .header-actions {
 .cbi-input-file {
   appearance: auto !important;
 }
+.cbi-input-file[type="file"] {
+  padding: 0;
+  padding-inline-end: 0.75rem;
+  line-height: calc(2.5rem - 2px);
+  overflow: hidden;
+  cursor: pointer;
+}
+.cbi-input-file[type="file"]::file-selector-button {
+  box-sizing: border-box;
+  height: 100%;
+  margin: 0;
+  margin-inline-end: var(--action-gap);
+  padding: 0 0.75rem;
+  border: 0;
+  border-inline-end: 1px solid var(--control-border);
+  border-radius: 0;
+  font: inherit;
+  color: var(--control-text);
+  background-color: var(--surface-active);
+  vertical-align: top;
+  cursor: inherit;
+  appearance: none;
+}
 .cbi-input-file::-webkit-file-upload-button {
   display: inline-block !important;
 }
@@ -4002,8 +4024,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   width: auto;
   margin: 0;
   padding: 0.75rem 1rem;
-  border: 1px solid transparent;
-  border-inline-start: 3px solid var(--dialog-feedback-accent);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-panel) !important;
   background-color: color-mix(in srgb, var(--dialog-feedback-accent) 10%, var(--surface-color)) !important;
   color: var(--text-strong);
@@ -4979,6 +5000,105 @@ pre.command-output {
     max-width: 100%;
   }
 }
+[data-page="admin-system-argon-config"] #argon-update [hidden] {
+  display: none !important;
+}
+[data-page="admin-system-argon-config"] .argon-update-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--field-gap);
+  padding: var(--field-gap) var(--section-inset);
+}
+[data-page="admin-system-argon-config"] .argon-update-content > p {
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+[data-page="admin-system-argon-config"] .argon-update-versions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: var(--field-gap);
+  margin: 0;
+}
+[data-page="admin-system-argon-config"] .argon-update-versions dt {
+  margin-bottom: var(--control-gap);
+  color: var(--muted-text);
+  font-size: 0.8125rem;
+}
+[data-page="admin-system-argon-config"] .argon-update-versions dd {
+  margin: 0;
+  color: var(--text-strong);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+[data-page="admin-system-argon-config"] .argon-update-status {
+  display: flex;
+  align-items: center;
+  gap: var(--control-gap);
+  color: var(--text-strong);
+}
+[data-page="admin-system-argon-config"] .argon-update-status[data-state="current"],
+[data-page="admin-system-argon-config"] .argon-update-status[data-state="complete"] {
+  font-weight: 600;
+}
+[data-page="admin-system-argon-config"] .argon-update-status-icon {
+  display: inline-flex;
+  flex: 0 0 1.25rem;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--success);
+  border-radius: 50%;
+  color: var(--success);
+  font-size: 0.8125rem;
+  line-height: 1;
+}
+[data-page="admin-system-argon-config"] .argon-update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--control-gap);
+}
+[data-page="admin-system-argon-config"] .argon-update-actions > .cbi-button {
+  min-height: 2.5rem;
+  max-width: 100%;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+[data-page="admin-system-argon-config"] #argon-update .argon-update-actions > .cbi-button-neutral {
+  color: var(--text-strong);
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-muted);
+}
+[data-page="admin-system-argon-config"] .argon-update-checked {
+  color: var(--muted-text);
+  font-size: 0.8125rem;
+}
+[data-page="admin-system-argon-config"] .argon-update-details {
+  min-width: 0;
+}
+[data-page="admin-system-argon-config"] .argon-update-details > summary {
+  cursor: pointer;
+  color: var(--text-strong);
+  line-height: 1.5;
+}
+[data-page="admin-system-argon-config"] .argon-update-notes {
+  max-height: 22rem;
+  margin: var(--control-gap) 0 0;
+  padding: var(--field-gap);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-panel);
+  background-color: var(--surface-muted);
+  color: var(--text-strong);
+  font: inherit;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 [data-page="admin-system-argon-config"] .argon-color-picker {
   display: flex;
   align-items: center;
@@ -5572,6 +5692,115 @@ pre.command-output {
   background: var(--input-bg);
   color: var(--text-color);
 }
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--action-gap) var(--field-gap);
+  padding: var(--field-gap) var(--section-inset);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card) !important;
+  background-color: var(--surface-raised) !important;
+  color: var(--text-color);
+  box-shadow: var(--section-shadow);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.6;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) > div:first-child {
+  display: contents;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) > div:first-child > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) > div:first-child > * + * {
+  margin-top: 0;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) > div:first-child > h4 {
+  grid-column: 1;
+  align-self: center;
+  padding: 0;
+  background: none;
+  color: var(--text-strong);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) > div:first-child > .btn {
+  justify-self: start;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) > div:last-child {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) > div:last-child > .btn {
+  margin: 0 !important;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .btn {
+  min-height: 2.25rem;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--surface-muted);
+  color: var(--text-strong);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) a {
+  color: color-mix(in srgb, var(--link-color) 75%, var(--text-strong));
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  overflow-wrap: anywhere;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-panel);
+  background-color: var(--surface-color);
+  overflow: hidden;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .table > :is(thead, tbody, tfoot) {
+  display: table-row-group;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .table .tr {
+  display: table-row;
+  background: none;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .table .th,
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .table .td {
+  display: table-cell;
+  width: 33.333%;
+  padding: 0.625rem 0.75rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-strong);
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .table .th {
+  border-top: 0;
+  background-color: var(--surface-muted);
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .table .td:first-child {
+  color: var(--muted-text);
+  font-weight: 400;
+}
+#maincontent > .alert-message.notice:has(a[href$="/admin/system/attendedsysupgrade"]) .table .td:last-child {
+  font-weight: 600;
+}
 [data-page="admin-system-attendedsysupgrade"] #view > p,
 [data-page="admin-system-attendedsysupgrade-overview"] #view > p {
   display: flex;
@@ -5665,11 +5894,73 @@ pre.command-output {
   vertical-align: text-top;
   top: auto;
 }
-[data-page="admin-system-filetransfer"] #cbi-upload {
+[data-page="admin-system-filetransfer"] .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed):where(:has(> .cbi-value, > [id] > .cbi-value)),
+[data-page="admin-system-fileassistant"] .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed):where(:has(> .cbi-value, > [id] > .cbi-value)) {
+  padding-block: var(--field-gap);
+}
+[data-page="admin-system-filetransfer"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page="admin-system-fileassistant"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-section-node:not(.cbi-section-node-tabbed) {
+  padding-block-start: 0;
+}
+[data-page="admin-system-filetransfer"] .cbi-section > .cbi-value,
+[data-page="admin-system-fileassistant"] .cbi-section > .cbi-value {
+  padding-block: var(--field-gap);
+}
+[data-page="admin-system-filetransfer"] .cbi-section > .cbi-value ~ .cbi-value,
+[data-page="admin-system-fileassistant"] .cbi-section > .cbi-value ~ .cbi-value,
+[data-page="admin-system-filetransfer"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-value,
+[data-page="admin-system-fileassistant"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-value {
+  padding-block-start: 0;
+}
+[data-page="admin-system-filetransfer"] .cbi-section > .cbi-section-create,
+[data-page="admin-system-fileassistant"] .cbi-section > .cbi-section-create {
+  padding: var(--field-gap) var(--section-inset);
+}
+[data-page="admin-system-filetransfer"] #cbi-upload,
+[data-page="admin-system-fileassistant"] #cbi-upload {
   margin-top: 0;
 }
-[data-page="admin-system-filetransfer"] .cbi-section-table {
+[data-page="admin-system-filetransfer"] .cbi-section-table,
+[data-page="admin-system-fileassistant"] .cbi-section-table {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+}
+[data-page="admin-system-filetransfer"] .cbi-value:has( > :is(#ulfile, #dlfile)),
+[data-page="admin-system-fileassistant"] .cbi-value:has( > :is(#ulfile, #dlfile)) {
+  display: grid;
+  grid-template-columns: fit-content(var(--form-label-width)) minmax(0, 25rem) auto;
+  align-items: center;
+  justify-content: start;
+  gap: var(--control-gap) var(--action-gap);
+}
+[data-page="admin-system-filetransfer"] .cbi-value:has( > :is(#ulfile, #dlfile)) > label.cbi-value,
+[data-page="admin-system-fileassistant"] .cbi-value:has( > :is(#ulfile, #dlfile)) > label.cbi-value {
+  display: block !important;
+  width: auto !important;
+  min-width: 0;
+  padding: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+[data-page="admin-system-filetransfer"] .cbi-value:has( > :is(#ulfile, #dlfile)) > .cbi-input-file,
+[data-page="admin-system-fileassistant"] .cbi-value:has( > :is(#ulfile, #dlfile)) > .cbi-input-file {
+  width: 100% !important;
+  min-width: 0;
+  max-width: 100%;
+}
+[data-page="admin-system-filetransfer"] .cbi-value:has( > :is(#ulfile, #dlfile)) > .cbi-button,
+[data-page="admin-system-fileassistant"] .cbi-value:has( > :is(#ulfile, #dlfile)) > .cbi-button {
+  justify-self: start;
+  max-width: 100%;
+}
+@container (max-width: 40rem) {
+  [data-page="admin-system-filetransfer"] .cbi-value:has( > :is(#ulfile, #dlfile)),
+  [data-page="admin-system-fileassistant"] .cbi-value:has( > :is(#ulfile, #dlfile)) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  [data-page="admin-system-filetransfer"] .cbi-value:has( > :is(#ulfile, #dlfile)) > label.cbi-value,
+  [data-page="admin-system-fileassistant"] .cbi-value:has( > :is(#ulfile, #dlfile)) > label.cbi-value {
+    grid-column: 1 / -1;
+  }
 }
 [data-page="admin-system-fileassistant"] .fb-container td[class$="-icon"]::before {
   filter: var(--file-icon-filter);
@@ -6192,36 +6483,47 @@ pre.command-output {
 [data-page="admin-status-overview"] #view > div:first-child {
   gap: 0 !important;
 }
-[data-page="admin-status"] div[style*="display:grid;grid-template-columns:repeat"],
-[data-page="admin-status-overview"] div[style*="display:grid;grid-template-columns:repeat"] {
-  display: flex !important;
-  justify-content: space-evenly !important;
-  flex-wrap: wrap;
+[data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]),
+[data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr)) !important;
+  gap: var(--field-gap);
+  margin: 0 !important;
+  padding: var(--field-gap) var(--section-inset);
 }
-[data-page="admin-status"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox,
-[data-page="admin-status-overview"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox {
-  flex: 0 1 8.5rem;
-  min-width: 8rem !important;
+[data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox,
+[data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox {
+  min-width: 0 !important;
   max-width: 100% !important;
+  margin: 0 !important;
   text-align: center;
 }
-[data-page="admin-status"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox .ifacebox-body,
-[data-page="admin-status-overview"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox .ifacebox-body {
+[data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox > .ifacebox-head:first-child,
+[data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox > .ifacebox-head:first-child {
+  overflow-wrap: anywhere;
+}
+[data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox .ifacebox-body,
+[data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox .ifacebox-body {
   font-size: 0.75rem;
   padding: 0.75rem 0.5rem;
 }
-[data-page="admin-status"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox .ifacebox-body .cbi-tooltip-container,
-[data-page="admin-status-overview"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox .ifacebox-body .cbi-tooltip-container {
+[data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox .ifacebox-body .cbi-tooltip-container,
+[data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox .ifacebox-body .cbi-tooltip-container {
   font-size: inherit !important;
   direction: ltr;
   unicode-bidi: isolate;
 }
-[dir="rtl"] [data-page="admin-status"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox .ifacebox-body .cbi-tooltip-container .cbi-tooltip,
-[dir="rtl"] [data-page="admin-status-overview"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox .ifacebox-body .cbi-tooltip-container .cbi-tooltip {
+[dir="rtl"] [data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox .ifacebox-body .cbi-tooltip-container .cbi-tooltip,
+[dir="rtl"] [data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox .ifacebox-body .cbi-tooltip-container .cbi-tooltip {
   direction: rtl;
 }
-[data-page="admin-status"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox > .ifacebox-body:last-child,
-[data-page="admin-status-overview"] div[style*="display:grid;grid-template-columns:repeat"] .ifacebox > .ifacebox-body:last-child {
+[data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox > .ifacebox-body:nth-child(2),
+[data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox > .ifacebox-body:nth-child(2) {
+  flex-grow: 1;
+  overflow-wrap: anywhere;
+}
+[data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox > .ifacebox-body:last-child,
+[data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox > .ifacebox-body:last-child {
   padding: 0.5rem 0.625rem;
 }
 [data-page="admin-status"] .argon-port-traffic,
@@ -7291,6 +7593,333 @@ pre.command-output {
 }
 [data-page="admin-vpn-passwall"] h4 {
   background: transparent;
+}
+[data-page="admin-vpn-passwall"] .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed):where(:has(> .cbi-value, > [id] > .cbi-value)),
+[data-page^="admin-vpn-passwall-"] .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed):where(:has(> .cbi-value, > [id] > .cbi-value)),
+[data-page="admin-services-passwall"] .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed):where(:has(> .cbi-value, > [id] > .cbi-value)),
+[data-page^="admin-services-passwall-"] .cbi-section > .cbi-section-node:not(.cbi-section-node-tabbed):where(:has(> .cbi-value, > [id] > .cbi-value)) {
+  padding-block: var(--field-gap);
+}
+[data-page="admin-vpn-passwall"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-vpn-passwall-"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page="admin-services-passwall"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-section-node:not(.cbi-section-node-tabbed),
+[data-page^="admin-services-passwall-"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-section-node:not(.cbi-section-node-tabbed) {
+  padding-block-start: 0;
+}
+[data-page="admin-vpn-passwall"] .cbi-section > .cbi-value,
+[data-page^="admin-vpn-passwall-"] .cbi-section > .cbi-value,
+[data-page="admin-services-passwall"] .cbi-section > .cbi-value,
+[data-page^="admin-services-passwall-"] .cbi-section > .cbi-value {
+  padding-block: var(--field-gap);
+}
+[data-page="admin-vpn-passwall"] .cbi-section > .cbi-value ~ .cbi-value,
+[data-page^="admin-vpn-passwall-"] .cbi-section > .cbi-value ~ .cbi-value,
+[data-page="admin-services-passwall"] .cbi-section > .cbi-value ~ .cbi-value,
+[data-page^="admin-services-passwall-"] .cbi-section > .cbi-value ~ .cbi-value,
+[data-page="admin-vpn-passwall"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-value,
+[data-page^="admin-vpn-passwall-"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-value,
+[data-page="admin-services-passwall"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-value,
+[data-page^="admin-services-passwall-"] .cbi-section > .cbi-section-descr:not(:empty) ~ .cbi-value {
+  padding-block-start: 0;
+}
+[data-page="admin-vpn-passwall"] .cbi-section > .cbi-section-create,
+[data-page^="admin-vpn-passwall-"] .cbi-section > .cbi-section-create,
+[data-page="admin-services-passwall"] .cbi-section > .cbi-section-create,
+[data-page^="admin-services-passwall-"] .cbi-section > .cbi-section-create {
+  padding: var(--field-gap) var(--section-inset);
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-container,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-container,
+[data-page="admin-services-passwall"] .lv-dropdown-container,
+[data-page^="admin-services-passwall-"] .lv-dropdown-container {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--control-gap);
+  min-width: 0;
+  max-width: 100%;
+  vertical-align: middle;
+  white-space: normal;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-container > .node-actions,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-container > .node-actions,
+[data-page="admin-services-passwall"] .lv-dropdown-container > .node-actions,
+[data-page^="admin-services-passwall-"] .lv-dropdown-container > .node-actions {
+  margin: 0 !important;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-display,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-display,
+[data-page="admin-services-passwall"] .lv-dropdown-display,
+[data-page^="admin-services-passwall-"] .lv-dropdown-display {
+  display: inline-flex;
+  flex: 0 1 var(--form-control-min-width);
+  align-items: center;
+  gap: var(--control-gap);
+  width: var(--form-control-min-width) !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  height: 2.5rem !important;
+  min-height: 2.5rem !important;
+  margin: 0 !important;
+  padding: 0.5rem 0.75rem !important;
+  line-height: 1.5rem !important;
+  border: 1px solid var(--control-border) !important;
+  border-radius: var(--radius-control) !important;
+  background-color: var(--select-bg) !important;
+  color: var(--control-text) !important;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-display:focus,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-display:focus,
+[data-page="admin-services-passwall"] .lv-dropdown-display:focus,
+[data-page^="admin-services-passwall-"] .lv-dropdown-display:focus {
+  --control-border: var(--control-focus);
+  outline: 0;
+  box-shadow: var(--control-focus-shadow);
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-label,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-label,
+[data-page="admin-services-passwall"] .lv-dropdown-label,
+[data-page^="admin-services-passwall-"] .lv-dropdown-label {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  text-align: start;
+  text-overflow: ellipsis;
+}
+[data-page="admin-vpn-passwall"] .lv-arrow-down,
+[data-page^="admin-vpn-passwall-"] .lv-arrow-down,
+[data-page="admin-services-passwall"] .lv-arrow-down,
+[data-page^="admin-services-passwall-"] .lv-arrow-down,
+[data-page="admin-vpn-passwall"] .lv-arrow-down-small,
+[data-page^="admin-vpn-passwall-"] .lv-arrow-down-small,
+[data-page="admin-services-passwall"] .lv-arrow-down-small,
+[data-page^="admin-services-passwall-"] .lv-arrow-down-small,
+[data-page="admin-vpn-passwall"] .lv-arrow-right,
+[data-page^="admin-vpn-passwall-"] .lv-arrow-right,
+[data-page="admin-services-passwall"] .lv-arrow-right,
+[data-page^="admin-services-passwall-"] .lv-arrow-right {
+  flex: 0 0 1rem;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  border: 0;
+  background-color: currentColor;
+  -webkit-mask: var(--dropdown-arrow-icon) center / contain no-repeat;
+  mask: var(--dropdown-arrow-icon) center / contain no-repeat;
+}
+[data-page="admin-vpn-passwall"] .lv-arrow-right,
+[data-page^="admin-vpn-passwall-"] .lv-arrow-right,
+[data-page="admin-services-passwall"] .lv-arrow-right,
+[data-page^="admin-services-passwall-"] .lv-arrow-right {
+  rotate: -90deg;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel,
+[data-page="admin-services-passwall"] .lv-dropdown-panel,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel {
+  max-height: min(50vh, 18rem) !important;
+  line-height: 1.5 !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-panel) !important;
+  background-color: var(--surface-panel) !important;
+  color: var(--dropdown-text) !important;
+  box-shadow: var(--dropdown-shadow);
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel > div:first-child,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel > div:first-child,
+[data-page="admin-services-passwall"] .lv-dropdown-panel > div:first-child,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel > div:first-child {
+  border-color: var(--border-color) !important;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel .lv-dropdown-search,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel .lv-dropdown-search,
+[data-page="admin-services-passwall"] .lv-dropdown-panel .lv-dropdown-search,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel .lv-dropdown-search {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-control);
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key],
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key],
+[data-page="admin-services-passwall"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key],
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key] {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-small);
+  background-color: transparent;
+  color: inherit;
+  text-align: start !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  transition: none;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key].is-selected,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key].is-selected,
+[data-page="admin-services-passwall"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key].is-selected,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key].is-selected,
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key].is-selected:hover,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key].is-selected:hover,
+[data-page="admin-services-passwall"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key].is-selected:hover,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key].is-selected:hover {
+  background-color: var(--dropdown-selected-bg) !important;
+  color: var(--dropdown-selected-text) !important;
+  font-weight: 500 !important;
+}
+@media (hover: hover) {
+  [data-page="admin-vpn-passwall"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key]:not(.is-selected):hover,
+  [data-page^="admin-vpn-passwall-"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key]:not(.is-selected):hover,
+  [data-page="admin-services-passwall"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key]:not(.is-selected):hover,
+  [data-page^="admin-services-passwall-"] .lv-dropdown-panel.cbi-listvalue-panel li[data-key]:not(.is-selected):hover {
+    background-color: var(--dropdown-hover-bg);
+  }
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel .lv-item-label,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel .lv-item-label,
+[data-page="admin-services-passwall"] .lv-dropdown-panel .lv-item-label,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel .lv-item-label {
+  margin: 0 !important;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel .lv-group-title,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel .lv-group-title,
+[data-page="admin-services-passwall"] .lv-dropdown-panel .lv-group-title,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel .lv-group-title {
+  gap: var(--control-gap);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-small);
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel .lv-group-title > b,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel .lv-group-title > b,
+[data-page="admin-services-passwall"] .lv-dropdown-panel .lv-group-title > b,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel .lv-group-title > b,
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel .lv-group-title > span,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel .lv-group-title > span,
+[data-page="admin-services-passwall"] .lv-dropdown-panel .lv-group-title > span,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel .lv-group-title > span {
+  margin: 0 !important;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel .lv-group-title > span[id^="group-count-"],
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel .lv-group-title > span[id^="group-count-"],
+[data-page="admin-services-passwall"] .lv-dropdown-panel .lv-group-title > span[id^="group-count-"],
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel .lv-group-title > span[id^="group-count-"] {
+  margin-inline-start: auto !important;
+  color: var(--muted-text) !important;
+}
+[data-page="admin-vpn-passwall"] .lv-dropdown-panel .lv-group-list,
+[data-page^="admin-vpn-passwall-"] .lv-dropdown-panel .lv-group-list,
+[data-page="admin-services-passwall"] .lv-dropdown-panel .lv-group-list,
+[data-page^="admin-services-passwall-"] .lv-dropdown-panel .lv-group-list {
+  margin: var(--control-gap) 0 0;
+  padding-inline-start: var(--control-gap);
+}
+[data-page="admin-vpn-passwall"]:has(#maincontent) .lv-dropdown-panel .lv-group-title,
+[data-page^="admin-vpn-passwall-"]:has(#maincontent) .lv-dropdown-panel .lv-group-title,
+[data-page="admin-services-passwall"]:has(#maincontent) .lv-dropdown-panel .lv-group-title,
+[data-page^="admin-services-passwall-"]:has(#maincontent) .lv-dropdown-panel .lv-group-title {
+  background-color: var(--surface-active) !important;
+}
+[data-page="admin-vpn-passwall"] .cbi-value-field > .share-toolbar,
+[data-page^="admin-vpn-passwall-"] .cbi-value-field > .share-toolbar,
+[data-page="admin-services-passwall"] .cbi-value-field > .share-toolbar,
+[data-page^="admin-services-passwall-"] .cbi-value-field > .share-toolbar {
+  padding-block: 0;
+}
+[data-page="admin-vpn-passwall"] #_passwall_status_fieldset,
+[data-page^="admin-vpn-passwall-"] #_passwall_status_fieldset,
+[data-page="admin-services-passwall"] #_passwall_status_fieldset,
+[data-page^="admin-services-passwall-"] #_passwall_status_fieldset {
+  padding-block: var(--control-gap);
+}
+[data-page="admin-vpn-passwall"] #_passwall_status_fieldset .status .block,
+[data-page^="admin-vpn-passwall-"] #_passwall_status_fieldset .status .block,
+[data-page="admin-services-passwall"] #_passwall_status_fieldset .status .block,
+[data-page^="admin-services-passwall-"] #_passwall_status_fieldset .status .block {
+  margin-block: var(--control-gap);
+}
+[data-page="admin-vpn-passwall"] #_log_fieldset,
+[data-page^="admin-vpn-passwall-"] #_log_fieldset,
+[data-page="admin-services-passwall"] #_log_fieldset,
+[data-page^="admin-services-passwall-"] #_log_fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--field-gap);
+  padding: var(--field-gap) var(--section-inset);
+}
+[data-page="admin-vpn-passwall"] #_log_fieldset > .cbi-button,
+[data-page^="admin-vpn-passwall-"] #_log_fieldset > .cbi-button,
+[data-page="admin-services-passwall"] #_log_fieldset > .cbi-button,
+[data-page^="admin-services-passwall-"] #_log_fieldset > .cbi-button {
+  align-self: flex-start;
+}
+[data-page="admin-vpn-passwall"] #_log_fieldset > textarea,
+[data-page^="admin-vpn-passwall-"] #_log_fieldset > textarea,
+[data-page="admin-services-passwall"] #_log_fieldset > textarea,
+[data-page^="admin-services-passwall-"] #_log_fieldset > textarea {
+  display: block;
+  max-width: 100%;
+  margin: 0 !important;
+}
+[data-page="admin-vpn-passwall"] #app_version,
+[data-page^="admin-vpn-passwall-"] #app_version,
+[data-page="admin-services-passwall"] #app_version,
+[data-page^="admin-services-passwall-"] #app_version {
+  display: flex;
+  flex-direction: column;
+  gap: var(--field-gap);
+}
+[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field,
+[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field,
+[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field,
+[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field {
+  display: grid;
+  grid-template-columns: minmax(0, 10rem) auto;
+  align-items: center;
+  justify-content: start;
+  gap: var(--control-gap) var(--action-gap);
+}
+[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field > span:first-child,
+[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field > span:first-child,
+[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field > span:first-child,
+[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field > span:first-child {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+}
+[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field > input[data-update-app],
+[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field > input[data-update-app],
+[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field > input[data-update-app],
+[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field > input[data-update-app] {
+  grid-column: 2;
+  justify-self: start;
+  max-width: 100%;
+}
+[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"],
+[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"],
+[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"],
+[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"] {
+  grid-column: 1 / -1;
+  min-width: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"]:empty,
+[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"]:empty,
+[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"]:empty,
+[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"]:empty {
+  display: none;
+}
+@container (max-width: 40rem) {
+  [data-page="admin-vpn-passwall"] .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title,
+  [data-page^="admin-vpn-passwall-"] .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title,
+  [data-page="admin-services-passwall"] .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title,
+  [data-page^="admin-services-passwall-"] .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title {
+    display: none;
+  }
 }
 [data-page^="admin-vpn-passwall2"] .tr,
 [data-page^="admin-services-passwall2"] .tr,

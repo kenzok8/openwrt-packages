@@ -382,3 +382,155 @@ msgstr "[Modo oscuro] Transparencia"
 #: htdocs/luci-static/resources/view/argon-config.js:47
 msgid "valid HEX color value"
 msgstr "un valor de color HEX válido"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Release notes"
+msgstr "Notas de la versión"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "View release"
+msgstr "Ver publicación"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Download package"
+msgstr "Descargar paquete"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Check for updates"
+msgstr "Buscar actualizaciones"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Current version"
+msgstr "Versión actual"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Latest stable version"
+msgstr "Última versión estable"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unknown version"
+msgstr "Versión desconocida"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Not checked yet."
+msgstr "Aún no se ha comprobado."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Checking for updates..."
+msgstr "Buscando actualizaciones..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Last checked: %s"
+msgstr "Última comprobación: %s"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "No release notes were published."
+msgstr "No se publicaron notas para esta versión."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to check for updates. Check the router's connection to GitHub and try again."
+msgstr "No se pudieron buscar actualizaciones. Compruebe la conexión del router con GitHub e inténtelo de nuevo."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to compare this version. View the release for details."
+msgstr "No se puede comparar esta versión. Consulte la publicación para más detalles."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update available."
+msgstr "Hay una actualización disponible."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Your theme is up to date."
+msgstr "El tema está actualizado."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The installed version is newer than the latest stable release."
+msgstr "La versión instalada es más reciente que la última versión estable."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Theme updates"
+msgstr "Actualizaciones del tema"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update now"
+msgstr "Actualizar ahora"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Reload page"
+msgstr "Recargar página"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Automatic installation is unavailable. Download the package to update manually."
+msgstr "La instalación automática no está disponible. Descargue el paquete para actualizar manualmente."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installation log"
+msgstr "Registro de instalación"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Preparing the update..."
+msgstr "Preparando la actualización..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Downloading the update..."
+msgstr "Descargando la actualización..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Verifying the package..."
+msgstr "Verificando el paquete..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installing the update. Please wait..."
+msgstr "Instalando la actualización. Espere..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update installed. Reload the page to use the new version."
+msgstr "Actualización instalada. Recargue la página para utilizar la nueva versión."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Download failed. Check the router's connection to GitHub and try again."
+msgstr "Error de descarga. Compruebe la conexión del router con GitHub e inténtelo de nuevo."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Package verification failed. Check for updates and try again."
+msgstr "Error al verificar el paquete. Vuelva a buscar actualizaciones e inténtelo de nuevo."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Not enough free space to install the update."
+msgstr "No hay suficiente espacio libre para instalar la actualización."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The installed version has changed. Check for updates again."
+msgstr "La versión instalada ha cambiado. Vuelva a buscar actualizaciones."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Release information has changed or expired. Check for updates again."
+msgstr "La información de la versión ha cambiado o ha caducado. Vuelva a buscar actualizaciones."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The update was interrupted. Check the installed version before trying again."
+msgstr "La actualización se ha interrumpido. Compruebe la versión instalada antes de intentarlo de nuevo."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installation failed. See the installation log for details."
+msgstr "Error de instalación. Consulte el registro de instalación para obtener más información."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to read update progress. Reconnecting..."
+msgstr "No se puede leer el progreso de la actualización. Reconectando..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to start the update. Check for updates and try again."
+msgstr "No se puede iniciar la actualización. Vuelva a buscar actualizaciones e inténtelo de nuevo."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update Argon to %s?"
+msgstr "¿Actualizar Argon a %s?"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The theme will be updated using the system package manager. Your Argon settings will be preserved."
+msgstr "El tema se actualizará con el gestor de paquetes del sistema. Se conservará su configuración de Argon."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Cancel"
+msgstr "Cancelar"

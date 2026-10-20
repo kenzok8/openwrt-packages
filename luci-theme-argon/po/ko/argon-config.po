@@ -380,3 +380,155 @@ msgstr "[다크 모드] 투명도"
 #: htdocs/luci-static/resources/view/argon-config.js:47
 msgid "valid HEX color value"
 msgstr "유효한 16진수 색상 값"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Release notes"
+msgstr "릴리스 노트"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "View release"
+msgstr "릴리스 보기"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Download package"
+msgstr "패키지 다운로드"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Check for updates"
+msgstr "업데이트 확인"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Current version"
+msgstr "현재 버전"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Latest stable version"
+msgstr "최신 안정 버전"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unknown version"
+msgstr "알 수 없는 버전"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Not checked yet."
+msgstr "아직 확인하지 않았습니다."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Checking for updates..."
+msgstr "업데이트 확인 중..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Last checked: %s"
+msgstr "마지막 확인: %s"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "No release notes were published."
+msgstr "이 버전에는 릴리스 노트가 없습니다."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to check for updates. Check the router's connection to GitHub and try again."
+msgstr "업데이트를 확인할 수 없습니다. 라우터의 GitHub 연결을 확인한 후 다시 시도하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to compare this version. View the release for details."
+msgstr "이 버전을 비교할 수 없습니다. 자세한 내용은 릴리스를 확인하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update available."
+msgstr "업데이트가 있습니다."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Your theme is up to date."
+msgstr "테마가 최신 버전입니다."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The installed version is newer than the latest stable release."
+msgstr "설치된 버전이 최신 안정 버전보다 새 버전입니다."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Theme updates"
+msgstr "테마 업데이트"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update now"
+msgstr "지금 업데이트"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Reload page"
+msgstr "페이지 새로고침"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Automatic installation is unavailable. Download the package to update manually."
+msgstr "자동 설치를 사용할 수 없습니다. 패키지를 다운로드하여 수동으로 업데이트하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installation log"
+msgstr "설치 로그"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Preparing the update..."
+msgstr "업데이트 준비 중..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Downloading the update..."
+msgstr "업데이트 다운로드 중..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Verifying the package..."
+msgstr "패키지 검증 중..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installing the update. Please wait..."
+msgstr "업데이트 설치 중입니다. 잠시 기다려 주세요..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update installed. Reload the page to use the new version."
+msgstr "업데이트가 설치되었습니다. 새 버전을 사용하려면 페이지를 새로고침하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Download failed. Check the router's connection to GitHub and try again."
+msgstr "다운로드에 실패했습니다. 라우터의 GitHub 연결을 확인하고 다시 시도하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Package verification failed. Check for updates and try again."
+msgstr "패키지 검증에 실패했습니다. 업데이트를 다시 확인하고 시도하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Not enough free space to install the update."
+msgstr "업데이트를 설치할 여유 공간이 부족합니다."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The installed version has changed. Check for updates again."
+msgstr "설치된 버전이 변경되었습니다. 업데이트를 다시 확인하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Release information has changed or expired. Check for updates again."
+msgstr "릴리스 정보가 변경되었거나 만료되었습니다. 업데이트를 다시 확인하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The update was interrupted. Check the installed version before trying again."
+msgstr "업데이트가 중단되었습니다. 다시 시도하기 전에 설치된 버전을 확인하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Installation failed. See the installation log for details."
+msgstr "설치에 실패했습니다. 자세한 내용은 설치 로그를 확인하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to read update progress. Reconnecting..."
+msgstr "업데이트 진행 상황을 읽을 수 없습니다. 다시 연결 중..."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Unable to start the update. Check for updates and try again."
+msgstr "업데이트를 시작할 수 없습니다. 업데이트를 다시 확인하고 시도하세요."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Update Argon to %s?"
+msgstr "Argon을 %s 버전으로 업데이트할까요?"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "The theme will be updated using the system package manager. Your Argon settings will be preserved."
+msgstr "시스템 패키지 관리자로 테마를 업데이트합니다. 현재 Argon 설정은 유지됩니다."
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Cancel"
+msgstr "취소"
