@@ -23,3 +23,4 @@ define Package/luci-app-eqos/install
 	$(INSTALL_BIN) ./files/usr/sbin/eqos $(1)/usr/sbin/eqos
 endef
 
+$(if $(filter luci-app-eqos,$(LUCI_BUILD_PACKAGES)),,$(eval $(call BuildPackage,luci-app-eqos)))
