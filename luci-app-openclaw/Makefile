@@ -69,7 +69,6 @@ else
 	chmod 755 $(1)/usr/share/openclaw/oc-config.sh 2>/dev/null || true
 	chmod 755 $(1)/usr/share/openclaw/luci-helper 2>/dev/null || true
   endef
-$(eval $(call BuildPackage,$(PKG_NAME)))
 endif
 
 define Package/$(PKG_NAME)/conffiles
@@ -85,3 +84,4 @@ define Package/$(PKG_NAME)/postinst
 }
 endef
 
+$(if $(filter $(PKG_NAME),$(LUCI_BUILD_PACKAGES)),,$(eval $(call BuildPackage,$(PKG_NAME))))
