@@ -35,7 +35,15 @@ It also supports automatic and manual switching between light and dark modes.
 
 </div>
 
-## What's new in 3.0
+## What's new in 3.1
+
+- **Online theme updates.** Check stable releases and install with the firmware's native APK or OPKG, preserving Argon settings and verifying package SHA256 and size.
+- **Layout fixes.** Improve dashboard actions, overview layouts, dynamic lists and custom IP/MAC inputs across narrow screens, light/dark modes and RTL layouts.
+- **Compatibility improvements.** Improve compatibility with stable OpenWrt firmware.
+
+Users on v3.0.0 or earlier must install v3.1.0 manually once to get online updates. See the [release notes](RELEASE.md).
+
+## 3.0 highlights
 
 - **Built-in Argon Config.** Manage the theme without a separate plugin.
 - **Broad third-party app support.** Refined layouts, forms and tables for most third-party LuCI apps, with desktop/mobile and light/dark adaptations.
@@ -89,9 +97,11 @@ Open **System → Argon Config** for login layouts, colors, glass effects, wallp
 
 Local image and video backgrounds are supported, along with Bing, Unsplash and Wallhaven wallpapers. Unsplash requires an API access key. Browser icons and login logos accept PNG files, 16–1024 pixels per side, up to 1 MiB; browser icons must be square.
 
-Under **Theme updates**, check the latest stable release, read its release notes and download the package matching your firmware's package manager. Checks use the router's connection to GitHub and cache successful results for five minutes.
+Under **Theme updates**, check the latest stable release, read its release notes and download the package matching your firmware's package manager.
 
 When a newer version is available, choose **Update now** and confirm to install the theme using the firmware’s native APK or OPKG package manager, preserving your Argon configuration. The page shows download, verification and installation status plus installation logs, and resumes monitoring after a page refresh. Reload the page after installation. Automatic installation requires a matching release package and SHA256 digest and does not perform downgrades. It updates the main theme package; separate translation packages remain managed by the system package manager.
+
+When building firmware, stop including the old standalone `luci-app-argon-config` plugin alongside the theme: its files conflict with the integrated settings. See [Build with OpenWrt](docs/DEVELOPMENT.md#build-with-openwrt) for existing build scripts.
 
 ## Screenshots
 

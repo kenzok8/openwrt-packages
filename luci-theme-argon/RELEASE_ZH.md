@@ -1,5 +1,27 @@
 # Master 分支的更新日志
 
+## v3.1.0 [ 2026.10.22 ]
+
+### 新功能
+
+- 新增稳定版检查与在线安装，可通过固件原生 APK 或 OPKG 包管理器升级，并保留 Argon 设置。
+- 新增安装包校验、降级保护、安装进度和日志，刷新页面后可继续跟踪安装状态。
+
+### 改进
+
+- 改善稳定版 OpenWrt 固件上的兼容性。
+
+### 修复
+
+- 修复 Dashboard 操作区间距和概览布局。
+- 修复动态列表控件及自定义 IP/MAC 输入框边框，兼顾窄屏、亮暗色和 RTL 布局。
+
+### 升级说明
+
+v3.0.0 及更早版本用户需先手动安装一次 v3.1.0，之后可使用在线升级。在线安装仅更新主题主包，独立语言包仍按原方式安装。
+
+[完整发布说明](https://github.com/jerrykuku/luci-theme-argon/releases/tag/v3.1.0)
+
 ## v3.0.0 [ 2026.10.16 ]
 
 - GitHub Release: https://github.com/jerrykuku/luci-theme-argon/releases/tag/v3.0.0

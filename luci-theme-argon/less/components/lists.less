@@ -86,10 +86,11 @@
     align-items: center;
     width: 100%;
     min-width: 0;
-    max-width: min(18rem, 100%);
+    max-width: 100%;
     flex-wrap: nowrap;
 
-    input {
+    // Only the plain add field joins its button; menu custom inputs stand alone.
+    > input {
       flex: 1 1 15.5rem;
       display: block;
       padding: 0.5rem 0.75rem;
@@ -190,12 +191,12 @@
 .cbi-dynlist,
 .cbi-dropdown {
   position: relative;
-  display: inline-flex;
-  padding-right: 0.25rem;
   min-height: 2.1875rem;
 }
 
 .cbi-dropdown {
+  display: inline-flex;
+  padding-inline-end: .25rem;
   align-items: center;
 }
 

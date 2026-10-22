@@ -9,7 +9,8 @@ import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-API = 'https://api.github.com/repos/jerrykuku/luci-theme-argon/releases/latest'
+PRIMARY = 'https://primary.argon.test/updates/stable.json'
+FALLBACK = 'https://fallback.argon.test/updates/stable.json'
 
 
 class UpdateRpcTests(unittest.TestCase):
@@ -29,7 +30,12 @@ version) test "$COMPARE_FAIL" != 1 || exit 1; [ "$3" = "$4" ] && printf '=\\n' |
 add) printf '%s\\n' "$@" >> "$MUTATIONS"; test "$INSTALL_FAIL" != 1 || { echo 'database locked'; exit 1; }; test "$WRONG_VERSION" = 1 || printf '3.0.0-r2' > "$INSTALLED"; echo 'Theme installed' ;;
 esac
 ''',
-            'opkg': '''case "$1" in
+            'opkg': '''if [ "$OPKG_QUERY_GUARD" = 1 ]; then
+    exec 8>"$MUTATIONS.lock"
+    flock -n 8 || exit 75
+    sleep .05
+fi
+case "$1" in
 status) v=$OPKG_VERSION; [ ! -f "$INSTALLED" ] || v=$(cat "$INSTALLED"); test -n "$v" || exit 1; printf 'Package: luci-theme-argon\\nVersion: %s\\nStatus: install ok installed\\n' "$v" ;;
 compare-versions) [ "$3" = "<<" ] && [ "$COMPARE_FAIL" != 1 ] && [ "$2" != "$4" ] && [ "$2" != 3.0.0-20261015 ] ;;
 install) printf '%s\\n' "$@" >> "$MUTATIONS"; test "$INSTALL_FAIL" != 1 || { echo 'database locked'; exit 1; }; test "$WRONG_VERSION" = 1 || printf '3.0.0-2' > "$INSTALLED"; echo 'Theme installed' ;;
@@ -40,10 +46,16 @@ esac
 test "$FETCH_FAIL" != 1 || exit 8
 while [ "$#" -gt 0 ]; do
     if [ "$1" = -O ]; then shift; destination=$1; fi
+    url=$1
     shift
 done
 case "$destination" in
-*release.json) cp "$PAYLOAD" "$destination" ;;
+*manifest.json)
+    sleep "${MANIFEST_DELAY:-0}"
+    case "$url" in
+    *primary.argon.test*) test "$PRIMARY_FAIL" != 1 || exit 8; cp "${PRIMARY_PAYLOAD:-$PAYLOAD}" "$destination" ;;
+    *) cp "$PAYLOAD" "$destination" ;;
+    esac ;;
 *) sleep "${DOWNLOAD_DELAY:-0}"; test "$DOWNLOAD_FAIL" != 1 || exit 8; cp "$PACKAGE_DATA" "$destination" ;;
 esac
 '''
@@ -95,8 +107,11 @@ json_set_namespace() {{
 json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
 ''')
         self.script = self.directory / 'rpc.sh'
+        sources = self.directory / 'sources.json'
+        sources.write_text(json.dumps({'primary': PRIMARY, 'fallback': FALLBACK}))
         self.script.write_text((ROOT / 'root/usr/libexec/rpcd/luci.argon_update').read_text()
                                .replace('/usr/share/libubox/jshn.sh', str(shim))
+                               .replace('/usr/share/argon/update-sources.json', str(sources))
                                .replace('/var/run/argon-update/release.json', str(self.cache))
                                .replace('/var/run/argon-update', str(self.directory / 'state')))
         self.env = dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ['PATH'],
@@ -104,12 +119,12 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
                         REQUESTS=str(self.requests), FETCH_FAIL='0', INSTALLED=str(self.directory / 'installed'),
                         MUTATIONS=str(self.directory / 'mutations'), PACKAGE_DATA=str(self.directory / 'package'))
         (self.directory / 'package').write_bytes(b'argon-package')
-        self.release = {'tag_name': 'v3.0.0', 'draft': False, 'prerelease': False,
-                        'published_at': '2026-10-16T01:00:00Z', 'body': '## 更新\n- 修复布局。',
-                        'assets': [{'name': name, 'digest': 'sha256:' + hashlib.sha256(b'argon-package').hexdigest(), 'size': 13} for name in [
-                            'luci-theme-argon-3.0.0-r1.apk', 'luci-theme-argon_3.0.0_all.ipk',
-                            'luci-theme-argon-3.0.0-r2.apk', 'luci-theme-argon_3.0.0-2_all.ipk',
-                            'luci-theme-argon-3.0.0-r1.apk', 'luci-theme-argon_3.0.0_all.ipk']]}
+        self.release = {'schema': 1, 'repository': 'jerrykuku/luci-theme-argon', 'tag': 'v3.0.0',
+                        'published_at': '2026-10-16T01:00:00Z', 'notes': '## 更新\n- 修复布局。',
+                        'ipk': 'luci-theme-argon_3.0.0-2_all.ipk', 'apk': 'luci-theme-argon-3.0.0-r2.apk',
+                        'ipk_sha256': hashlib.sha256(b'argon-package').hexdigest(),
+                        'apk_sha256': hashlib.sha256(b'argon-package').hexdigest(),
+                        'ipk_size': 13, 'apk_size': 13}
         self.payload.write_text(json.dumps(self.release))
 
     def call(self, method, **arguments):
@@ -133,16 +148,18 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
         self.env['OPKG_VERSION'] = ''
         self.assertEqual(self.call('get')['current_version'], '')
 
-    def test_check_uses_official_url_and_highest_matching_revision(self):
+    def test_check_uses_configured_static_source_and_ignores_rpc_urls(self):
         result = self.call('check', url='http://untrusted.invalid/', version='99.0.0')
         self.assertEqual(result['result'], 0)
         self.assertEqual(result['apk'], 'luci-theme-argon-3.0.0-r2.apk')
         self.assertEqual(result['ipk'], 'luci-theme-argon_3.0.0-2_all.ipk')
-        self.assertEqual(result['notes'], self.release['body'])
+        self.assertEqual(result['notes'], self.release['notes'])
         self.assertEqual(result['current_version'], '3.0.0-r1')
         requests = self.requests.read_text()
-        self.assertIn(API, requests)
-        self.assertIn('Cache-Control: no-cache', requests)
+        self.assertIn(PRIMARY, requests)
+        self.assertNotIn(FALLBACK, requests)
+        self.assertNotIn('api.github.com', requests)
+        self.assertNotIn('Cache-Control: no-cache', requests)
         self.assertNotIn('untrusted.invalid', requests)
         self.assertEqual(self.cache.stat().st_mode & 0o777, 0o600)
 
@@ -154,9 +171,77 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
         self.assertEqual(self.requests.read_text(), before)
         self.assertEqual(self.call('get')['tag'], 'v3.0.0')
 
+    def test_primary_failure_and_invalid_primary_each_fall_back_to_one_complete_manifest(self):
+        invalid = self.directory / 'invalid.json'
+        invalid.write_text(json.dumps(dict(self.release, apk_sha256='invalid', notes='wrong source')))
+        for patch in [{'PRIMARY_FAIL': '1'}, {'PRIMARY_PAYLOAD': str(invalid)}]:
+            with self.subTest(patch=patch):
+                self.cache.unlink(missing_ok=True)
+                self.requests.unlink(missing_ok=True)
+                old = self.env.copy()
+                self.env.update(patch)
+                checked = self.call('check')
+                self.assertEqual(checked['result'], 0)
+                self.assertEqual(checked['notes'], self.release['notes'])
+                requests = self.requests.read_text()
+                self.assertEqual(requests.count(PRIMARY), 1)
+                self.assertEqual(requests.count(FALLBACK), 1)
+                self.env = old
+
+    def test_failed_checks_have_a_cooldown_and_keep_the_previous_success(self):
+        cached = self.call('check')
+        cached['checked_at'] -= 400
+        self.cache.write_text(json.dumps(cached))
+        self.env['FETCH_FAIL'] = '1'
+        failed = self.call('check')
+        requests = self.requests.read_text()
+        self.assertEqual(failed['result'], 1)
+        self.assertGreater(failed['retry_at'], time.time())
+        self.assertEqual(self.call('check')['retry_at'], failed['retry_at'])
+        self.assertEqual(self.requests.read_text(), requests)
+        self.assertEqual(self.call('get')['notes'], cached['notes'])
+        (self.directory / 'state/retry_at').write_text(str(int(time.time()) - 1))
+        self.env['FETCH_FAIL'] = '0'
+        self.assertEqual(self.call('check')['result'], 0)
+        self.assertFalse((self.directory / 'state/retry_at').exists())
+
+    def test_concurrent_checks_share_one_network_request(self):
+        self.env['MANIFEST_DELAY'] = '1'
+        processes = [subprocess.Popen(['sh', str(self.script), 'call', 'check'], env=self.env,
+                                     stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE, text=True) for _ in range(3)]
+        outputs = [process.communicate(timeout=20) for process in processes]
+        for process, (output, errors) in zip(processes, outputs):
+            self.assertEqual(process.returncode, 0, errors)
+            self.assertEqual(json.loads(output)['result'], 0)
+        self.assertEqual(self.requests.read_text().count(PRIMARY), 1)
+
+    def test_remote_fields_cannot_override_local_state_or_add_a_download_url(self):
+        self.payload.write_text(json.dumps(dict(self.release, checked_at=1, result=99,
+                                               current_version='99.0.0', url='https://untrusted.invalid/')))
+        result = self.call('check')
+        self.assertEqual(result['result'], 0)
+        self.assertEqual(result['current_version'], '3.0.0-r1')
+        self.assertGreater(result['checked_at'], 1)
+        self.assertNotIn('url', result)
+
+    def test_parallel_opkg_queries_do_not_lose_versions_to_the_native_database_lock(self):
+        self.env.update(APK_VERSION='', OPKG_VERSION='3.0.0-1', OPKG_QUERY_GUARD='1')
+        self.assertTrue(self.call('check')['can_upgrade'])
+        processes = [subprocess.Popen(['sh', str(self.script), 'call', 'get'], env=self.env,
+                                     stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE, text=True) for _ in range(4)]
+        outputs = [process.communicate(timeout=20) for process in processes]
+        for process, (output, errors) in zip(processes, outputs):
+            self.assertEqual(process.returncode, 0, errors)
+            result = json.loads(output)
+            self.assertEqual(result['current_version'], '3.0.0-1')
+            self.assertTrue(result['can_upgrade'])
+
     def test_expired_or_future_cache_refreshes_and_failed_refresh_keeps_notes(self):
         first = self.call('check')
         for checked_at in [int(time.time()) - 400, int(time.time()) + 1000]:
+            (self.directory / 'state/retry_at').unlink(missing_ok=True)
             old = dict(first, checked_at=checked_at)
             self.cache.write_text(json.dumps(old))
             self.env['FETCH_FAIL'] = '1'
@@ -165,23 +250,23 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
             self.assertEqual(self.call('get')['notes'], first['notes'])
 
     def test_invalid_and_prerelease_responses_never_enter_cache(self):
-        for value in ['not JSON', '{}', '[]', json.dumps(dict(self.release, draft=True)),
-                      json.dumps(dict(self.release, prerelease=True)),
-                      json.dumps(dict(self.release, tag_name='v3.1.0-beta.1'))]:
+        for value in ['not JSON', '{}', '[]', json.dumps(dict(self.release, schema=2)),
+                      json.dumps(dict(self.release, repository='other/repo')),
+                      json.dumps(dict(self.release, tag='v3.1.0-beta.1'))]:
             with self.subTest(value=value[:60]):
+                (self.directory / 'state/retry_at').unlink(missing_ok=True)
                 self.payload.write_text(value)
                 self.assertNotEqual(self.call('check')['result'], 0)
                 self.assertFalse(self.cache.exists())
 
-    def test_mismatched_and_unsafe_asset_names_are_ignored(self):
-        self.release['assets'] = [{'name': name} for name in [
+    def test_mismatched_and_unsafe_asset_names_are_rejected(self):
+        for name in [
             'luci-theme-argon-4.0.0-r2.apk', 'luci-theme-argon_4.0.0_all.ipk',
-            'luci-theme-argon-3.0.0-r2.apk?evil', 'luci-theme-argon_3.0.0-../../tmp_all.ipk']]
-        self.payload.write_text(json.dumps(self.release))
-        result = self.call('check')
-        self.assertEqual(result['result'], 0)
-        self.assertEqual(result['apk'], '')
-        self.assertEqual(result['ipk'], '')
+            'luci-theme-argon-3.0.0-r2.apk?evil', 'luci-theme-argon_3.0.0-../../tmp_all.ipk']:
+            (self.directory / 'state/retry_at').unlink(missing_ok=True)
+            self.payload.write_text(json.dumps(dict(self.release, apk=name)))
+            self.assertNotEqual(self.call('check')['result'], 0)
+            self.assertFalse(self.cache.exists())
 
     def test_linked_cache_is_not_read_or_overwritten_and_failed_download_is_retryable(self):
         outside = self.directory / 'outside'
@@ -191,6 +276,7 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
         self.env['FETCH_FAIL'] = '1'
         self.assertEqual(self.call('check')['result'], 1)
         self.env['FETCH_FAIL'] = '0'
+        (self.directory / 'state/retry_at').unlink(missing_ok=True)
         self.assertEqual(self.call('check')['result'], 0)
         self.assertEqual(outside.read_text(), 'keep me')
 
@@ -245,13 +331,14 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
         self.assertEqual(self.start()['result'], 3)
         self.assertFalse((self.directory / 'mutations').exists())
 
-    def test_unverified_assets_remain_manual_downloads(self):
-        for patch in [{'digest': None}, {'digest': 'bad'}, {'size': 0}, {'size': 9000000}]:
+    def test_unverified_manifests_cannot_enable_installation(self):
+        for patch in [{'apk_sha256': None}, {'apk_sha256': 'bad'}, {'apk_size': 0}, {'apk_size': 9000000}, {'apk_size': '08'}]:
             self.cache.unlink(missing_ok=True)
-            release = dict(self.release, assets=[dict(self.release['assets'][2], **patch)])
+            (self.directory / 'state/retry_at').unlink(missing_ok=True)
+            release = dict(self.release, **patch)
             self.payload.write_text(json.dumps(release))
             checked = self.call('check')
-            self.assertEqual(checked['apk'], 'luci-theme-argon-3.0.0-r2.apk')
+            self.assertNotEqual(checked['result'], 0)
             self.assertFalse(checked['can_upgrade'])
             self.assertEqual(self.start()['result'], 3)
         self.assertFalse((self.directory / 'mutations').exists())

@@ -433,7 +433,7 @@ msgid "No release notes were published."
 msgstr ""
 
 #: htdocs/luci-static/resources/argon/updates.js
-msgid "Unable to check for updates. Check the router's connection to GitHub and try again."
+msgid "Unable to check for updates. Check the router's network connection and try again."
 msgstr ""
 
 #: htdocs/luci-static/resources/argon/updates.js
@@ -538,4 +538,8 @@ msgstr ""
 
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Cancel"
+msgstr ""
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Try again after %s."
 msgstr ""

@@ -2455,6 +2455,7 @@ body:not([data-page="admin-dashboard"]) #cbi-wireless > #wifi_assoclist_table > 
 .cbi-section-table-row:last-child {
   margin-bottom: 0;
 }
+.cbi-section-table-row > .cbi-value-field .cbi-dynlist,
 .cbi-section-table-row > .cbi-value-field .cbi-dropdown,
 .cbi-section-table-row > .cbi-value-field .cbi-input-select,
 .cbi-section-table-row > .cbi-value-field .cbi-input-text,
@@ -3182,6 +3183,9 @@ header .header-actions {
   max-width: 100%;
   min-width: min(100%, var(--form-control-min-width));
 }
+.cbi-value-field .cbi-dynlist {
+  width: var(--form-control-min-width);
+}
 @container (max-width: 40rem) {
   .cbi-value {
     flex-direction: column;
@@ -3435,10 +3439,10 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   align-items: center;
   width: 100%;
   min-width: 0;
-  max-width: min(18rem, 100%);
+  max-width: 100%;
   flex-wrap: nowrap;
 }
-.cbi-dynlist > .add-item input {
+.cbi-dynlist > .add-item > input {
   flex: 1 1 15.5rem;
   display: block;
   padding: 0.5rem 0.75rem;
@@ -3458,7 +3462,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   background-image: none;
   box-shadow: none;
 }
-[dir="rtl"] .cbi-dynlist > .add-item input:first-child {
+[dir="rtl"] .cbi-dynlist > .add-item > input:first-child {
   border-radius: 0 var(--radius-control) var(--radius-control) 0;
   border-left-width: 0;
   border-right-width: 1px;
@@ -3519,11 +3523,11 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
 .cbi-dynlist,
 .cbi-dropdown {
   position: relative;
-  display: inline-flex;
-  padding-right: 0.25rem;
   min-height: 2.1875rem;
 }
 .cbi-dropdown {
+  display: inline-flex;
+  padding-inline-end: 0.25rem;
   align-items: center;
 }
 .cbi-dropdown.btn > ul:not(.dropdown),
@@ -3770,6 +3774,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   text-align: start;
 }
 .cbi-dropdown[open] > ul.dropdown > li {
+  display: block;
   min-width: 0;
   min-height: 2.5rem;
   padding: 0.5rem 0.75rem;
@@ -3782,12 +3787,14 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   cursor: pointer;
 }
 .cbi-dropdown[open] > ul.dropdown > li > label {
+  display: block;
   flex: 1 1 auto;
   min-width: 0;
   margin-inline-start: 0.5rem;
 }
 .cbi-dropdown[open] > ul.dropdown > li:has(> img),
 .cbi-dropdown[open] > ul.dropdown > li > label:has(> img) {
+  display: flex;
   align-items: flex-start;
 }
 .cbi-dropdown[open] > ul.dropdown > li:has(> img) > img,
@@ -6402,6 +6409,64 @@ pre.command-output {
 [data-page="admin-network-firewall-custom"] #view > h3,
 [data-page="admin-status-routes"] #view > h3 {
   border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+#view > .Dashboard {
+  --dashboard-surface-alt: var(--surface-muted);
+  --dashboard-text: var(--text-strong);
+  --dashboard-text-muted: var(--muted-text);
+  --dashboard-border: var(--border-color);
+  --dashboard-primary: var(--primary);
+  --dashboard-success: var(--success);
+  --dashboard-warn: var(--warning);
+}
+#view > .Dashboard .dashboard-kpi-row > .cbi-section {
+  min-width: min(100%, 16rem);
+  padding: var(--field-gap) var(--section-inset);
+  gap: var(--field-gap);
+}
+#view > .Dashboard .dashboard-kpi-text {
+  overflow-wrap: anywhere;
+}
+#view > .Dashboard .dashboard-charts > .cbi-section {
+  min-width: min(100%, 18rem);
+  padding-block-end: var(--field-gap);
+}
+#view > .Dashboard .dashboard-charts > .cbi-section > :not(h3:first-child) {
+  margin-inline: var(--section-inset);
+}
+#view > .Dashboard .dashboard-charts > .cbi-section > .cbi-section-descr {
+  padding: 0;
+  margin-block-end: var(--field-gap);
+  overflow-wrap: anywhere;
+}
+#view > .Dashboard .dashboard-charts > .cbi-section > em {
+  padding: 0;
+}
+#view > .Dashboard .dashboard-charts > .cbi-section > .dashboard-legend-inline {
+  margin-block-start: var(--field-gap);
+}
+#view > .Dashboard .dashboard-bars {
+  direction: ltr;
+}
+#view > .Dashboard .dashboard-net-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16.25rem), 1fr));
+}
+#view > .Dashboard .dashboard-net-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+#view > .Dashboard .ifacebox {
+  min-width: 0;
+  max-width: 100%;
+}
+#view > .Dashboard .ifacebox-body {
+  text-align: start;
+}
+#view > .Dashboard [data-tab="internet"] > div > div > em {
+  display: block;
+  padding: var(--field-gap) var(--section-inset);
+}
+#view > .Dashboard [data-tab="layout"] .cbi-page-actions {
+  padding: var(--field-gap) var(--section-inset);
 }
 [data-page="admin-status-processes"] .th:nth-child(3),
 [data-page="admin-status-processes"] .td:nth-child(3) {

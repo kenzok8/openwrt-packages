@@ -57,6 +57,16 @@ test('loading the settings reads local state without a remote check; checks are 
 	assert.equal(f.nodes.find(n => n.tag === 'details').open, true);
 });
 
+test('failed checks show a cooldown time and retain previous version information', async () => {
+	const f = fixture({ initial: checked('3.0.0-r1'), check: { result: 1, retry_at: Math.floor(Date.now() / 1000) + 60 } });
+	await f.render();
+	await f.button().click();
+	assert.match(f.status(), /network connection/);
+	assert.match(f.status(), /Try again after/);
+	assert.equal(f.installButton().hidden, true);
+	assert.ok(f.nodes.some(n => n.textContent === '3.0.0-r1'));
+});
+
 test('package revisions, numeric versions, prereleases and locally newer builds compare correctly', async () => {
 	for (const [current, latest, manager, expected] of [
 		['3.0.0-r1', '3.0.0-r2', 'apk', 'Update available.'],

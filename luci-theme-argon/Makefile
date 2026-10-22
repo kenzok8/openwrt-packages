@@ -7,11 +7,12 @@
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=Argon Theme
-LUCI_DEPENDS:=+luci-base +USE_APK:wget-any +!USE_APK:wget +jsonfilter +ucode-mod-math +flock +coreutils-timeout
+# Older SDKs require the coreutils parent menu to enable coreutils-timeout.
+LUCI_DEPENDS:=+luci-base +USE_APK:wget-any +!USE_APK:wget +jsonfilter +ucode-mod-math +flock +coreutils +coreutils-timeout
 # Keep existing translation package names and the argon-config message domain.
 LUCI_BASENAME:=argon-config
-PKG_VERSION:=3.0.0
-PKG_RELEASE:=20261016
+PKG_VERSION:=3.1.0
+PKG_RELEASE:=20261022
 PKG_LICENSE:=Apache-2.0 MIT
 
 # LuCI derives translations independently of the theme version. Keep release
@@ -27,6 +28,8 @@ endif
 CONFIG_LUCI_CSSTIDY:=
 # Ship template source across stable and snapshot runtimes. Precompiled
 # bytecode would require the SDK's ucode format (see issue #715).
+# Disable this package's build step as well, avoiding LuCI's opt-out warning.
+CONFIG_LUCI_UTMIN:=
 LUCI_MINIFY_UT:=0
 
 define Package/luci-theme-argon/conffiles

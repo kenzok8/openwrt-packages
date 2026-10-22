@@ -426,8 +426,8 @@ msgid "No release notes were published."
 msgstr "이 버전에는 릴리스 노트가 없습니다."
 
 #: htdocs/luci-static/resources/argon/updates.js
-msgid "Unable to check for updates. Check the router's connection to GitHub and try again."
-msgstr "업데이트를 확인할 수 없습니다. 라우터의 GitHub 연결을 확인한 후 다시 시도하세요."
+msgid "Unable to check for updates. Check the router's network connection and try again."
+msgstr "업데이트를 확인할 수 없습니다. 라우터의 네트워크 연결을 확인하고 다시 시도하세요."
 
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Unable to compare this version. View the release for details."
@@ -532,3 +532,7 @@ msgstr "시스템 패키지 관리자로 테마를 업데이트합니다. 현재
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Cancel"
 msgstr "취소"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Try again after %s."
+msgstr "%s 이후에 다시 시도하세요."

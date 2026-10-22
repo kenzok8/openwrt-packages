@@ -1,0 +1,80 @@
+// out: false
+
+// luci-mod-dashboard supplies chart layout; the theme owns its card surfaces.
+// The module loads CSS after the theme, so keep these overrides view-scoped.
+#view > .Dashboard {
+    --dashboard-surface-alt: var(--surface-muted);
+    --dashboard-text: var(--text-strong);
+    --dashboard-text-muted: var(--muted-text);
+    --dashboard-border: var(--border-color);
+    --dashboard-primary: var(--primary);
+    --dashboard-success: var(--success);
+    --dashboard-warn: var(--warning);
+
+    .dashboard-kpi-row > .cbi-section {
+        min-width: ~"min(100%, 16rem)";
+        padding: var(--field-gap) var(--section-inset);
+        gap: var(--field-gap);
+    }
+
+    .dashboard-kpi-text {
+        overflow-wrap: anywhere;
+    }
+
+    .dashboard-charts > .cbi-section {
+        min-width: ~"min(100%, 18rem)";
+        padding-block-end: var(--field-gap);
+
+        // Keep the native full-width heading; inset its chart and legend.
+        > :not(h3:first-child) {
+            margin-inline: var(--section-inset);
+        }
+
+        > .cbi-section-descr {
+            padding: 0;
+            margin-block-end: var(--field-gap);
+            overflow-wrap: anywhere;
+        }
+
+        > em {
+            padding: 0;
+        }
+
+        > .dashboard-legend-inline {
+            margin-block-start: var(--field-gap);
+        }
+    }
+
+    // Keep numeric chart axes in their native direction within RTL pages.
+    .dashboard-bars {
+        direction: ltr;
+    }
+
+    .dashboard-net-grid {
+        grid-template-columns: repeat(auto-fill, minmax(~"min(100%, 16.25rem)", 1fr));
+    }
+
+    .dashboard-net-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ifacebox {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .ifacebox-body {
+        text-align: start;
+    }
+
+    // Each Internet column wraps its empty hint below the tab's root div.
+    [data-tab="internet"] > div > div > em {
+        display: block;
+        padding: var(--field-gap) var(--section-inset);
+    }
+
+    // The layout editor keeps its actions inside the card, unlike normal pages.
+    [data-tab="layout"] .cbi-page-actions {
+        padding: var(--field-gap) var(--section-inset);
+    }
+}

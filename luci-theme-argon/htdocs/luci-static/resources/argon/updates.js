@@ -105,6 +105,13 @@ return baseclass.extend({
 			statusIcon.hidden = kind !== 'current' && kind !== 'complete';
 		}
 
+		function checkError(retryAt) {
+			var message = _('Unable to check for updates. Check the router\'s network connection and try again.');
+			if (Number.isSafeInteger(retryAt) && retryAt > Date.now() / 1000)
+				message += ' ' + _('Try again after %s.').format(new Date(retryAt * 1000).toLocaleTimeString());
+			return message;
+		}
+
 		function mayInstall() {
 			var remote = release(state);
 			var local = version(state && state.current_version);
@@ -154,7 +161,7 @@ return baseclass.extend({
 			else if (busy)
 				showStatus(_('Checking for updates...'), 'working');
 			else if (!state || state.result !== 0)
-				showStatus(_('Unable to check for updates. Check the router\'s connection to GitHub and try again.'), 'error');
+				showStatus(checkError(state && state.retry_at), 'error');
 			else if (!remote)
 				showStatus(_('Not checked yet.'));
 			else if (!local || !remote.parsed)
@@ -295,8 +302,13 @@ return baseclass.extend({
 			busy = true;
 			refresh();
 			return callCheck().then(function(result) {
-				if (result.result !== 0 || !release(result))
-					throw new Error('update check failed');
+				if (result.result !== 0 || !release(result)) {
+					if (state)
+						state.can_upgrade = false;
+					var error = new Error('update check failed');
+					error.retry_at = result.retry_at;
+					throw error;
+				}
 				state = result;
 				busy = false;
 				refresh();
@@ -305,10 +317,10 @@ return baseclass.extend({
 				details.open = !!(remote && remote.parsed && local && compare(local, remote.parsed) < 0 && !needsReload());
 				if (state.upgrade && state.upgrade.active)
 					monitor();
-			}).catch(function() {
+			}).catch(function(error) {
 				busy = false;
 				refresh();
-				showStatus(_('Unable to check for updates. Check the router\'s connection to GitHub and try again.'), 'error');
+				showStatus(checkError(error.retry_at), 'error');
 			});
 		}
 		if (state && state.upgrade && state.upgrade.active)

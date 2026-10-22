@@ -428,8 +428,8 @@ msgid "No release notes were published."
 msgstr "No se publicaron notas para esta versión."
 
 #: htdocs/luci-static/resources/argon/updates.js
-msgid "Unable to check for updates. Check the router's connection to GitHub and try again."
-msgstr "No se pudieron buscar actualizaciones. Compruebe la conexión del router con GitHub e inténtelo de nuevo."
+msgid "Unable to check for updates. Check the router's network connection and try again."
+msgstr "No se pudo buscar actualizaciones. Compruebe la conexión de red del router e inténtelo de nuevo."
 
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Unable to compare this version. View the release for details."
@@ -534,3 +534,7 @@ msgstr "El tema se actualizará con el gestor de paquetes del sistema. Se conser
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Cancel"
 msgstr "Cancelar"
+
+#: htdocs/luci-static/resources/argon/updates.js
+msgid "Try again after %s."
+msgstr "Vuelva a intentarlo después de las %s."
