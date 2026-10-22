@@ -39,6 +39,18 @@ case "$PLATFORM" in
 	*)      MENU_ARMCPU=yes ;;
 esac
 
+# Raise uhttpd max_requests (default 3 is too low for this plugin's concurrent
+# polling and can crash some uhttpd builds), but never override a higher value.
+cur_max="$(uci -q get uhttpd.main.max_requests 2>/dev/null)"
+if [ -z "$cur_max" ] || [ "$cur_max" -lt 50 ] 2>/dev/null; then
+	uci -q batch <<-EOF >/dev/null
+		set uhttpd.main.max_requests='50'
+		commit uhttpd
+	EOF
+	# Apply now (skip during image build).
+	[ -z "${IPKG_INSTROOT}" ] && /etc/init.d/uhttpd reload >/dev/null 2>&1 || true
+fi
+
 uci -q batch <<-EOF >/dev/null
 	delete ucitrack.@amlogic[-1]
 	add ucitrack amlogic
