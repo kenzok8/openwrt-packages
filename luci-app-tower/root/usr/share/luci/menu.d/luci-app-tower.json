@@ -1,0 +1,56 @@
+{
+	"admin/services/tower": {
+		"title": "Tower",
+		"order": 41,
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-tower" ]
+		}
+	},
+	"admin/services/tower/subscriptions": {
+		"title": "订阅",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "tower/subscriptions"
+		},
+		"depends": {
+			"acl": [ "luci-app-tower" ]
+		}
+	},
+	"admin/services/tower/nodes": {
+		"title": "节点",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "tower/nodes"
+		},
+		"depends": {
+			"acl": [ "luci-app-tower" ]
+		}
+	},
+	"admin/services/tower/rules": {
+		"title": "规则",
+		"order": 3,
+		"action": {
+			"type": "view",
+			"path": "tower/rules"
+		},
+		"depends": {
+			"acl": [ "luci-app-tower" ]
+		}
+	},
+	"admin/services/tower/export": {
+		"title": "导出",
+		"order": 4,
+		"action": {
+			"type": "view",
+			"path": "tower/export"
+		},
+		"depends": {
+			"acl": [ "luci-app-tower" ]
+		}
+	}
+}

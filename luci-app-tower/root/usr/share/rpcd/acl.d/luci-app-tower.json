@@ -1,0 +1,14 @@
+{
+	"luci-app-tower": {
+		"description": "Grant access for luci-app-tower",
+		"read": {
+			"uci": [ "tower" ]
+		},
+		"write": {
+			"ubus": {
+				"luci.tower": [ "subscriptions", "nodes", "update_node", "remove_node", "add_subscription", "remove_subscription", "import_nodes", "refresh", "export_begin", "export_read", "export_discard", "preflight_export", "capabilities", "schemes", "scheme_detail", "add_scheme", "refresh_scheme", "remove_scheme", "rename_scheme", "links", "share_create", "share_revoke" ]
+			},
+			"uci": [ "tower" ]
+		}
+	}
+}

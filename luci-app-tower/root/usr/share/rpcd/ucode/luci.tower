@@ -1,0 +1,353 @@
+#!/usr/bin/ucode
+/*
+ * SPDX-License-Identifier: MIT
+ *
+ * luci-app-tower rpcd backend: drives the tower binary through subprocess
+ * calls so the JS frontend never touches the filesystem directly.
+ */
+
+'use strict';
+
+import { popen, unlink, writefile } from 'fs';
+import { cursor } from 'uci';
+
+function data_dir() {
+	const uci = cursor();
+	return uci.get('tower', 'main', 'data_dir') || '/etc/tower';
+}
+
+function listen_addr() {
+	const uci = cursor();
+	return uci.get('tower', 'main', 'listen') || '127.0.0.1:7443';
+}
+
+function temp_input(content) {
+	const fd = popen('umask 077; mktemp /tmp/tower-input-XXXXXX', 'r');
+	if (!fd)
+		return null;
+	const path = trim(fd.read('all'));
+	const code = fd.close();
+	if (substr(path, 0, 17) !== '/tmp/tower-input-')
+		return null;
+	if (code !== 0) {
+		unlink(path);
+		return null;
+	}
+	try {
+		if (writefile(path, content) !== length(content)) {
+			unlink(path);
+			return null;
+		}
+	} catch (e) {
+		unlink(path);
+		return null;
+	}
+	return path;
+}
+
+function shellquote(s) {
+	return `'${replace(s, "'", "'\\''")}'`;
+}
+
+function run(args) {
+	const cmd = `/usr/bin/tower -data ${shellquote(data_dir())} -listen ${shellquote(listen_addr())} ${args} 2>&1`;
+	const fd = popen(cmd, 'r');
+	if (!fd)
+		return { ok: false, error: 'failed to execute tower' };
+	const out = fd.read('all');
+	const code = fd.close();
+	if (code !== 0)
+		return { ok: false, error: `tower exited with ${code}: ${trim(out)}` };
+	return { ok: true, output: out };
+}
+
+function runJSON(args) {
+	const r = run(args);
+	if (!r.ok)
+		return { error: r.error };
+	try {
+		return { data: json(r.output) };
+	} catch (e) {
+		return { error: 'bad tower output' };
+	}
+}
+
+const methods = {
+	subscriptions: {
+		args: {},
+		call: function() {
+			return runJSON('subscriptions');
+		}
+	},
+	nodes: {
+		args: {},
+		call: function() {
+			return runJSON('nodes');
+		}
+	},
+	update_node: {
+		args: { node_json: 'node_json' },
+		call: function(req) {
+			const nodeJSON = req.args?.node_json ?? '';
+			if (nodeJSON === '')
+				return { error: 'node is required' };
+			const tmp = temp_input(nodeJSON);
+			if (!tmp)
+				return { error: 'failed to write node file' };
+			const r = run(`update_node --file ${shellquote(tmp)}`);
+			unlink(tmp);
+			return r.ok ? { success: true } : { error: r.error };
+		}
+	},
+	remove_node: {
+		args: { id: 'id' },
+		call: function(req) {
+			const id = req.args?.id ?? '';
+			if (id === '')
+				return { error: 'id is required' };
+			const r = run(`remove_node --id ${shellquote(id)}`);
+			return r.ok ? { success: true } : { error: r.error };
+		}
+	},
+	add_subscription: {
+		args: { name: 'name', url: 'url', user_agent: 'user_agent' },
+		call: function(req) {
+			const name = req.args?.name ?? '';
+			const url = req.args?.url ?? '';
+			if (url === '')
+				return { error: 'url is required' };
+			let cmd = `add --name ${shellquote(name)} --url ${shellquote(url)}`;
+			if (req.args?.user_agent)
+				cmd += ` --user-agent ${shellquote(req.args.user_agent)}`;
+			return runJSON(cmd);
+		}
+	},
+	remove_subscription: {
+		args: { id: 'id' },
+		call: function(req) {
+			const id = req.args?.id ?? '';
+			if (id === '')
+				return { error: 'id is required' };
+			const r = run(`remove --id ${shellquote(id)}`);
+			return r.ok ? { success: true } : { error: r.error };
+		}
+	},
+	import_nodes: {
+		args: { content: 'content' },
+		call: function(req) {
+			const content = req.args?.content ?? '';
+			if (content === '')
+				return { error: 'content is required' };
+			const tmp = temp_input(content);
+			if (!tmp)
+				return { error: 'failed to write import file' };
+			const r = run(`import --file ${shellquote(tmp)}`);
+			unlink(tmp);
+			if (!r.ok)
+				return { error: r.error };
+			return { imported: int(trim(r.output)) };
+		}
+	},
+	refresh: {
+		args: { id: 'id' },
+		call: function(req) {
+			let cmd = 'refresh';
+			if (req.args?.id)
+				cmd += ` --id ${shellquote(req.args.id)}`;
+			return runJSON(cmd);
+		}
+	},
+	export_begin: {
+		args: { target: 'target', protocols: 'protocols', nodes: 'nodes', scheme: 'scheme', prefer_rule_sets: false, plan_digest: 'plan_digest', accept_degradations: 'accept_degradations', strict: false, service_regions: 'service_regions' },
+		call: function(req) {
+			const target = req.args?.target ?? '';
+			if (target === '')
+				return { error: 'target is required' };
+			let cmd = `export_begin --target ${shellquote(target)}`;
+			if (req.args?.protocols)
+				cmd += ` --protocols ${shellquote(req.args.protocols)}`;
+			if (req.args?.nodes)
+				cmd += ` --nodes ${shellquote(req.args.nodes)}`;
+			if (req.args?.scheme)
+				cmd += ` --scheme ${shellquote(req.args.scheme)}`;
+			if (req.args?.prefer_rule_sets === false)
+				cmd += ' --prefer-rule-sets=false';
+			if (req.args?.plan_digest)
+				cmd += ` --plan-digest ${shellquote(req.args.plan_digest)}`;
+			if (req.args?.accept_degradations)
+				cmd += ` --accept-degradations ${shellquote(req.args.accept_degradations)}`;
+			if (req.args?.strict === true)
+				cmd += ' --strict';
+			if (req.args?.service_regions)
+				cmd += ` --service-regions ${shellquote(req.args.service_regions)}`;
+			return runJSON(cmd);
+		}
+	},
+	export_read: {
+		args: { id: 'id', offset: 0 },
+		call: function(req) {
+			const id = req.args?.id ?? '';
+			const offset = req.args?.offset;
+			if (id === '' || offset == null || int(offset) < 0)
+				return { error: 'id and a valid offset are required' };
+			return runJSON(`export_read --id ${shellquote(id)} --offset ${int(offset)}`);
+		}
+	},
+	export_discard: {
+		args: { id: 'id' },
+		call: function(req) {
+			const id = req.args?.id ?? '';
+			if (id === '')
+				return { error: 'id is required' };
+			const r = run(`export_discard --id ${shellquote(id)}`);
+			return r.ok ? { success: true } : { error: r.error };
+		}
+	},
+	preflight_export: {
+		args: { target: 'target', protocols: 'protocols', nodes: 'nodes', scheme: 'scheme', prefer_rule_sets: false, strict: false, service_regions: 'service_regions' },
+		call: function(req) {
+			const target = req.args?.target ?? '';
+			if (target === '')
+				return { error: 'target is required' };
+			let cmd = `preflight_export --target ${shellquote(target)}`;
+			if (req.args?.protocols)
+				cmd += ` --protocols ${shellquote(req.args.protocols)}`;
+			if (req.args?.nodes)
+				cmd += ` --nodes ${shellquote(req.args.nodes)}`;
+			if (req.args?.scheme)
+				cmd += ` --scheme ${shellquote(req.args.scheme)}`;
+			if (req.args?.prefer_rule_sets === false)
+				cmd += ' --prefer-rule-sets=false';
+			if (req.args?.strict === true)
+				cmd += ' --strict';
+			if (req.args?.service_regions)
+				cmd += ` --service-regions ${shellquote(req.args.service_regions)}`;
+			return runJSON(cmd);
+		}
+	},
+	capabilities: {
+		args: {},
+		call: function() {
+			return runJSON('capabilities');
+		}
+	},
+	schemes: {
+		args: {},
+		call: function() {
+			return runJSON('schemes');
+		}
+	},
+	scheme_detail: {
+		args: { id: 'id' },
+		call: function(req) {
+			const id = req.args?.id ?? '';
+			if (id === '') return { error: 'id is required' };
+			return runJSON(`scheme --id ${shellquote(id)}`);
+		}
+	},
+	add_scheme: {
+		args: { name: 'name', config: 'config', source_url: 'source_url' },
+		call: function(req) {
+			const config = req.args?.config ?? '';
+			const sourceUrl = req.args?.source_url ?? '';
+			if (config === '' && sourceUrl === '')
+				return { error: 'config is required' };
+			let cmd = 'add_scheme';
+			if (req.args?.name)
+				cmd += ` --name ${shellquote(req.args.name)}`;
+			if (sourceUrl)
+				cmd += ` --url ${shellquote(sourceUrl)}`;
+			if (config) {
+				const tmp = temp_input(config);
+				if (!tmp)
+					return { error: 'failed to write import file' };
+				const r = runJSON(`${cmd} --file ${shellquote(tmp)}`);
+				unlink(tmp);
+				return r;
+			}
+			return runJSON(cmd);
+		}
+	},
+	refresh_scheme: {
+		args: { id: 'id' },
+		call: function(req) {
+			const id = req.args?.id ?? '';
+			if (id === '') return { error: 'id is required' };
+			return runJSON(`refresh_scheme --id ${shellquote(id)}`);
+		}
+	},
+	remove_scheme: {
+		args: { id: 'id' },
+		call: function(req) {
+			const id = req.args?.id ?? '';
+			if (id === '')
+				return { error: 'id is required' };
+			const r = run(`remove_scheme --id ${shellquote(id)}`);
+			return r.ok ? { success: true } : { error: r.error };
+		}
+	},
+	rename_scheme: {
+		args: { id: 'id', name: 'name' },
+		call: function(req) {
+			const id = req.args?.id ?? '';
+			const name = req.args?.name ?? '';
+			if (id === '' || name === '')
+				return { error: 'id and name are required' };
+			const r = run(`rename_scheme --id ${shellquote(id)} --name ${shellquote(name)}`);
+			return r.ok ? { success: true } : { error: r.error };
+		}
+	},
+	links: {
+		args: { protocols: 'protocols', nodes: 'nodes' },
+		call: function(req) {
+			let cmd = 'links';
+			if (req.args?.protocols)
+				cmd += ` --protocols ${shellquote(req.args.protocols)}`;
+			if (req.args?.nodes)
+				cmd += ` --nodes ${shellquote(req.args.nodes)}`;
+			return runJSON(cmd);
+		}
+	},
+	share_create: {
+		args: { destination: 'destination', nodes: 'nodes', scheme: 'scheme', prefer_rule_sets: false, plan_digest: 'plan_digest', accept_degradations: 'accept_degradations', strict: false, service_regions: 'service_regions' },
+		call: function(req) {
+			const destination = req.args?.destination ?? '';
+			if (destination === '')
+				return { error: 'destination is required' };
+			let cmd = `share_create --destination ${shellquote(destination)}`;
+			if (req.args?.nodes)
+				cmd += ` --nodes ${shellquote(req.args.nodes)}`;
+			if (req.args?.scheme)
+				cmd += ` --scheme ${shellquote(req.args.scheme)}`;
+			if (req.args?.prefer_rule_sets === false)
+				cmd += ' --prefer-rule-sets=false';
+			if (req.args?.plan_digest)
+				cmd += ` --plan-digest ${shellquote(req.args.plan_digest)}`;
+			if (req.args?.accept_degradations)
+				cmd += ` --accept-degradations ${shellquote(req.args.accept_degradations)}`;
+			if (req.args?.strict === true)
+				cmd += ' --strict';
+			if (req.args?.service_regions)
+				cmd += ` --service-regions ${shellquote(req.args.service_regions)}`;
+			const result = runJSON(cmd);
+			if (result.error)
+				return result;
+			const fd = popen('/etc/init.d/tower enable >/dev/null 2>&1 && /etc/init.d/tower start 2>&1', 'r');
+			if (!fd)
+				return { error: 'failed to start tower local service' };
+			const output = fd.read('all');
+			if (fd.close() !== 0)
+				return { error: `failed to start tower local service: ${trim(output)}` };
+			return result;
+		}
+	},
+	share_revoke: {
+		args: {},
+		call: function() {
+			const r = run('share_revoke');
+			return r.ok ? { success: true } : { error: r.error };
+		}
+	}
+};
+
+return { 'luci.tower': methods };
