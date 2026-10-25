@@ -443,7 +443,7 @@ return view.extend({
 				? E('span', { class: 'amlogic-status-ok' }, _('Current Version') + ' [ ' + s.current_firmware_version + ' ] ')
 				: E('span', { class: 'amlogic-status-err' }, _('Invalid value.')));
 			dom.content(verPlugin, s && s.current_plugin_version
-				? E('span', { class: 'amlogic-status-ok' }, _('Current Version') + ' [ ' + s.current_plugin_version + ' ] ')
+				? E('span', { class: 'amlogic-status-ok' }, _('Current Version') + ' [ ' + s.current_plugin_version + '-js ] ')
 				: E('span', { class: 'amlogic-status-err' }, _('Invalid value.')));
 			dom.content(verKernel, s && s.current_kernel_version
 				? E('span', { class: 'amlogic-status-ok' }, _('Current Version') + ' [ ' + s.current_kernel_version + ' ] ')
