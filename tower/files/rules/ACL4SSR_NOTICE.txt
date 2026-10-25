@@ -1,0 +1,19 @@
+ACL4SSR rules bundled with Tower for OpenWrt
+============================================
+
+Source:     https://github.com/ACL4SSR/ACL4SSR
+Revision:   75f0101039d71724b6e998b34604c2e053580e0c
+License:    CC BY-SA 4.0
+            https://creativecommons.org/licenses/by-sa/4.0/
+
+This package includes three ACL4SSR remote-config files and the .list files
+referenced by those presets. The rule contents are distributed as third-party
+data and are not covered by Tower's MIT source-code license.
+
+Files are prefixed with "ACL4SSR_" to preserve attribution and avoid name
+collisions in the package. The bundled .ini files use the pinned source URLs
+listed above; generated MRS/SRS artifacts and manifests are not included.
+
+The "Self-Configuration" file adapts strategy groups and remote rule references from
+ClashConnectRules/Self-Configuration (MIT). Remote provider contents are not
+bundled; see the repository-level THIRD-PARTY-NOTICES.md for details.
