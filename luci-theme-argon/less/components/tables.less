@@ -1,5 +1,40 @@
 // out: false
 
+// Standalone native tables have no section to supply their surface or corners.
+// Round painted cells instead of clipping interactive descendants.
+.native-table-card() {
+  .native-page-card();
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: visible;
+
+  > :is(thead, tbody, .thead, .tbody):first-child,
+  > :is(thead, tbody, .thead, .tbody):first-child > :is(tr, .tr):first-child,
+  > :is(tr, .tr):first-child {
+    border-start-start-radius: inherit;
+    border-start-end-radius: inherit;
+  }
+
+  > :is(thead, tbody, .thead, .tbody):first-child > :is(tr, .tr):first-child > :is(td, th, .td, .th),
+  > :is(tr, .tr):first-child > :is(td, th, .td, .th) {
+    &:first-child {
+      border-start-start-radius: inherit;
+    }
+
+    &:last-child {
+      border-start-end-radius: inherit;
+    }
+  }
+
+  @media screen and (max-width: 1152px) {
+    // Responsive tables hide their title row; the first data row owns the top.
+    :is(.table-titles, .cbi-section-table-titles) + .tr {
+      border-start-start-radius: inherit;
+      border-start-end-radius: inherit;
+    }
+  }
+}
+
 // table
 
 .table {

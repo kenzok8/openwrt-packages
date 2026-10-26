@@ -27,7 +27,7 @@
     --oc-text: var(--text-color);
     --oc-text-muted: var(--plugin-text-muted);
     --oc-neutral: var(--plugin-neutral);
-    --oc-scrollbar: var(--plugin-scrollbar);
+    --oc-scrollbar: var(--oc-accent);
 
     @supports (color: color-mix(in srgb, red, blue)) {
         --oc-accent-hover: color-mix(in srgb, var(--oc-accent) 88%, black);
@@ -72,8 +72,8 @@
         --primary-a60: var(--oc-accent-a60) !important;
         --radio-hover-bg: var(--oc-accent-a10) !important;
         --tab-hover-dark-bg: var(--oc-accent-a10) !important;
-        --scrollbar-thumb: var(--oc-neutral) !important;
-        --scrollbar-thumb-hover: var(--oc-text-muted) !important;
+        --scrollbar-thumb: var(--oc-scrollbar) !important;
+        --scrollbar-thumb-hover: var(--oc-accent-hover) !important;
         border-radius: var(--radius-card);
 
         .developer-container,
@@ -88,6 +88,23 @@
 
         .config-upload-content {
             background: var(--oc-surface) !important;
+        }
+    }
+
+    // Editors inject important scrollbar colours. Override only control thumbs,
+    // retaining their existing widths, tracks and clipping.
+    textarea,
+    .oc,
+    .oc *,
+    .oc .cm-editor .cm-scroller,
+    .oc #debug-rendered,
+    .oc #debug-rendered pre {
+        &::-webkit-scrollbar-thumb {
+            background-color: var(--oc-scrollbar) !important;
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+            background-color: var(--oc-accent-hover) !important;
         }
     }
 
@@ -287,6 +304,7 @@
     }
 
     // Legacy help text is primary emphasis; success and error remain semantic.
+    b.oc-txt-good,
     b[style*="color:green"],
     b[style*="color: green"],
     b[color="green"] {
@@ -326,6 +344,26 @@
         >.cbi-value {
             padding-top: 0.4375rem;
             padding-bottom: 0.4375rem;
+        }
+    }
+
+    // The version tab reuses the update popup inside an existing Argon card.
+    // Align its content with the tabs without changing standalone popups.
+    &[data-page="admin-services-openclash-settings"] {
+        [id="container.openclash.config.version_update"] {
+            padding-inline: var(--section-inset);
+
+            >.oc {
+                border-radius: 0;
+                overflow: visible;
+            }
+
+            #selectPopup.select-popup-tab {
+                border: 0;
+                border-radius: 0;
+                padding: 0;
+                background: transparent;
+            }
         }
     }
 
@@ -490,6 +528,45 @@
 
     #tab-content .dom {
         padding: 0 1rem 1rem 1rem;
+    }
+
+    // The surrounding form already provides the log card and horizontal inset.
+    // Retain the editor frame and clipping used to hide inactive log panes.
+    &[data-page="admin-services-openclash-log"] {
+        #tab.oc {
+            height: auto;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+
+            >#tab-header {
+                padding: var(--field-gap) 0;
+                border: 0;
+                background: transparent;
+
+                >ul.oc-tabmenu {
+                    background: transparent;
+                }
+            }
+
+            +.oc {
+                border-radius: 0;
+            }
+        }
+
+        #tab-content>.dom {
+            padding: 0;
+        }
+
+        .oc .select-popup-footer.log-footer {
+            margin: 0;
+            padding: var(--field-gap) 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
+        }
     }
 
     #cbi-openclash-dns_servers .cbi-section-table-row>

@@ -3,7 +3,28 @@
 [data-page="admin-status-logs"],
 [data-page="admin-status-logs-syslog"],
 [data-page="admin-status-logs-dmesg"] {
+  #content_syslog {
+    .native-page-card();
+    display: flex;
+    flex-direction: column;
+    gap: var(--field-gap);
+    padding: var(--field-gap) var(--section-inset);
+
+    > div {
+      margin-block: 0 !important;
+    }
+
+    // LuCI uses padded wrappers for the two scroll buttons.
+    > div:has(> .cbi-button) {
+      padding-block: 0 !important;
+    }
+  }
+
   #syslog {
+    display: block;
+    margin: 0;
+    border: 1px solid var(--control-border);
+    background-color: var(--input-bg);
     direction: ltr;
     unicode-bidi: plaintext;
     text-align: start;
@@ -18,7 +39,7 @@
 [data-page="admin-status-logs-dmesg"] {
   #content_syslog > div:has(> input, > select) {
     line-height: 2.5rem;
-    margin-block-end: var(--control-gap) !important;
+    margin-block-end: 0 !important;
 
     > label,
     > input,

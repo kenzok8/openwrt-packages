@@ -33,6 +33,28 @@ td>.ifacebadge,
   margin: 0 .2rem 0 0;
 }
 
+// Signal/noise readings are measurements, not descriptive interface names.
+// Keep the value intact while allowing the icon to stack on narrow tables.
+.ifacebadge[data-signal] {
+  min-width: min-content;
+  padding-inline: .5rem;
+  white-space: nowrap;
+
+  > img {
+    flex: none;
+    margin: 0;
+  }
+
+  > span {
+    flex-shrink: 0;
+    max-width: none;
+    direction: ltr;
+    unicode-bidi: isolate;
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+}
+
 .network-status-table {
   display: flex;
   flex-wrap: wrap;

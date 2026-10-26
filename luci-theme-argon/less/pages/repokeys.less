@@ -1,6 +1,29 @@
 // out: false
 
 [data-page="admin-system-admin-repokeys"] {
+  .cbi-section-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: inherit;
+
+    // The native heading has two cells but data rows also have an action
+    // column. Paint the row itself so the whole card has one continuous top.
+    > .thead,
+    > .thead > .tr {
+      border-start-start-radius: inherit;
+      border-start-end-radius: inherit;
+      background: var(--surface-muted);
+    }
+
+    > .thead > .tr > .th:first-child {
+      border-start-start-radius: inherit;
+    }
+
+    .cbi-section-table-row {
+      margin-block: 0;
+    }
+  }
+
   textarea {
     width: 100%;
     min-width: 0;

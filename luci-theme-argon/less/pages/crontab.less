@@ -2,8 +2,16 @@
 
 // System - Crontab
 [data-page="admin-system-crontab"] {
+    #view > p:has(> textarea) {
+        .native-page-card();
+        margin: 0;
+        padding: var(--field-gap) var(--section-inset);
+        line-height: 0;
+    }
+
     #view p {
         textarea {
+            display: block;
             direction: ltr;
             unicode-bidi: plaintext;
             text-align: start;

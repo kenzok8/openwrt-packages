@@ -127,6 +127,7 @@
 
     > div {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
       gap: .5rem;
@@ -135,6 +136,7 @@
 
     dt {
       display: inline-flex;
+      flex: none;
       align-items: center;
       gap: .25rem;
       color: var(--muted-text);
@@ -156,11 +158,14 @@
 
     dd {
       margin: 0;
+      margin-inline-start: auto;
+      max-width: 100%;
       color: var(--text-strong);
       font-size: .75rem;
       font-weight: 500;
       font-variant-numeric: tabular-nums;
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
   }
 }

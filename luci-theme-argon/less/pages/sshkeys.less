@@ -1,10 +1,19 @@
 // out: false
 
 [data-page="admin-system-admin-sshkeys"] {
+  #view > div:has(> .cbi-section-node > .cbi-dynlist) {
+    // This view omits cbi-map/cbi-section. Only the key list is a section;
+    // leave its page description between the heading and that card.
+    > .cbi-section-node {
+      .native-page-card();
+      padding: var(--field-gap) var(--section-inset);
+    }
+  }
+
   .cbi-dynlist {
     width: 100%;
-    margin-inline: var(--section-inset);
-    max-width: ~"min(48rem, calc(100% - 2 * var(--section-inset)))";
+    margin: 0;
+    max-width: ~"min(48rem, 100%)";
     gap: var(--field-gap);
 
     > .item {

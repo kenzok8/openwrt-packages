@@ -2,6 +2,12 @@
 
 // Network - Diagnostics
 [data-page="admin-network-diagnostics"] {
+    #view > .cbi-map > .table {
+        .native-page-card();
+        padding: var(--control-gap);
+        border-collapse: separate;
+    }
+
     .table {
         // The toolbar must not become the dropdown's scroll/size boundary.
         overflow: visible;
@@ -32,7 +38,7 @@
 
         .td {
             background-color: var(--surface-color) !important;
-            border-bottom: 1px solid var(--border-color) !important;
+            border-bottom: 0 !important;
             display: flex;
             flex-direction: row;
             align-items: center;

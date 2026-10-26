@@ -259,6 +259,13 @@
 
     }
 
+    // Let a complete signal/noise reading move to its own line when needed.
+    .table .td:has(.ifacebadge[data-signal]),
+    #cbi-wireless .td:has(.ifacebadge[data-signal]) {
+        min-width: min-content;
+        padding-inline: var(--control-gap);
+    }
+
     .td select,
     .td input[type="text"] {
         width: 100%;

@@ -1,0 +1,31 @@
+// out: false
+
+// Match native LuCI maps: a heading, an unpainted page description, then
+// section cards. Untabbed forms need the inset already supplied by tabs.
+[data-page="admin-system-admin"],
+[data-page="admin-system-admin-password"],
+[data-page="admin-system-admin-pwpolicy"],
+[data-page="admin-system-admin-uhttpd"] {
+  .legacy-cbi-section-spacing();
+}
+
+// Password policy has no page description: join its heading and sole form
+// into one surface instead of separating two adjacent cards.
+[data-page="admin-system-admin-pwpolicy"] {
+  #view > .cbi-map {
+    .native-page-card();
+    gap: 0;
+
+    > h2 {
+      margin: 0;
+      border-end-start-radius: 0;
+      border-end-end-radius: 0;
+      box-shadow: none;
+    }
+
+    > .cbi-section {
+      background: none;
+      box-shadow: none;
+    }
+  }
+}

@@ -1,5 +1,13 @@
 // out: false
 
+// Opt-in surface for native views that do not render a cbi-section.
+.native-page-card() {
+  min-width: 0;
+  border-radius: var(--radius-card);
+  background-color: var(--surface-color);
+  box-shadow: var(--section-shadow);
+}
+
 .cbi-section,
 .cbi-section-error,
 #iptables,
@@ -8,7 +16,6 @@
 #cbi-wireless>.cbi-section-node,
 #cbi-wireless>#wifi_assoclist_table,
 [data-tab-title],
-[data-page^="admin-system-admin"]:not(.node-main-login) .cbi-map:not(#cbi-dropbear),
 [data-page="admin-system-opkg"] #maincontent>.container {
   font-family: inherit;
   font-weight: normal;

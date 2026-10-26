@@ -3,6 +3,10 @@
 // Native package-manager controls inject their own flex rules after the theme.
 [data-page="admin-system-package-manager"],
 [data-page="admin-system-opkg"] {
+    #view > #packages {
+        .native-table-card();
+    }
+
     .controls {
         min-width: 0;
         width: 100%;

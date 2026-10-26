@@ -29,9 +29,43 @@
 }
 
 #wifi_assoclist_table {
-    >.tr {
-        >.td[data-title="RX Rate / TX Rate"] {
-            width: 23rem;
+    // Keep the network identity readable without reserving the rate column
+    // by its translated heading. Let the remaining columns share the space.
+    .ifacebadge[data-ssid] {
+        display: flex;
+        width: 100%;
+        gap: var(--control-gap);
+        padding: var(--control-gap);
+
+        > img {
+            flex: none;
+            margin: 0;
+        }
+
+        > span {
+            flex: 1 1 0;
+            min-width: 0;
+            text-align: start;
+        }
+
+        small {
+            display: block;
+            direction: ltr;
+            unicode-bidi: isolate;
+        }
+    }
+
+    @media screen and (min-width: 1153px) {
+        > .tr > :is(.th, .td):first-child {
+            width: 22%;
+            min-width: 14rem;
+        }
+    }
+
+    @media screen and (max-width: 600px) {
+        .td:has(> .ifacebadge[data-ssid]) {
+            flex-basis: 100%;
+            padding-inline: var(--control-gap);
         }
     }
 }

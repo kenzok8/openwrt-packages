@@ -1,0 +1,34 @@
+// out: false
+
+// Wake on LAN uses custom content outside the standard form field layout.
+[data-page="admin-services-wol"] {
+    #cbi-luci-wol-defaults-_info {
+        padding-bottom: var(--field-gap);
+        line-height: 1.5;
+
+        > output {
+            width: 100%;
+            min-width: 0;
+        }
+
+        output p {
+            padding: 0;
+        }
+
+        .control-group {
+            margin-block-start: var(--control-gap);
+        }
+    }
+
+    .cbi-section:has(> #wol-output-text) {
+        padding-bottom: var(--field-gap);
+    }
+
+    #wol-output-text {
+        display: block;
+        // Override the application's inline width while preserving card insets.
+        width: calc(100% - var(--section-inset) - var(--section-inset)) !important;
+        margin-inline: var(--section-inset);
+        resize: vertical;
+    }
+}

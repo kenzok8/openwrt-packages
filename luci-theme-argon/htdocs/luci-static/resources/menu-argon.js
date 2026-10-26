@@ -201,6 +201,7 @@ return baseclass.extend({
 	 * Load menu data and trigger rendering
 	 */
 	__init__: function () {
+		this.bindSidebarToggle();
 		this.patchDynamicListFocus();
 		ui.menu.load().then(L.bind(this.render, this));
 	},
@@ -222,6 +223,25 @@ return baseclass.extend({
 		prototype.setFocus = guardedFocus;
 	},
 
+	bindSidebarToggle: function () {
+		var sidebarToggle = document.querySelector('.showSide');
+		var darkMask = document.querySelector('.darkMask');
+		// Navigation is synchronous: keep its controls enabled and focused.
+		var toggle = L.bind(this.handleSidebarToggle, this);
+
+		if (sidebarToggle)
+			sidebarToggle.addEventListener('click', toggle);
+		if (darkMask)
+			darkMask.addEventListener('click', toggle);
+
+		document.addEventListener('keydown', function(ev) {
+			if (ev.key === 'Escape' && sidebarToggle && sidebarToggle.classList.contains('active')) {
+				sidebarToggle.click();
+				sidebarToggle.focus();
+			}
+		});
+	},
+
 	/**
 	 * Main render function for the menu system
 	 * @param {Object} tree - Menu tree structure from LuCI
@@ -235,7 +255,8 @@ return baseclass.extend({
 		// Render tab menu if we're deep enough in the navigation hierarchy
 		if (L.env.dispatchpath.length >= 3) {
 			for (var i = 0; i < 3 && node; i++) {
-				node = node.children[L.env.dispatchpath[i]];
+				// A cached menu can predate the current page's route.
+				node = node.children ? node.children[L.env.dispatchpath[i]] : null;
 				url = url + (url ? '/' : '') + L.env.dispatchpath[i];
 			}
 
@@ -243,23 +264,6 @@ return baseclass.extend({
 				this.renderTabMenu(node, url);
 			}
 		}
-
-		// Attach event listeners for sidebar toggle functionality
-		var sidebarToggle = document.querySelector('.showSide');
-		var darkMask = document.querySelector('.darkMask');
-		
-		if (sidebarToggle) {
-			sidebarToggle.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
-		}
-		if (darkMask) {
-			darkMask.addEventListener('click', ui.createHandlerFn(this, 'handleSidebarToggle'));
-		}
-		document.addEventListener('keydown', function(ev) {
-			if (ev.key === 'Escape' && sidebarToggle && sidebarToggle.classList.contains('active')) {
-				sidebarToggle.click();
-				sidebarToggle.focus();
-			}
-		});
 	},
 
 	/**
