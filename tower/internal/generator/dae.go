@@ -939,6 +939,10 @@ func daePredicateFor(body, target string) (daePredicate, error) {
 	}
 }
 
+// daeRemoteDNS is the resolver used for non-China answers. The IP literal needs no
+// bootstrap lookup, and the TLS server name keeps certificate validation working.
+const daeRemoteDNS = "https://1.1.1.1/dns-query?tls_server_name=one.one.one.one"
+
 // honkDomainPredicateLimit is honk's hard cap on distinct domain predicates in
 // one routing policy (ROUTING_FACT_CAPACITY in its eBPF map).
 const honkDomainPredicateLimit = 256
@@ -1014,12 +1018,21 @@ func renderDAE(plan daePlan, honkVariant bool) string {
 	b.WriteString("dns {\n")
 	b.WriteString("    upstream {\n")
 	b.WriteString("        cndns: 'udp://dns.alidns.com:53'\n")
-	b.WriteString("        fallbackdns: 'tcp+udp://dns.google:53'\n")
+	// The remote resolver is an IP literal DoH endpoint: a hostname upstream such as
+	// dns.google has to be bootstrapped first and that lookup is blocked on most
+	// mainland networks, which turned every foreign answer into SERVFAIL.
+	// honk accepts a per-upstream detour and can send the query through the proxy;
+	// dae rejects that syntax, so it dials the IP directly.
+	if honkVariant && plan.fallback != "" {
+		b.WriteString("        remotedns: '" + daeRemoteDNS + "' -> " + plan.fallback + "\n")
+	} else {
+		b.WriteString("        remotedns: '" + daeRemoteDNS + "'\n")
+	}
 	b.WriteString("    }\n")
 	b.WriteString("    routing {\n")
 	b.WriteString("        request {\n")
 	b.WriteString("            qname(geosite:cn) -> cndns\n")
-	b.WriteString("            fallback: fallbackdns\n")
+	b.WriteString("            fallback: remotedns\n")
 	b.WriteString("        }\n")
 	b.WriteString("    }\n")
 	b.WriteString("}\n\n")
