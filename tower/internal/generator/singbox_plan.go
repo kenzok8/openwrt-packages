@@ -35,6 +35,9 @@ type PreflightWarning struct {
 	Code     string `json:"code"`
 	Location string `json:"location"`
 	Message  string `json:"message"`
+	// Informational warnings describe a substitution the caller cannot act on.
+	// They are shown but never block a degraded export.
+	Informational bool `json:"informational,omitempty"`
 }
 
 type PreflightItem struct {
@@ -241,6 +244,8 @@ func compileSingBox(opts Options) (singBoxPlan, PreflightResult) {
 }
 
 func finalizeSingBoxPlan(plan *singBoxPlan, opts Options) {
+	// Strict only asks for the digest check; it never changes the rendered
+	// output, so it must stay out of the digest itself.
 	payload := struct {
 		Target         model.ClientTarget
 		TargetPolicy   string
@@ -249,7 +254,6 @@ func finalizeSingBoxPlan(plan *singBoxPlan, opts Options) {
 		ServiceRegions map[string]string
 		Scheme         *model.RuleScheme
 		PreferRuleSets bool
-		Strict         bool
 		RuleSetLines   map[string][]string
 		Planned        []PreflightItem
 		Warnings       []PreflightWarning
@@ -258,7 +262,6 @@ func finalizeSingBoxPlan(plan *singBoxPlan, opts Options) {
 		Target: opts.Target, TargetPolicy: plan.result.TargetPolicy,
 		Nodes: opts.Nodes, Protocols: opts.Protocols, ServiceRegions: opts.ServiceRegions,
 		Scheme: opts.Scheme, PreferRuleSets: opts.PreferRuleSets,
-		Strict:       opts.Strict,
 		RuleSetLines: opts.RuleSetLines, Planned: plan.result.Planned,
 		Warnings: plan.result.Warnings, Issues: plan.result.Issues,
 	}
@@ -272,17 +275,24 @@ func finalizeSingBoxPlan(plan *singBoxPlan, opts Options) {
 }
 
 func acceptDegradedPlan(opts Options, result *PreflightResult) bool {
-	warningIDs := make([]string, 0, len(result.Warnings))
+	// Only the warnings that actually degraded the plan need consent. Informational
+	// notes (a policy substitution, a subscription that stayed inline) can change
+	// between two independent preflight and export processes, so requiring them
+	// would fail spuriously; extra accepted IDs are ignored.
+	required := make(map[string]bool, len(result.Warnings))
 	for _, warning := range result.Warnings {
-		warningIDs = append(warningIDs, warning.ID)
+		if !warning.Informational {
+			required[warning.ID] = true
+		}
 	}
-	accepted := append([]string(nil), opts.AcceptedDegradations...)
-	sort.Strings(warningIDs)
-	sort.Strings(accepted)
-	valid := opts.PlanDigest != "" && opts.PlanDigest == result.PlanDigest && len(accepted) == len(warningIDs)
+	accepted := make(map[string]bool, len(opts.AcceptedDegradations))
+	for _, id := range opts.AcceptedDegradations {
+		accepted[id] = true
+	}
+	valid := opts.PlanDigest != "" && opts.PlanDigest == result.PlanDigest
 	if valid {
-		for i := range warningIDs {
-			if accepted[i] == "" || accepted[i] != warningIDs[i] || (i > 0 && accepted[i] == accepted[i-1]) {
+		for id := range required {
+			if !accepted[id] {
 				valid = false
 				break
 			}

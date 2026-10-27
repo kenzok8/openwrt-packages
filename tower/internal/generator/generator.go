@@ -34,8 +34,27 @@ type Options struct {
 	AcceptedDegradations []string
 	ServiceRegions       map[string]string
 	Strict               bool
-	plannedRules         []plannedRule
-	plannedProviders     []plannedProvider
+	// LANInterface is the dae native `lan_interface` value. Empty keeps the
+	// historical br-lan default.
+	LANInterface string
+	// DAESubscriptions are airport endpoints emitted verbatim in the dae/honk
+	// `subscription` block instead of expanding every node into a `node` entry.
+	DAESubscriptions []DAESubscription
+	// DAESubscriptionFallbacks explains why a subscription could not be passed
+	// through; each entry becomes an informational preflight warning.
+	DAESubscriptionFallbacks []string
+	plannedRules             []plannedRule
+	plannedProviders         []plannedProvider
+}
+
+// DAESubscription is one airport endpoint the dae/honk config lets the core
+// fetch on its own. NodeNames is what the caller already parsed from the same
+// endpoint, so group filters can be validated before dae loads the config.
+type DAESubscription struct {
+	Tag       string
+	URL       string
+	UserAgent string
+	NodeNames []string
 }
 
 // Generate renders a full configuration for the target client.

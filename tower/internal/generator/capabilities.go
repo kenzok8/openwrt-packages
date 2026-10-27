@@ -70,6 +70,10 @@ func supportsProtocol(target model.ClientTarget, kind model.ProxyKind) bool {
 			model.KindTrojan, model.KindHysteria, model.KindHysteria2, model.KindTUIC,
 			model.KindSOCKS5, model.KindAnyTLS:
 			return true
+		case model.KindShadowsocksR:
+			// dae's Go outbound set registers an SSR dialer, but honk's Rust core
+			// has no SSR implementation and rejects ssr:// links outright.
+			return target == model.ClientDAE
 		default:
 			return false
 		}

@@ -38,6 +38,47 @@ var placeholderHosts = map[string]struct{}{
 	"223.5.5.5": {}, "127.0.0.1": {}, "0.0.0.0": {}, "localhost": {}, "example.com": {},
 }
 
+// IsURIListPayload reports whether a subscription payload is a proxy-URI list,
+// either plain or base64 wrapped. dae and honk only accept that form in their
+// `subscription` block; Clash YAML and Surge INI payloads have to be expanded
+// into node links by Tower instead.
+func IsURIListPayload(data []byte) bool {
+	text := strings.TrimSpace(string(data))
+	if text == "" {
+		return false
+	}
+	if containsURIList(text) {
+		return true
+	}
+	decoded := decodeBase64String(text)
+	return decoded != "" && containsURIList(decoded)
+}
+
+func containsURIList(text string) bool {
+	if containsSurgeProxySection(text) || strings.Contains(text, "proxies:") {
+		return false
+	}
+	lines, parsed := 0, 0
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		lines++
+		if strings.HasPrefix(trimmed, "STATUS=") {
+			parsed++
+			continue
+		}
+		for _, part := range strings.Fields(trimmed) {
+			if ParseURI(part, "") != nil {
+				parsed++
+				break
+			}
+		}
+	}
+	return lines > 0 && parsed*2 >= lines
+}
+
 // Parse decodes the raw payload and returns the parsed node list.
 func Parse(data []byte, sourceID string) ParsedContent {
 	text := strings.TrimSpace(string(data))

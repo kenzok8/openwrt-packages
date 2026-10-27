@@ -9,13 +9,17 @@ proxy-groups:
   - {name: OpenAI, icon: "https://api.iconify.design/simple-icons/openai.svg?color=%2374AA9C&width=24&height=24", <<: *pr}
   - {name: Claude, icon: "https://cdn.simpleicons.org/anthropic/D97757/EAA683", <<: *pr}
   - {name: Gemini, icon: "https://cdn.simpleicons.org/googlegemini/8E75B2/BCA7E8", <<: *pr}
+  - {name: ✨ Muse, icon: "https://raw.githubusercontent.com/kenzok78/ruleset/main/icon/muse.svg", <<: *pr}
+  - {name: 🪄 AI 其他, <<: *pr}
   - {name: Twitter, icon: "https://api.iconify.design/simple-icons/twitter.svg?color=%231DA1F2&width=24&height=24", <<: *pr}
   - {name: GitHub, icon: "https://cdn.simpleicons.org/github/24292F/FFFFFF", <<: *pr}
+  - {name: 🐬 OneDrive, <<: *pr}
   - {name: Microsoft, icon: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Microsoft_icon.svg", <<: *pr}
   - {name: TikTok, icon: "https://cdn.simpleicons.org/tiktok/111111/FFFFFF", <<: *pr}
   - {name: NETFLIX, icon: "https://cdn.simpleicons.org/netflix/E50914/E50914", <<: *pr}
   - {name: PayPal, icon: "https://cdn.simpleicons.org/paypal/003087/8AB4F8", <<: *pr}
   - {name: 🍎 Apple, type: select, proxies: [🌐 直连, 🚀 节点选择]}
+  - {name: 📣 APNs 推送, type: select, icon: "https://raw.githubusercontent.com/kenzok78/ruleset/main/icon/bell.svg", proxies: [🚀 节点选择, ♻️ 自动选择, DIRECT]}
   - {name: 🎯 全球直连, type: select, proxies: [🌐 直连, 🚀 节点选择]}
   - {name: 🌀 列表之外, <<: *pr}
   - {name: 🇭🇰 香港节点, type: select, include-all: true, filter: "(?i)港|hk|hongkong|hong kong"}
@@ -36,13 +40,18 @@ proxy-groups:
 rules:
   - RULE-SET,private_domain,🌐 直连
   - RULE-SET,direct1,🌐 直连
+  # APNs 必须排在 Apple 之前
+  - RULE-SET,apple_push,📣 APNs 推送
   - RULE-SET,apple_domain,🍎 Apple
   - RULE-SET,proxylite,🚀 节点选择
   - RULE-SET,openai_domain,OpenAI
   - RULE-SET,claude_domain,Claude
   - RULE-SET,gemini_domain,Gemini
+  - RULE-SET,muse_domain,✨ Muse
+  - RULE-SET,ai_domain,🪄 AI 其他
   - RULE-SET,twitter_domain,Twitter
   - RULE-SET,github_domain,GitHub
+  - RULE-SET,onedrive_domain,🐬 OneDrive
   - RULE-SET,microsoft_domain,Microsoft
   - RULE-SET,youtube_domain,YouTube
   - RULE-SET,google_domain,Google
@@ -58,12 +67,14 @@ rules:
 rule-anchor:
   ip: &ip {type: http, interval: 86400, behavior: ipcidr, format: mrs}
   domain: &domain {type: http, interval: 86400, behavior: domain, format: mrs}
-  kenzo: &kenzo {type: http, interval: 86400, behavior: domain, format: text}
   class: &class {type: http, interval: 86400, behavior: classical, format: text}
 rule-providers:
   private_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs" }
   direct1: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/Direct.list" }
   proxylite: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/ProxyLite.list" }
+  apple_push: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/ApplePush.list" }
+  ai_domain: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/AI.list" }
+  muse_domain: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/Muse.list" }
   openai_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs" }
   claude_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/anthropic.mrs" }
   gemini_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google-gemini.mrs" }
@@ -77,7 +88,6 @@ rule-providers:
   microsoft_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/microsoft.mrs" }
   apple_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/apple-cn.mrs" }
   tiktok_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/tiktok.mrs" }
-  gfw_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/gfw.mrs" }
   geolocation-!cn: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/geolocation-!cn.mrs" }
   cn_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/cn.mrs" }
   cn_ip: { <<: *ip, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geoip/cn.mrs" }

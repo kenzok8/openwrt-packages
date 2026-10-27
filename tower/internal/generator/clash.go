@@ -43,8 +43,9 @@ func generateClash(opts Options) string {
 	b.WriteString("  enhanced-mode: fake-ip\n")
 	b.WriteString("  fake-ip-range: 198.18.0.1/16\n")
 	b.WriteString("  fake-ip-filter:\n")
-	b.WriteString("    - \"*.lan\"\n")
-	b.WriteString("    - \"+.local\"\n")
+	for _, domain := range fakeIPFilter() {
+		b.WriteString("    - " + yaml(domain) + "\n")
+	}
 	b.WriteString("  default-nameserver:\n")
 	b.WriteString("    - 223.5.5.5\n")
 	b.WriteString("    - 119.29.29.29\n")
