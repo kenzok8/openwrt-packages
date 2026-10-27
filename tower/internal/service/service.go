@@ -532,18 +532,9 @@ func (s *Service) exportOptionsWithServiceRegions(target model.ClientTarget, pro
 					cached, alreadyLoaded := seenInline[sourceURL]
 					if !alreadyLoaded {
 						var cacheErr error
-						cached, cacheErr = s.ruleCache.LinesLimited(sourceURL, 4<<20)
+						cached, cacheErr = s.clashooInlineLines(sourceURL)
 						if cacheErr != nil {
-							cacheErr = s.ruleCache.DownloadWithPolicy(sourceURL, 4<<20, "raw.githubusercontent.com", func(body []byte) error {
-								_, err := generator.ParseClashooInlineRuleSet(body)
-								return err
-							})
-							if cacheErr == nil {
-								cached, cacheErr = s.ruleCache.LinesLimited(sourceURL, 4<<20)
-							}
-						}
-						if cacheErr != nil {
-							return generator.Options{}, &inlineSourceError{code: "resource_cache", location: location, message: fmt.Sprintf("获取 Clashoo inline 规则源 %s 失败：%v", sourceURL, cacheErr)}
+							return generator.Options{}, &inlineSourceError{code: "resource_cache", location: location, message: fmt.Sprintf("获取 Clashoo inline 规则源 %s 失败：%v（该规则源只存在于 MetaCubeX 的 sing 分支，直连不通时可换用不依赖 MRS 的方案，或稍后重试）", sourceURL, cacheErr)}
 						}
 						body := []byte(strings.Join(cached, "\n"))
 						if len(body) > 4<<20 {
@@ -607,6 +598,63 @@ func (s *Service) exportOptionsWithServiceRegions(target model.ClientTarget, pro
 		}
 	}
 	return options, nil
+}
+
+// clashooInlineMirrorPrefixes are CN-reachable mirrors for raw.githubusercontent.com,
+// tried in order only after the direct download fails. Clashoo itself ships its
+// core downloads through the same mirror for the same reason.
+var clashooInlineMirrorPrefixes = []string{"https://gh-proxy.com/", "https://ghfast.top/"}
+
+// clashooInlineLines loads one Clashoo inline rule source: a cached copy first (direct
+// URL then any mirror), then the direct download, then the mirrors. The rule source
+// only exists on MetaCubeX's sing branch, so a blocked raw.githubusercontent.com used
+// to fail the whole export; a mirror fills the same cache entry afterwards.
+func (s *Service) clashooInlineLines(sourceURL string) ([]string, error) {
+	const maxBytes = 4 << 20
+	validate := func(body []byte) error {
+		_, err := generator.ParseClashooInlineRuleSet(body)
+		return err
+	}
+	candidates := clashooInlineSources(sourceURL)
+	var firstErr error
+	for _, candidate := range candidates {
+		if lines, err := s.ruleCache.LinesLimited(candidate.url, maxBytes); err == nil {
+			return lines, nil
+		}
+	}
+	for _, candidate := range candidates {
+		if err := s.ruleCache.DownloadWithPolicy(candidate.url, maxBytes, candidate.host, validate); err != nil {
+			if firstErr == nil && candidate.url == sourceURL {
+				firstErr = err
+			}
+			continue
+		}
+		if lines, err := s.ruleCache.LinesLimited(candidate.url, maxBytes); err == nil {
+			return lines, nil
+		}
+	}
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	return nil, fmt.Errorf("所有镜像都无法获取该规则源")
+}
+
+type clashooInlineSource struct {
+	url  string
+	host string
+}
+
+// clashooInlineSources lists the direct URL followed by the mirror URLs.
+func clashooInlineSources(sourceURL string) []clashooInlineSource {
+	out := make([]clashooInlineSource, 0, len(clashooInlineMirrorPrefixes)+1)
+	out = append(out, clashooInlineSource{url: sourceURL, host: "raw.githubusercontent.com"})
+	for _, prefix := range clashooInlineMirrorPrefixes {
+		mirrored := prefix + sourceURL
+		if parsed, err := url.Parse(mirrored); err == nil && parsed.Hostname() != "" {
+			out = append(out, clashooInlineSource{url: mirrored, host: parsed.Hostname()})
+		}
+	}
+	return out
 }
 
 // Schemes returns the bundled presets followed by user-imported schemes.

@@ -116,11 +116,14 @@ func generateSingBox(opts Options) string {
 }
 
 func singBoxInbounds(target model.ClientTarget) []any {
+	// No explicit `stack`: sing-box 1.15+ uses its own TCP/IP stack and deprecated
+	// the option (removed in 1.17), and 1.14 and older already default to `mixed`
+	// when the build enables gVisor and to `system` otherwise, which is the adaptive
+	// behaviour a hardcoded value would override.
 	tun := map[string]any{
 		"type":    "tun",
 		"tag":     "tun-in",
 		"address": []string{"172.19.0.1/30", "fdfe:dcba:9876::1/126"},
-		"stack":   "mixed",
 	}
 	if target == model.ClientMomo {
 		// Momo installs its own routes and looks up these tags in normal mode.
