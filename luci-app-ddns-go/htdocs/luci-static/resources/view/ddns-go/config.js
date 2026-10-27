@@ -204,20 +204,8 @@ return view.extend({
  
     handleRestartService: async function() {
     try {
-        // const enabledValue = document.querySelector('input[name="cfg001c48.enabled"]')?.checked ? '1' : '0';
-	const enabledValue = document.querySelectorAll('input[id="widget.cbid.ddns-go.config.enabled"]')?.checked ? '1' : '0';
+        await fs.exec('/etc/init.d/ddns-go', ['restart']);
 
-        await uci.set('ddns-go', 'config', 'enabled', enabledValue);
-        await uci.save('ddns-go');
-        await uci.apply();
-        
-        await fs.exec('/etc/init.d/ddns-go', ['stop']);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        if (enabledValue === '1') {
-            await fs.exec('/etc/init.d/ddns-go', ['start']);
-        }
-        
         alert(_('SUCCESS:') + '\n' + _('DDNS-Go service restarted successfully'));
         if (window.statusPoll) {
             window.statusPoll();
@@ -225,6 +213,23 @@ return view.extend({
     } catch (error) {
         alert(_('ERROR:') + '\n' + _('Failed to restart service:') + '\n' + error.message);
     }
+    },
+
+    handleSaveApply: function(ev, mode) {
+        var enabled;
+
+        return this.handleSave(ev).then(L.bind(function() {
+            enabled = uci.get('ddns-go', 'config', 'enabled') === '1';
+
+            return uci.apply();
+        }, this)).then(function() {
+            return fs.exec('/etc/init.d/ddns-go', [enabled ? 'enable' : 'disable']);
+        }).then(function() {
+            return fs.exec('/etc/init.d/ddns-go', [enabled ? 'restart' : 'stop']);
+        }).then(function() {
+            if (window.statusPoll)
+                return window.statusPoll();
+        });
     },
 
     handleUpdate: async function () {
