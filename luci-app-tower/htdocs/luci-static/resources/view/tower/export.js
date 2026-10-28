@@ -553,6 +553,27 @@ return view.extend({
 		var targetNote = E('p', { 'class': 'tower-target-note' });
 		var schemeCompatibilityNote = E('p', { 'class': 'tower-target-note' });
 
+		// 切换目标客户端时，把该客户端不支持的协议从已选里剔除：
+		// 用户点 Momo（sing-box 内核）或 Honk 时，SSR 这类节点应当自动取消勾选，
+		// 而不是留一个勾着但复选框是灰的状态，让人以为选了却导不出来。
+		function pruneUnsupportedSelection() {
+			var supported = destinationCapability(currentDestination()).protocols || [];
+			var removed = 0;
+			nodes.forEach(function(n) {
+				if (selected[n.id] && supported.indexOf(n.kind) < 0) {
+					selected[n.id] = false;
+					activeProtocols[n.kind] = false;
+					removed++;
+				}
+			});
+			return removed;
+		}
+
+		function targetSupportsKind(kind) {
+			var supported = destinationCapability(currentDestination()).protocols || [];
+			return supported.indexOf(kind) >= 0;
+		}
+
 		function updateTargetCapabilities() {
 			var destination = currentDestination();
 			var target = destination.target || destination.id;
@@ -579,7 +600,9 @@ return view.extend({
 			}
 			if (!nodeOnly && target !== 'dae-config' && destinationCapability(destination).default_rule)
 				schemeSelect.value = destinationCapability(destination).default_rule;
+			pruneUnsupportedSelection();
 			invalidateGeneration();
+			renderProtocolList();
 			renderResults();
 		}
 
@@ -743,12 +766,14 @@ return view.extend({
 					result.issues = (result.issues || []).concat([{ code: 'target_policy_mismatch', message: _('DAE 预检没有返回所选方案对应的目标策略元数据。') }]);
 				}
 				renderPreflight(result);
-				generateBtn.disabled = !result || result.status !== 'exact' || !result.plan_digest;
+				// 预检只是提示：失败时仍然允许生成，导出会带导出预算重新计算计划，
+				// 否则一次冷缓存/网络波动就会把按钮永久置灰。
+				generateBtn.disabled = !selectedIDs().length;
 			}).catch(function(error) {
 				if (epoch !== preflightEpoch)
 					return;
 				renderPreflight({ status: 'unsupported', issues: [{ code: 'preflight_error', message: String(error) }], planned: [] });
-				generateBtn.disabled = true;
+				generateBtn.disabled = !selectedIDs().length;
 			});
 		}
 
@@ -996,7 +1021,7 @@ return view.extend({
 		allProtocolsCheckbox.addEventListener('change', function() {
 			allProtocols = allProtocolsCheckbox.checked;
 			existingKinds.forEach(function(kind) { activeProtocols[kind] = allProtocols; });
-			nodes.forEach(function(n) { selected[n.id] = allProtocols; });
+			nodes.forEach(function(n) { selected[n.id] = allProtocols && targetSupportsKind(n.kind); });
 			invalidateGeneration();
 			renderProtocolList('all');
 			renderResults();
@@ -1016,7 +1041,11 @@ return view.extend({
 				var protocol = (tower.protocols || []).filter(function(item) { return item.id === kind; })[0];
 				var count = nodes.filter(function(n) { return n.kind === kind; }).length;
 				var checkbox = E('input', { 'type': 'checkbox' });
-				checkbox.checked = !allProtocols && !!activeProtocols[kind];
+				var kindSupported = targetSupportsKind(kind);
+				checkbox.disabled = !kindSupported;
+				if (!kindSupported)
+					checkbox.title = _('当前客户端不支持此协议');
+				checkbox.checked = kindSupported && !allProtocols && !!activeProtocols[kind];
 				checkbox.addEventListener('change', function() {
 					if (allProtocols) {
 						allProtocols = false;
