@@ -97,20 +97,23 @@ func (s *Service) daeSubscriptionPlan(target model.ClientTarget, selected []mode
 		return nil, fallbacks, nil
 	}
 
-	// honk hashes each endpoint into its own node id and rejects a whole
-	// subscription when one id is already taken by an inline node, so a passthrough
-	// is only provable when the export inlines nothing: collisions inside the
-	// subscription itself are de-duplicated by honk without a rejection.
+	// honk hashes each endpoint into its own node id and rejects a *whole* subscription
+	// when one id is already taken by an inline node. Passing subscriptions through is
+	// still the format users want, so it is allowed next to inline nodes and the risk
+	// is reported instead of silently blocking the feature.
 	if target == model.ClientHonk {
+		inline := 0
 		eligible := make(map[string]bool, len(candidates))
 		for _, c := range candidates {
 			eligible[c.sub.ID] = true
 		}
 		for _, node := range selected {
 			if !eligible[node.SourceID] {
-				fallbacks = append(fallbacks, fmt.Sprintf("honk 需要内联其它节点（%q），订阅透传会因节点 ID 冲突被整条拒绝，已展开为节点", node.Name))
-				return nil, fallbacks, nil
+				inline++
 			}
+		}
+		if inline > 0 {
+			fallbacks = append(fallbacks, fmt.Sprintf("同时内联了 %d 个节点：若订阅里的某个节点与它们端点相同，honk 会拒绝整条订阅并在日志里提示", inline))
 		}
 	}
 	var subs []generator.DAESubscription
@@ -258,6 +261,25 @@ func daeLinkableNodes(target model.ClientTarget, st *store.State, sourceID strin
 // next to config.dae (/etc/dae or /etc/honk).
 const daeSubscriptionRelDir = "tower"
 
+// daeSubscriptionStoreDir holds URI lists published for cores that cannot read a
+// local file (honk only accepts http(s)).
+func (s *Service) daeSubscriptionStoreDir() string {
+	return filepath.Join(s.Store.Dir(), "dae-subs")
+}
+
+// DAESubscriptionFile returns a published URI list by tag, for the loopback server.
+func (s *Service) DAESubscriptionFile(tag string) (string, bool) {
+	tag = strings.TrimSpace(tag)
+	if tag == "" || strings.ContainsAny(tag, "/\\..") {
+		return "", false
+	}
+	body, err := os.ReadFile(filepath.Join(s.daeSubscriptionStoreDir(), tag+".sub"))
+	if err != nil {
+		return "", false
+	}
+	return string(body), true
+}
+
 // daeConfigDir is where the target core reads its config from.
 func daeConfigDir(target model.ClientTarget) string {
 	if target == model.ClientHonk {
@@ -270,6 +292,11 @@ func daeConfigDir(target model.ClientTarget) string {
 // core's config directory and returns the file:// URL to reference.
 func (s *Service) writeDAESubscriptionFile(target model.ClientTarget, tag string, nodes []model.ProxyNode) (string, error) {
 	dir := filepath.Join(daeConfigDir(target), daeSubscriptionRelDir)
+	if target == model.ClientHonk {
+		// honk only accepts http(s): publish under the data directory and reference the
+		// loopback endpoint that Tower serves it from.
+		dir = s.daeSubscriptionStoreDir()
+	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
@@ -303,5 +330,16 @@ func (s *Service) writeDAESubscriptionFile(target model.ClientTarget, tag string
 	if err := os.Rename(name, path); err != nil {
 		return "", err
 	}
+	if target == model.ClientHonk {
+		return fmt.Sprintf("http://%s/daesub/v1/%s", s.loopbackListen(), tag), nil
+	}
 	return "file://" + daeSubscriptionRelDir + "/" + tag + ".sub", nil
+}
+
+// loopbackListen returns the address the local API server binds to.
+func (s *Service) loopbackListen() string {
+	if listen := strings.TrimSpace(os.Getenv("TOWER_LISTEN")); listen != "" {
+		return listen
+	}
+	return "127.0.0.1:7443"
 }

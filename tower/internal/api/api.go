@@ -22,7 +22,29 @@ func New(svc *service.Service) *Server {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/share/v1/", s.handleLocalShare)
+	// honk only accepts http(s) subscription URLs, so URI lists Tower publishes for
+	// airports that serve mihomo YAML are served from loopback.
+	mux.HandleFunc("/daesub/v1/", s.handleDAESubscription)
 	return mux
+}
+
+func (s *Server) handleDAESubscription(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	tag := strings.TrimPrefix(r.URL.Path, "/daesub/v1/")
+	content, ok := s.svc.DAESubscriptionFile(tag)
+	if !ok {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if r.Method == http.MethodGet {
+		_, _ = w.Write([]byte(content))
+	}
 }
 
 func (s *Server) handleLocalShare(w http.ResponseWriter, r *http.Request) {

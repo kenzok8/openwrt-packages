@@ -57,7 +57,9 @@ const maxRuleSetBytes = 8 << 20
 const (
 	// A preflight runs on page open and on every selection change, and uhttpd only
 	// serves three script requests at a time, so it must never sit on downloads.
-	rulePreflightBudget = 10 * time.Second
+	// The preflight is only a hint: keep it cheap and let the export (ten minutes)
+	// download whatever a cold cache is missing.
+	rulePreflightBudget = 8 * time.Second
 	ruleExportBudget    = 10 * time.Minute
 )
 
@@ -608,6 +610,10 @@ func (s *Service) exportOptionsWithServiceRegions(target model.ClientTarget, pro
 					lines[resource.URL] = cached
 					continue
 				}
+			}
+			// 保持远程链接的目标不需要规则集内容，跳过以免每个规则集都白等一次网络。
+			if !generator.RuleSetNeedsLines(target, *resource, preferRuleSets) {
+				continue
 			}
 			// 读取顺序按代价排：缓存 → 随包分发的本地列表 → 网络（直连失败会走镜像）。
 			// 本地列表免费且离线可用，放在网络之前可以避免每个规则集都先等一次超时。

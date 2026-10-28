@@ -383,6 +383,40 @@ func ruleSourceLine(resource model.RuleSchemeRuleSet, rawLines []string, lineInd
 // isSingBoxSource reports whether a remote rule set is a sing-box "source"
 // file (JSON whose root object carries a rules array) that sing-box can consume
 // natively through route.rule_set.
+// RuleSetNeedsLines reports whether the exporter must load this rule set's content
+// for the target. Clash, Surge and sing-box keep supported rule sets as native remote
+// links, so their lines are not needed — only the formats they cannot express, and the
+// sing-box JSON sources whose shape decides between native and inline, still need them.
+func RuleSetNeedsLines(target model.ClientTarget, resource model.RuleSchemeRuleSet, preferRuleSets bool) bool {
+	if !preferRuleSets {
+		return true
+	}
+	format := strings.ToLower(strings.TrimSpace(resource.Format))
+	if format == "" {
+		format = "text"
+	}
+	switch target.Family() {
+	case model.FamilyClash:
+		return !(format == "text" || format == "yaml" || format == "mrs")
+	case model.FamilySurge, model.FamilyShadowrocket:
+		return format != "text"
+	case model.FamilySingBox:
+		if target == model.ClientClashooSB {
+			// Clashoo keeps its own inline-source branch; let it decide.
+			return true
+		}
+		if _, _, mapped := mapSingBoxMRS(resource); mapped && singBoxMRSMappingAllowed(target) {
+			// Mapped MRS becomes a remote .srs link, so its content is not needed.
+			return false
+		}
+		// Everything else is either inlined (text/yaml lists) or has to be inspected
+		// to tell a sing-box source from a plain list.
+		return true
+	default:
+		return true
+	}
+}
+
 func isSingBoxSource(resource model.RuleSchemeRuleSet, lines []string) bool {
 	if !hasSingBoxSourceURL(resource) {
 		return false
