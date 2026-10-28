@@ -13,9 +13,10 @@
 'require fs';
 'require view.amlogic.shared as amlogicShared';
 
-// Generate one openwrt_config.tar.gz on the server and return its path so the
-// frontend can stream it back via fs.read_direct.
-const callBackup     = rpc.declare({ object: 'luci.amlogic', method: 'backup_create' });
+// Generate one openwrt_config.tar.gz on the server (background) so the
+// frontend can stream it back via fs.read_direct once backup_status is done.
+const callBackup       = rpc.declare({ object: 'luci.amlogic', method: 'backup_create' });
+const callBackupStatus = rpc.declare({ object: 'luci.amlogic', method: 'backup_status' });
 // List existing snapshot names (e.g. etc-000 / etc-001 / etc-202401...).
 const callSnapList   = rpc.declare({ object: 'luci.amlogic', method: 'snapshot_list',
                                      expect: { names: [] } });
@@ -69,17 +70,11 @@ return view.extend({
 				const btn = ev.currentTarget;
 				btn.disabled = true;
 				btn.value = _('Generating...');
-				// Step 1: ask the server to pack /etc into openwrt_config.tar.gz.
-				return callBackup().then(function (r) {
-					if (!r || !r.ok) {
-						downloadStatus.textContent = _("Couldn't open file:") + ' ' + (r ? r.path : '');
-						return;
-					}
-					// Switch to success color before streaming the blob
-					downloadStatus.className = 'amlogic-status-ok';
-					downloadStatus.textContent = _('The file Will download automatically.') + ' ' + r.path;
-					// Fetch the file blob via fs.read_direct and trigger browser download.
-					return fs.read_direct(r.path, 'blob').then(function (blob) {
+				downloadStatus.className = 'amlogic-status-err';
+				downloadStatus.textContent = '';
+
+				function downloadFile(path) {
+					return fs.read_direct(path, 'blob').then(function (blob) {
 						const url = URL.createObjectURL(blob);
 						const a = document.createElement('a');
 						a.href = url;
@@ -89,6 +84,27 @@ return view.extend({
 						document.body.removeChild(a);
 						setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
 					});
+				}
+
+				function pollStatus(deadline) {
+					return callBackupStatus().then(function (s) {
+						if (s && s.status === 'done' && s.size > 0) {
+							downloadStatus.className = 'amlogic-status-ok';
+							downloadStatus.textContent = _('The file Will download automatically.') + ' ' + s.path;
+							return downloadFile(s.path);
+						}
+						if (s && s.status === 'failed')
+							throw new Error(_("Couldn't open file:") + ' ' + (s.path || ''));
+						if (Date.now() > deadline)
+							throw new Error(_('Backup generation timed out.'));
+						return new Promise(function (resolve) { setTimeout(resolve, 1500); })
+							.then(function () { return pollStatus(deadline); });
+					});
+				}
+
+				// Step 1: kick off the background pack job, then poll until done.
+				return callBackup().then(function () {
+					return pollStatus(Date.now() + 300000);
 				}).catch(function (e) {
 					downloadStatus.textContent = _('Create upload file error.') +
 						' ' + (e && e.message ? e.message : '');

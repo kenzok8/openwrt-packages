@@ -14,7 +14,8 @@
 					"list_uploads",
 					"read_log_tail",
 					"read_log_full",
-					"cpu_policies"
+					"cpu_policies",
+					"backup_status"
 				]
 			},
 			"uci": [ "amlogic" ],

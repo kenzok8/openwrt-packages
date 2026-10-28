@@ -18,6 +18,7 @@ const LOG_PLUGIN     = LOG_DIR + '/amlogic_check_plugin.log';
 const LOG_KERNEL     = LOG_DIR + '/amlogic_check_kernel.log';
 const LOG_FIRMWARE   = LOG_DIR + '/amlogic_check_firmware.log';
 const LOG_RESCUE     = LOG_DIR + '/amlogic_check_rescue.log';
+const BACKUP_STATUS  = LOG_DIR + '/amlogic_backup_status.log';
 const UPLOAD_TMP     = '/tmp/upload';
 const PKG_NAME       = 'luci-app-amlogic';
 const BACKUP_LIST    = '/etc/amlogic_backup_list.conf';
@@ -681,13 +682,29 @@ function m_install_upload(req) {
 	return { error: 'unsupported file type' };
 }
 
+// Kick off openwrt-backup -b in the background; the resulting tarball can be
+// fetched via fs.read_direct once backup_status reports done. Packing /etc
+// (docker, openclash rules, etc.) often exceeds the ~20s ubus RPC timeout, so
+// this must not block the rpcd thread.
 function m_backup_create() {
 	ensure_dirs();
 	shcall('chmod +x /usr/sbin/openwrt-backup');
-	shcall('/usr/sbin/openwrt-backup -b > ' + LOG_FILE + ' && sync');
+	writefile(BACKUP_STATUS, 'running\n');
+	shbg('/usr/sbin/openwrt-backup -b > ' + LOG_FILE + ' 2>&1 && sync && ' +
+	     '[ -f /.reserved/openwrt_config.tar.gz ] && ' +
+	     'echo done > ' + BACKUP_STATUS + ' || echo failed > ' + BACKUP_STATUS);
+	return { code: 0 };
+}
+
+function m_backup_status() {
+	const t = trim(readfile(BACKUP_STATUS) ?? '');
 	const path = '/.reserved/openwrt_config.tar.gz';
-	const ok = access(path);
-	return { ok: ok ? true : false, path };
+	const st = stat(path);
+	return {
+		status: t != '' ? t : 'idle',
+		path,
+		size: (st && st.type == 'file') ? st.size : 0
+	};
 }
 
 function m_save_backup_list(req) {
@@ -778,6 +795,7 @@ const methods = {
 	delete_upload:   { args: { name: '' }, call: m_delete_upload },
 	install_upload:  { args: { name: '' }, call: m_install_upload },
 	backup_create:   { call: m_backup_create },
+	backup_status:   { call: m_backup_status },
 	save_backup_list:{ args: { content: '' }, call: m_save_backup_list },
 	prime_backup_list:{ call: m_prime_backup_list },
 	reload_cpu:      { call: m_reload_cpu },
