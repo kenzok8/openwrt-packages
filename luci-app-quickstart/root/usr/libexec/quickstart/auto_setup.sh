@@ -1,12 +1,22 @@
 #!/bin/sh
 
+# Validate all arguments before touching logs, installing packages or sourcing
+# metadata scripts. This script is also callable without the LuCI controller.
+[ "$#" -gt 0 ] || { echo "No packages specified" >&2; exit 1; }
+for pkg in "$@"; do
+    case "$pkg" in
+        ''|[!a-zA-Z0-9]*|*[!a-zA-Z0-9_.+-]*) echo "Invalid package name" >&2; exit 1 ;;
+    esac
+    [ "${#pkg}" -le 128 ] || { echo "Invalid package name" >&2; exit 1; }
+done
+
 > /var/log/auto_setup.success
 > /var/log/auto_setup.failed
 > /var/log/auto_setup.input
 
 save_input() {
     local pkg
-    for pkg in $@; do
+    for pkg in "$@"; do
         echo "$pkg" >> /var/log/auto_setup.input
     done
 }
@@ -37,14 +47,14 @@ load_quickstart_cfg() {
 auto_setup_app() {
     local pkg=$1
     is-opkg install "app-meta-$pkg" || return 1
-    sh -c ". '/usr/libexec/istorea/$pkg.sh'"
+    sh -c '. "$1"' sh "/usr/libexec/istorea/$pkg.sh"
 }
 
 auto_setup_apps() {
     local pkg
-    for pkg in $@; do
+    for pkg in "$@"; do
         echo "Setting up $pkg..."
-        if auto_setup_app $pkg; then
+        if auto_setup_app "$pkg"; then
             echo "Set up $pkg success"
             echo "$pkg" >> /var/log/auto_setup.success
         else

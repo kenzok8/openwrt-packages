@@ -22,7 +22,7 @@ local function sink_socket(sock, io_err)
       if not chunk then 
         return 1 
       else 
-        return sock:send(chunk)
+        return sock:sendall(chunk)
       end 
     end 
   else 
@@ -64,13 +64,16 @@ local function chunksource(sock, buffer)
 	return function()
 		local output
 		local _, endp, count = buffer:find("^([0-9a-fA-F]+);?.-\r\n")
-		while not count and #buffer <= 1024 do
+		while not count and #buffer < 1024 do
 			local newblock, code = sock:recv(1024 - #buffer)
-			if not newblock then
+			if not newblock or newblock == "" then
 				return nil, code
 			end
 			buffer = buffer .. newblock  
 			_, endp, count = buffer:find("^([0-9a-fA-F]+);?.-\r\n")
+		end
+		if not count then
+			return nil, -1, "invalid encoding"
 		end
 		count = tonumber(count, 16)
 		if not count then
@@ -83,6 +86,7 @@ local function chunksource(sock, buffer)
 			return output
 		else
 			output = buffer:sub(endp+1, endp+count)
+			local buffered_tail = #buffer - endp - #output
 			buffer = ""
 			if count - #output > 0 then
 				local remain, code = sock:recvall(count-#output)
@@ -92,7 +96,7 @@ local function chunksource(sock, buffer)
 				output = output .. remain
 				count, code = sock:recvall(2)
 			else
-				count, code = sock:recvall(count+2-#buffer+endp)
+				count, code = sock:recvall(2-buffered_tail)
 			end
 			if not count then
 				return nil, code

@@ -95,14 +95,30 @@ function auto_setup()
     -- form style
     local packages = luci.http.formvalue("packages")
     local pkgs = ""
+    local function valid_package(value)
+        return type(value) == "string" and #value <= 128 and
+            value:match("^[%w][%w%.%+_%-]*$") ~= nil
+    end
+    local function invalid_package()
+        luci.http.prepare_content("application/json")
+        luci.http.write_json({success=1, scope="params", error="Invalid package name"})
+    end
     if type(packages) == "table" then
         if #packages > 0 then
             for k, v in pairs(packages) do
+                if not valid_package(v) then
+                    invalid_package()
+                    return
+                end
                 pkgs = pkgs .. " " .. luci.util.shellquote(v)
             end
         end
     else
         if packages ~= nil and packages ~= "" then
+            if not valid_package(packages) then
+                invalid_package()
+                return
+            end
             pkgs = luci.util.shellquote(packages)
         end
     end
