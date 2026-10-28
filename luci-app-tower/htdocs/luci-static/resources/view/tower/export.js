@@ -667,6 +667,11 @@ return view.extend({
 
 		function refreshSchemeCompatibility(target, ids, selectedScheme) {
 			var epoch = ++schemeCompatEpoch;
+			// 逐方案探测会为每个方案各跑一次预检，冷缓存时等于把几十个规则集下载几十遍，
+			// 既慢又会把方案标成不可用。这里只校验当前选中的方案，其余交给生成时处理。
+			if (schemeCompatibilityNote)
+				schemeCompatibilityNote.textContent = '';
+			return Promise.resolve();
 			var options = Array.prototype.slice.call(schemeSelect.options).filter(function(option) {
 				return !(option.value && schemeTargets[option.value] && schemeTargets[option.value] !== target) &&
 					!(target === 'dae-config' && option.value && !daeSchemePolicies[option.value]);
