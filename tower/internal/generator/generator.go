@@ -55,6 +55,10 @@ type DAESubscription struct {
 	URL       string
 	UserAgent string
 	NodeNames []string
+	// Local marks a subscription published by Tower as a URI list inside the core's
+	// config directory (file://tower/<tag>.sub) because the airport itself only
+	// serves mihomo YAML.
+	Local bool
 }
 
 // Generate renders a full configuration for the target client.

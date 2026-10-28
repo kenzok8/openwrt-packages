@@ -2,12 +2,15 @@ package service
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/kenzok8/tower/internal/generator"
 	"github.com/kenzok8/tower/internal/model"
 	"github.com/kenzok8/tower/internal/parser"
+	"github.com/kenzok8/tower/internal/store"
 )
 
 // daeSubscriptionUserAgent asks airports for the URI/base64 list that dae and
@@ -22,9 +25,12 @@ const daeSubscriptionCacheTTL = 10 * time.Minute
 
 type daeSubscriptionCheck struct {
 	eligible bool
-	reason   string
-	nodes    []model.ProxyNode
-	fetched  time.Time
+	// local marks a subscription published as a Tower-generated URI list instead of
+	// the airport URL, because the airport only serves mihomo YAML.
+	local   bool
+	reason  string
+	nodes   []model.ProxyNode
+	fetched time.Time
 }
 
 // daeSubscriptionPlan decides which airport endpoints the exported dae/honk
@@ -74,6 +80,14 @@ func (s *Service) daeSubscriptionPlan(target model.ClientTarget, selected []mode
 		}
 		check := s.checkDAESubscription(target, sub)
 		if !check.eligible {
+			// 机场只给 mihomo YAML 时 dae/honk 无法直接吃这个地址，退回"Tower 转成
+			// URI 列表落到内核配置目录 + file:// 相对路径"的订阅写法。
+			if nodes := daeLinkableNodes(target, st, sub.ID); len(nodes) > 0 {
+				check.local = true
+				check.nodes = nodes
+				candidates = append(candidates, candidate{sub: sub, check: check})
+				continue
+			}
 			fallbacks = append(fallbacks, fmt.Sprintf("订阅 %q 已展开为节点：%s", sub.Name, check.reason))
 			continue
 		}
@@ -100,12 +114,25 @@ func (s *Service) daeSubscriptionPlan(target model.ClientTarget, selected []mode
 		}
 	}
 	var subs []generator.DAESubscription
+	usedTags := make(map[string]bool, len(candidates))
 	covered := make([]string, 0, len(candidates))
 	for _, c := range candidates {
+		tag := daeSubscriptionTag(c.sub.Name, len(subs)+1, usedTags)
 		entry := generator.DAESubscription{
-			Tag:       fmt.Sprintf("sub_%03d", len(subs)+1),
+			Tag:       tag,
 			URL:       c.sub.URL,
 			NodeNames: daeNodeNames(c.check.nodes),
+		}
+		if c.check.local {
+			localURL, writeErr := s.writeDAESubscriptionFile(target, tag, c.check.nodes)
+			if writeErr != nil {
+				fallbacks = append(fallbacks, fmt.Sprintf("订阅 %q 已展开为节点：写入本机订阅文件失败（%v）", c.sub.Name, writeErr))
+				delete(usedTags, tag)
+				continue
+			}
+			entry.URL = localURL
+			entry.UserAgent = ""
+			entry.Local = true
 		}
 		if target == model.ClientHonk {
 			// honk can pin the download user agent; without it most airports answer
@@ -176,4 +203,105 @@ func unsupportedDAESubscriptionKind(target model.ClientTarget, nodes []model.Pro
 		}
 	}
 	return "", true
+}
+
+// daeSubscriptionTag derives the dae subscription tag from the airport name so the
+// exported config reads `subscription { mying: ... }` instead of `sub_001`. Only
+// identifier-safe ASCII survives; anything else falls back to a positional tag.
+func daeSubscriptionTag(name string, index int, used map[string]bool) string {
+	cleaned := make([]rune, 0, len(name))
+	for _, r := range name {
+		switch {
+		case r >= 'a' && r <= 'z', r >= 'A' && r <= 'Z', r >= '0' && r <= '9', r == '_', r == '-':
+			cleaned = append(cleaned, r)
+		case r == ' ':
+			cleaned = append(cleaned, '_')
+		}
+	}
+	tag := strings.Trim(string(cleaned), "_-")
+	if tag == "" || (tag[0] >= '0' && tag[0] <= '9') {
+		tag = fmt.Sprintf("sub_%03d", index)
+	}
+	for used[tag] {
+		tag += "_"
+	}
+	used[tag] = true
+	return tag
+}
+
+// daeLinkableNodes returns the stored nodes of a subscription that can be written as
+// a dae/honk readable URI list.
+func daeLinkableNodes(target model.ClientTarget, st *store.State, sourceID string) []model.ProxyNode {
+	client := target
+	if client != model.ClientHonk {
+		client = model.ClientDAE
+	}
+	var out []model.ProxyNode
+	for _, node := range st.Nodes {
+		if node.SourceID != sourceID || !generator.SupportsProtocol(client, node.Kind) {
+			continue
+		}
+		if node.IsSubscriptionMetadata != nil && *node.IsSubscriptionMetadata {
+			continue
+		}
+		if generator.Link(node) == "" {
+			continue
+		}
+		out = append(out, node)
+	}
+	return out
+}
+
+// daeSubscriptionDir is the directory, relative to the core's config directory, that
+// holds Tower-generated URI lists. dae rejects absolute file:// paths, so the
+// exported config references `file://tower/<tag>.sub` and this directory must live
+// next to config.dae (/etc/dae or /etc/honk).
+const daeSubscriptionRelDir = "tower"
+
+// daeConfigDir is where the target core reads its config from.
+func daeConfigDir(target model.ClientTarget) string {
+	if target == model.ClientHonk {
+		return "/etc/honk"
+	}
+	return "/etc/dae"
+}
+
+// writeDAESubscriptionFile publishes one subscription's nodes as a URI list inside the
+// core's config directory and returns the file:// URL to reference.
+func (s *Service) writeDAESubscriptionFile(target model.ClientTarget, tag string, nodes []model.ProxyNode) (string, error) {
+	dir := filepath.Join(daeConfigDir(target), daeSubscriptionRelDir)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", err
+	}
+	lines := make([]string, 0, len(nodes))
+	for _, node := range nodes {
+		if link := generator.Link(node); link != "" {
+			lines = append(lines, link)
+		}
+	}
+	if len(lines) == 0 {
+		return "", fmt.Errorf("没有可写成 URI 列表的节点")
+	}
+	path := filepath.Join(dir, tag+".sub")
+	tmp, err := os.CreateTemp(dir, ".tower-*.tmp")
+	if err != nil {
+		return "", err
+	}
+	name := tmp.Name()
+	defer os.Remove(name)
+	if err := tmp.Chmod(0o600); err != nil {
+		tmp.Close()
+		return "", err
+	}
+	if _, err := tmp.WriteString(strings.Join(lines, "\n") + "\n"); err != nil {
+		tmp.Close()
+		return "", err
+	}
+	if err := tmp.Close(); err != nil {
+		return "", err
+	}
+	if err := os.Rename(name, path); err != nil {
+		return "", err
+	}
+	return "file://" + daeSubscriptionRelDir + "/" + tag + ".sub", nil
 }

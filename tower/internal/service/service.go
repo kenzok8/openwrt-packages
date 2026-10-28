@@ -39,12 +39,49 @@ type Service struct {
 	lanName     string
 	daeSubMu    sync.Mutex
 	daeSubCache map[string]daeSubscriptionCheck
+
+	// ruleDeadline bounds how long one request may spend downloading rule sources.
+	// The LuCI export page triggers preflight as soon as it opens, so an unbounded
+	// download used to hold the admin session for minutes on a slow link.
+	ruleDeadline time.Time
 }
 
 const nativeDAESchemeID = "kenzok8-dae-native"
 
 // maxRuleSetBytes bounds one downloaded rule set.
 const maxRuleSetBytes = 8 << 20
+
+// Rule downloads are bounded per request. The LuCI export page fires a preflight as
+// soon as it opens, so a preflight gets a short leash and fails with a hint instead
+// of holding the admin session; the explicit export action may take much longer.
+const (
+	// A preflight runs on page open and on every selection change, and uhttpd only
+	// serves three script requests at a time, so it must never sit on downloads.
+	rulePreflightBudget = 10 * time.Second
+	ruleExportBudget    = 10 * time.Minute
+)
+
+// beginRuleBudget arms the download budget for one request. A non-positive budget
+// disables the limit.
+func (s *Service) beginRuleBudget(budget time.Duration) {
+	if budget <= 0 {
+		s.ruleDeadline = time.Time{}
+		return
+	}
+	s.ruleDeadline = time.Now().Add(budget)
+}
+
+// ruleBudgetRemaining reports the time left for rule downloads in this request.
+func (s *Service) ruleBudgetRemaining() (time.Duration, bool) {
+	if s.ruleDeadline.IsZero() {
+		return 0, true
+	}
+	remaining := time.Until(s.ruleDeadline)
+	if remaining <= 0 {
+		return 0, false
+	}
+	return remaining, true
+}
 
 // New creates a Service.
 func New(st *store.Store) *Service {
@@ -282,6 +319,7 @@ func (s *Service) ExportWithOptions(target model.ClientTarget, protocols []model
 // ExportWithConsent binds a degraded sing-box export to the exact preflight
 // plan and the differences accepted for this generation.
 func (s *Service) ExportWithConsent(target model.ClientTarget, protocols []model.ProxyKind, nodeIDs []string, schemeID string, preferRuleSets bool, planDigest string, acceptedDegradations []string) (string, error) {
+	s.beginRuleBudget(ruleExportBudget)
 	options, err := s.exportOptions(target, protocols, nodeIDs, schemeID, preferRuleSets, false)
 	if err != nil {
 		return "", err
@@ -303,6 +341,7 @@ func (s *Service) ExportStrictWithServiceRegions(target model.ClientTarget, prot
 	if len(nodeIDs) == 0 {
 		return "", fmt.Errorf("严格导出至少需要一个已选择的节点")
 	}
+	s.beginRuleBudget(ruleExportBudget)
 	options, err := s.exportOptionsWithServiceRegions(target, protocols, nodeIDs, schemeID, preferRuleSets, true, regions)
 	if err != nil {
 		return "", err
@@ -316,6 +355,16 @@ func (s *Service) ExportStrictWithServiceRegions(target model.ClientTarget, prot
 		}
 	}
 	if target.Family() == model.FamilySingBox || target.Family() == model.FamilyDAE {
+		// The UI may not have a usable preflight digest (cold rule cache, budget hit).
+		// Recompute the plan here with the export budget so the user is never blocked
+		// by a failed hint, and keep the digest binding for the actual render.
+		if planDigest == "" {
+			if result := generator.Preflight(options); result.Status == generator.PreflightUnsupported {
+				return "", &generator.PreflightError{Result: result}
+			} else {
+				planDigest = result.PlanDigest
+			}
+		}
 		options.Strict = true
 		options.PlanDigest = planDigest
 		content, err := generator.Generate(options)
@@ -341,8 +390,17 @@ func (s *Service) ExportStrictWithServiceRegions(target model.ClientTarget, prot
 // PreflightExportWithOptions checks a sing-box-family export using the same
 // selected nodes, scheme, and cached rule resources as the final export.
 func (s *Service) PreflightExportWithOptions(target model.ClientTarget, protocols []model.ProxyKind, nodeIDs []string, schemeID string, preferRuleSets bool) (generator.PreflightResult, error) {
+	s.beginRuleBudget(rulePreflightBudget)
 	options, err := s.exportOptions(target, protocols, nodeIDs, schemeID, preferRuleSets, false)
 	if err != nil {
+		// 预检只是提示，取源失败必须作为可读问题返回，而不是让调用方拿到裸错误
+		if !errors.As(err, new(*inlineSourceError)) {
+			return generator.PreflightResult{
+				Status:  generator.PreflightUnsupported,
+				Issues:  []generator.PreflightIssue{{Code: "resource_unavailable", Severity: "blocking", Location: "resources", Message: err.Error()}},
+				Planned: []generator.PreflightItem{},
+			}, nil
+		}
 		var inlineErr *inlineSourceError
 		if errors.As(err, &inlineErr) {
 			return generator.PreflightResult{
@@ -379,13 +437,14 @@ func (s *Service) PreflightExportStrict(target model.ClientTarget, protocols []m
 // PreflightExportStrictWithServiceRegions validates a strict request with
 // temporary service country choices. It never saves those choices.
 func (s *Service) PreflightExportStrictWithServiceRegions(target model.ClientTarget, protocols []model.ProxyKind, nodeIDs []string, schemeID string, preferRuleSets bool, regions map[string]string) (generator.PreflightResult, error) {
+	s.beginRuleBudget(rulePreflightBudget)
 	options, err := s.exportOptionsWithServiceRegions(target, protocols, nodeIDs, schemeID, preferRuleSets, true, regions)
 	if err != nil {
 		var inlineErr *inlineSourceError
 		if errors.As(err, &inlineErr) {
 			return generator.PreflightResult{Status: generator.PreflightUnsupported, Issues: []generator.PreflightIssue{{Code: inlineErr.code, Severity: "blocking", Location: inlineErr.location, Message: inlineErr.message}}, Planned: []generator.PreflightItem{}}, nil
 		}
-		return generator.PreflightResult{}, err
+		return generator.PreflightResult{Status: generator.PreflightUnsupported, Issues: []generator.PreflightIssue{{Code: "resource_unavailable", Severity: "blocking", Location: "resources", Message: err.Error()}}, Planned: []generator.PreflightItem{}}, nil
 	}
 	options.Strict = true
 	filtered := generator.FilterNodes(options.Nodes, protocols)
@@ -456,6 +515,9 @@ func (s *Service) exportOptions(target model.ClientTarget, protocols []model.Pro
 }
 
 func (s *Service) exportOptionsWithServiceRegions(target model.ClientTarget, protocols []model.ProxyKind, nodeIDs []string, schemeID string, preferRuleSets, strict bool, serviceRegions map[string]string) (generator.Options, error) {
+	if s.ruleDeadline.IsZero() {
+		s.beginRuleBudget(rulePreflightBudget)
+	}
 	var nodes []model.ProxyNode
 	var err error
 	if strict && len(nodeIDs) == 0 {
@@ -637,6 +699,9 @@ func (s *Service) ruleSourceLines(sourceURL string, maxBytes int, allowedHost st
 	}
 	var firstErr error
 	for _, candidate := range ruleSourceCandidates(sourceURL) {
+		if _, ok := s.ruleBudgetRemaining(); !ok {
+			return nil, fmt.Errorf("规则源下载超出本次请求的时间预算，请稍后重试；已缓存的规则集不受影响")
+		}
 		host := candidate.host
 		if allowedHost == "" {
 			host = ""

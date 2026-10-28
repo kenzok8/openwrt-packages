@@ -310,8 +310,14 @@ func compileDAE(opts Options) (daePlan, PreflightResult) {
 		}
 		if matchesAll {
 			// A group that matches every available node needs no filter at all: dae
-			// treats a filterless group as "all nodes", subscriptions included.
-			planGroup.filters = nil
+			// treats a filterless group as "all nodes", subscriptions included. When
+			// every node comes from a passthrough subscription, name them explicitly
+			// with subtag() so the group survives a manual node being added later.
+			if subtags := allNodesSubtags(names, nodeNames, plan.subscriptions); len(subtags) > 0 {
+				planGroup.filters = []string{"subtag(" + strings.Join(subtags, ", ") + ")"}
+			} else {
+				planGroup.filters = nil
+			}
 		}
 		plan.groups = append(plan.groups, planGroup)
 	}
@@ -693,6 +699,28 @@ func daeSubscriptionDigests(subscriptions []DAESubscription) []DAESubscriptionDi
 	return out
 }
 
+// allNodesSubtags returns the subscription tags that cover every available node, or
+// nil when any node is inlined (a manual node or a subscription that stayed inline).
+func allNodesSubtags(names, inlineNames []string, subscriptions []daeSubscription) []string {
+	if len(subscriptions) == 0 {
+		return nil
+	}
+	inline := make(map[string]bool, len(inlineNames))
+	for _, name := range inlineNames {
+		inline[name] = true
+	}
+	for _, name := range names {
+		if inline[name] {
+			return nil
+		}
+	}
+	tags := make([]string, 0, len(subscriptions))
+	for _, sub := range subscriptions {
+		tags = append(tags, sub.tag)
+	}
+	return tags
+}
+
 // daeProtocolTarget narrows a target to the core whose protocol set applies.
 // Only honk differs: its Rust core implements no SSR dialer.
 func daeProtocolTarget(target model.ClientTarget) model.ClientTarget {
@@ -705,14 +733,25 @@ func daeProtocolTarget(target model.ClientTarget) model.ClientTarget {
 // daeSubscriptionURL reports whether a subscription URL can be written into the
 // single-quoted dae `subscription` block as-is.
 func daeSubscriptionURL(raw string) bool {
-	u, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil || u.Host == "" {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || strings.ContainsAny(raw, "'\"\r\n") {
 		return false
 	}
-	if u.Scheme != "http" && u.Scheme != "https" {
+	u, err := url.Parse(raw)
+	if err != nil {
 		return false
 	}
-	return !strings.ContainsAny(raw, "'\"\r\n")
+	switch u.Scheme {
+	case "http", "https":
+		return u.Host != ""
+	case "file":
+		// dae resolves file:// against the core's config directory and rejects
+		// absolute paths, so the authority carries the first path segment
+		// ("file://tower/mying.sub" -> ./tower/mying.sub).
+		return u.Host != "" && !strings.HasPrefix(u.Path, "//")
+	default:
+		return false
+	}
 }
 
 // daeGroupFilter renders one scheme member as a dae `filter:` expression. dae
@@ -1009,13 +1048,21 @@ func renderDAE(plan daePlan, honkVariant bool) string {
 		}
 		b.WriteString("global {\n")
 		b.WriteString("    tproxy_port: 12345\n")
+		b.WriteString("    tproxy_port_protect: true\n")
+		b.WriteString("    so_mark_from_dae: 0\n")
+		b.WriteString("    log_level: info\n")
 		b.WriteString("    lan_interface: " + lan + "\n")
 		b.WriteString("    wan_interface: auto\n")
 		b.WriteString("    auto_config_kernel_parameter: true\n")
 		b.WriteString("    dial_mode: domain\n")
+		b.WriteString("    tls_implementation: utls\n")
+		b.WriteString("    bootstrap_resolver: '119.29.29.29:53'\n")
+		b.WriteString("    check_interval: 30s\n")
+		b.WriteString("    check_tolerance: 50ms\n")
 		b.WriteString("}\n\n")
 	}
 	b.WriteString("dns {\n")
+	b.WriteString("    ipversion_prefer: 4\n")
 	b.WriteString("    upstream {\n")
 	b.WriteString("        cndns: 'udp://dns.alidns.com:53'\n")
 	// The remote resolver is an IP literal DoH endpoint: a hostname upstream such as
@@ -1031,8 +1078,16 @@ func renderDAE(plan daePlan, honkVariant bool) string {
 	b.WriteString("    }\n")
 	b.WriteString("    routing {\n")
 	b.WriteString("        request {\n")
-	b.WriteString("            qname(geosite:cn) -> cndns\n")
+	b.WriteString("            qtype(https, svcb) -> reject\n")
+	b.WriteString("            qtype(aaaa) -> reject\n")
+	// Google Play 商店靠这两个后缀拿就近节点，必须走远端 DNS
+	b.WriteString("            qname(suffix: googleapis.cn, suffix: xn--ngstr-lra8j.com) -> remotedns\n")
+	b.WriteString("            qname(geosite: cn, geosite: microsoft@cn, geosite: apple@cn, geosite: private) -> cndns\n")
 	b.WriteString("            fallback: remotedns\n")
+	b.WriteString("        }\n")
+	b.WriteString("        response {\n")
+	b.WriteString("            upstream(remotedns) && ip(geoip: cn) -> cndns\n")
+	b.WriteString("            fallback: accept\n")
 	b.WriteString("        }\n")
 	b.WriteString("    }\n")
 	b.WriteString("}\n\n")
@@ -1076,6 +1131,9 @@ func renderDAE(plan daePlan, honkVariant bool) string {
 		b.WriteString("}\n\n")
 	}
 	b.WriteString("routing {\n")
+	b.WriteString("    dip(224.0.0.0/3, 'ff00::/8') -> direct\n")
+	b.WriteString("    dport(853) -> block\n")
+	b.WriteString("    dip(geoip: private) -> direct\n")
 	for _, rule := range renderDAEPredicates(plan.rules) {
 		b.WriteString("    " + rule + "\n")
 	}
