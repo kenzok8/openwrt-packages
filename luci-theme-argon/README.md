@@ -41,7 +41,7 @@ It also supports automatic and manual switching between light and dark modes.
 - **Layout fixes.** Improve dashboard actions, overview layouts, dynamic lists and custom IP/MAC inputs across narrow screens, light/dark modes and RTL layouts.
 - **Compatibility improvements.** Improve compatibility with stable OpenWrt firmware.
 
-Users on v3.0.0 or earlier must install v3.1.0 manually once to get online updates. See the [release notes](RELEASE.md).
+Users on v3.0.0 or earlier must install v3.1.1 manually once to get online updates. Users on v3.1.0 can upgrade through Theme updates. See the [release notes](RELEASE.md).
 
 ## 3.0 highlights
 
@@ -74,7 +74,7 @@ This applies only when the old standalone configuration plugin is installed. Oth
 
 The settings page, colors, backgrounds and branding are all included in the theme. The release's `luci-app-argon-config` is an **empty migration package using the old package name**. It preserves existing settings and hands its files over to the theme.
 
-1. Download both `luci-app-argon-config` and `luci-theme-argon` from the **same 3.0 release in the theme repository**, in the same format.
+1. Download both `luci-app-argon-config` and `luci-theme-argon` from the **same release in the theme repository**, in the same format.
 2. Put both files in one directory on the router and open a terminal there. **Do not uninstall the old plugin first.** Choose the command pair for your firmware; run the second command only after the first succeeds.
 
 ```sh

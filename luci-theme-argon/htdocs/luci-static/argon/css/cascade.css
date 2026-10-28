@@ -7947,6 +7947,87 @@ pre.command-output {
     max-width: 100%;
   }
 }
+[data-page="admin-services-tailscale"] #service_status_display,
+[data-page="admin-vpn-tailscale"] #service_status_display {
+  display: block;
+  padding: var(--field-gap) var(--section-inset);
+  border-radius: var(--radius-card);
+  background-color: var(--surface-color);
+  box-shadow: var(--section-shadow);
+  overflow-x: auto;
+}
+[data-page="admin-services-tailscale"] #tailscale_devices_display,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display {
+  display: block;
+}
+[data-page="admin-services-tailscale"] #tailscale_devices_display:has(> table),
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display:has(> table) {
+  overflow-x: auto;
+}
+[data-page="admin-services-tailscale"] #service_status_display table,
+[data-page="admin-vpn-tailscale"] #service_status_display table,
+[data-page="admin-services-tailscale"] #tailscale_devices_display table,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display table {
+  display: table;
+  line-height: normal;
+}
+[data-page="admin-services-tailscale"] #service_status_display table > thead,
+[data-page="admin-vpn-tailscale"] #service_status_display table > thead,
+[data-page="admin-services-tailscale"] #tailscale_devices_display table > thead,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display table > thead {
+  display: table-header-group;
+}
+[data-page="admin-services-tailscale"] #service_status_display table > tbody,
+[data-page="admin-vpn-tailscale"] #service_status_display table > tbody,
+[data-page="admin-services-tailscale"] #tailscale_devices_display table > tbody,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display table > tbody {
+  display: table-row-group;
+}
+[data-page="admin-services-tailscale"] #service_status_display table tr,
+[data-page="admin-vpn-tailscale"] #service_status_display table tr,
+[data-page="admin-services-tailscale"] #tailscale_devices_display table tr,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display table tr {
+  display: table-row;
+}
+[data-page="admin-services-tailscale"] #service_status_display table th,
+[data-page="admin-vpn-tailscale"] #service_status_display table th,
+[data-page="admin-services-tailscale"] #tailscale_devices_display table th,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display table th,
+[data-page="admin-services-tailscale"] #service_status_display table td,
+[data-page="admin-vpn-tailscale"] #service_status_display table td,
+[data-page="admin-services-tailscale"] #tailscale_devices_display table td,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display table td {
+  display: table-cell;
+  padding: 1.1em 1.25rem;
+  border-top: var(--table-border);
+  line-height: normal;
+  text-align: center;
+  white-space: nowrap;
+}
+[data-page="admin-services-tailscale"] #service_status_display table th,
+[data-page="admin-vpn-tailscale"] #service_status_display table th,
+[data-page="admin-services-tailscale"] #tailscale_devices_display table th,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display table th {
+  text-align: center !important;
+}
+[data-page="admin-services-tailscale"] #service_status_display tr + tr,
+[data-page="admin-vpn-tailscale"] #service_status_display tr + tr,
+[data-page="admin-services-tailscale"] #tailscale_devices_display tr:has(> td),
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display tr:has(> td) {
+  background-color: var(--row-color);
+}
+[data-page="admin-services-tailscale"] #tailscale_devices_display tr:nth-child(2n of :has(> td)),
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display tr:nth-child(2n of :has(> td)) {
+  background-color: var(--row-alt);
+}
+[data-page="admin-services-tailscale"] #service_status_display tr:first-child > td,
+[data-page="admin-vpn-tailscale"] #service_status_display tr:first-child > td,
+[data-page="admin-services-tailscale"] #tailscale_devices_display :is(.cbi-table-header, .cbi-section-table-titles) > th,
+[data-page="admin-vpn-tailscale"] #tailscale_devices_display :is(.cbi-table-header, .cbi-section-table-titles) > th {
+  border-top: 0;
+  background-color: var(--surface-muted);
+  line-height: 1.3rem;
+}
 [data-page="admin-vpn-passwall"] h4 {
   background: transparent;
 }
@@ -8440,10 +8521,24 @@ pre.command-output {
   unicode-bidi: isolate;
 }
 @media screen and (min-width: 1153px) {
+  #wifi_assoclist_table .td > .cbi-dropdown:is(.btn, .cbi-button):not([multiple]) {
+    min-width: max-content;
+  }
+  #wifi_assoclist_table .td > .cbi-dropdown:is(.btn, .cbi-button):not([multiple]) > ul:not(.dropdown) > li {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+  #wifi_assoclist_table > .tr > :is(.th, .td) {
+    padding-inline: var(--action-gap);
+    overflow-wrap: break-word;
+  }
   #wifi_assoclist_table > .tr > :is(.th, .td):first-child {
     width: 22%;
-    min-width: 14rem;
+    min-width: 10rem;
   }
+}
+#wifi_assoclist_table > .tr > .td > span.hide-xs {
+  display: block;
 }
 @media screen and (max-width: 600px) {
   #wifi_assoclist_table .td:has(> .ifacebadge[data-ssid]) {

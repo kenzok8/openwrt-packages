@@ -57,6 +57,24 @@ test('first-child entry routes identify the resolved page and retain wildcard re
 	} finally { renderer.close(); }
 });
 
+test('stylesheet URLs track source rebuilds and preserved timestamps on application and login pages', () => {
+	const renderer = createRenderer(templates);
+	try {
+		for (const entry of ['application', 'sysauth']) {
+			const stylesheet = stylesheetStat => renderer.render(entry, { stylesheetStat }).html
+				.match(/href="([^"]*\/css\/cascade\.css[^"]*)"/)[1];
+			const original = { mtime: 1792993553, ctime: 1792993553, size: 282004 };
+			const first = stylesheet(original);
+			assert.equal(first, '/luci-static/argon/css/cascade.css?v=1792993553-1792993553-282004');
+			assert.equal(stylesheet(original), first);
+			assert.notEqual(stylesheet({ ...original, mtime: original.mtime + 1 }), first);
+			assert.notEqual(stylesheet({ ...original, ctime: original.ctime + 1 }), first);
+			assert.notEqual(stylesheet({ ...original, size: original.size + 1 }), first);
+			assert.equal(stylesheet(null), '/luci-static/argon/css/cascade.css?v=0');
+		}
+	} finally { renderer.close(); }
+});
+
 test('login partials retain image/video, branding and authentication scope and script order', () => {
 	const renderer = createRenderer(templates);
 	try {

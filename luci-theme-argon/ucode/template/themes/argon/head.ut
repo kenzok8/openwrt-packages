@@ -18,7 +18,7 @@
 
 {# Shared document head. Callers supply hostname and is_login explicitly. -#}
 {%
-	import { access, lsdir, lstat } from 'fs';
+	import { access, lsdir, lstat, stat } from 'fs';
 	import { cursor } from 'uci';
 	import { dark_palette, appearance_modes } from 'luci.argon-palette';
 
@@ -80,7 +80,15 @@
 	{% endif %}
 	{% include("themes/" + theme + "/head_meta", { hostname: hostname, node: node, bar_color: bar_color, media: media, mode: mode, primary: primary, dark_primary: dark_primary }) %}
 
-	<link rel="stylesheet" href="{{ media }}/css/cascade.css{# ?v=PKG_VERSION #}">
+	{%
+		// Source builds can change CSS without changing the package version.
+		// ctime also catches replacements which preserve mtime and file size.
+		const stylesheet_stat = stat('/www' + media + '/css/cascade.css');
+		const stylesheet_version = stylesheet_stat
+			? sprintf('%d-%d-%d', stylesheet_stat.mtime, stylesheet_stat.ctime, stylesheet_stat.size)
+			: '0';
+	%}
+	<link rel="stylesheet" href="{{ media }}/css/cascade.css?v={{ stylesheet_version }}">
 	<style title="text/css">
 		:root {
 			--light-primary: {{ primary }};

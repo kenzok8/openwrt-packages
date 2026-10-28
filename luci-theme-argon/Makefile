@@ -11,8 +11,8 @@ LUCI_TITLE:=Argon Theme
 LUCI_DEPENDS:=+luci-base +USE_APK:wget-any +!USE_APK:wget +jsonfilter +ucode-mod-math +flock +coreutils +coreutils-timeout
 # Keep existing translation package names and the argon-config message domain.
 LUCI_BASENAME:=argon-config
-PKG_VERSION:=3.1.0
-PKG_RELEASE:=20261022
+PKG_VERSION:=3.1.1
+PKG_RELEASE:=20261028
 PKG_LICENSE:=Apache-2.0 MIT
 
 # LuCI derives translations independently of the theme version. Keep release

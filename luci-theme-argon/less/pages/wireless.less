@@ -56,10 +56,31 @@
     }
 
     @media screen and (min-width: 1153px) {
+        // A table action column shrinks to its controls' minimum content width.
+        // Preserve the ComboButton label when MAC filtering adds its menu.
+        .td > .cbi-dropdown:is(.btn, .cbi-button):not([multiple]) {
+            min-width: max-content;
+
+            > ul:not(.dropdown) > li {
+                white-space: nowrap;
+                overflow-wrap: normal;
+            }
+        }
+
+        > .tr > :is(.th, .td) {
+            padding-inline: var(--action-gap);
+            overflow-wrap: break-word;
+        }
+
         > .tr > :is(.th, .td):first-child {
             width: 22%;
-            min-width: 14rem;
+            min-width: 10rem;
         }
+    }
+
+    // Keep host names separate from the optional address details.
+    > .tr > .td > span.hide-xs {
+        display: block;
     }
 
     @media screen and (max-width: 600px) {

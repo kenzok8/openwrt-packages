@@ -1,0 +1,75 @@
+// out: false
+
+[data-page="admin-services-tailscale"],
+[data-page="admin-vpn-tailscale"] {
+    // The community app renders its status outside the normal CBI section card.
+    #service_status_display {
+        display: block;
+        padding: var(--field-gap) var(--section-inset);
+        border-radius: var(--radius-card);
+        background-color: var(--surface-color);
+        box-shadow: var(--section-shadow);
+        overflow-x: auto;
+    }
+
+    #tailscale_devices_display {
+        display: block;
+
+        // Older app versions render the table without a scrolling wrapper.
+        &:has(> table) {
+            overflow-x: auto;
+        }
+    }
+
+    // Both renderers use native rows and cells rather than LuCI's .tr/.td pair.
+    #service_status_display,
+    #tailscale_devices_display {
+        table {
+            display: table;
+            line-height: normal;
+
+            > thead {
+                display: table-header-group;
+            }
+
+            > tbody {
+                display: table-row-group;
+            }
+
+            tr {
+                display: table-row;
+            }
+
+            th,
+            td {
+                display: table-cell;
+                padding: 1.1em 1.25rem;
+                border-top: var(--table-border);
+                line-height: normal;
+                text-align: center;
+                white-space: nowrap;
+            }
+
+            // The app sets header alignment inline.
+            th {
+                text-align: center !important;
+            }
+        }
+    }
+
+    #service_status_display tr + tr,
+    #tailscale_devices_display tr:has(> td) {
+        background-color: var(--row-color);
+    }
+
+    #tailscale_devices_display tr:nth-child(2n of :has(> td)) {
+        background-color: var(--row-alt);
+    }
+
+    #service_status_display tr:first-child > td,
+    #tailscale_devices_display :is(.cbi-table-header, .cbi-section-table-titles) > th {
+        border-top: 0;
+        background-color: var(--surface-muted);
+        line-height: 1.3rem;
+    }
+}

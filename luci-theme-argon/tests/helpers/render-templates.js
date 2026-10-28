@@ -13,10 +13,11 @@ module.exports = function createRenderer(sourceDir) {
 	fs.mkdirSync(target, { recursive: true });
 	for (const name of fs.readdirSync(sourceDir).filter(name => name.endsWith('.ut'))) {
 		const source = fs.readFileSync(path.join(sourceDir, name), 'utf8')
-			.replace("import { access, lsdir, lstat } from 'fs';", `
+			.replace("import { access, lsdir, lstat, stat } from 'fs';", `
 function access(path) { return fixture.configExists ?? true; }
 function lsdir(path) { return fixture.icons ?? ['default.svg', 'status.svg']; }
-function lstat(path) { return { type: 'file' }; }`)
+function lstat(path) { return { type: 'file' }; }
+function stat(path) { return path == '/www/luci-static/argon/css/cascade.css' ? fixture.stylesheetStat : null; }`)
 			.replace("import { access } from 'fs';", 'function access(path) { return fixture.configExists ?? true; }')
 			.replace("import * as fs from 'fs';", `
 let fs = { access: path => fixture.configExists ?? true,
