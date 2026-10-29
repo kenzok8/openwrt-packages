@@ -1,7 +1,8 @@
 // out: false
 
 // Services - Dockerman
-[data-page="admin-docker-overview"] .cbi-section-table {
+[data-page="admin-docker-overview"] .cbi-section-table,
+[data-page="admin-services-dockerman-overview"] .cbi-section-table {
     // Keep long JSON values inside the Version and Environment tables.
     table-layout: fixed;
 
@@ -10,12 +11,50 @@
         min-width: 0;
         white-space: normal;
         overflow-wrap: anywhere;
-        text-align: left !important;
+        text-align: start !important;
         vertical-align: top;
     }
 
     .th:first-child {
         width: 30% !important;
+    }
+}
+
+// The JS app returns a plain td for its action group, without LuCI's usual
+// cbi-section-actions class. Reserve space for several icons before wrapping.
+[data-page="admin-services-dockerman-containers"] {
+    .td:last-child:has(> div > .cbi-button + .cbi-button) {
+        width: 16rem;
+        min-width: 16rem;
+        white-space: normal;
+        text-align: end;
+
+        > div {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            max-width: 16rem;
+            margin-inline-start: auto;
+            gap: var(--control-gap);
+
+            > * {
+                flex: 0 0 auto;
+            }
+        }
+    }
+
+    @media screen and (max-width: 1152px) {
+        .td:last-child:has(> div > .cbi-button + .cbi-button) {
+            flex: 1 1 100%;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+
+            > div {
+                max-width: 100%;
+            }
+        }
     }
 }
 
@@ -29,4 +68,42 @@
         padding: 0;
     }
 
+}
+
+// Dockerman appends its own overlay styles after the theme. Scope these rules
+// to its pages so positioning wins without changing the native show/hide state.
+[data-page="admin-docker"],
+[data-page^="admin-docker-"] {
+    #docker_apply_overlay {
+        position: fixed;
+        inset: 0;
+        padding: var(--page-gutter);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        > .alert-message {
+            position: static;
+            inset: auto;
+            transform: none;
+            width: 100%;
+            max-width: 60rem;
+            max-height: calc(100vh - 2 * var(--page-gutter));
+            max-height: calc(100dvh - 2 * var(--page-gutter));
+            min-width: 0;
+            margin: auto;
+            overflow: auto;
+
+            > span {
+                flex: 1 1 0;
+                min-width: 0;
+                max-width: 100%;
+            }
+        }
+    }
+
+    &.apply-overlay-active #docker_apply_overlay {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }

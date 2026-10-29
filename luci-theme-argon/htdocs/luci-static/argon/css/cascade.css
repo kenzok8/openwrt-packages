@@ -4759,6 +4759,10 @@ pre.command-output {
 [data-page="admin-system-system"] .cbi-dynlist {
   margin: 0.25rem 0;
 }
+[data-page="admin-system-system"] [data-name="notes"] .cbi-value-field > div:has(> .cbi-input-textarea) {
+  width: var(--form-control-min-width) !important;
+  max-width: 100%;
+}
 [data-page="admin-system-system"] #localtime,
 [data-page="admin-system-system"] [data-name="hostname"] input,
 [data-page="admin-system-system"] [data-name="log_size"] input,
@@ -7368,19 +7372,52 @@ pre.command-output {
 [data-page="admin-services-ttyd-ttyd"] #view iframe {
   height: 100%;
 }
-[data-page="admin-docker-overview"] .cbi-section-table {
+[data-page="admin-docker-overview"] .cbi-section-table,
+[data-page="admin-services-dockerman-overview"] .cbi-section-table {
   table-layout: fixed;
 }
 [data-page="admin-docker-overview"] .cbi-section-table .th,
-[data-page="admin-docker-overview"] .cbi-section-table .td {
+[data-page="admin-services-dockerman-overview"] .cbi-section-table .th,
+[data-page="admin-docker-overview"] .cbi-section-table .td,
+[data-page="admin-services-dockerman-overview"] .cbi-section-table .td {
   min-width: 0;
   white-space: normal;
   overflow-wrap: anywhere;
-  text-align: left !important;
+  text-align: start !important;
   vertical-align: top;
 }
-[data-page="admin-docker-overview"] .cbi-section-table .th:first-child {
+[data-page="admin-docker-overview"] .cbi-section-table .th:first-child,
+[data-page="admin-services-dockerman-overview"] .cbi-section-table .th:first-child {
   width: 30% !important;
+}
+[data-page="admin-services-dockerman-containers"] .td:last-child:has(> div > .cbi-button + .cbi-button) {
+  width: 16rem;
+  min-width: 16rem;
+  white-space: normal;
+  text-align: end;
+}
+[data-page="admin-services-dockerman-containers"] .td:last-child:has(> div > .cbi-button + .cbi-button) > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 16rem;
+  margin-inline-start: auto;
+  gap: var(--control-gap);
+}
+[data-page="admin-services-dockerman-containers"] .td:last-child:has(> div > .cbi-button + .cbi-button) > div > * {
+  flex: 0 0 auto;
+}
+@media screen and (max-width: 1152px) {
+  [data-page="admin-services-dockerman-containers"] .td:last-child:has(> div > .cbi-button + .cbi-button) {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  [data-page="admin-services-dockerman-containers"] .td:last-child:has(> div > .cbi-button + .cbi-button) > div {
+    max-width: 100%;
+  }
 }
 #cbi-dockerd .cbi-section {
   box-sizing: border-box;
@@ -7388,6 +7425,39 @@ pre.command-output {
 }
 #cbi-dockerd .cbi-section.cbi-tblsection {
   padding: 0;
+}
+[data-page="admin-docker"] #docker_apply_overlay,
+[data-page^="admin-docker-"] #docker_apply_overlay {
+  position: fixed;
+  inset: 0;
+  padding: var(--page-gutter);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+[data-page="admin-docker"] #docker_apply_overlay > .alert-message,
+[data-page^="admin-docker-"] #docker_apply_overlay > .alert-message {
+  position: static;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-width: 60rem;
+  max-height: calc(100vh - 2 * var(--page-gutter));
+  max-height: calc(100dvh - 2 * var(--page-gutter));
+  min-width: 0;
+  margin: auto;
+  overflow: auto;
+}
+[data-page="admin-docker"] #docker_apply_overlay > .alert-message > span,
+[data-page^="admin-docker-"] #docker_apply_overlay > .alert-message > span {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 100%;
+}
+[data-page="admin-docker"].apply-overlay-active #docker_apply_overlay,
+[data-page^="admin-docker-"].apply-overlay-active #docker_apply_overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 #cbi-smartdns #service_status {
   padding: 16px;
@@ -8306,20 +8376,20 @@ pre.command-output {
   flex-direction: column;
   gap: var(--field-gap);
 }
-[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field,
-[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field,
-[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field,
-[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field {
+[data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]),
+[data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]),
+[data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]),
+[data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) {
   display: grid;
-  grid-template-columns: minmax(0, 10rem) auto;
+  grid-template-columns: minmax(0, 10rem) max-content max-content minmax(0, 1fr);
   align-items: center;
   justify-content: start;
   gap: var(--control-gap) var(--action-gap);
 }
-[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field > span:first-child,
-[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field > span:first-child,
-[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field > span:first-child,
-[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field > span:first-child {
+[data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]) > span:first-child,
+[data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]) > span:first-child,
+[data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]) > span:first-child,
+[data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) > span:first-child {
   grid-column: 1;
   grid-row: 1;
   min-width: 0;
@@ -8327,30 +8397,77 @@ pre.command-output {
   overflow-wrap: anywhere;
   unicode-bidi: plaintext;
 }
-[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field > input[data-update-app],
-[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field > input[data-update-app],
-[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field > input[data-update-app],
-[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field > input[data-update-app] {
+[data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app],
+[data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app],
+[data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app],
+[data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app] {
   grid-column: 2;
+  grid-row: 1;
   justify-self: start;
+  min-width: 0;
   max-width: 100%;
 }
-[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"],
-[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"],
-[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"],
-[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"] {
-  grid-column: 1 / -1;
+[data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app][id$="-force_btn"],
+[data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app][id$="-force_btn"],
+[data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app][id$="-force_btn"],
+[data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app][id$="-force_btn"] {
+  grid-column: 3;
+}
+[data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]) > span[id$="-detail"],
+[data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]) > span[id$="-detail"],
+[data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]) > span[id$="-detail"],
+[data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) > span[id$="-detail"] {
+  grid-column: 4;
+  grid-row: 1;
   min-width: 0;
+  max-width: 100%;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
-[data-page="admin-vpn-passwall"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"]:empty,
-[data-page^="admin-vpn-passwall-"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"]:empty,
-[data-page="admin-services-passwall"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"]:empty,
-[data-page^="admin-services-passwall-"] #app_version > .cbi-value > .cbi-value-field > span[id$="-detail"]:empty {
-  display: none;
-}
 @container (max-width: 40rem) {
+  [data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]),
+  [data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]),
+  [data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]),
+  [data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--control-gap) var(--action-gap);
+  }
+  [data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]) > span:first-child,
+  [data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]) > span:first-child,
+  [data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]) > span:first-child,
+  [data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) > span:first-child {
+    flex: 0 0 100%;
+    min-width: 0;
+  }
+  [data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app],
+  [data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app],
+  [data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app],
+  [data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app] {
+    flex: 0 0 auto;
+    min-width: max-content;
+    max-width: 100%;
+    grid-column: auto;
+    grid-row: auto;
+  }
+  [data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app][id$="-force_btn"],
+  [data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app][id$="-force_btn"],
+  [data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app][id$="-force_btn"],
+  [data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) > input[data-update-app][id$="-force_btn"] {
+    grid-column: auto;
+  }
+  [data-page="admin-vpn-passwall"] .cbi-value-field:has(> input[data-update-app]) > span[id$="-detail"],
+  [data-page^="admin-vpn-passwall-"] .cbi-value-field:has(> input[data-update-app]) > span[id$="-detail"],
+  [data-page="admin-services-passwall"] .cbi-value-field:has(> input[data-update-app]) > span[id$="-detail"],
+  [data-page^="admin-services-passwall-"] .cbi-value-field:has(> input[data-update-app]) > span[id$="-detail"] {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: 100%;
+    grid-column: auto;
+    grid-row: auto;
+  }
   [data-page="admin-vpn-passwall"] .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title,
   [data-page^="admin-vpn-passwall-"] .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title,
   [data-page="admin-services-passwall"] .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title,

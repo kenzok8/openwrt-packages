@@ -193,41 +193,47 @@
         display: flex;
         flex-direction: column;
         gap: var(--field-gap);
+    }
 
-        > .cbi-value > .cbi-value-field {
-            display: grid;
-            grid-template-columns: minmax(0, 10rem) auto;
-            align-items: center;
-            justify-content: start;
-            gap: var(--control-gap) var(--action-gap);
+    // Match update fields even when a plugin version adds a section wrapper.
+    .cbi-value-field:has(> input[data-update-app]) {
+        display: grid;
+        grid-template-columns: minmax(0, 10rem) max-content max-content minmax(0, 1fr);
+        align-items: center;
+        justify-content: start;
+        gap: var(--control-gap) var(--action-gap);
 
-            > span:first-child {
-                grid-column: 1;
-                grid-row: 1;
-                min-width: 0;
-                line-height: 1.5;
-                overflow-wrap: anywhere;
-                unicode-bidi: plaintext;
-            }
+        > span:first-child {
+            grid-column: 1;
+            grid-row: 1;
+            min-width: 0;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+            unicode-bidi: plaintext;
+        }
 
-            > input[data-update-app] {
-                grid-column: 2;
-                justify-self: start;
-                max-width: 100%;
-            }
+        > input[data-update-app] {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: start;
+            min-width: 0;
+            max-width: 100%;
 
-            > span[id$="-detail"] {
-                grid-column: 1 / -1;
-                min-width: 0;
-                line-height: 1.5;
-                overflow-wrap: anywhere;
-
-                &:empty {
-                    display: none;
-                }
+            &[id$="-force_btn"] {
+                grid-column: 3;
             }
         }
+
+        > span[id$="-detail"] {
+            grid-column: 4;
+            grid-row: 1;
+            min-width: 0;
+            max-width: 100%;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
     }
+
 }
 
 @container (max-width: 40rem) {
@@ -235,8 +241,39 @@
     [data-page^="admin-vpn-passwall-"],
     [data-page="admin-services-passwall"],
     [data-page^="admin-services-passwall-"] {
-        // Its label is an ideographic space in the native template; when
-        // fields stack, it otherwise leaves a blank line above the actions.
+        .cbi-value-field:has(> input[data-update-app]) {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: var(--control-gap) var(--action-gap);
+
+            > span:first-child {
+                flex: 0 0 100%;
+                min-width: 0;
+            }
+
+            > input[data-update-app] {
+                flex: 0 0 auto;
+                min-width: max-content;
+                max-width: 100%;
+                grid-column: auto;
+                grid-row: auto;
+
+                &[id$="-force_btn"] {
+                    grid-column: auto;
+                }
+            }
+
+            > span[id$="-detail"] {
+                flex: 1 1 100%;
+                min-width: 0;
+                max-width: 100%;
+                grid-column: auto;
+                grid-row: auto;
+            }
+        }
+
         .cbi-value:has(> .cbi-value-field > .share-toolbar) > .cbi-value-title {
             display: none;
         }

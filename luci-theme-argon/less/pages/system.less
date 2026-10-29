@@ -6,6 +6,13 @@
     margin: .25rem 0;
   }
 
+  // ui.Textarea gives its wrapper and textarea an inline width of 100%.
+  // Size only the Notes widget; the textarea can keep filling its wrapper.
+  [data-name="notes"] .cbi-value-field > div:has(> .cbi-input-textarea) {
+    width: var(--form-control-min-width) !important;
+    max-width: 100%;
+  }
+
   #localtime,
   [data-name="hostname"] input,
   [data-name="log_size"] input,
