@@ -30,6 +30,26 @@ logn(){
     echo -e " $*" | tee -a $LOG
 }
 
+# 获取当前 overlay 的数据目录。
+# 不要写死 /overlay：部分固件（如 Kwrt/ImmortalWrt 的部分机型）把 rootfs_data
+# 挂在 /rom/overlay，而 /overlay 只存在于 preinit 的挂载命名空间里。
+get_overlay_src() {
+    local src upper
+    upper=$(sed -n 's/.*upperdir=\([^,]*\).*/\1/p' /proc/self/mountinfo 2>/dev/null | head -1)
+    src="${upper%/upper}"
+    if [ -n "$src" ] && [ -d "$src" ]; then
+        echo "$src"
+        return 0
+    fi
+    for src in /overlay /rom/overlay; do
+        if [ -d "$src" ]; then
+            echo "$src"
+            return 0
+        fi
+    done
+    return 1
+}
+
 load_uci_config() {
     if [ -f "/etc/config/$CONFIG" ]; then
         target_function=$(uci -q get $CONFIG.global.target_function)
@@ -214,10 +234,10 @@ format_disk() {
 
 # 获取系统盘
 get_system_disk() {
-    rom_dev=$(df -h | grep boot | awk '{print $1}' | head -1 )
-    [ -z ${rom_dev} ] && rom_dev=`df -P /boot 2>/dev/null | awk 'NR==2 {print $1}'`
-    [ -z ${rom_dev} ] && rom_dev=`blkid -t TYPE="squashfs" |awk -F : '{print $1}'`
-    [ -z ${rom_dev} ] && TDISK=`lsblk -l -o NAME,MOUNTPOINTS | grep -E '/rom'| grep -v '/rom/' | head -1 | awk '{print $1}'` && rom_dev="/dev/$TDISK"
+    rom_dev=$(df -h 2>/dev/null | grep boot | awk '{print $1}' | head -1 )
+    [ -z "${rom_dev}" ] && rom_dev=$(df -P /boot 2>/dev/null | awk 'NR==2 {print $1}')
+    [ -z "${rom_dev}" ] && rom_dev=$(blkid -t TYPE="squashfs" 2>/dev/null | awk -F : 'NR==1 {print $1}')
+    [ -z "${rom_dev}" ] && TDISK=`lsblk -l -o NAME,MOUNTPOINTS | grep -E '/rom'| grep -v '/rom/' | head -1 | awk '{print $1}'` && rom_dev="/dev/$TDISK"
     if [ -n "$rom_dev" ]; then
         case "$rom_dev" in
             /dev/sd[a-z][0-9]*)
@@ -429,7 +449,10 @@ fdiskB() {
     block detect > /etc/config/fstab
     uci -q set fstab.@global[0].anon_mount='0'
     uci -q set fstab.@global[0].auto_mount='0'
-    uci commit fstab
+    # 注意：'uci commit fstab' 会让 procd 重载 /etc/init.d/fstab，而它的
+    # stop() 是 '/sbin/block umount'，会把 /rom 和当前 /overlay 一起卸载。
+    # 扩展 overlay 时当前 overlay 正是配置拷贝源，所以此时不能提交。
+    [ "$target_function" = "/overlay" ] || uci commit fstab
     
     if [ "$target_function" = '/opt' ]; then
         /etc/init.d/dockerd stop >/dev/null 2> /dev/null
@@ -483,6 +506,14 @@ fdiskB() {
     fi
     sleep 5
     if [[ "$target_function" = "/" || "$target_function" = "/overlay" ]]; then
+        # 整盘被自动挂载（如 /dev/sda -> /mnt/sda）时 mkfs 会拒绝执行
+        # （"apparently in use by the system"），所以先卸载整盘。
+        if mount | grep -q "^/dev/$a "; then
+            log "取消整盘挂载 /dev/$a ..."
+            block umount /dev/$a >/dev/null 2> /dev/null
+            umount /dev/$a >/dev/null 2> /dev/null
+            sleep 1
+        fi
         format_disk "/dev/$b" $format_type
     elif [[ "$format_type" != "0" || "$isfdisk" = "1" ]]; then
         format_disk "/dev/$b" $format_type
@@ -523,7 +554,22 @@ fdiskB() {
     case "$target_function" in
         "/overlay") 
             if [ "$keep_config" = "1" ]; then
-                tar -C /overlay -cvf - . | tar -C /mnt/$b/ -xf - || tar -C /rom/overlay -cvf - . | tar -C /mnt/$b/ -xf - 
+                SRC=$(get_overlay_src)
+                if [ -z "$SRC" ]; then
+                    log "错误：找不到当前 overlay 数据目录，已中止（未修改 fstab）"
+                    expquit 1
+                fi
+                log "正在从 $SRC 拷贝配置到 /mnt/$b ..."
+                if ! tar -C "$SRC" -cf - . | tar -C /mnt/$b/ -xf -; then
+                    log "错误：配置拷贝失败，已中止（未修改 fstab，系统未受影响）"
+                    umount /dev/$b >/dev/null 2> /dev/null
+                    expquit 1
+                fi
+                if [ ! -f "/mnt/$b/upper/etc/config/network" ] && [ ! -f "/mnt/$b/etc/config/network" ]; then
+                    log "错误：拷贝校验失败（未找到 etc/config/network），已中止（未修改 fstab）"
+                    umount /dev/$b >/dev/null 2> /dev/null
+                    expquit 1
+                fi
                 umount /dev/$b >/dev/null 2> /dev/null 
                 [ $? -ne 0 ] && umount /mnt/$b >/dev/null 2> /dev/null 
                 [ $? -ne 0 ] && block umount /dev/$b >/dev/null 2> /dev/null 
@@ -781,9 +827,13 @@ stop() {
 
 expquit() {
     rm -f $LOCK
-    uci -q set fstab.@global[0].anon_mount='1'
-    uci -q set fstab.@global[0].auto_mount='1'
-    uci commit fstab
+    # 只有非 overlay 模式才在开头改过 anon_mount/auto_mount，需要恢复；
+    # overlay 模式为避免 block umount 没有提交，这里也就不能再 commit。
+    if [ "$target_function" != "/overlay" ]; then
+        uci -q set fstab.@global[0].anon_mount='1'
+        uci -q set fstab.@global[0].auto_mount='1'
+        uci commit fstab
+    fi
     [ -e "/etc/config/dockerd" ] && /etc/init.d/dockerd restart >/dev/null 2> /dev/null 
     [ "$1" = "2" ] && log "如果没生效，请重启设备"
     sleep 1
