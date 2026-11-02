@@ -1068,14 +1068,14 @@ select {
   background-repeat: no-repeat;
   appearance: none;
 }
-input:not(.cbi-button) {
+input:not(.cbi-button, [type="button"], [type="submit"], [type="reset"]) {
   background-color: var(--input-bg);
 }
 .cbi-dropdown:not(.btn):not(.cbi-button) {
   background-color: var(--dropdown-control-bg);
 }
 select:not([multiple="multiple"]):focus,
-input:not(.cbi-button):focus,
+input:not(.cbi-button, [type="button"], [type="submit"], [type="reset"]):focus,
 textarea:focus,
 .cbi-dropdown:focus {
   --control-border: var(--control-focus);
@@ -2492,6 +2492,7 @@ td > table > tbody > tr > td,
 }
 .btn,
 .cbi-button,
+input:where([type="button"], [type="submit"], [type="reset"]),
 .item::after {
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -2523,36 +2524,42 @@ td > table > tbody > tr > td,
 .btn:not(button) ul:not(.dropdown) li {
   padding: 0;
 }
-.cbi-button:not(select) {
+.cbi-button:not(select),
+input:where([type="button"], [type="submit"], [type="reset"]) {
   appearance: none !important;
 }
 @media (hover: hover) {
   :is(.btn, .cbi-button):not(:disabled):not([disabled]):not([aria-disabled="true"]):not([disabled] *, [aria-disabled="true"] *):hover,
+  input:where([type="button"], [type="submit"], [type="reset"]):not(:disabled):not([disabled]):not([aria-disabled="true"]):not([disabled] *, [aria-disabled="true"] *):hover,
   .cbi-dynlist:not([disabled]):not([aria-disabled="true"]) > .item:hover::after {
     box-shadow: var(--button-hover-shadow);
   }
 }
 .btn:disabled,
-.cbi-button:disabled {
+.cbi-button:disabled,
+input:where([type="button"], [type="submit"], [type="reset"]):disabled {
   cursor: not-allowed;
   pointer-events: none;
   opacity: 0.5;
   box-shadow: none;
 }
 .btn:focus-visible,
-.cbi-button:focus-visible {
+.cbi-button:focus-visible,
+input:where([type="button"], [type="submit"], [type="reset"]):focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 @media (prefers-reduced-motion: no-preference) {
   button.btn,
   button.cbi-button,
-  input.cbi-button {
+  input.cbi-button,
+  input:where([type="button"], [type="submit"], [type="reset"]) {
     transition: scale 0.15s ease-out, box-shadow 0.15s ease-out;
   }
   button.btn:not(:disabled):not([aria-disabled="true"]):not([data-static]):active,
   button.cbi-button:not(:disabled):not([aria-disabled="true"]):not([data-static]):active,
-  input.cbi-button:not(:disabled):not([aria-disabled="true"]):not([data-static]):active {
+  input.cbi-button:not(:disabled):not([aria-disabled="true"]):not([data-static]):active,
+  input:where([type="button"], [type="submit"], [type="reset"]):not(:disabled):not([aria-disabled="true"]):not([data-static]):active {
     scale: 0.96;
   }
 }
@@ -6734,12 +6741,15 @@ pre.command-output {
 [data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) {
   display: grid !important;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.5rem), 1fr)) !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
   gap: var(--field-gap);
   margin: 0 !important;
   padding: var(--field-gap) var(--section-inset);
 }
 [data-page="admin-status"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox,
 [data-page="admin-status-overview"] #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox {
+  width: auto !important;
   min-width: 0 !important;
   max-width: 100% !important;
   margin: 0 !important;
@@ -7865,10 +7875,6 @@ pre.command-output {
 }
 [data-page^="admin-services-openclash"] .oc .plugin-toggle-container {
   margin-left: inherit !important;
-}
-[data-page^="admin-services-openclash"] .oc .core-status-toggle {
-  flex: 0 !important;
-  min-width: auto !important;
 }
 [data-page^="admin-services-openclash"] .cbi-tabmenu > li {
   border-right: none !important;

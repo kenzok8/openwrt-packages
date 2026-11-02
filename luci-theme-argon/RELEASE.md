@@ -1,5 +1,11 @@
 # Update log for master branch
 
+## v3.1.2 [ 2026.11.02 ]
+
+- Fix port card wrapping and alignment, including ImmortalWrt.
+- Fix invisible OpenList2 button text and overflowing OpenClash status logs.
+- Improve Dockerman, Passwall and system notes layouts.
+
 ## v3.1.1 [ 2026.10.28 ]
 
 ### Fixed / 修复

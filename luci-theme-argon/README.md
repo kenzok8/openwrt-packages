@@ -41,7 +41,7 @@ It also supports automatic and manual switching between light and dark modes.
 - **Layout fixes.** Improve dashboard actions, overview layouts, dynamic lists and custom IP/MAC inputs across narrow screens, light/dark modes and RTL layouts.
 - **Compatibility improvements.** Improve compatibility with stable OpenWrt firmware.
 
-Users on v3.0.0 or earlier must install v3.1.1 manually once to get online updates. Users on v3.1.0 can upgrade through Theme updates. See the [release notes](RELEASE.md).
+Users on v3.0.0 or earlier must install v3.1.2 manually once to get online updates. Users on v3.1.0 or later can upgrade through Theme updates. See the [release notes](RELEASE.md).
 
 ## 3.0 highlights
 

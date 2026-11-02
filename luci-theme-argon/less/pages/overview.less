@@ -79,11 +79,15 @@
   #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(~"min(100%, 8.5rem)", 1fr)) !important;
+    // ImmortalWrt centers fixed-width cards; let both native variants fill a row.
+    align-items: stretch !important;
+    justify-items: stretch !important;
     gap: var(--field-gap);
     margin: 0 !important;
     padding: var(--field-gap) var(--section-inset);
 
     > .ifacebox {
+      width: auto !important;
       min-width: 0 !important;
       max-width: 100% !important;
       margin: 0 !important;

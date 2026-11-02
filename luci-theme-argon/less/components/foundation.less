@@ -28,7 +28,8 @@ select {
   appearance: none;
 }
 
-input:not(.cbi-button) {
+// Some LuCI apps use button variants without the .cbi-button base class.
+input:not(.cbi-button, [type="button"], [type="submit"], [type="reset"]) {
   background-color: var(--input-bg);
 }
 
@@ -37,7 +38,7 @@ input:not(.cbi-button) {
 }
 
 select:not([multiple="multiple"]):focus,
-input:not(.cbi-button):focus,
+input:not(.cbi-button, [type="button"], [type="submit"], [type="reset"]):focus,
 textarea:focus,
 .cbi-dropdown:focus {
   // Page-specific field borders also consume this locally focused role.

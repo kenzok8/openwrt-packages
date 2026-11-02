@@ -1,7 +1,9 @@
 // out: false
 
+// Keep type selectors weak so standalone .cbi-button-* variants set the fill.
 .btn,
 .cbi-button,
+input:where([type="button"], [type="submit"], [type="reset"]),
 .item::after {
   font-size: .875rem;
   line-height: 1.25rem;
@@ -36,19 +38,22 @@
   padding: 0;
 }
 
-.cbi-button:not(select) {
+.cbi-button:not(select),
+input:where([type="button"], [type="submit"], [type="reset"]) {
   appearance: none !important;
 }
 
 @media (hover: hover) {
   :is(.btn, .cbi-button):not(:disabled):not([disabled]):not([aria-disabled="true"]):not([disabled] *, [aria-disabled="true"] *):hover,
+  input:where([type="button"], [type="submit"], [type="reset"]):not(:disabled):not([disabled]):not([aria-disabled="true"]):not([disabled] *, [aria-disabled="true"] *):hover,
   .cbi-dynlist:not([disabled]):not([aria-disabled="true"]) > .item:hover::after {
     box-shadow: var(--button-hover-shadow);
   }
 }
 
 .btn:disabled,
-.cbi-button:disabled {
+.cbi-button:disabled,
+input:where([type="button"], [type="submit"], [type="reset"]):disabled {
   cursor: not-allowed;
   pointer-events: none;
   opacity: .5;
@@ -56,7 +61,8 @@
 }
 
 .btn:focus-visible,
-.cbi-button:focus-visible {
+.cbi-button:focus-visible,
+input:where([type="button"], [type="submit"], [type="reset"]):focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
@@ -64,7 +70,8 @@
 @media (prefers-reduced-motion: no-preference) {
   button.btn,
   button.cbi-button,
-  input.cbi-button {
+  input.cbi-button,
+  input:where([type="button"], [type="submit"], [type="reset"]) {
     transition: scale .15s ease-out, box-shadow .15s ease-out;
 
     &:not(:disabled):not([aria-disabled="true"]):not([data-static]):active {
