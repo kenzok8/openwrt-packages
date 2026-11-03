@@ -1,0 +1,404 @@
+#!/usr/bin/lua
+-- SPDX-License-Identifier: Apache-2.0
+local fs = require "nixio.fs"
+local nixio = require "nixio"
+local json = require "luci.jsonc"
+local archive = require "luci.lucky_archive"
+local ROOT = "/tmp/lucky-luci-backup"
+local LOCK = ROOT .. "/lock"
+local INIT = "/etc/init.d/lucky"
+local CONFIG_HELPER = "/usr/libexec/lucky-call"
+local config_operations = { ["set-port"] = 2, ["set-safe-url"] = 2, ["set-internet"] = 2, ["reset-auth"] = 1 }
+local locked, resume, stage, previous, target
+
+local function must(value, message)
+	if not value then error(message, 0) end
+	return value
+end
+local function quote(s) return "'" .. s:gsub("'", "'\\''") .. "'" end
+local function run(args, cwd)
+	local words = {}
+	for _, value in ipairs(args) do words[#words + 1] = quote(value) end
+	local command = table.concat(words, " ") .. " >/dev/null 2>&1"
+	if cwd then command = "cd " .. quote(cwd) .. " && " .. command end
+	return os.execute(command) == 0
+end
+local function random()
+	local f = must(io.open("/dev/urandom", "rb"), "Cannot generate backup ID")
+	local data = f:read(16); f:close()
+	must(data and #data == 16, "Cannot generate backup ID")
+	return (data:gsub(".", function(c) return string.format("%02x", c:byte()) end))
+end
+local function remove(path)
+	local st = fs.lstat(path)
+	if not st then return end
+	if st.type == "dir" then
+		for name in fs.dir(path) do remove(path .. "/" .. name) end
+		must(fs.rmdir(path), "Cannot remove temporary directory: " .. path)
+	else
+		must(fs.unlink(path), "Cannot remove temporary file: " .. path)
+	end
+end
+local function ensure_root()
+	local st = fs.lstat(ROOT)
+	if not st then must(fs.mkdir(ROOT, "700"), "Cannot create backup workspace"); st = fs.lstat(ROOT) end
+	must(st and st.type == "dir" and st.uid == 0, "Unsafe backup workspace")
+	must(fs.chmod(ROOT, "700"), "Cannot protect backup workspace")
+end
+local function workspace(token)
+	must(type(token) == "string" and #token == 32 and token:match("^[a-f0-9]+$"), "Invalid backup ID")
+	local path = ROOT .. "/" .. token
+	local st = fs.lstat(path)
+	must(st and st.type == "dir" and st.uid == 0, "Backup workspace has expired")
+	return path
+end
+local function lock(wait)
+	locked = must(nixio.open(LOCK, "w", "600"), "Cannot open backup lock")
+	-- Concurrent page opens share the first successful core query. Bound the
+	-- wait and keep status reads independent of this potentially slow operation.
+	for attempt = 1, wait and 51 or 1 do
+		if locked:lock("tlock") then return end
+		if wait and attempt < 51 then nixio.nanosleep(0, 100000000) end
+	end
+	error("Another backup or restore is in progress", 0)
+end
+local function running() return run({ "/bin/pidof", "lucky" }) end
+local function stop()
+	resume = running()
+	must(run({ INIT, "stop" }), "Cannot stop Lucky")
+	for _ = 1, 30 do
+		if not running() then return end
+		nixio.nanosleep(1)
+	end
+	error("Lucky is still running; configuration was not changed", 0)
+end
+local function config_dir()
+	local pipe = must(io.popen("/sbin/uci -q get 'lucky.@lucky[0].configdir'", "r"), "Cannot read configuration directory")
+	local value = pipe:read("*a"):gsub("\n$", "")
+	pipe:close()
+	if value == "" then value = "/etc/config/lucky.daji" end
+	must(type(value) == "string" and #value <= 512 and value:sub(1, 1) == "/" and not value:find("[%z\1-\31\127]"), "Unsafe configuration directory")
+	value = value:gsub("/+$", "")
+	must(archive.valid_path(value:sub(2)) and value:match("^/[^/]+/[^/]+"), "Use a dedicated configuration subdirectory")
+	for _, system in ipairs({ "/etc", "/etc/init.d", "/etc/hotplug.d", "/etc/ssl", "/etc/dropbear", "/etc/uci-defaults", "/etc/crontabs",
+		"/bin", "/sbin", "/usr", "/lib", "/www", "/proc", "/sys", "/dev", "/run", "/rom", "/overlay", ROOT }) do
+		must(value ~= system and system:sub(1, #value + 1) ~= value .. "/", "Unsafe configuration directory")
+		if system ~= "/etc" then must(value:sub(1, #system + 1) ~= system .. "/", "Unsafe configuration directory") end
+	end
+	must(value ~= "/etc/config", "Use a dedicated configuration subdirectory")
+	local path = ""
+	for part in value:gmatch("[^/]+") do
+		path = path .. "/" .. part
+		local st = fs.lstat(path)
+		must(st and st.type == "dir", "Configuration directory must exist and contain no symbolic links")
+	end
+	-- Mount points cannot be replaced by rename; do not traverse nested mounts.
+	local mounts = must(io.open("/proc/self/mounts", "r"), "Cannot inspect mounted filesystems")
+	for line in mounts:lines() do
+		local mount = line:match("^%S+ (%S+)")
+		if mount then
+			mount = mount:gsub("\\(%d%d%d)", function(n) return string.char(tonumber(n, 8)) end)
+			if mount == value or mount:sub(1, #value + 1) == value .. "/" then mounts:close(); error("Use a configuration subdirectory without nested mounts", 0) end
+		end
+	end
+	mounts:close()
+	return value
+end
+local function scan(path, allow_empty, clearing)
+	local count, size, entries = 0, 0, {}
+	local function walk(dir, prefix)
+		for name in fs.dir(dir) do
+			local relative = prefix .. name
+			must(archive.valid_path(relative), "Unsupported configuration filename")
+			local st = must(fs.lstat(dir .. "/" .. name), "Cannot read configuration file")
+			must(st.type == "reg" or st.type == "dir", "Configuration contains a link or special file: " .. relative)
+			count = count + 1
+			entries[#entries + 1] = { name = relative, directory = st.type == "dir", size = st.size, mtime = st.mtime, mode = tonumber(tostring(st.modedec), 8) % 512 }
+			if st.type == "reg" then size = size + st.size else walk(dir .. "/" .. name, relative .. "/") end
+			must(count <= archive.max_entries and (clearing or size <= archive.max_data), "Configuration exceeds 10000 entries or 64 MiB")
+		end
+	end
+	walk(path, "")
+	must(allow_empty or count > 0, "Configuration directory is empty")
+	return size, entries
+end
+local function restore_files(path, clearing)
+	local empty, lucky = true, false
+	for name in fs.dir(path) do
+		empty = false
+		local st = fs.lstat(path .. "/" .. name)
+		if name:lower():match("%.lkcf$") and st and st.type == "reg" then lucky = true end
+	end
+	must(empty or lucky, "Restore target must be empty or contain a regular .lkcf file at its root")
+	local _, entries = scan(path, true, clearing)
+	local names = {}
+	for _, entry in ipairs(entries) do names[#names + 1] = entry.name .. (entry.directory and "/" or "") end
+	table.sort(names)
+	return names
+end
+local function read_file(path)
+	local f = must(io.open(path, "rb"), "Missing restore preview; check the archive again")
+	local data = f:read("*a"); f:close(); return data
+end
+local function write_file(path, data)
+	local f = must(io.open(path, "wb"), "Cannot save restore preview")
+	must(f:write(data), "Cannot save restore preview"); must(f:close(), "Cannot save restore preview")
+end
+local function fingerprint(path)
+	local f = must(io.open(path, "rb"), "Cannot read backup")
+	local crc, size = 0, 0
+	while true do
+		local block = f:read(65536)
+		if not block then break end
+		crc, size = nixio.bin.crc32(block, crc), size + #block
+	end
+	f:close()
+	return tostring(size) .. ":" .. tostring(crc)
+end
+local function space(path, bytes)
+	local st = must(fs.statvfs(path), "Cannot check free space")
+	must(st.bavail * st.frsize >= bytes + 1024 * 1024, "Not enough free space for backup or restore")
+end
+local function validate(path)
+	local st = fs.lstat(path)
+	must(st and st.type == "reg" and st.nlink == 1, "Upload is missing or is not a regular file")
+	local info = archive.inspect(path)
+	archive.extract(path, info)
+	return info
+end
+local function update_config()
+	local core = require "luci.lucky_core"
+	local output = ROOT .. "/config-output"
+	local errors = ROOT .. "/config-error"
+	local words = { quote(CONFIG_HELPER) }
+	for _, value in ipairs(arg) do
+		must(type(value) == "string" and #value <= 512 and not value:find("[%z\1-\31\127]"), "Invalid configuration argument")
+		words[#words + 1] = quote(value)
+	end
+	if arg[1] == "set-port" then
+		local port = tonumber(arg[2])
+		must(arg[2]:match("^%d+$") and port and port >= 1 and port <= 65535, "Port must be an integer from 1 to 65535")
+	elseif arg[1] == "set-safe-url" then
+		must(#arg[2] <= 256 and not arg[2]:find("%s") and (arg[2] == "" or arg[2]:sub(1, 1) == "/"), "Invalid safe URL")
+	elseif arg[1] == "set-internet" then
+		must(arg[2] == "true" or arg[2] == "false", "Internet access must be true or false")
+	end
+	target = core.config_directory()
+	local directory = fs.stat(target)
+	must(directory and directory.type == "dir", "Configuration directory must exist")
+	must(fs.access("/usr/bin/lucky", "x"), "Lucky core is missing or not executable")
+	local online = false
+	if arg[1] ~= "reset-auth" and running() then
+		local ok, info = pcall(core.info, ROOT)
+		online = ok and core.supports_local_control(info.Version)
+	end
+	if online then
+		words = { quote("/usr/bin/lucky"), "-cd", quote(target) }
+		if arg[1] == "set-port" then
+			words[#words + 1] = "-rSetHttpAdminPort"
+			words[#words + 1] = quote(arg[2])
+		elseif arg[1] == "set-safe-url" and arg[2] == "" then
+			words[#words + 1] = "-rCancelSafeURL"
+		else
+			words[#words + 1] = arg[1] == "set-safe-url" and "-rSetSafeURL" or "-rSetAllowInternetaccess"
+			words[#words + 1] = quote(arg[2])
+		end
+	else
+		-- Older cores and stopped services use the offline writer. The common
+		-- cleanup resumes only an originally running service, even on failure.
+		stop()
+		must(not running(), "Lucky was started by another operation; configuration was not changed")
+	end
+	core.invalidate_base()
+	-- Invalidate even on partial failure. Once a local command is sent, never
+	-- retry via the offline writer: the running core may already have saved it.
+	local code = os.execute(table.concat(words, " ") .. " >" .. quote(output) .. " 2>" .. quote(errors))
+	local file = io.open(output, "rb")
+	local text = file and file:read(16384) or ""
+	if file then file:close() end
+	file = io.open(errors, "rb")
+	local detail = file and file:read(16384) or ""
+	if file then file:close() end
+	fs.unlink(output); fs.unlink(errors)
+	core.invalidate_base()
+	must(code == 0, detail ~= "" and detail or (text ~= "" and text or "Unable to update Lucky configuration"))
+	return { stdout = text }
+end
+local function main()
+	ensure_root()
+	local operation, token = arg[1], arg[2]
+	if operation == "configure" then
+		-- URI-encoded JSON is a single non-empty CGI argument even when a
+		-- setting value is empty. Only the existing setting commands are allowed.
+		must(#arg == 2 and #token <= 4096 and token:match("^[%w%%%.!~*'()_%-]+$"), "Invalid configuration payload")
+		local values = json.parse((token:gsub("%%(%x%x)", function(hex) return string.char(tonumber(hex, 16)) end)))
+		must(type(values) == "table" and config_operations[values[1]] == #values, "Invalid configuration command")
+		arg = values
+		operation, token = arg[1], arg[2]
+	end
+	local rules_open = operation == "rules-localips" or operation == "rules-allowlist"
+	local config_update = config_operations[operation]
+	must(operation and #arg == (config_update or ((rules_open or operation == "prepare" or operation == "core-prepare" or operation == "core-status" or operation == "core-info" or operation == "core-base" or operation == "base-invalidate" or operation == "core-fix") and 1 or 2)), "Invalid backup arguments")
+	if operation == "core-status" then return require("luci.lucky_core").status() end
+	lock(config_update or operation == "core-info" or operation == "core-base" or operation == "base-invalidate")
+	if config_update then
+		-- Native cgi-exec may lose its HTTP worker; service recovery must finish.
+		-- The legacy gateway already starts its helper in a separate session.
+		nixio.setsid()
+		return update_config()
+	end
+	if operation == "base-invalidate" then return require("luci.lucky_core").invalidate_base() end
+	if operation == "core-info" then return require("luci.lucky_core").info(ROOT) end
+	if operation == "core-base" then return require("luci.lucky_core").base(ROOT, remove) end
+	if operation == "core-fix" then return require("luci.lucky_core").fix() end
+	if rules_open or operation == "prepare" or operation == "core-prepare" then
+		local directory = (rules_open or operation == "prepare") and config_dir() or "core"
+		-- Abandoned private uploads/downloads expire at the next operation.
+		for name in fs.dir(ROOT) do
+			if #name == 32 and name:match("^[a-f0-9]+$") then
+				local st = fs.lstat(ROOT .. "/" .. name)
+				if st and os.time() - st.mtime > 86400 then remove(ROOT .. "/" .. name) end
+			end
+		end
+		token = random()
+		must(fs.mkdir(ROOT .. "/" .. token, "700"), "Cannot create backup workspace")
+		local f = must(io.open(ROOT .. "/" .. token .. "/directory", "w"), "Cannot save backup workspace")
+		must(f:write(directory), "Cannot save backup workspace"); must(f:close(), "Cannot save backup workspace")
+		if rules_open then
+			local ok, result = pcall(require("luci.lucky_rules").open, ROOT .. "/" .. token, directory, operation == "rules-localips" and "localips" or "ip-allowlist.txt")
+			if not ok then remove(ROOT .. "/" .. token); error(result, 0) end
+			result.token = token; return result
+		end
+		return { token = token, directory = directory }
+	end
+	local work = workspace(token)
+	if operation == "cleanup" then remove(work); return {} end
+	if operation == "rules-save" then return require("luci.lucky_rules").save(work, config_dir(), token) end
+	if operation == "core-check" or operation == "core-install" then
+		must(read_file(work .. "/directory") == "core", "Invalid core workspace")
+		local core = require "luci.lucky_core"
+		if operation == "core-check" then return core.check(work) end
+		local function start_core()
+			if not run({ INIT, "start" }) then return false end
+			local function current_core_running()
+				local expected = fs.stat("/usr/bin/lucky")
+				local pipe = io.popen("/bin/pidof lucky", "r")
+				if not expected or not pipe then if pipe then pipe:close() end; return false end
+				local pids = pipe:read("*a"); pipe:close()
+				local found = false
+				for pid in pids:gmatch("%d+") do
+					local actual = fs.stat("/proc/" .. pid .. "/exe")
+					if not actual or actual.ino ~= expected.ino or actual.dev ~= expected.dev then return false end
+					found = true
+				end
+				return found
+			end
+			for _ = 1, 10 do
+				if current_core_running() then nixio.nanosleep(1); return current_core_running() end
+				nixio.nanosleep(1)
+			end
+			return false
+		end
+		return core.install(work, token, function()
+			local was_running = running()
+			local stopped, err = pcall(stop)
+			resume = false
+			if not stopped then if was_running then start_core() end; error(err, 0) end
+			return was_running
+		end, start_core, running)
+	end
+	target = config_dir()
+	must(read_file(work .. "/directory") == target, "Configuration directory changed; start the operation again")
+	if operation == "clear-check" then
+		local existing = restore_files(target, true)
+		write_file(work .. "/clear-preview", table.concat(existing, "\n"))
+		return { directory = target, removed = existing, replaced = {}, added = {} }
+	end
+	if operation == "check" then
+		local info = validate(work .. "/upload.zip")
+		local existing, incoming, removed, replaced, added = restore_files(target), {}, {}, {}, {}
+		for _, entry in ipairs(info.entries) do incoming[entry.name .. (entry.directory and "/" or "")] = true end
+		for _, name in ipairs(existing) do
+			if incoming[name] then replaced[#replaced + 1] = name; incoming[name] = nil
+			else removed[#removed + 1] = name end
+		end
+		for name in pairs(incoming) do added[#added + 1] = name end
+		table.sort(added)
+		write_file(work .. "/preview", table.concat(existing, "\n"))
+		write_file(work .. "/fingerprint", fingerprint(work .. "/upload.zip"))
+		return { count = info.count, bytes = info.bytes, directory = target, removed = removed, replaced = replaced, added = added }
+	end
+	must(operation == "backup" or operation == "restore" or operation == "clear", "Unsupported backup operation")
+	if operation == "backup" then
+		stop()
+		local bytes, entries = scan(target)
+		space(work, bytes + archive.max_entries * 512)
+		local output = work .. "/backup.zip"
+		must(not fs.lstat(output), "Backup already exists")
+		archive.write(target, output, entries)
+		fs.chmod(output, "600")
+		local info = validate(output)
+		return { count = info.count, bytes = info.bytes, filename = "lucky-luci-config-" .. os.date("%Y%m%d-%H%M%S") .. ".zip" }
+	end
+	-- Revalidate under the lock even after the UI preview.
+	local clearing = operation == "clear"
+	local input = work .. "/upload.zip"
+	local info = clearing and { bytes = 0, count = 0, entries = {} } or validate(input)
+	if not clearing then must(read_file(work .. "/fingerprint") == fingerprint(input), "Backup changed; check the archive again") end
+	local preview = read_file(work .. (clearing and "/clear-preview" or "/preview"))
+	must(table.concat(restore_files(target, clearing), "\n") == preview, "Target file list changed; check the archive again")
+	local parent = target:match("^(.*)/[^/]+$")
+	space(parent, info.bytes + info.count * 4096)
+	stop()
+	must(config_dir() == target and table.concat(restore_files(target, clearing), "\n") == preview,
+		"Target file list changed while stopping Lucky; check the archive again")
+	local staging = parent .. "/.lucky-restore-" .. token
+	previous = parent .. "/.lucky-previous-" .. token
+	must(not fs.lstat(previous) and fs.mkdir(staging, "700"), "Cannot stage restored configuration")
+	stage = staging
+	if not clearing then archive.extract(input, info, stage) end
+	scan(stage, clearing)
+	for _, entry in ipairs(info.entries) do
+		local st = fs.lstat(stage .. "/" .. entry.name)
+		must(st and st.type == (entry.directory and "dir" or "reg") and (entry.directory or st.size == entry.size), "Extracted files do not match the backup")
+	end
+	must(not running(), "Lucky was started by another operation; restore cancelled")
+	require("luci.lucky_core").invalidate_base()
+	must(fs.rename(target, previous), "Cannot move original configuration; original files are unchanged")
+	if not fs.rename(stage, target) then
+		must(fs.rename(previous, target), "Restore rollback failed; original files are at " .. previous)
+		previous = nil
+		error("Cannot install restored configuration; original files were restored", 0)
+	end
+	stage = nil
+	-- Leave Lucky stopped so it cannot immediately recreate the cleared files.
+	if clearing then resume = false end
+	local removed = pcall(remove, previous)
+	return { count = info.count, bytes = info.bytes,
+		warning = not removed and ("Old configuration files remain at " .. previous) or nil }
+end
+
+nixio.umask("077")
+local ok, result = pcall(main)
+local warnings = {}
+if stage then
+	local cleaned = pcall(remove, stage)
+	if not cleaned then warnings[#warnings + 1] = "Temporary restore files remain at " .. stage end
+end
+-- Never restart against a missing directory after a failed rollback.
+if resume and target and fs.lstat(target) then
+	local started = running() or run({ INIT, "start" })
+	local recovered = false
+	for _ = 1, 5 do
+		local seen = running()
+		nixio.nanosleep(1)
+		if seen and running() then recovered = true; break end
+	end
+	if not started or not recovered then warnings[#warnings + 1] = "Lucky could not restart; start it manually" end
+end
+if locked then locked:close() end
+local reply = ok and result or { error = tostring(result) }
+reply.ok = ok
+if reply.warning then warnings[#warnings + 1] = reply.warning end
+if #warnings > 0 then reply.warning = table.concat(warnings, "; ") end
+io.write(json.stringify(reply), "\n")

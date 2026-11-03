@@ -1,0 +1,11 @@
+#!/usr/bin/lua
+-- SPDX-License-Identifier: Apache-2.0
+local json = require "luci.jsonc"
+if #arg ~= 1 or arg[1] ~= "read" then
+ io.stderr:write("Usage: lucky-diagnostics read\n"); os.exit(1)
+end
+local ok, result = pcall(function() return require("luci.lucky_diagnostics").collect() end)
+if not ok then
+ io.stderr:write("Cannot read Lucky diagnostics\n"); os.exit(1)
+end
+io.write(json.stringify(result), "\n")

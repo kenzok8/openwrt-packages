@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>Lucky · Refresh LuCI menu</title>
+<body>
+<p id="status">Refreshing the LuCI menu… / 正在刷新 LuCI 菜单…</p>
+<p><a id="open" href="/cgi-bin/luci/admin/services/lucky">Open Lucky / 打开 Lucky</a></p>
+<script>
+// Only invalidate menu snapshots. Preserve login cookies and other session
+// data (including form/tab state), and never accept an external redirect URL.
+(function() {
+    'use strict';
+    var marker = '/luci-static/';
+    var offset = window.location.pathname.lastIndexOf(marker);
+    var prefix = offset < 0 ? '' : window.location.pathname.slice(0, offset);
+    var target = (prefix + '/cgi-bin/luci/admin/services/lucky').replace(/^\/+/, '/');
+    document.getElementById('open').setAttribute('href', target);
+    try {
+        var storage = window.sessionStorage;
+        var saved = storage.getItem('luci-session-store');
+        var data = saved && JSON.parse(saved);
+        var changed = false;
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+            Object.keys(data).forEach(function(id) {
+                var session = data[id];
+                if (session && typeof session === 'object' && Object.prototype.hasOwnProperty.call(session, 'menu')) {
+                    delete session.menu;
+                    changed = true;
+                }
+            });
+            if (changed) storage.setItem('luci-session-store', JSON.stringify(data));
+        }
+    }
+    catch (e) {
+        document.getElementById('status').textContent = 'Browser storage is unavailable. Open Lucky using the link below. / 无法刷新浏览器缓存，请点击下方链接打开 Lucky。';
+        return;
+    }
+    window.location.replace(target);
+})();
+</script>
+</body>
+</html>

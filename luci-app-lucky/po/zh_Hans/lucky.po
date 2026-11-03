@@ -1,63 +1,554 @@
 msgid ""
-msgstr "Content-Type: text/plain; charset=UTF-8"
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Layout"
+msgstr "布局"
+
+msgid "Side by side"
+msgstr "并排"
+
+msgid "Vertical"
+msgstr "垂直"
+
+msgid "Session expired. Reload this page and sign in again."
+msgstr "登录已过期，请刷新页面并重新登录。"
+
+msgid "Choose file"
+msgstr "选择文件"
+
+msgid "Choose a non-empty file no larger than 64 MiB."
+msgstr "请选择非空文件，大小不能超过 64 MiB。"
+
+msgid "Uploading…"
+msgstr "正在上传…"
+
+msgid "Upload"
+msgstr "上传"
+
+msgid "Upload cancelled."
+msgstr "已取消上传。"
+
+msgid "Upload file"
+msgstr "上传文件"
+
+msgid "Configuration applied."
+msgstr "配置已应用。"
+
+msgid "Changes saved. Apply them to reload Lucky."
+msgstr "修改已保存，应用后将重新加载 Lucky。"
+
+msgid "Save & Apply"
+msgstr "保存并应用"
+
+msgid "Reset"
+msgstr "复位"
+
+msgid "Unable to load the Lucky page. Reload to retry."
+msgstr "无法加载 Lucky 页面，请刷新重试。"
+
+msgid "Admin access policy"
+msgstr "管理后台访问策略"
+
+msgid "Admin access policy saved."
+msgstr "管理后台访问策略已保存。"
+
+msgid "Admin credentials reset"
+msgstr "管理凭据已重置"
+
+msgid "Admin HTTP port"
+msgstr "管理后台 HTTP 端口"
+
+msgid "Admin panel"
+msgstr "管理后台"
+
+msgid "Admin port saved."
+msgstr "管理端口已保存。"
+
+msgid "Admin safe URL"
+msgstr "管理后台安全入口"
+
+msgid "Admin safe URL saved."
+msgstr "安全入口已保存。"
+
+msgid "Configuration saved, but Lucky could not restart. Start it manually."
+msgstr "配置已保存，但 Lucky 未能重新启动，请手动启动。"
+
+msgid "Allow Internet access to the admin panel"
+msgstr "允许从互联网访问管理后台"
+
+msgid "Allowed"
+msgstr "允许"
+
+msgid "Account:"
+msgstr "账号："
+
+msgid "Are you sure you want to perform this service action?"
+msgstr "确定要执行此服务操作吗？"
+
+msgid "Available when the service is running"
+msgstr "服务运行后可访问"
+
+msgid "Build date"
+msgstr "构建日期"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Collecting data…"
+msgstr "正在获取数据…"
+
+msgid "Refresh"
+msgstr "刷新"
+
+msgid "Refreshing…"
+msgstr "刷新中…"
+
+msgid "Configuration directory"
+msgstr "配置目录"
+
+msgid "Enter a port from 1 to 65535."
+msgstr "请输入 1 到 65535 之间的端口。"
+
+msgid "Exposing the admin panel to the Internet increases risk. Continue?"
+msgstr "将管理后台暴露到互联网会增加安全风险，是否继续？"
+
+msgid "Installation status"
+msgstr "安装状态"
+
+msgid "Installed"
+msgstr "已安装"
+
+msgid "Internet access was disabled before the credentials were changed."
+msgstr "修改凭据前已自动关闭互联网访问。"
+
+msgid "Invalid response from %s."
+msgstr "%s 返回了无效响应。"
+
+msgid "Load error: %s"
+msgstr "加载错误：%s"
+
+msgid "Local access only"
+msgstr "仅限本地访问"
+
+msgid "Not reported by this core"
+msgstr "当前核心未提供此状态"
 
 msgid "Lucky"
-msgstr "Lucky大吉"
+msgstr "Lucky"
 
-msgid "Lucky Control panel"
-msgstr "Lucky操作台"
+msgid "Lucky service state updated."
+msgstr "Lucky 服务状态已更新。"
 
-msgid "ipv4/ipv6 portforward,ddns,reverseproxy proxy,wake on lan,IOT and more,Default username and password 666"
-msgstr "IPv4/IPv6端口转发,动态域名服务,http/https反向代理，默认用户名密码666.."
+msgid "Lucky version"
+msgstr "Lucky 版本"
 
-msgid "Enable SSL"
-msgstr "开启SSL"
+msgid "New password:"
+msgstr "新密码："
 
-msgid "Collecting data..."
-msgstr "收集数据..."
+msgid "Not installed"
+msgstr "未安装"
 
-msgid "Set the Lucky access port"
-msgstr "设置访问端口"
+msgid "Package architecture"
+msgstr "软件包架构"
 
-msgid "Base Setting"
-msgstr "基本设置"
+msgid "Reset admin credentials"
+msgstr "重置管理账号密码"
 
-msgid "Safe entrance"
-msgstr "安全入口"
+msgid "Reset the Lucky admin account and generate a new password?"
+msgstr "确定重置 Lucky 管理账号并生成新密码吗？"
 
-msgid "Port must be between 1 and 65535"
-msgstr "端口范围1-65535之间"
+msgid "Restart"
+msgstr "重启"
 
-msgid "Open Web Interface"
-msgstr "打开WEB界面"
-
-msgid "RUNNING"
+msgid "Running"
 msgstr "运行中"
 
-msgid "NOT RUNNING"
-msgstr "未运行"
+msgid "Running status"
+msgstr "运行状态"
 
-msgid "Delayed Start (seconds)"
-msgstr "开机延时启动（秒）"
+msgid "Save"
+msgstr "保存"
 
-msgid "Username and password reset successfully to 666"
-msgstr "重置用户名和密码为666"
+msgid "Service overview"
+msgstr "服务概览"
 
-msgid "SUCCESS:"
-msgstr "执行完成："
+msgid "Start"
+msgstr "启动"
 
-msgid "ResetUser"
-msgstr "重置用户密码"
+msgid "Stop"
+msgstr "停止"
 
-msgid "Reset account and password to initial values"
-msgstr "重置帐号和密码为初始值"
+msgid "Stopped"
+msgstr "已停止"
 
-msgid "Encrypt access using HTTPS"
-msgstr "使用https加密访问"
+msgid "The configuration directory must be a safe absolute path."
+msgstr "配置目录必须是安全的绝对路径。"
 
-msgid "Set an installation access path, eg:sirpdboy"
-msgstr "设置一个安装访问路径，如:sirpdboy"
+msgid "The operation failed."
+msgstr "操作失败。"
 
-msgid "Lucky Service Not Running"
-msgstr "Lucky服务未启用"
+msgid "The safe URL must be empty or begin with / and contain no spaces."
+msgstr "安全入口必须留空或以 / 开头，且不能包含空白字符。"
 
+msgid "This configuration directory is not allowed."
+msgstr "不允许使用此配置目录。"
+
+msgid "Unable to load Lucky data."
+msgstr "无法加载 Lucky 数据。"
+
+msgid "Lucky returned an invalid temporary password."
+msgstr "Lucky 返回了无效的临时密码。"
+
+msgid "Lucky could not restart automatically. Restart it manually after saving this password."
+msgstr "Lucky 无法自动重启。请保存此密码后手动重启服务。"
+
+msgid "Open admin panel"
+msgstr "打开管理后台"
+
+msgid "Service and admin panel"
+msgstr "服务状态与后台管理"
+
+msgid "Access settings"
+msgstr "访问设置"
+
+msgid "Saving access settings briefly stops Lucky. It starts again only if it was running."
+msgstr "保存访问设置时会短暂停止 Lucky；仅在原本运行时自动重新启动。"
+
+msgid "Access settings apply without restarting a running Lucky. A stopped service stays stopped."
+msgstr "访问设置在线生效，无需重启 Lucky；已停止的服务会保持停止。"
+
+msgid "Only reset credentials if you cannot sign in."
+msgstr "仅在无法登录时重置管理账号密码。"
+
+msgid "Configuration backup and restore"
+msgstr "配置备份与还原"
+
+msgid "Back up every file in the saved configuration directory. Restore replaces the entire directory. Lucky is stopped during the operation and restarted only if it was running."
+msgstr "备份已保存配置路径下的全部文件，还原时完整替换目录。操作期间会停止 Lucky，原本运行时将在操作结束后自动启动。"
+
+msgid "Only LuCI full-directory ZIP backups are supported here, not backups exported by the Lucky admin panel. ZIP limit: 64 MiB; up to 10000 entries."
+msgstr "此处仅支持 LuCI 整目录 ZIP 备份，不支持 Lucky 管理后台导出的备份。ZIP 最大 64 MiB，最多 10000 个文件及目录。"
+
+msgid "Download backup"
+msgstr "下载备份"
+
+msgid "Restore backup"
+msgstr "还原备份"
+
+msgid "Backup operation failed."
+msgstr "备份还原操作失败。"
+
+msgid "Lucky will be stopped while creating the backup. Continue?"
+msgstr "创建备份期间会停止 Lucky，是否继续？"
+
+msgid "Select a LuCI directory backup to restore."
+msgstr "请选择需要还原的 LuCI 整目录备份。"
+
+msgid "Stopping Lucky and creating backup…"
+msgstr "正在停止 Lucky 并创建备份…"
+
+msgid "Configuration backup downloaded."
+msgstr "配置备份已下载。"
+
+msgid "Checking backup…"
+msgstr "正在校验备份…"
+
+msgid "This will stop Lucky and replace ALL files in the saved configuration directory. Files absent from the backup will be deleted. Continue?"
+msgstr "即将停止 Lucky 并完整替换已保存配置路径下的所有文件，备份中不存在的文件会被删除。是否继续？"
+
+msgid "Stopping Lucky and restoring configuration…"
+msgstr "正在停止 Lucky 并还原配置…"
+
+msgid "Configuration restored."
+msgstr "配置已还原。"
+
+msgid "Configuration directory: %s"
+msgstr "配置目录：%s"
+
+msgid "Confirm full-directory restore"
+msgstr "确认整目录还原"
+
+msgid "Files to delete"
+msgstr "将删除的文件及目录"
+
+msgid "Files to replace"
+msgstr "将替换的文件及目录"
+
+msgid "Files to create"
+msgstr "将新增的文件及目录"
+
+msgid "Confirm restore"
+msgstr "确认还原"
+
+msgid "None"
+msgstr "无"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Restore is allowed only into an empty directory or one containing a regular .lkcf file at its root. You will review the file changes before confirming."
+msgstr "还原目标必须为空目录，或根目录中已有普通 .lkcf 文件。执行前会列出文件变更供你确认。"
+
+msgid "Clear configuration"
+msgstr "清空配置"
+
+msgid "Confirm clear"
+msgstr "确认清空"
+
+msgid "Checking configuration directory…"
+msgstr "正在检查配置目录…"
+
+msgid "Stopping Lucky and clearing configuration…"
+msgstr "正在停止 Lucky 并清空配置…"
+
+msgid "Configuration cleared. Lucky remains stopped. Start it manually when ready."
+msgstr "配置已清空，Lucky 保持停止。准备好后请手动启动。"
+
+msgid "This permanently deletes ALL files, including hidden files and subdirectories. Back up first. Lucky will remain stopped after clearing; start it manually to create fresh configuration."
+msgstr "此操作会永久删除全部文件，包括隐藏文件和子目录，请先备份。清空后 Lucky 保持停止，手动启动后生成新配置。"
+
+msgid "Unable to inspect core."
+msgstr "无法检查核心。"
+
+msgid "Executable"
+msgstr "执行权限正常"
+
+msgid "Core missing"
+msgstr "核心文件不存在"
+
+msgid "Execution permission missing"
+msgstr "缺少执行权限"
+
+msgid "Unsafe core path"
+msgstr "核心路径异常"
+
+msgid "Upload a trusted Lucky Linux tar.gz release for this device. Only the core executable will be replaced; configuration is preserved. Continue?"
+msgstr "请上传可信来源、匹配本设备的 Lucky Linux tar.gz 升级包。只替换核心程序，保留配置，是否继续？"
+
+msgid "Core maintenance"
+msgstr "核心维护"
+
+msgid "Checking core archive and architecture…"
+msgstr "正在校验核心升级包与架构…"
+
+msgid "Replace core"
+msgstr "替换核心"
+
+msgid "Core execution permissions repaired."
+msgstr "核心执行权限已修复。"
+
+msgid "Core file status"
+msgstr "核心文件状态"
+
+msgid "Repair missing execution permissions, or upload a trusted Lucky Linux tar.gz release to install or replace the core. Configuration is preserved. Archive limit: 64 MiB."
+msgstr "可修复执行权限，或上传可信的 Lucky Linux tar.gz 升级包安装、替换核心。保留配置，升级包最大 64 MiB。"
+
+msgid "Repair execution permissions"
+msgstr "修复执行权限"
+
+msgid "Upload core"
+msgstr "上传核心"
+
+msgid "Core size: %s bytes"
+msgstr "核心大小：%s 字节"
+
+msgid "Lucky will stop before running the new core for validation. Only /usr/bin/lucky will be replaced; configuration is preserved. Success or failure restores the original running state."
+msgstr "将先停止 Lucky，再运行新核心进行校验。仅替换 /usr/bin/lucky，保留配置。成功或失败后恢复原运行状态。"
+
+msgid "Stop, validate and replace"
+msgstr "停止、校验并替换"
+
+msgid "Stopping Lucky, validating and replacing core…"
+msgstr "正在停止 Lucky、校验并替换核心…"
+
+msgid "Core replaced: %s"
+msgstr "核心已替换：%s"
+
+msgid "Service remains stopped."
+msgstr "服务保持停止。"
+
+msgid "Overview"
+msgstr "概览"
+
+msgid "Access rules"
+msgstr "访问规则"
+
+msgid "Maintenance"
+msgstr "维护"
+
+msgid "Lucky sections"
+msgstr "Lucky 功能分区"
+
+msgid "File contents"
+msgstr "文件内容"
+
+msgid "Load / Reload"
+msgstr "读取 / 重新读取"
+
+msgid "Save file"
+msgstr "保存文件"
+
+msgid "Fill default networks"
+msgstr "填入默认网段"
+
+msgid "Requires Lucky 3.1.0 or later; refresh core information after upgrading."
+msgstr "需要 Lucky 3.1.0 或更高正式版本；升级后请刷新核心信息。"
+
+msgid "Discard unsaved rule changes and reload?"
+msgstr "放弃尚未保存的规则修改并重新读取？"
+
+msgid "Saved. Lucky loads rule changes automatically; older cores may need a restart after clearing localips."
+msgstr "已保存。Lucky 会自动加载规则；旧核心清空 localips 后可能需要重启。"
+
+msgid "Loaded from the saved configuration directory."
+msgstr "已从保存的配置目录读取。"
+
+msgid "Included in full-directory backups. One entry per line; limit 64 KiB. Load before editing."
+msgstr "随整目录备份与还原。每行一条，最大 64 KiB；请先读取再编辑。"
+
+msgid "Absolute IP allowlist, ahead of the global blacklist. Single IP addresses only; # starts a comment line. No CIDR, domains or ports. Only direct peers are matched; login and other protections remain active."
+msgstr "绝对白名单，优先于全局黑名单。仅接受单个 IP，可用 # 开头写整行注释；不支持网段、域名或端口。仅匹配实际连接对端，登录及其他防护仍有效。"
+
+msgid "Custom LAN IPs and CIDR networks replace built-in networks. Do not add public networks unless intended. Fill defaults to restore the standard LAN ranges."
+msgstr "自定义内网 IP 与 CIDR 网段会替代内置网段，请谨慎添加公网地址。可填入默认网段后保存，恢复标准内网范围。"
+
+msgid "Reading recent logs…"
+msgstr "正在读取最近日志…"
+
+msgid "Unable to read diagnostics."
+msgstr "无法读取诊断日志。"
+
+msgid "OOM: Lucky was selected for termination"
+msgstr "OOM：内核记录 Lucky 被选中终止"
+
+msgid "Crash evidence"
+msgstr "崩溃线索"
+
+msgid "Repeated exits / restart limit"
+msgstr "反复退出 / 达到重启限制"
+
+msgid "Exit record; cause unknown"
+msgstr "退出记录，原因未知"
+
+msgid "Read successfully"
+msgstr "读取成功"
+
+msgid "Tool unavailable"
+msgstr "工具不可用"
+
+msgid "Read failed or permission denied"
+msgstr "读取失败或权限不足"
+
+msgid "Read timed out; results may be incomplete"
+msgstr "读取超时，结果可能不完整"
+
+msgid "Scan limit reached; results may be incomplete"
+msgstr "达到扫描上限，结果可能不完整"
+
+msgid "Only a bounded recent excerpt is retained."
+msgstr "仅保留有限的最近日志片段。"
+
+msgid "Related excerpts: %s"
+msgstr "相关日志片段：%s"
+
+msgid "No matching records found; this does not rule out an unexpected exit."
+msgstr "未找到相关记录，但不能据此排除曾发生异常退出。"
+
+msgid "Last read: %s"
+msgstr "上次读取：%s"
+
+msgid "Logs copied."
+msgstr "日志已复制。"
+
+msgid "Logs selected. Use your browser copy command."
+msgstr "日志已选中，请使用浏览器的复制操作。"
+
+msgid "Recent unexpected exit logs"
+msgstr "最近异常退出日志"
+
+msgid "Read on demand only. Reboots or log rotation can erase records. These excerpts do not prove the cause of the latest stop; service actions can also produce exit records."
+msgstr "仅按需读取；重启或日志轮转可能清除记录。这些片段不一定对应最近一次停止，服务操作也可能产生退出记录。"
+
+msgid "Each source keeps its own log order and timestamps. Excerpts and stack traces may be shortened. Check for private information before sharing."
+msgstr "各来源分别保留日志顺序和时间，片段与堆栈可能截短。对外分享前请检查是否包含隐私信息。"
+
+msgid "Refresh logs"
+msgstr "刷新日志"
+
+msgid "Copy logs"
+msgstr "复制日志"
+
+msgid "Expand to read recent logs."
+msgstr "展开后读取最近日志。"
+
+msgid "Not enough available memory for core queries. Stop Lucky and refresh to retry. Service status and logs remain available."
+msgstr "可用内存不足，已跳过核心信息查询。可停止 Lucky 后刷新重试；仍可查看服务状态和异常日志。"
+
+msgid "Unable to read recovery settings. Install the matching updated Lucky core package."
+msgstr "无法读取自动恢复设置，请安装配套更新的 Lucky 核心软件包。"
+
+msgid "Unable to read service status."
+msgstr "无法读取运行状态。"
+
+msgid "Command failed (exit code %s)."
+msgstr "命令执行失败（退出码 %s）。"
+
+msgid "Recovery enabled"
+msgstr "已开启"
+
+msgid "Recovery disabled"
+msgstr "已关闭"
+
+msgid "Updating recovery…"
+msgstr "切换中…"
+
+msgid "Scheduled recovery is unavailable. Switch it off and on again to repair it."
+msgstr "计划任务未正常启用，请关闭后重新开启以修复。"
+
+msgid "Paused after stopping Lucky. Start Lucky to resume recovery."
+msgstr "Lucky 已主动停止，自动恢复已暂停；再次启动后恢复守护。"
+
+msgid "Checks every minute; repeated recovery attempts are at least five minutes apart."
+msgstr "每分钟检查一次；反复异常时，至少间隔 5 分钟再次尝试恢复。"
+
+msgid "Scheduled recovery is off."
+msgstr "计划任务自动恢复已关闭。"
+
+msgid "Recover after unexpected exit"
+msgstr "意外退出自动恢复"
+
+msgid "Adds a fallback to system supervision. Manual stop and maintenance pause recovery. Uninstalling the Lucky core package removes its scheduled task."
+msgstr "作为系统进程守护的额外保障。主动停止或维护期间暂停恢复；卸载 Lucky 核心软件包时会清理它创建的计划任务。"
+
+msgid "Absolute IP allowlist"
+msgstr "绝对 IP 白名单"
+
+msgid "LAN networks"
+msgstr "局域网网段"
+
+msgid "Backup format and restore requirements"
+msgstr "备份格式与还原要求"
+
+msgid "Clearing removes every configuration file and leaves Lucky stopped."
+msgstr "清空会删除所有配置文件，并保持 Lucky 停止。"
+
+msgid "Format and behavior"
+msgstr "格式与生效说明"
+
+msgid "Recovery behavior"
+msgstr "自动恢复说明"
+
+msgid "Open Lucky to manage its services and rules."
+msgstr "进入 Lucky 后台，管理服务与规则。"
+
+msgid "Allow individual IPs before the global blacklist. Requires Lucky 3.1.0 or later."
+msgstr "优先于全局黑名单的独立 IP 白名单，需要 Lucky 3.1.0 及以上版本。"
+
+msgid "Define local IPs and networks. A non-empty file replaces the built-in networks."
+msgstr "自定义局域网 IP 和网段；文件非空时，替换默认内置网段。"
+
+msgid "Configuration and backups"
+msgstr "配置与备份"
+
+msgid "Backups and rule files use the saved directory. Save and apply directory changes separately."
+msgstr "备份和规则文件使用已保存的配置目录。修改目录后，请单独保存并应用。"

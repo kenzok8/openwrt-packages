@@ -1,30 +1,14 @@
 {
-    "admin/services/lucky": {
+	"admin/services/lucky": {
 		"title": "Lucky",
-		"order": 59,
+		"order": 60,
 		"action": {
-		     "type": "firstchild"
+			"type": "view",
+			"path": "lucky/config"
 		},
 		"depends": {
 			"acl": [ "luci-app-lucky" ],
 			"uci": { "lucky": true }
 		}
-    },
-    "admin/services/lucky/lucky": {
-             "title": "Lucky Control panel",
-             "order": 10,
-             "action": {
-               "type": "view",
-               "path": "lucky/lucky"
-             }
-    },
-    "admin/services/lucky/config": {
-             "title": "Base Setting",
-             "order": 20,
-             "action": {
-               "type": "view",
-               "path": "lucky/config"
-             }
-    }
-
+	}
 }

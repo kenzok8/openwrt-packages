@@ -1,0 +1,20 @@
+#!/bin/sh
+# SPDX-License-Identifier: Apache-2.0
+
+# Image construction must not affect the build host's caches or services.
+[ -n "$IPKG_INSTROOT" ] && exit 0
+
+rm -f /tmp/luci-indexcache /tmp/luci-indexcache.*
+rm -rf /tmp/luci-modulecache/
+
+# Refresh only this package's ACLs. Older rpcd releases can lose permissions
+# when restoring multiple sessions after HUP; restarting loses the login too.
+if ! lua /usr/lib/lua/luci/lucky_menu.lua; then
+	printf '%s\n' 'Lucky: existing session permissions could not be refreshed; sign in again if access is denied.' >&2
+fi
+
+printf '%s\n' \
+	'Lucky: LuCI menu refresh requested. Open Services -> Lucky.' \
+	'If this browser tab still has the old menu, open the following path on the same router and in the same tab (no logout needed):' \
+	'/luci-static/lucky-menu-refresh.html'
+exit 0

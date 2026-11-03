@@ -1,29 +1,154 @@
 {
-    "luci-app-lucky": {
-	"description": "Grant UCI access for luci-app-lucky",
-        "read": {
-            "uci": [ "lucky" ],
-            "file": {
-                "/etc/init.d/lucky": [ "exec" ],
-                "/usr/bin/lucky": [ "exec" ],
-                "/bin/pidof": [ "exec" ],
-                "/bin/ps": [ "exec" ],
-                "/bin/ash": [ "exec" ]
-      	    },
-            "ubus": {
-                "rc": [ "*" ],
-                "service": ["list"],
-                "luci.lucky": [ "*" ]
-            }
-        },
-        "write": {
-            "ubus": {
-                "luci.lucky": [ "*" ]
-            },
-            "file": {
-                "/etc/lucky/*.lkcf": ["write"]
-	    },
-            "uci": ["lucky"]
-        }
+  "luci-app-lucky": {
+    "description": "Grant access to the Lucky administration page",
+    "read": {
+      "cgi-io": [
+        "exec"
+      ],
+      "file": {
+        "/usr/libexec/lucky-watchdog status": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call info": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call base": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call status": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call arch": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup core-status": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup core-info": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup core-base": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-diagnostics read": [
+          "exec"
+        ]
+      },
+      "uci": [
+        "lucky"
+      ]
+    },
+    "write": {
+      "file": {
+        "/usr/libexec/lucky-backup configure *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup base-invalidate": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup set-port *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup set-safe-url *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup set-internet true": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup set-internet false": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup reset-auth": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-watchdog enable": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-watchdog disable": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call service start": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call service stop": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call service restart": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call set-port *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call set-safe-url *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call set-internet true": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call set-internet false": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-call reset-auth": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup prepare": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup backup *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup check *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup restore *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup cleanup *": [
+          "exec"
+        ],
+        "/tmp/lucky-luci-backup/*/upload.zip": [
+          "write"
+        ],
+        "/tmp/lucky-luci-backup/*/backup.zip": [
+          "read"
+        ],
+        "/usr/libexec/lucky-backup clear-check *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup clear *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup core-fix": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup core-prepare": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup core-check *": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup core-install *": [
+          "exec"
+        ],
+        "/tmp/lucky-luci-backup/*/core.tar.gz": [
+          "write"
+        ],
+        "/usr/libexec/lucky-backup rules-localips": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup rules-allowlist": [
+          "exec"
+        ],
+        "/usr/libexec/lucky-backup rules-save *": [
+          "exec"
+        ],
+        "/tmp/lucky-luci-backup/*/rules.json": [
+          "write"
+        ]
+      },
+      "uci": [
+        "lucky"
+      ]
     }
+  }
 }

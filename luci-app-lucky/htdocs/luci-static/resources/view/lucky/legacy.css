@@ -1,0 +1,22 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+.lucky-legacy-modal {
+	box-sizing: border-box;
+	width: min(720px, calc(100% - 32px));
+	max-height: calc(100vh - 48px);
+	margin: auto;
+	padding: 24px;
+	border: 1px solid rgba(128, 128, 128, .35);
+	border-radius: 8px;
+	box-shadow: 0 12px 48px rgba(0, 0, 0, .25);
+	font: inherit;
+	overflow: auto;
+}
+.lucky-legacy-modal::backdrop { background: rgba(0, 0, 0, .45); }
+.lucky-legacy-modal h3 { margin: 0 0 16px; color: inherit; background: transparent; }
+.lucky-legacy-modal p { line-height: 1.6; overflow-wrap: anywhere; }
+.lucky-legacy-modal input[type="file"] { max-width: 100%; }
+.lucky-legacy-modal .cbi-button { background-image: none !important; white-space: normal; }
+.lucky-legacy-modal .right { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.lucky-legacy-modal .lucky-archive-list { max-height: 180px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.lucky-legacy-notifications .alert-message { position: relative; padding-right: 40px; overflow-wrap: anywhere; }
+.lucky-legacy-dismiss { position: absolute; right: 8px; top: 8px; border: 0; background: transparent; color: inherit; font-size: 22px; cursor: pointer; }

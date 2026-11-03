@@ -1,0 +1,10 @@
+<%# SPDX-License-Identifier: Apache-2.0 %>
+<%+header%>
+<%
+local bridge = require "luci.lucky_legacy"
+local settings = bridge.bootstrap("lucky/config")
+%>
+<div id="lucky-legacy-root"><p class="spinning"><%:Collecting data…%></p></div>
+<script type="application/json" id="lucky-legacy-settings"><%=settings%></script>
+<script src="<%=resource%>/view/lucky/legacy.js"></script>
+<%+footer%>

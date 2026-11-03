@@ -1,0 +1,752 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/* Keep the native cbi-map title and cbi-section surfaces: the active LuCI
+ * theme owns the page chrome, palette and light/dark mode. All layout and
+ * control adjustments below stay inside the Lucky view. */
+.lucky-page {
+	--lucky-line: rgba(128, 128, 128, .24);
+	--lucky-soft: rgba(128, 128, 128, .07);
+	--lucky-accent: var(--primary, #3774bc);
+	box-sizing: border-box;
+	width: 100%;
+	min-width: 0;
+	max-width: 1440px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.lucky-page[data-layout="stacked"] {
+	max-width: 1040px;
+}
+
+.lucky-page .lucky-dashboard {
+	min-width: 0;
+}
+
+.lucky-page > .cbi-map-descr {
+	color: inherit;
+	line-height: 1.6;
+	opacity: .75;
+}
+
+.lucky-page .lucky-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	margin: 0 0 20px;
+	padding: 0 0 8px;
+	border-bottom: 1px solid var(--lucky-line);
+}
+
+.lucky-page .lucky-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	min-width: 0;
+}
+
+.lucky-page .lucky-toolbar-actions,
+.lucky-page .lucky-layout-control {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+}
+
+.lucky-page .lucky-toolbar-actions {
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	margin-left: auto;
+}
+
+.lucky-page .lucky-layout-control label {
+	margin: 0;
+	font-size: .92em;
+}
+
+.lucky-page .lucky-layout-control select {
+	box-sizing: border-box;
+	width: auto;
+	min-width: 6em;
+	max-width: 100%;
+	height: auto;
+	min-height: 38px;
+	margin: 0;
+	padding: 6px 10px;
+	font: inherit;
+	font-size: .94em;
+	line-height: 1.5;
+}
+
+.lucky-page .lucky-tabs [role="tab"] {
+	position: static;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 40px;
+	margin: 0;
+	padding: 8px 16px;
+	/* Argon dark forces a border on every button. Tabs need their own edge. */
+	border: 0 !important;
+	border-bottom: 2px solid transparent !important;
+	border-radius: 4px 4px 0 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-weight: 500;
+	line-height: 1.5;
+	box-shadow: none;
+	text-shadow: none;
+	cursor: pointer;
+}
+
+.lucky-page .lucky-tabs [aria-selected="true"] {
+	border-bottom-color: var(--lucky-accent) !important;
+	background: var(--lucky-soft);
+	font-weight: 700;
+}
+
+.lucky-page .lucky-tabs [role="tab"]:hover {
+	background: var(--lucky-soft);
+}
+
+.lucky-page [role="tabpanel"][hidden] {
+	display: none !important;
+}
+
+/* Wrapping is based on available content width, including theme sidebars. */
+.lucky-page .lucky-overview-layout,
+.lucky-page .lucky-rules-layout,
+.lucky-page .lucky-maintenance-layout {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 20px;
+}
+
+.lucky-page .lucky-panel {
+	box-sizing: border-box;
+	min-width: 0;
+	max-width: 100%;
+	margin: 0 0 20px;
+	padding: 22px;
+	border: 1px solid var(--lucky-line);
+	border-radius: 6px;
+}
+
+.lucky-page .lucky-overview-layout > .lucky-panel,
+.lucky-page .lucky-rules-layout > .lucky-panel,
+.lucky-page .lucky-maintenance-layout > .lucky-panel {
+	flex: 1 1 360px;
+	margin: 0;
+}
+
+.lucky-page .lucky-overview-layout > .lucky-service-panel {
+	flex: 1.4 1 460px;
+}
+
+.lucky-page .lucky-service-panel,
+.lucky-page .lucky-admin-panel,
+.lucky-page .lucky-rule-panel {
+	display: flex;
+	flex-direction: column;
+}
+
+.lucky-page[data-layout="stacked"] .lucky-overview-layout > .lucky-panel,
+.lucky-page[data-layout="stacked"] .lucky-rules-layout > .lucky-panel,
+.lucky-page[data-layout="stacked"] .lucky-maintenance-layout > .lucky-panel {
+	flex-basis: 100%;
+}
+
+.lucky-page .lucky-maintenance-layout {
+	margin-bottom: 20px;
+}
+
+.lucky-page .lucky-panel-title {
+	margin: 0 0 20px;
+	padding: 0;
+	color: inherit;
+	font-size: 1.08em;
+	font-weight: 700;
+	line-height: 1.5;
+}
+
+.lucky-page .lucky-panel-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+	margin-bottom: 20px;
+}
+
+.lucky-page .lucky-panel-heading .lucky-panel-title {
+	margin: 0;
+}
+
+.lucky-page .lucky-stats {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 18px 28px;
+	padding: 16px;
+	border-radius: 4px;
+	background: var(--lucky-soft);
+}
+
+.lucky-page .lucky-stat,
+.lucky-page .lucky-panel-heading > *,
+.lucky-page .lucky-inline > * {
+	min-width: 0;
+	overflow-wrap: break-word;
+	overflow-wrap: anywhere;
+}
+
+.lucky-page .lucky-label {
+	margin-bottom: 5px;
+	font-size: .92em;
+	line-height: 1.5;
+	opacity: .75;
+}
+
+.lucky-page .lucky-value {
+	font-weight: 600;
+	line-height: 1.6;
+	overflow-wrap: break-word;
+	overflow-wrap: anywhere;
+}
+
+.lucky-page #lucky-running {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 20px;
+	background: var(--lucky-soft);
+	font-size: .9em;
+}
+
+.lucky-page #lucky-running.lucky-state-success {
+	color: #fff;
+	background: #237547;
+}
+
+.lucky-page #lucky-running::before {
+	content: "";
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	margin-right: 6px;
+	border-radius: 50%;
+	background: currentColor;
+	vertical-align: middle;
+}
+
+.lucky-page #lucky-install.lucky-state-error,
+.lucky-page .lucky-state-warning {
+	border-left: 3px solid #c45142;
+	padding-left: 10px;
+}
+
+.lucky-page .lucky-state-warning {
+	border-color: #ba881a;
+}
+
+.lucky-page .lucky-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 20px 0 0;
+	padding: 0;
+}
+
+.lucky-page .lucky-service-actions {
+	padding-top: 16px;
+	border-top: 1px solid var(--lucky-line);
+}
+
+.lucky-page .cbi-button:not(.cbi-dropdown) {
+	box-sizing: border-box;
+	position: static;
+	float: none;
+	max-width: 100%;
+	height: auto;
+	min-height: 38px;
+	margin: 0;
+	padding: 8px 14px;
+	/* Lua-era themes add GIF icons as button backgrounds. Keep text buttons
+	 * consistent instead of combining those icons with our compact padding. */
+	background-image: none !important;
+	border-radius: 4px;
+	font: inherit;
+	font-size: .94em;
+	font-weight: 600;
+	line-height: 1.5;
+	white-space: normal;
+	text-align: center;
+	text-transform: none;
+	text-shadow: none;
+	vertical-align: middle;
+	overflow-wrap: break-word;
+	overflow-wrap: anywhere;
+	cursor: pointer;
+}
+
+.lucky-page .cbi-button:not([class*="cbi-button-"]) {
+	border: 1px solid var(--lucky-line);
+	background: var(--lucky-soft);
+	color: inherit;
+	box-shadow: none;
+}
+
+.lucky-page .cbi-button:not([class*="cbi-button-"]):hover:not(:disabled) {
+	border-color: currentColor;
+}
+
+.lucky-page .cbi-button:disabled,
+.lucky-page .cbi-button[aria-disabled="true"] {
+	opacity: .5;
+	cursor: not-allowed;
+	box-shadow: none;
+	pointer-events: none;
+}
+
+.lucky-page .cbi-button.lucky-admin-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	align-self: flex-start;
+	min-width: 11em;
+	margin-top: 18px;
+	/* Old themes have no action-button color once their GIF icons are removed. */
+	border: 1px solid var(--lucky-accent);
+	background-color: var(--lucky-accent);
+	color: #fff;
+	text-decoration: none;
+}
+
+.lucky-page #lucky-admin-address,
+.lucky-page [id^="lucky-rules-path-"] {
+	margin: 10px 0 0;
+	font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+	font-size: .9em;
+	font-weight: 400;
+	opacity: .75;
+	word-break: break-all;
+}
+
+.lucky-page #lucky-admin-address:empty,
+.lucky-page [id^="lucky-rules-path-"]:empty,
+.lucky-page .lucky-hint:empty {
+	display: none;
+}
+
+.lucky-page .lucky-settings {
+	margin-top: 22px;
+	padding-top: 18px;
+	border-top: 1px solid var(--lucky-line);
+}
+
+.lucky-page .lucky-admin-panel .lucky-settings {
+	margin-top: 20px;
+}
+
+.lucky-page .lucky-admin-panel .lucky-panel-intro {
+	margin: -10px 0 18px;
+}
+
+.lucky-page .lucky-recovery {
+	margin: 20px 0 0;
+	padding: 18px 22px;
+}
+
+.lucky-page .lucky-recovery-copy {
+	flex: 1 1 200px;
+	min-width: 0;
+}
+
+.lucky-page .lucky-recovery-copy .lucky-hint {
+	margin-top: 4px;
+}
+
+.lucky-page summary {
+	width: auto;
+	padding: 3px 0;
+	color: inherit;
+	font-weight: 600;
+	line-height: 1.6;
+	cursor: pointer;
+}
+
+.lucky-page .lucky-hint,
+.lucky-page .lucky-tab-description {
+	margin: 10px 0 0;
+	padding: 0;
+	font-size: .92em;
+	line-height: 1.7;
+	opacity: .75;
+	overflow-wrap: break-word;
+}
+
+.lucky-page .lucky-tab-description {
+	margin: 0 0 16px;
+}
+
+.lucky-page .lucky-inline {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 8px 10px;
+	padding: 14px 0;
+	border-bottom: 1px solid var(--lucky-line);
+}
+
+.lucky-page .lucky-inline > label {
+	grid-column: 1 / -1;
+}
+
+.lucky-page label {
+	display: block;
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0;
+	color: inherit;
+	font-size: inherit;
+	font-weight: 500;
+	line-height: 1.6;
+	text-align: left;
+}
+
+.lucky-page .lucky-inline input[type="text"],
+.lucky-page .lucky-inline input[type="number"],
+.lucky-page .lucky-config input[type="text"] {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	min-height: 38px;
+	padding: 8px 10px;
+	font: inherit;
+	line-height: 1.5;
+}
+
+.lucky-page .lucky-inline input[type="checkbox"] {
+	justify-self: start;
+	margin: 4px 0;
+}
+
+.lucky-page .lucky-watchdog-row,
+.lucky-page .lucky-reset,
+.lucky-page .lucky-danger-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px 20px;
+}
+
+.lucky-page .lucky-recovery-copy label {
+	font-weight: 600;
+}
+
+.lucky-page #lucky-watchdog-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	gap: 8px;
+	min-height: 40px;
+	padding: 7px 10px;
+	border: 1px solid var(--lucky-line);
+	background: var(--lucky-soft);
+	color: inherit;
+	box-shadow: none;
+}
+
+.lucky-page .lucky-switch-track {
+	position: relative;
+	display: inline-block;
+	flex-shrink: 0;
+	width: 32px;
+	height: 18px;
+	border-radius: 12px;
+	background: #707b89;
+}
+
+.lucky-page .lucky-switch-track::after {
+	content: "";
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background: #fff;
+}
+
+.lucky-page #lucky-watchdog-toggle[aria-checked="true"] .lucky-switch-track {
+	background: #237547;
+}
+
+.lucky-page #lucky-watchdog-toggle[aria-checked="true"] .lucky-switch-track::after {
+	left: 17px;
+}
+
+.lucky-page #lucky-watchdog-toggle:hover:not(:disabled) {
+	border-color: currentColor;
+}
+
+.lucky-page #lucky-watchdog-toggle[aria-busy="true"] {
+	cursor: progress;
+}
+
+.lucky-page .lucky-reset,
+.lucky-page .lucky-danger-row {
+	margin-top: 18px;
+}
+
+.lucky-page .lucky-danger-row {
+	padding-top: 16px;
+	border-top: 1px solid var(--lucky-line);
+}
+
+.lucky-page .lucky-reset p,
+.lucky-page .lucky-danger-row p {
+	flex: 1 1 200px;
+	min-width: 0;
+	margin: 0;
+}
+
+.lucky-page .lucky-format-help {
+	margin-top: 12px;
+	font-size: .94em;
+}
+
+.lucky-page .lucky-format-help summary {
+	font-weight: 500;
+}
+
+.lucky-page .lucky-rule-panel > .lucky-hint {
+	margin-bottom: 18px;
+}
+
+.lucky-page .lucky-rule-description {
+	min-height: 3.4em;
+}
+
+.lucky-page .lucky-rule-panel .lucky-format-help {
+	margin-top: auto;
+	padding-top: 12px;
+}
+
+.lucky-page[data-layout="stacked"] .lucky-rule-description {
+	min-height: 0;
+}
+
+.lucky-page .lucky-backup-panel .lucky-settings {
+	margin-top: 16px;
+	padding-top: 12px;
+}
+
+.lucky-page .lucky-danger-settings .lucky-danger-row {
+	margin-top: 12px;
+	padding-top: 0;
+	border-top: 0;
+}
+
+.lucky-page .lucky-rule-panel > label {
+	margin-top: 14px;
+}
+
+.lucky-page .lucky-file-name {
+	padding: 3px 7px;
+	border: 1px solid var(--lucky-line);
+	border-radius: 4px;
+	background: var(--lucky-soft);
+	color: inherit;
+	font-size: .88em;
+	line-height: 1.5;
+}
+
+.lucky-page .lucky-rules-text {
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	margin: 8px 0 0;
+	padding: 12px;
+	border: 1px solid var(--lucky-line);
+	border-radius: 4px;
+	background: var(--lucky-soft);
+	color: inherit;
+	font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+	font-size: .94em;
+	line-height: 1.7;
+	resize: vertical;
+}
+
+.lucky-page .lucky-rules-text:disabled {
+	opacity: .6;
+}
+
+.lucky-page .lucky-log-text {
+	max-height: 30rem;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+.lucky-page .lucky-config .cbi-map,
+.lucky-page .lucky-config .cbi-section,
+.lucky-page .lucky-config .cbi-section-node {
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	box-shadow: none;
+}
+
+.lucky-page .lucky-config-form {
+	margin-top: 18px;
+}
+
+.lucky-page .lucky-config .cbi-value {
+	display: block;
+	width: 100%;
+	padding: 0;
+}
+
+.lucky-page .lucky-config .cbi-value-title {
+	display: block;
+	float: none;
+	width: auto;
+	margin: 0 0 8px;
+	padding: 0;
+	color: inherit;
+	text-align: left;
+}
+
+.lucky-page .lucky-config .cbi-value-field {
+	display: block;
+	width: 100%;
+	max-width: 640px;
+	margin: 0;
+	padding: 0;
+}
+
+.lucky-page #lucky-config-actions .cbi-page-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 18px 0 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	box-shadow: none;
+}
+
+.lucky-page #lucky-config-actions .cbi-dropdown:not([open]) {
+	min-height: 38px;
+}
+
+.lucky-page a:focus,
+.lucky-page button:focus,
+.lucky-page summary:focus,
+.lucky-page input:focus,
+.lucky-page select:focus,
+.lucky-page textarea:focus {
+	outline: 2px solid var(--lucky-accent);
+	outline-offset: 3px;
+}
+
+.lucky-page :focus:not(:focus-visible) {
+	outline: none;
+}
+
+.lucky-page .lucky-sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+}
+
+.lucky-archive-list {
+	max-height: 12rem;
+	overflow: auto;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+	.lucky-page .lucky-toolbar {
+		gap: 8px;
+		margin-bottom: 14px;
+	}
+	.lucky-page .lucky-tabs {
+		flex: 1 1 auto;
+	}
+	.lucky-page .lucky-tabs [role="tab"] {
+		min-height: 44px;
+		padding: 8px 10px;
+	}
+	.lucky-page .lucky-toolbar-actions {
+		flex: 0 0 auto;
+	}
+	.lucky-page .lucky-layout-control {
+		display: none;
+	}
+	.lucky-page .lucky-panel {
+		padding: 16px;
+	}
+	.lucky-page .lucky-overview-layout,
+	.lucky-page .lucky-rules-layout,
+	.lucky-page .lucky-maintenance-layout {
+		gap: 14px;
+	}
+	.lucky-page .lucky-stats {
+		gap: 16px;
+		padding: 12px;
+	}
+	.lucky-page .cbi-button:not(.cbi-dropdown),
+	.lucky-page #lucky-watchdog-toggle,
+	.lucky-page #lucky-config-actions .cbi-dropdown:not([open]) {
+		min-height: 44px;
+	}
+	.lucky-page .lucky-admin-link {
+		width: 100% !important;
+	}
+	.lucky-page .lucky-watchdog-row {
+		flex-wrap: nowrap;
+		gap: 12px;
+	}
+	.lucky-page .lucky-recovery-copy {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+	.lucky-page .lucky-recovery {
+		margin-top: 14px;
+	}
+	.lucky-page .lucky-rule-description {
+		min-height: 0;
+	}
+}
+
+@media (max-width: 380px) {
+	.lucky-page .lucky-panel {
+		padding: 14px;
+	}
+	.lucky-page .lucky-panel-heading {
+		gap: 8px;
+	}
+	.lucky-page .lucky-tabs [role="tab"] {
+		padding-right: 8px;
+		padding-left: 8px;
+	}
+}
