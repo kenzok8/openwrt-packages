@@ -61,6 +61,10 @@ define Package/$(PKG_NAME)/description
   Main functions of Lucky: dynamic domain name ddns-go service, socat,reverse proxy ,wake on lan
 endef
 
+define Package/$(PKG_NAME)/conffiles
+/etc/config/lucky
+endef
+
 define Build/Prepare
 	[ ! -f $(PKG_BUILD_DIR)/$(PKG_NAME)_$(PKG_VERSION)_Linux_$(LUCKY_ARCH).tar.gz ] && wget https://github.com/gdy666/lucky/releases/download/v$(PKG_VERSION)/$(PKG_NAME)_$(PKG_VERSION)_Linux_$(LUCKY_ARCH).tar.gz -O $(PKG_BUILD_DIR)/$(PKG_NAME)_$(PKG_VERSION)_Linux_$(LUCKY_ARCH).tar.gz
 	tar -xzvf $(PKG_BUILD_DIR)/$(PKG_NAME)_$(PKG_VERSION)_Linux_$(LUCKY_ARCH).tar.gz -C $(PKG_BUILD_DIR)
@@ -72,6 +76,20 @@ endef
 define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lucky $(1)/usr/bin/lucky
+	$(INSTALL_DIR) $(1)/usr/libexec
+	$(INSTALL_BIN) ./files/lucky-call $(1)/usr/libexec/lucky-call
+	$(INSTALL_BIN) ./files/lucky-watchdog $(1)/usr/libexec/lucky-watchdog
+	$(INSTALL_DIR) $(1)/usr/share/lucky
+	echo '$(LUCKY_ARCH)' > $(1)/usr/share/lucky/arch
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_BIN) ./files/lucky.init $(1)/etc/init.d/lucky
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) ./files/luckyuci $(1)/etc/config/lucky
+endef
+
+define Package/$(PKG_NAME)/postinst
+#!/bin/sh
+[ -n "$${IPKG_INSTROOT}" ] || /usr/libexec/lucky-watchdog sync
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))

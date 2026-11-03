@@ -1,0 +1,96 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: MIT
+
+START=99
+STOP=15
+USE_PROCD=1
+EXTRA_COMMANDS="watchdog"
+EXTRA_HELP="	watchdog	Recover an unexpectedly stopped service"
+
+PROG=/usr/bin/lucky
+DEFAULT_CONFIG_DIR=/etc/config/lucky.daji
+STOP_MARKER=/var/run/lucky.stopped
+WATCHDOG_LAST=/var/run/lucky-watchdog.last
+
+validate_config_dir() {
+	local newline
+	newline='
+'
+	case "$1" in
+	*"$newline"* | //* | / | /proc | /proc/* | /sys | /sys/* | /dev | /dev/* | /run | /run/* | */../* | */.. | */./* | */.) ;;
+	/*) return 0 ;;
+	*) ;;
+	esac
+	logger -t lucky -p daemon.err "Rejected unsafe config directory: $1"
+	return 1
+}
+
+start_instance() {
+	local section="$1"
+	local enabled config_dir logger_enabled
+
+	config_get_bool enabled "$section" enabled 0
+	[ "$enabled" -eq 1 ] || return 0
+
+	config_get config_dir "$section" configdir "$DEFAULT_CONFIG_DIR"
+	config_get_bool logger_enabled "$section" logger 1
+	validate_config_dir "$config_dir" || return 1
+	umask 077
+	mkdir -p "$config_dir" || return 1
+
+	procd_open_instance "$section"
+	procd_set_param command "$PROG" -cd "$config_dir"
+	procd_set_param respawn 3600 5 5
+	procd_set_param stderr 1
+	[ "$logger_enabled" -eq 1 ] && procd_set_param stdout 1
+	procd_set_param file /etc/config/lucky
+	procd_close_instance
+}
+
+start_service() {
+	rm -f "$STOP_MARKER"
+	[ "$WATCHDOG_RECOVERY" = 1 ] || rm -f "$WATCHDOG_LAST"
+	config_load lucky
+	config_foreach start_instance lucky
+}
+
+stop_service() {
+	# rc.common serializes both stop and watchdog with procd's service lock.
+	# Write before stopping: maintenance must never race with a cron recovery.
+	umask 077
+	: > "$STOP_MARKER"
+}
+
+watchdog() {
+	local service now last
+	procd_lock
+	[ ! -e "$STOP_MARKER" ] || return 0
+	case "$(uci -q get lucky.@lucky[0].watchdog)" in 1 | on | true | yes) ;; *) return 0 ;; esac
+	case "$(uci -q get lucky.@lucky[0].enabled)" in 1 | on | true | yes) ;; *) return 0 ;; esac
+	[ -x "$PROG" ] || return 0
+	# Query the supervisor without executing the core; fail closed if ubus fails.
+	service="$(ubus -t 3 call service list '{"name":"lucky"}')" || return 0
+	if printf '%s\n' "$service" | jsonfilter -e '@.lucky.instances.*.running' | grep -qx true; then
+		return 0
+	fi
+	pidof lucky > /dev/null && return 0
+	# Repeated OOMs or a broken binary must not trigger a restart every minute.
+	read -r now _ < /proc/uptime
+	now="${now%%.*}"
+	last="$(cat "$WATCHDOG_LAST" 2> /dev/null)"
+	case "$last" in '' | *[!0-9]*) last=0 ;; esac
+	[ "$last" -eq 0 ] || [ "$((now - last))" -ge 300 ] || return 0
+	umask 077
+	printf '%s\n' "$now" > "$WATCHDOG_LAST" || return 1
+	logger -t lucky -p daemon.notice "Watchdog recovering unexpectedly stopped Lucky service"
+	WATCHDOG_RECOVERY=1 start
+}
+
+reload_service() {
+	stop
+	start
+}
+
+service_triggers() {
+	procd_add_reload_trigger lucky
+}

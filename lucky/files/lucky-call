@@ -1,0 +1,129 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+
+PROG=/usr/bin/lucky
+INIT=/etc/init.d/lucky
+DEFAULT_CONFIG_DIR=/etc/config/lucky.daji
+RESET_LOCK_DIR=/var/lock/lucky-reset-auth.lock
+
+fail() {
+	echo "$1" >&2
+	exit "${2:-1}"
+}
+
+config_dir() {
+	local value newline
+	value="$(uci -q get lucky.@lucky[0].configdir)"
+	[ -n "$value" ] || value="$DEFAULT_CONFIG_DIR"
+	newline='
+'
+	case "$value" in
+	*"$newline"* | //* | / | /proc | /proc/* | /sys | /sys/* | /dev | /dev/* | /run | /run/* | */../* | */.. | */./* | */.) ;;
+	/*)
+		printf '%s\n' "$value"
+		return 0
+		;;
+	esac
+	fail "Lucky config directory is unsafe" 2
+}
+
+require_program() {
+	[ -x "$PROG" ] || fail "Lucky is not installed" 127
+}
+
+set_conf() {
+	local key="$1"
+	local value="$2"
+	local dir
+	dir="$(config_dir)" || exit $?
+	require_program
+	if [ -n "$value" ]; then
+		"$PROG" -setconf -key "$key" -value "$value" -cd "$dir"
+	else
+		"$PROG" -setconf -key "$key" -cd "$dir"
+	fi
+}
+
+service_action() {
+	local action="$1"
+	local enabled
+	case "$action" in
+	start | restart) enabled=1 ;;
+	stop) enabled=0 ;;
+	*) fail "Unsupported service action" 2 ;;
+	esac
+	uci -q set "lucky.@lucky[0].enabled=$enabled" || fail "Unable to update Lucky service state"
+	uci commit lucky || fail "Unable to save Lucky service state"
+	"$INIT" "$action"
+}
+
+case "$1" in
+info)
+	[ "$#" -eq 1 ] || fail "Usage: lucky-call info" 2
+	require_program
+	exec "$PROG" -info
+	;;
+base)
+	[ "$#" -eq 1 ] || fail "Usage: lucky-call base" 2
+	dir="$(config_dir)" || exit $?
+	require_program
+	exec "$PROG" -baseConfInfo -cd "$dir"
+	;;
+status)
+	[ "$#" -eq 1 ] || fail "Usage: lucky-call status" 2
+	if ubus call service list '{"name":"lucky"}' 2> /dev/null |
+		jsonfilter -e '@.lucky.instances.*.running' 2> /dev/null | grep -qx true; then
+		echo true
+	else
+		echo false
+	fi
+	;;
+arch)
+	[ "$#" -eq 1 ] || fail "Usage: lucky-call arch" 2
+	if [ -r /usr/share/lucky/arch ]; then
+		exec sed -n '1p' /usr/share/lucky/arch
+	fi
+	exec uname -m
+	;;
+service)
+	[ "$#" -eq 2 ] || fail "Usage: lucky-call service start|stop|restart" 2
+	service_action "$2"
+	;;
+set-port)
+	[ "$#" -eq 2 ] || fail "Usage: lucky-call set-port PORT" 2
+	case "$2" in *[!0-9]* | '') fail "Port must be an integer from 1 to 65535" 2 ;; esac
+	[ "$2" -ge 1 ] 2> /dev/null && [ "$2" -le 65535 ] 2> /dev/null || fail "Port must be an integer from 1 to 65535" 2
+	set_conf AdminWebListenPort "$2"
+	;;
+set-safe-url)
+	[ "$#" -eq 2 ] || fail "Usage: lucky-call set-safe-url /path" 2
+	[ "${#2}" -le 256 ] || fail "Safe URL is too long" 2
+	case "$2" in *[[:space:]]*) fail "Safe URL must not contain whitespace" 2 ;; '' | /*) ;; *) fail "Safe URL must be empty or begin with /" 2 ;; esac
+	set_conf SetSafeURL "$2"
+	;;
+set-internet)
+	[ "$#" -eq 2 ] || fail "Usage: lucky-call set-internet true|false" 2
+	case "$2" in true | false) ;; *) fail "Internet access must be true or false" 2 ;; esac
+	set_conf AllowInternetaccess "$2"
+	;;
+reset-auth)
+	[ "$#" -eq 1 ] || fail "Usage: lucky-call reset-auth" 2
+	mkdir "$RESET_LOCK_DIR" 2> /dev/null || fail "Another credential reset is already running"
+	trap 'rmdir "$RESET_LOCK_DIR" 2>/dev/null' EXIT HUP INT TERM
+	password="$(dd if=/dev/urandom bs=12 count=1 2> /dev/null | hexdump -v -e '1/1 "%02x"')"
+	[ "${#password}" -eq 24 ] || fail "Unable to generate a secure password"
+	set_conf AllowInternetaccess false > /dev/null || fail "Unable to disable Internet access before resetting credentials"
+	"$INIT" stop || fail "Unable to stop Lucky before resetting credentials"
+	set_conf AdminAccount admin > /dev/null || fail "Unable to reset the admin account"
+	set_conf AdminPassword "$password" > /dev/null || fail "The account changed, but the password update failed"
+	if "$INIT" restart; then
+		restarted=true
+	else
+		restarted=false
+	fi
+	printf '{"account":"admin","password":"%s","restarted":%s}\n' "$password" "$restarted"
+	;;
+*)
+	fail "Unsupported Lucky operation" 2
+	;;
+esac

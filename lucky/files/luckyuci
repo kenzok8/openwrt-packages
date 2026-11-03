@@ -1,0 +1,5 @@
+config lucky
+        option enabled '1'
+        option logger '1'
+        option watchdog '0'
+        option configdir '/etc/config/lucky.daji'

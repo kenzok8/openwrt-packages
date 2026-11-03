@@ -1,0 +1,100 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+
+# Only this exact entry belongs to us. Never remove user-created Lucky jobs.
+ENTRY='* * * * * [ -x /usr/libexec/lucky-watchdog ] && /usr/libexec/lucky-watchdog check # lucky-watchdog'
+ROOT_CRONTAB=/etc/crontabs/root
+temporary=
+
+fail() {
+	echo "$1" >&2
+	exit 1
+}
+
+configured() {
+	case "$(uci -q get lucky.@lucky[0].watchdog)" in 1 | on | true | yes) return 0 ;; *) return 1 ;; esac
+}
+
+scheduled() {
+	grep -qxF "$ENTRY" "$ROOT_CRONTAB" 2> /dev/null
+}
+
+status() {
+	local enabled=false installed=false paused=false cron_running=false
+	configured && enabled=true
+	scheduled && installed=true
+	[ -e /var/run/lucky.stopped ] && paused=true
+	case "$(uci -q get lucky.@lucky[0].enabled)" in 1 | on | true | yes) ;; *) paused=true ;; esac
+	pidof crond > /dev/null && cron_running=true
+	printf '{"enabled":%s,"scheduled":%s,"paused":%s,"cron_running":%s}\n' "$enabled" "$installed" "$paused" "$cron_running"
+}
+
+sync_cron() {
+	local enabled="$1"
+	# An unconfigured installation does not require cron or touch its files.
+	[ "$enabled" = 1 ] || scheduled || return 0
+	[ ! -L "$ROOT_CRONTAB" ] || fail "Refusing a symlinked root crontab"
+	[ ! -e "$ROOT_CRONTAB" ] || [ -f "$ROOT_CRONTAB" ] || fail "Invalid root crontab"
+	command -v crontab > /dev/null || fail "Cron is not installed"
+	temporary="$(mktemp -d /tmp/lucky-watchdog.XXXXXX)" || fail "Cannot prepare crontab"
+	if [ -e "$ROOT_CRONTAB" ]; then
+		cat "$ROOT_CRONTAB" > "$temporary/before" || fail "Cannot read crontab"
+	else
+		: > "$temporary/before"
+	fi
+	# awk also handles a final line without a newline before appending our job.
+	awk -v entry="$ENTRY" '$0 != entry { print }' "$temporary/before" > "$temporary/after" || fail "Cannot prepare crontab"
+	[ "$enabled" = 1 ] && printf '%s\n' "$ENTRY" >> "$temporary/after"
+	if ! cmp -s "$temporary/before" "$temporary/after"; then
+		if [ -e "$ROOT_CRONTAB" ]; then
+			cmp -s "$temporary/before" "$ROOT_CRONTAB" || fail "Crontab changed; please retry"
+		else
+			[ ! -s "$temporary/before" ] || fail "Crontab changed; please retry"
+		fi
+		crontab -u root "$temporary/after" || fail "Cannot install crontab"
+	fi
+	if [ "$enabled" = 1 ]; then
+		/etc/init.d/cron enable || fail "Cannot enable cron"
+		pidof crond > /dev/null || /etc/init.d/cron start || fail "Cannot start cron"
+	fi
+}
+
+[ "$#" -eq 1 ] || fail "Usage: lucky-watchdog status|enable|disable|sync|remove|check"
+case "$1" in
+check)
+	# Avoid a transient process named "lucky" being mistaken for the core by
+	# other maintenance helpers using pidof. rc.common still takes procd's lock.
+	exec /bin/sh /etc/rc.common /etc/init.d/lucky watchdog
+	;;
+status)
+	status
+	exit 0
+	;;
+enable | disable | sync | remove) ;;
+*) fail "Unsupported watchdog operation" ;;
+esac
+
+umask 077
+exec 9> /var/lock/lucky-watchdog.lock
+flock -x 9 || fail "Cannot lock watchdog settings"
+trap '[ -z "$temporary" ] || { rm -f "$temporary/before" "$temporary/after"; rmdir "$temporary"; }' EXIT
+
+case "$1" in
+enable | disable)
+	enabled=0
+	[ "$1" = enable ] && enabled=1
+	# Set the option only after the cron update succeeds. A failed enable never
+	# starts recovery; a failed disable still leaves the old setting visible.
+	sync_cron "$enabled"
+	uci -q set "lucky.@lucky[0].watchdog=$enabled" && uci commit lucky || fail "Cannot save watchdog settings"
+	status
+	;;
+sync)
+	enabled=0
+	configured && enabled=1
+	sync_cron "$enabled"
+	;;
+remove)
+	sync_cron 0
+	;;
+esac
