@@ -20,12 +20,39 @@ local function write(path, data)
  local f = must(io.open(path, "wb"), "Cannot write core workspace")
  must(f:write(data), "Cannot write core workspace"); must(f:close(), "Cannot close core workspace")
 end
-local function safe_target()
- for _, path in ipairs({ "/usr", "/usr/bin" }) do
-  local s = fs.lstat(path); must(s and s.type == "dir" and s.uid == 0, "Unsafe core parent directory")
+local function root_managed(st)
+ return st and st.uid == 0 and st.modestr:sub(5, 5) == "-" and st.modestr:sub(8, 8) == "-"
+end
+local function safe_target(allow_parent_links)
+ -- Validate each directory on both sides of a link before executing the core
+ -- as root. Checking only the resolved endpoint would miss writable ancestors.
+ local links = 0
+ local function directory(parent, path)
+  if path:sub(1, 1) == "/" then parent = "" end
+  for part in path:gmatch("[^/]+") do
+   if part == ".." then
+    parent = parent:match("^(.*)/[^/]+$") or ""
+   elseif part ~= "." then
+    local next_path = parent .. "/" .. part
+    local st = fs.lstat(next_path)
+    local err = "Unsafe core parent directory: " .. next_path
+    if allow_parent_links and st and st.type == "lnk" and st.uid == 0 then
+     links = links + 1
+     must(links <= 40, err)
+     parent = directory(parent, must(fs.readlink(next_path), err))
+    else
+     must(root_managed(st) and st.type == "dir", err)
+     parent = next_path
+    end
+   end
+  end
+  return parent
  end
+ must(root_managed(fs.lstat("/")), "Unsafe core parent directory: /")
+ directory("", "/usr/bin")
  local s = fs.lstat(BIN)
  must(not s or (s.type == "reg" and s.nlink == 1), "Core must be a regular file, not a link")
+ if allow_parent_links then must(not s or root_managed(s), "Unsafe core file permissions: " .. BIN) end
  return s
 end
 local function elf(path)
@@ -314,7 +341,7 @@ function M.status()
  return { status = status, path = BIN, available_memory_kib = available_memory(), info = status == "ready" and cached_info(st) or nil, base = ok and base or nil }
 end
 function M.info(work)
- local st = safe_target()
+ local st = safe_target(true)
  must(st and fs.access(BIN, "x"), "Lucky core is missing or not executable")
  local info = cached_info(st)
  if info then return info end
@@ -327,7 +354,7 @@ function M.info(work)
  return info
 end
 function M.base(work, remove)
- local st = safe_target()
+ local st = safe_target(true)
  must(st and fs.access(BIN, "x"), "Lucky core is missing or not executable")
  local dir = base_directory()
  local file = fs.stat(dir .. "/lucky_base.lkcf")
