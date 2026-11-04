@@ -54,8 +54,8 @@ const openwrtClients = [
 	{ id: 'clashoo-mihomo', name: 'Clashoo · Mihomo', icon: 'Clashoo.png', detail: 'Mihomo YAML' },
 	{ id: 'clashoo-singbox', name: 'Clashoo · sing-box', icon: 'Clashoo.png', detail: 'sing-box JSON' },
 	{ id: 'momo', name: 'Momo', icon: 'ClientSingBox.png', detail: 'sing-box JSON' },
-	{ id: 'dae-config', name: 'daede · dae 配置', icon: 'ClientDae.png', detail: '完整配置 · 可选规则方案' },
-	{ id: 'honk-config', name: 'Honk · dae 配置', icon: 'ClientHonk.png', detail: '完整配置 · 可选规则方案' }
+	{ id: 'dae-config', name: 'daede · dae 配置', icon: 'ClientDae.png', detail: '完整配置 · Kenzo 模板' },
+	{ id: 'honk-config', name: 'Honk · dae 配置', icon: 'ClientHonk.png', detail: '完整配置 · Kenzo 模板' }
 ];
 
 /* Protocol filter options. */

@@ -93,11 +93,15 @@ function extFor(target) {
 		return '.txt';
 	if (target === 'sing-box' || target === 'hiddify' || target === 'clashoo-singbox' || target === 'momo')
 		return '.json';
-	if (target === 'dae-config')
+	if (usesDAETemplate(target))
 		return '.dae';
 	if (target === 'surge' || target === 'surge-mac' || target === 'shadowrocket')
 		return '.conf';
 	return '.yaml';
+}
+
+function usesDAETemplate(target) {
+	return target === 'dae-config' || target === 'honk-config';
 }
 
 function reusableLink(item) {
@@ -107,7 +111,7 @@ function reusableLink(item) {
 }
 
 function supportsServiceRegions(target) {
-	return [ 'sing-box', 'hiddify', 'clashoo-singbox', 'momo', 'dae-config' ].indexOf(target) >= 0;
+	return [ 'sing-box', 'hiddify', 'clashoo-singbox', 'momo' ].indexOf(target) >= 0;
 }
 
 function serviceRegionsJSON(target, regions) {
@@ -311,13 +315,14 @@ return view.extend({
 
 			var shown = visibleNodes();
 			var supported = destinationCapability(currentDestination()).protocols || [];
+			var templateTarget = usesDAETemplate(currentDestination().target || currentDestination().id);
 			shown.forEach(function(n) {
 				var checkbox = E('input', { 'type': 'checkbox' });
 				var compatible = supported.indexOf(n.kind) >= 0;
-				checkbox.disabled = !compatible;
+				checkbox.disabled = !compatible && !templateTarget;
 				checkbox.checked = !!selected[n.id];
 				if (!compatible)
-					checkbox.title = _('当前客户端不支持此协议');
+					checkbox.title = templateTarget ? _('当前选择的 dae/Honk 模板不支持此协议，请取消选择。') : _('当前客户端不支持此协议');
 				checkbox.addEventListener('change', function() {
 					selected[n.id] = checkbox.checked;
 					invalidateGeneration();
@@ -474,6 +479,7 @@ return view.extend({
 
 		// —— 规则方案选择 ——
 		var schemeSelect = E('select', { 'class': 'cbi-input-select tower-scheme-select', 'name': 'scheme' });
+		var schemeOptionsPanel = E('div', { 'class': 'tower-toolbar tower-scheme-options' });
 		var schemeTargets = {};
 		var schemeLabels = { '': _('默认（简单分流）') };
 		var daeSchemePolicies = {
@@ -553,10 +559,11 @@ return view.extend({
 		var targetNote = E('p', { 'class': 'tower-target-note' });
 		var schemeCompatibilityNote = E('p', { 'class': 'tower-target-note' });
 
-		// 切换目标客户端时，把该客户端不支持的协议从已选里剔除：
-		// 用户点 Momo（sing-box 内核）或 Honk 时，SSR 这类节点应当自动取消勾选，
-		// 而不是留一个勾着但复选框是灰的状态，让人以为选了却导不出来。
+		// 模板目标保留不兼容节点的勾选状态，让严格预检明确指出协议问题。
 		function pruneUnsupportedSelection() {
+			var destination = currentDestination();
+			if (usesDAETemplate(destination.target || destination.id))
+				return 0;
 			var supported = destinationCapability(currentDestination()).protocols || [];
 			var removed = 0;
 			nodes.forEach(function(n) {
@@ -577,6 +584,7 @@ return view.extend({
 		function updateTargetCapabilities() {
 			var destination = currentDestination();
 			var target = destination.target || destination.id;
+			var templateTarget = usesDAETemplate(target);
 			Array.prototype.forEach.call(schemeSelect.options, function(option) {
 				option.disabled = (target === 'dae-config' && !!option.value && !daeSchemePolicies[option.value]) ||
 					(!!option.value && !!schemeTargets[option.value] && schemeTargets[option.value] !== target);
@@ -584,21 +592,22 @@ return view.extend({
 			if (schemeSelect.selectedOptions[0] && schemeSelect.selectedOptions[0].disabled)
 				schemeSelect.value = target === 'dae-config' ? '' : destinationCapability(destination).default_rule || '';
 			var nodeOnly = !!destination.nodeOnly;
-			schemeSelect.disabled = nodeOnly;
-			preferRuleSets.disabled = nodeOnly || target === 'dae-config';
+			schemeSelect.disabled = nodeOnly || templateTarget;
+			preferRuleSets.disabled = nodeOnly || templateTarget;
+			schemeOptionsPanel.style.display = nodeOnly || templateTarget ? 'none' : '';
 			generateBtn.textContent = destination.target === 'links' ? _('生成节点订阅') : _('生成配置与链接');
 			sharePanel.querySelector('#tower-copy-config').textContent = destination.target === 'links' ? _('复制节点订阅') : _('复制配置文本');
 			if (nodeOnly) {
 				schemeSelect.value = '';
 				targetNote.textContent = _('此目标只导出节点订阅；完整配置和分流规则仍在目标插件中管理。');
-			} else if (target === 'dae-config') {
-				targetNote.textContent = _('dae 完整配置使用原生自动测速规则方案；其他不兼容规则会在预检中说明。');
+			} else if (templateTarget) {
+				targetNote.textContent = _('使用 Kenzo 完整配置模板；选中任一机场节点会写入该机场完整订阅，单个手动节点写入 node {}。Honk 不支持 SSR。');
 			} else if (destination.target === 'clashoo-singbox') {
 				targetNote.textContent = _('Clashoo 专用 sing-box 配置会内联受支持的规则集；当前目标不支持的节点会由严格预检提示。');
 			} else {
 				targetNote.textContent = _('使用所选规则方案生成完整配置；兼容目标仍需在对应插件中导入验证。');
 			}
-			if (!nodeOnly && target !== 'dae-config' && destinationCapability(destination).default_rule)
+			if (!nodeOnly && !templateTarget && destinationCapability(destination).default_rule)
 				schemeSelect.value = destinationCapability(destination).default_rule;
 			pruneUnsupportedSelection();
 			invalidateGeneration();
@@ -1100,6 +1109,10 @@ return view.extend({
 			]);
 		}
 
+		schemeOptionsPanel.appendChild(E('span', { 'class': 'tower-scheme-label' }, [ _('规则方案') ]));
+		schemeOptionsPanel.appendChild(schemeSelect);
+		schemeOptionsPanel.appendChild(E('label', { 'class': 'tower-rule-set-check' }, [ preferRuleSets, _('优先使用原生规则集') ]));
+
 		return E('div', { 'class': 'cbi-map tower-export-page' }, [
 			E('style', {}, [ css ]),
 			E('div', { 'class': 'tower-card' }, [
@@ -1114,10 +1127,10 @@ return view.extend({
 				]),
 				targetNote
 			]),
-				E('div', { 'class': 'tower-card' }, [
-					E('h4', { 'class': 'tower-card-title' }, _('2. 选择节点')),
-					protocolList,
-					E('div', { 'class': 'tower-toolbar' }, [ filterInput ]),
+			E('div', { 'class': 'tower-card' }, [
+				E('h4', { 'class': 'tower-card-title' }, _('2. 选择节点')),
+				protocolList,
+				E('div', { 'class': 'tower-toolbar' }, [ filterInput ]),
 				E('div', { 'class': 'tower-summary' }, [
 					E('span', {}, [ _('共'), ' ', statTotal, ' ', _('个节点') ]),
 					E('span', {}, [ _('当前筛选'), ' ', statVisible, ' ', _('个') ]),
@@ -1127,11 +1140,7 @@ return view.extend({
 			]),
 			E('div', { 'class': 'tower-card' }, [
 				E('h4', { 'class': 'tower-card-title' }, _('3. 生成与导出')),
-				E('div', { 'class': 'tower-toolbar' }, [
-					E('span', { 'class': 'tower-scheme-label' }, [ _('规则方案') ]),
-					schemeSelect,
-					E('label', { 'class': 'tower-rule-set-check' }, [ preferRuleSets, _('优先使用原生规则集') ]),
-				]),
+				schemeOptionsPanel,
 				serviceRegionsPanel,
 				schemeCompatibilityNote,
 				E('div', { 'class': 'tower-toolbar' }, [ generateBtn, genStatus ]),
