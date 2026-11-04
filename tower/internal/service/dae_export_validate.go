@@ -21,12 +21,12 @@ const honkValidationGlobal = "global {\n    tproxy_port: 12345\n    lan_interfac
 // so a typo would ship a rule that silently never matches. Both cores read the
 // same /usr/share/v2ray DAT files, and dae validate fails loudly on an unknown
 // code, so the honk config is validated with its include block rewritten.
-func (s *Service) validateDAEExport(target model.ClientTarget, content string) error {
+func (s *Service) validateDAEExport(ctx context.Context, target model.ClientTarget, content string) error {
 	switch target {
 	case model.ClientDAE:
-		return s.daeValidate(context.Background(), content)
+		return s.daeValidate(ctx, content)
 	case model.ClientHonk:
-		return s.daeValidate(context.Background(), honkValidationConfig(content))
+		return s.daeValidate(ctx, honkValidationConfig(content))
 	default:
 		return nil
 	}

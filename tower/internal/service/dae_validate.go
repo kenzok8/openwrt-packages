@@ -53,7 +53,7 @@ func validateDAEConfigWith(parent context.Context, content, validatorPath string
 	env = append(env, "DAE_LOCATION_ASSET=/usr/share/v2ray")
 	if err := run(ctx, validatorPath, []string{"validate", "-c", configPath}, env); err != nil {
 		if ctx.Err() == context.DeadlineExceeded {
-			return fmt.Errorf("dae validate timed out after %s", timeout)
+			return fmt.Errorf("dae validate timed out: %w", ctx.Err())
 		}
 		return fmt.Errorf("dae validate command failed")
 	}

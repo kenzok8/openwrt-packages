@@ -55,6 +55,9 @@ const maxRuleSetBytes = 8 << 20
 // soon as it opens, so a preflight gets a short leash and fails with a hint instead
 // of holding the admin session; the explicit export action may take much longer.
 const (
+	// Leave time for LuCI to receive the reply before its default RPC deadline.
+	daeRequestTimeout = 18 * time.Second
+
 	// A preflight runs on page open and on every selection change, and uhttpd only
 	// serves three script requests at a time, so it must never sit on downloads.
 	// The preflight is only a hint: keep it cheap and let the export (ten minutes)
@@ -83,6 +86,13 @@ func (s *Service) ruleBudgetRemaining() (time.Duration, bool) {
 		return 0, false
 	}
 	return remaining, true
+}
+
+func daeRequestContext(target model.ClientTarget) (context.Context, context.CancelFunc) {
+	if target.Family() == model.FamilyDAE {
+		return context.WithTimeout(context.Background(), daeRequestTimeout)
+	}
+	return context.Background(), func() {}
 }
 
 // New creates a Service.
@@ -321,10 +331,28 @@ func (s *Service) ExportWithOptions(target model.ClientTarget, protocols []model
 // ExportWithConsent binds a degraded sing-box export to the exact preflight
 // plan and the differences accepted for this generation.
 func (s *Service) ExportWithConsent(target model.ClientTarget, protocols []model.ProxyKind, nodeIDs []string, schemeID string, preferRuleSets bool, planDigest string, acceptedDegradations []string) (string, error) {
+	ctx, cancel := daeRequestContext(target)
+	defer cancel()
 	s.beginRuleBudget(ruleExportBudget)
 	options, err := s.exportOptions(target, protocols, nodeIDs, schemeID, preferRuleSets, false)
 	if err != nil {
 		return "", err
+	}
+	if target.Family() == model.FamilyDAE {
+		snapshot, err := s.loadDAETemplate(ctx, target, true)
+		if err != nil {
+			return "", err
+		}
+		content, result := generator.PrepareDAETemplate(options, snapshot.TemplateID, []byte(snapshot.Content))
+		if result.Status != generator.PreflightExact {
+			return "", &generator.PreflightError{Result: result}
+		}
+		if target == model.ClientDAE {
+			if err := s.validateDAEExport(ctx, target, content); err != nil {
+				return "", fmt.Errorf("设备 dae validate 未通过：%w", err)
+			}
+		}
+		return content, nil
 	}
 	options.PlanDigest = planDigest
 	options.AcceptedDegradations = acceptedDegradations
@@ -340,6 +368,8 @@ func (s *Service) ExportStrict(target model.ClientTarget, protocols []model.Prox
 // ExportStrictWithServiceRegions exports a strict plan with temporary service
 // country choices. The map is request-scoped and is not persisted.
 func (s *Service) ExportStrictWithServiceRegions(target model.ClientTarget, protocols []model.ProxyKind, nodeIDs []string, schemeID string, preferRuleSets bool, planDigest string, regions map[string]string) (string, error) {
+	ctx, cancel := daeRequestContext(target)
+	defer cancel()
 	if len(nodeIDs) == 0 {
 		return "", fmt.Errorf("严格导出至少需要一个已选择的节点")
 	}
@@ -348,7 +378,7 @@ func (s *Service) ExportStrictWithServiceRegions(target model.ClientTarget, prot
 	if err != nil {
 		return "", err
 	}
-	if len(generator.FilterNodes(options.Nodes, protocols)) == 0 {
+	if len(generator.FilterNodes(options.Nodes, protocols)) == 0 && len(options.DAESubscriptions) == 0 {
 		return "", fmt.Errorf("严格导出至少需要一个支持当前目标的已选择节点")
 	}
 	for _, node := range generator.FilterNodes(options.Nodes, protocols) {
@@ -356,7 +386,26 @@ func (s *Service) ExportStrictWithServiceRegions(target model.ClientTarget, prot
 			return "", fmt.Errorf("严格导出包含当前客户端不支持的协议 %s", node.Kind)
 		}
 	}
-	if target.Family() == model.FamilySingBox || target.Family() == model.FamilyDAE {
+	if target.Family() == model.FamilyDAE {
+		snapshot, err := s.loadDAETemplate(ctx, target, false)
+		if err != nil {
+			return "", err
+		}
+		content, result := generator.PrepareDAETemplate(options, snapshot.TemplateID, []byte(snapshot.Content))
+		if result.Status != generator.PreflightExact {
+			return "", &generator.PreflightError{Result: result}
+		}
+		if planDigest == "" || planDigest != result.PlanDigest {
+			return "", fmt.Errorf("严格导出需要与当前预检完全匹配的计划摘要")
+		}
+		if target == model.ClientDAE {
+			if err := s.validateDAEExport(ctx, target, content); err != nil {
+				return "", fmt.Errorf("设备 dae validate 未通过：%w", err)
+			}
+		}
+		return content, nil
+	}
+	if target.Family() == model.FamilySingBox {
 		// The UI may not have a usable preflight digest (cold rule cache, budget hit).
 		// Recompute the plan here with the export budget so the user is never blocked
 		// by a failed hint, and keep the digest binding for the actual render.
@@ -373,7 +422,7 @@ func (s *Service) ExportStrictWithServiceRegions(target model.ClientTarget, prot
 		if err != nil {
 			return "", err
 		}
-		if err := s.validateDAEExport(target, content); err != nil {
+		if err := s.validateDAEExport(ctx, target, content); err != nil {
 			return "", fmt.Errorf("设备 dae validate 未通过：%w", err)
 		}
 		return content, nil
@@ -392,6 +441,8 @@ func (s *Service) ExportStrictWithServiceRegions(target model.ClientTarget, prot
 // PreflightExportWithOptions checks a sing-box-family export using the same
 // selected nodes, scheme, and cached rule resources as the final export.
 func (s *Service) PreflightExportWithOptions(target model.ClientTarget, protocols []model.ProxyKind, nodeIDs []string, schemeID string, preferRuleSets bool) (generator.PreflightResult, error) {
+	ctx, cancel := daeRequestContext(target)
+	defer cancel()
 	s.beginRuleBudget(rulePreflightBudget)
 	options, err := s.exportOptions(target, protocols, nodeIDs, schemeID, preferRuleSets, false)
 	if err != nil {
@@ -414,16 +465,14 @@ func (s *Service) PreflightExportWithOptions(target model.ClientTarget, protocol
 		return generator.PreflightResult{}, err
 	}
 	if target.Family() == model.FamilyDAE {
-		result := generator.DAEPreflight(options)
-		if result.Status == generator.PreflightExact {
-			options.Strict = true
-			options.PlanDigest = result.PlanDigest
-			content, generateErr := generator.Generate(options)
-			if generateErr != nil {
-				return generator.PreflightResult{Status: generator.PreflightUnsupported, PlanDigest: result.PlanDigest, Issues: []generator.PreflightIssue{{Code: "dae_render", Severity: "blocking", Location: "export", Message: "DAE 配置生成失败"}}, Planned: result.Planned}, nil
-			}
-			if validateErr := s.validateDAEExport(target, content); validateErr != nil {
-				return generator.PreflightResult{Status: generator.PreflightUnsupported, PlanDigest: result.PlanDigest, Issues: []generator.PreflightIssue{{Code: "dae_validate", Severity: "blocking", Location: "export", Message: "设备 dae validate 未通过；当前 DAT 标签或配置需要修正"}}, Planned: result.Planned}, nil
+		snapshot, err := s.loadDAETemplate(ctx, target, true)
+		if err != nil {
+			return daeTemplateErrorResult(err), nil
+		}
+		content, result := generator.PrepareDAETemplate(options, snapshot.TemplateID, []byte(snapshot.Content))
+		if result.Status == generator.PreflightExact && target == model.ClientDAE {
+			if validateErr := s.validateDAEExport(ctx, target, content); validateErr != nil {
+				return daeTemplateErrorResult(fmt.Errorf("设备 dae validate 未通过")), nil
 			}
 		}
 		return result, nil
@@ -439,6 +488,8 @@ func (s *Service) PreflightExportStrict(target model.ClientTarget, protocols []m
 // PreflightExportStrictWithServiceRegions validates a strict request with
 // temporary service country choices. It never saves those choices.
 func (s *Service) PreflightExportStrictWithServiceRegions(target model.ClientTarget, protocols []model.ProxyKind, nodeIDs []string, schemeID string, preferRuleSets bool, regions map[string]string) (generator.PreflightResult, error) {
+	ctx, cancel := daeRequestContext(target)
+	defer cancel()
 	s.beginRuleBudget(rulePreflightBudget)
 	options, err := s.exportOptionsWithServiceRegions(target, protocols, nodeIDs, schemeID, preferRuleSets, true, regions)
 	if err != nil {
@@ -450,7 +501,7 @@ func (s *Service) PreflightExportStrictWithServiceRegions(target model.ClientTar
 	}
 	options.Strict = true
 	filtered := generator.FilterNodes(options.Nodes, protocols)
-	if len(filtered) == 0 {
+	if len(filtered) == 0 && len(options.DAESubscriptions) == 0 {
 		return generator.PreflightResult{Status: generator.PreflightUnsupported, Issues: []generator.PreflightIssue{{Code: "nodes_empty", Severity: "blocking", Location: "nodes", Message: "严格导出至少需要一个支持当前目标的已选择节点"}}, Planned: []generator.PreflightItem{}}, nil
 	}
 	for _, node := range filtered {
@@ -459,18 +510,14 @@ func (s *Service) PreflightExportStrictWithServiceRegions(target model.ClientTar
 		}
 	}
 	if target.Family() == model.FamilyDAE {
-		result := generator.DAEPreflight(options)
-		if result.Status != generator.PreflightExact {
-			return result, nil
+		snapshot, err := s.loadDAETemplate(ctx, target, true)
+		if err != nil {
+			return daeTemplateErrorResult(err), nil
 		}
-		options.PlanDigest = result.PlanDigest
-		content, generateErr := generator.Generate(options)
-		if generateErr != nil {
-			return generator.PreflightResult{Status: generator.PreflightUnsupported, PlanDigest: result.PlanDigest, Issues: []generator.PreflightIssue{{Code: "dae_render", Severity: "blocking", Location: "export", Message: "DAE 配置生成失败"}}, Planned: result.Planned}, nil
-		}
-		if target == model.ClientDAE {
-			if validateErr := s.daeValidate(context.Background(), content); validateErr != nil {
-				return generator.PreflightResult{Status: generator.PreflightUnsupported, PlanDigest: result.PlanDigest, Issues: []generator.PreflightIssue{{Code: "dae_validate", Severity: "blocking", Location: "export", Message: "设备 dae validate 未通过；当前 DAT 标签或配置需要修正"}}, Planned: result.Planned}, nil
+		content, result := generator.PrepareDAETemplate(options, snapshot.TemplateID, []byte(snapshot.Content))
+		if result.Status == generator.PreflightExact && target == model.ClientDAE {
+			if validateErr := s.validateDAEExport(ctx, target, content); validateErr != nil {
+				return daeTemplateErrorResult(fmt.Errorf("设备 dae validate 未通过")), nil
 			}
 		}
 		return result, nil
@@ -529,6 +576,9 @@ func (s *Service) exportOptionsWithServiceRegions(target model.ClientTarget, pro
 	}
 	if err != nil {
 		return generator.Options{}, err
+	}
+	if target.Family() == model.FamilyDAE {
+		return s.daeTemplateOptions(target, nodes, protocols, strict)
 	}
 	var scheme *model.RuleScheme
 	if schemeID != "" {
