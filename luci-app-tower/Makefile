@@ -7,7 +7,7 @@ LUCI_PKGARCH:=all
 LUCI_DEPENDS:=+tower
 
 PKG_NAME:=luci-app-tower
-PKG_VERSION:=1.1.0
+PKG_VERSION:=2026.11.05
 PKG_RELEASE:=1
 
 include $(TOPDIR)/feeds/luci/luci.mk
