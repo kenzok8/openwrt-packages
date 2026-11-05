@@ -213,7 +213,7 @@ return view.extend({
 		return E('div', { 'class': 'cbi-map tower-rules-page' }, [
 			E('style', {}, [ css ]),
 			E('section', { 'class': 'tower-card' }, [
-				E('h3', { 'class': 'tower-card-title' }, [ _('导入规则方案') ]),
+				E('h3', { 'class': 'tower-card-title' }, [ _('规则导入') ]),
 				E('p', { 'class': 'tower-import-intro' }, [ _('支持 HTTPS 链接、粘贴文本和本地文件；识别 Clash YAML、subconverter .ini 和 Surge 配置。只导入策略组与规则，不导入节点；引用的 HTTPS 规则集在刷新时下载并缓存在本机。') ]),
 				E('div', { 'class': 'tower-add' }, [
 					E('div', { 'class': 'tower-field' }, [

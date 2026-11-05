@@ -21,18 +21,14 @@ const css = '\
 .tower-target-note{margin:11px 0 0;font-size:12px;opacity:.7}\
 .tower-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}\
 .tower-protocol-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%;margin-bottom:12px}\
-.tower-export-page .tower-protocol-option{display:grid;grid-template-columns:minmax(0,1fr) 42px;align-items:center;gap:12px;min-width:0;min-height:60px;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(128,128,128,.22);border-radius:9px;background:rgba(128,128,128,.04);cursor:pointer;font-size:13px}\
+.tower-export-page .tower-protocol-option{display:grid;grid-template-columns:minmax(0,1fr) 24px;align-items:center;gap:12px;min-width:0;min-height:60px;box-sizing:border-box;padding:10px 14px;border:1px solid rgba(128,128,128,.22);border-radius:9px;background:rgba(128,128,128,.04);cursor:pointer;font-size:13px}\
 .tower-protocol-option:first-child{grid-column:1/-1}\
 .tower-protocol-option:hover{border-color:rgba(74,160,101,.55)}\
 .tower-protocol-option:has(input:checked){border-color:rgba(74,160,101,.68);background:rgba(74,160,101,.1)}\
 .tower-protocol-option:has(input:focus-visible){outline:2px solid rgba(66,153,225,.75);outline-offset:2px}\
 .tower-protocol-meta{display:flex;flex-direction:column;gap:3px;min-width:0}\
 .tower-protocol-name{font-size:13px;font-weight:600;line-height:1.2;overflow-wrap:anywhere}\
-.tower-protocol-option input{appearance:none;-webkit-appearance:none;position:relative;justify-self:end;width:42px;height:24px;margin:0;border:1px solid rgba(128,128,128,.4);border-radius:999px;background:rgba(128,128,128,.25);cursor:pointer;transition:background-color .16s ease,border-color .16s ease}\
-.tower-protocol-option input::before{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .16s ease}\
-.tower-protocol-option input:checked{border-color:#4aa065;background:#4aa065}\
-.tower-protocol-option input:checked::before{transform:translateX(18px)}\
-.tower-protocol-option input:focus-visible{outline:none}\
+.tower-protocol-option input{appearance:checkbox !important;-webkit-appearance:checkbox !important;position:static !important;top:auto !important;left:auto !important;justify-self:end;border-radius:0 !important;background:none !important;accent-color:#4aa065;cursor:pointer}\
 .tower-protocol-option input:disabled{opacity:.5;cursor:not-allowed}\
 .tower-protocol-count{opacity:.62;font-size:11px;font-variant-numeric:tabular-nums}\
 .tower-filter{margin-left:auto;min-width:200px;box-sizing:border-box;border:1px solid rgba(128,128,128,.28);border-radius:6px;background:transparent!important;color:inherit!important;font-size:12px;padding:7px 9px}\

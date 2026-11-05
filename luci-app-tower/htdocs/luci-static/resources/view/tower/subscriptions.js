@@ -363,7 +363,7 @@ return view.extend({
 				]) ])
 			]),
 			E('details', { 'class': 'tower-disclosure' }, [
-				E('summary', {}, [ _('粘贴导入节点') ]),
+				E('summary', {}, [ _('导入节点') ]),
 				E('div', { 'class': 'tower-disclosure-body' }, [
 					E('p', { 'class': 'cbi-section-descr' }, [ _('支持 Clash YAML、Surge INI、Base64 或分享链接。') ]), pasteTextarea,
 					E('div', { 'style': 'margin-top:10px' }, [ importBtn ])
