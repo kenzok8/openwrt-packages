@@ -1111,6 +1111,7 @@ return view.extend({
 
 		return E('div', { 'class': 'cbi-map tower-export-page' }, [
 			E('style', {}, [ css ]),
+			tower.buildBrand(_('整理订阅与节点，导出给目标客户端')),
 			E('div', { 'class': 'tower-card' }, [
 				E('h4', { 'class': 'tower-card-title' }, _('1. 目标客户端')),
 				E('div', { 'class': 'tower-client-section' }, [

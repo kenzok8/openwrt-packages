@@ -119,9 +119,41 @@ function downloadFile(filename, content) {
 	setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
 }
 
+// ── 页头品牌条：logo 跟包一起装到 /luci-static/tower/ ──
+var BRAND_CSS = '\
+.tower-brand{display:flex;align-items:center;gap:11px;margin:0 0 14px;padding:0}\
+.tower-brand-logo{width:40px;height:40px;flex:none;display:block}\
+.tower-brand-name{font-size:17px;font-weight:650;line-height:1.15}\
+.tower-brand-sub{display:block;font-size:11.5px;opacity:.55;margin-top:2px}\
+@media(max-width:480px){.tower-brand-logo{width:32px;height:32px}.tower-brand-name{font-size:15px}}\
+';
+
+var brandCssReady = false;
+
+function buildBrand(subtitle) {
+	if (!brandCssReady) {
+		brandCssReady = true;
+		document.head.appendChild(E('style', {}, [ BRAND_CSS ]));
+	}
+	return E('div', { 'class': 'tower-brand' }, [
+		E('img', {
+			'class': 'tower-brand-logo',
+			'src': L.resource('tower/logo.png'),
+			'alt': '',
+			'width': '40',
+			'height': '40'
+		}),
+		E('div', {}, [
+			E('span', { 'class': 'tower-brand-name' }, [ 'Tower' ]),
+			E('span', { 'class': 'tower-brand-sub' }, [ subtitle || '' ])
+		])
+	]);
+}
+
 return baseclass.extend({
 	copyText: copyText,
 	downloadFile: downloadFile,
+	buildBrand: buildBrand,
 	rpcListSubs: function() {
 		return L.resolveDefault(callListSubs(), { data: [] }).then(function(r) { return r.data; });
 	},

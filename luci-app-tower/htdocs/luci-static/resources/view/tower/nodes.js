@@ -87,12 +87,14 @@ return view.extend({
 		if (!nodes.length) {
 			return E('div', { 'class': 'cbi-map' }, [
 				E('style', {}, [ css ]),
+				tower.buildBrand(_('查看与筛选已导入的节点')),
 				E('div', { 'class': 'tower-empty' }, [ onlyOwned ? _('还没有自有节点。') : _('还没有节点。请先到「订阅」页添加订阅或导入节点。') ])
 			]);
 		}
 
 		return E('div', { 'class': 'cbi-map' }, [
 			E('style', {}, [ css ]),
+			tower.buildBrand(_('查看与筛选已导入的节点')),
 			E('div', { 'class': 'tower-card' }, [
 				E('div', { 'class': 'tower-toolbar' }, [
 					E('h4', { 'class': 'tower-card-title' }, [ onlyOwned ? _('自有节点') : _('节点'), ' ', statTotal, ' ', _('个') ]),

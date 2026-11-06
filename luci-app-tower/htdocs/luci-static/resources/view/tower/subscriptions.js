@@ -345,6 +345,7 @@ return view.extend({
 
 		var page = E('div', { 'class': 'cbi-map tower-page' }, [
 			E('style', {}, [ css ]),
+			tower.buildBrand(_('整理订阅与节点，导出给目标客户端')),
 			E('div', { 'class': 'tower-heading' }, [
 				E('div', {}, [ E('h2', {}, [ _('我的订阅') ]), E('p', { 'class': 'tower-subtitle' }, [ _('集中管理订阅与自有节点') ]) ]),
 				E('span', { 'class': 'tower-section-note' }, [ _('数据保存在此设备') ])
