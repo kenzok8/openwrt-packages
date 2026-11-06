@@ -16,7 +16,8 @@ const os = require('os');
 
 // ── 配置 (OpenWrt 适配) ──
 const PORT = parseInt(process.env.OC_CONFIG_PORT || '18793', 10);
-const HOST = process.env.OC_CONFIG_HOST || '0.0.0.0'; // token 认证保护，可安全绑定所有接口
+// 默认只绑回环：监听地址由 init.d 按 uci 的 bind 选项显式传进来。
+const HOST = process.env.OC_CONFIG_HOST || '127.0.0.1'; // token 认证保护，可安全绑定所有接口
 const NODE_BASE = process.env.NODE_BASE || '/opt/openclaw/node';
 const OC_GLOBAL = process.env.OC_GLOBAL || '/opt/openclaw/global';
 const OC_DATA = process.env.OC_DATA || '/opt/openclaw/data';
@@ -34,6 +35,14 @@ function loadAuthToken() {
   } catch { return ''; }
 }
 let AUTH_TOKEN = process.env.OC_PTY_TOKEN || loadAuthToken();
+
+// 定长比较，避免按字节提前返回泄露 token 前缀。
+function tokenMatches(given, expected) {
+  if (!given || !expected) return false;
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
 
 // ── 会话计数 ──
 let activeSessions = 0;
@@ -304,10 +313,16 @@ function handleUpgrade(req, socket, head) {
   // 认证: 验证查询参数中的 token
   // 每次连接时实时读取 UCI token (安装/升级可能重新生成 token)
   const currentToken = loadAuthToken() || AUTH_TOKEN;
-  if (currentToken) {
+  // 空 token 一律拒绝：否则等于把 root shell 公开到网上。
+  if (!currentToken) {
+    console.log(`[oc-config] WS rejected: no auth token configured, remote=${socket.remoteAddress}`);
+    socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
-    const clientToken = url.searchParams.get('token') || '';
-    if (clientToken !== currentToken) {
+    if (!tokenMatches(url.searchParams.get('token') || '', currentToken)) {
       console.log(`[oc-config] WS auth failed from ${socket.remoteAddress}`);
       socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
       socket.destroy();

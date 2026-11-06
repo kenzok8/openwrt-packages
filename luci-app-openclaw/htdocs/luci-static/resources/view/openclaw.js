@@ -38,7 +38,36 @@ function buildTokenUrl(base, tokenName, token) {
 }
 
 /* ── Logo: reuse bundled OpenClaw icon ── */
-var LOGO_HTML = '<img src="/luci-static/openclaw/icon_64.png" width="44" height="44" style="vertical-align:middle;border-radius:8px" onerror="this.style.display=\'none\'">';
+function logoNode() {
+	var img = E('img', {
+		'src': '/luci-static/openclaw/icon_64.png',
+		'width': '44', 'height': '44',
+		'style': 'vertical-align:middle;border-radius:8px'
+	});
+	img.addEventListener('error', function() { img.style.display = 'none'; });
+	return img;
+}
+
+/* iframe 面板的占位提示：图标 + 主文案 + 可选副文案 */
+function iframeMsg(icon, text, sub) {
+	var nodes = [E('div', { 'class': 'icon' }, [icon]), E('div', {}, [text])];
+	if (sub) nodes.push(E('div', { 'style': 'margin-top:8px;font-size:12px;color:#aaa' }, [sub]));
+	return E('div', { 'class': 'oc-iframe-msg' }, nodes);
+}
+
+/* 结果区的刷新按钮：用监听器而非内联 onclick，避免被 CSP 拦掉 */
+function reloadButton() {
+	return E('button', {
+		'class': 'oc-btn oc-btn-p',
+		'style': 'margin-top:10px',
+		'click': function() { window.location.reload(); }
+	}, ['🔄 ' + _('刷新')]);
+}
+
+/* 顶栏/结果区的一行状态文字 */
+function statusSpan(color, text) {
+	return E('span', { 'style': 'color:' + color }, [text]);
+}
 
 /* ── CSS: inherit page theme, zero custom dark rules ── */
 var CSS = '\
@@ -207,11 +236,13 @@ return view.extend({
 
 	/* ═══ Header ═══ */
 	_header: function() {
-		var h = E('div', { 'class': 'oc-header' });
-		h.innerHTML = LOGO_HTML +
-			'<div><h2>OpenClaw AI Gateway</h2>' +
-			'<div class="sub">' + _('OpenWrt 路由器智能 AI 网关') + '</div></div>';
-		return h;
+		return E('div', { 'class': 'oc-header' }, [
+			logoNode(),
+			E('div', {}, [
+				E('h2', {}, ['OpenClaw AI Gateway']),
+				E('div', { 'class': 'sub' }, [_('OpenWrt 路由器智能 AI 网关')])
+			])
+		]);
 	},
 
 	/* ═══ Tabs ═══ */
@@ -269,25 +300,23 @@ return view.extend({
 		]);
 	},
 
-	_card: function(id, label, valueHtml, small) {
-		var c = E('div', { 'class': 'oc-card' }, [
-			E('div', { 'class': 'lbl' }, [label]),
-			E('div', { 'class': 'val' + (small ? ' sm' : ''), 'id': 'oc-c-' + id })
-		]);
-		if (typeof valueHtml === 'string' && valueHtml.indexOf('<') >= 0)
-			c.querySelector('.val').innerHTML = valueHtml;
-		else
-			c.querySelector('.val').textContent = valueHtml || '-';
-		return c;
+	_card: function(id, label, value, small) {
+		var val = E('div', { 'class': 'val' + (small ? ' sm' : ''), 'id': 'oc-c-' + id });
+		if (value instanceof Node) val.appendChild(value);
+		else val.textContent = value || '-';
+		return E('div', { 'class': 'oc-card' }, [E('div', { 'class': 'lbl' }, [label]), val]);
 	},
 
 	_badge: function(st) {
-		if (!st || !st.enabled) return '<span class="oc-badge oc-badge-off">' + _('未知') + '</span>';
-		if ((st.mode || 'remote') === 'remote') return '<span class="oc-badge oc-badge-run"><span class="oc-dot oc-dot-g"></span>' + _('远端模式') + '</span>';
-		if (st.enabled !== '1') return '<span class="oc-badge oc-badge-off"><span class="oc-dot oc-dot-x"></span>' + _('已禁用') + '</span>';
-		if (st.gateway_running) return '<span class="oc-badge oc-badge-run"><span class="oc-dot oc-dot-g"></span>' + _('运行中') + '</span>';
-		if (st.gateway_starting) return '<span class="oc-badge oc-badge-start"><span class="oc-dot oc-dot-y"></span>' + _('启动中') + '</span>';
-		return '<span class="oc-badge oc-badge-stop"><span class="oc-dot oc-dot-r"></span>' + _('已停止') + '</span>';
+		var state = ['oc-badge-off', 'oc-dot-x', _('未知')];
+		if (!st || !st.enabled) state = ['oc-badge-off', 'oc-dot-x', _('未知')];
+		else if ((st.mode || 'remote') === 'remote') state = ['oc-badge-run', 'oc-dot-g', _('远端模式')];
+		else if (st.enabled !== '1') state = ['oc-badge-off', 'oc-dot-x', _('已禁用')];
+		else if (st.gateway_running) state = ['oc-badge-run', 'oc-dot-g', _('运行中')];
+		else if (st.gateway_starting) state = ['oc-badge-start', 'oc-dot-y', _('启动中')];
+		else state = ['oc-badge-stop', 'oc-dot-r', _('已停止')];
+		var dot = state[1] ? E('span', { 'class': 'oc-dot ' + state[1] }) : '';
+		return E('span', { 'class': 'oc-badge ' + state[0] }, [dot, state[2]]);
 	},
 
 	_infoTable: function(st) {
@@ -425,9 +454,9 @@ return view.extend({
 	},
 
 	_toggle: function(id, checked) {
-		var lbl = E('label', { 'class': 'oc-switch' });
-		lbl.innerHTML = '<input type="checkbox" id="' + id + '"' + (checked ? ' checked' : '') + '><span class="slider"></span>';
-		return lbl;
+		var box = E('input', { 'type': 'checkbox', 'id': id });
+		box.checked = !!checked;
+		return E('label', { 'class': 'oc-switch' }, [box, E('span', { 'class': 'slider' })]);
 	},
 
 	_input: function(id, value, type, hint) {
@@ -465,10 +494,7 @@ return view.extend({
 					'loading': 'lazy'
 				}));
 			} else {
-				container.innerHTML = '<div class="oc-iframe-msg">' +
-					'<div class="icon">🖥️</div>' +
-					'<div>' + _('当前为远端 Gateway 模式。') + '</div>' +
-					'<div style="margin-top:8px;font-size:12px;color:#aaa">' + _('请在设置中填写远端地址后打开控制台。') + '</div></div>';
+				container.replaceChildren(iframeMsg('🖥️', _('当前为远端 Gateway 模式。'), _('请在设置中填写远端地址后打开控制台。')));
 			}
 		} else if (st.gateway_running) {
 			var proto = window.location.protocol;
@@ -476,12 +502,11 @@ return view.extend({
 			var base = proto + '//' + host + ':' + (st.port || '18789') + '/';
 
 			/* 先加载占位，再异步拿 token 拼到 URL，避免登录弹窗 */
-			container.innerHTML = '<div class="oc-iframe-msg"><div class="icon">⏳</div><div>' + _('正在连接...') + '</div></div>';
+			container.replaceChildren(iframeMsg('⏳', _('正在连接...')));
 			callHelper(['get_token']).then(function(tok) {
 				var url = base;
 				if (tok && tok.token) url += '?token=' + encodeURIComponent(tok.token);
-				container.innerHTML = '';
-				container.appendChild(E('iframe', {
+				container.replaceChildren(E('iframe', {
 					'src': url,
 					'id': 'oc-console-iframe',
 					'allow': 'clipboard-read; clipboard-write',
@@ -490,10 +515,7 @@ return view.extend({
 				}));
 			});
 		} else {
-			container.innerHTML = '<div class="oc-iframe-msg">' +
-				'<div class="icon">🖥️</div>' +
-				'<div>' + _('Web 控制台不可用。') + '</div>' +
-				'<div style="margin-top:8px;font-size:12px;color:#aaa">' + _('请先启动 OpenClaw 服务。') + '</div></div>';
+			container.replaceChildren(iframeMsg('🖥️', _('Web 控制台不可用。'), _('请先启动 OpenClaw 服务。')));
 		}
 		panel.appendChild(container);
 		return panel;
@@ -506,10 +528,7 @@ return view.extend({
 		var mode = st.mode || 'remote';
 
 		if (mode === 'remote') {
-			container.innerHTML = '<div class="oc-iframe-msg">' +
-				'<div class="icon">⌨️</div>' +
-				'<div>' + _('远端模式不启动本机配置终端。') + '</div>' +
-				'<div style="margin-top:8px;font-size:12px;color:#aaa">' + _('需要终端时请在远端 Gateway 主机上操作。') + '</div></div>';
+			container.replaceChildren(iframeMsg('⌨️', _('远端模式不启动本机配置终端。'), _('需要终端时请在远端 Gateway 主机上操作。')));
 		} else if (st.pty_running) {
 			var proto = window.location.protocol;
 			var host = window.location.hostname;
@@ -520,22 +539,16 @@ return view.extend({
 			callHelper(['get_token']).then(function(tok) {
 				if (tok && tok.pty_token)
 					url += '?pty_token=' + encodeURIComponent(tok.pty_token);
-				container.innerHTML = '';
-				container.appendChild(E('iframe', {
+				container.replaceChildren(E('iframe', {
 					'src': url,
 					'allow': 'clipboard-read; clipboard-write',
 					'style': 'width:100%;height:650px;border:none;display:block',
 					'loading': 'lazy'
 				}));
 			});
-			container.innerHTML = '<div class="oc-iframe-msg">' +
-				'<div class="icon">⏳</div>' +
-				'<div>' + _('正在连接配置终端...') + '</div></div>';
+			container.replaceChildren(iframeMsg('⏳', _('正在连接配置终端...')));
 		} else {
-			container.innerHTML = '<div class="oc-iframe-msg">' +
-				'<div class="icon">⌨️</div>' +
-				'<div>' + _('配置终端未运行。') + '</div>' +
-				'<div style="margin-top:8px;font-size:12px;color:#aaa">' + _('请先启动 OpenClaw 服务。') + '</div></div>';
+			container.replaceChildren(iframeMsg('⌨️', _('配置终端未运行。'), _('请先启动 OpenClaw 服务。')));
 		}
 		panel.appendChild(container);
 		return panel;
@@ -554,7 +567,7 @@ return view.extend({
 		var el;
 		/* Status card */
 		el = document.getElementById('oc-c-status');
-		if (el) el.innerHTML = this._badge(st);
+		if (el) el.replaceChildren(this._badge(st));
 		/* Port */
 		el = document.getElementById('oc-c-port');
 		if (el) el.textContent = st.port || '18789';
@@ -702,12 +715,12 @@ return view.extend({
 
 		if (logWrap) logWrap.style.display = 'block';
 		if (logEl) logEl.textContent = _('开始安装') + ' (' + version + ')...\n';
-		if (stEl) stEl.innerHTML = '<span style="color:#1565c0">⏳ ' + _('安装中...') + '</span>';
-		if (resultEl) { resultEl.innerHTML = ''; resultEl.className = ''; }
+		if (stEl) stEl.replaceChildren(statusSpan('#1565c0', '⏳ ' + _('安装中...')));
+		if (resultEl) { resultEl.replaceChildren(); resultEl.className = ''; }
 
 		callHelper(['setup', version]).then(function(r) {
 			if (r && r.status === 'error') {
-				if (stEl) stEl.innerHTML = '<span style="color:#c62828">❌ ' + _('预检失败') + '</span>';
+				if (stEl) stEl.replaceChildren(statusSpan('#c62828', '❌ ' + _('预检失败')));
 				if (logEl) logEl.textContent += (r.message || _('资源不足')) + '\n';
 				return;
 			}
@@ -734,19 +747,23 @@ return view.extend({
 				logEl.scrollTop = logEl.scrollHeight;
 
 				if (r.state === 'running') {
-					if (stEl) stEl.innerHTML = '<span style="color:#1565c0">⏳ ' + _('安装中...') + '</span>';
+					if (stEl) stEl.replaceChildren(statusSpan('#1565c0', '⏳ ' + _('安装中...')));
 				} else if (r.state === 'success') {
 					clearInterval(self._setupTimer);
-					if (stEl) stEl.innerHTML = '<span style="color:#2e7d32">✅ ' + _('完成') + '</span>';
+					if (stEl) stEl.replaceChildren(statusSpan('#2e7d32', '✅ ' + _('完成')));
 					if (resultEl) {
 						resultEl.className = 'oc-log-result oc-log-ok';
-						resultEl.innerHTML = '<strong>🎉 ' + _('安装成功！') + '</strong><br>' +
-							'<span style="font-size:12px">' + _('已切换为源码模式，但未自动启用或启动本机服务。确认资源后可在设置中启用。') + '</span>' +
-							'<br><button class="oc-btn oc-btn-p" style="margin-top:10px" onclick="location.reload()">🔄 ' + _('刷新') + '</button>';
+						resultEl.replaceChildren(
+							E('strong', {}, ['🎉 ' + _('安装成功！')]),
+							E('br'),
+							E('span', { 'style': 'font-size:12px' }, [_('已切换为源码模式，但未自动启用或启动本机服务。确认资源后可在设置中启用。')]),
+							E('br'),
+							reloadButton()
+						);
 					}
 				} else if (r.state === 'failed') {
 					clearInterval(self._setupTimer);
-					if (stEl) stEl.innerHTML = '<span style="color:#c62828">❌ ' + _('失败') + '</span>';
+					if (stEl) stEl.replaceChildren(statusSpan('#c62828', '❌ ' + _('失败')));
 					if (resultEl) {
 						resultEl.className = 'oc-log-result oc-log-fail';
 						resultEl.textContent = '❌ ' + _('安装失败，请查看上方日志了解详情。');
@@ -787,7 +804,7 @@ return view.extend({
 		var stEl = document.getElementById('oc-log-st');
 		if (logWrap) logWrap.style.display = 'block';
 		if (logEl) logEl.textContent = _('正在升级到 ') + version + '...\n';
-		if (stEl) stEl.innerHTML = '<span style="color:#1565c0">⏳ ' + _('升级中...') + '</span>';
+		if (stEl) stEl.replaceChildren(statusSpan('#1565c0', '⏳ ' + _('升级中...')));
 
 		callHelper(['plugin_upgrade', version]).then(function() {
 			self._pollUpgradeLog();
@@ -812,15 +829,18 @@ return view.extend({
 				logEl.scrollTop = logEl.scrollHeight;
 				if (r.state === 'success') {
 					clearInterval(self._upgradeTimer);
-					if (stEl) stEl.innerHTML = '<span style="color:#2e7d32">✅ ' + _('升级完成') + '</span>';
+					if (stEl) stEl.replaceChildren(statusSpan('#2e7d32', '✅ ' + _('升级完成')));
 					if (resultEl) {
 						resultEl.className = 'oc-log-result oc-log-ok';
-						resultEl.innerHTML = '<strong>🎉 ' + _('升级成功！') + '</strong>' +
-							'<br><button class="oc-btn oc-btn-p" style="margin-top:10px" onclick="location.reload()">🔄 ' + _('刷新') + '</button>';
+						resultEl.replaceChildren(
+							E('strong', {}, ['🎉 ' + _('升级成功！')]),
+							E('br'),
+							reloadButton()
+						);
 					}
 				} else if (r.state === 'failed') {
 					clearInterval(self._upgradeTimer);
-					if (stEl) stEl.innerHTML = '<span style="color:#c62828">❌ ' + _('失败') + '</span>';
+					if (stEl) stEl.replaceChildren(statusSpan('#c62828', '❌ ' + _('失败')));
 				}
 			});
 		}, 1500);

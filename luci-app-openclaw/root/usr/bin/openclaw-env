@@ -68,16 +68,58 @@ check_space() {
 	fi
 }
 
-# 统一下载：BusyBox wget 优先，curl 备用
+# 统一下载：BusyBox wget 优先，curl 备用（两者都做 TLS 验签）
 _download() {
 	local url="$1" out="$2"
 	if command -v wget >/dev/null 2>&1; then
-		wget -q --no-check-certificate -O "$out" "$url" 2>/dev/null
-	elif command -v curl >/dev/null 2>&1; then
-		curl -fsSL --connect-timeout 15 --max-time 120 -o "$out" "$url" 2>/dev/null
-	else
-		log_err "没有可用的下载工具 (wget/curl)"; return 1
+		wget -q -O "$out" "$url" 2>/dev/null && return 0
 	fi
+	if command -v curl >/dev/null 2>&1; then
+		curl -fsSL --connect-timeout 15 --max-time 120 -o "$out" "$url" 2>/dev/null && return 0
+	fi
+	command -v wget >/dev/null 2>&1 || command -v curl >/dev/null 2>&1 || log_err "没有可用的下载工具 (wget/curl)"
+	return 1
+}
+
+# 哈希清单只从官方源取：镜像只负责加速，被找包会在这里暴露
+_node_hash_url() {
+	local ver="$1" libc="$2"
+	if [ "$libc" = "musl" ]; then
+		echo "https://unofficial-builds.nodejs.org/download/release/v${ver}/SHASUMS256.txt"
+	else
+		echo "https://nodejs.org/dist/v${ver}/SHASUMS256.txt"
+	fi
+}
+
+_sha256_file() {
+	if command -v sha256sum >/dev/null 2>&1; then
+		sha256sum "$1" 2>/dev/null | awk '{print $1}'
+	elif command -v openssl >/dev/null 2>&1; then
+		openssl dgst -sha256 "$1" 2>/dev/null | sed 's/.*= *//'
+	fi
+}
+
+# verify_tarball <file> <tarball-name> <version> <libc>
+verify_tarball() {
+	local file="$1" name="$2" ver="$3" libc="$4" expect actual hashf
+	if [ "${OC_SKIP_VERIFY:-0}" = "1" ]; then
+		log_warn "已跳过 ${name} 的 sha256 校验 (OC_SKIP_VERIFY=1)"
+		return 0
+	fi
+	actual=$(_sha256_file "$file")
+	[ -n "$actual" ] || { log_err "无法计算 ${name} 的 sha256（缺 sha256sum/openssl）"; return 1; }
+	hashf=$(mktemp /tmp/oc-shasums.XXXXXX) || return 1
+	if ! _download "$(_node_hash_url "$ver" "$libc")" "$hashf"; then
+		rm -f "$hashf"
+		log_err "下载 v${ver} 的 SHASUMS256.txt 失败；确认网络，或用 OC_SKIP_VERIFY=1 显式跳过"
+		return 1
+	fi
+	expect=$(awk -v n="$name" '$2 == n { print $1; exit }' "$hashf")
+	rm -f "$hashf"
+	[ -n "$expect" ] || { log_err "官方清单里没有 ${name}，无法校验，已中止"; return 1; }
+	[ "$expect" = "$actual" ] || { log_err "sha256 不匹配，${name} 可能被篡改：期望 ${expect}，实际 ${actual}"; return 1; }
+	log_ok "${name} sha256 校验通过"
+	return 0
 }
 
 # 尝试多个镜像，返回第一个成功的文件
@@ -294,6 +336,7 @@ install_node() {
 
 	local tarball="node-v${node_ver}-${node_arch}-musl.tar.gz"
 	local tmp_file="/tmp/oc-node-$$.tar.gz"
+	local pkg_name="$tarball"
 
 	if [ "$libc" = "musl" ]; then
 		if [ "$node_arch" = "linux-arm64" ]; then
@@ -310,11 +353,14 @@ install_node() {
 		fi
 	else
 		local glibc_tarball="node-v${node_ver}-${node_arch}.tar.gz"
+		pkg_name="$glibc_tarball"
 		_download_first "$tmp_file" \
 			"${NODE_MUSL_CN}/v${node_ver}/${glibc_tarball}" \
 			"https://nodejs.org/dist/v${node_ver}/${glibc_tarball}" || \
 			{ log_err "Node.js 下载失败"; exit 1; }
 	fi
+
+	verify_tarball "$tmp_file" "$pkg_name" "$node_ver" "$libc" || { rm -f "$tmp_file"; exit 1; }
 
 	echo "  正在解压..."
 	rm -rf "$NODE_BASE" 2>/dev/null

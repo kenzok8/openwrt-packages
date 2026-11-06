@@ -1,9 +1,17 @@
 -- luci-app-openclaw — LuCI Controller (18.06 compat)
+-- 注意：modern LuCI 会把这里当 Lua 菜单源加载，_() 未定义时会拖垮整个页面树，
+-- 所以必须自己 require i18n，不能依赖全局 translate。
 module("luci.controller.openclaw", package.seeall)
+
+local i18n = require "luci.i18n"
+local nixio = require "nixio"
+-- _() 是全局，必须显式挂到本模块环境
+_ = i18n.translate
+translate = i18n.translate
 
 function index()
 	-- luci 24.10+ uses menu.d JSON for registration; skip Lua menu
-	if nixio.fs.access("/usr/share/luci/menu.d/luci-app-openclaw.json") then
+	if nixio.fs and nixio.fs.access("/usr/share/luci/menu.d/luci-app-openclaw.json") then
 		return
 	end
 

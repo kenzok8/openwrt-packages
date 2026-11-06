@@ -1,12 +1,16 @@
 # luci-app-openclaw — OpenWrt LuCI plugin for OpenClaw AI Gateway
-# Dual-version: supports luci 18.06 (Lua CBI) + luci 24.10+ (JS view)
-# Works as feeds source or standalone in package/ directory
+# 同时兼容 luci 24.10+（JS view）与 18.06（Lua CBI），可作为 feeds 源或放进 package/
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-openclaw
-PKG_VERSION:=2026.03.30
+PKG_VERSION:=2026.05.22.3
 PKG_RELEASE:=1
+
+# 状态页与升级检测读这个文件；打包时按 PKG_VERSION 生成，仓库里不存副本
+define Build/Prepare
+	echo '$(PKG_VERSION)' > ./root/usr/share/openclaw/VERSION
+endef
 
 PKG_MAINTAINER:=kenzok8
 PKG_LICENSE:=GPL-3.0
@@ -15,61 +19,12 @@ LUCI_TITLE:=OpenClaw AI Gateway
 LUCI_DEPENDS:=+luci-compat +luci-base +curl +openssl-util
 LUCI_PKGARCH:=all
 
-# Prefer feeds/luci/luci.mk (handles install + i18n automatically)
+# 安装清单、i18n、文件权限都交给 luci.mk，不再自己维护一份
 LUCI_MK:=$(firstword $(wildcard $(TOPDIR)/feeds/luci/luci.mk))
-
-ifneq ($(LUCI_MK),)
-  include $(LUCI_MK)
-else
-  # Standalone mode: no luci feed available
-  include $(INCLUDE_DIR)/package.mk
-
-  define Package/$(PKG_NAME)
-    SECTION:=luci
-    CATEGORY:=LuCI
-    SUBMENU:=3. Applications
-    TITLE:=$(LUCI_TITLE)
-    DEPENDS:=$(LUCI_DEPENDS)
-    PKGARCH:=all
-  endef
-
-  define Package/$(PKG_NAME)/description
-    OpenClaw AI Gateway LuCI management plugin.
-    Supports 12+ AI model providers and multiple messaging channels.
-  endef
-
-  define Package/$(PKG_NAME)/install
-	# JS view (luci 24.10+)
-	$(INSTALL_DIR) $(1)/www/luci-static/resources/view
-	$(INSTALL_DATA) ./htdocs/luci-static/resources/view/openclaw.js \
-		$(1)/www/luci-static/resources/view/openclaw.js
-	$(INSTALL_DIR) $(1)/www/luci-static/openclaw
-	$(INSTALL_DATA) ./htdocs/luci-static/openclaw/icon_64.png \
-		$(1)/www/luci-static/openclaw/icon_64.png
-	# Lua compat (luci 18.06)
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller
-	$(INSTALL_DATA) ./luasrc/controller/openclaw.lua \
-		$(1)/usr/lib/lua/luci/controller/openclaw.lua
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi
-	$(INSTALL_DATA) ./luasrc/model/cbi/openclaw.lua \
-		$(1)/usr/lib/lua/luci/model/cbi/openclaw.lua
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/view/openclaw
-	$(INSTALL_DATA) ./luasrc/view/openclaw/status.htm \
-		$(1)/usr/lib/lua/luci/view/openclaw/status.htm
-	$(INSTALL_DATA) ./luasrc/view/openclaw/console.htm \
-		$(1)/usr/lib/lua/luci/view/openclaw/console.htm
-	$(INSTALL_DATA) ./luasrc/view/openclaw/terminal.htm \
-		$(1)/usr/lib/lua/luci/view/openclaw/terminal.htm
-	# root overlay
-	$(CP) ./root/* $(1)/
-	# fix permissions
-	chmod 755 $(1)/etc/init.d/openclaw 2>/dev/null || true
-	chmod 755 $(1)/etc/uci-defaults/99-openclaw 2>/dev/null || true
-	chmod 755 $(1)/usr/bin/openclaw-env 2>/dev/null || true
-	chmod 755 $(1)/usr/share/openclaw/oc-config.sh 2>/dev/null || true
-	chmod 755 $(1)/usr/share/openclaw/luci-helper 2>/dev/null || true
-  endef
+ifeq ($(LUCI_MK),)
+  $(error luci.mk not found: 需要 feeds/luci（例如 git clone https://github.com/openwrt/luci feeds/luci）)
 endif
+include $(LUCI_MK)
 
 define Package/$(PKG_NAME)/conffiles
 /etc/config/openclaw

@@ -1,5 +1,7 @@
 -- luci-app-openclaw — CBI Model (18.06 compat)
 local sys = require "luci.sys"
+_ = require("luci.i18n").translate
+translate = _
 
 m = Map("openclaw", "OpenClaw AI Gateway",
 	translate("AI gateway supporting 12+ model providers and multiple messaging channels."))

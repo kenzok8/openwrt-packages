@@ -11,30 +11,18 @@ CYAN='\033[0;36m'; BOLD='\033[1m'; DIM='\033[2m'; NC='\033[0m'
 # ── 端口检查兼容函数 (ss 或 netstat) ──
 # check_port_listening <port> — 检查端口是否在监听，返回 0/1
 check_port_listening() {
-	local p="$1"
-	if command -v ss >/dev/null 2>&1; then
-		ss -ltn 2>/dev/null | grep -q ":${p} "
-	else
-		netstat -tln 2>/dev/null | grep -q ":${p} "
-	fi
+	oc_port_listening "$1"
 }
 # get_pid_by_port <port> — 获取监听指定端口的进程 PID
 get_pid_by_port() {
-	local p="$1"
-	if command -v ss >/dev/null 2>&1; then
-		ss -tlnp 2>/dev/null | grep ":${p} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | head -1
-	else
-		netstat -tlnp 2>/dev/null | grep ":${p} " | sed -n 's|.* \([0-9]*\)/.*|\1|p' | head -1
-	fi
+	oc_pid_by_port "$1"
 }
 
-# ── 路径 (OpenWrt 适配) ──
-NODE_BASE="${NODE_BASE:-/opt/openclaw/node}"
-OC_GLOBAL="${OC_GLOBAL:-/opt/openclaw/global}"
-OC_DATA="${OC_DATA:-/opt/openclaw/data}"
-NODE_BIN="${NODE_BASE}/bin/node"
-OC_STATE_DIR="${OC_DATA}/.openclaw"
-CONFIG_FILE="${OC_STATE_DIR}/openclaw.json"
+# ── 路径与环境 ──
+. /usr/share/openclaw/oc-lib.sh
+NODE_BASE="$OC_NODE_BASE"
+NODE_BIN="$OC_NODE"
+CONFIG_FILE="$OC_CONFIG"
 
 export HOME="$OC_DATA"
 export OPENCLAW_HOME="$OC_DATA"
@@ -43,23 +31,22 @@ export OPENCLAW_CONFIG_PATH="$CONFIG_FILE"
 export NODE_ICU_DATA="${NODE_BASE}/share/icu"
 export PATH="${NODE_BASE}/bin:${OC_GLOBAL}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# ── 查找 openclaw 入口 ──
-OC_PKG_DIR=""
-for d in "${OC_GLOBAL}/lib/node_modules/openclaw" "${OC_GLOBAL}/node_modules/openclaw" "${NODE_BASE}/lib/node_modules/openclaw"; do
-	if [ -d "$d" ]; then
-		OC_PKG_DIR="$d"
-		break
-	fi
-done
+# 入口探测结果给 oc_cmd 用
+oc_find_entry
 
-OC_ENTRY=""
-if [ -n "$OC_PKG_DIR" ]; then
-	if [ -f "${OC_PKG_DIR}/openclaw.mjs" ]; then
-		OC_ENTRY="${OC_PKG_DIR}/openclaw.mjs"
-	elif [ -f "${OC_PKG_DIR}/dist/cli.js" ]; then
-		OC_ENTRY="${OC_PKG_DIR}/dist/cli.js"
+# 所有 JSON 读写都走 oc-json.mjs：不在 shell 里拼 JS，也不在每个调用点复制 chown
+# ocjson [--file <路径>] <子命令> [参数...]
+ocjson() {
+	[ -x "$NODE_BIN" ] || { echo "ERROR: Node.js 不可用: $NODE_BIN" >&2; return 1; }
+	local target="$CONFIG_FILE"
+	if [ "${1:-}" = "--file" ]; then
+		target="$2"; shift 2
 	fi
-fi
+	"$NODE_BIN" /usr/share/openclaw/oc-json.mjs "$@" --file "$target"
+	local rc=$?
+	chown openclaw:openclaw "$target" 2>/dev/null || true
+	return $rc
+}
 
 oc_cmd() {
 	if [ -n "$OC_ENTRY" ] && [ -x "$NODE_BIN" ]; then
@@ -77,132 +64,37 @@ oc_cmd() {
 
 # ── JSON 读写 (使用 Node.js) ──
 json_get() {
-	if [ ! -f "$CONFIG_FILE" ]; then echo ""; return; fi
-	_JS_KEY="$1" "$NODE_BIN" -e "
-		const fs=require('fs');
-		try{
-			const d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));
-			const ks=process.env._JS_KEY.split('.');let v=d;
-			for(const k of ks){v=v[k];if(v===undefined){console.log('');process.exit(0);}}
-			if(typeof v==='object')console.log(JSON.stringify(v));else console.log(v);
-		}catch(e){console.log('');}
-	" 2>/dev/null
+	ocjson get "$1" 2>/dev/null
 }
 
 json_set() {
-	local key="$1" value="$2"
-	local _js_err=""
-	
-	# 步骤1: 确保配置文件存在
+	local key="$1" value="$2" parent_dir
 	if [ ! -f "$CONFIG_FILE" ]; then
-		# 检查父目录是否可创建
-		local parent_dir="$(dirname "$CONFIG_FILE")"
-		if ! mkdir -p "$parent_dir" 2>/dev/null; then
+		parent_dir=$(dirname "$CONFIG_FILE")
+		mkdir -p "$parent_dir" 2>/dev/null || {
 			echo "ERROR: 无法创建配置目录 $parent_dir" >&2
 			echo "HINT: 请检查 /opt/openclaw/data 是否存在且有写权限" >&2
 			return 1
-		fi
-		
-		# 检查目录权限
-		if [ ! -w "$parent_dir" ]; then
-			echo "ERROR: 配置目录 $parent_dir 不可写" >&2
-			echo "HINT: 请运行: chmod 755 $parent_dir" >&2
-			return 1
-		fi
-		
-		# 尝试修复所有权
+		}
 		chown -R openclaw:openclaw "$OC_STATE_DIR" 2>/dev/null || true
-		
-		# 创建空配置文件
-		if ! echo '{}' > "$CONFIG_FILE" 2>/dev/null; then
+		echo '{}' > "$CONFIG_FILE" 2>/dev/null || {
 			echo "ERROR: 无法创建配置文件 $CONFIG_FILE" >&2
-			echo "HINT: 请检查磁盘空间和文件系统状态" >&2
 			return 1
-		fi
-		
-		chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
+		}
 	fi
-	
-	# 步骤2: 检查配置文件是否可写
-	if [ ! -w "$CONFIG_FILE" ]; then
+	[ -w "$CONFIG_FILE" ] || {
 		echo "ERROR: 配置文件 $CONFIG_FILE 不可写" >&2
 		echo "HINT: 请运行: chmod 644 $CONFIG_FILE" >&2
 		return 1
-	fi
-	
-	# 步骤3: 检查 Node.js 是否可用
-	if [ ! -x "$NODE_BIN" ]; then
-		echo "ERROR: Node.js 不可用: $NODE_BIN" >&2
-		echo "HINT: 请先运行 openclaw-env setup 安装 Node.js" >&2
-		return 1
-	fi
-	
-	# 步骤4: 使用临时文件传递值，避免环境变量转义问题
-	local tmp_val_file="/tmp/.oc_json_val_$$"
-	if ! printf '%s' "$value" > "$tmp_val_file" 2>/dev/null; then
-		echo "ERROR: 无法创建临时文件 $tmp_val_file" >&2
-		return 1
-	fi
-	
-	# 步骤5: 执行 JSON 写入
-	_JS_KEY="$key" _JS_DEBUG="${OC_CONFIG_DEBUG:-0}" "$NODE_BIN" -e "
-		const fs=require('fs');let d={};
-		const debug=process.env._JS_DEBUG==='1';
-		try{
-			const content=fs.readFileSync('${CONFIG_FILE}','utf8');
-			d=JSON.parse(content);
-		}catch(e){
-			if(debug)console.error('JSON parse warning:',e.message);
-		}
-		const ks=process.env._JS_KEY.split('.');let o=d;
-		for(let i=0;i<ks.length-1;i++){
-			if(!o[ks[i]]||typeof o[ks[i]]!=='object')o[ks[i]]={};
-			o=o[ks[i]];
-		}
-		// 读取值并作为字符串保存
-		let v=fs.readFileSync('${tmp_val_file}','utf8');
-		o[ks[ks.length-1]]=v;
-		try{
-			fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-			if(debug)console.log('JSON saved successfully');
-		}catch(e){
-			console.error('ERROR: Failed to write config:',e.message);
-			process.exit(1);
-		}
-	" 2>&1
-	local _js_rc=$?
-	
-	# 清理临时文件
-	rm -f "$tmp_val_file" 2>/dev/null
-	
-	# 步骤6: 检查执行结果
-	if [ $_js_rc -ne 0 ]; then
-		echo "ERROR: JSON 写入失败 (exit code: $_js_rc)" >&2
-		return 1
-	fi
-	
-	# 步骤7: 修复文件所有权
-	chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
-	
+	}
+	ocjson set "$key" "$value" || { echo "ERROR: JSON 写入失败" >&2; return 1; }
 	return 0
 }
 
 # ── 启用 auth 插件 ──
 enable_auth_plugins() {
-	[ ! -f "$CONFIG_FILE" ] && return
-	"$NODE_BIN" -e "
-		const fs=require('fs');
-		try{
-			const d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));
-			if(!d.plugins)d.plugins={};if(!d.plugins.entries)d.plugins.entries={};
-			const e=d.plugins.entries;
-			['qwen-portal-auth','copilot-proxy','google-gemini-cli-auth','minimax-portal-auth'].forEach(p=>{
-				if(!e[p])e[p]={};e[p].enabled=true;
-			});
-			delete e['google-antigravity-auth'];
-			fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-		}catch(e){}
-	" 2>/dev/null
+	[ -f "$CONFIG_FILE" ] || return
+	ocjson auth-plugins >/dev/null 2>&1
 }
 
 # ── 修复插件配置中的插件名称不匹配问题 ──
@@ -210,93 +102,24 @@ enable_auth_plugins() {
 # 问题: 旧版本写入的是 "openclaw-qqbot"，但实际插件名是 "@tencent-connect/openclaw-qqbot"
 # 此函数会自动检测并修正不匹配的插件名称
 fix_plugin_config() {
-	[ ! -f "$CONFIG_FILE" ] && return
-	[ ! -x "$NODE_BIN" ] && return
-	
-	# 检查是否存在 qqbot 插件目录
-	local qqbot_ext_dir="${OC_STATE_DIR}/extensions/openclaw-qqbot"
-	[ ! -d "$qqbot_ext_dir" ] && return
-	
-	# 读取并修复 plugins.allow 中的插件名称
-	local fixed=0
-	"$NODE_BIN" -e "
-		const fs=require('fs');
-		try{
-			const d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));
-			if(!d.plugins)d.plugins={};
-			
-			// 修复 plugins.allow 数组中的插件名称
-			if(Array.isArray(d.plugins.allow)){
-				const oldName='openclaw-qqbot';
-				const newName='@tencent-connect/openclaw-qqbot';
-				const idx=d.plugins.allow.indexOf(oldName);
-				if(idx!==-1){
-					// 检查是否已有正确的名称
-					if(!d.plugins.allow.includes(newName)){
-						d.plugins.allow[idx]=newName;
-						console.log('FIXED');
-					}else{
-						// 已有正确名称，删除错误的
-						d.plugins.allow.splice(idx,1);
-						console.log('REMOVED_DUPLICATE');
-					}
-					fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-				}
-			}
-			
-			// 同时修复 plugins.entries 中的键名
-			if(d.plugins.entries && d.plugins.entries['openclaw-qqbot']){
-				if(!d.plugins.entries['@tencent-connect/openclaw-qqbot']){
-					d.plugins.entries['@tencent-connect/openclaw-qqbot']=d.plugins.entries['openclaw-qqbot'];
-				}
-				delete d.plugins.entries['openclaw-qqbot'];
-				fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-				console.log('FIXED_ENTRIES');
-			}
-		}catch(e){}
-	" 2>/dev/null | while read line; do
-		case "$line" in
-			FIXED|REMOVED_DUPLICATE|FIXED_ENTRIES)
-				echo -e "  ${GREEN}✅ 已修复插件配置名称: openclaw-qqbot → @tencent-connect/openclaw-qqbot${NC}"
-				fixed=1
-				;;
-		esac
-	done
-	
-	# 确保配置文件权限正确
-	chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
-	
+	[ -f "$CONFIG_FILE" ] || return
+	[ -x "$NODE_BIN" ] || return
+	local qqbot_ext_dir="${OC_STATE_DIR}/extensions/openclaw-qqbot" fixed=0
+	[ -d "$qqbot_ext_dir" ] || return
+	case "$(ocjson plugin-fix-names 2>/dev/null)" in
+		FIXED|REMOVED_DUPLICATE|FIXED_ENTRIES)
+			echo -e "  ${GREEN}✅ 已修复插件配置名称: openclaw-qqbot → @tencent-connect/openclaw-qqbot${NC}"
+			fixed=1
+			;;
+	esac
 	return $fixed
 }
 
 # ── 确保 qqbot 插件在 plugins.allow 中 ──
 ensure_qqbot_plugin_allowed() {
-	[ ! -f "$CONFIG_FILE" ] && return
-	[ ! -x "$NODE_BIN" ] && return
-	
-	"$NODE_BIN" -e "
-		const fs=require('fs');
-		try{
-			const d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));
-			if(!d.plugins)d.plugins={};
-			if(!Array.isArray(d.plugins.allow))d.plugins.allow=[];
-			
-			const correctName='@tencent-connect/openclaw-qqbot';
-			const oldName='openclaw-qqbot';
-			
-			// 移除旧的不正确名称
-			d.plugins.allow=d.plugins.allow.filter(n=>n!==oldName);
-			
-			// 添加正确的名称（如果不存在）
-			if(!d.plugins.allow.includes(correctName)){
-				d.plugins.allow.push(correctName);
-				fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-				console.log('ADDED');
-			}
-		}catch(e){}
-	" 2>/dev/null
-	
-	chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
+	[ -f "$CONFIG_FILE" ] || return
+	[ -x "$NODE_BIN" ] || return
+	ocjson plugin-ensure-qqbot >/dev/null 2>&1
 }
 
 # ── 模型认证: 将 API Key 写入 auth-profiles.json (而非 openclaw.json) ──
@@ -307,46 +130,19 @@ ensure_qqbot_plugin_allowed() {
 auth_set_apikey() {
 	local provider="$1" api_key="$2" profile_id="${3:-${1}:manual}"
 	local auth_dir="${OC_STATE_DIR}/agents/main/agent"
-	local auth_file="${auth_dir}/auth-profiles.json"
 	mkdir -p "$auth_dir"
 	chown -R openclaw:openclaw "${OC_STATE_DIR}/agents" 2>/dev/null || true
-	_AP_PROVIDER="$provider" _AP_KEY="$api_key" _AP_PROFILE="$profile_id" "$NODE_BIN" -e "
-		const fs=require('fs'),f=process.env._AP_FILE||'${auth_file}';
-		let d={version:1,profiles:{},usageStats:{}};
-		try{d=JSON.parse(fs.readFileSync(f,'utf8'));}catch(e){}
-		if(!d.profiles)d.profiles={};
-		d.profiles[process.env._AP_PROFILE]={
-			type:'api_key',
-			provider:process.env._AP_PROVIDER,
-			key:process.env._AP_KEY
-		};
-		fs.writeFileSync(f,JSON.stringify(d,null,2));
-	" 2>/dev/null
-	chown openclaw:openclaw "$auth_file" 2>/dev/null || true
+	ocjson --file "${auth_dir}/auth-profiles.json" auth-profile api_key "$provider" "$profile_id" "$api_key" >/dev/null 2>&1
 }
 
 # ── GitHub Copilot Token 写入 auth-profiles.json (type:token) ──
 # GitHub Copilot 使用 token 类型而非 api_key，OpenClaw 会自动兑换 Copilot session token
 # 用法: auth_set_copilot_token <github_token>
 auth_set_copilot_token() {
-	local github_token="$1"
 	local auth_dir="${OC_STATE_DIR}/agents/main/agent"
-	local auth_file="${auth_dir}/auth-profiles.json"
 	mkdir -p "$auth_dir"
 	chown -R openclaw:openclaw "${OC_STATE_DIR}/agents" 2>/dev/null || true
-	_AP_TOKEN="$github_token" "$NODE_BIN" -e "
-		const fs=require('fs'),f='${auth_file}';
-		let d={version:1,profiles:{},usageStats:{}};
-		try{d=JSON.parse(fs.readFileSync(f,'utf8'));}catch(e){}
-		if(!d.profiles)d.profiles={};
-		d.profiles['github-copilot:github']={
-			type:'token',
-			provider:'github-copilot',
-			token:process.env._AP_TOKEN
-		};
-		fs.writeFileSync(f,JSON.stringify(d,null,2));
-	" 2>/dev/null
-	chown openclaw:openclaw "$auth_file" 2>/dev/null || true
+	ocjson --file "${auth_dir}/auth-profiles.json" auth-profile token github-copilot "github-copilot:github" "$1" >/dev/null 2>&1
 }
 
 # ── 注册模型到 agents.defaults.models 并设为默认 ──
@@ -355,21 +151,7 @@ auth_set_copilot_token() {
 #     register_and_set_model anthropic/claude-sonnet-4
 # 注意: 模型 ID 可能含 "." (如 gpt-5.2)，不能用 json_set (以 . 分割路径)
 register_and_set_model() {
-	local model_id="$1"
-	_RSM_MID="$model_id" "$NODE_BIN" -e "
-		const fs=require('fs');
-		let d={};
-		try{d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));}catch(e){}
-		if(!d.agents)d.agents={};
-		if(!d.agents.defaults)d.agents.defaults={};
-		if(!d.agents.defaults.models)d.agents.defaults.models={};
-		if(!d.agents.defaults.model)d.agents.defaults.model={};
-		const mid=process.env._RSM_MID;
-		d.agents.defaults.models[mid]={};
-		d.agents.defaults.model.primary=mid;
-		fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-	" 2>/dev/null
-	chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
+	ocjson model-set "$1" >/dev/null 2>&1
 }
 
 # ── 注册自定义提供商 (需要 baseUrl 的 OpenAI 兼容提供商) ──
@@ -379,69 +161,14 @@ register_and_set_model() {
 register_custom_provider() {
 	local provider_name="$1" base_url="$2" api_key="$3" model_id="$4" model_display="${5:-$4}"
 	local ctx_window="${6:-128000}" max_tok="${7:-32000}"
-	_RCP_PROV="$provider_name" _RCP_URL="$base_url" _RCP_KEY="$api_key" _RCP_MID="$model_id" _RCP_MNAME="$model_display" _RCP_CTX="$ctx_window" _RCP_MAXTOK="$max_tok" "$NODE_BIN" -e "
-		const fs=require('fs');
-		let d={};
-		try{d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));}catch(e){}
-		if(!d.models)d.models={};
-		if(!d.models.providers)d.models.providers={};
-		d.models.mode='merge';
-		const prov=process.env._RCP_PROV;
-		d.models.providers[prov]={
-			baseUrl:process.env._RCP_URL,
-			apiKey:process.env._RCP_KEY,
-			api:'openai-completions',
-			models:[{
-				id:process.env._RCP_MID,
-				name:process.env._RCP_MNAME,
-				reasoning:false,
-				input:['text','image'],
-				cost:{input:0,output:0,cacheRead:0,cacheWrite:0},
-				contextWindow:parseInt(process.env._RCP_CTX)||128000,
-				maxTokens:parseInt(process.env._RCP_MAXTOK)||32000
-			}]
-		};
-		fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-	" 2>/dev/null
-	chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
+	ocjson provider "$provider_name" "$base_url" "$api_key" "$model_id" "$model_display" "$ctx_window" "$max_tok" >/dev/null 2>&1
 }
 
 # ── 注册 Coding Plan 提供商 (多模型批量注册) ──
 # 用法: register_codingplan_provider <api_key>
 # 按阿里云官方文档注册 bailian 提供商，包含所有 Coding Plan 套餐支持的模型
 register_codingplan_provider() {
-	local api_key="$1"
-	_RCP_KEY="$api_key" "$NODE_BIN" -e "
-		const fs=require('fs');
-		let d={};
-		try{d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));}catch(e){}
-		if(!d.models)d.models={};
-		if(!d.models.providers)d.models.providers={};
-		d.models.mode='merge';
-		d.models.providers['bailian']={
-			baseUrl:'https://coding.dashscope.aliyuncs.com/v1',
-			apiKey:process.env._RCP_KEY,
-			api:'openai-completions',
-			models:[
-				{id:'qwen3.5-plus',name:'qwen3.5-plus',reasoning:false,input:['text','image'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:1000000,maxTokens:65536},
-				{id:'qwen3-coder-plus',name:'qwen3-coder-plus',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:1000000,maxTokens:65536},
-				{id:'qwen3-coder-next',name:'qwen3-coder-next',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:262144,maxTokens:65536},
-				{id:'qwen3-max-2026-01-23',name:'qwen3-max-2026-01-23',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:262144,maxTokens:65536},
-				{id:'MiniMax-M2.5',name:'MiniMax-M2.5',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:204800,maxTokens:131072},
-				{id:'glm-5',name:'glm-5',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:202752,maxTokens:16384},
-				{id:'glm-4.7',name:'glm-4.7',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:202752,maxTokens:16384},
-				{id:'kimi-k2.5',name:'kimi-k2.5',reasoning:false,input:['text','image'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:262144,maxTokens:32768}
-			]
-		};
-		if(!d.agents)d.agents={};
-		if(!d.agents.defaults)d.agents.defaults={};
-		if(!d.agents.defaults.models)d.agents.defaults.models={};
-		['qwen3.5-plus','qwen3-coder-plus','qwen3-coder-next','qwen3-max-2026-01-23','MiniMax-M2.5','glm-5','glm-4.7','kimi-k2.5'].forEach(m=>{
-			d.agents.defaults.models['bailian/'+m]={};
-		});
-		fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-	" 2>/dev/null
-	chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
+	ocjson provider-bailian "$1" >/dev/null 2>&1
 }
 
 # ── 注册腾讯云 Coding Plan 提供商 (多模型批量注册) ──
@@ -449,38 +176,7 @@ register_codingplan_provider() {
 # 按腾讯云官方文档 (https://cloud.tencent.com/document/product/1772/128949) 注册
 # provider name: lkeap, Base URL: https://api.lkeap.cloud.tencent.com/coding/v3
 register_lkeap_codingplan_provider() {
-	local api_key="$1"
-	_RCP_KEY="$api_key" "$NODE_BIN" -e "
-		const fs=require('fs');
-		let d={};
-		try{d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));}catch(e){}
-		if(!d.models)d.models={};
-		if(!d.models.providers)d.models.providers={};
-		d.models.mode='merge';
-		d.models.providers['lkeap']={
-			baseUrl:'https://api.lkeap.cloud.tencent.com/coding/v3',
-			apiKey:process.env._RCP_KEY,
-			api:'openai-completions',
-			models:[
-				{id:'tc-code-latest',name:'Auto (智能匹配最优模型)',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:128000,maxTokens:8192},
-				{id:'hunyuan-2.0-instruct',name:'Tencent HY 2.0 Instruct',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:128000,maxTokens:16000},
-				{id:'hunyuan-2.0-thinking',name:'Tencent HY 2.0 Think',reasoning:true,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:128000,maxTokens:64000},
-				{id:'hunyuan-t1',name:'Hunyuan-T1',reasoning:true,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:32000,maxTokens:64000},
-				{id:'hunyuan-turbos',name:'Hunyuan-TurboS',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:32000,maxTokens:16000},
-				{id:'minimax-m2.5',name:'MiniMax-M2.5',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:204800,maxTokens:131072},
-				{id:'kimi-k2.5',name:'Kimi-K2.5',reasoning:false,input:['text','image'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:262144,maxTokens:32768},
-				{id:'glm-5',name:'GLM-5',reasoning:false,input:['text'],cost:{input:0,output:0,cacheRead:0,cacheWrite:0},contextWindow:202752,maxTokens:8192}
-			]
-		};
-		if(!d.agents)d.agents={};
-		if(!d.agents.defaults)d.agents.defaults={};
-		if(!d.agents.defaults.models)d.agents.defaults.models={};
-		['tc-code-latest','hunyuan-2.0-instruct','hunyuan-2.0-thinking','hunyuan-t1','hunyuan-turbos','minimax-m2.5','kimi-k2.5','glm-5'].forEach(m=>{
-			d.agents.defaults.models['lkeap/'+m]={};
-		});
-		fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-	" 2>/dev/null
-	chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
+	ocjson provider-lkeap "$1" >/dev/null 2>&1
 }
 
 # ── 辅助函数 ──
@@ -1183,31 +879,7 @@ configure_model() {
 				if [ -n "$model_name" ]; then
 					# Ollama 无需 API Key，使用占位符
 					auth_set_apikey ollama "ollama-local" "ollama:local"
-					# v2026.3.2: Ollama 使用原生 ollama API，不再走 OpenAI 兼容层
-					_RCP_PROV="ollama" _RCP_URL="$ollama_url" _RCP_KEY="ollama-local" _RCP_MID="$model_name" _RCP_MNAME="$model_name" "$NODE_BIN" -e "
-						const fs=require('fs');
-						let d={};
-						try{d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));}catch(e){}
-						if(!d.models)d.models={};
-						if(!d.models.providers)d.models.providers={};
-						d.models.mode='merge';
-						d.models.providers['ollama']={
-							baseUrl:process.env._RCP_URL,
-							apiKey:process.env._RCP_KEY,
-							api:'ollama',
-							models:[{
-								id:process.env._RCP_MID,
-								name:process.env._RCP_MNAME,
-								reasoning:false,
-								input:['text'],
-								cost:{input:0,output:0,cacheRead:0,cacheWrite:0},
-								contextWindow:128000,
-								maxTokens:32000
-							}]
-						};
-						fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-					" 2>/dev/null
-					chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
+					ocjson provider-ollama "$ollama_url" "$model_name" >/dev/null 2>&1
 					register_and_set_model "ollama/${model_name}"
 					echo -e "  ${GREEN}✅ Ollama 已配置，活跃模型: ollama/${model_name}${NC}"
 					echo -e "  ${CYAN}   Ollama 地址: ${ollama_url}${NC}"
@@ -1920,30 +1592,10 @@ health_check() {
 
 	# ── 自动修复: 移除旧版错误写入的顶层 models.xxx 无效键 ──
 	if [ -f "$CONFIG_FILE" ]; then
-		local has_bad_models=$("$NODE_BIN" -e "
-			const d=JSON.parse(require('fs').readFileSync('${CONFIG_FILE}','utf8'));
-			const m=d.models;
-			if(m&&typeof m==='object'){
-				const bad=Object.keys(m).filter(k=>['openai','anthropic','google','openrouter','deepseek','github-copilot','dashscope','xai','groq','siliconflow','custom'].includes(k));
-				if(bad.length>0){console.log(bad.join(','));}
-			}
-		" 2>/dev/null)
+		local has_bad_models
+		has_bad_models=$(ocjson drop-legacy-models 2>/dev/null)
 		if [ -n "$has_bad_models" ]; then
 			echo -e "  ${YELLOW}⚠️  检测到旧版配置错误: 顶层 models 包含无效键 (${has_bad_models})${NC}"
-			echo -e "  ${CYAN}正在自动修复...${NC}"
-			"$NODE_BIN" -e "
-				const fs=require('fs');
-				const d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));
-				const bad=['openai','anthropic','google','openrouter','deepseek','github-copilot','dashscope','xai','groq','siliconflow','custom'];
-				if(d.models&&typeof d.models==='object'){
-					bad.forEach(k=>delete d.models[k]);
-					if(Object.keys(d.models).length===0||(Object.keys(d.models).length===1&&d.models.providers)){}
-					else if(Object.keys(d.models).filter(k=>k!=='mode'&&k!=='providers').length===0){}
-					if(!d.models.providers&&Object.keys(d.models).every(k=>bad.includes(k)||k==='mode'))delete d.models;
-				}
-				fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-			" 2>/dev/null
-			chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
 			echo -e "  ${GREEN}✅ 已移除无效的 models 配置键${NC}"
 			echo ""
 		fi
@@ -2064,46 +1716,7 @@ reset_to_defaults() {
 				
 				# v2026.3.14: 同时清除 plugins 中与渠道相关的配置
 				# 防止重置后插件配置残留导致状态不一致
-				if [ -f "$CONFIG_FILE" ] && [ -x "$NODE_BIN" ]; then
-					"$NODE_BIN" -e "
-						const fs=require('fs');
-						try{
-							const d=JSON.parse(fs.readFileSync('${CONFIG_FILE}','utf8'));
-							let modified=false;
-							
-							// 清除 plugins.entries 中与消息渠道相关的插件
-							if(d.plugins && d.plugins.entries){
-								const channelPlugins=['openclaw-qqbot','@tencent-connect/openclaw-qqbot','openclaw-lark','@larksuite/openclaw-lark'];
-								channelPlugins.forEach(p=>{
-									if(d.plugins.entries[p]){
-										delete d.plugins.entries[p];
-										modified=true;
-									}
-								});
-							}
-							
-							// 清除 plugins.allow 中的渠道插件
-							if(Array.isArray(d.plugins && d.plugins.allow)){
-								const beforeLen=d.plugins.allow.length;
-								d.plugins.allow=d.plugins.allow.filter(p=>
-									!p.includes('qqbot') && 
-									!p.includes('lark') && 
-									!p.includes('telegram') &&
-									!p.includes('discord') &&
-									!p.includes('slack') &&
-									!p.includes('whatsapp')
-								);
-								if(d.plugins.allow.length!==beforeLen)modified=true;
-							}
-							
-							if(modified){
-								fs.writeFileSync('${CONFIG_FILE}',JSON.stringify(d,null,2));
-								console.log('CLEANED');
-							}
-						}catch(e){}
-					" 2>/dev/null
-					chown openclaw:openclaw "$CONFIG_FILE" 2>/dev/null || true
-				fi
+				[ -f "$CONFIG_FILE" ] && ocjson reset-channels >/dev/null 2>&1
 				
 				# 清除飞书扩展目录中的敏感数据 (保留插件本体)
 				local feishu_ext_dir="${OC_STATE_DIR}/extensions/openclaw-lark"
@@ -2343,7 +1956,7 @@ backup_restore_menu() {
 					# 验证备份中 openclaw.json 有效
 					local tmp_json="/tmp/oc-restore-check.json"
 					tar -xzf "$latest" --wildcards '*/openclaw.json' -O > "$tmp_json" 2>/dev/null
-					if [ ! -s "$tmp_json" ] || ! "$NODE_BIN" -e "JSON.parse(require('fs').readFileSync('${tmp_json}','utf8'))" 2>/dev/null; then
+					if [ ! -s "$tmp_json" ] || ! ocjson --file "$tmp_json" check 2>/dev/null; then
 						rm -f "$tmp_json"
 						echo -e "  ${RED}❌ 备份中的配置文件无效，恢复已取消${NC}"
 					else
@@ -2548,7 +2161,7 @@ advanced_menu() {
 				echo -e "  ${CYAN}配置文件路径: ${CONFIG_FILE}${NC}"
 				echo ""
 				if [ -f "$CONFIG_FILE" ]; then
-					"$NODE_BIN" -e "console.log(JSON.stringify(JSON.parse(require('fs').readFileSync('${CONFIG_FILE}','utf8')),null,2))" 2>/dev/null || cat "$CONFIG_FILE"
+					ocjson dump 2>/dev/null || cat "$CONFIG_FILE"
 				else
 					echo "  (配置文件不存在)"
 				fi

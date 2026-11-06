@@ -77,6 +77,16 @@ make package/luci-app-openclaw/compile V=s
 - 内存低于 768MB 且 swap 低于 1GB 时会拒绝安装
 - 安装完成后不会自动启用或启动本机服务，需要手动确认后再启用
 
+### 高级选项
+
+| 项 | 默认 | 说明 |
+| --- | --- | --- |
+| `openclaw.main.bind` | `lan` | 配置终端（PTY，默认 18793）的监听地址：`lan` 绑 LAN IP、`all` 绑 0.0.0.0、`loopback` 只绑 127.0.0.1 |
+| `openclaw.main.update_repo` | `kenzok8/luci-app-openclaw` | 「检查更新 / 升级插件」使用的 GitHub 仓库 |
+| `OC_SKIP_VERIFY=1` | 关 | 源码安装时跳过 Node.js 压缩包的 sha256 校验，仅在确认网络受限时临时使用 |
+
+PTY 的访问口令是 `openclaw.main.pty_token`，未设置时服务会拒绝所有连接（不会退化成免口令）。
+
 ## 磁盘空间不足解决方案
 
 OpenWrt 设备 root 分区通常很小。推荐优先使用 **远端 Gateway 模式**，把 OpenClaw 运行在 NAS、PVE LXC/VM、Linux 主机或内存/存储更充足的设备上。
