@@ -43,6 +43,45 @@ class UpdateSiteTests(unittest.TestCase):
     def generate(self, release=None):
         return SITE.generate(release or self.release, self.packages, 'jerrykuku/luci-theme-argon', self.output)
 
+    def add_language(self, language='zh-cn'):
+        metadata = SITE.resolve(self.release['tag_name'])
+        names = [f'luci-i18n-argon-config-{language}_{metadata["ipk_i18n_version"]}_all.ipk',
+                 f'luci-i18n-argon-config-{language}-{metadata["apk_i18n_version"]}.apk']
+        for name in names:
+            data = ('translation bytes for ' + name).encode()
+            (self.packages / name).write_bytes(data)
+            self.release['assets'].append({'name': name, 'size': len(data),
+                                           'digest': 'sha256:' + hashlib.sha256(data).hexdigest()})
+        return names
+
+    def test_language_packages_are_versioned_and_verified_in_both_formats(self):
+        names = self.add_language()
+        self.add_language('de')
+        manifest = self.generate()
+        self.assertEqual(set(manifest['translations']), {'zh-cn', 'de'})
+        for kind, name in zip(['ipk', 'apk'], names):
+            entry = manifest['translations']['zh-cn']
+            self.assertEqual(entry[kind], name)
+            self.assertEqual(entry[kind + '_sha256'], hashlib.sha256((self.packages / name).read_bytes()).hexdigest())
+            self.assertEqual(entry[kind + '_size'], (self.packages / name).stat().st_size)
+
+    def test_missing_corrupt_or_wrong_version_language_packages_block_publication(self):
+        for problem in ['missing-format', 'corrupt', 'wrong-version', 'duplicate']:
+            with self.subTest(problem=problem):
+                self.release = self.release_for('v3.1.0')
+                names = self.add_language()
+                if problem == 'missing-format':
+                    self.release['assets'].pop()
+                elif problem == 'corrupt':
+                    (self.packages / names[0]).write_bytes(b'corrupt translation')
+                elif problem == 'wrong-version':
+                    self.release['assets'][-1]['name'] = names[1].replace('3.1.0', '3.0.0')
+                else:
+                    self.release['assets'].append(self.release['assets'][-1])
+                with self.assertRaises(ValueError):
+                    self.generate()
+                self.assertFalse(self.output.exists())
+
     def test_manifest_contains_exact_revision_names_digests_sizes_and_notes(self):
         for tag in ['v3.0.0', 'v3.1.0']:
             release = self.release_for(tag)

@@ -6,6 +6,10 @@ readonly state_dir='/var/run/argon-update'
 readonly cache_file='/var/run/argon-update/release.json'
 readonly sources_file='/usr/share/argon/update-sources.json'
 readonly repository='jerrykuku/luci-theme-argon'
+readonly i18n_dir='/usr/lib/lua/luci/i18n'
+
+wget_bin=/usr/libexec/wget-ssl
+[ -x "$wget_bin" ] || wget_bin="$(command -v uclient-fetch || command -v wget)"
 
 opkg_query() (
 	# OPKG locks its database even for status and comparison commands. Keep our
@@ -66,7 +70,45 @@ load_sources() {
 	fi
 }
 
-normalize_manifest() {
+valid_language() {
+	printf '%s\n' "$1" | grep -Eq '^[a-z]{2,3}(-[a-z0-9]{2,8})?$'
+}
+
+valid_translation_asset() {
+	[ "$1" = "$4" ] && printf '%s\n' "$2" | grep -Eq '^[a-f0-9]{64}$' &&
+		printf '%s\n' "$3" | grep -Eq '^[1-9][0-9]{0,6}$' && [ "$3" -le 1048576 ]
+}
+
+translation_languages() (
+	json_get_type kind translations
+	[ -n "$kind" ] || exit 0
+	[ "$kind" = object ] && json_select translations || exit 1
+	json_get_keys language_keys
+	count=0
+	for language_key in $language_keys; do
+		# jshn's reader converts hyphens to underscores. Recover the package
+		# suffix, then require filenames that exactly match that language.
+		language="$(printf '%s' "$language_key" | tr '_' '-')"
+		count=$((count + 1))
+		[ "$count" -le 32 ] && valid_language "$language" || exit 1
+		json_get_type kind "$language_key"
+		[ "$kind" = object ] && json_select "$language_key" || exit 1
+		for kind in ipk apk; do
+			json_get_var file "$kind"
+			json_get_var checksum "${kind}_sha256"
+			json_get_var bytes "${kind}_size"
+			case "$kind" in
+			ipk) expected="luci-i18n-argon-config-${language}_v${ipk#luci-theme-argon_}" ;;
+			apk) expected="luci-i18n-argon-config-${language}-${apk#luci-theme-argon-}" ;;
+			esac
+			valid_translation_asset "$file" "$checksum" "$bytes" "$expected" || exit 1
+		done
+		json_select ..
+		printf '%s\n' "$language"
+	done
+)
+
+read_manifest_fields() {
 	json_load_file "$1" || return 1
 	json_get_var schema schema
 	json_get_var manifest_repository repository
@@ -82,6 +124,17 @@ normalize_manifest() {
 	done
 	printf '%s\n' "$published_at" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$' || return 1
 	[ "${#notes}" -le 131072 ] || return 1
+	languages="$(translation_languages)" || return 1
+}
+
+normalize_manifest() {
+	local manifest_namespace language field
+	json_set_namespace manifest_input manifest_namespace
+	if ! read_manifest_fields "$1"; then
+		json_set_namespace "$manifest_namespace"
+		return 1
+	fi
+	json_set_namespace "$manifest_namespace"
 	# Copy only the contract fields, not remote status, URLs or local timestamps.
 	json_init
 	json_add_int schema 1
@@ -95,6 +148,29 @@ normalize_manifest() {
 	json_add_string apk_sha256 "$apk_sha256"
 	json_add_int ipk_size "$ipk_size"
 	json_add_int apk_size "$apk_size"
+	if [ -n "$languages" ]; then
+		json_add_object translations
+		for language in $languages; do
+			json_set_namespace manifest_input
+			json_select translations
+			json_select "$language"
+			for field in ipk apk ipk_sha256 apk_sha256 ipk_size apk_size; do
+				json_get_var "translation_$field" "$field"
+			done
+			json_select ..
+			json_select ..
+			json_set_namespace "$manifest_namespace"
+			json_add_object "$language"
+			json_add_string ipk "$translation_ipk"
+			json_add_string apk "$translation_apk"
+			json_add_string ipk_sha256 "$translation_ipk_sha256"
+			json_add_string apk_sha256 "$translation_apk_sha256"
+			json_add_int ipk_size "$translation_ipk_size"
+			json_add_int apk_size "$translation_apk_size"
+			json_close_object
+		done
+		json_close_object
+	fi
 	json_add_int checked_at "$(date +%s)"
 }
 
@@ -131,7 +207,7 @@ check_updates() {
 	for source_url in "$primary_url" "$fallback_url"; do
 		[ -n "$source_url" ] || continue
 		# The two attempts together stay below rpcd's request timeout.
-		if (ulimit -f 2048; timeout -k 1 5 wget -T 4 -q -U 'luci-theme-argon' \
+		if (ulimit -f 2048; timeout -k 1 5 "$wget_bin" -T 4 -q -U 'luci-theme-argon' \
 			-O "$work/manifest.json" "$source_url") 2>/dev/null &&
 			[ "$(wc -c < "$work/manifest.json")" -le 1048576 ] && normalize_manifest "$work/manifest.json"; then
 			json_dump > "$work/cache.json"
@@ -170,6 +246,79 @@ select_package() {
 		printf '%s\n' "$digest" | grep -Eq '^[a-f0-9]{64}$' &&
 		printf '%s\n' "$size" | grep -Eq '^[1-9][0-9]{0,7}$' &&
 		[ "$size" -gt 0 ] && [ "$size" -le 8388608 ]
+}
+
+installed_translations() {
+	{
+		for catalog in "$i18n_dir"/argon-config.*.lmo "$i18n_dir"/argon.*.lmo; do
+			[ -f "$catalog" ] && [ ! -L "$catalog" ] || continue
+			language="${catalog##*/}"
+			language="${language#*.}"
+			printf '%s\n' "${language%.lmo}"
+		done
+		case "$package_manager" in
+		apk) apk list --installed 'luci-i18n-argon-config-*' 2>/dev/null |
+			sed -n 's/^luci-i18n-argon-config-\([a-z][a-z0-9-]*\)-[0-9].*/\1/p' ;;
+		opkg) opkg_query list-installed 'luci-i18n-argon-config-*' 2>/dev/null |
+			awk '$1 ~ /^luci-i18n-argon-config-/ { sub(/^luci-i18n-argon-config-/, "", $1); print $1 }' ;;
+		esac
+	} | sort -u | while IFS= read -r language; do
+		valid_language "$language" && printf '%s\n' "$language"
+	done
+}
+
+# Emit a private, validated download plan. Never install the theme first and
+# discover afterwards that the language package is missing or corrupt.
+package_plan() (
+	printf '%s %s %s\n' "$package" "$digest" "$size"
+	wanted="$(installed_translations)"
+	configured="$(uci -q get luci.main.lang 2>/dev/null | tr 'A-Z_' 'a-z-')"
+	case "$configured" in zh-cn|zh-hans) configured=zh-cn ;; zh-tw|zh-hant) configured=zh-tw ;; nb-no) configured=no ;; esac
+	if ! json_select translations; then
+		[ -z "$wanted" ]
+		exit $?
+	fi
+	if valid_language "$configured"; then
+		json_get_type kind "$configured"
+		[ "$kind" != object ] || wanted="$(printf '%s\n%s\n' "$wanted" "$configured" | sort -u)"
+	fi
+	for language in $wanted; do
+		json_select "$language" || exit 1
+		json_get_var file "$format"
+		json_get_var checksum "${format}_sha256"
+		json_get_var bytes "${format}_size"
+		case "$format" in
+		ipk) expected="luci-i18n-argon-config-${language}_v${target_version}_all.ipk" ;;
+		apk) expected="luci-i18n-argon-config-${language}-${target_version}.apk" ;;
+		esac
+		valid_translation_asset "$file" "$checksum" "$bytes" "$expected" || exit 1
+		printf '%s %s %s\n' "$file" "$checksum" "$bytes"
+		json_select ..
+	done
+)
+
+verify_translation_versions() {
+	local file checksum bytes name expected actual
+	while read -r file checksum bytes; do
+		case "$file" in luci-i18n-argon-config-*) ;; *) continue ;; esac
+		case "$package_manager" in
+		apk)
+			name="${file%-${target_version}.apk}"
+			expected="$target_version"
+			actual="$(apk list --installed "$name" 2>/dev/null | awk -v prefix="$name-" '
+				index($1, prefix) == 1 { print substr($1, length(prefix) + 1); exit }')" ;;
+		opkg)
+			name="${file%_v${target_version}_all.ipk}"
+			expected="v$target_version"
+			actual="$(opkg_query status "$name" 2>/dev/null | awk '
+				/^Version: / { version=$2 }
+				/^Status: .* installed$/ { installed=1 }
+				END { if (installed) print version }')" ;;
+		esac
+		[ "$actual" = "$expected" ] || return 1
+	done <<EOF
+$1
+EOF
 }
 
 is_upgrade() {
@@ -244,7 +393,7 @@ respond() {
 	json_get_var checked_at checked_at
 	if [ "$1" = 0 ] && printf '%s\n' "$checked_at" | grep -Eq '^[0-9]{1,11}$' &&
 		[ "$now" -ge "$checked_at" ] && [ "$((now - checked_at))" -lt 300 ] &&
-		select_package && is_upgrade && command -v flock >/dev/null 2>&1 && command -v sha256sum >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
+		select_package && is_upgrade && package_plan >/dev/null && command -v flock >/dev/null 2>&1 && command -v sha256sum >/dev/null 2>&1 && command -v timeout >/dev/null 2>&1; then
 		can_upgrade=1
 	fi
 	json_add_int result "$1"
@@ -268,6 +417,7 @@ write_status() {
 }
 
 run_upgrade() {
+	local plan file checksum bytes total_size
 	# Run a private copy, since installing the theme replaces this RPC script.
 	work="${0%/*}"
 	case "$work" in "$state_dir"/job.??????) ;; *) return 1 ;; esac
@@ -277,27 +427,39 @@ run_upgrade() {
 	json_load_file "$work/release.json" && select_package || { write_status failed metadata; return; }
 	installed_version
 	is_upgrade || { write_status failed version; return; }
+	plan="$(package_plan)" || { write_status failed metadata; return; }
+	total_size="$(printf '%s\n' "$plan" | awk '{ size += $3 } END { print size }')"
 	# Leave room for download metadata and unpacking. The package manager also
 	# performs its own dependency and storage checks; never force those checks.
 	tmp_free="$(df -Pk "$state_dir" | awk 'END { print $4 }')"
 	root_path=/
 	[ ! -d /overlay ] || root_path=/overlay
 	root_free="$(df -Pk "$root_path" | awk 'END { print $4 }')"
-	if [ "${tmp_free:-0}" -lt "$((size / 1024 + 2048))" ] ||
-		[ "${root_free:-0}" -lt "$((size * 3 / 1024 + 1024))" ]; then
+	if [ "${tmp_free:-0}" -lt "$((total_size / 1024 + 2048))" ] ||
+		[ "${root_free:-0}" -lt "$((total_size * 3 / 1024 + 1024))" ]; then
 		write_status failed space
 		return
 	fi
 	write_status downloading
-	url="https://github.com/jerrykuku/luci-theme-argon/releases/download/$tag/$package"
-	(ulimit -f 16384; timeout -k 2 90 wget -T 20 -q -U 'luci-theme-argon' \
-		-O "$work/$package" "$url") 2>/dev/null || { write_status failed network; return; }
+	set --
+	while read -r file checksum bytes; do
+		url="https://github.com/jerrykuku/luci-theme-argon/releases/download/$tag/$file"
+		(ulimit -f 16384; timeout -k 2 90 "$wget_bin" -T 20 -q -U 'luci-theme-argon' \
+			-O "$work/$file" "$url") 2>/dev/null || { write_status failed network; return; }
+		set -- "$@" "$work/$file"
+	done <<EOF
+$plan
+EOF
 	write_status verifying
-	if [ "$(wc -c < "$work/$package")" -ne "$size" ] ||
-		[ "$(sha256sum "$work/$package" | awk '{ print $1 }')" != "$digest" ]; then
-		write_status failed checksum
-		return
-	fi
+	while read -r file checksum bytes; do
+		if [ "$(wc -c < "$work/$file")" -ne "$bytes" ] ||
+			[ "$(sha256sum "$work/$file" | awk '{ print $1 }')" != "$checksum" ]; then
+			write_status failed checksum
+			return
+		fi
+	done <<EOF
+$plan
+EOF
 	# Recheck immediately before modifying the package database.
 	installed_version
 	is_upgrade || { write_status failed version; return; }
@@ -305,8 +467,8 @@ run_upgrade() {
 	# Bound captured output without imposing a file-size limit on the installer.
 	(
 		case "$package_manager" in
-		apk) apk add --allow-untrusted "$work/$package" ;;
-		opkg) opkg install "$work/$package" ;;
+		apk) apk add --allow-untrusted "$@" ;;
+		opkg) opkg install "$@" ;;
 		esac
 		printf '%s\n' "$?" > "$work/exit"
 	) 2>&1 | tail -c 8192 > "$state_dir/log"
@@ -315,7 +477,7 @@ run_upgrade() {
 		return
 	fi
 	installed_version
-	if [ "$current_version" != "$target_version" ]; then
+	if [ "$current_version" != "$target_version" ] || ! verify_translation_versions "$plan"; then
 		write_status failed install
 		return
 	fi
@@ -331,6 +493,7 @@ start_upgrade() {
 	read_cache && [ "$now" -ge "$checked_at" ] && [ "$((now - checked_at))" -lt 300 ] &&
 		select_package && [ "$tag" = "$requested_tag" ] && [ "$package" = "$requested_package" ] || { fail 3; return; }
 	is_upgrade || { fail 5; return; }
+	package_plan >/dev/null || { fail 3; return; }
 	prepare_state || { fail 1; return; }
 	exec 9>"$state_dir/lock"
 	flock -n 9 || { fail 4; return; }

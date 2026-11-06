@@ -51,7 +51,8 @@ if op != 'get': p.write_text(json.dumps(state))
                         PKG_UPGRADE='1', PATH=str(binary) + os.pathsep + os.environ['PATH'])
         script = (ROOT / 'root/etc/uci-defaults/30_luci-theme-argon').read_text()
         self.script = self.root / 'initialize'
-        self.script.write_text(script.replace('/etc/', str(self.root / 'etc') + '/'))
+        self.script.write_text(script.replace('/etc/', str(self.root / 'etc') + '/')
+                               .replace('/usr/lib/lua/luci/i18n', str(self.root / 'i18n')))
 
     def initialize(self, state=None):
         if state is not None:
@@ -126,6 +127,40 @@ if op != 'get': p.write_text(json.dumps(state))
         marker.touch()
         subprocess.run(['sh', str(preinst)], env=dict(self.env, IPKG_INSTROOT=str(self.root)),
                        check=True, capture_output=True)
+        self.assertFalse((self.root / 'etc/argon-config-migration').exists())
+
+    def theme_preinst(self):
+        recipe = (ROOT / 'Makefile').read_text()
+        source = re.search(r'define Package/luci-theme-argon/preinst\n(.*?)\nendef', recipe, re.S).group(1)
+        script = self.root / 'theme-preinst'
+        script.write_text(source.replace('$$', '$'))
+        subprocess.run(['sh', str(script)], env=dict(self.env, IPKG_INSTROOT=str(self.root)),
+                       check=True, capture_output=True)
+
+    def test_bundled_translations_survive_an_older_theme_only_updater(self):
+        original = self.root / 'usr/lib/lua/luci/i18n/argon-config.zh-cn.lmo'
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b'previous Chinese catalog')
+        self.theme_preinst()
+        # The previous package removes its formerly owned catalog on upgrade.
+        original.unlink()
+        self.initialize()
+        restored = self.root / 'i18n/argon-config.zh-cn.lmo'
+        self.assertEqual(restored.read_bytes(), b'previous Chinese catalog')
+        self.assertFalse((self.root / 'etc/argon-config-migration').exists())
+        self.initialize()
+        self.assertEqual(restored.read_bytes(), b'previous Chinese catalog')
+
+    def test_language_package_catalog_is_not_replaced_by_the_migration_backup(self):
+        original = self.root / 'usr/lib/lua/luci/i18n/argon-config.de.lmo'
+        original.parent.mkdir(parents=True)
+        original.write_bytes(b'old German catalog')
+        self.theme_preinst()
+        target = self.root / 'i18n/argon-config.de.lmo'
+        target.parent.mkdir()
+        target.write_bytes(b'new official language package')
+        self.initialize()
+        self.assertEqual(target.read_bytes(), b'new official language package')
         self.assertFalse((self.root / 'etc/argon-config-migration').exists())
 
 

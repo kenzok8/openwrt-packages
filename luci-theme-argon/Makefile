@@ -8,11 +8,12 @@ include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=Argon Theme
 # Older SDKs require the coreutils parent menu to enable coreutils-timeout.
-LUCI_DEPENDS:=+luci-base +USE_APK:wget-any +!USE_APK:wget +jsonfilter +ucode-mod-math +flock +coreutils +coreutils-timeout
+# Virtual wget providers include wget-nossl, but every wallpaper API uses HTTPS.
+LUCI_DEPENDS:=+luci-base +wget-ssl +ca-bundle +jsonfilter +ucode-mod-math +flock +coreutils +coreutils-timeout
 # Keep existing translation package names and the argon-config message domain.
 LUCI_BASENAME:=argon-config
-PKG_VERSION:=3.1.2
-PKG_RELEASE:=20261102
+PKG_VERSION:=3.1.3
+PKG_RELEASE:=20261106
 PKG_LICENSE:=Apache-2.0 MIT
 
 # LuCI derives translations independently of the theme version. Keep release
@@ -34,6 +35,20 @@ LUCI_MINIFY_UT:=0
 
 define Package/luci-theme-argon/conffiles
 /etc/config/argon
+endef
+
+# Some firmware builds bundle translations into the theme instead of separate
+# language packages. Preserve them even when an older updater installs us alone.
+define Package/luci-theme-argon/preinst
+#!/bin/sh
+root="$${IPKG_INSTROOT}"
+for catalog in "$$root"/usr/lib/lua/luci/i18n/argon-config.*.lmo "$$root"/usr/lib/lua/luci/i18n/argon.*.lmo; do
+	[ -f "$$catalog" ] && [ ! -L "$$catalog" ] || continue
+	umask 077
+	mkdir -p "$$root/etc/argon-config-migration/i18n" || exit 1
+	cp -p "$$catalog" "$$root/etc/argon-config-migration/i18n/$${catalog##*/}" || exit 1
+done
+exit 0
 endef
 
 include $(TOPDIR)/feeds/luci/luci.mk

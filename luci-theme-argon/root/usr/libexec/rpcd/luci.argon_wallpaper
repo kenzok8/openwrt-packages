@@ -4,8 +4,7 @@
 . /lib/functions.sh
 . /usr/share/libubox/jshn.sh
 
-# the script will be excuted when `argon.@global[0].bing_background == '1'`
-# defaults to 'bing' to be compatible with old config
+# Default to Bing for the legacy bing_background configuration.
 WEB_PIC_SRC="$(uci -q get argon.@global[0].online_wallpaper || echo 'bing')"
 
 # API_KEY is used by Unsplash and Wallhaven when configured.
@@ -16,10 +15,23 @@ EXACT_RESO="$(uci -q get argon.@global[0].use_exact_resolution || echo '1')"
 CACHE="/var/run/argon_${WEB_PIC_SRC}.url"
 WRLOCK="/var/lock/argon_${WEB_PIC_SRC}.lock"
 
+# Older releases give wget-ssl and wget-nossl the same alternative priority.
+# Use the TLS binary directly even when /usr/bin/wget still selects wget-nossl.
+WGET=/usr/libexec/wget-ssl
+if [ ! -x "$WGET" ]; then
+	# Keep source-only deployments compatible with the firmware's downloader.
+	WGET="$(command -v uclient-fetch || command -v wget)"
+fi
+
+fetch_url() {
+	# GNU wget may retry beyond -T. Bound the whole request below rpcd's timeout.
+	timeout -k 1 6 "$WGET" -T 5 -qO- "$1"
+}
+
 fetch_pic_url() {
 	case "$WEB_PIC_SRC" in
 	bing)
-		local picpath="$(wget -T3 -qO- \
+		local picpath="$(fetch_url \
 			"https://www.bing.com/HPImageArchive.aspx?format=js&n=1" |
 			jsonfilter -qe '@.images[0].url' |
 			sed 's/1920x1080/UHD/g')"
@@ -27,20 +39,20 @@ fetch_pic_url() {
 		;;
 	unsplash)
 		if [ -n "$API_KEY" ]; then
-			wget -T3 -qO- "https://api.unsplash.com/photos/random?client_id=${API_KEY}" |
+			fetch_url "https://api.unsplash.com/photos/random?client_id=${API_KEY}" |
 				jsonfilter -qe '@["urls"]["regular"]'
 		fi
 		;;
 	unsplash_*)
 		local collection_id="${WEB_PIC_SRC#unsplash_}"
 		if [ -n "$API_KEY" ]; then
-			wget -T3 -qO- \
+			fetch_url \
 				"https://api.unsplash.com/photos/random?client_id=${API_KEY}&collections=${collection_id}" |
 				jsonfilter -qe '@["urls"]["regular"]'
 		fi
 		;;
 	wallhaven)
-		wget -T3 -qO- \
+		fetch_url \
 			"https://wallhaven.cc/api/v1/search?resolutions=1920x1080&sorting=random" |
 			jsonfilter -qe "@.data[0].path"
 		;;
@@ -49,7 +61,7 @@ fetch_pic_url() {
 		local use_reso="resolutions"
 		[ "$EXACT_RESO" -eq "1" ] || use_reso="atleast"
 		[ -z "$API_KEY" ] || API_KEY="apikey=$API_KEY&"
-		wget -T3 -qO- \
+		fetch_url \
 			"https://wallhaven.cc/api/v1/search?${API_KEY}q=id%3A${tag_id}&${use_reso}=1920x1080&sorting=random" |
 			jsonfilter -qe '@.data[0].path'
 		;;
@@ -58,9 +70,9 @@ fetch_pic_url() {
 
 try_update() {
 	local lock="$WRLOCK"
-	exec 200>"$lock"
+	exec 9>"$lock"
 
-	if flock -n 200 >"/dev/null" 2>&1; then
+	if flock -n 9 >"/dev/null" 2>&1; then
 		local picurl="$(fetch_pic_url)"
 		if [ -n "$picurl" ]; then
 
@@ -70,7 +82,7 @@ try_update() {
 			# if not, browser only displays a blank image
 			# NOTE: only happens to Wallhaven.cc source images
 			case "$WEB_PIC_SRC" in
-			wallhaven*) wget -T3 -qO- "${picurl}" > /dev/null ;;
+			wallhaven*) fetch_url "${picurl}" > /dev/null ;;
 			esac
 
 			echo "$picurl" | tee "$CACHE"
@@ -79,7 +91,7 @@ try_update() {
 			# and let the login page select a local background instead.
 			: > "$CACHE"
 		fi
-		flock -u 200 >"/dev/null" 2>&1
+		flock -u 9 >"/dev/null" 2>&1
 	elif [ -s "$CACHE" ]; then
 		cat "$CACHE"
 	fi

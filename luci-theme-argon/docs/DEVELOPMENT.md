@@ -93,7 +93,7 @@ Use monochrome SVGs with a `viewBox` and transparent background. CSS masks suppl
 
 ## Static update feed deployment
 
-The router reads a static `/updates/stable.json` manifest without calling the GitHub API. After publication, CI uses its own `GITHUB_TOKEN` to retrieve the official release, verifies the theme package SHA256 digests and sizes, and generates one artifact. GitHub Pages publishes that artifact directly; Cloudflare Pages deploys the same files from a dedicated `updates` Git branch. Packages continue to download from the pinned GitHub Release, and translation packages remain separate.
+The router reads a static `/updates/stable.json` manifest without calling the GitHub API. After publication, CI uses its own `GITHUB_TOKEN` to retrieve the official release, verifies theme and translation package SHA256 digests and sizes, and generates one artifact. GitHub Pages publishes that artifact directly; Cloudflare Pages deploys the same files from a dedicated `updates` Git branch. Packages continue to download from the pinned GitHub Release. The installer includes matching packages for existing Argon translations and the configured LuCI language when available.
 
 Initial maintainer setup:
 
@@ -118,6 +118,8 @@ Only successful stable publications update the feed. Previews are excluded, and 
 Run **Publish update feeds** again to republish GitHub Pages. Identical artifacts do not create another branch commit. With a Hook configured, reruns still trigger CF when the branch is unchanged, allowing failed deployments to be retried. With Git auto-deployment only, retry the build in CF or publish changed feed content. Both publication jobs are independent, so either side can publish if the other fails.
 
 The manifest contains `schema`, `repository`, `tag`, `published_at`, `notes`, and the `apk`/`ipk` filenames with `_sha256`/`_size` fields. Metadata comes from the published package bytes rather than master's Makefile. Both formats must be complete and match the tag. Malformed feeds trigger fallback and never overwrite the previous successful cache. Checks are manual, with a five-minute success cache, a one-minute failure cooldown and a lock that coalesces concurrent requests.
+
+Schema 1 also supports an optional `translations` object keyed by language package suffix, such as `zh-cn`. Each entry has the same six package fields for both formats. Names must match the theme's release, each translation is limited to 1 MiB, and at most 32 languages are accepted. Existing translations without verified metadata disable automatic installation. All required packages are downloaded and verified before the package manager runs; storage checks use their combined size, and completion requires the expected installed versions. The theme's pre-install hook and UCI initialization preserve bundled catalogs across a first upgrade made by an older updater, without replacing catalogs already supplied by independent language packages.
 
 Source builds default to an empty CF primary. Configure one before packaging:
 

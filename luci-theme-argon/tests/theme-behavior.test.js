@@ -294,8 +294,11 @@ jsonfilter() { return 1; }
 	try {
 		const script = path.join(dir, 'wallpaper.sh');
 		const cache = path.join(dir, 'wallpaper.url');
+		const downloader = path.join(dir, 'wget');
+		writeFileSync(downloader, '#!/bin/sh\nexit 1\n', { mode: 0o755 });
 		writeFileSync(cache, 'https://example.com/old.jpg\n');
 		writeFileSync(script, source.replace(imports, stub)
+			.replace('WGET=/usr/libexec/wget-ssl', `WGET="${downloader}"`)
 			.replace('CACHE="/var/run/argon_${WEB_PIC_SRC}.url"', 'CACHE="$TEST_CACHE"')
 			.replace('WRLOCK="/var/lock/argon_${WEB_PIC_SRC}.lock"', 'WRLOCK="$TEST_LOCK"'));
 		for (const wallpaper of ['unsplash', 'unsplash_123']) {
@@ -306,7 +309,7 @@ jsonfilter() { return 1; }
 			assert.deepEqual(JSON.parse(output), { url: '' });
 		}
 		rmSync(cache);
-		const failedFetch = execFileSync('bash', [script, 'call', 'get_url'], {
+		const failedFetch = execFileSync('sh', [script, 'call', 'get_url'], {
 			input: '{}\n', encoding: 'utf8',
 			env: { ...process.env, TEST_WALLPAPER: 'unsplash', TEST_KEY: 'test-key', TEST_CACHE: cache, TEST_LOCK: path.join(dir, 'lock') }
 		});

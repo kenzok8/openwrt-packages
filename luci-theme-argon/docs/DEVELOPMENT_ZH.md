@@ -93,7 +93,7 @@ lessc less/cascade.less htdocs/luci-static/argon/css/cascade.css
 
 ## 静态更新源部署
 
-更新检查读取 `/updates/stable.json` 静态清单。路由器不调用 GitHub API；发布工作流使用自身的 `GITHUB_TOKEN` 读取正式 Release，核验主题包的 SHA256/大小后生成一份产物。GitHub Pages 直接发布该产物，Cloudflare Pages 从专用 `updates` 分支部署同一份文件。安装包继续从固定的 GitHub Release 版本下载，独立语言包仍单独安装。
+更新检查读取 `/updates/stable.json` 静态清单。路由器不调用 GitHub API；发布工作流使用自身的 `GITHUB_TOKEN` 读取正式 Release，核验主题和语言包的 SHA256/大小后生成一份产物。GitHub Pages 直接发布该产物，Cloudflare Pages 从专用 `updates` 分支部署同一份文件。安装包继续从固定的 GitHub Release 版本下载；安装器会包含现有 Argon 翻译及可用的 LuCI 当前配置语言对应的包。
 
 首次启用需要仓库维护者完成以下配置：
 
@@ -118,6 +118,8 @@ lessc less/cascade.less htdocs/luci-static/argon/css/cascade.css
 重新运行 **Publish update feeds** 可再次发布 GitHub Pages；清单未变化时不重复创建分支提交。若配置了 Hook，即使分支内容未变化也会重新触发 CF，便于重试失败的部署；仅使用 Git 自动部署时，需要在 CF 中重试构建或新增清单提交。两端发布任务互相独立，一端失败不会阻止另一端发布。
 
 清单字段包括 `schema`、`repository`、`tag`、`published_at`、`notes`，以及 `apk`/`ipk` 文件名和对应的 `_sha256`/`_size`。由最终发布包计算元数据，不从 master 的 Makefile 推断最新版。两种格式均须完整且属于同一版本；客户端拒绝损坏清单，并保留上一次成功记录。请求只在手动检查时发起，成功缓存五分钟，双源均失败后冷却一分钟。
+
+Schema 1 还支持可选的 `translations` 对象，以 `zh-cn` 等语言包后缀为键，每项包含双格式对应的六个包字段。文件名须与主题发行版本匹配，单个语言包不超过 1 MiB，最多接受 32 种语言。现有翻译缺少可校验信息时不开放自动安装。所有所需包先完成下载和校验，再调用包管理器；空间检查按总大小计算，安装完成后核对各包版本。主题的 preinst 与 UCI 初始化会保留旧更新器首次升级时的内嵌翻译，并保留独立语言包已提供的文件。
 
 源码构建默认不包含 CF 地址。需要自行指定时，在打包前执行：
 

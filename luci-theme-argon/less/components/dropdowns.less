@@ -99,7 +99,9 @@
     background: transparent;
     color: inherit;
     white-space: normal;
-    overflow-wrap: anywhere;
+    // Let full words contribute to the menu's intrinsic width. `anywhere`
+    // shrinks compact controls' expanded labels down to a single character.
+    overflow-wrap: break-word;
     cursor: pointer;
 
     > label {

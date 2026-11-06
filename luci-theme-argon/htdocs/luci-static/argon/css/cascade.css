@@ -3788,7 +3788,7 @@ body:not(.Interfaces) .cbi-rowstyle-2:first-child {
   background: transparent;
   color: inherit;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   cursor: pointer;
 }
 .cbi-dropdown[open] > ul.dropdown > li > label {

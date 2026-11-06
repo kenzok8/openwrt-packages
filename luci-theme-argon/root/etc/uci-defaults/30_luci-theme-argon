@@ -1,5 +1,22 @@
 #!/bin/sh
 
+# OPKG/APK may remove catalogs owned by the previous theme. Keep existing
+# translations until a separate language package takes ownership of them.
+i18n_backup=/etc/argon-config-migration/i18n
+if [ -d "$i18n_backup" ]; then
+	mkdir -p /usr/lib/lua/luci/i18n || exit 1
+	for catalog in "$i18n_backup"/argon-config.*.lmo "$i18n_backup"/argon.*.lmo; do
+		[ -f "$catalog" ] && [ ! -L "$catalog" ] || continue
+		target="/usr/lib/lua/luci/i18n/${catalog##*/}"
+		if [ ! -e "$target" ] && [ ! -L "$target" ]; then
+			cp -p "$catalog" "$target" || exit 1
+		fi
+		rm -f "$catalog"
+	done
+	rmdir "$i18n_backup" 2>/dev/null || true
+	rmdir /etc/argon-config-migration 2>/dev/null || true
+fi
+
 # The empty legacy package saves its conffile before releasing file ownership.
 if [ -f /etc/argon-config-migration/argon ]; then
 	cp -p /etc/argon-config-migration/argon /etc/config/argon || exit 1

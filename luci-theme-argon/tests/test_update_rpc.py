@@ -25,9 +25,31 @@ class UpdateRpcTests(unittest.TestCase):
         fakebin.mkdir()
         scripts = {
             'apk': '''case "$1" in
-list) test -n "$APK_VERSION" || exit 1; v=$APK_VERSION; [ ! -f "$INSTALLED" ] || v=$(cat "$INSTALLED"); test -n "$v" || exit 1; printf 'luci-theme-argon-%s noarch [installed]\\n' "$v" ;;
+list)
+    case "$3" in
+    luci-i18n-argon-config-*)
+        if [ -f "$LANG_INSTALLED" ]; then
+            while read -r name version; do
+                [ "$3" = 'luci-i18n-argon-config-*' ] || [ "$3" = "$name" ] || continue
+                printf '%s-%s noarch [installed]\\n' "$name" "$version"
+            done < "$LANG_INSTALLED"
+        fi
+        exit 0 ;;
+    esac
+    test -n "$APK_VERSION" || exit 1; v=$APK_VERSION; [ ! -f "$INSTALLED" ] || v=$(cat "$INSTALLED"); test -n "$v" || exit 1; printf 'luci-theme-argon-%s noarch [installed]\\n' "$v" ;;
 version) test "$COMPARE_FAIL" != 1 || exit 1; [ "$3" = "$4" ] && printf '=\\n' || { [ "$3" = 3.0.0-r20261015 ] && printf '>\\n' || printf '<\\n'; } ;;
-add) printf '%s\\n' "$@" >> "$MUTATIONS"; test "$INSTALL_FAIL" != 1 || { echo 'database locked'; exit 1; }; test "$WRONG_VERSION" = 1 || printf '3.0.0-r2' > "$INSTALLED"; echo 'Theme installed' ;;
+add) printf '%s\\n' "$@" >> "$MUTATIONS"; test "$INSTALL_FAIL" != 1 || { echo 'database locked'; exit 1; }; test "$WRONG_VERSION" = 1 || printf '3.0.0-r2' > "$INSTALLED"
+    for file in "$@"; do
+        case "$file" in */luci-i18n-argon-config-*.apk)
+            name=${file##*/}; name=${name%-3.0.0-r2.apk}
+            if [ -f "$LANG_INSTALLED" ]; then
+                awk -v name="$name" '$1 != name' "$LANG_INSTALLED" > "$LANG_INSTALLED.tmp"
+                mv "$LANG_INSTALLED.tmp" "$LANG_INSTALLED"
+            fi
+            test "$WRONG_LANGUAGE_VERSION" = 1 || printf '%s 3.0.0-r2\\n' "$name" >> "$LANG_INSTALLED" ;;
+        esac
+    done
+    echo 'Theme installed' ;;
 esac
 ''',
             'opkg': '''if [ "$OPKG_QUERY_GUARD" = 1 ]; then
@@ -36,9 +58,23 @@ esac
     sleep .05
 fi
 case "$1" in
-status) v=$OPKG_VERSION; [ ! -f "$INSTALLED" ] || v=$(cat "$INSTALLED"); test -n "$v" || exit 1; printf 'Package: luci-theme-argon\\nVersion: %s\\nStatus: install ok installed\\n' "$v" ;;
+list-installed) [ ! -f "$LANG_INSTALLED" ] || awk '{ print $1 " - " $2 }' "$LANG_INSTALLED" ;;
+status)
+    case "$2" in luci-i18n-argon-config-*)
+        v=$(awk -v name="$2" '$1 == name { v=$2 } END { print v }' "$LANG_INSTALLED" 2>/dev/null)
+        test -n "$v" || exit 0
+        printf 'Package: %s\\nVersion: %s\\nStatus: install ok installed\\n' "$2" "$v"; exit 0 ;;
+    esac
+    v=$OPKG_VERSION; [ ! -f "$INSTALLED" ] || v=$(cat "$INSTALLED"); test -n "$v" || exit 1; printf 'Package: luci-theme-argon\\nVersion: %s\\nStatus: install ok installed\\n' "$v" ;;
 compare-versions) [ "$3" = "<<" ] && [ "$COMPARE_FAIL" != 1 ] && [ "$2" != "$4" ] && [ "$2" != 3.0.0-20261015 ] ;;
-install) printf '%s\\n' "$@" >> "$MUTATIONS"; test "$INSTALL_FAIL" != 1 || { echo 'database locked'; exit 1; }; test "$WRONG_VERSION" = 1 || printf '3.0.0-2' > "$INSTALLED"; echo 'Theme installed' ;;
+install) printf '%s\\n' "$@" >> "$MUTATIONS"; test "$INSTALL_FAIL" != 1 || { echo 'database locked'; exit 1; }; test "$WRONG_VERSION" = 1 || printf '3.0.0-2' > "$INSTALLED"
+    for file in "$@"; do
+        case "$file" in */luci-i18n-argon-config-*.ipk)
+            name=${file##*/}; name=${name%_v3.0.0-2_all.ipk}
+            test "$WRONG_LANGUAGE_VERSION" = 1 || printf '%s v3.0.0-2\\n' "$name" >> "$LANG_INSTALLED" ;;
+        esac
+    done
+    echo 'Theme installed' ;;
 esac
 ''',
             'df': 'printf "Filesystem 1024-blocks Used Available Capacity Mounted on\\nroot 100000 1000 %s 1%% /\\n" "${FREE_KB:-99000}"\n',
@@ -56,30 +92,45 @@ case "$destination" in
     *primary.argon.test*) test "$PRIMARY_FAIL" != 1 || exit 8; cp "${PRIMARY_PAYLOAD:-$PAYLOAD}" "$destination" ;;
     *) cp "$PAYLOAD" "$destination" ;;
     esac ;;
-*) sleep "${DOWNLOAD_DELAY:-0}"; test "$DOWNLOAD_FAIL" != 1 || exit 8; cp "$PACKAGE_DATA" "$destination" ;;
+*) sleep "${DOWNLOAD_DELAY:-0}"; test "$DOWNLOAD_FAIL" != 1 || exit 8
+   case "$url" in
+   *luci-i18n-argon-config-*) test "$LANG_DOWNLOAD_FAIL" != 1 || exit 8; cp "$LANG_DATA" "$destination" ;;
+   *) cp "$PACKAGE_DATA" "$destination" ;;
+   esac ;;
 esac
-'''
+''',
+            'uci': 'test -z "$LUCI_LANGUAGE" || printf "%s\\n" "$LUCI_LANGUAGE"\n'
         }
         for name, content in scripts.items():
             path = fakebin / name
             path.write_text('#!/bin/sh\n' + content)
             path.chmod(0o755)
         helper = self.directory / 'json_fixture.py'
-        helper.write_text('''import json,sys
+        helper.write_text('''import json,re,sys
 root=json.load(sys.stdin); path=json.loads(sys.argv[1]); op=sys.argv[2]; args=sys.argv[3:]
 obj=root
 for key in path: obj=obj[int(key)] if isinstance(obj,list) else obj[key]
+def alias(key): return re.sub(r'[^a-zA-Z0-9_]', '_', str(key))
+def resolve(key):
+    if key in obj: return key
+    return next((name for name in reversed(list(obj)) if alias(name)==key), key)
 if op=='select':
     if args[0]=='..': path=path[:-1]
     else:
-        child=obj[int(args[0])] if isinstance(obj,list) else obj[args[0]]
+        key=args[0] if isinstance(obj,list) else resolve(args[0])
+        child=obj[int(key)] if isinstance(obj,list) else obj[key]
         if not isinstance(child,(dict,list)): raise ValueError('not a container')
-        path.append(args[0])
+        path.append(key)
     print(json.dumps(path))
-elif op=='keys': print(' '.join(map(str,range(len(obj)) if isinstance(obj,list) else obj.keys())))
+elif op=='keys': print(' '.join(map(alias,range(len(obj)) if isinstance(obj,list) else obj.keys())))
 elif op=='get':
-    value=obj.get(args[0],'')
+    value=obj.get(resolve(args[0]),'')
     print(int(value) if isinstance(value,bool) else '' if value is None else value)
+elif op=='type':
+    value=obj.get(resolve(args[0]))
+    print('object' if isinstance(value,dict) else 'array' if isinstance(value,list) else
+          'boolean' if isinstance(value,bool) else 'int' if isinstance(value,int) else
+          'string' if isinstance(value,str) else '')
 elif op=='add':
     obj[args[1]]=int(args[2]) if args[0]=='int' else bool(int(args[2])) if args[0]=='boolean' else {} if args[0]=='object' else args[2]
     print(json.dumps(root))
@@ -92,6 +143,7 @@ json_load() {{ FIXTURE_JSON=$1; FIXTURE_PATH='[]'; fixture_json validate >/dev/n
 json_load_file() {{ json_load "$(cat "$1")"; }}
 json_init() {{ FIXTURE_JSON='{{}}'; FIXTURE_PATH='[]'; }}
 json_get_var() {{ fixture_value=$(fixture_json get "$2"); export "$1=$fixture_value"; }}
+json_get_type() {{ fixture_value=$(fixture_json type "$2"); export "$1=$fixture_value"; }}
 json_get_keys() {{ fixture_value=$(fixture_json keys); export "$1=$fixture_value"; }}
 json_select() {{ fixture_value=$(fixture_json select "$1" 2>/dev/null) || return 1; FIXTURE_PATH=$fixture_value; }}
 json_add_string() {{ FIXTURE_JSON=$(fixture_json add string "$1" "$2"); }}
@@ -100,8 +152,14 @@ json_add_boolean() {{ FIXTURE_JSON=$(fixture_json add boolean "$1" "$2"); }}
 json_add_object() {{ FIXTURE_JSON=$(fixture_json add object "$1" ''); json_select "$1"; }}
 json_close_object() {{ json_select ..; }}
 json_set_namespace() {{
- if [ "$1" = upgrade_status ]; then FIXTURE_SAVED_JSON=$FIXTURE_JSON; FIXTURE_SAVED_PATH=$FIXTURE_PATH; export "$2=base";
- else FIXTURE_JSON=$FIXTURE_SAVED_JSON; FIXTURE_PATH=$FIXTURE_SAVED_PATH; fi
+ [ "$#" -lt 2 ] || export "$2=${{FIXTURE_NAMESPACE:-base}}"
+ printf '%s' "$FIXTURE_JSON" > '{self.directory}/namespace-'"${{FIXTURE_NAMESPACE:-base}}"'.json'
+ printf '%s' "$FIXTURE_PATH" > '{self.directory}/namespace-'"${{FIXTURE_NAMESPACE:-base}}"'.path'
+ FIXTURE_NAMESPACE=${{1:-base}}
+ if [ -f '{self.directory}/namespace-'"$FIXTURE_NAMESPACE"'.json' ]; then
+   FIXTURE_JSON=$(cat '{self.directory}/namespace-'"$FIXTURE_NAMESPACE"'.json')
+   FIXTURE_PATH=$(cat '{self.directory}/namespace-'"$FIXTURE_NAMESPACE"'.path')
+ else json_init; fi
 }}
 
 json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
@@ -109,16 +167,22 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
         self.script = self.directory / 'rpc.sh'
         sources = self.directory / 'sources.json'
         sources.write_text(json.dumps({'primary': PRIMARY, 'fallback': FALLBACK}))
+        self.catalogs = self.directory / 'catalogs'
+        self.catalogs.mkdir()
         self.script.write_text((ROOT / 'root/usr/libexec/rpcd/luci.argon_update').read_text()
                                .replace('/usr/share/libubox/jshn.sh', str(shim))
                                .replace('/usr/share/argon/update-sources.json', str(sources))
                                .replace('/var/run/argon-update/release.json', str(self.cache))
-                               .replace('/var/run/argon-update', str(self.directory / 'state')))
+                               .replace('/var/run/argon-update', str(self.directory / 'state'))
+                               .replace('/usr/lib/lua/luci/i18n', str(self.catalogs))
+                               .replace('wget_bin=/usr/libexec/wget-ssl', 'wget_bin=' + str(fakebin / 'wget')))
         self.env = dict(os.environ, PATH=str(fakebin) + os.pathsep + os.environ['PATH'],
                         APK_VERSION='3.0.0-r1', OPKG_VERSION='', PAYLOAD=str(self.payload),
                         REQUESTS=str(self.requests), FETCH_FAIL='0', INSTALLED=str(self.directory / 'installed'),
-                        MUTATIONS=str(self.directory / 'mutations'), PACKAGE_DATA=str(self.directory / 'package'))
+                        MUTATIONS=str(self.directory / 'mutations'), PACKAGE_DATA=str(self.directory / 'package'),
+                        LANG_DATA=str(self.directory / 'language'), LANG_INSTALLED=str(self.directory / 'languages-installed'))
         (self.directory / 'package').write_bytes(b'argon-package')
+        (self.directory / 'language').write_bytes(b'argon-language')
         self.release = {'schema': 1, 'repository': 'jerrykuku/luci-theme-argon', 'tag': 'v3.0.0',
                         'published_at': '2026-10-16T01:00:00Z', 'notes': '## 更新\n- 修复布局。',
                         'ipk': 'luci-theme-argon_3.0.0-2_all.ipk', 'apk': 'luci-theme-argon-3.0.0-r2.apk',
@@ -296,6 +360,92 @@ json_dump() {{ printf '%s\\n' "$FIXTURE_JSON"; }}
                 return result
             time.sleep(.05)
         self.fail('worker did not finish')
+
+    def add_languages(self, *languages):
+        digest = hashlib.sha256((self.directory / 'language').read_bytes()).hexdigest()
+        self.release['translations'] = {language: {
+            'apk': f'luci-i18n-argon-config-{language}-3.0.0-r2.apk',
+            'ipk': f'luci-i18n-argon-config-{language}_v3.0.0-2_all.ipk',
+            'apk_sha256': digest, 'ipk_sha256': digest,
+            'apk_size': 14, 'ipk_size': 14,
+        } for language in languages}
+        self.payload.write_text(json.dumps(self.release))
+
+    def test_bundled_chinese_is_installed_with_the_theme_for_both_managers(self):
+        self.add_languages('zh-cn', 'de')
+        (self.catalogs / 'argon-config.zh-cn.lmo').write_bytes(b'bundled Chinese')
+        for manager in ['apk', 'opkg']:
+            with self.subTest(manager=manager):
+                for file in ['installed', 'languages-installed', 'mutations', 'requests']:
+                    (self.directory / file).unlink(missing_ok=True)
+                self.env.update(APK_VERSION='3.0.0-r1' if manager == 'apk' else '',
+                                OPKG_VERSION='3.0.0-1' if manager == 'opkg' else '')
+                self.assertTrue(self.call('check')['can_upgrade'])
+                self.assertEqual(self.start()['result'], 0)
+                done = self.finished()
+                self.assertEqual(done['upgrade']['phase'], 'complete', done)
+                command = (self.directory / 'mutations').read_text()
+                self.assertIn('luci-i18n-argon-config-zh-cn', command)
+                self.assertNotIn('luci-i18n-argon-config-de', command)
+                self.assertLess(command.index('luci-theme-argon'), command.index('luci-i18n-argon-config-zh-cn'))
+                self.assertNotIn('force-', command)
+
+    def test_missing_verified_language_metadata_blocks_theme_only_installation(self):
+        (self.catalogs / 'argon-config.zh-cn.lmo').write_bytes(b'bundled Chinese')
+        self.assertFalse(self.call('check')['can_upgrade'])
+        self.assertEqual(self.start()['result'], 3)
+        self.assertFalse((self.directory / 'mutations').exists())
+
+    def test_configured_locale_is_added_when_available_and_missing_catalog_packages_are_repaired(self):
+        self.add_languages('zh-cn', 'de')
+        self.env['LUCI_LANGUAGE'] = 'zh_Hans'
+        (self.directory / 'languages-installed').write_text('luci-i18n-argon-config-de 3.0.0-r1\n')
+        self.assertTrue(self.call('check')['can_upgrade'])
+        self.assertEqual(self.start()['result'], 0)
+        self.assertEqual(self.finished()['upgrade']['phase'], 'complete')
+        command = (self.directory / 'mutations').read_text()
+        for language in ['zh-cn', 'de']:
+            self.assertIn('luci-i18n-argon-config-' + language, command)
+
+    def test_language_download_or_checksum_failure_never_mutates_the_theme(self):
+        self.add_languages('zh-cn')
+        (self.catalogs / 'argon-config.zh-cn.lmo').touch()
+        self.call('check')
+        for failure in ['network', 'checksum']:
+            with self.subTest(failure=failure):
+                self.env['LANG_DOWNLOAD_FAIL'] = '1' if failure == 'network' else '0'
+                if failure == 'checksum':
+                    (self.directory / 'language').write_bytes(b'corrupt')
+                self.assertEqual(self.start()['result'], 0)
+                done = self.finished()
+                self.assertEqual(done['upgrade']['phase'], 'failed')
+                self.assertEqual(done['upgrade']['error'], failure, done)
+                self.assertFalse((self.directory / 'mutations').exists())
+
+    def test_language_version_is_verified_before_reporting_complete(self):
+        self.add_languages('zh-cn')
+        (self.catalogs / 'argon-config.zh-cn.lmo').touch()
+        self.env['WRONG_LANGUAGE_VERSION'] = '1'
+        self.call('check')
+        self.assertEqual(self.start()['result'], 0)
+        self.assertEqual(self.finished()['upgrade']['error'], 'install')
+
+    def test_translation_metadata_is_validated_and_only_contract_fields_are_cached(self):
+        self.add_languages('zh-cn')
+        original = self.release['translations']['zh-cn'].copy()
+        for bad in [[], {'../zh-cn': original}, {'zh-cn': dict(original, apk_size=0)},
+                    {'zh-cn': dict(original, ipk_sha256='bad')},
+                    {'zh-cn': dict(original, apk='luci-i18n-argon-config-zh-cn-4.0.0-r1.apk')}]:
+            with self.subTest(metadata=bad):
+                (self.directory / 'state/retry_at').unlink(missing_ok=True)
+                self.payload.write_text(json.dumps(dict(self.release, translations=bad)))
+                self.assertNotEqual(self.call('check')['result'], 0)
+                self.assertFalse(self.cache.exists())
+        (self.directory / 'state/retry_at').unlink(missing_ok=True)
+        self.payload.write_text(json.dumps(dict(self.release, translations={'zh-cn': dict(original, url='https://untrusted.invalid/')})))
+        result = self.call('check')
+        self.assertEqual(result['translations']['zh-cn'], original)
+        self.assertNotIn('untrusted.invalid', self.requests.read_text())
 
     def test_background_install_for_both_managers_and_status_survives_reloads(self):
         for manager in ['apk', 'opkg']:
