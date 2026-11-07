@@ -173,7 +173,7 @@ check_kernel() {
 
     # Check the version on the server
     latest_version="$(
-        curl -fsSL -m 10 \
+        curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error \
             ${kernel_api}/releases/expanded_assets/kernel_${kernel_tag} |
             grep -oE "${main_line_version}\.[0-9]+[^\"]*\.tar\.gz" | sed 's/.tar.gz//' |
             sort -urV | head -n 1
@@ -185,7 +185,7 @@ check_kernel() {
 
     # Get the sha256 value of the latest version
     latest_kernel_sha256="$(
-        curl -fsSL -m 10 \
+        curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error \
             ${kernel_api}/releases/expanded_assets/kernel_${kernel_tag} |
             awk -v pattern="${latest_version}\.tar\.gz" -v RS='</li>' '$0 ~ pattern { print $0 "</li>"; exit }' |
             grep -o 'value="sha256:[^"]*' | sed 's/value="sha256://'
@@ -225,7 +225,7 @@ download_kernel() {
 
     kernel_down_from="https://github.com/${kernel_repo}/releases/download/kernel_${kernel_tag}/${kernel_file_name}.tar.gz"
 
-    curl -fsSL "${kernel_down_from}" -o ${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}.tar.gz
+    curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error "${kernel_down_from}" -o "${KERNEL_DOWNLOAD_PATH}/${kernel_file_name}.tar.gz"
     [[ "${?}" -ne "0" ]] && tolog "03.02 The kernel download failed." "1"
 
     # Verify sha256

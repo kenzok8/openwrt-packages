@@ -146,7 +146,7 @@ check_updated() {
                 firmware_tags_array+=("${firmware_tags_name}")
             fi
         done < <(
-            curl -fsSL -m 10 \
+            curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error \
                 https://github.com/${server_firmware_url}/releases?page=${i} |
                 grep -oE 'releases/tag/([^" ]+)'
         )
@@ -177,7 +177,7 @@ check_updated() {
 
     # Retrieve the HTML code of the tags list page
     html_code="$(
-        curl -fsSL -m 10 \
+        curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error \
             https://github.com/${server_firmware_url}/releases/expanded_assets/${firmware_releases_tag}
     )"
 
@@ -268,7 +268,7 @@ download_firmware() {
 
     # Download to OpenWrt file
     firmware_download_name="openwrt_${BOARD}_k${main_line_version}_github${firmware_suffix}"
-    curl -fsSL "${latest_url}" -o "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}"
+    curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error "${latest_url}" -o "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}"
     if [[ "$?" -eq "0" && -s "${FIRMWARE_DOWNLOAD_PATH}/${firmware_download_name}" ]]; then
         tolog "03.02 OpenWrt downloaded successfully."
     else

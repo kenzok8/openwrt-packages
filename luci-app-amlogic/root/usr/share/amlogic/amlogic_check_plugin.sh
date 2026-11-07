@@ -132,7 +132,7 @@ check_plugin() {
     if [[ "${plugin_branch}" == "main" ]]; then
         # JS branch: match tags ending with -js (e.g. 3.1.305-js)
         latest_version="$(
-            curl -fsSL -m 10 \
+            curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error \
                 https://github.com/ophub/luci-app-amlogic/releases |
                 grep -oE 'expanded_assets/[0-9]+\.[0-9]+\.[0-9]+-js' | sed 's|expanded_assets/||g' |
                 sort -urV | head -n 1
@@ -140,7 +140,7 @@ check_plugin() {
     else
         # Lua branch: match tags with digits only, no suffix (e.g. 3.1.305)
         latest_version="$(
-            curl -fsSL -m 10 \
+            curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error \
                 https://github.com/ophub/luci-app-amlogic/releases |
                 grep -oE 'expanded_assets/[0-9]+\.[0-9]+\.[0-9]+' | sed 's|expanded_assets/||g' |
                 grep -v -- '-' |
@@ -212,7 +212,7 @@ download_plugin() {
 
     tolog "03.03 Querying GitHub API for release assets..."
     api_url="https://api.github.com/repos/ophub/luci-app-amlogic/releases/tags/${latest_version}"
-    asset_list="$(curl -fsSL -m 15 "${api_url}" | jq -r '.assets[].name' | xargs)"
+    asset_list="$(curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error "${api_url}" | jq -r '.assets[].name' | xargs)"
     if [[ -z "${asset_list}" ]]; then
         tolog "03.03 Failed to fetch release assets from GitHub API." "1"
     fi
@@ -229,14 +229,14 @@ download_plugin() {
     # Download the main plugin file
     plugin_full_url="${download_repo}/${latest_version}/${plugin_file_name}"
     tolog "03.05 Downloading main plugin..."
-    curl -fsSL "${plugin_full_url}" -o "${TMP_CHECK_DIR}/${plugin_file_name}"
+    curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error "${plugin_full_url}" -o "${TMP_CHECK_DIR}/${plugin_file_name}"
     [[ "${?}" -ne "0" ]] && tolog "03.05 Plugin [ ${plugin_file_name} ] download failed." "1"
 
     # Download language packs
     for langfile in "${lang_file_list[@]}"; do
         lang_full_url="${download_repo}/${latest_version}/${langfile}"
         tolog "03.06 Downloading language pack [ ${langfile} ]..."
-        curl -fsSL "${lang_full_url}" -o "${TMP_CHECK_DIR}/${langfile}"
+        curl -fsSL --retry 3 --retry-delay 2 --retry-connrefused --connect-timeout 10 --remove-on-error "${lang_full_url}" -o "${TMP_CHECK_DIR}/${langfile}"
         [[ "${?}" -ne "0" ]] && tolog "03.06 Language pack [ ${langfile} ] download failed." "1"
     done
 
