@@ -6,6 +6,30 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 FIELDS = ("PKG_NAME", "PKG_VERSION", "LUCI_TITLE", "PKG_TITLE", "LUCI_DESCRIPTION", "PKG_DESCRIPTION", "PKG_LICENSE")
 
+VAR = re.compile(r"\$\([^()]*(?:\([^()]*\)[^()]*)*\)")
+SHELL_CAT = re.compile(r"\$\(shell cat \$\(CURDIR\)/([^)\s]+)")
+CLEAN_VERSION = re.compile(r"^[0-9][0-9A-Za-z._~+\-]*$")
+
+
+def clean(text: str) -> str:
+    return re.sub(r"\s+", " ", VAR.sub("", text)).strip()
+
+
+def read_version(fields: dict, base: Path) -> str:
+    raw = fields.get("PKG_VERSION", "")
+    if "$(" in raw:
+        match = SHELL_CAT.search(raw)
+        if not match:
+            return ""
+        target = base / match.group(1)
+        try:
+            raw = target.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return ""
+    version = clean(raw)
+    return version if CLEAN_VERSION.match(version) else ""
+
+
 def read_fields(makefile: Path) -> dict:
     try:
         text = makefile.read_text(encoding="utf-8", errors="replace")
@@ -27,15 +51,16 @@ def collect():
         if not makefile.is_file():
             continue
         fields = read_fields(makefile)
-        name = fields.get("PKG_NAME") or entry.name
-        title = (fields.get("LUCI_TITLE") or fields.get("PKG_TITLE")
-                 or fields.get("LUCI_DESCRIPTION") or fields.get("PKG_DESCRIPTION") or "")
+        declared = fields.get("PKG_NAME", "")
+        name = declared if declared and "$(" not in declared and " " not in declared else entry.name
+        title = clean(fields.get("LUCI_TITLE") or fields.get("PKG_TITLE")
+                      or fields.get("LUCI_DESCRIPTION") or fields.get("PKG_DESCRIPTION") or "")
         items.append({
             "dir": entry.name,
             "name": name,
-            "version": fields.get("PKG_VERSION", ""),
+            "version": read_version(fields, entry),
             "title": title,
-            "license": fields.get("PKG_LICENSE", ""),
+            "license": clean(fields.get("PKG_LICENSE", "")),
         })
     return items
 
