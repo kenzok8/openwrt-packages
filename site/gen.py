@@ -168,7 +168,7 @@ footer a {{ color: var(--accent); }}
 </main>
 
 <footer>
-  <div>生成于 {date} · 数据来自仓库内各包的 <code>Makefile</code></div>
+  <div>数据来自仓库内各包的 <code>Makefile</code>，由 <a href="https://github.com/kenzok8/AutoSync">AutoSync</a> 定时重建</div>
   <div><a href="https://github.com/kenzok8/openwrt-packages">源码仓库</a> · <a href="https://down.dllkids.xyz/">固件与插件下载</a></div>
 </footer>
 
@@ -223,15 +223,12 @@ def render(repo: str) -> str:
             continue
         cards = "\n".join(card(item, repo) for item in buckets[key])
         sections.append(f'  <section>\n    <h2>{label} · {len(buckets[key])}</h2>\n    <div class="grid">\n{cards}\n    </div>\n  </section>')
-    from datetime import datetime, timezone, timedelta
-    stamp = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
     return TEMPLATE.format(
         count=len(items),
         apps=len(buckets["apps"]),
         core=len(buckets["core"]),
         luci=len(buckets["luci"]),
         sections="\n".join(sections),
-        date=stamp,
     )
 
 if __name__ == "__main__":
