@@ -9,7 +9,7 @@ proxy-groups:
   - {name: OpenAI, icon: "https://api.iconify.design/simple-icons/openai.svg?color=%2374AA9C&width=24&height=24", <<: *pr}
   - {name: Claude, icon: "https://cdn.simpleicons.org/anthropic/D97757/EAA683", <<: *pr}
   - {name: Gemini, icon: "https://cdn.simpleicons.org/googlegemini/8E75B2/BCA7E8", <<: *pr}
-  - {name: ✨ Muse, icon: "https://raw.githubusercontent.com/kenzok78/ruleset/main/icon/muse.svg", <<: *pr}
+  - {name: ✨ Muse, icon: "https://raw.githubusercontent.com/kenzok8/ruleset/main/icon/muse.svg", <<: *pr}
   - {name: 🪄 AI 其他, <<: *pr}
   - {name: Twitter, icon: "https://api.iconify.design/simple-icons/twitter.svg?color=%231DA1F2&width=24&height=24", <<: *pr}
   - {name: GitHub, icon: "https://cdn.simpleicons.org/github/24292F/FFFFFF", <<: *pr}
@@ -19,7 +19,7 @@ proxy-groups:
   - {name: NETFLIX, icon: "https://cdn.simpleicons.org/netflix/E50914/E50914", <<: *pr}
   - {name: PayPal, icon: "https://cdn.simpleicons.org/paypal/003087/8AB4F8", <<: *pr}
   - {name: 🍎 Apple, type: select, proxies: [🌐 直连, 🚀 节点选择]}
-  - {name: 📣 APNs 推送, type: select, icon: "https://raw.githubusercontent.com/kenzok78/ruleset/main/icon/bell.svg", proxies: [🚀 节点选择, ♻️ 自动选择, DIRECT]}
+  - {name: 📣 APNs 推送, type: select, icon: "https://raw.githubusercontent.com/kenzok8/ruleset/main/icon/bell.svg", proxies: [🚀 节点选择, ♻️ 自动选择, DIRECT]}
   - {name: 🎯 全球直连, type: select, proxies: [🌐 直连, 🚀 节点选择]}
   - {name: 🌀 列表之外, <<: *pr}
   - {name: 🇭🇰 香港节点, type: select, include-all: true, filter: "(?i)港|hk|hongkong|hong kong"}
@@ -70,13 +70,13 @@ rule-anchor:
   class: &class {type: http, interval: 86400, behavior: classical, format: text}
 rule-providers:
   private_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/private.mrs" }
-  direct1: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/Direct.list" }
-  proxylite: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/ProxyLite.list" }
-  apple_push: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/ApplePush.list" }
-  ai_domain: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/AI.list" }
-  muse_domain: { <<: *class, url: "https://raw.githubusercontent.com/kenzok78/ruleset/main/rule/Muse.list" }
+  direct1: { <<: *class, url: "https://raw.githubusercontent.com/kenzok8/ruleset/main/rule/Direct.list" }
+  proxylite: { <<: *class, url: "https://raw.githubusercontent.com/kenzok8/ruleset/main/rule/ProxyLite.list" }
+  apple_push: { <<: *class, url: "https://raw.githubusercontent.com/kenzok8/ruleset/main/rule/ApplePush.list" }
+  ai_domain: { <<: *class, url: "https://raw.githubusercontent.com/kenzok8/ruleset/main/rule/AI.list" }
+  muse_domain: { <<: *class, url: "https://raw.githubusercontent.com/kenzok8/ruleset/main/rule/Muse.list" }
   openai_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/openai.mrs" }
-  claude_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/anthropic.mrs" }
+  claude_domain: { <<: *class, url: "https://raw.githubusercontent.com/kenzok8/ruleset/main/rule/Claude.list" }
   gemini_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/google-gemini.mrs" }
   twitter_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/twitter.mrs" }
   youtube_domain: { <<: *domain, url: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/meta/geo/geosite/youtube.mrs" }

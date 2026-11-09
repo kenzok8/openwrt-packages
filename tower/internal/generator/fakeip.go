@@ -4,7 +4,7 @@ package generator
 // fake-ip: time sync, STUN, console networking, LAN discovery and captive-portal
 // checks all break when they receive a 198.18.x.x address.
 //
-// Copied verbatim from kenzok78/ruleset e00a0fd rule/FakeIPFilter-CN.list and
+// Copied verbatim from kenzok8/ruleset e00a0fd rule/FakeIPFilter-CN.list and
 // rule/FakeIPFilter-NotCN.list. Keep this file in sync when those lists change;
 // Tower ships them inline so a generated config never depends on a rule provider
 // download that would have to go through the very proxy it is bootstrapping.
@@ -211,7 +211,7 @@ var fakeIPFilterDomains = []string{
 }
 
 // fakeIPFilter returns the ordered, de-duplicated fake-ip bypass list: the
-// long-standing LAN entries plus the curated kenzok78/ruleset lists.
+// long-standing LAN entries plus the curated kenzok8/ruleset lists.
 func fakeIPFilter() []string {
 	base := append([]string{"*.lan", "+.local"}, fakeIPFilterDomains...)
 	out := make([]string, 0, len(base))

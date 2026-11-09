@@ -45,9 +45,9 @@ func daeTemplateID(target model.ClientTarget) (string, error) {
 func daeTemplateSources(target model.ClientTarget) (string, string, error) {
 	switch target {
 	case model.ClientDAE:
-		return "https://raw.githubusercontent.com/kenzok78/ruleset/main/dae/config.dae", "https://cdn.jsdelivr.net/gh/kenzok78/ruleset@main/dae/config.dae", nil
+		return "https://raw.githubusercontent.com/kenzok8/ruleset/main/dae/config.dae", "https://cdn.jsdelivr.net/gh/kenzok8/ruleset@main/dae/config.dae", nil
 	case model.ClientHonk:
-		return "https://raw.githubusercontent.com/kenzok78/ruleset/main/honk/config.dae", "https://cdn.jsdelivr.net/gh/kenzok78/ruleset@main/honk/config.dae", nil
+		return "https://raw.githubusercontent.com/kenzok8/ruleset/main/honk/config.dae", "https://cdn.jsdelivr.net/gh/kenzok8/ruleset@main/honk/config.dae", nil
 	default:
 		return "", "", fmt.Errorf("配置模板仅支持 dae 和 Honk")
 	}
