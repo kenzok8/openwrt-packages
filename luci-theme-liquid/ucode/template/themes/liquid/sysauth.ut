@@ -1,0 +1,122 @@
+{#
+ Copyright 2026 然后七年 <69092025+zzsj0928@users.noreply.github.com>
+ Licensed to the public under the Apache License 2.0.
+-#}
+
+{% include('header', { blank_page: true }) %}
+
+{# 完全静态登录页：form 直接渲染在 DOM 中，无 hidden/opacity、无 DOM 移动、
+   不依赖 LuCI 的 #modal_overlay/ui.showModal。CSS (#liquid-login) 负责
+   全屏遮罩 + 居中玻璃卡片。密码管理器（Bitwarden 等）任何时机扫描
+   都能看到完整字段，无竞态。 #}
+
+<div id="liquid-login">
+	<div class="liquid-login-stack">
+		<div id="liquid-login-capsules"></div>
+		<div class="modal login">
+		<div class="liquid-logo">
+			<svg viewBox="0 0 64 68" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+				<defs>
+					<!-- 水滴形裁剪路径（CSS clip-path 引用） -->
+					<clipPath id="liquid-drop-clip" clipPathUnits="objectBoundingBox">
+						<path d="M0.5,0 C0.72,0.29 0.89,0.44 0.89,0.62 A0.39,0.39 0 0,1 0.11,0.62 C0.11,0.44 0.28,0.29 0.5,0 Z"/>
+					</clipPath>
+					<!-- accent-glass-soft 风格渐变：左下主题色 → 右上白色半透明 -->
+					<linearGradient id="liquid-lg-top" x1="0" y1="1" x2="1" y2="0">
+						<stop offset="0%" stop-color="var(--primary-color-low)" stop-opacity="0.85"/>
+						<stop offset="35%" stop-color="var(--primary-color-medium)" stop-opacity="0.55"/>
+						<stop offset="100%" stop-color="rgba(255,255,255,0.72)"/>
+					</linearGradient>
+					<!-- 左上角高光条（模拟玻璃折射亮线） -->
+					<linearGradient id="liquid-lg-shine" x1="0" y1="0" x2="0.5" y2="0.8">
+						<stop offset="0%" stop-color="white" stop-opacity="0.7"/>
+						<stop offset="50%" stop-color="white" stop-opacity="0.15"/>
+						<stop offset="100%" stop-color="white" stop-opacity="0"/>
+					</linearGradient>
+				</defs>
+				<path d="M32 3 C46 20 57 30 57 42 a25 25 0 0 1 -50 0 C7 30 18 20 32 3 Z" fill="url(#liquid-lg-top)"/>
+				<path d="M32 3 C46 20 57 30 57 42 a25 25 0 0 1 -50 0 C7 30 18 20 32 3 Z" fill="url(#liquid-lg-shine)"/>
+				<ellipse cx="22" cy="40" rx="10" ry="6.5" fill="white" opacity="0.18"/>
+			</svg>
+		</div>
+		<h4>{{ _('Authorization Required') }}</h4>
+		<form method="post" action="/cgi-bin/luci/" class="cbi-map" onsubmit="if(!this.luci_password.value){this.luci_password.focus();return false;}">
+			<div class="cbi-section">
+				<div class="cbi-section-node">
+					<div class="cbi-value">
+						<label class="cbi-value-title" for="luci_username">{{ _('Username') }}</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-user" name="luci_username" id="luci_username" type="text" autocomplete="username" value="{{ entityencode(duser, true) }}">
+						</div>
+					</div>
+					<div class="cbi-value">
+						<label class="cbi-value-title" for="luci_password">{{ _('Password') }}</label>
+						<div class="cbi-value-field">
+							<input class="cbi-input-password" name="luci_password" id="luci_password" type="password" autocomplete="current-password">
+						</div>
+					</div>
+					{% if (auth_fields): %}
+						{% for (let field in auth_fields): %}
+							<div class="cbi-value">
+								<label class="cbi-value-title" for="{{ field.name }}">{{ _(field.label ?? field.name) }}</label>
+								<div class="cbi-value-field">
+									<input
+										name="{{ field.name }}"
+										id="{{ field.name }}"
+										type="{{ field.type ?? 'text' }}"
+										{% if (field.placeholder): %}placeholder="{{ field.placeholder }}"{% endif %}
+										{% if (field.inputmode): %}inputmode="{{ field.inputmode }}"{% endif %}
+										{% if (field.pattern): %}pattern="{{ field.pattern }}"{% endif %}
+										{% if (field.maxlength): %}maxlength="{{ field.maxlength }}"{% endif %}
+										{% if (field.autocomplete): %}autocomplete="{{ field.autocomplete }}"{% endif %}
+										{% if (field.required): %}required{% endif %}
+									>
+								</div>
+							</div>
+						{% endfor %}
+					{% endif %}
+					{% if (auth_html): %}
+						<div class="cbi-value">
+							{{ auth_html }}
+						</div>
+					{% endif %}
+					{% if (auth_assets): %}
+						{% for (let asset in auth_assets): %}
+							{% if (asset.type == 'script'): %}
+								<script src="{{ asset.src }}"></script>
+							{% endif %}
+						{% endfor %}
+					{% endif %}
+					<hr>
+					<div class="cbi-value">
+						<div class="cbi-value-field">
+							<button type="submit" class="btn cbi-button-positive important">{{ _('Log in') }}</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		{% if (auth_message): %}
+		<div class="alert-message{% if (auth_plugin): %} warning{% endif %}">
+			{{ auth_message }}
+		</div>
+		{% elif (fuser): %}
+		<div class="alert-message error">
+			{{ _('Invalid username and/or password! Please try again.') }}
+		</div>
+		{% endif %}
+		</div>
+	</div>
+</div>
+
+<div id="view">
+	<div class="spinning">{{ _('Loading view…') }}</div>
+	<script>
+		L.require('ui').then(function(ui) {
+			ui.instantiateView('liquid.sysauth');
+		});
+	</script>
+</div>
+
+{% include('footer', { blank_page: true }) %}

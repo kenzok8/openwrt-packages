@@ -1,0 +1,125 @@
+{#
+ Copyright 2026 然后七年 <69092025+zzsj0928@users.noreply.github.com>
+ Licensed to the public under the Apache License 2.0.
+-#}
+
+{%
+	import * as fs from 'fs';
+	import { popen } from 'fs';
+%}
+
+{%
+	const boardinfo = ubus.call('system', 'board') ?? {};
+%}
+
+{%
+	/* 从包数据库读取版本号（支持 apk 和 opkg）。
+	   优化：mtime 校验 + /tmp 缓存，避免每次渲染 fork awk。
+	   包安装/卸载/升级会更新 db mtime → 缓存自动失效重建，版本零滞后。 */
+	let theme_ver = '';
+	let db_file = '/lib/apk/db/installed';
+	let db_mtime = 0;
+	let st = fs.stat(db_file);
+	if (st && st.type == 'file') {
+		db_mtime = st.mtime;
+	} else {
+		db_file = '/usr/lib/opkg/status';
+		st = fs.stat(db_file);
+		if (st && st.type == 'file')
+			db_mtime = st.mtime;
+	}
+	if (db_mtime > 0) {
+		let cm = match(fs.readfile('/tmp/liquid-version.cache') ?? '', /^(\d+) (.*)$/);
+		if (cm !== null && sprintf('%d', db_mtime) == cm[1])
+			theme_ver = cm[2];
+	}
+	if (theme_ver == '') {
+		let _vf = popen("awk '/^P:luci-theme-liquid$/{f=1;next} f&&/^V:/{print substr($0,3);exit}' " + db_file + " 2>/dev/null", "r");
+		if (_vf) { theme_ver = replace(_vf.read("all"), /\s+/, ""); _vf.close(); }
+		if (theme_ver == '') {
+			_vf = popen("awk '/^Package: luci-theme-liquid$/{f=1;next} f&&/^Version:/{print $2;exit}' /usr/lib/opkg/status 2>/dev/null", "r");
+			if (_vf) { theme_ver = replace(_vf.read("all"), /\s+/, ""); _vf.close(); }
+		}
+		if (theme_ver != '' && db_mtime > 0)
+			fs.writefile('/tmp/liquid-version.cache', sprintf('%d %s', db_mtime, theme_ver));
+	}
+	if (theme_ver == '') theme_ver = '?';
+
+	/* 资源签名（缓存击穿）：同 header.ut，main.js 的 mtime+size 拼进 ?v=，
+	   热部署后 URL 变化 → 客户端不再用旧缓存的 JS。 */
+	let js_st = fs.stat('/www/luci-static/liquid/main.js');
+	let js_ver = theme_ver;
+	if (js_st && js_st.type == 'file')
+		js_ver += sprintf('-%x%x', js_st.mtime, js_st.size);
+
+	/* 固件信息：优先读 /etc/os-release 的 FIRMWARE_URL（固件 release 链接）
+	   与 OPENWRT_RELEASE（固件版本文本），读不到时回退动态构造。
+	   锁屏与登录后 foot 横幅共用。 */
+	let fw_url = '';
+	let fw_text = '';
+	let fw_release = '';
+	let osrel = fs.readfile('/etc/os-release') ?? '';
+	let lines = split(osrel, '\n');
+	for (let i = 0; i < length(lines); i++) {
+		let m1 = match(lines[i], /^FIRMWARE_URL=(.*)$/);
+		if (m1 !== null)
+			fw_url = trim(m1[1], "\"\n\r");
+		let m2 = match(lines[i], /^OPENWRT_RELEASE=(.*)$/);
+		if (m2 !== null)
+			fw_text = trim(m2[1], "\"\n\r");
+	}
+	if (fw_url != '')
+		fw_release = fw_url;
+	else {
+		let fw_m = match(version.distversion ?? '', /OpenWrt[ \t]+([0-9]+\.[0-9]+(\.[0-9]+)?)/);
+		fw_release = (fw_m !== null)
+			? sprintf('https://downloads.openwrt.org/releases/%s/', fw_m[1])
+			: 'https://github.com/openwrt/openwrt/releases';
+	}
+	if (fw_text == '')
+		fw_text = sprintf('%s %s', version.distversion ?? '', version.distrevision ?? '');
+
+	/* LuCI release 链接：luciversion 为纯版本号（如 23.05.3）时链接对应
+	   release tag，否则（git 快照版本）回退官方 release 页 */
+	let luci_m = match(version.luciversion ?? '', /^([0-9]+\.[0-9]+(\.[0-9]+)?)$/);
+	let luci_release = (luci_m !== null)
+		? sprintf('https://github.com/openwrt/luci/releases/tag/v%s', luci_m[1])
+		: 'https://github.com/openwrt/luci/releases';
+%}
+
+{% if (!blank_page): %}
+	<div class="luci-foot-spacer"></div>
+	</div><!-- /#maincontent -->
+</div><!-- /#maincontainer -->
+{% endif %}
+
+{% if (blank_page): %}
+<p class="luci">
+	<a href="https://github.com/zzsj0928/luci-theme-liquid" target="_blank" rel="noopener">Liquid Theme {{ theme_ver }}</a>
+	<span class="luci-sep">·</span>
+	<a href="{{ fw_release }}" target="_blank" rel="noopener">{{ fw_text }}</a>
+	<span class="luci-sep">·</span>
+	<span>Kernel: {{ boardinfo.kernel ?? '?' }}</span>
+	<span class="luci-sep">·</span>
+	<a href="{{ luci_release }}" target="_blank" rel="noopener">{{ version.luciname }} {{ version.luciversion }}</a>
+</p>
+{% endif %}
+{% if (!blank_page): %}
+<p class="luci luci-foot">
+	<a class="liquid-version-link luci-theme-ver" data-ver="{{ theme_ver }}" href="https://github.com/zzsj0928/luci-theme-liquid" target="_blank" rel="noopener">Liquid Theme {{ theme_ver }}</a>
+	<span class="luci-sep luci-sep-fw">·</span>
+	<a class="luci-fw" href="{{ fw_release }}" target="_blank" rel="noopener">{{ fw_text }}</a>
+	<span class="luci-sep">·</span>
+	<span>Kernel: {{ boardinfo.kernel ?? '?' }}</span>
+	<span class="luci-sep">·</span>
+	<a href="{{ luci_release }}" target="_blank" rel="noopener">{{ version.luciname }} {{ version.luciversion }}</a>
+</p>
+{% endif %}
+
+{% if (!blank_page): %}
+<script>L.require('menu-liquid')</script>
+{% endif %}
+<script type="text/javascript" src="{% print(media); %}/main.js?v={% print(js_ver); %}"></script>
+
+</body>
+</html>

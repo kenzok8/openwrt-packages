@@ -1,0 +1,65 @@
+{
+	"admin/system/liquid/save_config": {
+		"title": "Liquid Config",
+		"order": 100,
+		"action": {
+			"type": "function",
+			"module": "luci.controller.liquid",
+			"function": "act_save_config"
+		}
+	},
+	"admin/system/liquid/version": {
+		"title": "Liquid Version",
+		"order": 101,
+		"action": {
+			"type": "function",
+			"module": "luci.controller.liquid",
+			"function": "act_version"
+		}
+	},
+	"admin/system/liquid/detect_pkgmgr": {
+		"title": "Liquid OTA Detect PkgMgr",
+		"order": 102,
+		"action": {
+			"type": "function",
+			"module": "luci.controller.liquid",
+			"function": "act_detect_pkgmgr"
+		}
+	},
+	"admin/system/liquid/ota_download": {
+		"title": "Liquid OTA Download",
+		"order": 103,
+		"action": {
+			"type": "function",
+			"module": "luci.controller.liquid",
+			"function": "act_ota_download"
+		}
+	},
+	"admin/system/liquid/ota_download_progress": {
+		"title": "Liquid OTA Download Progress",
+		"order": 104,
+		"action": {
+			"type": "function",
+			"module": "luci.controller.liquid",
+			"function": "act_ota_download_progress"
+		}
+	},
+	"admin/system/liquid/ota_install": {
+		"title": "Liquid OTA Install",
+		"order": 105,
+		"action": {
+			"type": "function",
+			"module": "luci.controller.liquid",
+			"function": "act_ota_install"
+		}
+	},
+	"admin/system/liquid/ota_clear": {
+		"title": "Liquid OTA Clear",
+		"order": 106,
+		"action": {
+			"type": "function",
+			"module": "luci.controller.liquid",
+			"function": "act_ota_clear"
+		}
+	}
+}

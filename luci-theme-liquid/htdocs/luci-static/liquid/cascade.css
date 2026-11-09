@@ -1,0 +1,5322 @@
+/*!
+ * LuCI Liquid Glass Theme — cascade.css
+ *
+ * A macOS-style liquid glass theme for LuCI >= 23 (23.05 / master).
+ * Light / dark / auto modes are driven by <html data-darkmode="true|false">
+ * (set by main.js or the inline script in header.ut).
+ *
+ * Copyright 2026 然后七年 <69092025+zzsj0928@users.noreply.github.com>
+ * Licensed to the public under the Apache License 2.0.
+ */
+
+/* ==========================================================================
+   1. Design tokens
+   ========================================================================== */
+
+:root {
+	/* -- LuCI compatible palette (light) -- */
+	--background-color-high: #f4f6fa;
+	--background-color-medium: #e9edf4;
+	--background-color-low: #dfe5ef;
+
+	--text-color-highest: #10151d;
+	--text-color-high: #1d2633;
+	--text-color-medium: #4c5868;
+	--text-color-low: #8a95a6;
+
+	--border-color-high: rgba(23, 34, 52, 0.20);
+	--border-color-medium: rgba(23, 34, 52, 0.13);
+	--border-color-low: rgba(23, 34, 52, 0.07);
+
+	--primary-color-high: #2f7fe0;
+	--primary-color-medium: #1f6fc8;
+	--primary-color-low: #0f56a8;
+	--on-primary-color: #ffffff;
+
+	--error-color-high-rgb: 224, 58, 58;
+	--error-color-high: rgb(var(--error-color-high-rgb));
+	--error-color-medium: #d23c3c;
+	--error-color-low: #b52a2a;
+	--on-error-color: #ffffff;
+
+	--success-color-high-rgb: 16, 166, 96;
+	--success-color-high: rgb(var(--success-color-high-rgb));
+	--success-color-medium: #0d9a58;
+	--success-color-low: #0a8048;
+	--on-success-color: #ffffff;
+
+	--warn-color-high: #e0a013;
+	--warn-color-medium: #d99414;
+	--warn-color-low: #c98716;
+	--on-warn-color: #3a2c00;
+
+	--disabled-opacity: .65;
+
+	color-scheme: light;
+
+	--font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+	             "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
+	--font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
+	             "Liberation Mono", monospace;
+
+	/* -- liquid glass extras (light) -- */
+	--glass-blur: 26px;
+	--glass-sat: 1.6;
+	--glass-radius: 18px;
+	--glass-radius-lg: 24px;
+	--glass-opacity: 1;
+	--glass-bg: rgba(255, 255, 255, calc(0.42 * var(--glass-opacity)));
+	--glass-bg-strong: rgba(255, 255, 255, calc(0.66 * var(--glass-opacity)));
+	/* 亮色 hover 背景用浅主题色 tint（纯白 hover 会发白、看不清字） */
+	--glass-bg-hover: color-mix(in srgb, color-mix(in srgb, var(--primary-color-high) 30%, #ffffff) calc(100% * var(--glass-opacity)), transparent);
+	/* picker 选项高亮：沿用 glass-bg-hover 逻辑（亮底对比度已足够） */
+	--picker-option-hover: var(--glass-bg-hover);
+	--picker-option-checked: var(--glass-bg-hover);
+	/* 表格隔行：不透明浅色（半透明玻璃隔行会让图标文字显得半透，
+	   误以为接口未连接） */
+	--table-stripe: #f4f6f9;
+	--tab-active-text-color: var(--text-color-highest);
+	--glass-border: rgba(255, 255, 255, calc(0.8 * var(--glass-opacity)));
+	--glass-border-dark: rgba(23, 34, 52, calc(0.09 * var(--glass-opacity)));
+	--glass-inset: rgba(255, 255, 255, calc(0.95 * var(--glass-opacity)));
+	--glass-shadow: 0 22px 54px rgba(31, 45, 70, 0.16), 0 2px 8px rgba(31, 45, 70, 0.06);
+	--glass-shadow-soft: 0 8px 24px rgba(31, 45, 70, 0.10);
+
+	--menu-bg: rgba(255, 255, 255, calc(0.36 * var(--glass-opacity)));
+	--field-bg: rgba(255, 255, 255, calc(0.56 * var(--glass-opacity)));
+	--track-bg: rgba(23, 34, 52, calc(0.10 * var(--glass-opacity)));
+
+	--accent-grad: linear-gradient(135deg, #5aa8f7 0%, #2f7fe0 48%, #1a63c4 100%);
+	--accent-glow: rgba(47, 127, 224, 0.38);
+	--lock-card-bg: rgba(255, 255, 255, calc(0.5 * var(--glass-opacity)));
+	--indicator-bg: var(--accent-glass-soft);
+	--indicator-border: color-mix(in srgb, var(--primary-color-high) 48%, transparent);
+	--indicator-shadow: 0 4px 16px color-mix(in srgb, var(--primary-color-high) 30%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+	--accent-glass: linear-gradient(135deg, rgba(90, 168, 247, 0.32), rgba(255, 255, 255, 0.62));
+	--accent-glass-soft: linear-gradient(135deg, rgba(90, 168, 247, 0.26), rgba(255, 255, 255, 0.72));
+	/* 移动端 chrome 条（菜单栏/面包屑/底部 foot/菜单抽屉）去掉
+	   backdrop-filter 后的等价不透明色：分别是 --glass-bg-strong、
+	   --menu-bg 叠 --background-color-medium 的合成值（与 meta
+	   theme-color 一致，main.js syncThemeColor 同公式动态跟随）。
+	   安卓 Chrome 的地址栏收缩动画与 sticky/fixed 元素的
+	   backdrop-filter 重采样冲突（iOS 不受影响），移动端禁模糊改实底 */
+	--glass-chrome-solid: #f8f9fb;
+	--glass-menu-solid: #f1f3f8;
+	--body-grad:
+		radial-gradient(1100px 750px at 85% -10%, rgba(96, 165, 250, 0.38), transparent 60%),
+		radial-gradient(950px 700px at -10% 30%, rgba(167, 139, 250, 0.30), transparent 55%),
+		radial-gradient(900px 620px at 55% 118%, rgba(45, 212, 191, 0.24), transparent 55%),
+		linear-gradient(160deg, #eef2f9 0%, #e7edf6 50%, #e2e9f5 100%);
+}
+
+:root[data-darkmode="true"] {
+	/* -- LuCI compatible palette (dark) -- */
+	--background-color-high: #10141c;
+	--background-color-medium: #161c27;
+	--background-color-low: #1d2532;
+
+	--text-color-highest: #f1f4f9;
+	--text-color-high: #d9dfe9;
+	--text-color-medium: #96a2b6;
+	--text-color-low: #66728a;
+
+	--border-color-high: rgba(255, 255, 255, 0.20);
+	--border-color-medium: rgba(255, 255, 255, 0.13);
+	--border-color-low: rgba(255, 255, 255, 0.07);
+
+	--primary-color-high: #5da3f0;
+	--primary-color-medium: #4790e6;
+	--primary-color-low: #2f74cc;
+	--on-primary-color: #0b1220;
+
+	--error-color-high-rgb: 226, 98, 98;
+	--error-color-high: rgb(var(--error-color-high-rgb));
+	--error-color-medium: #cf5f5f;
+	--error-color-low: #b34a4a;
+	--on-error-color: #0b1220;
+
+	--success-color-high-rgb: 46, 185, 118;
+	--success-color-high: rgb(var(--success-color-high-rgb));
+	--success-color-medium: #38a86f;
+	--success-color-low: #2f8f5d;
+	--on-success-color: #0b1220;
+
+	--warn-color-high: #d9a33a;
+	--warn-color-medium: #c99430;
+	--warn-color-low: #b8842a;
+	--on-warn-color: #221a05;
+
+	--disabled-opacity: .45;
+
+	color-scheme: dark;
+
+	--glass-bg: rgba(24, 32, 48, calc(0.4 * var(--glass-opacity)));
+	--glass-bg-strong: rgba(22, 29, 44, calc(0.74 * var(--glass-opacity)));
+	--glass-bg-hover: rgba(42, 54, 78, calc(0.55 * var(--glass-opacity)));
+	/* picker 选项高亮：暗底需要更亮的选中/悬停色，否则看不清 */
+	--picker-option-hover: rgba(70, 100, 160, calc(0.55 * var(--glass-opacity)));
+	--picker-option-checked: rgba(60, 90, 150, calc(0.45 * var(--glass-opacity)));
+	--table-stripe: #1b2330;
+	--tab-active-text-color: var(--text-color-highest);
+	--glass-border: rgba(255, 255, 255, calc(0.16 * var(--glass-opacity)));
+	--glass-border-dark: rgba(0, 0, 0, calc(0.42 * var(--glass-opacity)));
+	--glass-inset: rgba(255, 255, 255, calc(0.10 * var(--glass-opacity)));
+	--glass-shadow: 0 26px 64px rgba(0, 0, 0, 0.6), 0 2px 10px rgba(0, 0, 0, 0.32);
+	--glass-shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+	--menu-bg: rgba(12, 17, 27, calc(0.52 * var(--glass-opacity)));
+	--field-bg: rgba(255, 255, 255, calc(0.07 * var(--glass-opacity)));
+	--track-bg: rgba(255, 255, 255, calc(0.10 * var(--glass-opacity)));
+
+	/* 移动端 chrome 条实色等价（暗）：见亮色同名变量注释 */
+	--glass-chrome-solid: #151c2b;
+	--glass-menu-solid: #111621;
+
+	--accent-grad: linear-gradient(135deg, #7cbcff 0%, #5da3f0 48%, #2f74cc 100%);
+	--accent-glow: rgba(93, 163, 240, 0.4);
+	--lock-card-bg: rgba(13, 18, 28, calc(0.55 * var(--glass-opacity)));
+	--indicator-bg: var(--accent-glass-soft);
+	--indicator-border: rgba(255, 255, 255, 0.18);
+	--indicator-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	--accent-glass: linear-gradient(135deg, rgba(93, 163, 240, 0.30), rgba(46, 58, 84, 0.5));
+	--accent-glass-soft: linear-gradient(135deg, rgba(93, 163, 240, 0.24), rgba(46, 58, 84, 0.45));
+
+
+	--body-grad:
+		radial-gradient(1100px 750px at 85% -10%, rgba(47, 102, 196, 0.42), transparent 60%),
+		radial-gradient(950px 700px at -10% 30%, rgba(109, 70, 220, 0.34), transparent 55%),
+		radial-gradient(900px 620px at 55% 118%, rgba(13, 148, 136, 0.26), transparent 55%),
+		linear-gradient(160deg, #0d1220 0%, #0a0f18 50%, #060a12 100%);
+}
+/* ==========================================================================
+   1b. Accent color themes (data-accent on <html>)
+   ========================================================================== */
+
+:root[data-accent="magenta"] {
+	--primary-color-high: #d63384;
+	--primary-color-medium: #bd2c72;
+	--primary-color-low: #9c1f5e;
+	--accent-grad: linear-gradient(135deg, #f270b5 0%, #d63384 48%, #a61e6a 100%);
+	--accent-glow: rgba(214, 51, 132, 0.38);
+	--accent-glass: linear-gradient(135deg, rgba(214, 51, 132, 0.30), rgba(255, 255, 255, 0.62));
+	--accent-glass-soft: linear-gradient(135deg, rgba(214, 51, 132, 0.24), rgba(255, 255, 255, 0.72));
+}
+
+:root[data-darkmode="true"][data-accent="magenta"] {
+	--primary-color-high: #e86fb0;
+	--primary-color-medium: #dc5aa0;
+	--primary-color-low: #c23e8f;
+	--accent-grad: linear-gradient(135deg, #f59ad0 0%, #e86fb0 48%, #c23e8f 100%);
+	--accent-glow: rgba(232, 111, 176, 0.4);
+	--accent-glass: linear-gradient(135deg, rgba(232, 111, 176, 0.28), rgba(46, 58, 84, 0.45));
+	--accent-glass-soft: linear-gradient(135deg, rgba(232, 111, 176, 0.22), rgba(46, 58, 84, 0.4));
+}
+
+:root[data-accent="amber"] {
+	--primary-color-high: #e8940f;
+	--primary-color-medium: #d1810d;
+	--primary-color-low: #b06e0a;
+	--accent-grad: linear-gradient(135deg, #ffc04a 0%, #e8940f 48%, #c47100 100%);
+	--accent-glow: rgba(232, 148, 15, 0.38);
+	--accent-glass: linear-gradient(135deg, rgba(232, 148, 15, 0.30), rgba(255, 255, 255, 0.62));
+	--accent-glass-soft: linear-gradient(135deg, rgba(232, 148, 15, 0.24), rgba(255, 255, 255, 0.72));
+}
+
+:root[data-darkmode="true"][data-accent="amber"] {
+	--primary-color-high: #f5b74a;
+	--primary-color-medium: #eda63a;
+	--primary-color-low: #d99414;
+	--accent-grad: linear-gradient(135deg, #ffd98a 0%, #f5b74a 48%, #d99414 100%);
+	--accent-glow: rgba(245, 183, 74, 0.4);
+	--accent-glass: linear-gradient(135deg, rgba(245, 183, 74, 0.28), rgba(46, 58, 84, 0.45));
+	--accent-glass-soft: linear-gradient(135deg, rgba(245, 183, 74, 0.22), rgba(46, 58, 84, 0.4));
+}
+
+:root[data-accent="purple"] {
+	--primary-color-high: #8e44ad;
+	--primary-color-medium: #7c3a99;
+	--primary-color-low: #672f82;
+	--accent-grad: linear-gradient(135deg, #c084fc 0%, #8e44ad 48%, #6a2f8e 100%);
+	--accent-glow: rgba(142, 68, 173, 0.38);
+	--accent-glass: linear-gradient(135deg, rgba(142, 68, 173, 0.30), rgba(255, 255, 255, 0.62));
+	--accent-glass-soft: linear-gradient(135deg, rgba(142, 68, 173, 0.24), rgba(255, 255, 255, 0.72));
+}
+
+:root[data-darkmode="true"][data-accent="purple"] {
+	--primary-color-high: #b483d8;
+	--primary-color-medium: #a470c8;
+	--primary-color-low: #8e44ad;
+	--accent-grad: linear-gradient(135deg, #d8b4fe 0%, #b483d8 48%, #8e44ad 100%);
+	--accent-glow: rgba(180, 131, 216, 0.4);
+	--accent-glass: linear-gradient(135deg, rgba(180, 131, 216, 0.28), rgba(46, 58, 84, 0.45));
+	--accent-glass-soft: linear-gradient(135deg, rgba(180, 131, 216, 0.22), rgba(46, 58, 84, 0.4));
+}
+
+:root[data-accent="lime"] {
+	--primary-color-high: #7fb52a;
+	--primary-color-medium: #709e24;
+	--primary-color-low: #5f8a1e;
+	--accent-grad: linear-gradient(135deg, #c0e35c 0%, #7fb52a 48%, #5f8a1e 100%);
+	--accent-glow: rgba(127, 181, 42, 0.38);
+	--accent-glass: linear-gradient(135deg, rgba(127, 181, 42, 0.30), rgba(255, 255, 255, 0.62));
+	--accent-glass-soft: linear-gradient(135deg, rgba(127, 181, 42, 0.24), rgba(255, 255, 255, 0.72));
+}
+
+:root[data-darkmode="true"][data-accent="lime"] {
+	--primary-color-high: #a3d04a;
+	--primary-color-medium: #93c23c;
+	--primary-color-low: #7fb52a;
+	--accent-grad: linear-gradient(135deg, #d8f08a 0%, #a3d04a 48%, #7fb52a 100%);
+	--accent-glow: rgba(163, 208, 74, 0.4);
+	--accent-glass: linear-gradient(135deg, rgba(163, 208, 74, 0.28), rgba(46, 58, 84, 0.45));
+	--accent-glass-soft: linear-gradient(135deg, rgba(163, 208, 74, 0.22), rgba(46, 58, 84, 0.4));
+}
+
+/* 自定义主题色（data-accent="custom"）：主色来自 --accent-custom（JS 从
+   uci accent_custom / 输入框设置），派生色变量由 main.js 的
+   applyCustomAccent() 生成，此处给出默认蓝 fallback（JS 未跑时防闪烁） */
+:root[data-accent="custom"] {
+	--primary-color-high: var(--accent-custom, #2f7fe0);
+	--primary-color-medium: var(--accent-custom-medium, #286cbe);
+	--primary-color-low: var(--accent-custom-low, #205698);
+	--accent-grad: var(--accent-custom-grad, linear-gradient(135deg, #639fe8 0%, #2f7fe0 48%, #1c4c86 100%));
+	--accent-glow: var(--accent-custom-glow, rgba(47, 127, 224, 0.38));
+	--accent-glass: var(--accent-custom-glass, linear-gradient(135deg, rgba(47, 127, 224, 0.30), rgba(255, 255, 255, 0.62)));
+	--accent-glass-soft: var(--accent-custom-glass-soft, linear-gradient(135deg, rgba(47, 127, 224, 0.24), rgba(255, 255, 255, 0.72)));
+}
+
+:root[data-darkmode="true"][data-accent="custom"] {
+	--primary-color-high: var(--accent-custom-dark-high, #6da5e9);
+	--primary-color-medium: var(--accent-custom-dark-medium, #488ee4);
+	--primary-color-low: var(--accent-custom-dark-low, #2f7fe0);
+	--accent-grad: var(--accent-custom-dark-grad, linear-gradient(135deg, #9cc8f7 0%, #6da5e9 48%, #488ee4 100%));
+	--accent-glow: var(--accent-custom-dark-glow, rgba(109, 165, 233, 0.42));
+	--accent-glass: var(--accent-custom-dark-glass, linear-gradient(135deg, rgba(109, 165, 233, 0.28), rgba(46, 58, 84, 0.45)));
+	--accent-glass-soft: var(--accent-custom-dark-glass-soft, linear-gradient(135deg, rgba(109, 165, 233, 0.22), rgba(46, 58, 84, 0.40)));
+}
+
+
+/* ==========================================================================
+   2. Reset & base
+   ========================================================================== */
+
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+
+html {
+	font-size: 100%;
+	min-height: 100%;
+}
+
+body {
+	font-family: var(--font-sans);
+	font-size: 14px;
+	line-height: 1.55;
+	color: var(--text-color-high);
+	background: var(--background-color-medium) var(--body-grad) fixed;
+	background-attachment: fixed;
+	height: 100%;
+	min-height: 100vh;
+	margin: 0;
+	overflow: hidden;
+	-webkit-font-smoothing: antialiased;
+}
+
+a {
+	color: var(--primary-color-high);
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+ul, ol {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+h1, h2, h3, h4 {
+	font-weight: 700;
+	line-height: 1.3;
+	margin: 0 0 .5em 0;
+}
+
+#view h2 {
+	font-size: 17px;
+	color: var(--text-color-highest);
+	margin: 6px 0 10px;
+}
+
+hr {
+	border: 0;
+	border-top: 1px solid var(--border-color-medium);
+	margin: .75em 0;
+}
+
+code, pre, kbd {
+	font-family: var(--font-mono);
+}
+
+img {
+	max-width: 100%;
+}
+
+/* scrollbars */
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--border-color-medium);
+	border: 2px solid transparent;
+	border-radius: 999px;
+	background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--border-color-high);
+	border: 2px solid transparent;
+	background-clip: content-box;
+}
+
+/* ==========================================================================
+   3. Top bar
+   ========================================================================== */
+
+#menubar {
+	position: sticky;
+	top: 0;
+	z-index: 900;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 56px;
+	padding: 0 18px;
+	background: var(--glass-bg-strong);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border-bottom: 1px solid var(--glass-border-dark);
+	box-shadow: 0 1px 0 var(--glass-inset), 0 6px 24px rgba(0, 0, 0, 0.06);
+}
+
+#menubar .navigation {
+	display: none;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	margin: 0;
+	flex-shrink: 0;
+	border-radius: 12px;
+	cursor: pointer;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	transition: background .15s ease, transform .15s ease;
+}
+
+#menubar .navigation:hover {
+	background: var(--glass-bg-hover);
+}
+
+#menubar .navigation a {
+	display: block;
+	position: relative;
+	width: 18px;
+	height: 14px;
+	text-indent: -9999px;
+	overflow: hidden;
+}
+
+#menubar .navigation a::before,
+#menubar .navigation a::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	width: 18px;
+	height: 2px;
+	border-radius: 2px;
+	background: var(--text-color-high);
+	transition: top .15s ease, transform .15s ease;
+}
+
+#menubar .navigation a::before {
+	top: 0;
+	box-shadow: 0 6px 0 var(--text-color-high);
+}
+
+#menubar .navigation a::after {
+	top: 12px;
+}
+
+#menubar .navigation.active a::before {
+	top: 6px;
+	transform: rotate(45deg);
+	box-shadow: none;
+}
+
+#menubar .navigation.active a::after {
+	top: 6px;
+	transform: rotate(-45deg);
+}
+
+#menubar .hostname {
+	font-size: 16px;
+	font-weight: 700;
+	letter-spacing: .2px;
+	white-space: nowrap;
+}
+
+#menubar .hostname a {
+	color: var(--text-color-highest);
+	text-decoration: none;
+}
+
+/* 顶栏 logo（内联 SVG，跟随主题色 + 玻璃水滴感） */
+#menubar .hostname a .liquid-logo {
+	display: inline-block;
+	width: 22px;
+	height: 22px;
+	margin: 0 8px -5px 0;
+	vertical-align: baseline;
+	/* 与登录页 logo 同款光晕效果：三层 drop-shadow 沿水滴轮廓 + 高光线 */
+	filter: drop-shadow(0 0 3px color-mix(in srgb, var(--primary-color-high) 35%, transparent))
+	        drop-shadow(0 1px 6px color-mix(in srgb, var(--primary-color-high) 25%, transparent))
+	        drop-shadow(0 0 12px color-mix(in srgb, var(--primary-color-high) 12%, transparent))
+	        drop-shadow(0 0.5px 0 rgba(255, 255, 255, 0.7));
+	transition: filter .25s ease;
+}
+#menubar .hostname a .liquid-logo:hover {
+	filter: drop-shadow(0 0 5px color-mix(in srgb, var(--primary-color-high) 50%, transparent))
+	        drop-shadow(0 2px 10px color-mix(in srgb, var(--primary-color-high) 35%, transparent))
+	        drop-shadow(0 0 18px color-mix(in srgb, var(--primary-color-high) 18%, transparent))
+	        drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
+}
+
+#menubar .distversion {
+	color: var(--text-color-low);
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+#menubar #indicators {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+header [data-indicator],
+#menubar [data-indicator] {
+	padding: 5px 10px;
+	font-size: 10.5px;
+	font-weight: 700;
+	letter-spacing: .4px;
+	text-transform: uppercase;
+	color: var(--text-color-medium);
+	/* 淡化半透明玻璃质感（与二级菜单选中项同源） */
+	background: color-mix(in srgb, var(--accent-glass-soft) 55%, transparent);
+	border: 1px solid color-mix(in srgb, var(--primary-color-high) 22%, transparent);
+	border-radius: 999px;
+	white-space: nowrap;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+	transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+header [data-indicator][data-clickable],
+#menubar [data-indicator][data-clickable] {
+	cursor: pointer;
+}
+
+header [data-indicator][data-clickable]:hover,
+#menubar [data-indicator][data-clickable]:hover {
+	background: var(--accent-glass-soft);
+	border-color: color-mix(in srgb, var(--primary-color-high) 38%, transparent);
+	color: var(--text-color-highest);
+}
+
+header [data-indicator][data-style="active"],
+#menubar [data-indicator][data-style="active"] {
+	color: var(--text-color-highest);
+	background: var(--accent-glass-soft);
+	border-color: color-mix(in srgb, var(--primary-color-high) 38%, transparent);
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--primary-color-high) 20%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+header [data-indicator][data-style="inactive"],
+#menubar [data-indicator][data-style="inactive"] {
+	opacity: .7;
+}
+
+/* ==========================================================================
+   4. Light / dark / auto mode switch
+   ========================================================================== */
+
+.liquid-mode-switch {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	margin-left: 4px;
+	padding: 3px;
+	border-radius: 999px;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	box-shadow: 0 4px 14px rgba(31, 45, 70, 0.16),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+	vertical-align: middle;
+}
+
+.liquid-mode-switch .liquid-mode-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: var(--text-color-medium);
+	cursor: pointer;
+	transition: background .15s ease, color .15s ease, box-shadow .15s ease;
+}
+
+.liquid-mode-switch .liquid-mode-btn:hover {
+	color: var(--text-color-highest);
+}
+
+.liquid-mode-switch .liquid-mode-btn.active {
+	color: var(--on-primary-color);
+	background: var(--accent-grad);
+	box-shadow: 0 3px 10px var(--accent-glow);
+}
+
+.liquid-mode-switch .liquid-mode-btn img {
+	width: 16px;
+	height: 16px;
+	pointer-events: none;
+}
+
+/* 暗黑模式：模式开关图标（外链 svg 的 currentColor 在 <img> 里不继承
+   CSS color，解析为默认黑色）反色为浅色，避免深色背景下黑图标 */
+:root[data-darkmode="true"] .liquid-mode-btn img {
+	filter: invert(1);
+}
+
+.liquid-mode-switch-fixed {
+	position: fixed;
+	top: 16px;
+	right: 16px;
+	z-index: 2001;
+	margin: 0;
+}
+
+/* 顶栏模式开关（刷新指示区左侧） */
+#menubar > .liquid-mode-switch {
+	margin: 0 12px 0 0;
+	flex-shrink: 0;
+}
+
+/* 菜单栏顶部颜色胶囊（水平居中）。胶囊宽度 min(216px, 100%)（侧栏
+   胶囊宽度 = 内容宽度(max-content)：8 个圆点（Bing + 5 色 + 自定义 + 占位）
+   永远排在同一行，宽度随内容自适应，任何侧栏宽度都不会换行、不会
+   超出胶囊；margin auto 居中保证左右两侧间距一致；圆点 flex:none
+   固定 18px 正圆不压缩、不缩小。 */
+#mainmenu > .liquid-color-switch {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-wrap: nowrap;
+	width: calc(100% + 8px);
+	max-width: calc(100% + 8px);
+	margin: 0 -4px 28px;
+	flex-shrink: 0;
+	box-sizing: border-box;
+}
+
+/* accent color switch */
+.liquid-color-switch {
+	position: relative;
+	height: 35px;
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	gap: 0;
+	margin-left: 6px;
+	padding: 0 18px;
+	border-radius: 999px;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	box-shadow: 0 4px 14px rgba(31, 45, 70, 0.16),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+	vertical-align: middle;
+}
+
+.liquid-color-btn {
+	flex: none;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: 2px solid rgba(255, 255, 255, 0.85);
+	border-radius: 50%;
+	cursor: pointer;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+	transition: transform .15s ease, box-shadow .15s ease;
+}
+
+/* Bing 壁纸按钮（五色之前）：点亮 = 启用 Bing 每日壁纸。
+   方形外框（跟随 b logo 的圆角方形图标 rx=5），选中时白色描边也是方形 */
+.liquid-bing-btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border-radius: 5px;
+	border: 2px solid transparent;
+	background: transparent;
+	cursor: pointer;
+	transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+	opacity: .55;
+}
+
+.liquid-bing-btn:hover {
+	transform: scale(1.15);
+	opacity: 1;
+}
+
+/* 启用时只保留一层白色方形描边（border）。
+   不能有 box-shadow 白环：按钮同时带 .liquid-color-btn 类，
+   其 .active 的 2px 白环会叠成第二层圈，这里用 !important 压掉 */
+.liquid-bing-btn.active {
+	transform: scale(1.15);
+	border-color: rgba(255, 255, 255, 0.85);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+	opacity: 1;
+}
+
+.liquid-color-btn:hover {
+	transform: scale(1.15);
+}
+
+.liquid-color-btn.active {
+	transform: scale(1.15);
+	box-shadow: 0 0 0 2px var(--text-color-high), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.liquid-color-switch-fixed {
+	position: fixed;
+	top: 60px;
+	right: 16px;
+	z-index: 2001;
+	margin: 0;
+}
+
+/* 自定义主题色按钮（5 色之后）：彩虹圆点；激活时显示当前自定义色 */
+.liquid-custom-btn {
+	background: conic-gradient(#f66, #fc3, #6c6, #3cf, #96f, #f66);
+	opacity: .85;
+}
+
+/* 选中时：内部显示自定义色（第一层，clip 到 padding-box），
+   描边（2px 边框区）为彩虹渐变（第二层，clip 到 border-box），
+   一眼识别"这是自定义颜色"。不能用 background 简写（color 不能放
+   在非最后层的 box 关键字后，整条会被浏览器丢弃） */
+.liquid-custom-btn.active {
+	background-image:
+		linear-gradient(var(--accent-custom, #2f7fe0), var(--accent-custom, #2f7fe0)),
+		conic-gradient(#f66, #fc3, #6c6, #3cf, #96f, #f66);
+	background-clip: padding-box, border-box;
+	background-origin: padding-box, border-box;
+	border: 3px solid transparent;
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+	opacity: 1;
+}
+
+/* 菜单搜索按钮：与颜色圆点完全同步的交互设计（白描边、hover
+   放大、启用黑圈），仅形状为圆角方框 + 浅灰底 + 白色放大镜。
+   所有状态显式声明，覆盖 .liquid-color-btn 的继承干扰 */
+.liquid-search-btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	background: rgba(148, 163, 184, 0.55); /* 浅灰底（明亮模式） */
+	border-radius: 5px; /* 方框 */
+	border: 2px solid rgba(255, 255, 255, 0.85); /* 与其他圆点一致白描边 */
+	color: #ffffff !important; /* 白色放大镜，任何状态不变黑 */
+	cursor: pointer;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+	opacity: .95;
+	transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.liquid-search-btn svg {
+	width: 12px;
+	height: 12px;
+	display: block;
+}
+.liquid-search-btn:hover {
+	transform: scale(1.15); /* 描边一起放大，同其他圆点 */
+	background: rgba(148, 163, 184, 0.65);
+	opacity: 1;
+}
+.liquid-search-btn.active {
+	transform: scale(1.15);
+	background: rgba(148, 163, 184, 0.65);
+	box-shadow: 0 0 0 2px var(--text-color-high), /* 黑圈同其他圆点 */
+	            0 2px 6px rgba(0, 0, 0, 0.3);
+	opacity: 1;
+}
+
+/* 暗黑模式：白色方框底（用户指定），深色放大镜 */
+:root[data-darkmode="true"] .liquid-search-btn {
+	background: rgba(255, 255, 255, 0.92);
+	color: #334155 !important;
+	border-color: rgba(255, 255, 255, 0.85);
+}
+:root[data-darkmode="true"] .liquid-search-btn:hover {
+	background: #ffffff;
+}
+:root[data-darkmode="true"] .liquid-search-btn.active {
+	background: #ffffff;
+	box-shadow: 0 0 0 2px var(--text-color-high),
+	            0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ── 菜单搜索框（抽屉式下推，圆角矩形）──────────────
+   与颜色胶囊同源玻璃设计，但圆角矩形（10px 非胶囊），
+   插在颜色胶囊下方，菜单被往下推（非悬浮）。
+   放大镜/清除图标绝对定位在输入框内部（不隔离） */
+.liquid-menu-search {
+	display: flex;
+	position: relative;
+	align-items: center;
+	margin: 0 auto 12px;
+	height: 0; /* 默认收起：0 高不占位 */
+	padding: 0;
+	opacity: 0;
+	overflow: hidden; /* 圆角裁剪子元素（input 撑满后不露直角） */
+	border-radius: 10px;
+	border-width: 0; /* 收起时无边框 */
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	box-shadow: 0 4px 14px rgba(31, 45, 70, 0.16),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+	color: var(--text-color-medium);
+	-webkit-backdrop-filter: blur(10px) saturate(var(--glass-sat));
+	backdrop-filter: blur(10px) saturate(var(--glass-sat));
+	box-sizing: border-box;
+	transition: height .16s ease, opacity .16s ease, padding .16s ease, margin .16s ease;
+}
+.liquid-menu-search.open {
+	height: 34px;
+	padding: 0;
+	opacity: 1;
+	border-width: 1px;
+	animation: none;
+}
+
+/* 收回：过渡动画由 height/opacity transition 处理（.open 移除即触发） */
+
+@keyframes liquid-search-drop {
+	from { opacity: 0; transform: translateY(-8px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.liquid-menu-search-icon {
+	position: absolute;
+	left: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: inline-flex;
+	color: var(--text-color-medium);
+	pointer-events: none;
+}
+
+.liquid-menu-search-input {
+	flex: 1;
+	width: 100%;
+	height: 100%; /* 撑满容器高度，避免露出容器/页面背景色差 */
+	min-width: 0;
+	/* 用 !important 压掉 LuCI 全局 input[type="text"] 的 padding/背景/边框：
+	   28px = 图标(8px 左偏移+12px 宽) + 8px 间距，文字贴图标右侧 */
+	padding: 4px 30px 4px 28px !important;
+	border: none !important;
+	outline: none;
+	background: transparent !important; /* 压掉 --field-bg 底色，融入容器 */
+	/* 圆角跟随容器（容器 10px + 1px 边框 → input 内缩用 9px），
+	   避免撑满后直角盖掉容器圆角 */
+	border-radius: 9px !important;
+	display: block;
+	color: var(--text-color-high);
+	font-size: 12px;
+	box-sizing: border-box;
+}
+/* 聚焦时：恢复主题色高亮边框（用户要求），但保持透明底不破坏玻璃。
+   用容器 :focus-within 让整个搜索框显示主题色描边 + 淡光晕 */
+.liquid-menu-search:focus-within {
+	border-color: var(--primary-color-high) !important;
+	box-shadow: 0 0 0 3px var(--accent-glow), 0 4px 14px rgba(31, 45, 70, 0.16) !important;
+}
+.liquid-menu-search-input:focus {
+	background: transparent !important;
+	border-color: transparent !important;
+	box-shadow: none !important;
+}
+/* 浏览器 autofill 会强加黄/白底，压掉保持玻璃透明 */
+.liquid-menu-search-input:-webkit-autofill {
+	-webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+	-webkit-text-fill-color: var(--text-color-high) !important;
+	transition: background-color 9999s ease-out !important;
+}
+.liquid-menu-search-input::placeholder {
+	color: var(--text-color-medium);
+	opacity: .7;
+}
+
+.liquid-menu-search-clear {
+	position: absolute;
+	right: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 18px;
+	height: 18px;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: rgba(148, 163, 184, 0.35);
+	color: var(--text-color-medium);
+	font-size: 13px;
+	line-height: 1;
+	cursor: pointer;
+	display: none; /* 默认隐藏，有输入时 JS 显示 */
+	align-items: center;
+	justify-content: center;
+	opacity: .75;
+}
+.liquid-menu-search-clear:hover {
+	opacity: 1;
+}
+
+/* 搜索过滤：不匹配的菜单项隐藏 */
+#mainmenu li.liquid-menu-hidden {
+	display: none !important;
+}
+
+/* 自定义颜色输入面板（点击彩虹圆点下拉） */
+.liquid-custom-pop {
+	display: none;
+	position: absolute;
+	top: calc(100% + 8px);
+	right: 0;
+	z-index: 9999;
+	padding: 6px;
+	border-radius: 8px;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset);
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	backdrop-filter: blur(var(--glass-blur));
+	animation: liquid-pop-in .3s ease;
+	transform-origin: top right;
+}
+
+@keyframes liquid-pop-in {
+	from { opacity: 0; transform: translateY(-8px) scale(.95); }
+	to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.liquid-custom-input {
+	width: 112px;
+	padding: 4px 8px;
+	font-size: 12px;
+	font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+	color: var(--text-color);
+	background: var(--input-bg, rgba(255, 255, 255, 0.7));
+	border: 1px solid var(--glass-border);
+	border-radius: 6px;
+	outline: none;
+}
+
+.liquid-custom-input:focus {
+	border-color: var(--primary-color-high);
+	box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+/* 锁屏（无菜单栏，开关固定在右上角）：输入面板向上弹出 */
+.liquid-color-switch-fixed .liquid-custom-pop {
+	top: auto;
+	bottom: calc(100% + 8px);
+	transform-origin: bottom right;
+}
+
+/* ── 透明度滑杆（玻璃感，参考 iOS 26/macOS 26 slider）───────── */
+/* 绝对定位在胶囊下方，不参与胶囊 flex 布局，不撑爆胶囊 */
+.liquid-glass-slider-wrap {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: calc(100% + 4px);
+	display: flex;
+	align-items: center;
+	height: 16px;
+	pointer-events: none;
+	z-index: 2;
+	/* 内容流不参与胶囊 flex 布局，overflow: visible 确保 tick/bubble 可见 */
+}
+/* 胶囊需要 overflow:visible 才能显示溢出的滑杆 */
+.liquid-color-switch {
+	overflow: visible;
+}
+.liquid-glass-slider {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	height: 4px;
+	border-radius: 4px;
+	outline: none;
+	cursor: pointer;
+	pointer-events: auto;
+	/* 轨道：亮色用深色半透明，暗色用浅色半透明 */
+	background: linear-gradient(to right, rgba(0,0,0,0.12), rgba(0,0,0,0.22));
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	border: none;
+	box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.08);
+}
+:root[data-darkmode="true"] .liquid-glass-slider {
+	background: linear-gradient(to right, rgba(255,255,255,0.06), rgba(255,255,255,0.16));
+	box-shadow: 0 0 0 1px rgba(255,255,255,0.12), 0 1px 4px rgba(0,0,0,0.08);
+}
+.liquid-glass-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.68));
+	border: 1px solid rgba(255, 255, 255, 0.95);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(255, 255, 255, 0.15);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	cursor: pointer;
+}
+.liquid-glass-slider::-moz-range-thumb {
+	width: 16px;
+	height: 16px;
+	border-radius: 50%;
+	background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.68));
+	border: 1px solid rgba(255, 255, 255, 0.95);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(255, 255, 255, 0.15);
+	cursor: pointer;
+}
+.liquid-glass-slider::-webkit-slider-thumb:hover {
+	background: linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,0.88));
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25), 0 0 0 3px rgba(255, 255, 255, 0.2);
+}
+.liquid-glass-slider::-webkit-slider-thumb:active {
+	transform: scale(0.9);
+}
+/* 暗黑模式滑杆轨道稍微更亮 */
+:root[data-darkmode="true"] .liquid-glass-slider {
+	background: linear-gradient(to right, rgba(255,255,255,0.06), rgba(255,255,255,0.16));
+	border-color: rgba(255, 255, 255, 0.12);
+}
+/* 默认值竖线标记：绝对定位在轨道上方，垂直居中，百分比对齐 thumb */
+.liquid-glass-slider-tick {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	pointer-events: auto;
+	cursor: pointer;
+	transition: opacity .15s ease;
+}
+/* tick 内部的竖线指示器（垂直居中由父 flex 保证） */
+.liquid-glass-slider-tick::before {
+	content: '';
+	display: block;
+	width: 4px;
+	height: 14px;
+	flex-shrink: 0;
+	background: rgba(90, 95, 110, 0.85);
+	border: 1px solid rgba(255, 255, 255, 0.6);
+	box-shadow: 0 0 2px rgba(0,0,0,0.2);
+	border-radius: 2px;
+}
+.liquid-glass-slider-tick:hover::before {
+	background: rgba(60, 65, 80, 1);
+	border-color: rgba(255, 255, 255, 0.9);
+}
+/* 侧栏菜单里的胶囊下方不需要下移（胶囊本身就是菜单项，位置已定） */
+#mainmenu > .liquid-color-switch > .liquid-glass-slider-wrap {
+	top: calc(100% + 2px);
+}
+
+/* 浮动数值气泡（拖动时跟随 thumb 显示当前值） */
+.liquid-glass-slider-bubble {
+	position: absolute;
+	bottom: calc(100% + 6px);
+	transform: translateX(-50%);
+	padding: 3px 7px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	color: var(--text-color-highest);
+	background: var(--glass-bg-strong);
+	border: 1px solid var(--glass-border);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+	pointer-events: none;
+	white-space: nowrap;
+}
+.liquid-glass-slider-bubble::after {
+	content: '';
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-left: -4px;
+	border: 4px solid transparent;
+	border-top-color: var(--glass-border);
+}
+
+/* 登录后暂存提示 toast */
+.liquid-pending-toast {
+	position: fixed;
+	bottom: 24px;
+	left: 50%;
+	transform: translateX(-50%) translateY(20px);
+	opacity: 0;
+	transition: opacity .3s ease, transform .3s ease;
+	z-index: 9999;
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 10px 16px;
+	border-radius: 12px;
+	background: var(--glass-bg-strong);
+	border: 1px solid var(--glass-border);
+	backdrop-filter: blur(16px);
+	-webkit-backdrop-filter: blur(16px);
+	box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+	pointer-events: auto;
+	max-width: 75vw;
+}
+.liquid-pending-toast.show {
+	opacity: 1;
+	transform: translateX(-50%) translateY(0);
+}
+.liquid-pending-toast-text {
+	font-size: 13px;
+	color: var(--text-color-high);
+	white-space: nowrap;
+	text-align: center;
+}
+.liquid-pending-toast-countdown {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--accent-glow);
+	font-variant-numeric: tabular-nums;
+	min-width: 28px;
+	text-align: center;
+}
+.liquid-pending-toast-buttons {
+	display: flex;
+	gap: 8px;
+}
+.liquid-pending-toast-btn {
+	flex-shrink: 0;
+	padding: 5px 14px;
+	border: none;
+	border-radius: 8px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: box-shadow .15s ease, background .15s ease;
+}
+.liquid-pending-toast-btn[data-action="apply"] {
+	background: var(--accent-grad);
+	color: var(--on-primary-color, #fff);
+	box-shadow: 0 2px 8px var(--accent-glow);
+}
+.liquid-pending-toast-btn[data-action="apply"]:hover {
+	box-shadow: 0 4px 16px var(--accent-glow);
+}
+.liquid-pending-toast-btn[data-action="dismiss"] {
+	background: var(--glass-bg);
+	color: var(--text-color-medium);
+	border: 1px solid var(--glass-border);
+}
+.liquid-pending-toast-btn[data-action="dismiss"]:hover {
+	color: var(--text-color-high);
+}
+	min-width: 80px;
+}
+.liquid-pending-toast-btn[data-action="apply"] {
+	background: var(--accent-grad);
+	color: var(--on-primary-color, #fff);
+	box-shadow: 0 2px 8px var(--accent-glow);
+}
+.liquid-pending-toast-btn[data-action="apply"]:hover {
+	box-shadow: 0 4px 16px var(--accent-glow);
+}
+.liquid-pending-toast-btn[data-action="dismiss"] {
+	background: var(--glass-bg);
+	color: var(--text-color-medium);
+	border: 1px solid var(--glass-border);
+}
+.liquid-pending-toast-btn[data-action="dismiss"]:hover {
+	color: var(--text-color-high);
+}
+
+/* ==========================================================================
+   5. Layout
+   ========================================================================== */
+
+#maincontainer {
+	display: flex;
+	align-items: stretch;
+	width: 100%;
+	height: calc(100vh - 56px);
+	min-height: calc(100vh - 56px);
+	overflow-y: auto;
+}
+
+#maincontent {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: 100%;
+	margin-left: 236px;
+	padding: 6px 22px 96px;
+}
+
+#view {
+	margin-top: 18px;
+}
+
+.skiplink {
+	position: absolute;
+	left: -9999px;
+}
+
+/* ==========================================================================
+   6. Sidebar menu
+   ========================================================================== */
+
+#mainmenu {
+	position: fixed;
+	top: 56px;
+	bottom: 0;
+	left: 0;
+	width: 236px;
+	flex-shrink: 0;
+	height: auto;
+	overflow-y: auto;
+	padding: 12px 10px 24px;
+	animation: liquid-slide-in .5s cubic-bezier(.22, .9, .3, 1);
+	background: var(--menu-bg);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border-right: 1px solid var(--glass-border-dark);
+	transition: width .2s ease, transform .2s ease;
+}
+
+#mainmenu ul.mainmenu {
+	display: block;
+}
+
+#mainmenu ul.mainmenu.l1 > li > a {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	position: relative;
+	z-index: 3;
+	padding: 10px 14px;
+	margin-bottom: 3px;
+	border-radius: 13px;
+	border: 1px solid transparent;
+	font-weight: 600;
+	font-size: 13.5px;
+	color: var(--text-color-high);
+	text-decoration: none;
+	transition: background .16s ease, border-color .16s ease,
+	            box-shadow .16s ease, color .16s ease;
+}
+
+/* 悬停视觉由 .liquid-menu-indicator 滑块负责；这里仅文字变色 */
+#mainmenu ul.mainmenu.l1 > li > a:hover {
+	background: transparent;
+	border-color: transparent;
+	box-shadow: none;
+	color: var(--text-color-highest);
+}
+
+/* menu item selected — 与追踪滑块同款的透明蓝玻璃，蓝色略深（不被 hover 覆盖） */
+#mainmenu ul.mainmenu.l1 > li.selected > a,
+#mainmenu ul.mainmenu.l1 > li.selected.active > a,
+#mainmenu ul.mainmenu.l1 > li.selected > a:hover,
+#mainmenu ul.mainmenu.l1 > li.selected.active > a:hover {
+	background: var(--accent-glass);
+	border-color: color-mix(in srgb, var(--primary-color-high) 55%, transparent);
+	color: var(--primary-color-low);
+	box-shadow: 0 4px 16px color-mix(in srgb, var(--primary-color-high) 26%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+	-webkit-backdrop-filter: blur(10px) saturate(var(--glass-sat));
+	backdrop-filter: blur(10px) saturate(var(--glass-sat));
+}
+
+:root[data-darkmode="true"] #mainmenu ul.mainmenu.l1 > li.selected > a,
+:root[data-darkmode="true"] #mainmenu ul.mainmenu.l1 > li.selected.active > a,
+:root[data-darkmode="true"] #mainmenu ul.mainmenu.l1 > li.selected > a:hover,
+:root[data-darkmode="true"] #mainmenu ul.mainmenu.l1 > li.selected.active > a:hover {
+	background: var(--accent-glass);
+	border-color: color-mix(in srgb, var(--primary-color-high) 48%, transparent);
+	color: #dcecff;
+	box-shadow: 0 4px 18px color-mix(in srgb, var(--primary-color-high) 38%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* 展开态（点击展开的其他一级菜单）— 次级高亮 */
+#mainmenu ul.mainmenu.l1 > li.active > a,
+#mainmenu ul.mainmenu.l1 > li.active > a:hover {
+	background: var(--glass-bg);
+	border-color: var(--glass-border);
+	color: var(--primary-color-high);
+	box-shadow: inset 0 0 0 1px var(--glass-border),
+	            inset 0 1px 0 var(--glass-inset);
+}
+
+#mainmenu ul.mainmenu.l1 > li.selected > a::before {
+	content: "";
+	position: absolute;
+	left: -10px;
+	top: 22%;
+	height: 56%;
+	width: 4px;
+	border-radius: 0 4px 4px 0;
+	background: var(--accent-grad);
+	box-shadow: 0 0 12px var(--accent-glow);
+}
+
+/* expandable submenu indicator */
+#mainmenu ul.mainmenu.l1 > li:has(> ul:not(:empty)) > a::after {
+	content: "";
+	width: 12px;
+	height: 12px;
+	margin-left: auto;
+	background: url(svg/chevron-down.svg) center / contain no-repeat;
+	opacity: .65;
+	transition: transform .18s ease;
+	flex-shrink: 0;
+}
+
+#mainmenu ul.mainmenu.l1 > li.active > a::after {
+	transform: rotate(180deg);
+}
+
+/* submenu */
+#mainmenu li > ul,
+#mainmenu li > ul.mainmenu {
+	display: none !important;
+	margin: 2px 0 6px 10px;
+	padding-left: 8px;
+	border-left: 1px solid var(--border-color-low);
+}
+
+#mainmenu li.active > ul,
+#mainmenu li.active > ul.mainmenu {
+	display: block !important;
+	animation: liquid-fade-in .22s ease;
+}
+
+/* 二级菜单 hover 追踪滑块 */
+ul.mainmenu.l2 {
+	position: relative;
+}
+
+.liquid-sub-indicator {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 32px;
+	border-radius: 10px;
+	background: var(--indicator-bg);
+	border: 1px solid var(--indicator-border);
+	box-shadow: var(--indicator-shadow);
+	opacity: 0;
+	pointer-events: none;
+	z-index: 0;
+	transition: transform .25s cubic-bezier(.22, .8, .3, 1),
+	            height .25s cubic-bezier(.22, .8, .3, 1),
+	            opacity .18s ease;
+}
+
+ul.mainmenu.l2.liquid-sub-hovering .liquid-sub-indicator {
+	opacity: 1;
+}
+
+#mainmenu ul.mainmenu.l2 > li > a {
+	display: block;
+	position: relative;
+	z-index: 3;
+	padding: 8px 12px;
+	margin: 1px 0;
+	border-radius: 10px;
+	font-weight: 500;
+	font-size: 12.5px;
+	color: var(--text-color-medium);
+	text-decoration: none;
+	transition: background .15s ease, color .15s ease;
+}
+
+#mainmenu ul.mainmenu.l2 > li > a:hover {
+	background: transparent;
+	color: var(--primary-color-high);
+}
+
+/* 二级菜单选中项 — 淡蓝玻璃胶囊（亮色下可见，避免纯白难辨） */
+#mainmenu ul.mainmenu.l2 > li.selected > a,
+#mainmenu ul.mainmenu.l2 > li.selected > a:hover {
+	background: var(--accent-glass-soft);
+	border-color: color-mix(in srgb, var(--primary-color-high) 38%, transparent);
+	color: var(--primary-color-low);
+	font-weight: 600;
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--primary-color-high) 20%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root[data-darkmode="true"] #mainmenu ul.mainmenu.l2 > li.selected > a,
+:root[data-darkmode="true"] #mainmenu ul.mainmenu.l2 > li.selected > a:hover {
+	background: var(--accent-glass-soft);
+	border-color: color-mix(in srgb, var(--primary-color-high) 34%, transparent);
+	color: #dcecff;
+	box-shadow: 0 2px 10px color-mix(in srgb, var(--primary-color-high) 32%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+#mainmenu:empty {
+	display: none;
+}
+
+/* hover 追踪滑块 */
+.liquid-menu-indicator {
+	position: absolute;
+	left: 10px;
+	right: 10px;
+	top: 0;
+	height: 40px;
+	border-radius: 13px;
+	background: var(--indicator-bg);
+	border: 1px solid var(--indicator-border);
+	box-shadow: var(--indicator-shadow);
+	-webkit-backdrop-filter: blur(10px) saturate(var(--glass-sat));
+	backdrop-filter: blur(10px) saturate(var(--glass-sat));
+	opacity: 0;
+	pointer-events: none;
+	z-index: 0;
+	transition: transform .28s cubic-bezier(.22, .8, .3, 1),
+	            height .28s cubic-bezier(.22, .8, .3, 1),
+	            opacity .18s ease;
+}
+
+#mainmenu.liquid-menu-hovering .liquid-menu-indicator {
+	opacity: 1;
+}
+
+
+/* ==========================================================================
+   7. Mode menu (mobile breadcrumb)
+   ========================================================================== */
+
+#modemenu {
+	position: sticky;
+	top: 56px;
+	z-index: 800;
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 4px 10px;
+	padding: 10px 22px;
+	margin: 0;
+	background: var(--glass-bg);
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	backdrop-filter: blur(var(--glass-blur));
+	border-bottom: 1px solid var(--glass-border-dark);
+}
+
+#modemenu a {
+	color: var(--text-color-medium);
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 12.5px;
+	padding: 5px 10px;
+	border-radius: 999px;
+	transition: background .15s ease, color .15s ease;
+}
+
+#modemenu a:hover {
+	background: var(--glass-bg-hover);
+	color: var(--text-color-high);
+}
+
+#modemenu .active a {
+	color: var(--on-primary-color);
+	background: var(--accent-grad);
+	box-shadow: 0 3px 10px var(--accent-glow);
+}
+
+#modemenu > div:not(.active) ~ div {
+	display: none;
+}
+
+/* ==========================================================================
+   8. Tab menu
+   ========================================================================== */
+
+/* 通用 tab 按钮组（页面级 #tabmenu 与 cbi 表单内 tab 共用样式）。
+   胶囊形状保留；未选中项透明交给追踪滑块，选中项用菜单区
+   selected 同款 accent 渐变高亮。 */
+:is(ul.cbi-tabmenu, ul.tabs) {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0 0 14px;
+	padding: 0;
+}
+
+:is(ul.cbi-tabmenu, ul.tabs) > li {
+	display: inline-block;
+	position: relative;
+	z-index: 1;
+	margin: 0;
+}
+
+/* 覆盖 LuCI bootstrap 的 tab 容器主题色（bootstrap: color:var(--primary-color-high)），
+   统一改为文字色，明暗模式自动切换 */
+:is(ul.cbi-tabmenu, ul.tabs) > li {
+	color: inherit;
+}
+
+:is(ul.cbi-tabmenu, ul.tabs) > li > a {
+	display: inline-block;
+	padding: 8px 18px;
+	border-radius: 999px;
+	font-weight: 600;
+	font-size: 12.5px;
+	color: var(--text-color-medium);
+	background: transparent;
+	border: 1px solid transparent;
+	text-decoration: none;
+	transition: color .16s ease, box-shadow .16s ease;
+}
+
+:is(ul.cbi-tabmenu, ul.tabs) > li > a:hover {
+	color: var(--text-color-high);
+}
+
+/* 选中项与左侧菜单 selected 同款玻璃质感高亮 */
+:is(ul.cbi-tabmenu, ul.tabs) > li.cbi-tab > a {
+	background: var(--accent-glass);
+	border-color: color-mix(in srgb, var(--primary-color-high) 55%, transparent);
+	color: var(--text-color-highest);
+	box-shadow: 0 4px 16px color-mix(in srgb, var(--primary-color-high) 26%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+	-webkit-backdrop-filter: blur(10px) saturate(var(--glass-sat));
+	backdrop-filter: blur(10px) saturate(var(--glass-sat));
+}
+
+/* iStoreOS tabs 选中项：Vue scoped 样式（li.active a { color:... }）特异性高，
+   !important 强制主题玻璃样式（与 tabmenu-item 同策略） */
+:is(ul.cbi-tabmenu, ul.tabs) > li.cbi-tab > a {
+	background: var(--accent-glass) !important;
+	border-color: color-mix(in srgb, var(--primary-color-high) 55%, transparent) !important;
+	color: var(--text-color-highest) !important;
+}
+
+/* iStoreOS ul.tabs 的 Vue scoped 滑动条（div.auto）在 flex 容器内占位，
+   隐藏它避免干扰 tab 布局（主题自带 .liquid-tab-indicator 追踪滑块） */
+ul.tabs > div.auto {
+	display: none !important;
+}
+
+:is(:root[data-darkmode="true"] ul.cbi-tabmenu, :root[data-darkmode="true"] ul.tabs) > li.cbi-tab > a {
+	background: var(--accent-glass);
+	border-color: color-mix(in srgb, var(--primary-color-high) 48%, transparent);
+	color: var(--text-color-highest);
+	box-shadow: 0 4px 18px color-mix(in srgb, var(--primary-color-high) 38%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+:is(ul.cbi-tabmenu, ul.tabs) > li.cbi-tab-disabled > a {
+	opacity: .75;
+}
+
+/* 第三方应用/页面导航 tab（li[class*="tabmenu-item"]，如 homeproxy、
+   系统→管理页）：显式强制与主题 cbi-tab 完全一致的样式，防任何
+   应用自带样式干扰导致观感不一致 */
+:is(ul.cbi-tabmenu, ul.tabs) > li[class*="tabmenu-item"] > a {
+	padding: 8px 18px;
+	border-radius: 999px;
+	font-weight: 600;
+	font-size: 12.5px;
+	color: var(--text-color-medium);
+	background: transparent;
+	border: 1px solid transparent;
+	text-decoration: none;
+	transition: color .16s ease, box-shadow .16s ease;
+}
+
+:is(ul.cbi-tabmenu, ul.tabs) > li[class*="tabmenu-item"] > a:hover {
+	color: var(--text-color-high);
+}
+
+:is(ul.cbi-tabmenu, ul.tabs) > li[class*="tabmenu-item"].cbi-tab > a {
+	background: var(--accent-glass) !important;
+	border-color: color-mix(in srgb, var(--primary-color-high) 55%, transparent) !important;
+	color: var(--primary-color-low) !important;
+	box-shadow: 0 4px 16px color-mix(in srgb, var(--primary-color-high) 26%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+	-webkit-backdrop-filter: blur(10px) saturate(var(--glass-sat)) !important;
+	backdrop-filter: blur(10px) saturate(var(--glass-sat)) !important;
+}
+
+:is(:root[data-darkmode="true"] ul.cbi-tabmenu, :root[data-darkmode="true"] ul.tabs) > li[class*="tabmenu-item"].cbi-tab > a {
+	background: var(--accent-glass) !important;
+	border-color: color-mix(in srgb, var(--primary-color-high) 48%, transparent) !important;
+	color: #dcecff !important;
+	box-shadow: 0 4px 18px color-mix(in srgb, var(--primary-color-high) 38%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+}
+
+/* tab hover 追踪滑块（main.js 驱动，跟随鼠标/选中项滑动） */
+.liquid-tab-indicator {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	border-radius: 999px;
+	background: var(--indicator-bg);
+	border: 1px solid var(--indicator-border);
+	box-shadow: var(--indicator-shadow);
+	opacity: 0;
+	pointer-events: none;
+	z-index: 0;
+	transition: transform .26s cubic-bezier(.22, .8, .3, 1),
+	            width .26s cubic-bezier(.22, .8, .3, 1),
+	            opacity .18s ease;
+}
+
+/* cbi tab pane 显示控制（ui.tabs 通过 data-tab-title / data-tab-active 控制）
+   注意：tabmenu 的 li 也带 data-tab 属性，不能按 [data-tab] 全局隐藏，
+   必须用 [data-tab-title]（仅 pane 内容容器带）折叠内容区——与官方
+   bootstrap 的机制一致（height/opacity 折叠而非 display:none）。 */
+[data-tab-title] {
+	height: 0;
+	opacity: 0;
+	overflow: hidden;
+}
+
+[data-tab-active="true"] {
+	height: auto;
+	opacity: 1;
+	overflow: visible;
+	animation: liquid-fade-in .22s ease;
+}
+
+/* 卡片宽度：逐层按父可用宽 100% 套用；内容超宽时卡片内横向滚动，
+   不再溢出外层卡片 —— 仅限 modal 内嵌套（接口编辑等）；
+   概况页等主内容卡片自适应内部模块高度/宽度，不设滚动条 */
+#modal_overlay .cbi-map,
+#modal_overlay .cbi-section {
+	width: 100%;
+	overflow-x: auto;
+}
+
+/* 软件包页（package-manager）：filter / 下载 / 操作按钮组都是
+   div.controls > div > span.control-group > input + button。luci 的
+   .controls > * > * { flex-grow:1 } 会把组内 input 和按钮一起拉伸；
+   主题全局 input{width:100%} 又让输入框撑满 span，同组按钮被挤出、
+   与相邻控件重叠。控制组改 inline-flex：输入框占剩余空间、按钮按内容宽 */
+.controls .control-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	max-width: 100%;
+}
+
+.controls .control-group input {
+	width: auto !important;
+	min-width: 100px;
+	flex: 1 1 auto !important;
+}
+
+.controls .control-group .btn {
+	flex: 0 0 auto !important;
+	margin: 0;
+}
+
+/* 打开下拉时该层解除裁剪（滚动容器会裁掉弹出的选项列表），
+   并提升整条祖先链的层级：backdrop-filter 会让每层都形成层叠
+   上下文，仅提升一层不够，需让包含它的所有容器都高于后续兄弟 */
+.cbi-map:has(.cbi-dropdown[open]),
+.cbi-section:has(.cbi-dropdown[open]),
+.cbi-section-node:has(.cbi-dropdown[open]),
+.cbi-section-table:has(.cbi-dropdown[open]),
+#maincontent:has(.cbi-dropdown[open]) {
+	overflow-x: visible !important;
+	overflow-y: visible !important;
+	position: relative;
+	z-index: 1000;
+}
+
+#tabmenu {
+	padding: 16px 0 14px;
+}
+
+#tabmenu ul.cbi-tabmenu {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 0;
+	padding: 0;
+}
+
+#tabmenu ul.cbi-tabmenu > li {
+	display: inline-block;
+	margin: 0;
+}
+
+#tabmenu ul.cbi-tabmenu > li > a {
+	display: inline-block;
+	padding: 8px 18px;
+	border-radius: 999px;
+	font-weight: 600;
+	font-size: 12.5px;
+	color: var(--text-color-medium);
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	text-decoration: none;
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
+	box-shadow: var(--glass-shadow-soft);
+	transition: background .16s ease, color .16s ease,
+	            border-color .16s ease, box-shadow .16s ease;
+}
+
+#tabmenu ul.cbi-tabmenu > li > a:hover {
+	background: var(--glass-bg-hover);
+	color: var(--text-color-high);
+}
+
+#tabmenu ul.cbi-tabmenu > .cbi-tab > a {
+	color: var(--on-primary-color);
+	background: var(--accent-grad);
+	border-color: transparent;
+	box-shadow: 0 6px 18px var(--accent-glow),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* ==========================================================================
+   9. Footer
+   ========================================================================== */
+
+p.luci {
+	padding: 20px 22px 30px;
+	margin: 0;
+	text-align: center;
+	font-size: 11.5px;
+	color: var(--text-color-low);
+}
+
+/* 内容区底部 spacer：滚动到底时内容完整显示在 foot 之上 */
+.luci-foot-spacer {
+	height: 80px;
+}
+
+/* 登录后 foot 横幅：从菜单栏右外侧到窗口右边缘，顶栏式玻璃横幅 */
+body:not(.liquid-login) p.luci {
+	position: fixed;
+	bottom: 0;
+	left: 236px;
+	right: 0;
+	margin: 0;
+	padding: 9px 22px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: 8px 14px;
+	font-size: 11.5px;
+	color: var(--text-color-low);
+	background: var(--glass-bg-strong);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border-top: 1px solid var(--glass-border-dark);
+	box-shadow: 0 -1px 0 var(--glass-inset), 0 -6px 24px rgba(0, 0, 0, 0.06);
+	z-index: 700;
+}
+
+body:not(.liquid-login) p.luci a {
+	color: var(--text-color-medium);
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+	transition: color .15s ease, border-bottom-color .15s ease;
+}
+
+body:not(.liquid-login) p.luci a:hover {
+	color: var(--primary-color-high);
+	border-bottom-color: var(--primary-color-high);
+}
+
+.luci-sep {
+	opacity: .4;
+}
+
+/* ── 页脚版本号 → 检查更新卡片（对齐 pushbot 的四态 frosted toast）──
+   overlay 直接挂在 fixed 的页脚 p.luci 内：absolute 锚定页脚盒子，
+   水平居中自然是"页脚宽度内"（left:236px → 右缘），不是全屏居中。
+   非更新态 8s 自动消失（比 pushbot 多 4s）+ 点卡片跳作者仓库；
+   更新态不自动消失，按钮操作。 */
+/* 挂载方式（r22）：改为 body 直接子级 + position:fixed + z-index:1500，
+   由 main.js 按页脚实际高度写 bottom。原因：此前 overlay 是 fixed 页脚
+   (backdrop-filter 玻璃) 的子元素、卡片伸出页脚盒子之外，iOS WebKit 的
+   合成会把后面同样带 backdrop-filter 的玻璃卡片绘制层压在伸出部分之上
+   （布局/命中测试显示卡片在上、绘制却在下 → 看着"上半部分被内容盖住"，
+   Chrome 不复现、大屏横布局不重叠也不复现）。根层 fixed + z1500 后
+   绘制顺序在任何引擎里都平凡正确（高于内容/ifacebox:hover 的1001，
+   低于 modal 2000）。 */
+.liquid-ver-overlay {
+	position: fixed;
+	left: 0;
+	right: 0;
+	/* 紧贴页脚上沿向上展开：卡片浮在页脚上方滑出，不遮盖页脚横幅
+	   （40px 为兜底，main.js 会用页脚实际高度覆盖） */
+	bottom: 40px;
+	height: 160px;
+	z-index: 1500;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	padding-bottom: 8px;
+	/* 不要灰黑蒙版/背景模糊：只保留浮出的卡片本身，下方页脚区内容
+	   原样可见（用户反馈）；卡片自带渐变底 + 投影，不靠蒙版衬托 */
+	background: none;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	opacity: 0;
+	transition: opacity .5s ease;
+	/* 蒙版去掉后 overlay 自身透明，不能再拦在内容上方吃掉点击：
+	   整层穿透，只有卡片（.liquid-ver-toast）恢复可点 */
+	pointer-events: none;
+}
+.liquid-ver-overlay.show { opacity: 1; }
+/* 流程内错误提示（下载失败等）：盖在"检测到更新"卡片上、卡片内上下左右
+   居中模糊弹出（对齐 pushbot pb_ota_showError 设计）；遮罩随卡片圆角。
+   此态仍需拦截下层卡片的点击，避免错误提示期间误触"立即更新" */
+.liquid-ver-overlay.card-centered {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: auto;
+	z-index: 2;
+	align-items: center;
+	justify-content: center;
+	padding-bottom: 0;
+	border-radius: inherit;
+	pointer-events: auto;
+}
+.liquid-ver-toast {
+	min-width: 200px;
+	max-width: min(460px, calc(100vw - 24px));
+	padding: 14px 22px;
+	border-radius: 12px;
+	position: relative;
+	text-align: center;
+	color: #ffffff;
+	box-shadow: 0 14px 34px rgba(15, 23, 42, 0.35);
+	transform: scale(.92) translateY(14px);
+	transition: transform .5s ease;
+	/* 父层 overlay 已 pointer-events:none，卡片需自行恢复可点
+	   （按钮操作、点卡片跳作者仓库） */
+	pointer-events: auto;
+}
+.liquid-ver-overlay.show .liquid-ver-toast { transform: scale(1) translateY(0); }
+/* 状态色：内测=紫 / 最新=绿 / 有更新=橙 / 失败=红（与 pushbot 一致） */
+.liquid-ver-toast.is-ahead {
+	background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+	border: 1px solid rgba(167, 139, 250, 0.45);
+}
+.liquid-ver-toast.is-latest {
+	background: linear-gradient(135deg, #10b981, #059669);
+	border: 1px solid rgba(52, 211, 153, 0.45);
+}
+.liquid-ver-toast.is-update {
+	background: linear-gradient(135deg, #f59e0b, #ea580c);
+	border: 1px solid rgba(251, 146, 60, 0.5);
+}
+.liquid-ver-toast.is-err {
+	background: linear-gradient(135deg, #ef4444, #dc2626);
+	border: 1px solid rgba(248, 113, 113, 0.45);
+}
+.liquid-ver-toast-msg {
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.5;
+}
+.liquid-ver-toast-sub {
+	margin-top: 7px;
+	font-size: 12px;
+	font-weight: 500;
+	opacity: .9;
+	font-family: Menlo, Consolas, monospace;
+}
+/* 非更新态卡片可点击（整卡超链接作者仓库） */
+.liquid-ver-toast.is-clickable { cursor: pointer; }
+/* 页脚版本号：检查中闪烁（同 pushbot badge） */
+.liquid-version-link.is-checking {
+	opacity: .6;
+	animation: liquid-blink .8s ease-in-out infinite;
+}
+@keyframes liquid-blink {
+	0%, 100% { opacity: 1; }
+	50% { opacity: .4; }
+}
+
+/* ── OTA 操作按钮行（与 pushbot 同款 frosted 白按钮）── */
+.liquid-ota-btn-row {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 4px;
+	justify-content: center;
+	margin-top: 12px;
+}
+.liquid-ota-btn {
+	padding: 5px 10px;
+	border-radius: 8px;
+	border: 1px solid rgba(255, 255, 255, .35);
+	background: rgba(255, 255, 255, .18);
+	color: #fff;
+	font-size: 11px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background .2s, transform .15s;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	line-height: 1.2;
+	white-space: nowrap;
+	flex-shrink: 1;
+	min-width: 0;
+}
+.liquid-ota-btn:hover { background: rgba(255, 255, 255, .3); transform: translateY(-1px); }
+.liquid-ota-btn:active { transform: scale(.96); }
+.liquid-ota-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.liquid-ota-btn.liquid-ota-ready { background: rgba(16, 185, 129, .45); border-color: rgba(52, 211, 153, .6); }
+/* 圆环进度（One-Click/Pull 下载进度） */
+.liquid-ota-ring { display: inline-block; width: 18px; height: 18px; vertical-align: middle; }
+.liquid-ota-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.liquid-ota-ring-bg { fill: none; stroke: rgba(255, 255, 255, .2); stroke-width: 2.8; }
+.liquid-ota-ring-fg {
+	fill: none;
+	stroke: #fff;
+	stroke-width: 2.8;
+	stroke-linecap: round;
+	transition: stroke-dasharray .35s ease;
+}
+
+/* ==========================================================================
+   10. CBI form components
+   ========================================================================== */
+
+.cbi-map {
+	margin: 0 0 18px;
+	padding: 18px 22px 22px;
+	border-radius: var(--glass-radius-lg);
+	background: var(--glass-bg);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inset);
+}
+
+.cbi-map-descr {
+	color: var(--text-color-medium);
+	font-size: 13px;
+	padding: 0 0 12px;
+}
+
+.cbi-section {
+	margin: 0 0 16px;
+	padding: 16px 20px 18px;
+	border-radius: var(--glass-radius);
+	background: var(--glass-bg);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset);
+}
+
+.cbi-section-node {
+	padding: 4px 0;
+}
+
+/* 多实例 section（如 Dropbear 实例）：每个实例独立子卡片。
+   由 main.js 的 styleMultiSections 检测"同一 cbi-section 内有多个
+   平级 cbi-section-node"时加 liquid-multi-node 类（CSS :has 兄弟
+   选择器在部分渲染/嵌套结构下不可靠） */
+.cbi-section-node.liquid-multi-node {
+	margin: 0 0 12px;
+	background: color-mix(in srgb, var(--glass-bg) 55%, transparent);
+	border: 1px solid var(--glass-border);
+	border-radius: var(--glass-radius);
+	padding: 12px 16px 10px;
+	box-shadow: inset 0 1px 0 var(--glass-inset);
+}
+
+.cbi-section-node.liquid-multi-node:last-child {
+	margin-bottom: 4px;
+}
+
+.cbi-section-node > .cbi-section {
+	margin-top: 8px;
+}
+
+.cbi-title {
+	padding: 2px 0 10px;
+}
+
+.cbi-title h3 {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 15px;
+	color: var(--text-color-highest);
+	margin: 0;
+}
+
+.cbi-title h3::before {
+	content: "";
+	width: 4px;
+	height: 16px;
+	border-radius: 4px;
+	background: var(--accent-grad);
+}
+
+/* value rows */
+.cbi-value {
+	display: flex;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 10px 0;
+	border-top: 1px solid var(--border-color-low);
+}
+
+.cbi-value:first-of-type {
+	border-top: 0;
+}
+
+.cbi-value.cbi-value-last {
+	border-bottom: 0;
+}
+
+.cbi-value-title {
+	flex: 0 0 260px;
+	max-width: 46%;
+	padding-top: 7px;
+	font-weight: 600;
+	font-size: 13px;
+	color: var(--text-color-high);
+	text-align: right;
+}
+
+.cbi-value-field {
+	flex: 1;
+	min-width: 0;
+}
+
+/* 输入框下方的按钮组（如"与浏览器同步/与 NTP 服务器同步"）：
+   span 默认 inline，margin-top 不生效——改 block 并与上方输入框留缝 */
+.cbi-value-field .control-group {
+	display: block;
+	margin-top: 8px;
+}
+
+.cbi-value-description {
+	font-size: 11.5px;
+	color: var(--text-color-low);
+	padding-top: 3px;
+}
+
+.cbi-value-field .cbi-value-description {
+	padding: 3px 0 0;
+}
+
+/* text / number / password / select / textarea */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+input[type="email"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+select,
+textarea,
+.cbi-input-text,
+.cbi-input-password,
+.cbi-input-number {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: 8px 12px;
+	font-family: inherit;
+	font-size: 13px;
+	color: var(--text-color-high);
+	background: var(--field-bg);
+	border: 1px solid var(--border-color-medium);
+	border-radius: 10px;
+	-webkit-backdrop-filter: blur(6px);
+	backdrop-filter: blur(6px);
+	transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+	outline: none;
+	border-color: var(--primary-color-high);
+	background: var(--glass-bg-hover);
+	box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+input[disabled],
+select[disabled],
+textarea[disabled] {
+	opacity: var(--disabled-opacity);
+	cursor: not-allowed;
+}
+
+/* 原生裸 select（.cbi-input-select 等）现代化：去浏览器原生外观，
+   主题圆角/边框/聚焦。此规则作为「不支持 base-select」内核的回退：
+   Chrome 135+/Edge 135+/Safari 27 会被下方更高特异性的 base-select
+   规则覆盖（从而启用 ::picker(select) 自绘下拉）；老内核/Firefox 则
+   保留 appearance:none（展开菜单退回系统原生，但折叠态仍是主题样式）。
+   不自绘箭头（避免在 pushbot 等第三方页面出现重复箭头）。 */
+select:not([multiple]) {
+	appearance: none;
+	-webkit-appearance: none;
+	padding: 8px 12px;
+	background-color: var(--field-bg);
+	border: 1px solid var(--border-color-medium);
+	border-radius: 12px;
+	cursor: pointer;
+	transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+select:not([multiple]):hover {
+	border-color: var(--primary-color-high);
+}
+
+/* .cbi-select（分割按钮风格）内部 select 由外层 ::after 提供箭头 */
+
+/* 原生 select 弹出列表的选项项美化（浏览器原生面板本身无法定制，
+   但 option 的背景/文字色/字体在 Chrome/Edge/Firefox 上可生效） */
+select option {
+	background: var(--field-bg, #fff);
+	color: var(--text-color-high);
+	font-size: 13px;
+	padding: 4px 8px;
+}
+
+select option:checked {
+	background: var(--primary-color-high);
+	color: var(--on-primary-color, #fff);
+}
+
+
+textarea {
+	min-height: 72px;
+	resize: vertical;
+}
+
+/* checkbox / radio */
+input[type="checkbox"],
+input[type="radio"] {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 18px;
+	height: 18px;
+	margin: 0;
+	vertical-align: -4px;
+	flex-shrink: 0;
+	cursor: pointer;
+	background: var(--field-bg);
+	border: 1.5px solid var(--border-color-high);
+	transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+
+input[type="checkbox"] {
+	border-radius: 6px;
+}
+
+input[type="radio"] {
+	border-radius: 50%;
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+	background: var(--accent-grad);
+	/* 白边 + 外发光：下拉选项高亮背景（accent）盖住勾选框时，
+	   勾号和边框仍清晰可见 */
+	border: 2px solid rgba(255, 255, 255, 0.9);
+	box-shadow: 0 0 0 2px var(--accent-glow), 0 2px 8px var(--accent-glow);
+}
+
+input[type="checkbox"]:checked::after {
+	content: "";
+	position: absolute;
+}
+
+input[type="checkbox"]:checked {
+	position: relative;
+}
+
+input[type="checkbox"]:checked::after {
+	left: 4px;
+	top: 0;
+	width: 6px;
+	height: 10px;
+	border: solid #ffffff;
+	border-width: 0 2.5px 2.5px 0;
+	transform: rotate(45deg);
+}
+
+input[type="radio"]:checked::after {
+	content: "";
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--on-primary-color);
+	transform: translate(-50%, -50%);
+}
+
+input[type="radio"] {
+	position: relative;
+}
+
+/* buttons */
+.btn,
+.cbi-button {
+	display: inline-block;
+	/* 原 9px 18px + 1px border；border 移除后各补 1px，整体尺寸不变 */
+	padding: 10px 19px;
+	font-family: inherit;
+	font-size: 12.5px;
+	font-weight: 600;
+	line-height: 1.4;
+	white-space: nowrap;
+	color: var(--text-color-high);
+	text-align: center;
+	text-decoration: none;
+	/* 去浏览器原生按钮外观：WebKit 等会叠加一层原生矩形描边，
+	   不跟 border-radius，出现"两层按钮"的错觉 */
+	appearance: none;
+	-webkit-appearance: none;
+	background: var(--glass-bg);
+	/* 不用 border：部分引擎里 border 绘制层会与背景分层栅格化，
+	   不跟 border-radius 的弧度——圆角处缺描边、左右缘露出方剪裁
+	   竖缝/下层按钮。改用同色 inset box-shadow 描边：与背景同层绘制，
+	   永远贴合圆角（各变体的 border-color 规则随之废弃） */
+	border: none;
+	border-radius: 10px;
+	cursor: pointer;
+	/* 按钮不用 backdrop-filter：WebKit/老内核里它的滤镜区域是矩形、
+	   不跟 border-radius 裁剪，圆角按钮左右缘会露出方形剪裁的
+	   深/浅竖缝，四角也不跟弧度。按钮面积小、模糊收益低，
+	   玻璃感靠半透明底+描边阴影即可（下拉胶囊同理，见
+	   .cbi-dropdown.cbi-button-apply / -negative 的覆盖） */
+	box-shadow: var(--glass-shadow-soft), inset 0 0 0 1px var(--glass-border),
+	            inset 0 1px 0 var(--glass-inset);
+	transition: transform .12s ease, box-shadow .15s ease,
+	            background .15s ease, color .15s ease, opacity .15s ease;
+}
+
+.btn:hover,
+.cbi-button:hover {
+	background: var(--glass-bg-hover);
+	text-decoration: none;
+}
+
+/* 彩色（accent/负面）按钮 hover 保持自身色系并微亮，不发白 */
+.cbi-button-action:hover,
+.cbi-button-apply:hover,
+.cbi-button-reload:hover,
+.cbi-button-edit:hover,
+.cbi-button-positive:hover,
+.cbi-button-save:hover {
+	background: var(--accent-grad);
+	filter: brightness(1.1);
+}
+
+.cbi-button-negative:hover,
+.cbi-button-reset:hover,
+.cbi-button-remove:hover {
+	background: linear-gradient(135deg, #f06767, var(--error-color-high));
+	filter: brightness(1.08);
+}
+
+.btn:active,
+.cbi-button:active {
+	transform: translateY(1px);
+}
+
+.btn:disabled,
+.cbi-button:disabled {
+	opacity: var(--disabled-opacity);
+	cursor: not-allowed;
+}
+
+.cbi-button-action,
+.cbi-button-apply,
+.cbi-button-reload,
+.cbi-button-edit,
+.btn.primary,
+.cbi-button-positive,
+.cbi-button-save {
+	color: var(--on-primary-color);
+	background: var(--accent-grad);
+	box-shadow: 0 6px 16px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.cbi-button-negative,
+.cbi-button-reset,
+.cbi-button-remove,
+.cbi-section-remove .cbi-button {
+	color: var(--on-error-color);
+	background: linear-gradient(135deg, #f06767, var(--error-color-high));
+	box-shadow: 0 6px 16px rgba(var(--error-color-high-rgb), 0.35);
+}
+
+/* 多实例 section（Dropbear 等）的删除按钮：在标题行右侧，
+   从卡片右上角向内部收一点，不顶着卡片边缘（float:right 默认贴边）。
+   liquid-multi-sec 由 main.js 检测多实例时加到外层 section */
+.cbi-section.liquid-multi-sec > .cbi-section-remove {
+	margin: 14px 14px 0 0;
+}
+
+.cbi-button-neutral,
+.cbi-button-download,
+.cbi-button-find,
+.cbi-button-link,
+.cbi-button-up,
+.cbi-button-down,
+.cbi-button-pause {
+	color: var(--text-color-high);
+	background: var(--glass-bg);
+	/* 描边由基础规则的 inset 环形阴影提供（原 border-color 已废弃） */
+}
+
+/* page actions */
+.cbi-page-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	justify-content: flex-end;
+	padding: 14px 4px 4px;
+}
+
+.cbi-page-actions::after {
+	content: "";
+	clear: both;
+}
+
+/* 原生 select 美化（Combobox 替换已禁用，所有 select 保留原生 DOM）。
+   折叠态 + 展开菜单均通过 CSS 美化（select::picker(select)，Chrome 135+/
+   Edge 135+/Safari 27 支持），与 Combobox 视觉统一但无 DOM 替换开销。
+   无线设置页 formvalue 联动链因此完全正常。 */
+select:not([multiple]):not(.cbi-dropdown select):not(.cbi-select select) {
+	/* appearance: base-select 启用 select::picker(select) 自定义下拉菜单，
+	   不用 appearance: none（那会禁用 picker）。再用显式属性覆盖默认外观。
+	   支持 base-select 的浏览器此声明覆盖上方 appearance:none 回退；
+	   不支持的浏览器此声明被判无效丢弃，自动回退到 appearance:none。 */
+	appearance: base-select;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	border-radius: 10px;
+	padding: 8px 34px 8px 12px;
+	min-height: 35px;
+	min-width: 140px;
+	font-size: 13px;
+	color: var(--text-color-high);
+	cursor: pointer;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset);
+	transition: border-color .15s ease, box-shadow .15s ease;
+}
+select:not([multiple]):not(.cbi-dropdown select):not(.cbi-select select):hover {
+	border-color: var(--primary-color-high);
+}
+select:not([multiple]):not(.cbi-dropdown select):not(.cbi-select select):focus {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+/* select 下拉菜单美化（Chrome 135+/Edge 135+/Safari 27 的 select::picker(select)） */
+select:not([multiple]):not(.cbi-dropdown select):not(.cbi-select select)::picker(select) {
+	appearance: base-select;
+	background: var(--glass-bg-strong);
+	border: 1px solid var(--glass-border);
+	border-radius: 10px;
+	box-shadow: var(--glass-shadow);
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	padding: 4px;
+	/* 宽度：自适应最长选项内容 + 微余量；禁止撑满到窗口边缘 */
+	width: auto;
+	max-inline-size: calc(100vw - 20px);
+	overflow: auto;
+	/* 覆盖浏览器默认 span-inline-end（会横向撑满到右边缘） */
+	position-area: block-end;
+	/* 覆盖浏览器默认 max-block-size: stretch（纵向撑满） */
+	max-block-size: auto;
+}
+/* picker 内选项的背景/文字色：Chrome 不支持 ::picker(select) option 选择器，
+   直接用 option 伪类在 picker 内生效的继承机制覆盖。 */
+select:not([multiple]):not(.cbi-dropdown select):not(.cbi-select select) option {
+	padding: 8px 12px;
+	color: var(--text-color-high);
+	transition: background .12s ease;
+}
+select:not([multiple]):not(.cbi-dropdown select):not(.cbi-select select) option:checked {
+	background: var(--picker-option-checked);
+	color: var(--text-color-highest);
+}
+select:not([multiple]):not(.cbi-dropdown select):not(.cbi-select select) option:hover {
+	background: var(--picker-option-hover);
+}
+
+/* ==========================================================================
+   11. Tables
+   ========================================================================== */
+
+.table,
+.cbi-section-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0;
+	margin: 6px 0;
+	border-radius: 12px;
+	overflow: hidden;
+	border: 1px solid var(--border-color-low);
+}
+
+.table th,
+.cbi-section-table th,
+.table .th,
+.cbi-section-table .th {
+	padding: 9px 12px;
+	font-size: 11.5px;
+	font-weight: 700;
+	text-align: left;
+	letter-spacing: .3px;
+	color: var(--text-color-medium);
+	background: var(--glass-bg);
+	border-bottom: 1px solid var(--border-color-low);
+	display: table-cell;
+	float: none;
+}
+
+.table td,
+.cbi-section-table td,
+.table .td,
+.cbi-section-table .td {
+	padding: 8px 12px;
+	font-size: 13px;
+	vertical-align: middle;
+	border-bottom: 1px solid var(--border-color-low);
+	background: transparent;
+	display: table-cell;
+	float: none;
+}
+
+/* LuCI 新版用 .tr .td 类模拟表格，需要显式设置 display */
+.tr {
+	display: table-row;
+}
+
+.td {
+	display: table-cell;
+	float: none;
+}
+
+.table tr:last-child td,
+.cbi-section-table tr:last-child td {
+	border-bottom: 0;
+}
+
+/* 双色交叉（斑马纹）与 hover 画在整行上，底色延伸到表格行头尾 */
+.table tr.cbi-rowstyle-2,
+.cbi-section-table tr.cbi-rowstyle-2,
+.table tr:nth-child(even),
+.cbi-section-table tr:nth-child(even) {
+	background: var(--table-stripe);
+}
+
+/* 接口/设备表格行：强制不透明。luci 的"hover 删除按钮"或渲染逻辑
+   会给行加内联 style="opacity:0.5"，让已连接接口的图标/文字呈半透、
+   被误判为未连接；统一压回 1（连接状态由图标本身区分） */
+.cbi-section-table tr {
+	opacity: 1 !important;
+}
+
+.table tr:hover,
+.cbi-section-table tr:hover {
+	background: var(--glass-bg-hover);
+}
+
+/* 标签/值两列表格（.table 内含 td[width="33%"]：概览"系统"表、存储/内存
+   用量表等多个页面共用同一标记 → 统一处理、不按页面特化；参考 Argon 让
+   列宽随内容自适应，再叠一层"放不下就换行"的弹性）：
+   ① 宽度足够：标签列 20ch 对齐、值同行（16ch 会把最长标签"CPU 使用率（%）"
+      挤成两行——实测 16ch 折行、18ch 起单行，20ch 留中文字体度量余量）；
+   ② 宽度不足：值整块换到下一行、占满行宽；
+   ③ 极窄：标签列可压缩，标题与值的文字都换行（不再横向滚动/被裁）。
+   （原方案：标签锁死 20ch + 值 nowrap，只能靠横向滚动，窄屏很挤） */
+.table:has(td[width="33%"]) {
+	display: block;
+	overflow-x: auto;   /* 仅兜底：单个不可断的超长串仍可横滚 */
+}
+
+.table:has(td[width="33%"]) tr {
+	display: flex;
+	/* 放不下的列换到下一行，而不是挤压/横向滚动 */
+	flex-wrap: wrap;
+	align-items: center;
+	/* 标题与值都允许换行 */
+	white-space: normal;
+}
+
+.table:has(td[width="33%"]) tr > td {
+	flex: 0 1 auto;
+	min-width: 0;
+}
+
+.table:has(td[width="33%"]) tr > td[width="33%"] {
+	/* 首选 20ch 保持各行列对齐。
+	   !important 必须：单行规则(r13)给所有格设了 flex/width !important，
+	   而 important 无视特异性 → 不加会把桌面固定列压成"文字宽"、
+	   值列逐行错位（实测踩过） */
+	flex: 0 0 20ch !important;
+	width: 20ch !important;
+	max-width: 20ch !important;
+	white-space: normal !important;
+	overflow-wrap: break-word;
+	word-break: break-word;
+}
+
+.table:has(td[width="33%"]) tr > td:last-child {
+	/* 以内容宽为基准：同行放不下 → 整块换行并撑满该行 */
+	flex: 1 1 auto;
+	min-width: 0;
+	white-space: normal;
+	overflow-wrap: break-word;
+	word-break: break-word;
+}
+
+/* ==========================================================================
+   12. Dropdown, dynamic list, progressbar
+   ========================================================================== */
+
+.cbi-dropdown {
+	display: inline-flex;
+	align-items: center;
+	position: relative;
+	min-width: 140px;
+	/* 多选空值等"无当前值行"（ul 内无 li[display]）时 ul 高度为 0，
+	   胶囊会塌成扁条：给固定最小高度，与含当前值行的胶囊等高 */
+	min-height: 35px;
+	padding: 8px 34px 8px 12px;
+	font-size: 13px;
+	/* 闭合：仿左侧菜单选中项——主题色柔和渐变（左浓右淡）叠加玻璃，
+	   透明带模糊，不再整块 accent 渐变填充 */
+	color: var(--text-color-high);
+	background:
+		linear-gradient(100deg,
+			color-mix(in srgb, var(--primary-color-high) 24%, transparent),
+			color-mix(in srgb, var(--primary-color-high) 5%, transparent) 62%,
+			color-mix(in srgb, var(--primary-color-high) 12%, transparent)),
+		var(--glass-bg);
+	border: 1px solid color-mix(in srgb, var(--primary-color-high) 42%, transparent);
+	border-radius: 10px;
+	box-shadow: 0 4px 16px color-mix(in srgb, var(--primary-color-high) 20%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.55);
+	-webkit-backdrop-filter: blur(10px) saturate(var(--glass-sat));
+	backdrop-filter: blur(10px) saturate(var(--glass-sat));
+	cursor: pointer;
+}
+
+/* 下拉图标区（ui.js 生成的 span.open）：绝对定位到右侧，用竖线
+   与按钮主体分割。点击 ▾ 展开下拉；点击左侧主体执行主操作。
+   这是 ComboButton（保存并应用）等下拉按钮的下拉入口，
+   不能用背景箭头（点击背景图不命中 span.open，导致无法下拉）。 */
+.cbi-dropdown > .open {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 34px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-left: 1px solid rgba(255, 255, 255, 0.35);
+	color: var(--on-primary-color);
+	cursor: pointer;
+	z-index: 1;
+}
+
+/* cbi-dropdown：未打开时 ul 作为当前值行（只显示选中项），
+   打开时变为玻璃下拉列表 */
+.cbi-dropdown > ul {
+	display: flex;
+	width: 100%;
+	margin: 0 !important;
+	padding: 0;
+	list-style: none;
+	overflow: hidden;
+}
+
+.cbi-dropdown > ul > li {
+	display: none;
+}
+
+/* 当前值行：与官方 bootstrap 一致，无条件显示 li[display]
+   （不依赖 :not([open])，防止关闭流程中断时值不可见） */
+.cbi-dropdown > ul > li[display] {
+	display: flex;
+	align-items: center;
+	flex: 1;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* 多选下拉：选中的多个选项在胶囊内换行展示（每个一行），
+   按钮随之动态拓高，页面上直观看得出已选哪些；
+   行高随内容在文档流中自然增高，不溢出所在行/卡片 */
+.cbi-dropdown[multiple] > ul {
+	flex-wrap: wrap;
+	gap: 2px 8px;
+}
+
+.cbi-dropdown[multiple] > ul > li[display] {
+	/* 一个选项一行（竖向），不允许并行显示 */
+	flex: 0 0 100%;
+	white-space: normal;
+	overflow-wrap: break-word;
+}
+
+
+/* 打开时：触发器淡出（背景/边框/箭头/预览行全部隐去），
+   视觉上只剩一个弹出的选项列表——避免“框 + 弹出列表”看起来像
+   两个下拉菜单堆叠。ui.js 打开时会把原 ul 克隆为 ul.preview，
+   弹出规则只作用于 ul.dropdown。 */
+/* 打开时提升自身层级：backdrop-filter 让胶囊形成层叠上下文，
+   内部弹出列表 z-index 9999 出不去，会被后续卡片/层盖住 */
+.cbi-dropdown[open] {
+	z-index: 1000;
+	/* 打开时胶囊纯玻璃（preview 显示当前值），取消主题色渐变 */
+	background: var(--glass-bg);
+	border-color: var(--glass-border);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset);
+}
+
+/* 暗黑下闭合/打开：外发光略强、内高光调暗（与左侧菜单选中项一致） */
+:root[data-darkmode="true"] .cbi-dropdown {
+	box-shadow: 0 4px 18px color-mix(in srgb, var(--primary-color-high) 30%, transparent),
+	            inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* 普通下拉（非"保存并应用"类按钮）无分隔：箭头区不画竖线，窄一点 */
+.cbi-dropdown:not(.cbi-button-apply):not(.cbi-button-negative) > .open {
+	border-left: none;
+	width: 26px;
+}
+
+/* 普通下拉文字强制主题文字色：on-primary-color 在亮/暗下分别是
+   白/黑，叠在新渐变玻璃上正好白底白字、黑底黑字看不清 */
+.cbi-dropdown:not(.cbi-button-apply):not(.cbi-button-negative),
+.cbi-dropdown:not(.cbi-button-apply):not(.cbi-button-negative) > ul > li,
+.cbi-dropdown:not(.cbi-button-apply):not(.cbi-button-negative) > ul > li[display] {
+	color: var(--text-color-high) !important;
+}
+
+:root[data-darkmode="true"] .cbi-dropdown:not(.cbi-button-apply):not(.cbi-button-negative),
+:root[data-darkmode="true"] .cbi-dropdown:not(.cbi-button-apply):not(.cbi-button-negative) > ul > li,
+:root[data-darkmode="true"] .cbi-dropdown:not(.cbi-button-apply):not(.cbi-button-negative) > ul > li[display] {
+	color: #d9dfe9 !important;
+}
+
+.cbi-dropdown[open] > .more,
+.cbi-dropdown[open] > div {
+	display: none;
+}
+
+/* ComboButton（保存并应用 / Apply unchecked）：保持 accent 渐变按钮
+   样式（而非普通下拉框），右侧竖线分割下拉图标区 */
+.cbi-dropdown.cbi-button-apply {
+	background: var(--accent-grad);
+	/* 与 .cbi-button 同理：废弃 border（透明边框也是独立绘制层，
+	   引擎分层栅格化时不跟 border-radius，露出两层/方剪裁描边）。
+	   padding 各边 +1px 补偿边框厚度（基础 8px 34px 8px 12px），尺寸不变 */
+	border: none;
+	padding: 9px 35px 9px 13px;
+	color: var(--on-primary-color);
+	box-shadow: 0 6px 16px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+	/* 与 .cbi-button 同理：不透明渐变底本就用不上模糊，去掉继承来的
+	   backdrop-filter，避免 WebKit 矩形滤镜区域在圆角缘露缝 */
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	/* 保存并应用：宽度只匹配文字，不继承普通下拉框的 min-width */
+	min-width: auto;
+}
+
+.cbi-dropdown.cbi-button-apply > .open {
+	border-left-color: rgba(255, 255, 255, 0.35);
+	color: var(--on-primary-color);
+}
+
+.cbi-dropdown.cbi-button-negative {
+	background: linear-gradient(135deg, #f06767, var(--error-color-high));
+	/* 与 apply 同理：废弃 border 以免独立绘制层不跟圆角；padding +1px 补偿 */
+	border: none;
+	padding: 9px 35px 9px 13px;
+	color: var(--on-error-color);
+	box-shadow: 0 6px 16px rgba(var(--error-color-high-rgb), 0.35);
+	/* 与 apply 同理：不透明渐变底用不上模糊，去掉以免矩形滤镜缝 */
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	min-width: auto;
+}
+
+.cbi-dropdown.cbi-button-negative > .open {
+	border-left-color: rgba(255, 255, 255, 0.35);
+	color: var(--on-error-color);
+}
+
+/* ComboButton 闭合时：按钮本身已有渐变底色，内部当前值行
+   不再叠加 accent 底色（打开后的弹出列表里选中项仍保留高亮） */
+.cbi-dropdown:not([open]) > ul > li[selected],
+.cbi-dropdown.cbi-button-apply:not([open]) > ul > li[selected],
+.cbi-dropdown.cbi-button-negative:not([open]) > ul > li[selected] {
+	background: transparent;
+}
+
+/* 原生 select（.cbi-select）：与 cbi-dropdown 统一的分割按钮风格 */
+.cbi-select {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	min-width: 140px;
+	/* 与按钮族同理：废弃透明 border（独立绘制层不跟圆角），
+	   padding 各边 +1px 补偿（原 8px 34px 8px 12px），尺寸不变 */
+	padding: 9px 35px 9px 13px;
+	/* 与 cbi-dropdown 统一的渐变按钮风格 */
+	background: var(--accent-grad);
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0 6px 16px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+	cursor: pointer;
+}
+
+.cbi-select select {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 100%;
+	background: transparent;
+	border: none;
+	outline: none;
+	height: auto;
+	padding: 0;
+	color: var(--text-color-high);
+}
+
+.cbi-select select option {
+	background: var(--field-bg);
+	color: var(--text-color-high);
+}
+
+.cbi-select::after {
+	content: "▾";
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 34px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-left: 1px solid rgba(255, 255, 255, 0.35);
+	color: var(--on-primary-color);
+	pointer-events: none;
+}
+
+/* 单选时多余的 “···”（多选超限指示）默认隐藏，与官方一致 */
+.cbi-dropdown > .more {
+	display: none;
+}
+
+.cbi-dropdown[multiple][more] > .more {
+	display: flex;
+}
+
+/* 下拉打开时临时解除卡片链 backdrop-filter（JS holdCardBlur 加类）：
+   玻璃卡片的 backdrop-filter 创建 stacking context + containing
+   block，内部下拉 z-index 出不去会被遮挡；解除后下拉可盖住后续卡片 */
+.liquid-dd-bf-off,
+.liquid-dd-bf-off * {
+	-webkit-backdrop-filter: none !important;
+	backdrop-filter: none !important;
+}
+
+.cbi-dropdown[open] > ul.dropdown {
+	display: block;
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: calc(100% + 4px);
+	z-index: 9999;
+	max-height: 260px;
+	overflow-y: auto;
+	padding: 5px;
+	background: rgba(255, 255, 255, 0.92);
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	backdrop-filter: blur(var(--glass-blur));
+	border: 1px solid var(--glass-border);
+	border-radius: 12px;
+	box-shadow: var(--glass-shadow);
+}
+
+/* 暗黑模式下下拉选项列表更实一些（alpha 0.74 → 0.97 + 更强模糊），
+   避免透出下方内容导致选项文字看不清；仍保留玻璃质感 */
+:root[data-darkmode="true"] .cbi-dropdown[open] > ul.dropdown {
+	background: rgba(22, 29, 44, 0.97);
+	-webkit-backdrop-filter: blur(32px) saturate(var(--glass-sat));
+	backdrop-filter: blur(32px) saturate(var(--glass-sat));
+}
+
+/* 替换型下拉（liquid-combo-pilot）：不用主题色渐变，纯玻璃光色，
+   黑白场景各自适配（亮色浅玻璃 / 暗色深玻璃实底） */
+.cbi-dropdown.liquid-combo-pilot {
+	min-height: 24px;
+	padding: 4px 34px 4px 10px;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset);
+}
+
+:root[data-darkmode="true"] .cbi-dropdown.liquid-combo-pilot {
+	background: rgba(22, 29, 44, 0.92);
+	border-color: rgba(255, 255, 255, 0.16);
+}
+
+.cbi-dropdown.liquid-combo-pilot > ul > li[display],
+.cbi-dropdown.liquid-combo-pilot[open] > ul.preview > li[display] {
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.cbi-dropdown.liquid-combo-pilot > .open {
+	border-left: none;
+	width: 24px;
+	color: var(--text-color-medium);
+}
+
+.cbi-dropdown.liquid-combo-pilot[open] {
+	background: var(--glass-bg);
+	border-color: var(--glass-border);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset);
+}
+
+/* 暗黑下闭合框更实（glass-bg 0.4 太透，透出内容会淹没浅色文字）：
+   已由全局暗色渐变覆盖，此处删除旧实底覆盖 */
+
+/* 试点弹出列表悬浮：中性灰高亮，不用主题色 */
+.cbi-dropdown.liquid-combo-pilot[open] > ul.dropdown > li:hover {
+	background: rgba(127, 127, 127, 0.18) !important;
+	color: var(--text-color-highest);
+}
+
+/* 打开下拉瞬间：胶囊内 preview（当前值克隆）在鼠标下方会命中全局
+   主题色 hover——强制中性透明，避免"点击时当前选项突然变主题色" */
+.cbi-dropdown.liquid-combo-pilot[open] > ul.preview > li,
+.cbi-dropdown.liquid-combo-pilot[open] > ul.preview > li[selected],
+.cbi-dropdown.liquid-combo-pilot[open] > ul.preview > li:hover,
+.cbi-dropdown.liquid-combo-pilot[open] > ul.preview > li[display]:hover {
+	background: transparent !important;
+	color: var(--text-color-high) !important;
+}
+
+/* 打开时胶囊本体跟随全局主题色渐变玻璃（r43 的强制覆盖已由全局
+   [open] 样式取代，此处删除） */
+
+/* 试点下拉全部文字强制主题文字色（防内联样式/其他规则把闭合或
+   列表文字染成黑色，暗色下看不清） */
+.cbi-dropdown.liquid-combo-pilot > ul > li,
+.cbi-dropdown.liquid-combo-pilot > ul > li[display],
+.cbi-dropdown.liquid-combo-pilot > ul.preview > li,
+.cbi-dropdown.liquid-combo-pilot[open] > ul.dropdown > li {
+	color: var(--text-color-high) !important;
+}
+
+:root[data-darkmode="true"] .cbi-dropdown.liquid-combo-pilot > ul > li,
+:root[data-darkmode="true"] .cbi-dropdown.liquid-combo-pilot > ul > li[display],
+:root[data-darkmode="true"] .cbi-dropdown.liquid-combo-pilot > ul.preview > li,
+:root[data-darkmode="true"] .cbi-dropdown.liquid-combo-pilot[open] > ul.dropdown > li {
+	color: #d9dfe9 !important;
+}
+
+/* 试点（接口页 proto，main.js 替换的 Combobox 加 liquid-combo-pilot）：
+   弹出面板去掉 backdrop-filter blur（性能主因）改用高不透明度半透明底，
+   阴影降级——视觉几乎不变，打开/滚动明显更顺。仅试点范围生效。 */
+.cbi-dropdown.liquid-combo-pilot[open] > ul.dropdown {
+	background: rgba(255, 255, 255, 0.95);
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	box-shadow: 0 4px 16px rgba(31, 45, 70, 0.14);
+}
+
+:root[data-darkmode="true"] .cbi-dropdown.liquid-combo-pilot[open] > ul.dropdown {
+	background: rgba(22, 29, 44, 0.97);
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+/* 打开时：preview 克隆作为顶部当前值行（官方机制），
+   原 ul 弹出后顶部仍有当前值显示 */
+.cbi-dropdown[open] > ul.preview {
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	align-items: center;
+	overflow: hidden;
+}
+
+.cbi-dropdown[open] > ul.preview > li[display] {
+	display: flex;
+	align-items: center;
+	flex: 1;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* 打开时胶囊内 preview（当前值克隆）无条件透明：点击瞬间鼠标压在其
+   上会命中全局主题色 hover，出现深色渐变背景——所有下拉统一清除 */
+.cbi-dropdown[open] > ul.preview > li,
+.cbi-dropdown[open] > ul.preview > li[selected],
+.cbi-dropdown[open] > ul.preview > li[display],
+.cbi-dropdown[open] > ul.preview > li:hover {
+	background: transparent !important;
+}
+
+.cbi-dropdown[open] > ul.dropdown > li {
+	display: flex;
+	align-items: center;
+	padding: 7px 10px;
+	border-radius: 8px;
+	font-size: 13px;
+	color: var(--text-color-medium);
+	cursor: pointer;
+	/* 长文本选项（如 wechatpush 推送模式带描述）允许换行显示全 */
+	white-space: normal;
+	overflow-wrap: break-word;
+}
+
+/* 富选项（cbiRichListValue）：闭合显示标题，弹出列表内显示描述 */
+.cbi-dropdown > ul > li .hide-close,
+.cbi-dropdown[open] > ul.dropdown > li .hide-open {
+	display: none;
+}
+
+.cbi-dropdown > ul > li .hide-open,
+.cbi-dropdown[open] > ul.dropdown > li .hide-close {
+	display: initial;
+}
+
+.cbi-dropdown > ul > li {
+	padding: 7px 10px;
+	border-radius: 8px;
+	font-size: 13px;
+	color: var(--text-color-medium);
+	cursor: pointer;
+}
+
+/* 下拉选项 hover：更实的背景 + 高对比文字。
+   亮色用主题色浅 tint（白色背景上白 hover 看不清），暗黑用实色蓝灰 */
+.cbi-dropdown > ul > li:hover {
+	background: color-mix(in srgb, var(--primary-color-high) 16%, #ffffff);
+	color: var(--text-color-highest);
+}
+
+:root[data-darkmode="true"] .cbi-dropdown li:hover {
+	/* 暗黑 hover：半透明白磨砂高亮。
+	   注意不能加 backdrop-filter —— li 已位于带玻璃背景的 ul 内，
+	   再叠一层 blur 会把深色玻璃模糊加深，反而显得比胶囊更暗；
+	   半透明白叠在深色上即是"凸起的白玻璃"质感 */
+	background: rgba(255, 255, 255, 0.07) !important;
+	color: #ffffff;
+}
+
+.cbi-dropdown > ul > li[selected] {
+	color: var(--on-primary-color);
+	background: var(--accent-grad);
+}
+
+/* 下拉弹出列表里的当前选中项：玻璃磨砂白（半透明白，略强于 hover），
+   不取主题/胶囊色 —— 胶囊（含保存并应用的 positive/negative 变色）与
+   选中项不再出现"红胶囊 + 绿选项"式的颜色冲突 */
+.cbi-dropdown[open] > ul.dropdown > li[selected] {
+	background: rgba(255, 255, 255, 0.12) !important;
+	color: #ffffff;
+}
+
+.cbi-dropdown > .placeholder,
+.cbi-dropdown[open] > .placeholder {
+	color: var(--text-color-low);
+}
+
+.cbi-dynlist {
+	margin: 4px 0;
+	padding: 10px;
+	border-radius: 12px;
+	background: var(--field-bg);
+	border: 1px dashed var(--border-color-medium);
+}
+
+.cbi-dynlist .cbi-dynlist-remove {
+	/* 死规则保留：当前 LuCI(uidynlist) 已不生成该类，见下方 .item::after */
+	margin-left: 8px;
+}
+
+/* ===== DynamicList 的删除按钮 = .item::after（stock 机制，非 DOM 按钮）=====
+   ui.js handleClick 的热区算法：
+     const afterWidth = parseFloat(getComputedStyle(item,'::after').width) || 0;
+     if (rect.right - ev.clientX <= afterWidth) removeItem(...)
+   主题未定义该伪元素 → width=0、无可见 ✕ → 既看不见也点不到（用户反馈
+   "添加后没有删除按钮"）。补齐：
+   - float:right 把 ✕ 顶到条目右缘（热区按"条目右缘往左 afterWidth 像素"算，
+     必须落在右缘才点得到）；
+   - width:>0 且给足点击面积；text-align:center 让字形在热区里居中；
+   - hover/active 变主题红，提示可点。 */
+.cbi-dynlist .item::after {
+	content: '✕';
+	float: right;
+	width: 24px;
+	margin-left: 10px;
+	text-align: center;
+	cursor: pointer;
+	color: var(--text-color-medium);
+	border-radius: 8px;
+	line-height: 1.6;
+	transition: color .15s ease, background .15s ease;
+}
+
+.cbi-dynlist .item:hover::after {
+	color: var(--error-color-high);
+	background: rgba(var(--error-color-high-rgb), .12);
+}
+
+.cbi-dynlist .item::after:active {
+	transform: scale(.9);
+}
+
+/* 条目与右侧 ✕ 之间留出文字间距，避免长文本顶到按钮上 */
+.cbi-dynlist .item {
+	padding: 2px 0;
+}
+
+.cbi-dynlist .item > span {
+	margin-right: 6px;
+}
+
+.cbi-progressbar {
+	position: relative;
+	width: 100%;
+	min-width: 60px;
+	height: 8px;
+	overflow: hidden;
+	border-radius: 999px;
+	background: var(--track-bg);
+}
+
+.cbi-progressbar > div {
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	border-radius: 999px;
+	background: var(--accent-grad);
+	box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* status-page (overview) memory/storage bars: taller, with used/total
+   text rendered inside the bar by liquid's main.js */
+.cbi-section .cbi-progressbar {
+	height: 22px;
+	display: flex;
+	align-items: center;
+}
+
+.cbi-section .cbi-progressbar > div {
+	/* fill: sub-menu glass gradient (blue → white), theme color ~90%,
+	   NO border/ring, NO outer drop shadow (it would bleed onto the
+	   row separator on mobile) — edge implied by inner top highlight */
+	background: linear-gradient(135deg,
+	            color-mix(in srgb, var(--primary-color-high) 90%, transparent),
+	            rgba(255, 255, 255, 0.72));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+	            inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+
+:root[data-darkmode="true"] .cbi-section .cbi-progressbar > div {
+	background: linear-gradient(135deg,
+	            color-mix(in srgb, var(--primary-color-high) 88%, transparent),
+	            rgba(46, 58, 84, 0.45));
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.cbi-section .cbi-progressbar > span.liquid-bar-label {
+	position: relative;
+	z-index: 2;
+	margin: 0 auto;
+	font-size: 11px;
+	font-weight: 700;
+	line-height: 22px;
+	color: var(--text-color-highest);
+	text-shadow: 0 1px 2px rgba(255, 255, 255, 0.45);
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+/* ==========================================================================
+   13. Dashboard cards
+   ========================================================================== */
+
+.Dashboard .dashboard-bg {
+	border-radius: 20px;
+	background: var(--glass-bg);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inset);
+}
+
+.Dashboard .box-s1 {
+	min-height: 466px;
+}
+
+.Dashboard .title {
+	text-align: center;
+	padding: 18px 0 8px;
+}
+
+.Dashboard .title img {
+	width: 60px;
+	height: 60px;
+	object-fit: contain;
+	vertical-align: middle;
+}
+
+.Dashboard .title h3 {
+	margin-top: 8px;
+	font-size: 15px;
+	color: var(--text-color-highest);
+}
+
+.Dashboard .svgmonotone {
+	filter: invert(.42) hue-rotate(180deg) saturate(.6);
+}
+
+:root[data-darkmode="true"] .Dashboard .svgmonotone {
+	filter: invert(.75) hue-rotate(180deg) saturate(.8);
+}
+
+.Dashboard .section-content {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 20px;
+	padding: 20px 0 0;
+}
+
+.Dashboard .section-content > div {
+	width: 100%;
+	padding: 0 1.5em 1.5em;
+}
+
+.Dashboard .section-content > div:nth-child(2) {
+	margin-left: 0;
+}
+
+.Dashboard .settings-info {
+	padding-top: 1em;
+}
+
+.Dashboard .settings-info p,
+.Dashboard .settings-info .mt-2 {
+	margin: 6px 0;
+	font-size: 12.5px;
+}
+
+.Dashboard .settings-info p span:first-child,
+.Dashboard .settings-info .mt-2 span:first-child {
+	display: inline-block;
+	min-width: 9em;
+	color: var(--text-color-low);
+	text-align: right;
+	margin-right: 6px;
+}
+
+.Dashboard .settings-info p span:nth-child(2) {
+	color: var(--text-color-high);
+	font-weight: 500;
+	word-break: break-all;
+}
+
+.Dashboard .router-status-self .router-status-info .settings-info {
+	padding-left: 22px;
+}
+
+.Dashboard .internet-status-self .internet-status-info .settings-info,
+.Dashboard .router-status-wifi .wifi-info .settings-info,
+.Dashboard .router-status-lan .lan-info .settings-info {
+	display: flex;
+	justify-content: space-around;
+	flex-wrap: wrap;
+	gap: 8px 20px;
+}
+
+.Dashboard .radio-info {
+	padding: 4px 0;
+}
+
+.Dashboard .devices-list .devices-info .td {
+	padding: 4px 8px;
+}
+
+.Dashboard .devices-list .devices-info .tr .td:first-child {
+	width: 33%;
+	word-break: break-all;
+}
+
+.Dashboard .fade-in {
+	animation: liquid-fade-in .35s ease;
+}
+
+/* ==========================================================================
+   14. Generic app / module card lists
+   (covers third party "applications" dashboards: name + description cards)
+   ========================================================================== */
+
+.app-item,
+.app-card,
+.app-box,
+.app-entry {
+	border-radius: var(--glass-radius);
+	background: var(--glass-bg);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset);
+	padding: 14px 18px;
+	margin-bottom: 12px;
+	transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.app-item:hover,
+.app-card:hover,
+.app-box:hover,
+.app-entry:hover {
+	background: var(--glass-bg-hover);
+	box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inset);
+	transform: translateY(-1px);
+}
+
+.app-item .app-name,
+.app-card .app-title,
+.app-box .app-name,
+.app-entry .app-name {
+	font-weight: 700;
+	font-size: 14px;
+	color: var(--text-color-highest);
+}
+
+.app-item .app-description,
+.app-card .app-description,
+.app-box .app-description,
+.app-entry .app-description {
+	font-size: 12px;
+	color: var(--text-color-medium);
+	margin-top: 4px;
+}
+
+/* ==========================================================================
+   15. Lock screen (sysauth login)
+   ========================================================================== */
+
+body.liquid-login {
+	background-color: #0a0d13;
+	background-image: url(img/MontereyDark.jpg);
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-attachment: fixed;
+}
+
+:root[data-darkmode="false"] body.liquid-login {
+	background-image: url(img/MontereyLight.jpg);
+}
+
+/* Bing 每日壁纸（仅锁屏界面）：壁纸可用（data-liquid-bing-ok="1"，由
+   ucode 模板按当日缓存是否就绪输出）时覆盖亮/暗两种模式的默认壁纸。
+   无互联网（ok=0）或按钮关闭时规则不匹配，回退默认 Monterey 壁纸
+   （亮色 MontereyLight / 暗色 MontereyDark） */
+body.liquid-login[data-liquid-bing-ok="1"] {
+	background-image: var(--liquid-bing) !important;
+	background-size: cover;
+	background-position: center;
+	background-attachment: fixed;
+}
+
+body.liquid-login .skiplink {
+	display: none;
+}
+
+body.liquid-login #view .spinning {
+	display: none;
+}
+
+body.liquid-login #maincontainer {
+	height: 100vh;
+}
+
+body.liquid-login #liquid-login {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 1000;
+	overflow: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(8, 11, 16, 0.22);
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
+}
+
+/* 登录页纵向 stack：胶囊与登录卡片同处一个 flex 列，胶囊在卡片正上方
+   随卡片高度联动——输错密码出现错误提示使卡片变高时，胶囊自动上移，
+   不再与卡片重叠（此前胶囊 absolute 定位在中心上方固定 240px，
+   卡片变高不会带动它）。此布局同时天然兼容移动端。 */
+body.liquid-login #liquid-login .liquid-login-stack {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 16px;
+	max-width: calc(100vw - 40px);
+}
+
+/* 登录页胶囊容器：static 跟随 stack 流式布局（不再 absolute 偏移） */
+body.liquid-login #liquid-login-capsules {
+	position: static;
+	transform: none;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	flex-wrap: nowrap;
+}
+
+/* 登录页胶囊取消 fixed 定位，改为 static 跟随 flex 布局 */
+body.liquid-login .liquid-mode-switch,
+body.liquid-login .liquid-color-switch {
+	position: relative !important;
+	margin: 0 !important;
+	overflow: visible;
+}
+/* 登录页自定义颜色弹出框向上弹出，不被页面底部遮挡 */
+body.liquid-login .liquid-custom-pop {
+	top: auto;
+	bottom: calc(100% + 8px);
+	transform-origin: bottom center;
+}
+/* 登录页透明度滑杆：胶囊正下方，宽度与胶囊总宽一致，紧凑 */
+body.liquid-login .liquid-glass-slider-login {
+	position: relative;
+	left: 0;
+	right: 0;
+	top: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 5px;
+	margin-top: -1px;
+	pointer-events: none;
+	z-index: 2;
+	width: calc(100% - 60px);
+	margin-left: 30px;
+	margin-right: 30px;
+}
+body.liquid-login .liquid-glass-slider {
+	height: 1px;
+}
+body.liquid-login .liquid-glass-slider::-webkit-slider-thumb {
+	width: 12px;
+	height: 12px;
+	border-width: 1px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 1.5px rgba(255, 255, 255, 0.1);
+}
+body.liquid-login .liquid-glass-slider::-moz-range-thumb {
+	width: 12px;
+	height: 12px;
+	border-width: 1px;
+}
+
+/* 登录页隐藏搜索按钮（无意义） */
+body.liquid-login .liquid-search-btn {
+	display: none !important;
+}
+
+body.liquid-login #liquid-login .modal.login {
+	width: 392px;
+	max-width: calc(100vw - 40px);
+	margin: 0;
+	padding: 30px 34px 26px;
+	text-align: center;
+	border-radius: 24px;
+	background: var(--lock-card-bg);
+	-webkit-backdrop-filter: blur(30px) saturate(1.6);
+	backdrop-filter: blur(30px) saturate(1.6);
+	border: 1px solid var(--glass-border);
+	box-shadow: 0 32px 90px rgba(0, 0, 0, 0.55),
+	            inset 0 1px 0 var(--glass-inset);
+}
+
+/* 登录页表单卡片：排除全局 overflow-x:auto（r43 为嵌套卡片滚动而加），
+   否则圆角 + 滚动容器会把左上角"用户名"裁掉一角 */
+body.liquid-login .cbi-map,
+body.liquid-login .cbi-section {
+	overflow: visible !important;
+}
+
+/* 登录页 logo（main.js 注入内联 SVG，跟随主题色 + 玻璃水滴感） */
+body.liquid-login #liquid-login .modal.login .liquid-logo {
+	display: block;
+	width: 78px;
+	height: 78px;
+	margin: 0 auto 14px;
+}
+body.liquid-login #liquid-login .modal.login .liquid-logo svg {
+	width: 100%;
+	height: 100%;
+	/* 光晕沿水滴轮廓：多层 drop-shadow 从内到外 */
+	filter: drop-shadow(0 0 6px color-mix(in srgb, var(--primary-color-high) 50%, transparent))
+	        drop-shadow(0 2px 12px color-mix(in srgb, var(--primary-color-high) 40%, transparent))
+	        drop-shadow(0 0 24px color-mix(in srgb, var(--primary-color-high) 20%, transparent))
+	        drop-shadow(0 1px 0 rgba(255, 255, 255, 0.9));
+	transition: filter .3s ease;
+}
+body.liquid-login #liquid-login .modal.login .liquid-logo:hover svg {
+	filter: drop-shadow(0 0 10px color-mix(in srgb, var(--primary-color-high) 60%, transparent))
+	        drop-shadow(0 4px 20px color-mix(in srgb, var(--primary-color-high) 50%, transparent))
+	        drop-shadow(0 0 36px color-mix(in srgb, var(--primary-color-high) 25%, transparent))
+	        drop-shadow(0 2px 0 rgba(255, 255, 255, 1));
+}
+
+body.liquid-login #liquid-login .modal.login h4 {
+	font-size: 17px;
+	font-weight: 700;
+	margin-bottom: 16px;
+	color: var(--text-color-highest);
+}
+
+body.liquid-login #liquid-login .modal.login .cbi-value {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 5px;
+	border-top: 0;
+	padding: 4px 0 12px;
+}
+
+body.liquid-login #liquid-login .modal.login .cbi-value-title {
+	flex: none;
+	max-width: none;
+	width: 100%;
+	padding-top: 0;
+	text-align: left;
+	font-size: 11.5px;
+	font-weight: 600;
+	color: var(--text-color-medium);
+}
+
+body.liquid-login #liquid-login .modal.login input {
+	padding: 11px 13px;
+	font-size: 14px;
+	border-radius: 12px;
+}
+
+body.liquid-login #liquid-login .modal.login .alert-message {
+	text-align: left;
+	margin: 0 0 8px;
+}
+
+/* avoid nested glass inside the lock card */
+body.liquid-login #liquid-login .modal.login .cbi-map,
+body.liquid-login #liquid-login .modal.login .cbi-section,
+body.liquid-login #liquid-login .modal.login .cbi-section-node {
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	border: 0;
+	box-shadow: none;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+}
+
+body.liquid-login #liquid-login .modal.login button.important {
+	width: 100%;
+	margin-top: 6px;
+	padding: 12px;
+	font-size: 14px;
+	border-radius: 12px;
+	/* 实色主题底：accent-grad 是半透明渐变，在明亮卡片上
+	   左边缘会透出深色（看起来像黑边） */
+	background: var(--primary-color-high);
+	border: 1px solid transparent;
+	box-shadow: 0 6px 16px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+body.liquid-login #liquid-login .modal.login hr {
+	margin: 2px 0 12px;
+	border-color: var(--border-color-low);
+}
+
+body.liquid-login p.luci {
+	position: fixed;
+	bottom: 4px;
+	left: 0;
+	width: 100%;
+	margin: 0;
+	padding: 8px 22px 4px;
+	z-index: 2001;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: nowrap;
+	gap: 0 10px;
+	color: rgba(255, 255, 255, 0.6);
+	text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+}
+
+/* 登录页 foot 分隔符 · 更清晰（登录后的共享 .luci-sep 不动） */
+body.liquid-login .luci-sep {
+	opacity: .7;
+}
+
+body.liquid-login p.luci a {
+	color: rgba(255, 255, 255, 0.88);
+	text-decoration: none;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+	transition: color .15s ease, border-bottom-color .15s ease;
+}
+
+body.liquid-login p.luci a:hover {
+	color: #fff;
+	border-bottom-color: rgba(255, 255, 255, 0.9);
+}
+
+/* ==========================================================================
+   16. Modal dialogs
+   ========================================================================== */
+
+#modal_overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 2000;
+	overflow: auto;
+	background: rgba(8, 12, 18, 0.42);
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity .18s ease, visibility .18s ease;
+	/* flex 容器：普通 modal 顶部对齐（margin 5em auto），
+	   应用提示(.alert-message)用 margin:auto 全屏居中。
+	   超高 modal 由本容器 overflow:auto 滚动（不锁定、不脱离文档流） */
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+}
+
+body.modal-overlay-active {
+	overflow: hidden;
+	height: 100vh;
+}
+
+body.modal-overlay-active #modal_overlay {
+	left: 0;
+	right: 0;
+	opacity: 1;
+	visibility: visible;
+}
+
+#modal_overlay > .modal {
+	/* 弹出窗口宽 = 屏幕可用宽度 80%（嵌套卡片按此逐层套宽） */
+	width: 80%;
+	min-width: 270px;
+	max-width: 80vw;
+	margin: 5em auto;
+	min-height: 32px;
+	border-radius: 18px;
+	padding: 20px 24px;
+	background: var(--glass-bg-strong);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inset);
+}
+
+/* ── 应用配置流程提示（正在等待/应用完成/无待应用配置等）──
+   背景：LuCI 的 displayStatus(type) 会把 type 字符串（如 'notice
+   spinning'）作为 class 直接加到 modal 元素上，而主题的 .notice /
+   .spinning 是为按钮/文档流元素设计的（margin/padding/border、
+   inline-block/relative/padding-left），作用到 modal 自身会把布局
+   挤偏（spinning 的 position:relative 在 flex 中 margin:auto 垂直
+   居中行为异常，是安卓上"正在等待"偏右下的根因）。
+   修复：modal 上下文完整重置这些污染，恢复纯 static + flex 居中。 */
+#modal_overlay > .modal.alert-message,
+#modal_overlay > .modal.alert-message.notice,
+#modal_overlay > .modal.alert-message.spinning {
+	/* 重置 .notice 污染（文档流内联提示样式） */
+	margin: auto !important;
+	padding: 20px 28px !important;
+	border-radius: 18px !important;
+	font-size: 13px !important;
+	background: var(--glass-bg-strong) !important;
+	border: 1px solid var(--glass-border) !important;
+	/* 重置 .spinning 污染（按钮的 inline-block/relative/padding-left）。
+	   注意 position 不用 !important —— JS 强制居中器(visualViewport)
+	   需用 inline style 覆盖为 fixed，!important 会压死它 */
+	position: static;
+	display: block !important;
+	text-align: center !important;
+	width: min(420px, 90vw) !important;
+	max-width: 90vw !important;
+	max-height: 80vh !important;
+	overflow: auto !important;
+	z-index: 2100 !important;
+}
+
+#modal_overlay > .modal.alert-message h4:empty {
+	display: none;
+}
+
+/* spinner 图标作为行内元素与文字同行，参与整体居中 */
+#modal_overlay > .modal.alert-message.spinning::before {
+	position: static;
+	display: inline-block;
+	vertical-align: middle;
+	margin: 0 8px 0 0;
+}
+
+/* 页面顶部成功通知的独立遮罩（portalTopNotices 提升进来的，如"密码已更改"）：
+   不复用 ui.js 的 #modal_overlay（里面常驻预创建空 .modal 底座，
+   混用会把空壳一起显示成两个框），主题自建居中层，点击/6s 自动消失 */
+#liquid-notice-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 2100;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	overflow: auto;
+	background: rgba(8, 12, 18, 0.42);
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
+}
+#liquid-notice-overlay.show {
+	display: flex;
+}
+#liquid-notice-overlay .alert-message {
+	/* 与 #modal_overlay > .modal.alert-message（如"配置更改已应用。"）
+	   完全一致的标准弹窗设计，避免到处不同弹框造成体验割裂 */
+	display: block !important;
+	width: min(420px, 90vw);
+	max-width: 90vw;
+	margin: 0;
+	padding: 20px 28px;
+	border-radius: 18px;
+	text-align: center;
+	font-size: 13px;
+	cursor: pointer;
+	/* bootstrap 会给 .info 强制 on-primary 白字 + 蓝渐变，压回主题玻璃 */
+	color: var(--text-color-high);
+	background: var(--glass-bg-strong);
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inset);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	animation: liquid-pop-in .25s ease;
+}
+#liquid-notice-overlay .alert-message p {
+	margin: 0;
+}
+/* 内置"关闭"按钮居中（按钮的 margin-left:auto 是内联样式，需要 !important 压） */
+#liquid-notice-overlay .alert-message > div:last-child {
+	justify-content: center;
+}
+#liquid-notice-overlay .alert-message .btn {
+	margin: 10px 0 0 !important;
+}
+
+#modal_overlay > .modal > * {
+	line-height: normal;
+	margin-bottom: .5em;
+	max-width: 100%;
+}
+
+#modal_overlay > .modal h4 {
+	font-size: 15px;
+	color: var(--text-color-highest);
+}
+
+#modal_overlay > .modal .button-row {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+#modal_overlay > .modal .button-row > button:first-of-type {
+	margin-right: auto;
+}
+
+/* 按钮/操作元素并排时留空隙（表格操作列、内联按钮组、section 创建区等） */
+.cbi-button + .cbi-button,
+.cbi-button + button,
+button + .cbi-button,
+button + button,
+.btn + .btn,
+.btn + button,
+button + .btn,
+.td.cbi-section-actions > * + *,
+.cbi-section-create > * + * {
+	margin-left: 8px;
+}
+
+/* 已是 flex gap 的容器（页面操作区、modal 按钮行）自带间距，
+   去掉叠加的 margin，避免间距翻倍 */
+.cbi-page-actions > * + *,
+#modal_overlay > .modal .button-row > * + * {
+	margin-left: 0;
+}
+
+/* ==========================================================================
+   17. Labels, notices, alerts
+   ========================================================================== */
+
+.label {
+	display: inline-block;
+	padding: 3px 10px;
+	margin: 0 2px;
+	border-radius: 999px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: .4px;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: var(--text-color-medium);
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+}
+
+.label.important,
+.label.notice {
+	color: var(--on-primary-color);
+	background: var(--accent-grad);
+	border-color: transparent;
+}
+
+.label.success {
+	color: var(--on-success-color);
+	background: linear-gradient(135deg, #3dbf88, var(--success-color-high));
+	border-color: transparent;
+}
+
+.label.warning {
+	color: var(--on-warn-color);
+	background: linear-gradient(135deg, #f0c04a, var(--warn-color-high));
+	border-color: transparent;
+}
+
+.label-danger,
+.label.error {
+	color: var(--on-error-color);
+	background: linear-gradient(135deg, #f06767, var(--error-color-high));
+	border-color: transparent;
+}
+
+.alert-message {
+	margin: 0 0 16px;
+	padding: 12px 16px;
+	border-radius: 12px;
+	background: var(--glass-bg);
+	-webkit-backdrop-filter: blur(10px);
+	backdrop-filter: blur(10px);
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow-soft);
+}
+
+.alert-message h4 {
+	font-size: 14px;
+	margin-bottom: 3px;
+}
+
+.alert-message p {
+	margin: .25em 0;
+}
+
+.alert-message.warning {
+	background: color-mix(in srgb, var(--warn-color-high) 22%, var(--glass-bg));
+	border-color: color-mix(in srgb, var(--warn-color-high) 45%, transparent);
+}
+
+.alert-message.error {
+	background: color-mix(in srgb, var(--error-color-high) 20%, var(--glass-bg));
+	border-color: color-mix(in srgb, var(--error-color-high) 45%, transparent);
+}
+
+.alert-message.success {
+	background: color-mix(in srgb, var(--success-color-high) 20%, var(--glass-bg));
+	border-color: color-mix(in srgb, var(--success-color-high) 45%, transparent);
+}
+
+.notice {
+	margin: 8px 0;
+	padding: 8px 12px;
+	border-radius: 10px;
+	font-size: 12px;
+	background: var(--field-bg);
+	border: 1px solid var(--border-color-low);
+}
+
+/* ==========================================================================
+   18. Misc LuCI components
+   ========================================================================== */
+
+/* loading spinner */
+.spinning {
+	display: inline-block;
+	position: relative;
+	padding-left: 28px;
+}
+
+.spinning::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 20px;
+	height: 20px;
+	margin-top: -10px;
+	color: var(--text-color-medium);
+	background: url(svg/spinner.svg) center / contain no-repeat;
+	animation: liquid-spin .9s linear infinite;
+}
+
+/* interface boxes (luci-mod-network) */
+.ifacebox {
+	display: inline-block;
+	position: relative;
+	min-width: 0;
+	margin: 0 0 16px;
+	padding: 14px 18px;
+	border-radius: var(--glass-radius);
+	background: var(--glass-bg);
+	-webkit-backdrop-filter: blur(var(--glass-blur));
+	backdrop-filter: blur(var(--glass-blur));
+	border: 1px solid var(--glass-border);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset);
+}
+
+/* 未加入任何防火墙区域的接口：luci 渲染的 head 色条内联为浅灰/白色
+   （#eeeeee / #ffffff），且不同 luci 版本输出不同：
+   - '--zone-color-rgb:238, 238, 238'（冒号后有无空格两种）
+   - 或直接 'background-color: rgb(238, 238, 238)'
+   统一覆盖变量与直接色值，按模式改为中性灰：
+   亮色浅灰（黑字可读），暗色近黑（白字清晰） */
+.ifacebox-head[style*="--zone-color-rgb:238, 238, 238"],
+.ifacebox-head[style*="--zone-color-rgb: 238, 238, 238"],
+.ifacebox-head[style*="--zone-color-rgb:255, 255, 255"],
+.ifacebox-head[style*="--zone-color-rgb: 255, 255, 255"] {
+	--zone-color-rgb: 125, 125, 125;
+	background-color: rgb(125, 125, 125) !important;
+}
+
+:root[data-darkmode="true"] .ifacebox-head[style*="--zone-color-rgb:238, 238, 238"],
+:root[data-darkmode="true"] .ifacebox-head[style*="--zone-color-rgb: 238, 238, 238"],
+:root[data-darkmode="true"] .ifacebox-head[style*="--zone-color-rgb:255, 255, 255"],
+:root[data-darkmode="true"] .ifacebox-head[style*="--zone-color-rgb: 255, 255, 255"] {
+	/* 暗色下：比黑色浅一点点（近黑），白色接口名清晰可读 */
+	--zone-color-rgb: 24, 26, 30;
+	background-color: rgb(24, 26, 30) !important;
+}
+
+.ifacebox-head {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	font-weight: 700;
+	font-size: 14px;
+	white-space: nowrap;
+	color: var(--text-color-highest);
+	/* 顶部防火墙分区色条：扩展到卡片边缘（抵消 ifacebox 的
+	   14px/18px padding），整行显示分区底色，与下方信息区分割 */
+	margin: -14px -18px 14px;
+	padding: 7px 18px;
+	border-radius: calc(var(--glass-radius) - 2px) calc(var(--glass-radius) - 2px) 0 0;
+	border-bottom: 1px solid var(--glass-border);
+}
+
+.ifacebox-body {
+	white-space: nowrap;
+	text-align: center;
+}
+
+.ifacebox-body > img,
+.ifacebox-body > .cbi-tooltip-container,
+.ifacebox-body > span {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+/* 接口列表操作列（重启/停止/编辑/删除）：不压缩、不换行；
+   按钮靠左（贴近接口信息，不往右让开太多） */
+.cbi-section-table td.cbi-section-actions {
+	width: 1%;
+	white-space: nowrap;
+	text-align: left;
+	vertical-align: middle;
+}
+
+/* GridSection（接口页网格卡片）的操作区同样不换行 */
+.cbi-section-actions {
+	white-space: nowrap;
+}
+
+
+/* 端口状态页：接口卡片宽度自适应内容、整体居中、间距 */
+div[style*="grid-template-columns:repeat(auto-fit, minmax(70px, 1fr))"] {
+	display: flex !important;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: flex-start;
+	gap: 14px;
+}
+
+div[style*="grid-template-columns:repeat(auto-fit, minmax(70px, 1fr))"] .ifacebox,
+.network-status-table .ifacebox {
+	width: auto !important;
+	max-width: none !important;
+	min-width: 70px;
+	margin: 0 !important;
+}
+
+/* GridSection 行内单元格强制等高：接口卡/详情/操作按钮底边对齐，
+   单元格分割线在同一高度（内容高度不同时不再错位） */
+div[style*="grid-template-columns:repeat(auto-fit, minmax(70px, 1fr))"] > * {
+	align-self: stretch !important;
+	height: auto !important;
+}
+
+/* 接口页行：接口小块靠左（限定左侧），详情与按钮依次排开 */
+div[style*="grid-template-columns:repeat(auto-fit, minmax(70px, 1fr))"]:has(.cbi-section-actions) {
+	justify-content: flex-start;
+}
+
+/* 网络-接口页的接口卡片：宽度按内容（接口组 bridge 的多个图标）拓展，
+   防止图标溢出卡片；max-width 不限制，让列随内容拉伸 */
+.cbi-section-table td[data-name="_ifacebox"] {
+	width: fit-content;
+	/* 卡片左右对称留空：多图标扩宽后右侧不贴相邻列 */
+	padding-left: 14px;
+	padding-right: 14px;
+}
+
+.cbi-section-table .ifacebox {
+	width: fit-content;
+	min-width: 0;
+	max-width: none;
+}
+
+/* 端口状态卡片：接口名/图标/连接状态水平居中 */
+div[style*="grid-template-columns:repeat(auto-fit, minmax(70px, 1fr))"] .ifacebox {
+	text-align: center;
+}
+
+div[style*="grid-template-columns:repeat(auto-fit, minmax(70px, 1fr))"] .ifacebox-head {
+	justify-content: center;
+}
+
+/* 网络卡片（30_network）：内容左对齐、上游标题居中、接口名行居中 */
+.network-status-table .ifacebox {
+	text-align: left !important;
+}
+
+.network-status-table .ifacebox-body.left,
+.network-status-table .ifacebox-body .nowrap {
+	text-align: left !important;
+}
+
+.network-status-table .ifacebox-head.center {
+	justify-content: center;
+	text-align: center;
+}
+
+.network-status-table .ifacebox > div:last-child {
+	text-align: center;
+}
+
+/* 网络卡片（30_network）整体居中、子卡片留空隙 */
+.network-status-table {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: flex-start;
+	gap: 14px;
+	margin-bottom: 14px;
+}
+
+/* 统计 tooltip：默认隐藏，悬停 📊/统计区域时在下方悬浮显示（DHCPv6/端口统计） */
+.cbi-tooltip {
+	z-index: 9999 !important;
+	/* absolute 脱离文档流：不占位（否则设备页图标右侧会留白），
+	   悬停时像概况页一样悬浮显示 */
+	position: absolute;
+	left: -10000px;
+	opacity: 0;
+	visibility: hidden;
+	/* 磨砂玻璃底（与概况页悬浮框一致，否则透明看不见文字） */
+	background: var(--glass-bg-strong);
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	border: 1px solid var(--glass-border);
+	border-radius: 10px;
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+	padding: 8px 12px;
+	white-space: normal;
+	line-height: 1.55;
+	color: var(--text-color-high);
+	pointer-events: none;
+}
+
+.cbi-tooltip-container {
+	position: relative;
+}
+
+/* 悬浮内容框内不再重复显示接口图标（行内主图标已表示连接状态）；
+   只针对 render_iface 的 ifacebadge.large 内重复图标，避免误伤
+   设备页等把主图标放在 tooltip 结构里的场景 */
+.cbi-tooltip.ifacebadge.large > img {
+	display: none;
+}
+
+/* hover 时提升卡片本身的层叠顺序：
+   .ifacebox 的 backdrop-filter 会创建 stacking context，把 tooltip 的
+   z-index:9999 锁在卡片内部，卡片之间的遮挡由 DOM 顺序决定——后一张
+   卡片会盖住前一张卡片的 tooltip。hover 提升卡片（z-index:1001）即可
+   让 tooltip 随卡片整体盖过相邻卡片（tooltip 的 9999 在卡片内部仍生效）。 */
+.ifacebox:hover {
+	z-index: 1001;
+}
+
+/* 悬浮内容框（tooltip）hover 时，提升其所在卡片本身的层叠顺序。
+   卡片的 backdrop-filter 会创建 stacking context 把 tooltip 的
+   z-index 锁在卡片内部，卡片之间的遮挡由 DOM 顺序决定，因此必须
+   整体提升卡片（而非只调 tooltip 的 z-index）。:has 覆盖 tooltip
+   可能挂载的各种卡片容器。 */
+.ifacebox:has(.cbi-tooltip-container:hover),
+.zonebadge:has(.cbi-tooltip-container:hover),
+.cbi-section-node:has(.cbi-tooltip-container:hover),
+.cbi-map:has(.cbi-tooltip-container:hover),
+.network-status-table:has(.cbi-tooltip-container:hover) {
+	z-index: 99999 !important;
+}
+
+.ifacebox .cbi-tooltip-container {
+	position: relative;
+}
+
+.ifacebox .cbi-tooltip {
+	position: absolute;
+	left: -10000px;
+	top: 100%;
+	opacity: 0;
+	display: block;
+	min-width: 220px;
+	margin: 4px 0 0;
+	padding: 8px 10px;
+	border-radius: 10px;
+	background: var(--glass-bg-strong);
+	-webkit-backdrop-filter: blur(12px);
+	backdrop-filter: blur(12px);
+	border: 1px solid var(--glass-border);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+	z-index: 9999;
+	white-space: normal;
+	line-height: 1.55;
+	pointer-events: none;
+	transition: opacity .15s ease;
+}
+
+/* 悬浮内容框被 portal 到 body 顶层后，原 .ifacebox .cbi-tooltip 的
+   背景规则因元素移出卡片而失效（会变成透明、文字看不清），
+   这里补上磨砂玻璃底色 */
+.liquid-tip-ported {
+	background: var(--glass-bg-strong) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) !important;
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)) !important;
+	border: 1px solid var(--glass-border) !important;
+	border-radius: 10px !important;
+	box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2) !important;
+	padding: 8px 12px !important;
+	white-space: normal !important;
+	line-height: 1.55 !important;
+	color: var(--text-color-high) !important;
+}
+
+/* 接口总览表格：列宽自适应 */
+.cbi-section-table {
+	table-layout: auto;
+}
+
+.cbi-section-table td,
+.cbi-section-table .td {
+	vertical-align: middle;
+}
+
+/* 网络 tooltip 接口徽章：横杠/圆点/接口名/图标同一行垂直居中 */
+.ifacebadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	vertical-align: middle;
+}
+
+.ifacebadge .zonebadge {
+	flex-shrink: 0;
+	padding: 2px 6px;
+	line-height: 1;
+}
+
+/* 接口图标全局统一 24px：不同 svg viewBox / 不同容器会导致宽度不一，
+   统一强制宽度 24px（!important 防内联样式覆盖），占位紧凑 */
+img[src*="icons/"][src$=".svg"] {
+	width: 24px !important;
+	height: auto !important;
+	vertical-align: middle;
+}
+
+/* interfaces.js 里 ifacebox-body 的设备图内联 16px，覆盖为 24px */
+.ifacebox-body > img {
+	width: 24px !important;
+	height: auto !important;
+}
+
+.ifacebadge img {
+	width: 24px;
+	height: auto;
+	vertical-align: middle;
+}
+
+/* luci 渲染会给接口徽章（ifacebadge）的图标/文字加内联
+   style="opacity:0.5"（离线样式），即使接口已连接也会残留，
+   造成半透明、被误判为未连接；统一压回不透明 */
+.ifacebadge img,
+.ifacebadge span {
+	opacity: 1 !important;
+}
+
+.zonebadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 10px;
+	font-weight: 700;
+	background: var(--glass-bg);
+	border: 1px solid var(--glass-border);
+	/* 与上方内容（概况页的 ifacebox-body 等）留出空隙 */
+	margin-top: 8px;
+}
+
+/* 区域名与成员接口横向排开；成员接口徽章之间用细竖线分隔，
+   结构更清晰（区域名 | 接口1 | 接口2） */
+.zonebadge > strong {
+	margin-right: 2px;
+}
+
+.zonebadge .ifacebadge + .ifacebadge {
+	border-left: 1px solid currentColor;
+	padding-left: 8px;
+}
+
+/* 胶囊内接口图标：全局 24px 偏大，缩到 15px 与紧凑胶囊匹配 */
+.zonebadge img[src$=".svg"] {
+	width: 15px !important;
+	height: 15px !important;
+}
+
+/* 防火墙区域标签（zonebadge）文字：LuCI 内置的淡 zone 色背景在暗色
+   下不变，白字会看不清——仅对带 zone 色背景的（内联 --zone-color-rgb）
+   在暗色下改用深色字；无 zone 色的 empty 标签走玻璃底+继承浅字 */
+:root[data-darkmode="true"] .zonebadge[style*="--zone-color-rgb"] {
+	color: #1d2633;
+}
+
+/* zonebadge-empty（如 ACCEPT / ACCEPT all others）：无 zone 色、玻璃底，
+   亮色下默认玻璃边框太淡看不见——用中灰边框；暗色文字继承浅色清晰 */
+.zonebadge-empty {
+	border-color: var(--border-color-medium);
+}
+
+/* code / pre blocks */
+pre {
+	padding: 12px 14px;
+	border-radius: 12px;
+	background: var(--field-bg);
+	border: 1px solid var(--border-color-low);
+	overflow: auto;
+}
+
+/* horizontal form rows helpers */
+.right {
+	float: right;
+}
+
+.left {
+	float: left;
+}
+
+/* ==========================================================================
+   19. Animations
+   ========================================================================== */
+
+@keyframes liquid-spin {
+	to { transform: rotate(360deg); }
+}
+
+@keyframes liquid-fade-in {
+	from { opacity: 0; transform: translateY(4px); }
+	to   { opacity: 1; transform: none; }
+}
+
+@keyframes liquid-jelly {
+	0%   { opacity: 0; transform: translateY(-10px) scaleY(.88); }
+	55%  { opacity: 1; transform: translateY(3px) scaleY(1.03); }
+	75%  { opacity: 1; transform: translateY(-2px) scaleY(.98); }
+	100% { opacity: 1; transform: none; }
+}
+
+@keyframes liquid-slide-in {
+	from { opacity: 0; transform: translateX(-36px); }
+	to   { opacity: 1; transform: none; }
+}
+
+/* ==========================================================================
+   20. Responsive
+   ========================================================================== */
+
+@media screen and (max-width: 854px) {
+
+	/* 移动端：弹出窗口（modal）宽 95%（80% 会把内容挤太小）；
+	   左右内边距收到 2px，让第一层卡片也按 2px 缩进（与嵌套每层一致） */
+	#modal_overlay > .modal {
+		width: 95%;
+		max-width: 95vw;
+		padding: 16px 2px 20px;
+	}
+
+	/* 移动端：多层嵌套卡片（network/dns/主机名记录等会套 2-4 层）压缩
+	   各层左右缩进到 6px，避免嵌套层数多了最内层内容被挤出视口；
+	   嵌套的每层再往内缩 2px（margin），层级越深内容越窄。
+	   注意左右 padding 需 ≥ 6px：输入框/下拉聚焦高亮 ring 外扩 3px，
+	   2px 时高亮会被卡片边缘裁断（微超被切），6px 才留足余量 */
+	.cbi-map {
+		padding: 10px 2px 12px;
+	}
+
+	.cbi-map .cbi-map,
+	.cbi-map .cbi-section,
+	.cbi-section .cbi-map,
+	.cbi-section .cbi-section {
+		margin-left: 2px;
+		margin-right: 2px;
+	}
+
+	.cbi-section {
+		padding: 10px 6px 12px;
+	}
+
+	.cbi-section-node {
+		/* 左右 4px 余量：滚动容器 overflow-x:auto 会在可视右缘横向裁剪
+		   输入框聚焦 ring(3px)，留 4px 保证 ring 不被切；嵌套仍紧凑 */
+		padding: 2px 4px;
+	}
+
+	/* 登录页表单容器：上面的 overflow-x:auto 同样会横裁登录输入框的
+	   聚焦 ring；登录表单不超宽、无需横向滚动，改 visible 即可 */
+	body.liquid-login .cbi-section-node {
+		overflow-x: visible;
+	}
+
+	.cbi-section-node > .cbi-section {
+		margin-top: 2px;
+	}
+
+	/* 移动端：接口卡片列限宽（fit-content 拉伸会把相邻列挤爆，
+	   拓宽后的卡片与文字重叠），子接口图标行允许换行避免溢出 */
+	.cbi-section-table td[data-name="_ifacebox"] {
+		width: auto;
+		max-width: 42%;
+		padding-left: 4px;
+		padding-right: 4px;
+	}
+
+	.cbi-section-table .ifacebox {
+		width: auto;
+		max-width: 100%;
+	}
+
+	.ifacebox-body > span {
+		white-space: normal;
+	}
+
+	/* 移动端：接口图标强制统一 24px，防止被列宽挤压变形 */
+	.cbi-section-table .ifacebox img {
+		width: 24px !important;
+		height: auto !important;
+		flex-shrink: 0;
+	}
+
+	/* 移动端：接口图标（主图标+子接口图标）换行居中，多图标整齐排列 */
+	.ifacebox-body {
+		white-space: normal;
+	}
+
+	.ifacebox-body > .cbi-tooltip-container,
+	.ifacebox-body > span,
+	.ifacebox-body > span .cbi-tooltip-container {
+		display: inline-block;
+		vertical-align: middle;
+		margin: 2px;
+	}
+
+	/* 移动端：接口表格按内容宽度排布（列不压缩，按钮紧贴信息：
+	   不重叠、也不贴最右留空）；超出视口时外层横向滚动 */
+	.cbi-section-table {
+		width: max-content;
+		min-width: 100%;
+	}
+
+	/* 移动端所有表格按内容宽度排布（列不压缩，MAC/MTU 等不重叠），
+	   超出视口时允许横向滚动。
+	   注意：横向滚动只放在表格的直接容器（.cbi-section-node 包裹式 /
+	   .cbi-tblsection 直挂式，form.js 的两种渲染路径），不再放在
+	   #maincontent——#maincontent 一旦带 overflow-x:auto 就成了嵌套滚动
+	   容器，安卓 Chrome 对其上的纵向手势路由比 iOS 严格，会拖慢/拦掉
+	   文档级滚动从而挡住地址栏收缩；宽表格在自己的容器内横滚即可 */
+	.cbi-section-node,
+	.cbi-tblsection {
+		overflow-x: auto;
+	}
+
+	.cbi-section-table {
+		width: max-content !important;
+		min-width: 100%;
+	}
+
+	.cbi-section-table td.cbi-section-actions {
+		white-space: nowrap;
+	}
+
+	/* 接口页 GridSection（网格卡片，带操作按钮的行）：按内容宽度排布，
+	   重启/停止/编辑/删除按钮不挤压重叠文字，超出视口横向滚动 */
+	div[style*="grid-template-columns:repeat(auto-fit, minmax(70px, 1fr))"]:has(.cbi-section-actions) {
+		width: max-content;
+		min-width: 100%;
+		overflow-x: auto;
+	}
+
+	/* 接口小框（接口名 + 设备/IP 信息）与其所在行卡片左缘间隔 4px：
+	   把 td[data-name="_ifacebox"] 的左右 padding 从 14px 收到 4px
+	   （小框往左移；对称留空保持，右侧也不贴相邻列） */
+	.cbi-section-table td[data-name="_ifacebox"] {
+		padding-left: 4px;
+		padding-right: 4px;
+	}
+
+	/* 移动端接口图标：宽度固定 24px，高度等比缩放（不强制高度） */
+	img[src*="icons/"][src$=".svg"] {
+		width: 24px !important;
+		height: auto !important;
+	}
+
+	/* 移动端接口页表格（含接口图标列的 GridSection）：锁定视口宽，
+	   覆盖上面的 max-content（行不再按内容撑宽、按钮不再溢出到屏幕
+	   右侧），所有内容在视口内换行显示 */
+	.cbi-section-table:has(td[data-name="_ifacebox"]) {
+		width: 100% !important;
+		min-width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	/* 移动端接口页：每接口两行 —— 第一行 = 接口图标 + 详细信息，
+	   第二行 = 重启/停止/编辑/删除四个操作按钮（整行，右对齐） */
+	.cbi-section-table-row {
+		display: flex;
+		flex-wrap: wrap;
+		/* 图标列与详细信息列等高对齐；二者合在一起超宽时才允许分行。
+		   横向 gap 归零：各 td 本来自带的分割线（border-bottom）就能
+		   首尾相连成一条连续线；垂直 gap 保留作换行/与按钮行的间距 */
+		align-items: stretch;
+		gap: 6px 0;
+	}
+
+	.cbi-section-table-row > td {
+		flex: 0 1 auto;
+		min-width: 0;
+		/* 移动端接口页：隐藏行分割线（线与列对齐难兼顾，先试无分割线） */
+		border-bottom: 0 !important;
+	}
+
+	.cbi-section-table-row > td.cbi-section-actions {
+		flex: 1 1 100%;
+		order: 99;
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		align-items: center;
+		gap: 4px;
+		padding: 2px 0 4px;
+		/* 四个按钮下方多 8px：让相邻两个接口之间稍微区分 */
+		margin-bottom: 8px;
+	}
+
+	#menubar .navigation {
+		display: flex;
+	}
+
+	#maincontainer {
+		flex-direction: column;
+		height: calc(100vh - 64px);
+	}
+
+	#mainmenu {
+		position: fixed;
+		left: 0;
+		top: 64px;
+		bottom: 0;
+		width: 264px;
+		transform: translateX(-102%);
+		animation: none;
+		z-index: 800;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		box-shadow: none;
+	}
+
+	#mainmenu.active {
+		transform: translateX(0);
+		box-shadow: 0 14px 50px rgba(0, 0, 0, 0.35);
+	}
+
+	#maincontent {
+		/* 外层卡片到屏幕边缘的留白：16px → 4px（用户反馈移动端概览页
+		   padding 偏大，大幅压缩）。内层卡片自身仍有 2~6px padding，
+		   文字距边缘合计约 14px，输入框聚焦 ring(3px) 也不至于贴边 */
+		padding: 0 4px 64px;
+		margin-left: 0;
+		/* r19 起移动端页面纵向滚动由文档承担（见下方「文档级滚动」块，
+		   为了让安卓浏览器地址栏随滚动收缩）。此处 flex-shrink:0 保证
+		   #maincontent 不被压缩成滚动容器；overflow-x:auto 只负责宽表格
+		   横向滚动。下拉打开时 :has(.cbi-dropdown[open]) 把 overflow 翻回
+		   visible 不再影响文档滚动位置（滚动位置在文档上，与此处无关） */
+		flex-shrink: 0;
+	}
+
+	/* ===== 文档级滚动：让安卓 Chrome/Edge 地址栏随滚动收缩（r19）=====
+	   安卓只在「文档级滚动」时才收缩工具栏/地址栏。此前纵向滚动锁在
+	   #maincontainer（body{overflow:hidden} + #maincontainer{overflow-y:auto}）
+	   这个嵌套滚动容器里，浏览器检测不到文档滚动，地址栏固定占高。
+	   现改为文档自然滚动：body 放开 overflow、#maincontainer 去掉固定高度
+	   与内层滚动、#menubar 靠 sticky 吸顶。仅登录后长页面生效，登录页
+	   （body.liquid-login）保持原固定布局。宽表格横向滚动仍由
+	   #maincontent{overflow-x:auto} 承担，不会外溢成文档横向滚动。 */
+	html {
+		overflow: visible;
+		height: auto;
+	}
+
+	body:not(.liquid-login) {
+		overflow: visible;
+		height: auto;
+		/* 用 svh（小视口=工具栏全展开的高度）而非 dvh：dvh 会随工具栏
+		   收缩动画实时变化，导致 body 高度回流、与收缩手势互相干扰
+		   （症状：须先回顶才肯收缩）。svh 恒定，背景经 canvas 铺满全屏 */
+		min-height: 100vh;
+		min-height: 100svh;
+		/* 安卓 Chrome/Edge 会禁用 background-attachment:fixed 页面的
+		   地址栏收缩（fixed 背景需整幅重绘，浏览器直接关掉收缩动画）。
+		   移动端改 scroll：渐变沿整个文档铺开，视觉无断层 */
+		background-attachment: scroll;
+	}
+
+	body:not(.liquid-login) #maincontainer {
+		height: auto;
+		min-height: 0;
+		overflow: visible;
+	}
+
+	/* ===== 移动端 chrome 条去模糊（r23）=====
+	   安卓 Chrome/Edge 的地址栏收缩动画期间要重绘 sticky/fixed 元素背后
+	   区域，backdrop-filter 元素需重采样、与收缩动画冲突——症状：
+	   首次下滑不收缩，往上回一点点再下滑才行；iOS Safari 滤镜层无此问题。
+	   吸顶菜单栏/面包屑、fixed 底部 foot、菜单抽屉全部去掉 blur，改等价
+	   不透明实色（与 meta theme-color 同色，浏览器工具栏依旧无缝衔接）。
+	   内容区卡片的 backdrop-filter 保留（在文档流内，不参与该冲突） */
+	#menubar,
+	#modemenu,
+	#mainmenu,
+	body:not(.liquid-login) p.luci {
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+
+	#menubar,
+	#modemenu,
+	body:not(.liquid-login) p.luci {
+		background: var(--glass-chrome-solid);
+	}
+
+	#mainmenu {
+		background: var(--glass-menu-solid);
+	}
+
+	body:not(.liquid-login) p.luci {
+		left: 0;
+	}
+
+	/* 移动端登录页 foot：窄屏允许换行（桌面一行） */
+	body.liquid-login p.luci {
+		flex-wrap: wrap;
+		gap: 2px 10px;
+		bottom: 2px;
+	}
+
+	/* 移动端 foot 横幅只保留「主题版本 + 固件版本」（版本号需可点检查更新），
+	   其余（kernel/luci/多余分隔符/检查更新卡片容器）仍隐藏。
+	   注意 overlay 也是 p.luci 的直接子元素——不排除会被这条规则
+	   display:none 掉，移动端整个检查更新卡片直接消失 */
+	body:not(.liquid-login) p.luci > *:not(.luci-fw):not(.luci-theme-ver):not(.luci-sep-fw):not(.liquid-ver-overlay) {
+		display: none;
+	}
+
+	body:not(.liquid-login) p.luci {
+		/* 移动端 foot 加高 4px（上下 padding 各 +2px），与浏览器底部
+		   工具栏衔接更饱满 */
+		padding: 8px 22px;
+		/* 字号调小一号 */
+		font-size: 10.5px;
+		/* 主题版本与固件版本间隔：较桌面 14px 大幅收紧 */
+		gap: 8px 4px;
+		/* 主题版本+固件版本一行放不下时：不换行、不压缩，
+		   从左侧起排，右侧溢出屏幕的部分直接裁掉不显示 */
+		flex-wrap: nowrap;
+		justify-content: flex-start;
+		/* 关键：overflow:hidden 会把"向上滑出页脚"的检查更新卡片
+		   整个裁掉（移动端点击无弹出的根因）。
+		   overflow-x: clip 只裁横向溢出，且 clip/visible 配对不会
+		   把 overflow-y 降级为 auto —— 横向照裁、纵向放行卡片 */
+		overflow-x: clip;
+		overflow-y: visible;
+	}
+	body:not(.liquid-login) p.luci > * {
+		flex-shrink: 0;
+		white-space: nowrap;
+	}
+
+	/* 更新卡片按钮：窄屏一排 6 个太挤 → 3+3 两行网格。
+	   grid 自动布局同样遵循 flex 的 order（order-modified document order），
+	   用 order 重排到目标顺序、列数固定 3，行划分确定不依赖宽度；
+	   DOM 顺序不变，桌面端（media 外）仍是原来的一行。
+	   第一行：一键更新 / 拉取新包 / 清理包
+	   第二行：下载链接 / 作者仓库 / 忽略 */
+	.liquid-ota-btn-row {
+		display: grid;
+		grid-template-columns: repeat(3, auto);
+		justify-content: center;
+		justify-items: center;
+		gap: 8px;
+	}
+	.liquid-ota-btn-row .liquid-ota-btn:nth-child(1) { order: 1; } /* 一键更新 */
+	.liquid-ota-btn-row .liquid-ota-btn:nth-child(2) { order: 2; } /* 拉取新包 */
+	.liquid-ota-btn-row .liquid-ota-btn:nth-child(4) { order: 3; } /* 清理包 */
+	.liquid-ota-btn-row .liquid-ota-btn:nth-child(3) { order: 5; } /* 下载链接 */
+	.liquid-ota-btn-row .liquid-ota-btn:nth-child(5) { order: 6; } /* 作者仓库 */
+	.liquid-ota-btn-row .liquid-ota-btn:nth-child(6) { order: 7; } /* 忽略 */
+
+	/* 更新卡片占屏宽 85%，按钮增大（触屏点按更友好） */
+	.liquid-ver-toast {
+		width: 85vw;
+	}
+	.liquid-ota-btn {
+		padding: 8px 12px;
+		font-size: 12px;
+	}
+
+	.luci-foot-spacer {
+		height: 100px;
+	}
+
+	#menubar .distversion {
+		display: none;
+	}
+
+	/* 文档级滚动后 modemenu（面包屑）需 sticky 吸顶在菜单栏下方，
+	   否则会被当普通内容随文档滚走（内层滚动时期它是 static，因为在
+	   滚动容器外、天然不动；改文档滚动后必须显式吸顶） */
+	#modemenu {
+		position: sticky;
+		top: 56px;
+	}
+
+	.cbi-value {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 5px;
+	}
+
+	.cbi-value-title {
+		flex: none;
+		max-width: none;
+		width: 100%;
+		padding-top: 0;
+		text-align: left;
+	}
+
+	.cbi-section-table,
+	.table {
+		display: block;
+		overflow-x: auto;
+	}
+
+	/* 移动端：tr 转 flex。分隔线画在 tr 底部（而非各 td）——
+	   行内 td 高度不同（标题行矮、进度条行高），td 级 border-bottom
+	   会左右错位；tr 级 border-bottom 只有一条边，横贯整行天然一致。
+	   （斑马纹/hover 本就画在 tr 上，故左右始终对齐） */
+	.cbi-section-table tr,
+	.table tr {
+		display: flex !important;
+		align-items: stretch;
+		white-space: nowrap;
+		border-bottom: 1px solid var(--border-color-low);
+	}
+
+	.cbi-section-table tr > td,
+	.cbi-section-table tr > th,
+	.cbi-section-table tr > .td,
+	.cbi-section-table tr > .th,
+	.table tr > td,
+	.table tr > th,
+	.table tr > .td,
+	.table tr > .th {
+		flex: 0 1 auto;
+		display: flex;
+		align-items: center;
+		/* 基础规则用类选择器(.table .td)，特异性更高，必须 !important
+		   才能移除 td 级分隔线（分隔线统一画在 tr 底部） */
+		border-bottom: 0 !important;
+	}
+
+	.cbi-section-table tr:last-child,
+	.table tr:last-child {
+		border-bottom: 0;
+	}
+
+	/* 移动端：进度条行（22px 高）与文字行高度差会让分隔线节奏不均，
+	   收紧进度条行的上下 padding，让行高与文字行一致，横线间距均匀。
+	   同时给该行 td 显式 min-height（22px 进度条 + 4px*2 padding），
+	   兜底 stretch 未拉高左侧标题 td 的情况 → 左右 border-bottom 对齐 */
+	.cbi-section-table tr:has(.cbi-progressbar) > td,
+	.table tr:has(.cbi-progressbar) > td {
+		padding-top: 4px;
+		padding-bottom: 4px;
+		min-height: 30px;
+	}
+
+	.cbi-section-table tr > td:last-child,
+	.table tr > td:last-child {
+		flex: 1 1 100%;
+	}
+
+	.cbi-section-table tr > td[width="33%"],
+	.table tr > td[width="33%"] {
+		flex: 0 0 20ch;
+		max-width: 20ch;
+		white-space: normal;
+		overflow-wrap: break-word;
+		word-break: break-word;
+	}
+
+	.Dashboard .section-content {
+		flex-direction: column;
+	}
+
+	.Dashboard .box-s1 {
+		min-height: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: .01ms !important;
+		transition-duration: .01ms !important;
+	}
+}
+
+
+/* Bootstrap 工具类：插件常用 class="hidden" 隐藏元素（隐藏的保存按钮、
+   提示面板、折叠区块等）。主题只加载自己的 css，必须自行提供，
+   否则插件声明 hidden 的元素会全部显示出来。 */
+.hidden {
+	display: none;
+}
+
+/* ===== 下拉浮层突破卡片裁剪（纯 CSS，不动 JS/DOM） =====
+   1) 含下拉的表格：overflow:hidden（圆角裁剪）→ visible，弹出列表可见；
+   2) 含"打开"下拉的卡片提升 z-index：突破 backdrop-filter 形成的
+      stacking context，避免被相邻卡片盖住；
+   3) 移动端滚动容器（.cbi-section-node / #maincontent）：两轴 visible，
+      不再裁剪弹出列表。r19 起页面纵向滚动由文档承担（#maincontent 仅
+      overflow-x:auto 负责宽表格横滚），此翻转不影响文档滚动位置 */
+/* 只在"打开"时解除裁剪（加载/闭合时保持原样，不影响胶囊尺寸） */
+.cbi-section-table:has(.cbi-dropdown[open]) {
+	overflow: visible !important;
+}
+
+.cbi-section:has(.cbi-dropdown[open]),
+.cbi-map:has(.cbi-dropdown[open]) {
+	position: relative;
+	z-index: 1000;
+}
+
+@media screen and (max-width: 854px) {
+	.cbi-section-node:has(.cbi-dropdown[open]),
+	#maincontent:has(.cbi-dropdown[open]) {
+		overflow-x: visible !important;
+		overflow-y: visible !important;
+	}
+}
+/* ==========================================================================
+   OpenClash 页面适配（透明玻璃卡片 + 内容居中）
+   status 页上下两块大卡片（.main-card，各自嵌套 .card-row > .sub-card
+   多层）全部主题化：大卡片透明融入页面背景，内层 sub-card / 公告卡片
+   用主题玻璃配方（半透明 + 模糊 + 玻璃边框 + 内高光）。明暗由
+   openclash 自带变量（html[data-darkmode="true"] .oc）与主题
+   --glass-* 变量联动，无需单独处理暗色。
+   ========================================================================== */
+
+/* 大卡片（两块 .main-card）：去掉白底/边框/阴影，透明融入主题背景 */
+body[data-page^="admin-services-openclash"] #cbi-openclash > fieldset .main-card {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
+	padding: 0 10px 10px 10px;
+}
+
+body[data-page^="admin-services-openclash"] #cbi-openclash > fieldset .myip-main-card {
+	margin: 0;
+	padding: 10px;
+	border: none !important;
+	background: transparent !important;
+}
+
+/* 公告卡片：玻璃 */
+body[data-page^="admin-services-openclash"] .oc .announcement-card {
+	background: var(--glass-bg) !important;
+	border: 1px solid var(--glass-border) !important;
+	border-radius: var(--glass-radius);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+}
+
+/* 内层嵌套卡片（sub-card）：主题玻璃配方，替代 openclash 白/灰实底 */
+body[data-page^="admin-services-openclash"] .oc .sub-card {
+	background: var(--glass-bg) !important;
+	border: 1px solid var(--glass-border) !important;
+	border-radius: var(--glass-radius);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+}
+
+/* hover：主题玻璃高亮（主色边框 + tint 背景），去掉 openclash 位移 */
+body[data-page^="admin-services-openclash"] .oc .sub-card:hover {
+	background: var(--glass-bg-hover) !important;
+	border-color: color-mix(in srgb, var(--primary-color-high) 55%, var(--glass-border)) !important;
+	box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inset) !important;
+	transform: none;
+}
+
+/* myip 页：IP 地址 / 访问检查 输出块玻璃化 */
+body[data-page^="admin-services-openclash"] .oc .myip-ip-item,
+body[data-page^="admin-services-openclash"] .oc .myip-check-item {
+	background: var(--glass-bg) !important;
+	border: 1px solid var(--glass-border) !important;
+	border-radius: var(--glass-radius);
+	box-shadow: var(--glass-shadow-soft), inset 0 1px 0 var(--glass-inset) !important;
+	-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+	backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
+}
+
+body[data-page^="admin-services-openclash"] .oc .myip-ip-item:hover,
+body[data-page^="admin-services-openclash"] .oc .myip-check-item:hover {
+	background: var(--glass-bg-hover) !important;
+	border-color: color-mix(in srgb, var(--primary-color-high) 55%, var(--glass-border)) !important;
+	box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-inset) !important;
+	transform: none;
+}
+
+/* ---- 内容居中（运行状态 / 控制面板 IP:端口 / 混合代理） ---- */
+body[data-page^="admin-services-openclash"] .oc .card-content {
+	align-items: center !important;
+	justify-content: center !important;
+}
+
+body[data-page^="admin-services-openclash"] .oc .card-controls {
+	align-self: center;
+}
+
+body[data-page^="admin-services-openclash"] .oc .core-main-controls {
+	justify-content: center !important;
+}
+
+body[data-page^="admin-services-openclash"] .oc .plugin-toggle-container {
+	margin-left: inherit !important;
+}
+
+body[data-page^="admin-services-openclash"] .oc .core-status-toggle {
+	flex: 0 !important;
+	min-width: auto !important;
+}
+
+body[data-page^="admin-services-openclash"] .oc .card-value {
+	justify-content: center;
+}
+
+/* ==========================================================================
+   宽表格优先折叠按钮（liquid-actions-overflow）
+   -------------------------------------------------------------------------
+   触发：main.js 判定表格“自然宽度”超出所在容器 / 当前屏幕时给 <table>
+   加 liquid-actions-overflow 类（判定始终在去类状态下进行，避免加/去类
+   来回震荡；仅作用于含操作列的表格，无按钮的表格维持原样）。
+
+   效果：操作列先让步，而不是先压缩文字——
+   1) 放开 form.js stabilizeActionColumnWidth 写死在 td/th 上的内联
+      width/min-width（必须 !important 才能压过内联样式）；
+   2) 一旦进入折叠状态，按钮**每个独占一行**（列宽收到最宽按钮的
+      内容宽），不做“随宽度 2+2+1 逐步折行”的渐进换行——行为确定，
+      文字列也能拿回最多宽度。注意 LuCI 用 dom.append 逐个追加按钮，
+      按钮之间没有空白文本节点，inline 元素之间不存在换行点，只改
+      white-space 不会换行，必须让按钮容器（td 内的 div）转 flex；
+   3) 文字列因此拿回可用宽度，不再被挤成窄条多行换行 / 被容器裁切；
+   4) 窄屏（≤854px）表格按 max-content 撑宽（=行内所有格子排成一行的
+      总宽），按钮换行也拉不窄——把表宽收回 100%，行内换行才生效，
+      同时去掉横向滚动；此时操作列已独占整行、按钮放得下，维持一行
+      横排（放不下时仍可 flex-wrap 折行）。
+   按钮已折叠仍放不下时（文字本身超宽），文字单元格换行兜底。 */
+table.liquid-actions-overflow td.cbi-section-actions,
+table.liquid-actions-overflow th.cbi-section-actions {
+	white-space: normal !important;
+	/* 不设首选宽度：列宽=最宽按钮的内容宽（百分比会抢文字列的可用宽度） */
+	width: auto !important;
+	min-width: 0 !important;
+	flex-wrap: wrap;
+	gap: 4px 6px;
+}
+
+table.liquid-actions-overflow td.cbi-section-actions > div {
+	display: flex;
+	/* 每个按钮一行（纵排、靠左，按钮保持自然宽度不被拉伸） */
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px 6px;
+	width: auto !important;
+	min-width: 0 !important;
+	max-width: 100%;
+}
+
+/* 已有 gap，清掉相邻按钮的 margin-left（否则间距叠加翻倍） */
+table.liquid-actions-overflow td.cbi-section-actions > div > * + * {
+	margin-left: 0 !important;
+}
+
+/* 兜底：按钮已折叠后表格仍放不下（文字本身超宽，如长域名）时，
+   让文字单元格换行收缩，而不是被 .cbi-section 的 overflow:hidden
+   裁掉右侧——优先级仍是"先折叠按钮，最后才让文字换行" */
+table.liquid-actions-overflow td:not(.cbi-section-actions),
+table.liquid-actions-overflow th:not(.cbi-section-actions) {
+	white-space: normal !important;
+	overflow-wrap: break-word;
+	word-break: break-word;
+}
+
+@media screen and (max-width: 854px) {
+	table.liquid-actions-overflow {
+		width: 100% !important;
+		min-width: 100% !important;
+	}
+
+	/* 窄屏下行内布局已把操作列推到独占的一整行、宽度足够摆下所有按钮，
+	   维持横排一行；真的放不下时 flex-wrap 照样折行 */
+	table.liquid-actions-overflow td.cbi-section-actions > div {
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: center;
+	}
+}
+
+/* ==========================================================================
+   多列宽表响应式：一行三列 + 单元格自带表头（.liquid-grid，由 main.js 打标）
+   -------------------------------------------------------------------------
+   适用：DHCP 租约 / DDNS / WiFi / UPnP / 进程 等多列表（GridSection 与概览
+   include 表）。断点 1100px（实测：1150px 时"状态"列尚有 6.5 字/行，
+   1100px 掉到 4.3；移动端则整表按内容宽撑开只能横滚）。
+
+   断点判定放在 main.js 的 matchMedia（单一来源），这里只按 .liquid-grid 类
+   生效；关键声明用 !important —— ≤854px 的既有规则给 tr/td 设过
+   display:flex（同特异性会靠"后写"抢胜负，实测会输），必须显式压过。
+
+   排除两类已有专属布局的表：
+   - 接口页表（td[data-name="_ifacebox"]）：图标行有独立两行布局；
+   - 标签/值两列表（td[width="33%"]）：已有"20ch 标签列 + 值换行"方案。
+   单元格自带表头用 td::before 显示 data-title（Argon 同款机制，文案由
+   main.js 从同列 th 回填）；原表头行隐藏，带筛选输入的 thead 保留。 */
+.cbi-section-table.liquid-grid:not(:has(td[data-name="_ifacebox"])):not(:has(td[width="33%"])),
+.table.liquid-grid:not(:has(td[data-name="_ifacebox"])):not(:has(td[width="33%"])) {
+	display: block;
+	width: 100% !important;
+	min-width: 100% !important;
+	overflow-x: auto;
+}
+
+.cbi-section-table.liquid-grid:not(:has(td[data-name="_ifacebox"])):not(:has(td[width="33%"])) tr:not(.table-titles):not(.cbi-section-table-titles),
+.table.liquid-grid:not(:has(td[data-name="_ifacebox"])):not(:has(td[width="33%"])) tr:not(.table-titles):not(.cbi-section-table-titles) {
+	display: flex !important;
+	/* 放不下的列连同表头换到下一行，而不是挤压成一字一行/横向滚动 */
+	flex-wrap: wrap !important;
+	align-items: stretch;
+	white-space: normal !important;
+	/* 行与行之间的呼吸感：操作列换行到下一行时不至于贴着上一行 */
+	row-gap: 10px;
+}
+
+.cbi-section-table.liquid-grid:not(:has(td[data-name="_ifacebox"])):not(:has(td[width="33%"])) tr > td:not(.cbi-section-actions),
+.table.liquid-grid:not(:has(td[data-name="_ifacebox"])):not(:has(td[width="33%"])) tr > td:not(.cbi-section-actions) {
+	flex: 1 1 33.33% !important; /* 一行三列，列边界落在 0/33.3/66.6 */
+	display: block !important;
+	min-width: 0 !important;
+	white-space: normal !important;
+	overflow-wrap: break-word;
+	word-break: normal;         /* 按词换行，不再一字一断 */
+	border-bottom: 0 !important;
+	padding: 6px 10px;
+}
+
+/* 操作列前的内容格：跨满前两列（66.6%），使按钮正好从第三列起点开始
+   —— 与上一行第三列"同列对齐"（用户要求）；右 padding 24px 拉开间距。
+   :has(td.cbi-section-actions) 限定"有操作列的表"，避免误伤两列内容表。 */
+/* 选择器必须带与通用规则相同的 :not(:has(...)) 链：通用规则元素更多，
+   同特异性会输（实测 66.6% 被 33.33% 盖掉），补齐链路 + .td + :nth-last-child 才赢 */
+.cbi-section-table.liquid-grid:not(:has(td[data-name="_ifacebox"])):not(:has(td[width="33%"])):has(td.cbi-section-actions) tr > td.td:nth-last-child(2),
+.table.liquid-grid:not(:has(td[data-name="_ifacebox"])):not(:has(td[width="33%"])):has(td.cbi-section-actions) tr > td.td:nth-last-child(2) {
+	flex: 2 1 66.6% !important;
+	padding-right: 24px;
+}
+
+/* 操作列占第三列：按钮起点 = 上一行第三列内容起点（严格同列对齐）；
+   顶对齐（align-self/items: flex-start）；放不下时 flex-wrap 自动换到下一行 */
+.cbi-section-table.liquid-grid tr > td.cbi-section-actions,
+.table.liquid-grid tr > td.cbi-section-actions {
+	flex: 1 1 33.4% !important;
+	min-width: 0 !important;
+	align-self: flex-start;
+	align-items: flex-start;
+	margin-left: 0;
+	padding: 6px 10px;
+	white-space: normal !important;
+}
+
+/* 单元格自带表头（Argon 同款；文案由 main.js 从同列 th 回填 data-title） */
+.cbi-section-table.liquid-grid td[data-title]::before,
+.table.liquid-grid td[data-title]::before {
+	content: attr(data-title);
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.45;
+	letter-spacing: .2px;
+	color: var(--text-color-medium);
+	opacity: .9;
+	margin-bottom: 1px;
+}
+
+/* 原表头行隐藏（每格已自带表头）；带筛选输入的 thead 保留。
+   !important 必须：≤854px 的既有规则给 tr 设了 display:flex !important */
+.cbi-section-table.liquid-grid tr.table-titles,
+.cbi-section-table.liquid-grid tr.cbi-section-table-titles,
+.table.liquid-grid tr.table-titles,
+.cbi-section-table.liquid-grid thead:not(:has(input)),
+.table.liquid-grid thead:not(:has(input)) {
+	display: none !important;
+}
+
+/* 三列网格下操作列仅占 1/3 宽：按钮相邻间距 8→4px，尽量保持一行
+   （1000px 实测：4 按钮约 290px，格内可用 284px，8px 间距会挤成两行） */
+.cbi-section-table.liquid-grid td.cbi-section-actions > div > * + *,
+.table.liquid-grid td.cbi-section-actions > div > * + * {
+	margin-left: 4px;
+}
+
+/* 折叠态（按钮优先折叠）在此模式下的适配：操作列已占整行 → 按钮横排折行；
+   文字格的"一字一断"兜底改回按词换行 */
+/* 仅 grid 态（视口≤1100、操作列已独占整行）才把折叠按钮改横排；
+   桌面宽屏折叠态维持 r17 的"每个按钮一行"纵排 */
+table.liquid-actions-overflow.liquid-grid td.cbi-section-actions > div {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+table.liquid-actions-overflow.liquid-grid td:not(.cbi-section-actions),
+table.liquid-actions-overflow.liquid-grid th:not(.cbi-section-actions) {
+	word-break: normal;
+	overflow-wrap: break-word;
+}
+
+/* ===== 移动端（≤854px）：标签/值两列表的标签列改为按自身文字宽度收缩 =====
+   原来固定 20ch≈145px（为了让最长标签"CPU 使用率（%）"单行），但短标签
+   （主机名/型号/温度…只需 40~60px）右侧空出 ~100px，把值列挤到换行——
+   实测移动端值列因此少 ~90px。改为 flex:0 1 auto + max-width:20ch：
+   改为固定 5 个字的内容宽（5em）：既让值列拿回空间（比 20ch≈145px 窄），
+   又保证全表标签列等宽、值列起点对齐（用户反馈：按文字收缩会让值列
+   逐行错位）。超过 5 字的标签（如 CPU 使用率（%））在本格内折行。
+   桌面（>854px）保持 20ch 固定列。 */
+@media screen and (max-width: 854px) {
+	.table:has(td[width="33%"]) tr > td[width="33%"],
+	.cbi-section-table tr > td[width="33%"],
+	.table tr > td[width="33%"] {
+		flex: 0 0 5em !important;
+		box-sizing: content-box !important; /* 5em=5 个汉字的内容宽，外加自身 padding */
+		width: 5em !important;
+		max-width: none !important;
+		min-width: 0 !important;
+		/* 固定 5 字宽后，超过 5 字的标签（CPU 使用率（%））在本格内折行，
+		   值列起点全表对齐（用户反馈：按文字收缩会导致值列不齐） */
+		white-space: normal !important;
+		overflow-wrap: break-word;
+		word-break: break-word;
+	}
+}
+
+/* ===== 启动项页（admin/system/startup）：操作列 5 个按钮排 3+2 =====
+   该页移动端按钮容器为整行宽，5 个按钮自然折行会排成 4+1（最后孤零零
+   一个，不美观）。改为 3 列网格：第一行 3 个、第二行 2 个。
+   仅按该页 data-page 生效（用户要求"单独优化这里"），其它表格不受影响。 */
+@media screen and (max-width: 854px) {
+	/* data-page 两种写法都匹配（连字符式 admin-system-startup /
+	   路径式 admin/system/startup，主题与 openclash 用前者） */
+	body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+		td.cbi-section-actions > div {
+		display: grid;
+		grid-template-columns: repeat(3, max-content);
+		justify-content: start;
+		align-items: start;
+		gap: 6px 8px;
+	}
+
+	/* 网格自带 gap，清掉相邻按钮的 margin-left（否则间距叠加不均） */
+	body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+		td.cbi-section-actions > div > * + * {
+		margin-left: 0;
+	}
+}
+
+/* ===== 有标题的操作格：标题在上、按钮在下、两者左对齐 =====
+   ui.Table（cbi_update_table）会把表头文案复制成单元格 data-title、并把
+   表头的 cbi-section-actions 类复制过来——如概览 DHCP 租约表的最后一列
+   （表头"静态租约" / 内容"设为静态"按钮）。该格在 ≤854px 被通用规则
+   变成 flex 行 → 标题与按钮排成左右两列，看起来像"两列东西"。
+   实际语义：标题=这列的表头，按钮=这列的内容 → 上下堆叠；
+   对齐方式经用户确认为左对齐（先居中后改回左对齐更合适）。 */
+.cbi-section-table.liquid-grid td.cbi-section-actions[data-title],
+.table.liquid-grid td.cbi-section-actions[data-title] {
+	display: block !important;   /* ::before 标题与按钮上下排 */
+	text-align: left;            /* 标题与按钮左对齐 */
+}
+
+/* 若格内是按钮容器（折叠/按钮组），同样左对齐 */
+.cbi-section-table.liquid-grid td.cbi-section-actions[data-title] > div,
+.table.liquid-grid td.cbi-section-actions[data-title] > div {
+	text-align: left;
+	justify-content: flex-start;
+}
+
+/* ===== 概览"系统"卡片（标签/值两列表 td[width="33%"]）：每行强制单行 =====
+   用户要求：每行只占一行不换行；固件版本这类超长值不折行，改为整卡
+   左右滑动查看右侧内容（.table 本就是 overflow-x:auto 的滚动容器）。
+   注意这是对 r4（放不下就换行）与 r10（标签按文字收缩）的本卡覆盖：
+   - 行 flex-wrap: nowrap + 单元格 white-space: nowrap → 行=内容宽；
+   - 单元格 flex:0 0 auto + width:max-content → 行宽=标签+值的自然宽；
+   - 表宽超出容器时由 .table:has(td[width="33%"]){overflow-x:auto} 横滚。
+   !important 必须：要压过 r10 移动端的 width:max-content/20ch 封顶以及
+   桌面 20ch 固定列规则（同特异性会靠顺序，这里统一显式压过）。 */
+.table:has(td[width="33%"]) tr {
+	flex-wrap: nowrap !important;
+	white-space: nowrap !important;
+}
+
+/* 值列（最后一格）必须占满剩余宽度：内存/存储的进度条要拉满到右侧。
+   r13 把所有格子改成 flex:0 0 auto + max-content 后，值列缩成内容宽 →
+   进度条看起来"等于文字长度"（用户反馈）。important 对 important 由
+   特异性决定（本规则带 :last-child 更高），故这里同样加 important。 */
+.table:has(td[width="33%"]) tr > td:last-child {
+	flex: 1 1 auto !important;
+	width: auto !important;
+}
+
+.table:has(td[width="33%"]) tr > td {
+	flex: 0 0 auto !important;
+	width: max-content !important;
+	max-width: none !important;
+	white-space: nowrap !important;
+	overflow-wrap: normal !important;
+	word-break: normal !important;
+}
+
+/* ===== 启动项页（admin/system/startup）：操作按钮按语义上色 =====
+   该页操作格内 5 个子元素顺序固定（startup.js rows.push）：
+   ① 启用开关（cbi-button-positive=已启用 / negative=已禁用）
+   ② 启动 Start  ③ 重启 Restart  ④ 重新加载 Reload  ⑤ 停止 Stop
+   需求：启用/启动=绿、重启/重新加载=橙、停止=红；仅本页生效。
+   主题现有 .cbi-button-positive 等走 accent 蓝渐变，这里按语义覆盖，
+   含 :hover 态（否则 hover 会被主题的 accent-grad 规则抢回蓝色）。 */
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > :nth-child(2),
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > .cbi-button-positive {
+	/* 启动 + 启用(已启用态) → 绿 */
+	color: var(--on-success-color);
+	background: linear-gradient(135deg, #34d399, var(--success-color-medium));
+	box-shadow: 0 6px 16px rgba(var(--success-color-high-rgb), 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > :nth-child(2):hover,
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > .cbi-button-positive:hover {
+	filter: brightness(1.08);
+}
+
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > :nth-child(3),
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > :nth-child(4) {
+	/* 重启 + 重新加载 → 橙（复用主题 amber 强调色渐变） */
+	color: #ffffff;
+	background: linear-gradient(135deg, #ffc04a 0%, #e8940f 48%, #c47100 100%);
+	box-shadow: 0 6px 16px rgba(232, 148, 15, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > :nth-child(3):hover,
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > :nth-child(4):hover {
+	filter: brightness(1.08);
+}
+
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > :nth-child(5) {
+	/* 停止 → 红（与主题 negative 同配方，保证禁用态/其它页一致观感） */
+	color: var(--on-error-color);
+	background: linear-gradient(135deg, #f06767, var(--error-color-high));
+	box-shadow: 0 6px 16px rgba(var(--error-color-high-rgb), 0.35);
+}
+
+body:is([data-page="admin-system-startup"], [data-page="admin/system/startup"])
+	td.cbi-section-actions > div > :nth-child(5):hover {
+	filter: brightness(1.08);
+}
+
+/* ===== 小体积弹窗：含文件选择控件的对话框按内容收窄 =====
+   （用户反馈："选择要上传的文件…取消/上传"这类弹窗异常宽，右侧大片空白）
+   根因：#modal_overlay > .modal 固定 width:80%（max 80vw）——1920 屏上
+   一个只有标题+文件框+两个按钮的对话框也占 1536px；再叠加 .button-row
+   的 flex-end + 首按钮 margin-right:auto（取消在最左、上传在最右），
+   空白被进一步拉开。
+   方案：只对含 input[type=file] 的弹窗收窄到 520px（按内容包裹、文字
+   正常换行），按钮行随之收拢；其它表单弹窗保持 80% 不变。 */
+#modal_overlay > .modal:has(input[type="file"]) {
+	/* 按内容自适应（fit-content）：内容已全部左对齐，固定 520px 会在右侧
+	   留出大片空白（实测344px）。弹窗宽=最宽一行内容+内边距；超长说明文字
+	   仍会被 max-width 限制并正常换行 */
+	/* 宽度策略（用户定量要求：约当前的 180% ≈545px，且按钮/内容不许换行）：
+	   - fit-content：内容长时随内容展开（上限 80vw），绝不逼元素换行；
+	   - min-width 545：短内容也保底 545px —— 之前纯 fit-content 只有303px，
+	     弹窗过小、按钮行(.button-row flex-wrap:wrap)被挤到换行。 */
+	width: fit-content;
+	min-width: min(545px, 92vw);
+	max-width: 80vw;
+}
+
+/* 文件框随容器宽度走，别用浏览器默认 intrinsic 宽撑破 */
+#modal_overlay > .modal:has(input[type="file"]) input[type="file"] {
+	max-width: 100%;
+}
+
+/* ui.js 的上传弹窗真实结构（hideModal 里的 uploadFile）：
+     .modal > p(说明) + div[display:flex] > (.left[flex:1] = 选择文件按钮
+                                            .right[flex:1] = 取消 + 上传)
+   默认左右各占一半、右侧组贴中线，两组之间只有 129px 且上传按钮离右缘 56px。
+   用户要求拉开"选择文件"与"取消/上传"的间距 → 右侧整组靠右并加左间距。 */
+/* 按钮行左组（选择文件）必须贴左：标题/说明的 text-align:center（方案2）
+   会被 .left 继承 → 按钮被推到 .left 中央，左侧出现空白间隔（用户反馈）。 */
+#modal_overlay > .modal:has(input[type="file"]) > div[style*="display:flex"] .left {
+	text-align: left;
+}
+
+#modal_overlay > .modal:has(input[type="file"]) > div[style*="display:flex"] .right {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-left: 32px;
+}
+
+/* 按钮收拢到右侧一组：.button-row 首按钮的 margin-right:auto 会把
+   "取消"甩到最左、"上传"顶到最右（间距 300+px 的空白带）。小弹窗里取消。 */
+#modal_overlay > .modal:has(input[type="file"]) .button-row > button:first-of-type {
+	margin-right: 0;
+}
+
+/* 方案2（用户选定）：标题与说明文字**居中**——左对齐时短文本行右侧会留
+   128~195px 空白，居中后空白分到两侧更平衡；文件框仍左对齐、按钮仍右对齐 */
+#modal_overlay > .modal:has(input[type="file"]) > :not(input):not(.button-row) {
+	text-align: center;
+}
+
+/* 对齐方式（用户最终指定）：标题、说明文字、选择文件按钮一律**左对齐**，
+   只有"取消/上传"两个按钮右对齐（.button-row 本就是 flex-end）。
+   （曾试过内容整体右对齐，用户反馈说明文字也要左 → 回到默认左对齐，
+   仅保留下方文件框的显式左推，防止被带 text-align 的包装层甩到右边。） */
+
+#modal_overlay > .modal:has(input[type="file"]) input[type="file"] {
+	display: block;
+	/* 选择文件按钮保持左对齐（用户指定）：块级 + margin-right:auto
+	   推到左侧——只靠 text-align:right 会把它甩到右边 */
+	margin-right: auto;
+	margin-left: 0;
+}
+
+/* ===== 会话过期/重新登录弹窗（luci.js notifySessionExpiry）收窄 =====
+   结构（源码确认）：.modal > h4 + div.alert-message.warning + div.right(登录按钮)。
+   它走通用规则 width:80% → 1920 屏上占 1536px，只有一句话却拉满整屏（用户反馈）。
+   按内容收窄：fit-content + 保底 420px（窄屏 92vw），上限 80vw；只命中"同时带
+   直接子级 .alert-message 与 .right"的弹窗，与上传弹窗（.right 在 flex 行内）不冲突。 */
+#modal_overlay > .modal:has(> .alert-message):has(> .right) {
+	width: fit-content;
+	/* 窄屏上原来 min(420px,92vw) 等于 92% 屏宽 → 看着像贴边大卡片；
+	   按用户要求改为"屏幕宽度的 75%"：窄屏下 min 与 max 都落到 75vw，
+	   长文本也被限在 75% 内换行；宽屏仍保底 420px 不会缩水 */
+	min-width: min(420px, 75vw);
+	max-width: 75vw;
+}
+
+/* ===== 登录页防页脚遮挡（几何触发，仅重叠的设备生效）=====
+   #liquid-login 是 fixed 全屏 + flex 垂直居中；页脚 p.luci 是 fixed bottom:4
+   z-index:2001 —— 矮视口（折叠机外屏）或 iOS 工具栏展开时，卡片下半截（登录
+   按钮）被页脚文字压住，内屏（大屏）轻微覆盖。
+   main.js 实测"整个 stack（顶部胶囊+卡片）相对视口与页脚"重叠才加类：
+     · clear → 给页脚留 72px 净空（卡片上移，解决轻微覆盖）
+     · fit   → 仍不行则整栈 zoom 等比缩小（小屏不滚动、页脚固定可见、
+               顶部胶囊不被裁——用户要求：缩小登录页所有元素比例）
+   其它平台视口够高 → 不重叠 → 不加类 → 渲染完全不变。
+   注：不靠 UA/分辨率猜设备（iOS UA 无机型信息），靠几何测量。 */
+body.liquid-login.liquid-login-clear #liquid-login {
+	padding-bottom: 72px;
+}
+
+/* 第二级：整栈等比缩小（zoom 由 main.js 按几何计算后写入 inline style）。
+   目的是"小屏不滚动、页脚固定可见"（用户要求：缩小登录页所有元素比例），
+   同时保证顶部胶囊（暗黑模式/颜色选择）不被裁掉。 */
+body.liquid-login.liquid-login-fit #liquid-login .liquid-login-stack {
+	/* zoom 在 inline style 上；此处只留调试标记用的 class，无强制样式 */
+}

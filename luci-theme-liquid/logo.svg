@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 232 80" role="img" aria-label="Liquid">
+  <defs>
+    <linearGradient id="liquid-lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6fb0f8" stop-opacity="0.95"/>
+      <stop offset="0.55" stop-color="#2f7fe0" stop-opacity="0.62"/>
+      <stop offset="1" stop-color="#12529f" stop-opacity="0.98"/>
+    </linearGradient>
+  </defs>
+  <!-- 水滴 -->
+  <path d="M40 4 C53 20 63 29 63 40 a23 23 0 0 1 -46 0 C17 29 27 20 40 4 Z" fill="url(#liquid-lg)" stroke="rgba(255,255,255,0.75)" stroke-width="2"/>
+  <ellipse cx="31" cy="37" rx="9" ry="5.5" fill="#ffffff" opacity="0.6"/>
+  <!-- 主题名 -->
+  <text x="80" y="56" font-family="'Segoe UI','PingFang SC','Microsoft YaHei',Arial,sans-serif" font-size="42" font-weight="700" letter-spacing="1" fill="url(#liquid-lg)">Liquid</text>
+</svg>

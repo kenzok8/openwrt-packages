@@ -1,0 +1,260 @@
+{#
+ Copyright 2026 然后七年 <69092025+zzsj0928@users.noreply.github.com>
+ Licensed to the public under the Apache License 2.0.
+-#}
+
+{%
+	import * as fs from 'fs';
+	import { popen } from 'fs';
+	import { getuid, getspnam } from 'luci.core';
+
+	const boardinfo = ubus.call('system', 'board') ?? {};
+	
+	/* 从包数据库读取版本号（支持 apk 和 opkg）。
+	   优化：mtime 校验 + /tmp 缓存，避免每次渲染 fork awk。
+	   包安装/卸载/升级会更新 db mtime → 缓存自动失效重建，版本零滞后。 */
+	let theme_ver = '';
+	let db_file = '/lib/apk/db/installed';
+	let db_mtime = 0;
+	let st = fs.stat(db_file);
+	if (st && st.type == 'file') {
+		db_mtime = st.mtime;
+	} else {
+		db_file = '/usr/lib/opkg/status';
+		st = fs.stat(db_file);
+		if (st && st.type == 'file')
+			db_mtime = st.mtime;
+	}
+	if (db_mtime > 0) {
+		let cm = match(fs.readfile('/tmp/liquid-version.cache') ?? '', /^(\d+) (.*)$/);
+		if (cm !== null && sprintf('%d', db_mtime) == cm[1])
+			theme_ver = cm[2];
+	}
+	if (theme_ver == '') {
+		let f = popen("awk '/^P:luci-theme-liquid$/{f=1;next} f&&/^V:/{print substr($0,3);exit}' " + db_file + " 2>/dev/null", "r");
+		if (f) { theme_ver = replace(f.read("all"), /\s+/, ""); f.close(); }
+		if (theme_ver == '') {
+			f = popen("awk '/^Package: luci-theme-liquid$/{f=1;next} f&&/^Version:/{print $2;exit}' /usr/lib/opkg/status 2>/dev/null", "r");
+			if (f) { theme_ver = replace(f.read("all"), /\s+/, ""); f.close(); }
+		}
+		if (theme_ver != '' && db_mtime > 0)
+			fs.writefile('/tmp/liquid-version.cache', sprintf('%d %s', db_mtime, theme_ver));
+	}
+	if (theme_ver == '') theme_ver = '?';
+
+	/* 资源签名（缓存击穿）：热部署（scp 覆盖文件）不改包版本号，?v= 不变
+	   → 浏览器继续用旧缓存，表现为"改了样式却没变化"。把 cascade.css 的
+	   mtime+size 拼进查询串：文件一改 URL 立即变化，客户端必然重新拉取。 */
+	let css_st = fs.stat('/www/luci-static/liquid/cascade.css');
+	let css_ver = theme_ver;
+	if (css_st && css_st.type == 'file')
+		css_ver += sprintf('-%x%x', css_st.mtime, css_st.size);
+
+	http.prepare_content('text/html; charset=UTF-8');
+
+	let ptitle = (node ?? dispatched)?.title;
+
+	/* ---- 主题配置（uci /etc/config/liquid，换客户端保留） ---- */
+	let cfg_mode = 'auto';
+	let cfg_accent = 'blue';
+	let cfg_accent_custom = '';
+	let cfg_bing = '0';
+	let cfg_glass_opacity = '';
+	let cfg = fs.readfile('/etc/config/liquid') ?? '';
+	let cm = match(cfg, /option[ \t]+mode[ \t]+'?([^' \t\n]+)'?/);
+	if (cm !== null)
+		cfg_mode = cm[1];
+	let ca = match(cfg, /option[ \t]+accent[ \t]+'?([^' \t\n]+)'?/);
+	if (ca !== null)
+		cfg_accent = ca[1];
+	let cc = match(cfg, /option[ \t]+accent_custom[ \t]+'?([^' \t\n]+)'?/);
+	if (cc !== null)
+		cfg_accent_custom = cc[1];
+	let cb = match(cfg, /option[ \t]+bing[ \t]+'?([^' \t\n]+)'?/);
+	if (cb !== null)
+		cfg_bing = cb[1];
+	let co = match(cfg, /option[ \t]+glass_opacity[ \t]+'?([^' \t\n]+)'?/);
+	if (co !== null)
+		cfg_glass_opacity = co[1];
+
+	/* ---- Bing 每日壁纸：缓存到各设备自己的 /tmp/liquid/，
+	   软链 /www/liquid-cache 供 http 访问（/www 为 overlay 可写）。
+	   system() 只透传 stdout（返回退出码），因此用"写临时文件 +
+	   fs.readfile"获取 wget 输出 ---- */
+	let bing_style = '';
+	let bing_ok = '0';
+	let accent_custom_style = '';
+	let glass_opacity_style = '';
+	if (cfg_accent == 'custom' && cfg_accent_custom != '')
+		accent_custom_style = sprintf(':root{--accent-custom:%s;}', cfg_accent_custom);
+	if (cfg_glass_opacity != '') {
+		let op = int(cfg_glass_opacity, 10);
+		if (op < 0) op = 0;
+		if (op > 100) op = 100;
+		/* 亮/暗参考 alpha 不同，JS 会根据 data-darkmode 动态修正，
+		   此处只注入 slider 值供 JS 首帧读取 */
+		let def_light = 42;
+		let def_dark  = 40;
+		let f_light = def_light > 0 ? sprintf('%.2f', op / def_light) : '1.00';
+		let f_dark  = def_dark  > 0 ? sprintf('%.2f', op / def_dark)  : '1.00';
+		glass_opacity_style = sprintf(':root[data-darkmode="false"]{--glass-opacity:%s;}:root[data-darkmode="true"]{--glass-opacity:%s;}', f_light, f_dark);
+	}
+
+	if (cfg_bing == '1') {
+		system('mkdir -p /tmp/liquid && ln -sfn /tmp/liquid /www/liquid-cache && date +%Y%m%d > /tmp/liquid-date.txt');
+		let today = trim(fs.readfile('/tmp/liquid-date.txt') ?? '');
+		if (today != '') {
+			let bing_file = sprintf('/tmp/liquid/bing-%s.jpg', today);
+			if (fs.stat(bing_file)) {
+				bing_style = sprintf(":root{--liquid-bing:url('/liquid-cache/bing-%s.jpg');}", today);
+				bing_ok = '1';
+				/* 无论今天壁纸是新下载还是已缓存，只要确认存在，
+				   就清理 /tmp/liquid/ 下所有历史壁纸，只保留今天的 */
+				system(sprintf('ls /tmp/liquid/bing-*.jpg 2>/dev/null | grep -v "bing-%s.jpg" | xargs rm -f 2>/dev/null', today));
+			} else {
+				system('wget -qO /tmp/liquid-bing-api.json -T 8 "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=zh-CN"');
+				let api = fs.readfile('/tmp/liquid-bing-api.json') ?? '';
+				if (api != '') {
+					let j = json(api);
+					if (j && j.images && j.images[0] && j.images[0].urlbase) {
+						let u = sprintf('https://www.bing.com%s_1920x1080.jpg', j.images[0].urlbase);
+						system(sprintf('wget -qO "%s" -T 20 "%s"', bing_file, u));
+						if (fs.stat(bing_file)) {
+							bing_style = sprintf(":root{--liquid-bing:url('/liquid-cache/bing-%s.jpg');}", today);
+							bing_ok = '1';
+							/* 新壁纸下载成功后清理 /tmp/liquid/ 下所有旧壁纸，
+							   只保留今天的文件，防止壁纸随时间堆积占满 /tmp */
+							system(sprintf('ls /tmp/liquid/bing-*.jpg 2>/dev/null | grep -v "bing-%s.jpg" | xargs rm -f 2>/dev/null', today));
+						}
+					}
+				}
+			}
+		}
+	}
+-%}
+
+<!DOCTYPE html>
+<html lang="{{ dispatcher.lang }}">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="darkreader-lock">
+<!-- 浏览器工具栏配色：初值=底部 foot 玻璃横幅的渲染实色（亮 #f8f9fb /
+     暗 #151c2b，即 --glass-bg-strong 叠 --background-color-medium 的合成色），
+     让移动端浏览器工具栏与页面上下玻璃栏融为一体。首绘后由 main.js
+     syncThemeColor() 用 canvas 实时合成精确值并跟随明暗切换 -->
+<meta name="theme-color" content="#f8f9fb" />
+{% if (glass_opacity_style != ''): %}<style>{{ glass_opacity_style }}</style>{% endif %}
+{% if (bing_style != ''): %}<style>{{ bing_style }}</style>{% endif %}
+{% if (accent_custom_style != ''): %}<style>{{ accent_custom_style }}</style>{% endif %}
+<script>
+	/* Liquid theme: apply uci-persisted light/dark/auto mode + accent before CSS paints.
+	   uci（服务端模板读取）优先：其他客户端修改后本机刷新即生效；
+	   仅当 uci 未配置时回退 localStorage。锁屏页同样按 uci 显示（只读）。 */
+	(function () {
+		try {
+			if ('scrollRestoration' in history)
+				history.scrollRestoration = 'manual';
+			var m = "{{ cfg_mode }}";
+			var a = "{{ cfg_accent }}";
+			if (!m)
+				m = localStorage.getItem('liquid-theme-mode') || 'auto';
+			if (!a)
+				a = localStorage.getItem('liquid-accent') || 'blue';
+			var dark = (m == 'dark') || ((m != 'light') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+			document.documentElement.setAttribute('data-darkmode', dark ? 'true' : 'false');
+			document.documentElement.setAttribute('data-liquid-mode', m);
+			document.documentElement.setAttribute('data-accent', a);
+			/* 工具栏色随明暗：foot 玻璃渲染实色（亮/暗两套），main.js 之后会
+			   用 canvas 合成精确值覆盖，此处只给首绘一个接近值避免闪默认色 */
+			var tc = document.querySelector('meta[name="theme-color"]');
+			if (tc)
+				tc.setAttribute('content', dark ? '#151c2b' : '#f8f9fb');
+			/* 明暗守护（head 阶段即安装）：OpenClash 等第三方脚本会在 body
+			   解析期间覆写 <html data-darkmode>（其 common.js 按背景亮度
+			   判定，加载早期 body 背景未算出时误判为暗色），而主题 main.js
+			   在 footer 才加载，浏览器可能在解析到 footer 前就绘制出暗色帧
+			   ——表现为"进 OpenClash 先闪暗再纠正"。此处在 head 就装
+			   监视器：任何与主题有效模式不符的外部写入都在微任务里立即
+			   还原（同步 data-darkmode 与 color-scheme），首帧绘制前完成，
+			   彻底杜绝闪暗。 */
+			if (window.MutationObserver) {
+				var _gRoot = document.documentElement;
+				var _gMql = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+				var _gMeta = document.querySelector('meta[name="color-scheme"]');
+				var _gSelf = false;
+				function _gWant() {
+					var mm = _gRoot.getAttribute('data-liquid-mode') || m;
+					return ((mm == 'dark') || ((mm != 'light') && _gMql && _gMql.matches)) ? 'true' : 'false';
+				}
+				new MutationObserver(function () {
+					if (_gSelf)
+						return;
+					var want = _gWant();
+					if (_gRoot.getAttribute('data-darkmode') !== want) {
+						_gSelf = true;
+						_gRoot.setAttribute('data-darkmode', want);
+						_gSelf = false;
+					}
+					if (_gMeta && _gMeta.content !== (want == 'true' ? 'dark' : 'light'))
+						_gMeta.content = (want == 'true' ? 'dark' : 'light');
+				}).observe(_gRoot, { attributes: true, attributeFilter: ['data-darkmode'] });
+			}
+		} catch (e) {}
+	})();
+</script>
+<link rel="stylesheet" type="text/css" media="screen" href="{% print(media); %}/cascade.css?v={% print(css_ver); %}" />
+<link rel="icon" href="{{ media }}/logo.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="{{ media }}/logo.png" />
+<script type="text/javascript" src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}"></script>
+<script type="text/javascript" src="{{ resource }}/cbi.js"></script>
+<title>{{ striptags(`${boardinfo.hostname ?? '?'}${ptitle ? ` | ${_(ptitle)}` : ''}`) }}</title>
+{% if (css): %}
+<style title="text/css">{{ css }}</style>
+{% endif %}
+</head>
+<body class="lang_{{ dispatcher.lang }}{% if (blank_page): %} liquid-login{% endif %}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}" data-hostname="{{ striptags(boardinfo.hostname ?? '') }}" data-liquid-mode="{{ cfg_mode }}" data-liquid-accent="{{ cfg_accent }}" data-liquid-bing="{{ cfg_bing }}" data-liquid-bing-ok="{{ bing_ok }}" data-liquid-accent-custom="{{ cfg_accent_custom }}" data-liquid-glass-opacity="{{ cfg_glass_opacity }}">
+
+<p class="skiplink">
+<span id="skiplink1"><a href="#navigation">{{ _('Skip to navigation') }}</a></span>
+<span id="skiplink2"><a href="#content">{{ _('Skip to content') }}</a></span>
+</p>
+
+{% if (!blank_page): %}
+<div id="menubar">
+	<h2 class="navigation"><a id="navigation" name="navigation">{{ _('Navigation') }}</a></h2>
+
+	<span class="hostname"><a href="/"><svg class="liquid-logo" viewBox="0 0 64 68" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="liquid-lg-top" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--primary-color-high)" stop-opacity="0.85"/><stop offset="0.5" stop-color="var(--primary-color-high)" stop-opacity="0.4"/><stop offset="1" stop-color="var(--primary-color-low)" stop-opacity="0.92"/></linearGradient></defs><path d="M32 3 C46 20 57 30 57 42 a25 25 0 0 1 -50 0 C7 30 18 20 32 3 Z" fill="url(#liquid-lg-top)" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><ellipse cx="23" cy="39" rx="9.5" ry="6" fill="#ffffff" opacity="0.6"/></svg>{{ striptags(boardinfo.hostname ?? '?') }}</a></span>
+	<span class="distversion">{{ version.distversion }} {{ version.distrevision }}</span>
+	<span id="indicators"></span>
+</div>
+
+<div id="modemenu" style="display:none"></div>
+
+<div id="maincontainer">
+	<div id="mainmenu"></div>
+
+	<div id="maincontent">
+		{% if (getuid() == 0 && getspnam('root')?.pwdp === '' && join('-', ctx.request_path) != 'admin-system-admin'): %}
+		<div class="alert-message warning">
+			<h4>{{ _('No password set!') }}</h4>
+			<p>{{ _('There is no password set on this router. Please configure a root password to protect the web interface.') }}</p>
+			{% if (dispatcher.lookup("admin/system/admin")): %}
+				<div class="right"><a class="btn" href="{{ dispatcher.build_url("admin/system/admin") }}">{{ _('Go to password configuration...') }}</a></div>
+			{% endif %}
+		</div>
+		{% endif %}
+
+		{% if (boardinfo.rootfs_type == "initramfs"): %}
+		<div class="alert-message warning">
+			<h4>{{ _('System running in recovery (initramfs) mode.') }}</h4>
+			<p>{{ _('No changes to settings will be stored and are lost after rebooting. This mode should only be used to install a firmware upgrade') }}</p>
+			{% if (dispatcher.lookup("admin/system/flash")): %}
+			  <div class="right"><a class="btn" href="{{ dispatcher.build_url("admin/system/flash") }}">{{ _('Go to firmware upgrade...') }}</a></div>
+			{% endif %}
+		</div>
+		{% endif %}
+
+		<div id="tabmenu" style="display:none"></div>
+{% endif %}

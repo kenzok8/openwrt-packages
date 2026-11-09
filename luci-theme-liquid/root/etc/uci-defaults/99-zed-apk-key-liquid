@@ -1,0 +1,30 @@
+#!/bin/sh
+#
+# Zed 自签 APK 公钥：条件写入（已有则跳过，添加不覆盖）。
+#
+# 为什么用 uci-defaults 而不是只靠 postinst：
+#   固件构建时**不执行包脚本**——package/Makefile 与 image.mk 里的 apk
+#   调用都带 --no-scripts，postinst 在构建期不会跑，所以"第三方编译固件
+#   包含本主题"时 postinst 方案无法把公钥带进镜像。
+#   而 /etc/uci-defaults/ 下的包文件会随 rootfs 留在固件里，设备**首次
+#   开机**由 /etc/init.d/boot 自动执行 —— 公钥信任自动建立，无需用户
+#   任何操作；对装过 pushbot 的设备则检测到同名文件直接跳过。
+#
+# 为什么不做成包内文件：
+#   pushbot 与主题会带同一把公钥；apk 严格追踪文件归属，两个包 manifest
+#   声明同一路径会报 "trying to overwrite ... owned by" 冲突。
+#   本脚本创建的文件不在任何包 manifest 内 → 多包共存各写一次、后者跳过。
+#
+# 设备端还有两条同样的兜底路径：包 postinst（在线安装时）与 OTA 安装前
+# 自举（老设备首次走 OTA 时），三者都是"有则跳过"的幂等写入。
+
+[ -f /etc/apk/keys/zed-openwrt-apk.pem ] || {
+	mkdir -p /etc/apk/keys
+	printf '%s\n' \
+		'-----BEGIN PUBLIC KEY-----' \
+		'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE16+nzzY9Lx5wvzZoWs/18vZxsNZD' \
+		'jv+CqECJLUj+fA7J228Iu13DVUO8CK9jQyLHtqkw0f4/X2bKLlLiz281zQ==' \
+		'-----END PUBLIC KEY-----' > /etc/apk/keys/zed-openwrt-apk.pem
+}
+
+exit 0

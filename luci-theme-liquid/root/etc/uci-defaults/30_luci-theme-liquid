@@ -1,0 +1,37 @@
+#!/bin/sh
+
+changed=0
+
+if ! uci -q get "luci.themes.Liquid" 2>/dev/null; then
+	uci set "luci.themes.Liquid=/luci-static/liquid"
+	changed=1
+fi
+
+# 首次安装（非升级）时无条件将默认主题设为 liquid：
+# 固件编译场景下 luci.main.mediaurlbase 可能已被 luci-base 的
+# uci-defaults 预设为 /luci-static/bootstrap（或用户 sed 改的集合
+# 默认），若不覆盖，首次进入 LuCI 会 fallback 到 themes/null。
+# 单独判断 PKG_UPGRADE，不依赖 themes.Liquid 是否已注册
+# （固件可能已预置注册但 mediaurlbase 未指向 liquid）；
+# 若已是 liquid 则跳过（避免无谓 commit）。
+if [ "$PKG_UPGRADE" != 1 ] && \
+   [ "$(uci -q get luci.main.mediaurlbase)" != "/luci-static/liquid" ]; then
+	uci set "luci.main.mediaurlbase=/luci-static/liquid"
+	changed=1
+fi
+
+if [ $changed = 1 ]; then
+	uci commit luci
+fi
+
+# 主题持久化配置（模式/主题色/Bing 壁纸开关）：首次安装时创建默认 section
+if [ ! -f /etc/config/liquid ]; then
+	touch /etc/config/liquid
+	uci set "liquid.theme=theme"
+	uci commit liquid
+fi
+
+# 清除 LuCI 路由缓存，使主题新增的 save_config 端点（menu.d/controller）立即可用
+rm -f /tmp/luci-indexcache /tmp/luci-indexcache.* 2>/dev/null
+
+exit 0
