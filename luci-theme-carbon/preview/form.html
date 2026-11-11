@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Wireless — Carbon Demo</title>
+</head>
+<body>
+	<p><a href="index.html?page=admin/network/wireless">打开无线演示 / Open the wireless demo</a></p>
+	<script>
+		const next = new URL('index.html', location.href);
+		next.search = location.search;
+		next.searchParams.set('page', 'admin/network/wireless');
+		location.replace(next.href);
+	</script>
+</body>
+</html>

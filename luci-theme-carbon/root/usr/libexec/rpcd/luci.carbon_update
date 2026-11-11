@@ -1,0 +1,309 @@
+#!/bin/sh
+# Carbon theme settings backend: verified theme updates and the custom logo.
+# RPC callers can select a checked version, never a URL or command.
+# An optional HTTPS download mirror (uci carbon.update.mirror) only carries the
+# package bytes; release metadata, size and SHA-256 always come from GitHub.
+# A custom logo is uploaded by LuCI's cgi-upload to $logo_upload (the only file
+# the ACL lets it write), validated here and published under $logo_dir, which
+# sysupgrade keeps (/lib/upgrade/keep.d/luci-theme-carbon).
+. /usr/share/libubox/jshn.sh
+umask 077
+state_dir=/tmp/carbon-update
+key_dir=/usr/share/carbon/keys
+repository=mrjoechen/luci-theme-carbon
+package_name=luci-theme-carbon
+logo_dir=/www/luci-static/carbon/custom
+logo_upload=/tmp/carbon-logo.upload
+logo_max=262144
+logo_exts='svg png webp jpg gif'
+
+valid_mirror() {
+	[ "${#1}" -le 200 ] && printf '%s\n' "$1" | grep -Eq '^https://[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?(:[0-9]{1,5})?(/[A-Za-z0-9._~%+-]+)*/$'
+}
+mirror_prefix() {
+	mirror=$(uci -q get carbon.update.mirror 2>/dev/null) || mirror=''
+	valid_mirror "$mirror" || mirror=''
+}
+valid_version() { [ "${#1}" -le 40 ] && printf '%s\n' "$1" | grep -Eq '^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}-r[0-9]{1,6}$'; }
+prepare() {
+	[ ! -L "$state_dir" ] && mkdir -p "$state_dir" &&
+	[ "$(ls -nd "$state_dir" | awk '{print $3}')" = 0 ] && chmod 700 "$state_dir"
+}
+opkg_call() (
+	# Even `opkg status` takes the native DB lock. Serialize our polls and worker
+	# so a page refresh cannot make installation or its version check fail.
+	exec 7>"$state_dir/opkg.lock"
+	flock -w 5 7 || exit 1
+	opkg "$@" 7>&-
+)
+installed() {
+	manager=''; current=''; managed=0
+	if command -v apk >/dev/null 2>&1 && [ -f /etc/apk/world ]; then
+		manager=apk
+		current=$(apk --repositories-file /dev/null --no-network list --installed "$package_name" 2>/dev/null | sed -n 's/^luci-theme-carbon-\([^ ]*\) .*/\1/p' | head -n 1)
+	elif command -v opkg >/dev/null 2>&1; then
+		manager=opkg
+		current=$(opkg_call status "$package_name" 2>/dev/null | awk '/^Version: / {v=$2} /^Status: .* installed$/ {ok=1} END {if(ok) print v}')
+	fi
+	if valid_version "$current"; then managed=1
+	else current=$(cat /usr/share/carbon/version 2>/dev/null); fi
+}
+newer() {
+	valid_version "$target" && valid_version "$current" || return 1
+	case "$manager" in
+		apk) [ "$(apk version -t "$target" "$current" 2>/dev/null)" = '>' ] ;;
+		opkg) opkg_call compare-versions "$target" '>>' "$current" ;;
+		*) return 1 ;;
+	esac
+}
+tools_ready() {
+	for tool in curl flock sha256sum setsid; do command -v "$tool" >/dev/null 2>&1 || return 1; done
+	[ "$manager" != apk ] || [ -s "$key_dir/carbon-apk.pem" ]
+}
+load_release() {
+	target=''; tag=''; filename=''; digest=''; size=0; checked=0; notes=''
+	[ -s "$state_dir/release.json" ] && json_load_file "$state_dir/release.json" || return 1
+	json_get_vars target tag filename digest size checked notes
+}
+fresh() { now=$(date +%s); [ "$checked" -le "$now" ] && [ "$((now - checked))" -le 1800 ]; }
+write_status() {
+	phase=$1; error=${2:-}; log=''
+	[ -z "${job:-}" ] || log=$(tail -c 4096 "$job/log" 2>/dev/null)
+	json_init
+	json_add_string state "$phase"
+	json_add_string error "$error"
+	json_add_string log "$log"
+	json_dump > "$state_dir/status.$$"
+	mv "$state_dir/status.$$" "$state_dir/status.json"
+}
+error_reply() { json_init; json_add_string error "$1"; json_dump; }
+status_reply() {
+	phase=idle; error=''; log=''
+	if [ -s "$state_dir/status.json" ] && json_load_file "$state_dir/status.json"; then json_get_vars state error log; phase=$state; fi
+	busy=0
+	if command -v flock >/dev/null 2>&1; then
+		exec 8>"$state_dir/lock"
+		if flock -n 8; then
+			case "$phase" in checking|downloading|verifying|installing) write_status failed interrupted ;; esac
+		else busy=1; fi
+	fi
+	installed
+	load_release || :
+	can_upgrade=0; reason=''
+	if ! tools_ready; then reason=dependencies
+	elif [ "$managed" != 1 ]; then reason=manual_install
+	elif [ "$busy" = 0 ] && [ -n "$target" ] && newer && fresh; then can_upgrade=1; fi
+	json_init
+	json_add_string state "$phase"; json_add_string error "$error"; json_add_string log "$log"
+	json_add_string current "$current"; json_add_string manager "$manager"
+	json_add_string latest "$target"; json_add_string tag "$tag"; json_add_string notes "$notes"
+	mirror_prefix; json_add_string mirror "$mirror"
+	json_add_string logo "$(logo_url)"
+	json_add_int checked_at "$checked"; json_add_boolean busy "$busy"
+	json_add_boolean can_upgrade "$can_upgrade"; json_add_string reason "$reason"
+	json_dump
+}
+download() {
+	# Bound disk use even on curl versions that only enforce Content-Length.
+	(ulimit -f 8192; curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
+		--connect-timeout 5 --max-time "$3" --max-filesize 4194304 -o "$2" "$1") 9>&-
+}
+save_preferences() {
+	had_theme=1; saved_theme=$(uci -q get luci.main.mediaurlbase) || had_theme=0
+	had_language=1; saved_language=$(uci -q get luci.main.lang) || had_language=0
+	settings_saved=1
+}
+restore_preferences() {
+	[ "${settings_saved:-0}" = 1 ] || return 0
+	# Older package removal hooks can reset the active theme during an upgrade.
+	if [ "$had_theme" = 1 ]; then uci set "luci.main.mediaurlbase=$saved_theme"
+	else uci -q delete luci.main.mediaurlbase || :; fi
+	if [ "$had_language" = 1 ]; then uci set "luci.main.lang=$saved_language"
+	else uci -q delete luci.main.lang || :; fi
+	uci commit luci
+}
+check_release() {
+	rm -f "$state_dir/release.json"
+	download "https://api.github.com/repos/$repository/releases/latest" "$job/release.json" 15 || { failure=network; return 1; }
+	[ "$(wc -c < "$job/release.json")" -le 1048576 ] && json_load_file "$job/release.json" || { failure=metadata; return 1; }
+	json_get_vars tag_name draft prerelease body
+	[ "$draft" = 0 ] && [ "$prerelease" = 0 ] && printf '%s\n' "$tag_name" | grep -Eq '^v[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$' || { failure=metadata; return 1; }
+	tag=$tag_name; version=${tag#v}; notes=$(printf '%s' "$body" | head -c 12000)
+	json_select assets || { failure=metadata; return 1; }
+	json_get_keys assets
+	found=0
+	for asset in $assets; do
+		json_select "$asset"
+		json_get_vars name digest size
+		case "$manager" in
+			apk) pattern="^luci-theme-carbon-${version}-r[0-9]+\\.apk$" ;;
+			opkg) pattern="^luci-theme-carbon_${version}-r[0-9]+_all\\.ipk$" ;;
+			*) failure=manual_install; return 1 ;;
+		esac
+		if printf '%s\n' "$name" | grep -Eq "$pattern"; then
+			[ "$found" = 0 ] || { failure=metadata; return 1; }
+			found=1; filename=$name; hash=${digest#sha256:}; bytes=$size
+		fi
+		json_select ..
+	done
+	[ "$found" = 1 ] && printf '%s\n' "$hash" | grep -Eq '^[a-f0-9]{64}$' &&
+	printf '%s\n' "$bytes" | grep -Eq '^[0-9]{1,7}$' && [ "$bytes" -gt 0 ] && [ "$bytes" -le 4194304 ] || { failure=metadata; return 1; }
+	target=$(printf '%s' "$filename" | sed -e 's/^luci-theme-carbon[-_]//' -e 's/_all\.ipk$//' -e 's/\.apk$//')
+	valid_version "$target" || { failure=metadata; return 1; }
+	json_init
+	json_add_string target "$target"; json_add_string tag "$tag"; json_add_string filename "$filename"
+	json_add_string digest "$hash"; json_add_int size "$bytes"; json_add_int checked "$(date +%s)"; json_add_string notes "$notes"
+	json_dump > "$job/checked.json"
+	mv "$job/checked.json" "$state_dir/release.json"
+}
+install_release() {
+	load_release && [ "$target" = "$requested" ] && fresh && newer && [ "$managed" = 1 ] || { failure=stale; return 1; }
+	free=$(df -Pk "$state_dir" | awk 'END {print $4}')
+	[ "$free" -ge "$((size / 1024 * 3 + 2048))" ] || { failure=space; return 1; }
+	package="$job/$filename"
+	url="https://github.com/$repository/releases/download/$tag/$filename"
+	mirror_prefix
+	# Mirror first when configured, then GitHub. Each copy must match GitHub's size and SHA-256.
+	failure=network
+	for source in ${mirror:+mirror} github; do
+		case "$source" in mirror) from="$mirror$url" ;; *) from=$url ;; esac
+		echo "Downloading from $source: $from"
+		write_status downloading
+		rm -f "$package"
+		download "$from" "$package" 90 || { echo "Download from $source failed"; failure=network; continue; }
+		write_status verifying
+		if [ "$(wc -c < "$package")" = "$size" ] && [ "$(sha256sum "$package" | awk '{print $1}')" = "$digest" ]; then
+			failure=''
+			break
+		fi
+		echo "Size or SHA-256 mismatch from $source"
+		failure=checksum
+	done
+	[ -z "$failure" ] || return 1
+	case "$manager" in
+		apk)
+			apk --keys-dir "$key_dir" --repositories-file /dev/null --no-network verify "$package" 9>&- || { failure=signature; return 1; }
+			apk --keys-dir "$key_dir" --repositories-file /dev/null --no-network adbdump "$package" > "$job/info" 9>&- || { failure=metadata; return 1; }
+			actual=$(awk '/^info:/ {info=1;next} /^paths:/ {exit} info && /^  name:/ {n=$2} info && /^  version:/ {v=$2} END {print n " " v}' "$job/info")
+			;;
+		opkg)
+			tar -xzOf "$package" ./control.tar.gz > "$job/control.tar.gz" && tar -xzOf "$job/control.tar.gz" ./control > "$job/control" || { failure=metadata; return 1; }
+			actual=$(awk '/^Package:/ {n=$2} /^Version:/ {v=$2} END {print n " " v}' "$job/control")
+			;;
+	esac
+	[ "$actual" = "$package_name $target" ] || { failure=metadata; return 1; }
+	# Recheck immediately before mutation; the native manager also owns its DB lock.
+	installed; newer || { failure=stale; return 1; }
+	save_preferences
+	write_status installing
+	case "$manager" in
+		apk) apk --keys-dir "$key_dir" --repositories-file /dev/null --no-network add "$package" 9>&- || { failure=install; return 1; } ;;
+		opkg) opkg_call install "$package" 9>&- || { failure=install; return 1; } ;;
+	esac
+	restore_preferences || { failure=settings; return 1; }
+	settings_saved=0
+	installed
+	[ "$managed" = 1 ] && [ "$current" = "$target" ] || { failure=version; return 1; }
+}
+start_job() {
+	installed
+	tools_ready || { error_reply dependencies; return; }
+	[ "$managed" = 1 ] || { error_reply manual_install; return; }
+	exec 9>"$state_dir/lock"
+	flock -n 9 || { error_reply busy; return; }
+	for old in "$state_dir"/job.*; do [ ! -d "$old" ] || rm -rf "$old"; done
+	if [ "$1" = upgrade ]; then
+		json_load "$input" && json_get_var requested version && valid_version "$requested" || { error_reply invalid; return; }
+		load_release && [ "$requested" = "$target" ] && newer && fresh || { error_reply stale; return; }
+	fi
+	job=$(mktemp -d "$state_dir/job.XXXXXX") || { error_reply space; return; }
+	cp "$0" "$job/worker" && chmod 700 "$job/worker" || { error_reply space; return; }
+	case "$1" in check) write_status checking ;; upgrade) write_status downloading ;; esac
+	# Keep the inherited flock until the worker exits, even across rpcd reloads.
+	setsid "$job/worker" worker "$1" "${requested:-}" </dev/null >"$job/log" 2>&1 &
+	json_init; json_add_boolean started 1; json_dump
+}
+
+configure() {
+	json_load "$input" 2>/dev/null && json_get_var value mirror || { error_reply invalid_mirror; return; }
+	value=$(printf '%s' "$value" | tr -d ' \t\r\n')
+	[ -z "$value" ] || case "$value" in */) ;; *) value="$value/" ;; esac
+	[ -z "$value" ] || valid_mirror "$value" || { error_reply invalid_mirror; return; }
+	[ -f /etc/config/carbon ] || touch /etc/config/carbon
+	uci -q get carbon.update >/dev/null || uci set carbon.update=update
+	if [ -n "$value" ]; then uci set "carbon.update.mirror=$value"; else uci -q delete carbon.update.mirror || :; fi
+	uci commit carbon || { error_reply state; return; }
+	json_init; json_add_string mirror "$value"; json_dump
+}
+
+# ---- custom logo ----------------------------------------------------------
+logo_url() {
+	for ext in $logo_exts; do
+		[ -f "$logo_dir/logo.$ext" ] && [ ! -L "$logo_dir/logo.$ext" ] || continue
+		stamp=$(date -r "$logo_dir/logo.$ext" +%s 2>/dev/null) || stamp=''
+		printf '/luci-static/carbon/custom/logo.%s%s' "$ext" "${stamp:+?v=$stamp}"
+		return 0
+	done
+}
+# Image type from the file's magic bytes (never from its name).
+# Plain head/printf comparisons: OpenWrt's default BusyBox has no od -t.
+logo_type() {
+	case "$(head -c 6 "$1")" in GIF87a|GIF89a) echo gif; return 0 ;; esac
+	if [ "$(head -c 4 "$1")" = RIFF ] && [ "$(head -c 12 "$1" | tail -c 4)" = WEBP ]; then echo webp; return 0; fi
+	if [ "$(head -c 8 "$1")" = "$(printf '\211PNG\r\n\032\n')" ]; then echo png; return 0; fi
+	if [ "$(head -c 3 "$1")" = "$(printf '\377\330\377')" ]; then echo jpg; return 0; fi
+	head -c 4096 "$1" | tr 'A-Z' 'a-z' | grep -q '<svg' && echo svg
+}
+# The logo is shown through <img>, where SVG scripts never run, but the file is
+# also reachable by URL on the LuCI origin. Reject anything that could run there.
+svg_safe() {
+	flat=$(tr 'A-Z\n\r\t' 'a-z   ' < "$1")
+	printf '%s' "$flat" | grep -Eq '<script|<foreignobject|<iframe|<embed|<object|<!entity|<a[ />]|<(set|animate)[ />]|<handler|javascript:|vbscript:|&#|[^a-z0-9_:.-]on[a-z]+ *=' && return 1
+	# Embedded data: URIs only as raster images.
+	printf '%s' "$flat" | grep -Eo 'data: *[a-z0-9/+.-]*' | grep -Evq '^data: *image/(png|jpeg|jpg|gif|webp)$' && return 1
+	return 0
+}
+logo_reply() { json_init; json_add_string logo "$(logo_url)"; json_dump; }
+logo_fail() { rm -f "$logo_upload" "$logo_dir/.logo.new"; error_reply "$1"; }
+set_logo() {
+	[ -f "$logo_upload" ] && [ ! -L "$logo_upload" ] || { logo_fail logo_missing; return; }
+	size=$(wc -c < "$logo_upload")
+	[ "$size" -gt 0 ] && [ "$size" -le "$logo_max" ] || { logo_fail logo_size; return; }
+	ext=$(logo_type "$logo_upload")
+	[ -n "$ext" ] || { logo_fail logo_type; return; }
+	[ "$ext" != svg ] || svg_safe "$logo_upload" || { logo_fail logo_unsafe; return; }
+	[ ! -L "$logo_dir" ] && mkdir -p "$logo_dir" && chmod 755 "$logo_dir" &&
+	cp "$logo_upload" "$logo_dir/.logo.new" && chmod 644 "$logo_dir/.logo.new" || { logo_fail state; return; }
+	rm -f "$logo_upload"
+	for old in $logo_exts; do [ "$old" = "$ext" ] || rm -f "$logo_dir/logo.$old"; done
+	mv -f "$logo_dir/.logo.new" "$logo_dir/logo.$ext" || { logo_fail state; return; }
+	logo_reply
+}
+reset_logo() {
+	rm -f "$logo_upload"
+	for ext in $logo_exts; do rm -f "$logo_dir/logo.$ext"; done
+	rm -f "$logo_dir/.logo.new"
+	[ ! -d "$logo_dir" ] || rmdir "$logo_dir" 2>/dev/null || :
+	logo_reply
+}
+logo() {
+	json_load "$input" 2>/dev/null && json_get_var action action || { error_reply invalid; return; }
+	case "$action" in set) set_logo ;; reset) reset_logo ;; *) error_reply invalid ;; esac
+}
+
+case "$1" in
+	list) printf '%s\n' '{"status":{},"check":{},"upgrade":{"version":""},"configure":{"mirror":""},"logo":{"action":""}}' ;;
+	call)
+		input=$(cat)
+		prepare || { error_reply state; exit 0; }
+		case "$2" in status) status_reply ;; check|upgrade) start_job "$2" ;; configure) configure ;; logo) logo ;; *) error_reply invalid ;; esac
+		;;
+	worker)
+		job=${0%/*}; requested=${3:-}; failure=interrupted; complete=0
+		trap 'restore_preferences; [ "$complete" = 1 ] || write_status failed "$failure"; rm -rf "$job"' EXIT
+		trap 'exit 1' HUP INT TERM
+		installed
+		case "$2" in check) check_release && write_status idle && complete=1 ;; upgrade) install_release && write_status success && complete=1 ;; esac
+		;;
+	*) exit 1 ;;
+esac

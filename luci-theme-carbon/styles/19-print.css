@@ -1,0 +1,9 @@
+/* ==========================================================================
+   19. Print
+   ========================================================================== */
+
+@media print {
+	.cb-sidebar, .cb-toolbar, .cb-scrim, .cbi-page-actions, .cb-footer { display: none !important; }
+	.cb-main { margin: 0; }
+	body { background: #fff; }
+}

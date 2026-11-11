@@ -1,0 +1,674 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: zh_Hant\n"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d cores"
+msgstr "%d 核心"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d min"
+msgstr "%d 分鐘"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d on Wi-Fi"
+msgstr "Wi‑Fi 連線 %d 台"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dd %dh"
+msgstr "%d 天 %d 小時"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dh %dm"
+msgstr "%d 小時 %d 分"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%ds ago"
+msgstr "%d 秒前"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s device"
+msgstr "%s 裝置"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s left"
+msgstr "剩餘 %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 min average"
+msgstr "1 分鐘平均"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "2 min ago"
+msgstr "2 分鐘前"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "<1 min"
+msgstr "<1 分鐘"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "A new version is available."
+msgstr "有新版本可用。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "About this setting"
+msgstr "關於此設定"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "All settings"
+msgstr "全部設定"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Another update operation is running."
+msgstr "已有更新作業正在執行。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature verification failed. Nothing was installed; signature checks remain enabled."
+msgstr "APK 簽章驗證失敗，未執行安裝；簽章驗證維持啟用。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature, SHA-256 and file size are verified before installation. Your signature checks remain enabled."
+msgstr "安裝前會驗證 APK 簽章、SHA-256 與檔案大小，並保留簽章驗證。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "apk/opkg has no record of this Carbon install (for example, it was copied by an older carbon-install.sh). Run the latest carbon-install.sh once, or install the APK/IPK package, to enable online upgrades."
+msgstr "apk/opkg 中沒有這次 Carbon 安裝的記錄（例如由舊版 carbon-install.sh 複製檔案安裝）。請重新執行一次最新的 carbon-install.sh，或安裝 APK/IPK 套件，以啟用線上升級。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Appearance"
+msgstr "外觀"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Auto"
+msgstr "自動"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Backup & Upgrade"
+msgstr "備份與升級"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Cache"
+msgstr "快取"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Camera"
+msgstr "攝影機"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Cancel"
+msgstr "取消"
+
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+#: root/usr/share/luci/menu.d/luci-theme-carbon.json
+msgid "Carbon Theme Settings"
+msgstr "Carbon 主題"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check for updates"
+msgstr "檢查更新"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check the latest stable Carbon release."
+msgstr "檢查 Carbon 最新穩定版。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Checking for updates…"
+msgstr "正在檢查更新…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "click to switch"
+msgstr "點選切換"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Collapse sidebar"
+msgstr "收合側邊欄"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Common"
+msgstr "常用"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Computer"
+msgstr "電腦"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Confirm update"
+msgstr "確認升級"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected"
+msgstr "已連線"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected Devices"
+msgstr "已連線裝置"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected over Wi-Fi"
+msgstr "透過 Wi‑Fi 連線"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Connection interrupted. Progress will resume when LuCI reconnects. %s"
+msgstr "連線暫時中斷，LuCI 恢復後將繼續顯示進度。%s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connections"
+msgstr "作用中連線"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "CPU"
+msgstr "CPU"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Current logo"
+msgstr "目前的 Logo"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Dark"
+msgstr "深色"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Devices"
+msgstr "線上裝置"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP client"
+msgstr "DHCP 用戶端"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP clients"
+msgstr "DHCP 用戶端"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Download"
+msgstr "下載"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download failed. Check internet access, DNS, router time and GitHub availability."
+msgstr "下載失敗，請檢查網路、DNS、路由器時間及 GitHub 連線狀況。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download mirror"
+msgstr "下載鏡像"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Downloading update…"
+msgstr "正在下載更新…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters, digits and . _ ~ % + - only)."
+msgstr "請輸入 HTTPS 鏡像前綴，例如 https://mirror.example.com/（僅限字母、數字及 . _ ~ % + -）。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Expand sidebar"
+msgstr "展開側邊欄"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Fixed IP"
+msgstr "固定 IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Free"
+msgstr "可用"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Game console"
+msgstr "遊戲主機"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "GitHub (opens in a new tab)"
+msgstr "GitHub（在新分頁開啟）"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hidden network"
+msgstr "隱藏網路"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hide detailed status"
+msgstr "收合詳細狀態"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
+msgstr "請安裝 curl、ca-bundle、flock，並確認 Carbon 公鑰檔案完整。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install update"
+msgstr "一鍵升級"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install version %s? Your theme preferences will be retained. Do not power off the router during installation."
+msgstr "要安裝版本 %s 嗎？主題偏好將會保留，安裝期間請勿關閉路由器電源。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installation log"
+msgstr "安裝記錄"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installed version"
+msgstr "目前版本"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installing update…"
+msgstr "正在安裝更新…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Interfaces"
+msgstr "網路介面"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Internet & Network"
+msgstr "上網與網路"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid update request."
+msgstr "更新要求無效。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
+msgstr "IPK 更新透過 HTTPS 下載，並核對發布檔案的 SHA-256 與大小。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "LAN IP"
+msgstr "區域網路 IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Language"
+msgstr "語言"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Latest stable version"
+msgstr "最新穩定版"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Light"
+msgstr "淺色"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Live Traffic"
+msgstr "即時流量"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load"
+msgstr "系統負載"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load average"
+msgstr "平均負載"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Log out"
+msgstr "登出"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo"
+msgstr "Logo"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo saved."
+msgstr "Logo 已儲存。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Manage"
+msgstr "管理"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Memory"
+msgstr "記憶體"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Menu"
+msgstr "選單"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Mirror prefix"
+msgstr "鏡像前綴"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Need more settings? Switch to"
+msgstr "需要更多設定？切換到"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Network devices"
+msgstr "網路裝置"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No devices yet"
+msgstr "目前沒有裝置"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "No installation log yet."
+msgstr "尚無安裝記錄。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No wireless"
+msgstr "未偵測到無線網卡"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not checked"
+msgstr "尚未檢查"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Not connected"
+msgstr "未連線"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not enough temporary storage or unable to create update files."
+msgstr "暫存空間不足或無法建立更新檔案。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Now"
+msgstr "現在"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "of %s max"
+msgstr "上限 %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Off"
+msgstr "已關閉"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Offline"
+msgstr "未連上網路"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "On"
+msgstr "已開啟"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Online"
+msgstr "已連上網路"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Optional. If GitHub downloads are slow or blocked, enter an HTTPS prefix that proxies GitHub links, for example https://mirror.example.com/ for https://mirror.example.com/https://github.com/…. Release information is still read from GitHub, and the downloaded file must match the size and SHA-256 published there; GitHub is tried if the mirror fails."
+msgstr "選填。若 GitHub 下載緩慢或無法連線，可填寫代理 GitHub 連結的 HTTPS 前綴，例如 https://mirror.example.com/ 對應 https://mirror.example.com/https://github.com/…。版本資訊仍從 GitHub 讀取，下載的檔案必須與 GitHub 公布的大小及 SHA-256 一致；鏡像失敗時會自動改用 GitHub。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Overview"
+msgstr "概覽"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Password"
+msgstr "管理密碼"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Permission denied. Log out and log in again once after updating Carbon, then retry."
+msgstr "權限不足。升級 Carbon 後請先登出並重新登入一次，再試一次。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Personalise the logo and update the theme without changing your router configuration."
+msgstr "自訂 Logo、線上更新主題，保留路由器設定。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Phone"
+msgstr "手機"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "PPPoE"
+msgstr "PPPoE 撥號"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Printer"
+msgstr "印表機"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Private"
+msgstr "私人位址"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro"
+msgstr "專業"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro mode"
+msgstr "專業模式"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Randomised MAC address"
+msgstr "裝置使用隨機 MAC 位址，無法透過 MAC 辨識品牌"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Reboot"
+msgstr "重新啟動"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Recently active"
+msgstr "最近活躍"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release metadata or package version is invalid. Nothing was installed."
+msgstr "發布資訊或套件版本不符，未執行安裝。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes"
+msgstr "更新說明"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes will appear after checking."
+msgstr "檢查後顯示更新說明。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Reload page"
+msgstr "重新整理頁面"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Resources"
+msgstr "系統資源"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Restore default"
+msgstr "還原預設"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Save"
+msgstr "儲存"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads try the mirror first, then GitHub."
+msgstr "已儲存。下載時會先嘗試鏡像，再使用 GitHub。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads use GitHub directly."
+msgstr "已儲存。下載將直接使用 GitHub。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saving…"
+msgstr "正在儲存…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show all %d devices"
+msgstr "顯示全部 %d 台裝置"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show detailed status"
+msgstr "顯示詳細狀態"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show less"
+msgstr "收合"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Shown in the sidebar, on the login page, on the overview and as the browser icon. PNG, JPEG, WebP, GIF or SVG up to 256 KB; a square image of at least 128 × 128 pixels looks best. The logo is kept across theme updates and firmware upgrades that keep settings."
+msgstr "顯示在側邊欄、登入頁、概覽頁與瀏覽器分頁上。支援 PNG、JPEG、WebP、GIF 或 SVG，最大 256 KB；建議使用至少 128 × 128 像素的正方形圖片。主題升級以及保留設定的韌體升級後，Logo 會保留。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Simple"
+msgstr "簡易"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since %s"
+msgstr "自 %s 起"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since boot"
+msgstr "開機以來"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Smart device"
+msgstr "智慧裝置"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Software"
+msgstr "套件"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Speaker"
+msgstr "喇叭"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static"
+msgstr "靜態分配"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static address"
+msgstr "靜態位址"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Storage"
+msgstr "儲存空間"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "System"
+msgstr "系統"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Tablet"
+msgstr "平板"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Temperature"
+msgstr "溫度"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The default logo is restored."
+msgstr "已還原預設 Logo。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The downloaded file failed its size or SHA-256 check. Nothing was installed."
+msgstr "下載檔案的大小或 SHA-256 驗證失敗，未執行安裝。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The installed version does not match the release. Check the installation log."
+msgstr "安裝後的版本與目標版本不符，請查看安裝記錄。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The logo must be at most 256 KB."
+msgstr "Logo 不能超過 256 KB。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package manager could not finish installation. See the log below."
+msgstr "套件管理員無法完成安裝，請查看下方記錄。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package was installed, but restoring theme preferences failed. Check System → Language and Style."
+msgstr "套件已安裝，但還原主題偏好失敗，請檢查「系統 → 語言與樣式」。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The release changed, expired, or is no longer newer. Check for updates again."
+msgstr "發布資訊已變更、過期或不再是新版本，請重新檢查更新。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The update was interrupted. Check the installed version before trying again."
+msgstr "更新已中斷，請確認目前版本後再試一次。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The uploaded file did not reach the router. Try again."
+msgstr "上傳的檔案沒有送達路由器，請再試一次。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "This SVG contains scripts, event handlers, links or embedded documents and was rejected. Save it as a plain SVG or PNG."
+msgstr "此 SVG 含有指令碼、事件處理、連結或內嵌文件，已被拒絕。請另存為一般 SVG 或 PNG。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Traffic interface"
+msgstr "流量統計介面"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "TV"
+msgstr "電視"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unable to access update state storage."
+msgstr "無法存取更新狀態目錄。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unavailable"
+msgstr "無法讀取"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unknown"
+msgstr "未知"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unknown device"
+msgstr "未知裝置"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unmanaged"
+msgstr "未管理"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unsupported file. Use a PNG, JPEG, WebP, GIF or SVG image."
+msgstr "不支援的檔案。請使用 PNG、JPEG、WebP、GIF 或 SVG 圖片。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update Carbon"
+msgstr "升級 Carbon"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update complete. Reload this page to use the new version."
+msgstr "更新完成，請重新整理頁面以使用新版本。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update failed."
+msgstr "更新失敗。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Updates"
+msgstr "更新"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Upload"
+msgstr "上傳"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Upload logo…"
+msgstr "上傳 Logo…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Uptime"
+msgstr "運行時間"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Used"
+msgstr "已用"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Verifying update…"
+msgstr "正在驗證更新…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "View releases on GitHub"
+msgstr "在 GitHub 查看發布版本"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IP"
+msgstr "外部 IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IPv6"
+msgstr "外部 IPv6"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wi-Fi"
+msgstr "無線 Wi‑Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wireless"
+msgstr "無線網路"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "You are using the latest version."
+msgstr "已是最新版本。"

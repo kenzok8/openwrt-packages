@@ -1,0 +1,674 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: vi\n"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d cores"
+msgstr "%d nhân"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d min"
+msgstr "%d phút"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d on Wi-Fi"
+msgstr "%d qua Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dd %dh"
+msgstr "%d ngày %d giờ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dh %dm"
+msgstr "%d giờ %d phút"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%ds ago"
+msgstr "%d giây trước"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s device"
+msgstr "Thiết bị %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s left"
+msgstr "còn %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 min average"
+msgstr "Trung bình 1 phút"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "2 min ago"
+msgstr "2 phút trước"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "<1 min"
+msgstr "<1 phút"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "A new version is available."
+msgstr "Đã có phiên bản mới."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "About this setting"
+msgstr "Về cài đặt này"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "All settings"
+msgstr "Tất cả cài đặt"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Another update operation is running."
+msgstr "Một thao tác cập nhật khác đang chạy."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature verification failed. Nothing was installed; signature checks remain enabled."
+msgstr "Xác minh chữ ký APK thất bại. Chưa cài gì; kiểm tra chữ ký vẫn được bật."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature, SHA-256 and file size are verified before installation. Your signature checks remain enabled."
+msgstr "Chữ ký APK, SHA-256 và kích thước tệp được kiểm tra trước khi cài. Kiểm tra chữ ký vẫn được bật."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "apk/opkg has no record of this Carbon install (for example, it was copied by an older carbon-install.sh). Run the latest carbon-install.sh once, or install the APK/IPK package, to enable online upgrades."
+msgstr "apk/opkg không có bản ghi về lần cài Carbon này (ví dụ do carbon-install.sh cũ sao chép tệp). Hãy chạy carbon-install.sh mới nhất một lần, hoặc cài gói APK/IPK, để bật cập nhật trực tuyến."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Appearance"
+msgstr "Giao diện"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Auto"
+msgstr "Tự động"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Backup & Upgrade"
+msgstr "Sao lưu và nâng cấp"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Cache"
+msgstr "Bộ đệm"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Camera"
+msgstr "Camera"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Cancel"
+msgstr "Hủy"
+
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+#: root/usr/share/luci/menu.d/luci-theme-carbon.json
+msgid "Carbon Theme Settings"
+msgstr "Cài đặt giao diện Carbon"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check for updates"
+msgstr "Kiểm tra cập nhật"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check the latest stable Carbon release."
+msgstr "Kiểm tra bản Carbon ổn định mới nhất."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Checking for updates…"
+msgstr "Đang kiểm tra cập nhật…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "click to switch"
+msgstr "nhấn để chuyển"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Collapse sidebar"
+msgstr "Thu gọn thanh bên"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Common"
+msgstr "Thường dùng"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Computer"
+msgstr "Máy tính"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Confirm update"
+msgstr "Xác nhận cập nhật"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected"
+msgstr "Đã kết nối"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected Devices"
+msgstr "Thiết bị đã kết nối"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected over Wi-Fi"
+msgstr "Kết nối qua Wi-Fi"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Connection interrupted. Progress will resume when LuCI reconnects. %s"
+msgstr "Mất kết nối. Tiến trình sẽ tiếp tục hiển thị khi LuCI kết nối lại. %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connections"
+msgstr "Kết nối"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "CPU"
+msgstr "CPU"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Current logo"
+msgstr "Logo hiện tại"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Dark"
+msgstr "Tối"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Devices"
+msgstr "Thiết bị"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP client"
+msgstr "Máy khách DHCP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP clients"
+msgstr "Máy khách DHCP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Download"
+msgstr "Tải xuống"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download failed. Check internet access, DNS, router time and GitHub availability."
+msgstr "Tải xuống thất bại. Hãy kiểm tra kết nối Internet, DNS, giờ của router và tình trạng GitHub."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download mirror"
+msgstr "Máy chủ gương tải xuống"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Downloading update…"
+msgstr "Đang tải bản cập nhật…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters, digits and . _ ~ % + - only)."
+msgstr "Nhập tiền tố máy chủ gương HTTPS như https://mirror.example.com/ (chỉ chữ cái, chữ số và . _ ~ % + -)."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Expand sidebar"
+msgstr "Mở rộng thanh bên"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Fixed IP"
+msgstr "IP cố định"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Free"
+msgstr "Trống"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Game console"
+msgstr "Máy chơi game"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "GitHub (opens in a new tab)"
+msgstr "GitHub (mở trong thẻ mới)"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hidden network"
+msgstr "Mạng ẩn"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hide detailed status"
+msgstr "Ẩn trạng thái chi tiết"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
+msgstr "Hãy cài curl, ca-bundle và flock, và khôi phục khóa công khai của Carbon nếu bị thiếu."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install update"
+msgstr "Cài bản cập nhật"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install version %s? Your theme preferences will be retained. Do not power off the router during installation."
+msgstr "Cài phiên bản %s? Tùy chọn giao diện sẽ được giữ nguyên. Đừng tắt router trong khi cài."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installation log"
+msgstr "Nhật ký cài đặt"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installed version"
+msgstr "Phiên bản đã cài"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installing update…"
+msgstr "Đang cài bản cập nhật…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Interfaces"
+msgstr "Giao tiếp mạng"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Internet & Network"
+msgstr "Internet và mạng"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid update request."
+msgstr "Yêu cầu cập nhật không hợp lệ."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
+msgstr "Bản cập nhật IPK được tải qua HTTPS và đối chiếu với SHA-256 và kích thước tệp đã công bố."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "LAN IP"
+msgstr "IP LAN"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Language"
+msgstr "Ngôn ngữ"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Latest stable version"
+msgstr "Phiên bản ổn định mới nhất"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Light"
+msgstr "Sáng"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Live Traffic"
+msgstr "Lưu lượng trực tiếp"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load"
+msgstr "Tải"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load average"
+msgstr "Tải trung bình"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Log out"
+msgstr "Đăng xuất"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo"
+msgstr "Logo"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo saved."
+msgstr "Đã lưu logo."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Manage"
+msgstr "Quản lý"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Memory"
+msgstr "Bộ nhớ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Menu"
+msgstr "Menu"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Mirror prefix"
+msgstr "Tiền tố máy chủ gương"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Need more settings? Switch to"
+msgstr "Cần thêm cài đặt? Chuyển sang"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Network devices"
+msgstr "Thiết bị mạng"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No devices yet"
+msgstr "Chưa có thiết bị"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "No installation log yet."
+msgstr "Chưa có nhật ký cài đặt."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No wireless"
+msgstr "Không có Wi-Fi"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not checked"
+msgstr "Chưa kiểm tra"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Not connected"
+msgstr "Chưa kết nối"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not enough temporary storage or unable to create update files."
+msgstr "Không đủ bộ nhớ tạm hoặc không thể tạo tệp cập nhật."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Now"
+msgstr "Bây giờ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "of %s max"
+msgstr "trên tối đa %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Off"
+msgstr "Tắt"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Offline"
+msgstr "Ngoại tuyến"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "On"
+msgstr "Bật"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Online"
+msgstr "Trực tuyến"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Optional. If GitHub downloads are slow or blocked, enter an HTTPS prefix that proxies GitHub links, for example https://mirror.example.com/ for https://mirror.example.com/https://github.com/…. Release information is still read from GitHub, and the downloaded file must match the size and SHA-256 published there; GitHub is tried if the mirror fails."
+msgstr "Không bắt buộc. Nếu tải từ GitHub chậm hoặc bị chặn, hãy nhập tiền tố HTTPS chuyển tiếp liên kết GitHub, ví dụ https://mirror.example.com/ cho https://mirror.example.com/https://github.com/…. Thông tin phiên bản vẫn được đọc từ GitHub, và tệp tải về phải khớp kích thước và SHA-256 công bố tại đó; nếu máy chủ gương lỗi, GitHub sẽ được dùng."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Overview"
+msgstr "Tổng quan"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Password"
+msgstr "Mật khẩu"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Permission denied. Log out and log in again once after updating Carbon, then retry."
+msgstr "Không có quyền. Sau khi cập nhật Carbon, hãy đăng xuất và đăng nhập lại một lần rồi thử lại."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Personalise the logo and update the theme without changing your router configuration."
+msgstr "Tùy chỉnh logo và cập nhật giao diện mà không thay đổi cấu hình router."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Phone"
+msgstr "Điện thoại"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "PPPoE"
+msgstr "PPPoE"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Printer"
+msgstr "Máy in"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Private"
+msgstr "Riêng tư"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro"
+msgstr "Chuyên sâu"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro mode"
+msgstr "chế độ chuyên sâu"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Randomised MAC address"
+msgstr "Địa chỉ MAC ngẫu nhiên"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Reboot"
+msgstr "Khởi động lại"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Recently active"
+msgstr "Mới hoạt động"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release metadata or package version is invalid. Nothing was installed."
+msgstr "Thông tin phát hành hoặc phiên bản gói không hợp lệ. Chưa cài gì."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes"
+msgstr "Ghi chú phát hành"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes will appear after checking."
+msgstr "Ghi chú phát hành sẽ hiện sau khi kiểm tra."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Reload page"
+msgstr "Tải lại trang"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Resources"
+msgstr "Tài nguyên"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Restore default"
+msgstr "Khôi phục mặc định"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Save"
+msgstr "Lưu"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads try the mirror first, then GitHub."
+msgstr "Đã lưu. Tải xuống sẽ thử máy chủ gương trước, sau đó GitHub."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads use GitHub directly."
+msgstr "Đã lưu. Tải xuống dùng trực tiếp GitHub."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saving…"
+msgstr "Đang lưu…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show all %d devices"
+msgstr "Hiện tất cả %d thiết bị"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show detailed status"
+msgstr "Hiện trạng thái chi tiết"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show less"
+msgstr "Thu gọn"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Shown in the sidebar, on the login page, on the overview and as the browser icon. PNG, JPEG, WebP, GIF or SVG up to 256 KB; a square image of at least 128 × 128 pixels looks best. The logo is kept across theme updates and firmware upgrades that keep settings."
+msgstr "Hiển thị ở thanh bên, trang đăng nhập, trang tổng quan và biểu tượng trình duyệt. PNG, JPEG, WebP, GIF hoặc SVG tối đa 256 KB; ảnh vuông ít nhất 128 × 128 điểm ảnh trông đẹp nhất. Logo được giữ lại khi cập nhật giao diện và nâng cấp firmware có giữ cài đặt."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Simple"
+msgstr "Đơn giản"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since %s"
+msgstr "Từ %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since boot"
+msgstr "Từ khi khởi động"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Smart device"
+msgstr "Thiết bị thông minh"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Software"
+msgstr "Phần mềm"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Speaker"
+msgstr "Loa"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static"
+msgstr "Tĩnh"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static address"
+msgstr "Địa chỉ tĩnh"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Storage"
+msgstr "Lưu trữ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "System"
+msgstr "Hệ thống"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Tablet"
+msgstr "Máy tính bảng"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Temperature"
+msgstr "Nhiệt độ"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The default logo is restored."
+msgstr "Đã khôi phục logo mặc định."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The downloaded file failed its size or SHA-256 check. Nothing was installed."
+msgstr "Tệp tải về không qua được kiểm tra kích thước hoặc SHA-256. Chưa cài gì."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The installed version does not match the release. Check the installation log."
+msgstr "Phiên bản đã cài không khớp với bản phát hành. Hãy xem nhật ký cài đặt."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The logo must be at most 256 KB."
+msgstr "Logo tối đa 256 KB."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package manager could not finish installation. See the log below."
+msgstr "Trình quản lý gói không thể hoàn tất cài đặt. Xem nhật ký bên dưới."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package was installed, but restoring theme preferences failed. Check System → Language and Style."
+msgstr "Đã cài gói nhưng không khôi phục được tùy chọn giao diện. Hãy kiểm tra Hệ thống → Ngôn ngữ và kiểu."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The release changed, expired, or is no longer newer. Check for updates again."
+msgstr "Bản phát hành đã thay đổi, hết hạn hoặc không còn mới hơn. Hãy kiểm tra cập nhật lại."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The update was interrupted. Check the installed version before trying again."
+msgstr "Quá trình cập nhật bị gián đoạn. Hãy kiểm tra phiên bản đã cài trước khi thử lại."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The uploaded file did not reach the router. Try again."
+msgstr "Tệp tải lên không đến được router. Hãy thử lại."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "This SVG contains scripts, event handlers, links or embedded documents and was rejected. Save it as a plain SVG or PNG."
+msgstr "Tệp SVG này chứa script, trình xử lý sự kiện, liên kết hoặc tài liệu nhúng nên bị từ chối. Hãy lưu thành SVG thường hoặc PNG."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Traffic interface"
+msgstr "Giao tiếp mạng cho lưu lượng"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "TV"
+msgstr "TV"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unable to access update state storage."
+msgstr "Không thể truy cập nơi lưu trạng thái cập nhật."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unavailable"
+msgstr "Không khả dụng"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unknown"
+msgstr "Không rõ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unknown device"
+msgstr "Thiết bị không rõ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unmanaged"
+msgstr "Không quản lý"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unsupported file. Use a PNG, JPEG, WebP, GIF or SVG image."
+msgstr "Tệp không được hỗ trợ. Hãy dùng ảnh PNG, JPEG, WebP, GIF hoặc SVG."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update Carbon"
+msgstr "Cập nhật Carbon"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update complete. Reload this page to use the new version."
+msgstr "Cập nhật xong. Tải lại trang để dùng phiên bản mới."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update failed."
+msgstr "Cập nhật thất bại."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Updates"
+msgstr "Cập nhật"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Upload"
+msgstr "Tải lên"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Upload logo…"
+msgstr "Tải logo lên…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Uptime"
+msgstr "Thời gian hoạt động"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Used"
+msgstr "Đã dùng"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Verifying update…"
+msgstr "Đang xác minh bản cập nhật…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "View releases on GitHub"
+msgstr "Xem các bản phát hành trên GitHub"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IP"
+msgstr "IP WAN"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IPv6"
+msgstr "IPv6 WAN"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wi-Fi"
+msgstr "Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wireless"
+msgstr "Không dây"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "You are using the latest version."
+msgstr "Bạn đang dùng phiên bản mới nhất."

@@ -1,0 +1,24 @@
+#!/bin/sh
+# Register the Carbon theme and make it the default on first install.
+
+changed=0
+
+if ! uci -q get luci.themes.Carbon >/dev/null 2>&1; then
+	uci set luci.themes.Carbon=/luci-static/carbon
+	changed=1
+fi
+
+if [ "$PKG_UPGRADE" != 1 ] && [ "$changed" = 1 ]; then
+	uci set luci.main.mediaurlbase=/luci-static/carbon
+fi
+
+[ "$changed" = 1 ] && uci commit luci
+
+# Updater settings (download mirror); kept across upgrades.
+[ -f /etc/config/carbon ] || touch /etc/config/carbon
+if ! uci -q get carbon.update >/dev/null 2>&1; then
+	uci set carbon.update=update
+	uci commit carbon
+fi
+
+exit 0

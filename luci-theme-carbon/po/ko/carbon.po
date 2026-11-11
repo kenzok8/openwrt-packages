@@ -1,0 +1,674 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ko\n"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d cores"
+msgstr "%d코어"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d min"
+msgstr "%d분"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d on Wi-Fi"
+msgstr "Wi-Fi %d대"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dd %dh"
+msgstr "%d일 %d시간"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dh %dm"
+msgstr "%d시간 %d분"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%ds ago"
+msgstr "%d초 전"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s device"
+msgstr "%s 기기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s left"
+msgstr "%s 남음"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 min average"
+msgstr "1분 평균"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "2 min ago"
+msgstr "2분 전"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "<1 min"
+msgstr "1분 미만"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "A new version is available."
+msgstr "새 버전이 있습니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "About this setting"
+msgstr "이 설정 정보"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "All settings"
+msgstr "모든 설정"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Another update operation is running."
+msgstr "다른 업데이트 작업이 진행 중입니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature verification failed. Nothing was installed; signature checks remain enabled."
+msgstr "APK 서명 확인에 실패했습니다. 아무것도 설치하지 않았으며 서명 확인은 계속 켜져 있습니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature, SHA-256 and file size are verified before installation. Your signature checks remain enabled."
+msgstr "설치 전에 APK 서명, SHA-256, 파일 크기를 확인합니다. 서명 확인은 계속 켜져 있습니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "apk/opkg has no record of this Carbon install (for example, it was copied by an older carbon-install.sh). Run the latest carbon-install.sh once, or install the APK/IPK package, to enable online upgrades."
+msgstr "apk/opkg에 이 Carbon 설치 기록이 없습니다(예: 이전 carbon-install.sh가 파일을 복사한 경우). 온라인 업데이트를 사용하려면 최신 carbon-install.sh를 한 번 실행하거나 APK/IPK 패키지를 설치하세요."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Appearance"
+msgstr "모양"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Auto"
+msgstr "자동"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Backup & Upgrade"
+msgstr "백업 및 업그레이드"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Cache"
+msgstr "캐시"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Camera"
+msgstr "카메라"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Cancel"
+msgstr "취소"
+
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+#: root/usr/share/luci/menu.d/luci-theme-carbon.json
+msgid "Carbon Theme Settings"
+msgstr "Carbon 테마 설정"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check for updates"
+msgstr "업데이트 확인"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check the latest stable Carbon release."
+msgstr "Carbon 최신 안정 버전을 확인합니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Checking for updates…"
+msgstr "업데이트 확인 중…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "click to switch"
+msgstr "클릭하여 전환"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Collapse sidebar"
+msgstr "사이드바 접기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Common"
+msgstr "자주 사용"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Computer"
+msgstr "컴퓨터"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Confirm update"
+msgstr "업데이트 진행"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected"
+msgstr "연결됨"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected Devices"
+msgstr "연결된 기기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected over Wi-Fi"
+msgstr "Wi-Fi로 연결됨"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Connection interrupted. Progress will resume when LuCI reconnects. %s"
+msgstr "연결이 끊겼습니다. LuCI가 다시 연결되면 진행 상황을 계속 표시합니다. %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connections"
+msgstr "연결"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "CPU"
+msgstr "CPU"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Current logo"
+msgstr "현재 로고"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Dark"
+msgstr "다크"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Devices"
+msgstr "기기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP client"
+msgstr "DHCP 클라이언트"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP clients"
+msgstr "DHCP 클라이언트"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Download"
+msgstr "다운로드"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download failed. Check internet access, DNS, router time and GitHub availability."
+msgstr "다운로드에 실패했습니다. 인터넷 연결, DNS, 라우터 시간, GitHub 상태를 확인하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download mirror"
+msgstr "다운로드 미러"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Downloading update…"
+msgstr "업데이트 다운로드 중…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters, digits and . _ ~ % + - only)."
+msgstr "https://mirror.example.com/ 과 같은 HTTPS 미러 접두사를 입력하세요(영문자, 숫자, . _ ~ % + - 만 사용)."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Expand sidebar"
+msgstr "사이드바 펼치기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Fixed IP"
+msgstr "고정 IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Free"
+msgstr "여유"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Game console"
+msgstr "게임기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "GitHub (opens in a new tab)"
+msgstr "GitHub(새 탭에서 열기)"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hidden network"
+msgstr "숨겨진 네트워크"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hide detailed status"
+msgstr "자세한 상태 숨기기"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
+msgstr "curl, ca-bundle, flock을 설치하고 Carbon 공개 키가 없으면 복원하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install update"
+msgstr "업데이트 설치"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install version %s? Your theme preferences will be retained. Do not power off the router during installation."
+msgstr "%s 버전을 설치할까요? 테마 설정은 유지됩니다. 설치 중에는 라우터 전원을 끄지 마세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installation log"
+msgstr "설치 로그"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installed version"
+msgstr "설치된 버전"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installing update…"
+msgstr "업데이트 설치 중…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Interfaces"
+msgstr "인터페이스"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Internet & Network"
+msgstr "인터넷 및 네트워크"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid update request."
+msgstr "잘못된 업데이트 요청입니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
+msgstr "IPK 업데이트는 HTTPS로 다운로드하며 릴리스의 SHA-256과 파일 크기로 확인합니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "LAN IP"
+msgstr "LAN IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Language"
+msgstr "언어"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Latest stable version"
+msgstr "최신 안정 버전"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Light"
+msgstr "라이트"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Live Traffic"
+msgstr "실시간 트래픽"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load"
+msgstr "부하"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load average"
+msgstr "평균 부하"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Log out"
+msgstr "로그아웃"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo"
+msgstr "로고"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo saved."
+msgstr "로고를 저장했습니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Manage"
+msgstr "관리"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Memory"
+msgstr "메모리"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Menu"
+msgstr "메뉴"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Mirror prefix"
+msgstr "미러 접두사"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Need more settings? Switch to"
+msgstr "설정이 더 필요하신가요? 전환:"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Network devices"
+msgstr "네트워크 장치"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No devices yet"
+msgstr "아직 기기가 없습니다"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "No installation log yet."
+msgstr "아직 설치 로그가 없습니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No wireless"
+msgstr "무선 없음"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not checked"
+msgstr "확인 안 함"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Not connected"
+msgstr "연결 안 됨"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not enough temporary storage or unable to create update files."
+msgstr "임시 저장 공간이 부족하거나 업데이트 파일을 만들 수 없습니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Now"
+msgstr "지금"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "of %s max"
+msgstr "최대 %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Off"
+msgstr "꺼짐"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Offline"
+msgstr "오프라인"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "On"
+msgstr "켜짐"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Online"
+msgstr "온라인"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Optional. If GitHub downloads are slow or blocked, enter an HTTPS prefix that proxies GitHub links, for example https://mirror.example.com/ for https://mirror.example.com/https://github.com/…. Release information is still read from GitHub, and the downloaded file must match the size and SHA-256 published there; GitHub is tried if the mirror fails."
+msgstr "선택 사항입니다. GitHub 다운로드가 느리거나 차단된 경우 GitHub 링크를 중계하는 HTTPS 접두사를 입력하세요. 예: https://mirror.example.com/https://github.com/… 에는 https://mirror.example.com/. 릴리스 정보는 계속 GitHub에서 읽으며, 다운로드한 파일은 GitHub에 게시된 크기와 SHA-256이 일치해야 합니다. 미러가 실패하면 GitHub를 사용합니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Overview"
+msgstr "개요"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Password"
+msgstr "비밀번호"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Permission denied. Log out and log in again once after updating Carbon, then retry."
+msgstr "권한이 없습니다. Carbon을 업데이트한 뒤 한 번 로그아웃했다가 다시 로그인하고 다시 시도하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Personalise the logo and update the theme without changing your router configuration."
+msgstr "라우터 설정을 바꾸지 않고 로고를 꾸미고 테마를 업데이트합니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Phone"
+msgstr "휴대폰"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "PPPoE"
+msgstr "PPPoE"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Printer"
+msgstr "프린터"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Private"
+msgstr "비공개"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro"
+msgstr "전문가"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro mode"
+msgstr "전문가 모드"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Randomised MAC address"
+msgstr "무작위 MAC 주소"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Reboot"
+msgstr "재부팅"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Recently active"
+msgstr "최근 활동"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release metadata or package version is invalid. Nothing was installed."
+msgstr "릴리스 정보 또는 패키지 버전이 올바르지 않습니다. 아무것도 설치하지 않았습니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes"
+msgstr "릴리스 노트"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes will appear after checking."
+msgstr "확인 후 릴리스 노트가 표시됩니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Reload page"
+msgstr "페이지 새로 고침"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Resources"
+msgstr "리소스"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Restore default"
+msgstr "기본값 복원"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Save"
+msgstr "저장"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads try the mirror first, then GitHub."
+msgstr "저장했습니다. 다운로드는 먼저 미러를 시도한 다음 GitHub를 사용합니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads use GitHub directly."
+msgstr "저장했습니다. 다운로드는 GitHub를 직접 사용합니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saving…"
+msgstr "저장 중…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show all %d devices"
+msgstr "기기 %d대 모두 보기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show detailed status"
+msgstr "자세한 상태 보기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show less"
+msgstr "간단히 보기"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Shown in the sidebar, on the login page, on the overview and as the browser icon. PNG, JPEG, WebP, GIF or SVG up to 256 KB; a square image of at least 128 × 128 pixels looks best. The logo is kept across theme updates and firmware upgrades that keep settings."
+msgstr "사이드바, 로그인 페이지, 개요, 브라우저 아이콘에 표시됩니다. 최대 256KB의 PNG, JPEG, WebP, GIF 또는 SVG를 지원하며, 128 × 128픽셀 이상의 정사각형 이미지가 가장 잘 어울립니다. 로고는 테마 업데이트와 설정을 유지하는 펌웨어 업그레이드 후에도 유지됩니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Simple"
+msgstr "간편"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since %s"
+msgstr "%s부터"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since boot"
+msgstr "부팅 이후"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Smart device"
+msgstr "스마트 기기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Software"
+msgstr "소프트웨어"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Speaker"
+msgstr "스피커"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static"
+msgstr "고정"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static address"
+msgstr "고정 주소"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Storage"
+msgstr "저장소"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "System"
+msgstr "시스템"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Tablet"
+msgstr "태블릿"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Temperature"
+msgstr "온도"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The default logo is restored."
+msgstr "기본 로고로 복원했습니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The downloaded file failed its size or SHA-256 check. Nothing was installed."
+msgstr "다운로드한 파일이 크기 또는 SHA-256 확인에 실패했습니다. 아무것도 설치하지 않았습니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The installed version does not match the release. Check the installation log."
+msgstr "설치된 버전이 릴리스와 일치하지 않습니다. 설치 로그를 확인하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The logo must be at most 256 KB."
+msgstr "로고는 256KB 이하여야 합니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package manager could not finish installation. See the log below."
+msgstr "패키지 관리자가 설치를 마치지 못했습니다. 아래 로그를 확인하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package was installed, but restoring theme preferences failed. Check System → Language and Style."
+msgstr "패키지는 설치되었지만 테마 설정을 복원하지 못했습니다. 시스템 → 언어 및 스타일을 확인하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The release changed, expired, or is no longer newer. Check for updates again."
+msgstr "릴리스가 변경되었거나 만료되었거나 더 이상 최신이 아닙니다. 업데이트를 다시 확인하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The update was interrupted. Check the installed version before trying again."
+msgstr "업데이트가 중단되었습니다. 다시 시도하기 전에 설치된 버전을 확인하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The uploaded file did not reach the router. Try again."
+msgstr "업로드한 파일이 라우터에 도착하지 않았습니다. 다시 시도하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "This SVG contains scripts, event handlers, links or embedded documents and was rejected. Save it as a plain SVG or PNG."
+msgstr "이 SVG에는 스크립트, 이벤트 핸들러, 링크 또는 포함된 문서가 있어 거부되었습니다. 일반 SVG 또는 PNG로 저장하세요."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Traffic interface"
+msgstr "트래픽 인터페이스"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "TV"
+msgstr "TV"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unable to access update state storage."
+msgstr "업데이트 상태 저장소에 접근할 수 없습니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unavailable"
+msgstr "사용할 수 없음"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unknown"
+msgstr "알 수 없음"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unknown device"
+msgstr "알 수 없는 기기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unmanaged"
+msgstr "관리 안 함"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unsupported file. Use a PNG, JPEG, WebP, GIF or SVG image."
+msgstr "지원하지 않는 파일입니다. PNG, JPEG, WebP, GIF 또는 SVG 이미지를 사용하세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update Carbon"
+msgstr "Carbon 업데이트"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update complete. Reload this page to use the new version."
+msgstr "업데이트가 완료되었습니다. 페이지를 새로 고치면 새 버전을 사용할 수 있습니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update failed."
+msgstr "업데이트에 실패했습니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Updates"
+msgstr "업데이트"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Upload"
+msgstr "업로드"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Upload logo…"
+msgstr "로고 업로드…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Uptime"
+msgstr "가동 시간"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Used"
+msgstr "사용 중"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Verifying update…"
+msgstr "업데이트 확인 중…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "View releases on GitHub"
+msgstr "GitHub에서 릴리스 보기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IP"
+msgstr "WAN IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IPv6"
+msgstr "WAN IPv6"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wi-Fi"
+msgstr "Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wireless"
+msgstr "무선"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "You are using the latest version."
+msgstr "최신 버전을 사용하고 있습니다."

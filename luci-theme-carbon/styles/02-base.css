@@ -1,0 +1,67 @@
+/* ==========================================================================
+   2. Base
+   ========================================================================== */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	background: var(--cb-bg);
+	color: var(--cb-text);
+	font: 14px/1.5 var(--cb-font);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	font-feature-settings: "kern";
+}
+
+a { color: var(--cb-accent); text-decoration: none; }
+/* :where() keeps hover underline at class specificity, so button-like links
+   can opt out without !important */
+:where(a):hover { text-decoration: underline; text-underline-offset: 2px; }
+
+h1, h2, h3, h4, h5, h6 { margin: 0 0 .5em; font-weight: 600; line-height: 1.25; color: var(--cb-text); }
+h2 { font-size: 26px; font-weight: 700; letter-spacing: -.01em; }
+h3 { font-size: 17px; }
+h4 { font-size: 15px; }
+h5 { font-size: 14px; }
+p { margin: 0 0 .75em; }
+hr { border: 0; border-top: 1px solid var(--cb-sep); margin: 16px 0; }
+small { font-size: 12px; }
+code, kbd, pre, samp, var, tt { font-family: var(--cb-mono); font-size: 12.5px; }
+pre {
+	background: var(--cb-card-2);
+	border: 1px solid var(--cb-sep);
+	border-radius: var(--cb-radius-sm);
+	padding: 10px 12px;
+	overflow: auto;
+	white-space: pre-wrap;
+}
+img { max-width: 100%; }
+ul, ol { padding-left: 1.4em; }
+abbr[title] { text-decoration: underline dotted; cursor: help; }
+strong, b { font-weight: 600; }
+em { font-style: normal; color: var(--cb-text-2); }
+fieldset { border: 0; margin: 0 0 16px; padding: 0; }
+legend { font-size: 17px; font-weight: 600; padding: 0 0 8px; }
+
+::selection { background: var(--cb-accent-t); }
+:focus-visible { outline: 3px solid var(--cb-focus); outline-offset: 1px; }
+
+.hidden { display: none !important; }
+.left { text-align: left !important; }
+.right { text-align: right !important; }
+.center { text-align: center !important; }
+.top { vertical-align: top !important; }
+.middle { vertical-align: middle !important; }
+.bottom { vertical-align: bottom !important; }
+.pull-right { float: right; }
+.pull-left { float: left; }
+form.inline { display: inline; margin: 0; }
+.nowrap { white-space: nowrap; }
+

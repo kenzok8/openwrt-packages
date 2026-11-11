@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hans">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carbon navigation regressions</title>
+<link rel="stylesheet" href="../htdocs/luci-static/carbon/carbon.css">
+<script>
+const carbonReady = new Promise((resolve, reject) => {
+	const script = document.createElement('script');
+	script.src = '../htdocs/luci-static/carbon/carbon.js?test=' + Date.now();
+	script.onload = resolve; script.onerror = reject; document.head.append(script);
+});
+</script>
+<style>body {padding:16px} #maincontent {max-width:358px} #results {white-space:pre-wrap} .test-spacer {height:900px}</style>
+<h1>Carbon navigation regressions</h1>
+<pre id="results" role="status">Running…</pre>
+<div id="maincontent"><div id="tabmenu"></div><div id="view"></div></div>
+<script>
+(async function () {
+	await carbonReady;
+	const results = [];
+	const report = (name, pass) => results.push((pass ? 'PASS ' : 'FAIL ') + name);
+	report('mobile viewport (390px recommended)', window.innerWidth <= 600);
+	const frame = () => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+	const makeRow = (kind, active = 9) => {
+		const row = document.createElement('ul'); row.className = kind;
+		for (let i = 0; i < 10; i++) {
+			const li = document.createElement('li');
+			li.className = kind === 'tabs' ? (i === active ? 'active' : '') : (i === active ? 'cbi-tab' : 'cbi-tab-disabled');
+			li.innerHTML = '<a href="#">功能页面 ' + String(i + 1).padStart(2, '0') + '</a>';
+			row.append(li);
+		}
+		return row;
+	};
+	const visible = row => {
+		const r = row.getBoundingClientRect(), a = row.querySelector('.active, .cbi-tab').getBoundingClientRect();
+		return a.left >= r.left - 1 && a.right <= r.right + 1;
+	};
+	const menu = document.getElementById('tabmenu'), view = document.getElementById('view');
+	const parent = makeRow('tabs'), child = makeRow('tabs', 8);
+	menu.append(parent, child);
+	Carbon.initShell();
+	await frame();
+	report('initial active route tab', visible(parent));
+	report('nested active route tab', visible(child));
+	const dynamic = makeRow('cbi-tabmenu');
+	view.append(dynamic);
+	await frame();
+	report('asynchronously inserted form tabs', visible(dynamic));
+	dynamic.children[9].className = 'cbi-tab-disabled';
+	dynamic.children[1].className = 'cbi-tab';
+	await frame();
+	report('programmatic active tab change', visible(dynamic));
+	const hidden = document.createElement('div'); hidden.hidden = true;
+	const nested = makeRow('cbi-tabmenu'); hidden.append(nested); view.append(hidden);
+	await frame(); hidden.hidden = false; await frame();
+	report('tabs revealed inside a hidden pane', visible(nested));
+	parent.scrollLeft = 0;
+	view.append(document.createElement('p'));
+	await frame();
+	report('unrelated refresh preserves manual horizontal scrolling', parent.scrollLeft === 0);
+	dynamic.children[1].className = 'cbi-tab-disabled';
+	dynamic.children[8].className = 'cbi-tab';
+	await frame();
+	view.style.maxWidth = '240px';
+	await frame();
+	report('active tab stays visible after narrowing the container', visible(dynamic));
+	view.style.maxWidth = '';
+	const spacer = document.createElement('div'); spacer.className = 'test-spacer'; view.append(spacer);
+	const input = document.createElement('input'); input.setAttribute('aria-label', 'Focus stays here');
+	view.prepend(input); input.focus({ preventScroll: true });
+	const before = window.scrollY;
+	dynamic.children[8].className = 'cbi-tab-disabled'; dynamic.children[1].className = 'cbi-tab';
+	await frame();
+	report('revealing a tab does not scroll the document vertically', window.scrollY === before);
+	report('revealing a tab preserves input focus', document.activeElement === input);
+	document.getElementById('results').textContent = results.join('\n');
+	document.title = results.some(line => line.startsWith('FAIL')) ? 'FAIL — Carbon navigation' : 'PASS — Carbon navigation';
+})();
+</script>
+</html>

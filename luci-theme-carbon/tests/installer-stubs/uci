@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "uci $*" >> "$STATE/log"
+[ "$1" = -q ] && shift
+case "$1" in
+	get) [ "$2" = luci.main.mediaurlbase ] && cat "$STATE/theme" 2>/dev/null ;;
+	set) case "$2" in luci.main.mediaurlbase=*) echo "${2#*=}" > "$STATE/theme" ;; esac ;;
+esac
+exit 0

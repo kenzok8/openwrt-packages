@@ -1,0 +1,115 @@
+/* ==========================================================================
+   1. Design tokens
+   ========================================================================== */
+
+:root {
+	/* Carbon palette — status & data colours */
+	--cb-blue: #3b82f6;
+	--cb-green: #16a34a;
+	--cb-orange: #e8870b;
+	--cb-red: #e5484d;
+	--cb-purple: #8b5cf6;
+	--cb-teal: #0d9f9b;
+	--cb-indigo: #4f5bea;
+	--cb-pink: #e2367f;
+	--cb-yellow: #eab308;
+	--cb-gray: #8b91a1;
+
+	--cb-green-t: rgba(22, 163, 74, .12);
+	--cb-orange-t: rgba(232, 135, 11, .13);
+	--cb-red-t: rgba(229, 72, 77, .11);
+
+	/* Carbon indigo — the one accent used for actions, focus and selection */
+	--cb-accent: #4f5bea;
+	--cb-accent-strong: #3d49d6;
+	--cb-accent-t: rgba(79, 91, 234, .11);
+	--cb-focus: rgba(79, 91, 234, .26);
+	--cb-on-accent: #ffffff;
+
+	/* surfaces */
+	--cb-bg: #f3f4f8;
+	--cb-card: rgba(255, 255, 255, .84);
+	--cb-card-solid: #ffffff;
+	--cb-card-2: rgba(15, 23, 42, .025);
+	--cb-card-edge: rgba(15, 23, 42, .06);
+	--cb-field: #ffffff;
+	--cb-fill: rgba(15, 23, 42, .06);
+	--cb-fill-2: rgba(15, 23, 42, .035);
+	--cb-hover: rgba(79, 91, 234, .05);
+
+	--cb-text: #1a1f36;
+	--cb-text-2: rgba(26, 31, 54, .62);
+	--cb-text-3: rgba(26, 31, 54, .36);
+
+	--cb-sep: rgba(15, 23, 42, .07);
+	--cb-border: rgba(15, 23, 42, .08);
+	--cb-border-strong: rgba(15, 23, 42, .15);
+
+	--cb-toolbar: rgba(243, 244, 248, .74);
+	--cb-popover: rgba(255, 255, 255, .88);
+
+	--cb-shadow: 0 0 0 1px var(--cb-card-edge), 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(30, 41, 90, .22);
+	--cb-shadow-pop: 0 0 0 1px var(--cb-card-edge), 0 22px 50px -14px rgba(30, 41, 90, .3);
+
+	--cb-radius: 18px;
+	--cb-radius-md: 12px;
+	--cb-radius-sm: 10px;
+
+	--cb-font: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", "Microsoft YaHei", "Noto Sans CJK SC", Roboto, sans-serif;
+	--cb-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas, "Liberation Mono", monospace;
+	--cb-ease: cubic-bezier(.25, .1, .25, 1);
+
+	--cb-content-max: 1240px;
+
+	color-scheme: light;
+}
+
+:root[data-darkmode="true"] {
+	--cb-blue: #60a5fa;
+	--cb-green: #34d399;
+	--cb-orange: #fbb03b;
+	--cb-red: #f87171;
+	--cb-purple: #a78bfa;
+	--cb-teal: #2dd4bf;
+	--cb-indigo: #8b95ff;
+	--cb-pink: #f472b6;
+	--cb-yellow: #facc15;
+	--cb-gray: #9aa1b2;
+
+	--cb-green-t: rgba(52, 211, 153, .14);
+	--cb-orange-t: rgba(251, 176, 59, .15);
+	--cb-red-t: rgba(248, 113, 113, .15);
+
+	--cb-accent: #8b95ff;
+	--cb-accent-strong: #aab3ff;
+	--cb-accent-t: rgba(139, 149, 255, .16);
+	--cb-focus: rgba(139, 149, 255, .32);
+	--cb-on-accent: #0e1024;
+
+	--cb-bg: #0c0d12;
+	--cb-card: rgba(24, 26, 34, .8);
+	--cb-card-solid: #181a22;
+	--cb-card-2: rgba(255, 255, 255, .03);
+	--cb-card-edge: rgba(255, 255, 255, .06);
+	--cb-field: rgba(255, 255, 255, .045);
+	--cb-fill: rgba(255, 255, 255, .08);
+	--cb-fill-2: rgba(255, 255, 255, .05);
+	--cb-hover: rgba(255, 255, 255, .04);
+
+	--cb-text: #e9ebf5;
+	--cb-text-2: rgba(233, 235, 245, .6);
+	--cb-text-3: rgba(233, 235, 245, .32);
+
+	--cb-sep: rgba(255, 255, 255, .07);
+	--cb-border: rgba(255, 255, 255, .08);
+	--cb-border-strong: rgba(255, 255, 255, .15);
+
+	--cb-toolbar: rgba(12, 13, 18, .7);
+	--cb-popover: rgba(30, 32, 42, .9);
+
+	--cb-shadow: 0 0 0 1px var(--cb-card-edge), 0 10px 30px -18px rgba(0, 0, 0, .7);
+	--cb-shadow-pop: 0 0 0 1px var(--cb-card-edge), 0 24px 56px -14px rgba(0, 0, 0, .75);
+
+	color-scheme: dark;
+}
+

@@ -1,0 +1,152 @@
+/* ==========================================================================
+   7. Buttons — solid colours only (no gradients)
+   ========================================================================== */
+
+/* secondary: glass chip */
+.btn,
+.cbi-button,
+button:where(:not([class*="cb-"])),
+input[type="submit"],
+input[type="button"],
+input[type="reset"] {
+	--btn-bg: var(--cb-card-solid);
+	--btn-fg: var(--cb-text);
+	--btn-ring: var(--cb-border-strong);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	width: auto;
+	min-height: 34px;
+	padding: 6px 15px;
+	border: 0;
+	border-radius: var(--cb-radius-sm);
+	background: var(--btn-bg);
+	color: var(--btn-fg);
+	box-shadow: inset 0 0 0 1px var(--btn-ring), 0 1px 2px rgba(15, 23, 42, .05);
+	font: inherit;
+	font-size: 13.5px;
+	font-weight: 600;
+	line-height: 20px;
+	letter-spacing: .005em;
+	white-space: nowrap;
+	text-decoration: none;
+	vertical-align: middle;
+	cursor: pointer;
+	transition: background-color .15s var(--cb-ease), box-shadow .15s var(--cb-ease), color .15s, transform .1s var(--cb-ease);
+	-webkit-user-select: none;
+	user-select: none;
+}
+:root[data-darkmode="true"] .btn,
+:root[data-darkmode="true"] .cbi-button,
+:root[data-darkmode="true"] input[type="submit"],
+:root[data-darkmode="true"] input[type="button"],
+:root[data-darkmode="true"] input[type="reset"],
+:root[data-darkmode="true"] button:where(:not([class*="cb-"])) { --btn-bg: rgba(255, 255, 255, .06); }
+
+.btn:hover,
+.cbi-button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+input[type="reset"]:hover,
+button:where(:not([class*="cb-"])):hover { --btn-ring: var(--cb-accent); color: var(--cb-accent-strong); }
+.btn:active,
+.cbi-button:active,
+button:where(:not([class*="cb-"])):active { transform: translateY(1px); }
+.btn:focus-visible,
+.cbi-button:focus-visible { outline: 0; box-shadow: inset 0 0 0 1px var(--cb-accent), 0 0 0 4px var(--cb-focus); }
+
+/* primary: solid Carbon indigo */
+.btn.primary,
+.btn.important,
+.cbi-button-apply,
+.cbi-button-save,
+.cbi-button-positive.important,
+.cbi-button-action.important,
+.cbi-button.important,
+.cbi-page-actions .cbi-button-apply,
+.cbi-section-actions .cbi-button-edit,
+input[type="submit"].cbi-button-apply {
+	--btn-bg: var(--cb-accent) !important;
+	--btn-fg: var(--cb-on-accent) !important;
+	--btn-ring: transparent !important;
+	color: var(--cb-on-accent) !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 6px 14px -6px rgba(79, 91, 234, .55);
+}
+.btn.primary:hover,
+.btn.important:hover,
+.cbi-button-apply:hover,
+.cbi-button-save:hover,
+.cbi-button.important:hover,
+.cbi-section-actions .cbi-button-edit:hover { --btn-bg: var(--cb-accent-strong) !important; }
+
+/* tinted variants */
+.cbi-button-positive,
+.cbi-button-add,
+.btn.success {
+	--btn-bg: var(--cb-green-t);
+	--btn-fg: var(--cb-green);
+	--btn-ring: transparent;
+}
+.cbi-button-negative,
+.cbi-button-remove,
+.btn.danger,
+.btn.error {
+	--btn-bg: var(--cb-red-t);
+	--btn-fg: var(--cb-red);
+	--btn-ring: transparent;
+}
+.cbi-button-action,
+.cbi-button-edit,
+.cbi-button-find,
+.cbi-button-link,
+.cbi-button-download {
+	--btn-bg: var(--cb-accent-t);
+	--btn-fg: var(--cb-accent-strong);
+	--btn-ring: transparent;
+}
+:root[data-darkmode="true"] .cbi-button-positive,
+:root[data-darkmode="true"] .cbi-button-add { --btn-bg: var(--cb-green-t); }
+:root[data-darkmode="true"] .cbi-button-negative,
+:root[data-darkmode="true"] .cbi-button-remove { --btn-bg: var(--cb-red-t); }
+:root[data-darkmode="true"] .cbi-button-action,
+:root[data-darkmode="true"] .cbi-button-edit,
+:root[data-darkmode="true"] .cbi-button-find,
+:root[data-darkmode="true"] .cbi-button-link,
+:root[data-darkmode="true"] .cbi-button-download { --btn-bg: var(--cb-accent-t); }
+.cbi-button-positive:hover,
+.cbi-button-add:hover { --btn-ring: var(--cb-green); color: var(--cb-green); }
+.cbi-button-negative:hover,
+.cbi-button-remove:hover { --btn-ring: var(--cb-red); color: var(--cb-red); }
+
+.cbi-button-negative.important {
+	--btn-bg: var(--cb-red) !important;
+	--btn-fg: #fff !important;
+	color: #fff !important;
+	box-shadow: 0 6px 14px -6px rgba(229, 72, 77, .55);
+}
+
+.cbi-button-reset,
+.cbi-button-neutral,
+.cbi-button-up,
+.cbi-button-down,
+.cbi-button-fieldadd,
+.cbi-button-reload { --btn-bg: var(--cb-fill); --btn-ring: transparent; }
+:root[data-darkmode="true"] .cbi-button-reset,
+:root[data-darkmode="true"] .cbi-button-neutral { --btn-bg: var(--cb-fill); }
+
+.cbi-page-actions .cbi-button-apply + .cbi-button-save,
+.cbi-page-actions .cbi-button-negative + .cbi-button-save {
+	--btn-bg: var(--cb-card-solid) !important;
+	--btn-fg: var(--cb-text) !important;
+	--btn-ring: var(--cb-border-strong) !important;
+	color: var(--cb-text) !important;
+	box-shadow: inset 0 0 0 1px var(--btn-ring);
+}
+:root[data-darkmode="true"] .cbi-page-actions .cbi-button-apply + .cbi-button-save { --btn-bg: rgba(255, 255, 255, .06) !important; }
+
+.cbi-button-up,
+.cbi-button-down { min-width: 34px; padding: 0 8px; }
+
+.btn .close, .alert-message .close { font-family: inherit; }
+

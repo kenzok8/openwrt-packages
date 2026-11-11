@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="theme-color" content="#f2f2f7">
+	<meta name="description" content="Explore the Carbon LuCI theme for OpenWrt: live mock traffic, connected devices, Wi-Fi and system settings.">
+	<title>OpenWrt · 概览 — Carbon 预览</title>
+	<script src="lang.js" data-i18n="../htdocs/luci-static/carbon/i18n/"></script>
+	<link rel="stylesheet" href="../htdocs/luci-static/carbon/carbon.css">
+	<link rel="stylesheet" href="demo.css">
+	<link rel="icon" href="../htdocs/luci-static/carbon/logo.svg" type="image/svg+xml">
+	<script src="../htdocs/luci-static/carbon/carbon.js"></script>
+	<script src="mock.js"></script>
+</head>
+<body class="lang_zh_Hans" data-page="admin-status-overview">
+	<a class="demo-skip" href="#maincontent">Skip to content / 跳到内容</a>
+	<div class="cb-app">
+		<aside class="cb-sidebar" id="cb-sidebar">
+				<button type="button" class="cb-collapse" id="cb-collapse" aria-label="Collapse sidebar"></button>
+			<a class="cb-brand" href="index.html">
+				<img class="cb-brand-logo" src="../htdocs/luci-static/carbon/logo.svg" alt="">
+				<span class="cb-brand-text">
+					<strong>OpenWrt</strong>
+					<small>Xiaomi Redmi Router AX6000</small>
+				</span>
+			</a>
+			<div class="cb-mode" id="cb-mode"></div>
+			<nav class="cb-nav" id="topmenu" style="display:none"></nav>
+			<div class="cb-sidebar-foot" id="cb-sidebar-foot"></div>
+		</aside>
+		<div class="cb-scrim" id="cb-scrim"></div>
+
+		<main class="cb-main">
+			<header class="cb-toolbar">
+				<button type="button" class="cb-burger" id="cb-burger" aria-label="Menu"><span></span></button>
+				<div class="cb-title" id="cb-title"></div>
+				<div class="cb-appearance" id="cb-appearance"></div>
+					<div id="indicators" class="cb-indicators">
+					<span data-indicator="poll-status" data-clickable="true" data-style="active">自动刷新</span>
+				</div>
+			</header>
+
+			<div id="maincontent" class="cb-content" tabindex="-1">
+				<div id="demo-banner" class="demo-banner"></div>
+				<noscript><div class="alert-message warning">请启用 JavaScript 以体验 Carbon 演示。 Enable JavaScript to explore this demo.</div></noscript>
+				<div id="tabmenu" style="display:none"></div>
+
+				<div id="view" aria-busy="true"><p>正在加载演示 / Loading demo…</p></div>
+			</div>
+
+			<footer class="cb-footer">
+				<span>Powered by <a href="https://github.com/openwrt/luci" target="_blank" rel="noopener noreferrer">LuCI</a> · <a href="https://openwrt.org" target="_blank" rel="noopener noreferrer">OpenWrt 24.10.0</a> · Carbon Demo</span>
+			</footer>
+		</main>
+	</div>
+
+	<div id="demo-toast" class="demo-toast" role="status" aria-live="polite"></div>
+	<script src="demo.js"></script>
+</body>
+</html>

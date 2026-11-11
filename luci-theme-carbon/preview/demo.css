@@ -1,0 +1,21 @@
+/* Demo-only layout. All controls, surfaces and colours come from Carbon. */
+.demo-banner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px; padding: 12px 16px; margin-bottom: 18px; border: 1px solid var(--cb-border); border-radius: var(--cb-radius-md); color: var(--cb-text-2); background: var(--cb-card-2); font-size: 12px; }
+.demo-banner strong { color: var(--cb-accent); margin-right: 10px; letter-spacing: .06em; }
+.demo-links { display: flex; gap: 16px; flex-wrap: wrap; }
+.demo-intro { margin: 8px 0 22px; }
+.demo-intro p { color: var(--cb-text-2); margin-top: 6px; }
+.demo-tools { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 12px 0 18px; }
+.demo-tools input { max-width: 100%; }
+.demo-muted { color: var(--cb-text-2); }
+.demo-output { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.8 var(--cb-mono); }
+.demo-toast { position: fixed; z-index: 5000; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 12px 20px; max-width: calc(100% - 32px); width: max-content; border: 1px solid var(--cb-border); border-radius: var(--cb-radius-md); background: var(--cb-card-solid); box-shadow: var(--cb-shadow-pop); }
+.demo-toast:empty { display: none; }
+.demo-dialog { color: var(--cb-text); background: var(--cb-card-solid); border: 1px solid var(--cb-border); border-radius: var(--cb-radius); padding: 26px; width: min(440px, calc(100% - 32px)); box-shadow: var(--cb-shadow-pop); }
+.demo-dialog::backdrop { background: rgba(0, 0, 0, .4); backdrop-filter: blur(4px); }
+.demo-dialog h3 { margin-top: 0; }
+.demo-dialog .demo-tools { justify-content: flex-end; margin-bottom: 0; }
+.demo-login-note { margin: 0 0 18px; color: var(--cb-text-2); font-size: 13px; }
+.demo-skip { position: fixed; top: -100px; left: 16px; z-index: 6000; padding: 10px 16px; background: var(--cb-card-solid); border-radius: 8px; }
+.demo-skip:focus { top: 12px; }
+[hidden] { display: none !important; }
+@media (max-width: 600px) { .demo-banner { align-items: flex-start; } .demo-banner span { line-height: 1.8; } }

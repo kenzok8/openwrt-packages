@@ -1,0 +1,100 @@
+/* ==========================================================================
+   13. Modal dialogs & change list
+   ========================================================================== */
+
+#modal_overlay {
+	position: fixed;
+	z-index: 900;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	overflow: auto;
+	background: rgba(0, 0, 0, .32);
+	opacity: 0;
+	visibility: hidden;
+	transition: opacity .2s var(--cb-ease), visibility .2s;
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+	#modal_overlay {
+		-webkit-backdrop-filter: blur(6px);
+		backdrop-filter: blur(6px);
+	}
+}
+body.modal-overlay-active { overflow: hidden; height: 100vh; }
+body.modal-overlay-active #modal_overlay { opacity: 1; visibility: visible; }
+
+.modal {
+	width: 92%;
+	max-width: 600px;
+	min-width: 270px;
+	min-height: 32px;
+	margin: 9vh auto 5vh;
+	padding: 22px 24px 18px;
+	border-radius: 20px;
+	background: var(--cb-card);
+	box-shadow: var(--cb-shadow-pop);
+	color: var(--cb-text);
+	transform: translateY(8px) scale(.98);
+	transition: transform .25s var(--cb-ease);
+}
+.modal { background: var(--cb-card-solid); }
+body.modal-overlay-active .modal { transform: none; }
+.modal > * { line-height: 1.5; margin-bottom: .6em; max-width: 100%; }
+.modal > h4 { font-size: 17px; margin-bottom: 10px; }
+.modal > pre,
+.modal > textarea { white-space: pre-wrap; overflow: auto; width: 100%; }
+.modal > .right,
+.modal > .button-row {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 8px;
+	margin: 18px 0 0;
+}
+.modal > .right > *,
+.modal > .button-row > * { margin: 0 !important; }
+.modal > .button-row { justify-content: space-between; }
+.modal > .button-row > button:first-of-type { margin-right: auto !important; }
+.modal.alert-message { padding: 22px 24px 18px; }
+.modal.alert-message::before { display: none; }
+#modal_overlay > .modal.uci-dialog,
+#modal_overlay > .modal.cbi-modal { max-width: 900px; }
+#modal_overlay > .modal.login > button.important { width: 100%; font-size: 15px; margin-top: 8px; }
+.modal .cbi-section-node { box-shadow: none; background: var(--cb-card-2); }
+:root[data-darkmode="true"] .modal .cbi-section-node { background: #3a3a3c; }
+
+.uci-change-list { line-height: 1.7; white-space: pre; }
+.uci-dialog div > del,
+.uci-dialog div > ins,
+.uci-dialog div > var {
+	display: block;
+	margin-bottom: 3px;
+	padding: 3px 8px;
+	border-radius: 6px;
+	background: var(--cb-fill-2);
+	color: var(--cb-text);
+	font-family: var(--cb-mono);
+	font-size: 12px;
+	font-style: normal;
+	text-decoration: none;
+	line-height: 1.5;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	position: relative;
+}
+.uci-dialog div > ins { background: var(--cb-green-t); }
+.uci-dialog div > del { background: var(--cb-red-t); }
+.uci-dialog var > ins { background: var(--cb-green-t); text-decoration: none; }
+.uci-dialog var > del { background: var(--cb-red-t); }
+.uci-dialog del, .uci-dialog ins, .uci-dialog var { display: block; font-style: normal; text-decoration: none; }
+.uci-change-list > var > * { overflow: hidden; text-overflow: ellipsis; }
+.uci-change-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 8px; }
+.uci-change-legend-label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+.uci-change-legend-label > ins,
+.uci-change-legend-label > del,
+.uci-change-legend-label > var { display: flex; width: 16px; height: 16px; margin: 0 !important; padding: 0 !important; border-radius: 4px; }
+.uci-change-legend-label > * > * { flex-basis: 100%; padding: 1px; }
+
+#applyreboot-section { line-height: 2.4; }
+

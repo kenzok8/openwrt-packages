@@ -1,0 +1,674 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: pt_BR\n"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d cores"
+msgstr "%d núcleos"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d min"
+msgstr "%d min"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d on Wi-Fi"
+msgstr "%d no Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dd %dh"
+msgstr "%d d %d h"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dh %dm"
+msgstr "%d h %d min"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%ds ago"
+msgstr "há %d s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s device"
+msgstr "Dispositivo %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s left"
+msgstr "restam %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 min average"
+msgstr "Média de 1 min"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "2 min ago"
+msgstr "há 2 min"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "<1 min"
+msgstr "<1 min"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "A new version is available."
+msgstr "Uma nova versão está disponível."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "About this setting"
+msgstr "Sobre esta configuração"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "All settings"
+msgstr "Todas as configurações"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Another update operation is running."
+msgstr "Outra atualização já está em andamento."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature verification failed. Nothing was installed; signature checks remain enabled."
+msgstr "A verificação da assinatura APK falhou. Nada foi instalado; a verificação de assinaturas continua ativa."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature, SHA-256 and file size are verified before installation. Your signature checks remain enabled."
+msgstr "A assinatura APK, o SHA-256 e o tamanho do arquivo são verificados antes da instalação. A verificação de assinaturas continua ativa."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "apk/opkg has no record of this Carbon install (for example, it was copied by an older carbon-install.sh). Run the latest carbon-install.sh once, or install the APK/IPK package, to enable online upgrades."
+msgstr "O apk/opkg não tem registro desta instalação do Carbon (por exemplo, ela foi copiada por um carbon-install.sh antigo). Execute uma vez o carbon-install.sh mais recente, ou instale o pacote APK/IPK, para ativar as atualizações online."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Appearance"
+msgstr "Aparência"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Auto"
+msgstr "Automático"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Backup & Upgrade"
+msgstr "Backup e atualização"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Cache"
+msgstr "Cache"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Camera"
+msgstr "Câmera"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+#: root/usr/share/luci/menu.d/luci-theme-carbon.json
+msgid "Carbon Theme Settings"
+msgstr "Configurações do tema Carbon"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check for updates"
+msgstr "Verificar atualizações"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check the latest stable Carbon release."
+msgstr "Verifique a versão estável mais recente do Carbon."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Checking for updates…"
+msgstr "Verificando atualizações…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "click to switch"
+msgstr "clique para alternar"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Collapse sidebar"
+msgstr "Recolher barra lateral"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Common"
+msgstr "Comuns"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Computer"
+msgstr "Computador"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Confirm update"
+msgstr "Confirmar atualização"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected"
+msgstr "Conectado"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected Devices"
+msgstr "Dispositivos conectados"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected over Wi-Fi"
+msgstr "Conectado via Wi-Fi"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Connection interrupted. Progress will resume when LuCI reconnects. %s"
+msgstr "Conexão interrompida. O progresso será retomado quando o LuCI se reconectar. %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connections"
+msgstr "Conexões"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "CPU"
+msgstr "CPU"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Current logo"
+msgstr "Logotipo atual"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Dark"
+msgstr "Escuro"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Devices"
+msgstr "Dispositivos"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP client"
+msgstr "Cliente DHCP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP clients"
+msgstr "Clientes DHCP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Download"
+msgstr "Download"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download failed. Check internet access, DNS, router time and GitHub availability."
+msgstr "Falha no download. Verifique o acesso à internet, o DNS, a hora do roteador e a disponibilidade do GitHub."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download mirror"
+msgstr "Espelho de download"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Downloading update…"
+msgstr "Baixando atualização…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters, digits and . _ ~ % + - only)."
+msgstr "Digite um prefixo de espelho HTTPS como https://mirror.example.com/ (apenas letras, números e . _ ~ % + -)."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Expand sidebar"
+msgstr "Expandir barra lateral"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Fixed IP"
+msgstr "IP fixo"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Free"
+msgstr "Livre"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Game console"
+msgstr "Console de videogame"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "GitHub (opens in a new tab)"
+msgstr "GitHub (abre em nova aba)"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hidden network"
+msgstr "Rede oculta"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hide detailed status"
+msgstr "Ocultar status detalhado"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
+msgstr "Instale curl, ca-bundle e flock e restaure a chave pública do Carbon, se estiver faltando."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install update"
+msgstr "Instalar atualização"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install version %s? Your theme preferences will be retained. Do not power off the router during installation."
+msgstr "Instalar a versão %s? Suas preferências do tema serão mantidas. Não desligue o roteador durante a instalação."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installation log"
+msgstr "Log de instalação"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installed version"
+msgstr "Versão instalada"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installing update…"
+msgstr "Instalando atualização…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Interfaces"
+msgstr "Interfaces"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Internet & Network"
+msgstr "Internet e rede"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid update request."
+msgstr "Solicitação de atualização inválida."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
+msgstr "As atualizações IPK são baixadas por HTTPS e conferidas com o SHA-256 e o tamanho publicados na versão."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "LAN IP"
+msgstr "IP da LAN"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Language"
+msgstr "Idioma"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Latest stable version"
+msgstr "Versão estável mais recente"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Light"
+msgstr "Claro"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Live Traffic"
+msgstr "Tráfego ao vivo"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load"
+msgstr "Carga"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load average"
+msgstr "Carga média"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Log out"
+msgstr "Sair"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo"
+msgstr "Logotipo"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo saved."
+msgstr "Logotipo salvo."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Manage"
+msgstr "Gerenciar"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Memory"
+msgstr "Memória"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Menu"
+msgstr "Menu"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Mirror prefix"
+msgstr "Prefixo do espelho"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Need more settings? Switch to"
+msgstr "Precisa de mais configurações? Mude para o"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Network devices"
+msgstr "Dispositivos de rede"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No devices yet"
+msgstr "Nenhum dispositivo ainda"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "No installation log yet."
+msgstr "Nenhum log de instalação ainda."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No wireless"
+msgstr "Sem Wi-Fi"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not checked"
+msgstr "Não verificado"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Not connected"
+msgstr "Não conectado"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not enough temporary storage or unable to create update files."
+msgstr "Armazenamento temporário insuficiente ou não foi possível criar os arquivos de atualização."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Now"
+msgstr "Agora"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "of %s max"
+msgstr "de %s máx."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Off"
+msgstr "Desligado"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Offline"
+msgstr "Offline"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "On"
+msgstr "Ligado"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Online"
+msgstr "Online"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Optional. If GitHub downloads are slow or blocked, enter an HTTPS prefix that proxies GitHub links, for example https://mirror.example.com/ for https://mirror.example.com/https://github.com/…. Release information is still read from GitHub, and the downloaded file must match the size and SHA-256 published there; GitHub is tried if the mirror fails."
+msgstr "Opcional. Se os downloads do GitHub estiverem lentos ou bloqueados, digite um prefixo HTTPS que faça proxy dos links do GitHub, por exemplo https://mirror.example.com/ para https://mirror.example.com/https://github.com/…. As informações da versão continuam vindo do GitHub, e o arquivo baixado precisa ter o tamanho e o SHA-256 publicados lá; o GitHub é usado se o espelho falhar."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Overview"
+msgstr "Visão geral"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Password"
+msgstr "Senha"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Permission denied. Log out and log in again once after updating Carbon, then retry."
+msgstr "Permissão negada. Depois de atualizar o Carbon, saia e entre novamente uma vez e tente de novo."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Personalise the logo and update the theme without changing your router configuration."
+msgstr "Personalize o logotipo e atualize o tema sem alterar a configuração do roteador."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Phone"
+msgstr "Celular"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "PPPoE"
+msgstr "PPPoE"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Printer"
+msgstr "Impressora"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Private"
+msgstr "Privado"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro"
+msgstr "Pro"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro mode"
+msgstr "modo Pro"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Randomised MAC address"
+msgstr "Endereço MAC aleatório"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Reboot"
+msgstr "Reiniciar"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Recently active"
+msgstr "Ativo recentemente"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release metadata or package version is invalid. Nothing was installed."
+msgstr "Metadados da versão ou versão do pacote inválidos. Nada foi instalado."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes"
+msgstr "Notas da versão"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes will appear after checking."
+msgstr "As notas da versão aparecerão após a verificação."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Reload page"
+msgstr "Recarregar página"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Resources"
+msgstr "Recursos"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Restore default"
+msgstr "Restaurar padrão"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Save"
+msgstr "Salvar"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads try the mirror first, then GitHub."
+msgstr "Salvo. Os downloads tentam primeiro o espelho e depois o GitHub."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads use GitHub directly."
+msgstr "Salvo. Os downloads usam o GitHub diretamente."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saving…"
+msgstr "Salvando…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show all %d devices"
+msgstr "Mostrar todos os %d dispositivos"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show detailed status"
+msgstr "Mostrar status detalhado"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show less"
+msgstr "Mostrar menos"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Shown in the sidebar, on the login page, on the overview and as the browser icon. PNG, JPEG, WebP, GIF or SVG up to 256 KB; a square image of at least 128 × 128 pixels looks best. The logo is kept across theme updates and firmware upgrades that keep settings."
+msgstr "Exibido na barra lateral, na página de login, na visão geral e como ícone do navegador. PNG, JPEG, WebP, GIF ou SVG de até 256 KB; uma imagem quadrada de pelo menos 128 × 128 pixels fica melhor. O logotipo é mantido nas atualizações do tema e nas atualizações de firmware que preservam as configurações."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Simple"
+msgstr "Simples"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since %s"
+msgstr "Desde %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since boot"
+msgstr "Desde a inicialização"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Smart device"
+msgstr "Dispositivo inteligente"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Software"
+msgstr "Software"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Speaker"
+msgstr "Alto-falante"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static"
+msgstr "Estático"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static address"
+msgstr "Endereço estático"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Storage"
+msgstr "Armazenamento"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "System"
+msgstr "Sistema"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Tablet"
+msgstr "Tablet"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Temperature"
+msgstr "Temperatura"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The default logo is restored."
+msgstr "O logotipo padrão foi restaurado."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The downloaded file failed its size or SHA-256 check. Nothing was installed."
+msgstr "O arquivo baixado falhou na verificação de tamanho ou SHA-256. Nada foi instalado."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The installed version does not match the release. Check the installation log."
+msgstr "A versão instalada não corresponde à versão publicada. Verifique o log de instalação."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The logo must be at most 256 KB."
+msgstr "O logotipo deve ter no máximo 256 KB."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package manager could not finish installation. See the log below."
+msgstr "O gerenciador de pacotes não conseguiu concluir a instalação. Veja o log abaixo."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package was installed, but restoring theme preferences failed. Check System → Language and Style."
+msgstr "O pacote foi instalado, mas não foi possível restaurar as preferências do tema. Verifique Sistema → Idioma e estilo."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The release changed, expired, or is no longer newer. Check for updates again."
+msgstr "A versão mudou, expirou ou não é mais recente. Verifique as atualizações novamente."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The update was interrupted. Check the installed version before trying again."
+msgstr "A atualização foi interrompida. Verifique a versão instalada antes de tentar novamente."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The uploaded file did not reach the router. Try again."
+msgstr "O arquivo enviado não chegou ao roteador. Tente novamente."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "This SVG contains scripts, event handlers, links or embedded documents and was rejected. Save it as a plain SVG or PNG."
+msgstr "Este SVG contém scripts, manipuladores de eventos, links ou documentos incorporados e foi recusado. Salve-o como SVG simples ou PNG."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Traffic interface"
+msgstr "Interface de tráfego"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "TV"
+msgstr "TV"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unable to access update state storage."
+msgstr "Não foi possível acessar o armazenamento do estado da atualização."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unavailable"
+msgstr "Indisponível"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unknown"
+msgstr "Desconhecido"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unknown device"
+msgstr "Dispositivo desconhecido"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unmanaged"
+msgstr "Não gerenciado"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unsupported file. Use a PNG, JPEG, WebP, GIF or SVG image."
+msgstr "Arquivo não suportado. Use uma imagem PNG, JPEG, WebP, GIF ou SVG."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update Carbon"
+msgstr "Atualizar o Carbon"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update complete. Reload this page to use the new version."
+msgstr "Atualização concluída. Recarregue esta página para usar a nova versão."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update failed."
+msgstr "Falha na atualização."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Updates"
+msgstr "Atualizações"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Upload"
+msgstr "Upload"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Upload logo…"
+msgstr "Enviar logotipo…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Uptime"
+msgstr "Tempo ligado"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Used"
+msgstr "Usado"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Verifying update…"
+msgstr "Verificando atualização…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "View releases on GitHub"
+msgstr "Ver versões no GitHub"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IP"
+msgstr "IP da WAN"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IPv6"
+msgstr "IPv6 da WAN"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wi-Fi"
+msgstr "Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wireless"
+msgstr "Sem fio"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "You are using the latest version."
+msgstr "Você está usando a versão mais recente."

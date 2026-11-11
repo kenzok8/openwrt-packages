@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+	<meta name="theme-color" content="#f2f2f7">
+	<title>Login — Carbon Demo</title>
+	<script src="lang.js" data-i18n="../htdocs/luci-static/carbon/i18n/"></script>
+	<link rel="stylesheet" href="../htdocs/luci-static/carbon/carbon.css">
+	<link rel="stylesheet" href="demo.css">
+	<link rel="icon" href="../htdocs/luci-static/carbon/logo.svg" type="image/svg+xml">
+	<script src="../htdocs/luci-static/carbon/carbon.js"></script>
+</head>
+<body class="cb-login" data-page="admin">
+	<div class="cb-login-wrap">
+		<div class="cb-login-brand">
+			<img class="cb-login-logo" src="../htdocs/luci-static/carbon/logo.svg" alt="Carbon">
+			<h1>OpenWrt</h1>
+		</div>
+		<div id="maincontent" class="cb-login-card">
+			<form id="demo-login" action="index.html" method="get">
+				<div class="cbi-map">
+					<h2 id="login-title">Carbon 演示</h2>
+					<p class="demo-login-note" id="login-note">无需真实账号或密码，直接进入演示。</p>
+					<div class="cbi-section"><div class="cbi-section-node">
+						<div class="cbi-value"><label class="cbi-value-title" for="demo-user" id="user-label">用户名</label><div class="cbi-value-field"><input id="demo-user" class="cbi-input-text" value="root" readonly></div></div>
+						<div class="cbi-value"><label class="cbi-value-title" for="demo-password" id="password-label">演示密码</label><div class="cbi-value-field"><input id="demo-password" class="cbi-input-text" type="password" value="carbon-demo" readonly></div></div>
+					</div></div>
+				</div>
+				<div class="cbi-page-actions"><button type="submit" class="btn cbi-button cbi-button-apply" id="login-button">进入演示</button></div>
+				<input type="hidden" name="lang" id="login-lang" value="zh-Hans">
+			</form>
+			<noscript>Enable JavaScript / 请启用 JavaScript</noscript>
+		</div>
+		<p class="cb-login-foot">OpenWrt 24.10.0 · Carbon Demo</p>
+	</div>
+	<script>
+		const en = !/^zh/i.test(document.documentElement.lang);
+		document.getElementById('login-lang').value = en ? 'en' : 'zh-Hans';
+		if (en) {
+			Object.entries({ 'login-title': 'Carbon Demo', 'login-note': 'No account or password needed. Enter the demo directly.', 'user-label': 'Username', 'password-label': 'Demo password', 'login-button': 'Enter demo' }).forEach(([id, text]) => { document.getElementById(id).textContent = text; });
+		}
+	</script>
+</body>
+</html>

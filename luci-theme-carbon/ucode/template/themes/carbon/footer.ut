@@ -1,0 +1,30 @@
+{#
+ Carbon — an Apple-style LuCI theme for everyday users
+ Licensed to the public under the Apache License 2.0.
+-#}
+
+{% const is_login = (duser != null); %}
+
+	{% if (is_login): %}
+			</div>
+			<p class="cb-login-foot">
+				{{ version.distname }} {{ version.distversion }}
+			</p>
+		</div>
+	{% elif (!blank_page): %}
+				</div>
+				<footer class="cb-footer">
+					<span>
+						Powered by
+						<a href="https://github.com/openwrt/luci" target="_blank" rel="noreferrer">{{ version.luciname }} ({{ version.luciversion }})</a>
+						·
+						<a href="{{ entityencode(version.disturl ?? '#', true) }}" target="_blank" rel="noreferrer">{{ version.distname }} {{ version.distversion }}</a>
+						· Carbon
+					</span>
+				</footer>
+			</main>
+		</div>
+		<script>L.require('menu-carbon')</script>
+	{% endif %}
+	</body>
+</html>

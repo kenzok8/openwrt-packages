@@ -1,0 +1,674 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ja\n"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d cores"
+msgstr "%d コア"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d min"
+msgstr "%d 分"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d on Wi-Fi"
+msgstr "Wi-Fi 接続 %d 台"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dd %dh"
+msgstr "%d 日 %d 時間"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%dh %dm"
+msgstr "%d 時間 %d 分"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%ds ago"
+msgstr "%d 秒前"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s device"
+msgstr "%s デバイス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%s left"
+msgstr "残り %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 min average"
+msgstr "1 分平均"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "2 min ago"
+msgstr "2 分前"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "<1 min"
+msgstr "1 分未満"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "A new version is available."
+msgstr "新しいバージョンがあります。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "About this setting"
+msgstr "この設定について"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "All settings"
+msgstr "すべての設定"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Another update operation is running."
+msgstr "別の更新処理が実行中です。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature verification failed. Nothing was installed; signature checks remain enabled."
+msgstr "APK の署名検証に失敗しました。何もインストールされていません。署名検証は有効のままです。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "APK signature, SHA-256 and file size are verified before installation. Your signature checks remain enabled."
+msgstr "インストール前に APK の署名、SHA-256、ファイルサイズを検証します。署名検証は有効のままです。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "apk/opkg has no record of this Carbon install (for example, it was copied by an older carbon-install.sh). Run the latest carbon-install.sh once, or install the APK/IPK package, to enable online upgrades."
+msgstr "apk/opkg にこの Carbon のインストール記録がありません（例：古い carbon-install.sh でファイルをコピーした場合）。オンライン更新を有効にするには、最新の carbon-install.sh を一度実行するか、APK/IPK パッケージをインストールしてください。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Appearance"
+msgstr "外観"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Auto"
+msgstr "自動"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Backup & Upgrade"
+msgstr "バックアップと更新"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Cache"
+msgstr "キャッシュ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Camera"
+msgstr "カメラ"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+#: root/usr/share/luci/menu.d/luci-theme-carbon.json
+msgid "Carbon Theme Settings"
+msgstr "Carbon テーマ設定"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check for updates"
+msgstr "更新を確認"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Check the latest stable Carbon release."
+msgstr "Carbon の最新安定版を確認します。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Checking for updates…"
+msgstr "更新を確認しています…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "click to switch"
+msgstr "クリックで切り替え"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Collapse sidebar"
+msgstr "サイドバーを折りたたむ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Common"
+msgstr "よく使う項目"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Computer"
+msgstr "パソコン"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Confirm update"
+msgstr "更新する"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected"
+msgstr "接続済み"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected Devices"
+msgstr "接続中のデバイス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connected over Wi-Fi"
+msgstr "Wi-Fi で接続"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Connection interrupted. Progress will resume when LuCI reconnects. %s"
+msgstr "接続が中断されました。LuCI に再接続すると進捗の表示を再開します。%s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Connections"
+msgstr "接続数"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "CPU"
+msgstr "CPU"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Current logo"
+msgstr "現在のロゴ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Dark"
+msgstr "ダーク"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Devices"
+msgstr "デバイス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP client"
+msgstr "DHCP クライアント"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "DHCP clients"
+msgstr "DHCP クライアント"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Download"
+msgstr "ダウンロード"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download failed. Check internet access, DNS, router time and GitHub availability."
+msgstr "ダウンロードに失敗しました。インターネット接続、DNS、ルーターの時刻、GitHub の状態を確認してください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Download mirror"
+msgstr "ダウンロードミラー"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Downloading update…"
+msgstr "更新をダウンロードしています…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters, digits and . _ ~ % + - only)."
+msgstr "https://mirror.example.com/ のような HTTPS ミラーのプレフィックスを入力してください（英数字と . _ ~ % + - のみ）。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Expand sidebar"
+msgstr "サイドバーを展開"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Fixed IP"
+msgstr "固定 IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Free"
+msgstr "空き"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Game console"
+msgstr "ゲーム機"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "GitHub (opens in a new tab)"
+msgstr "GitHub（新しいタブで開く）"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hidden network"
+msgstr "非公開ネットワーク"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Hide detailed status"
+msgstr "詳細なステータスを隠す"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
+msgstr "curl、ca-bundle、flock をインストールし、Carbon の公開鍵がない場合は復元してください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install update"
+msgstr "更新をインストール"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Install version %s? Your theme preferences will be retained. Do not power off the router during installation."
+msgstr "バージョン %s をインストールしますか？テーマの設定は保持されます。インストール中はルーターの電源を切らないでください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installation log"
+msgstr "インストールログ"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installed version"
+msgstr "インストール済みのバージョン"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Installing update…"
+msgstr "更新をインストールしています…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Interfaces"
+msgstr "インターフェイス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Internet & Network"
+msgstr "インターネットとネットワーク"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid update request."
+msgstr "無効な更新リクエストです。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
+msgstr "IPK の更新は HTTPS でダウンロードし、リリースの SHA-256 とファイルサイズで確認します。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "LAN IP"
+msgstr "LAN IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Language"
+msgstr "言語"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Latest stable version"
+msgstr "最新の安定版"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Light"
+msgstr "ライト"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Live Traffic"
+msgstr "リアルタイム通信量"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load"
+msgstr "負荷"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Load average"
+msgstr "ロードアベレージ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Log out"
+msgstr "ログアウト"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo"
+msgstr "ロゴ"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Logo saved."
+msgstr "ロゴを保存しました。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Manage"
+msgstr "管理"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Memory"
+msgstr "メモリ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Menu"
+msgstr "メニュー"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Mirror prefix"
+msgstr "ミラーのプレフィックス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Need more settings? Switch to"
+msgstr "さらに設定が必要ですか？切り替え："
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Network devices"
+msgstr "ネットワークデバイス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No devices yet"
+msgstr "デバイスはまだありません"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "No installation log yet."
+msgstr "インストールログはまだありません。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No wireless"
+msgstr "無線なし"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not checked"
+msgstr "未確認"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Not connected"
+msgstr "未接続"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Not enough temporary storage or unable to create update files."
+msgstr "一時領域が不足しているか、更新ファイルを作成できません。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Now"
+msgstr "現在"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "of %s max"
+msgstr "最大 %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Off"
+msgstr "オフ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Offline"
+msgstr "オフライン"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "On"
+msgstr "オン"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Online"
+msgstr "オンライン"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Optional. If GitHub downloads are slow or blocked, enter an HTTPS prefix that proxies GitHub links, for example https://mirror.example.com/ for https://mirror.example.com/https://github.com/…. Release information is still read from GitHub, and the downloaded file must match the size and SHA-256 published there; GitHub is tried if the mirror fails."
+msgstr "任意。GitHub からのダウンロードが遅いかブロックされている場合は、GitHub のリンクを中継する HTTPS プレフィックスを入力します。例：https://mirror.example.com/https://github.com/… には https://mirror.example.com/。リリース情報は引き続き GitHub から取得し、ダウンロードしたファイルは GitHub で公開されたサイズと SHA-256 に一致する必要があります。ミラーが失敗した場合は GitHub を使います。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Overview"
+msgstr "概要"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Password"
+msgstr "パスワード"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Permission denied. Log out and log in again once after updating Carbon, then retry."
+msgstr "権限がありません。Carbon を更新した後、一度ログアウトして再ログインしてから、もう一度お試しください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Personalise the logo and update the theme without changing your router configuration."
+msgstr "ルーターの設定を変えずに、ロゴの変更やテーマの更新ができます。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Phone"
+msgstr "スマートフォン"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "PPPoE"
+msgstr "PPPoE"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Printer"
+msgstr "プリンター"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Private"
+msgstr "プライベート"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro"
+msgstr "プロ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Pro mode"
+msgstr "プロモード"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Randomised MAC address"
+msgstr "ランダムな MAC アドレス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Reboot"
+msgstr "再起動"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Recently active"
+msgstr "最近アクティブ"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release metadata or package version is invalid. Nothing was installed."
+msgstr "リリース情報またはパッケージのバージョンが無効です。何もインストールされていません。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes"
+msgstr "リリースノート"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Release notes will appear after checking."
+msgstr "確認後にリリースノートが表示されます。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Reload page"
+msgstr "ページを再読み込み"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Resources"
+msgstr "リソース"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Restore default"
+msgstr "デフォルトに戻す"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Save"
+msgstr "保存"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads try the mirror first, then GitHub."
+msgstr "保存しました。ダウンロードはミラーを先に試し、次に GitHub を使います。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saved. Downloads use GitHub directly."
+msgstr "保存しました。ダウンロードは GitHub を直接使います。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Saving…"
+msgstr "保存しています…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show all %d devices"
+msgstr "%d 台すべて表示"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show detailed status"
+msgstr "詳細なステータスを表示"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Show less"
+msgstr "表示を減らす"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Shown in the sidebar, on the login page, on the overview and as the browser icon. PNG, JPEG, WebP, GIF or SVG up to 256 KB; a square image of at least 128 × 128 pixels looks best. The logo is kept across theme updates and firmware upgrades that keep settings."
+msgstr "サイドバー、ログインページ、概要ページ、ブラウザーのアイコンに表示されます。256 KB までの PNG、JPEG、WebP、GIF、SVG に対応しています。128 × 128 ピクセル以上の正方形の画像がおすすめです。ロゴはテーマの更新や設定を保持したファームウェア更新でも保持されます。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Simple"
+msgstr "シンプル"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since %s"
+msgstr "%s から"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Since boot"
+msgstr "起動以降"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Smart device"
+msgstr "スマートデバイス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Software"
+msgstr "ソフトウェア"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Speaker"
+msgstr "スピーカー"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static"
+msgstr "静的"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Static address"
+msgstr "静的アドレス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Storage"
+msgstr "ストレージ"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "System"
+msgstr "システム"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Tablet"
+msgstr "タブレット"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Temperature"
+msgstr "温度"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The default logo is restored."
+msgstr "デフォルトのロゴに戻しました。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The downloaded file failed its size or SHA-256 check. Nothing was installed."
+msgstr "ダウンロードしたファイルがサイズまたは SHA-256 の確認に失敗しました。何もインストールされていません。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The installed version does not match the release. Check the installation log."
+msgstr "インストールされたバージョンがリリースと一致しません。インストールログを確認してください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The logo must be at most 256 KB."
+msgstr "ロゴは 256 KB 以下にしてください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package manager could not finish installation. See the log below."
+msgstr "パッケージマネージャーがインストールを完了できませんでした。下のログを確認してください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The package was installed, but restoring theme preferences failed. Check System → Language and Style."
+msgstr "パッケージはインストールされましたが、テーマ設定の復元に失敗しました。「システム → 言語とスタイル」を確認してください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The release changed, expired, or is no longer newer. Check for updates again."
+msgstr "リリースが変更されたか、期限切れか、新しくなくなりました。もう一度更新を確認してください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The update was interrupted. Check the installed version before trying again."
+msgstr "更新が中断されました。再試行する前にインストール済みのバージョンを確認してください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "The uploaded file did not reach the router. Try again."
+msgstr "アップロードしたファイルがルーターに届きませんでした。もう一度お試しください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "This SVG contains scripts, event handlers, links or embedded documents and was rejected. Save it as a plain SVG or PNG."
+msgstr "この SVG にはスクリプト、イベントハンドラー、リンク、または埋め込み文書が含まれているため拒否されました。通常の SVG または PNG として保存し直してください。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Traffic interface"
+msgstr "通信量のインターフェイス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "TV"
+msgstr "テレビ"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unable to access update state storage."
+msgstr "更新状態の保存先にアクセスできません。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unavailable"
+msgstr "利用不可"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unknown"
+msgstr "不明"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unknown device"
+msgstr "不明なデバイス"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Unmanaged"
+msgstr "管理なし"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Unsupported file. Use a PNG, JPEG, WebP, GIF or SVG image."
+msgstr "未対応のファイルです。PNG、JPEG、WebP、GIF、SVG の画像を使ってください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update Carbon"
+msgstr "Carbon を更新"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update complete. Reload this page to use the new version."
+msgstr "更新が完了しました。ページを再読み込みすると新しいバージョンを使えます。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Update failed."
+msgstr "更新に失敗しました。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Updates"
+msgstr "更新"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Upload"
+msgstr "アップロード"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Upload logo…"
+msgstr "ロゴをアップロード…"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Uptime"
+msgstr "稼働時間"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Used"
+msgstr "使用中"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Verifying update…"
+msgstr "更新を検証しています…"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "View releases on GitHub"
+msgstr "GitHub でリリースを見る"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IP"
+msgstr "WAN IP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "WAN IPv6"
+msgstr "WAN IPv6"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wi-Fi"
+msgstr "Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Wireless"
+msgstr "無線"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "You are using the latest version."
+msgstr "最新のバージョンを使用しています。"

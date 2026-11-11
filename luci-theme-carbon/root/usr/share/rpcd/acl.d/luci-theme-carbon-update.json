@@ -1,0 +1,10 @@
+{
+  "luci-theme-carbon-update": {
+    "description": "Carbon theme settings: check releases, install verified theme updates, choose a download mirror and set a custom logo",
+    "read": { "ubus": { "luci.carbon_update": [ "status", "check" ] } },
+    "write": {
+      "ubus": { "luci.carbon_update": [ "upgrade", "configure", "logo" ] },
+      "file": { "/tmp/carbon-logo.upload": [ "write" ] }
+    }
+  }
+}
