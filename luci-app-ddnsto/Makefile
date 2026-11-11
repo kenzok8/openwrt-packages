@@ -8,21 +8,14 @@ include $(TOPDIR)/rules.mk
 LUCI_TITLE:=LuCI support for ddnsto
 LUCI_DEPENDS:=+ddnsto +block-mount
 LUCI_PKGARCH:=all
-PKG_VERSION:=4.2.2-r2
+PKG_VERSION:=4.2.2-r3
 PKG_RELEASE:=
 
 define Package/luci-app-ddnsto/postinst
 #!/bin/sh
-# Retire only this package-owned legacy registration.
+# Maintain the old desktop entry without a second manifest or file owner.
 root="$${IPKG_INSTROOT:-}"
-legacy="$${root}/usr/share/linkeasefull/desktop-apps.d/16-ddnsto.json"
-if [ "$$(readlink "$${legacy}" 2>/dev/null)" = "/usr/share/ddnsto/ddnsto-plugin.json" ]; then
-	rm -f "$${legacy}"
-fi
-if [ -f "$${legacy}" ] && [ ! -L "$${legacy}" ] && [ "$$(sha256sum "$${legacy}" | cut -d " " -f 1)" = "a72a8b3e529c91b2a3bc32ef695e5f7dc2935e332fcbd3201f985e05c2c8763d" ]; then
-	rm -f "$${legacy}"
-fi
-rmdir "$${root}/usr/share/linkeasefull/desktop-apps.d" 2>/dev/null || true
+sh "$${root}/usr/share/ddnsto/register-desktop.sh" || exit $$?
 icon="$${root}/usr/share/linkeasefull/app-meta/ddnsto/logo.png"
 if [ "$$(readlink "$${icon}" 2>/dev/null)" = "/www/luci-static/resources/app-icons/ddnsto.png" ]; then
  rm -f "$${icon}"
@@ -38,10 +31,13 @@ endef
 define Package/luci-app-ddnsto/prerm
 #!/bin/sh
 root="$${IPKG_INSTROOT:-}"
-registration="$${root}/usr/share/linkease/apps.d/16-ddnsto.json"
-if [ "$$(readlink "$${registration}" 2>/dev/null)" = "/usr/share/ddnsto/ddnsto-plugin.json" ]; then
- rm -f "$${registration}"
-fi
+for directory in /usr/share/linkease/apps.d /usr/share/linkeasefull/desktop-apps.d; do
+	registration="$${root}$${directory}/16-ddnsto.json"
+	if [ "$$(readlink "$${registration}" 2>/dev/null)" = "/usr/share/ddnsto/ddnsto-plugin.json" ]; then
+		rm -f "$${registration}"
+	fi
+done
+rmdir "$${root}/usr/share/linkeasefull/desktop-apps.d" 2>/dev/null || true
 exit 0
 endef
 
