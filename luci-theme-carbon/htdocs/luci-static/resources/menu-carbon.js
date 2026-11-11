@@ -107,6 +107,8 @@ const provider = {
  * Temperature sensors: every thermal zone plus the first input of each hwmon
  * device (CPU, SoC, Wi‑Fi chips, x86 coretemp …). Discovered once per page.
  * Sessions from before an upgrade may only be allowed to read zone 0.
+ * rpcd (since 2026-07) re-checks the ACL against the symlink target, so the
+ * ACL lists both the /sys/class/… links and their /sys/devices/… targets.
  */
 let sensors = null;
 const listNames = (dir, pattern) => L.resolveDefault(fs.list(dir), []).then((entries) =>

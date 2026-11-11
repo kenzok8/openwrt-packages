@@ -109,7 +109,6 @@ test('dashboard shows merged devices, Wi-Fi details, IPv6, sensors and a traffic
 		gateway: document.body.textContent.includes('100.64.0.1') && [...document.querySelectorAll('.cb-list .cb-mono')].some((e) => e.textContent === '100.64.0.1'),
 		ipv6: !document.querySelector('.cb-ip6').closest('.cb-meta').classList.contains('hidden') && document.querySelector('.cb-ip6').textContent,
 		sensors: [...document.querySelectorAll('.cb-kv li')].map((li) => li.firstChild.textContent).filter((t) => t.startsWith('Temperature')),
-		options: [...document.querySelectorAll('.cb-traffic-select option')].map((o) => o.value),
 		tile: document.querySelector('.cb-tile .cb-tile-sub').textContent
 	}));
 	assert.equal(info.count, '17');
@@ -118,15 +117,41 @@ test('dashboard shows merged devices, Wi-Fi details, IPv6, sensors and a traffic
 	assert.equal(info.gateway, false, 'upstream gateway is not a LAN device');
 	assert.equal(info.ipv6, '240e:3a1:4c2:8f0::1');
 	assert.deepEqual(info.sensors, ['Temperature · cpu', 'Temperature · mt7986 phy1']);
-	assert.deepEqual(info.options, ['auto', 'br-lan', 'pppoe-wan', 'eth0', 'lan1', 'lan2', 'lan4', 'phy0-ap0', 'phy1-ap0', 'wan']);
 	assert.match(info.tile, /^\d+ on Wi-Fi$/);
 
-	await page.selectOption('.cb-traffic-select', 'br-lan');
+	/* the traffic picker is a Carbon listbox (same control as the language switch), grouped like <optgroup> */
+	const picker = '.cb-card.cb-traffic .cb-lb.cb-traffic-select';
+	const listed = async () => {
+		await page.click(picker);
+		await page.waitForSelector('.cb-lb-list.show');
+		return page.evaluate(() => {
+			const ul = document.querySelector('.cb-lb-list');
+			return {
+				options: [...ul.querySelectorAll('[role="option"]')].map((li) => li.textContent),
+				groups: [...ul.querySelectorAll('.cb-lb-group')].map((li) => li.textContent)
+			};
+		});
+	};
+	let list = await listed();
+	assert.equal(list.options.length, 10);
+	assert.match(list.options[0], /^Auto/);
+	assert.deepEqual(list.groups, ['Interfaces', 'Network devices']);
+	assert.ok(list.options.includes('LAN (br-lan)') || list.options.some((o) => o.endsWith('(br-lan)')));
+	await page.click('.cb-lb-list li[role="option"]:has-text("(br-lan)")');
 	assert.equal(await page.evaluate(() => localStorage.getItem('carbon.traffic')), 'br-lan');
+	assert.match(await page.textContent(picker), /\(br-lan\)$/);
 	/* a physical port (e.g. an xPON uplink) is selectable and survives the next refresh */
-	await page.selectOption('.cb-traffic-select', 'wan');
+	list = await listed();
+	await page.click('.cb-lb-list li[role="option"] >> text="wan"');
 	assert.equal(await page.evaluate(() => localStorage.getItem('carbon.traffic')), 'wan');
-	assert.deepEqual(await page.$$eval('.cb-traffic-select optgroup', (g) => g.map((x) => x.label)), ['Interfaces', 'Network devices']);
+	assert.equal(await page.textContent(picker), 'wan');
+	/* keyboard: Escape closes and returns focus to the trigger */
+	await page.focus(picker);
+	await page.keyboard.press('ArrowDown');
+	await page.waitForSelector('.cb-lb-list.show');
+	await page.keyboard.press('Escape');
+	assert.equal(await page.$('.cb-lb-list'), null);
+	assert.equal(await page.evaluate(() => document.activeElement.classList.contains('cb-traffic-select')), true);
 	await context.close();
 });
 

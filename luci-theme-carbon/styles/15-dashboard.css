@@ -47,19 +47,12 @@
 	font-weight: 500;
 }
 .cb-card-note { color: var(--cb-text-2); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* traffic source picker in the card head */
+/* traffic source picker in the card head: a C.listbox, like the language switch */
 .cb-card-head .cb-traffic-select {
 	flex: 0 1 auto;
+	align-self: center;
 	min-width: 0;
 	max-width: 60%;
-	width: auto;
-	height: 28px;
-	min-height: 28px;
-	padding: 0 26px 0 10px;
-	border-radius: 8px;
-	color: var(--cb-text-2);
-	font-size: 12.5px;
-	text-overflow: ellipsis;
 }
 .cb-card-link { font-size: 13px; font-weight: 500; white-space: nowrap; }
 

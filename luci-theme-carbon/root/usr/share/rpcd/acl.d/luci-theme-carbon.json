@@ -15,15 +15,21 @@
 			"file": {
 				"/proc/stat": [ "read" ],
 				"/proc/net/arp": [ "read" ],
+				"/proc/[0-9]*/net/arp": [ "read" ],
 				"/proc/sys/net/netfilter/nf_conntrack_count": [ "read" ],
 				"/proc/sys/net/netfilter/nf_conntrack_max": [ "read" ],
 				"/sys/class/thermal": [ "list" ],
 				"/sys/class/thermal/thermal_zone*/temp": [ "read" ],
 				"/sys/class/thermal/thermal_zone*/type": [ "read" ],
+				"/sys/devices/*/thermal_zone*/temp": [ "read" ],
+				"/sys/devices/*/thermal_zone*/type": [ "read" ],
 				"/sys/class/hwmon": [ "list" ],
 				"/sys/class/hwmon/hwmon*": [ "list" ],
 				"/sys/class/hwmon/hwmon*/name": [ "read" ],
-				"/sys/class/hwmon/hwmon*/temp*_input": [ "read" ]
+				"/sys/class/hwmon/hwmon*/temp*_input": [ "read" ],
+				"/sys/devices/*/hwmon[0-9]*": [ "list" ],
+				"/sys/devices/*/hwmon[0-9]*/name": [ "read" ],
+				"/sys/devices/*/hwmon[0-9]*/temp*_input": [ "read" ]
 			},
 			"uci": [ "luci" ]
 		},

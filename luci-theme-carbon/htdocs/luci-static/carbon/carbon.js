@@ -427,8 +427,9 @@
 	/* ------------------------------------------------------------------
 	 * Listbox: a select in Carbon's glass style (instead of a native <select>)
 	 *
-	 * listbox({ options: [{ value, label }], value, label, className, onChange(value) })
-	 *   → { el, open({ anchor, beside }), toggle(…), close(), set(value) }
+	 * listbox({ options: [{ value, label, group }], value, label, className, onChange(value) })
+	 *   → { el, open({ anchor, beside }), toggle(…), close(), set(value), setOptions(options, value) }
+	 * Consecutive options with the same `group` get a heading above them (like <optgroup>).
 	 * Select-only combobox pattern: the trigger is a button; ↑/↓/Enter/Space
 	 * open the list, ↑/↓/Home/End/typing move, Enter/Space pick, Esc/Tab close.
 	 * The list lives on <body> (position: fixed) so no container clips it; it
@@ -448,7 +449,7 @@
 			text.textContent = o ? o.label : '';
 			el.title = (opts.label ? opts.label + ' · ' : '') + text.textContent;
 		};
-		const items = () => list ? Array.from(list.children) : [];
+		const items = () => list ? Array.from(list.querySelectorAll('[role="option"]')) : [];
 		const highlight = (i) => {
 			const all = items();
 			if (!all.length) return;
@@ -492,7 +493,10 @@
 			if (list) return;
 			opener = o.anchor || el;
 			list = h('ul', { class: 'cb-lb-list', id: id, role: 'listbox', tabindex: '-1', 'aria-label': opts.label || null });
+			let group = null;
 			opts.options.forEach((opt, i) => {
+				if (opt.group && opt.group !== group) list.appendChild(h('li', { class: 'cb-lb-group', role: 'presentation', text: opt.group }));
+				group = opt.group || null;
 				const li = h('li', { id: id + '-' + i, role: 'option', 'aria-selected': opt.value === value ? 'true' : 'false' }, [
 					h('span', { class: 'cb-lb-check', html: icon('check') }), h('span', { text: opt.label })
 				]);
@@ -555,7 +559,16 @@
 			open({ last: e.key === 'ArrowUp' });
 		});
 		sync();
-		return { el: el, open: open, toggle: toggle, close: close, set(v) { value = v; sync(); } };
+		return {
+			el: el, open: open, toggle: toggle, close: close,
+			set(v) { value = v; sync(); },
+			setOptions(options, v) {
+				close(false);
+				opts.options = options;
+				if (v !== undefined) value = v;
+				sync();
+			}
+		};
 	}
 	C.listbox = listbox;
 
@@ -1543,10 +1556,17 @@
 			ui.dl = rate(t('Download'), COLORS.blue);
 			ui.ul = rate(t('Upload'), COLORS.purple);
 			ui.totals = h('div', { class: 'cb-totals' });
-			ui.trafficSel = h('select', { class: 'cb-traffic-select', 'aria-label': t('Traffic interface') });
-			ui.trafficSel.appendChild(h('option', { value: 'auto' }, t('Auto')));
+			ui.trafficSel = listbox({
+				options: [{ value: 'auto', label: t('Auto') }], value: 'auto',
+				label: t('Traffic interface'), className: 'cb-traffic-select',
+				onChange: (v) => {
+					st.traffic = v;
+					store.set('carbon.traffic', st.traffic);
+					updateTraffic();
+				}
+			});
 			ui.chart = h('div', { class: 'cb-chart' });
-			dash.appendChild(card('cb-traffic span-8', t('Live Traffic'), ui.trafficSel, [
+			dash.appendChild(card('cb-traffic span-8', t('Live Traffic'), ui.trafficSel.el, [
 				h('div', { class: 'cb-rates' }, [ui.dl.el, ui.ul.el, ui.totals]),
 				ui.chart,
 				h('div', { class: 'cb-chart-foot' }, [h('span', { text: t('2 min ago') }), h('span', { text: t('Now') })])
@@ -1762,21 +1782,20 @@
 				const autoDev = auto ? (auto.l3_device || auto.device) : null;
 				const key = groups.map((g) => g.dev + '=' + g.names.join(',')).join('|') + '#' +
 					src.devices.map((d) => d.dev).join(',') + '#' + autoDev;
+				const pick = groups.find((g) => g.dev === st.traffic) || src.devices.find((d) => d.dev === st.traffic);
 				if (key !== st.trafficKey) {
 					st.trafficKey = key;
-					ui.trafficSel.innerHTML = '';
-					ui.trafficSel.appendChild(h('option', { value: 'auto' },
-						t('Auto') + (auto ? ' · ' + (auto.interface || '').toUpperCase() + (autoDev ? ' (' + autoDev + ')' : '') : '')));
-					const ifOpts = groups.map((g) => h('option', { value: g.dev }, g.names.join(' / ') + ' (' + g.dev + ')'));
-					if (src.devices.length) {
-						ui.trafficSel.appendChild(h('optgroup', { label: t('Interfaces') }, ifOpts));
-						ui.trafficSel.appendChild(h('optgroup', { label: t('Network devices') },
-							src.devices.map((d) => h('option', { value: d.dev }, d.dev))));
-					}
-					else ifOpts.forEach((o) => ui.trafficSel.appendChild(o));
+					/* interfaces and kernel devices get headings only when both are listed */
+					const grouped = src.devices.length > 0;
+					ui.trafficSel.setOptions([{
+						value: 'auto',
+						label: t('Auto') + (auto ? ' · ' + (auto.interface || '').toUpperCase() + (autoDev ? ' (' + autoDev + ')' : '') : '')
+					}].concat(
+						groups.map((g) => ({ value: g.dev, label: g.names.join(' / ') + ' (' + g.dev + ')', group: grouped ? t('Interfaces') : null })),
+						src.devices.map((d) => ({ value: d.dev, label: d.dev, group: t('Network devices') }))
+					), pick ? pick.dev : 'auto');
 				}
-				const pick = groups.find((g) => g.dev === st.traffic) || src.devices.find((d) => d.dev === st.traffic);
-				ui.trafficSel.value = pick ? pick.dev : 'auto';
+				else ui.trafficSel.set(pick ? pick.dev : 'auto');
 				const dev = pick ? pick.dev : autoDev;
 				if (dev !== st.dev) {
 					st.prevNet = null;
@@ -1787,11 +1806,6 @@
 				st.dev = dev;
 				st.devAlt = pick ? pick.alt : (auto ? auto.device : null);
 			}
-			ui.trafficSel.addEventListener('change', () => {
-				st.traffic = ui.trafficSel.value;
-				store.set('carbon.traffic', st.traffic);
-				updateTraffic();
-			});
 
 			async function slow() {
 				const hintsDue = Date.now() - st.hintsAt > 30000;

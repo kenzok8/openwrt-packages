@@ -11,6 +11,9 @@
 [![Build](https://github.com/mrjoechen/luci-theme-carbon/actions/workflows/build.yml/badge.svg)](https://github.com/mrjoechen/luci-theme-carbon/actions/workflows/build.yml)
 [![Release](https://img.shields.io/github/v/release/mrjoechen/luci-theme-carbon)](https://github.com/mrjoechen/luci-theme-carbon/releases/latest)
 [![License](https://img.shields.io/github/license/mrjoechen/luci-theme-carbon)](LICENSE)
+[![Download](https://img.shields.io/github/downloads/mrjoechen/luci-theme-carbon/total?style=flat)](https://github.com/mrjoechen/luci-theme-carbon/releases/latest)
+[![Star](https://img.shields.io/github/stars/mrjoechen/luci-theme-carbon)](https://github.com/mrjoechen/ShowcaseApp/stargazers)
+
 **[在线演示](https://mrjoechen.github.io/luci-theme-carbon/) · [English demo](https://mrjoechen.github.io/luci-theme-carbon/?lang=en)**
 
 </div>
