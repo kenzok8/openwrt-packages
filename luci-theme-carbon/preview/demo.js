@@ -125,13 +125,15 @@
 			};
 		}
 		if (active === 'admin/network/dhcp') {
+			/* same id as LuCI's active-leases table, so Carbon adds brand avatars */
+			const leaseTable = (headers, rows) => table(headers, rows).replace('<div class="table ', '<div id="lease_status_table" class="table ');
 			const leases = (await P.provider.leases()).dhcp_leases;
 			view.innerHTML = intro(T('Connected devices', '已连接设备'), T('16 sample clients on the home network.', '家庭网络中的 16 台模拟客户端。')) + '<div class="demo-tools"><label for="device-search">' + T('Search', '搜索') + '</label>' + input('device-search', '', 'type="search" placeholder="' + T('Name, IP or MAC', '名称、IP 或 MAC 地址') + '"') + '<span id="device-count" role="status"></span></div><div id="device-table"></div>';
 			const filter = () => {
 				const term = document.getElementById('device-search').value.toLowerCase();
 				const rows = leases.filter((l) => [l.hostname, l.ipaddr, l.macaddr].join(' ').toLowerCase().includes(term));
 				document.getElementById('device-count').textContent = rows.length + T(' devices', ' 台设备');
-				document.getElementById('device-table').innerHTML = section(T('DHCP leases', 'DHCP 租约'), rows.length ? table([T('Hostname', '主机名'), 'IPv4', 'MAC', T('Lease', '租期')], rows.map((l) => [esc(l.hostname || T('Unknown device', '未知设备')), esc(l.ipaddr), '<span class="cb-mono">' + esc(l.macaddr) + '</span>', l.expires === false ? T('Static', '静态') : Math.round(l.expires / 3600) + T(' hours', ' 小时')])) : '<p class="cbi-section-node">' + T('No matching devices.', '没有匹配的设备。') + '</p>');
+				document.getElementById('device-table').innerHTML = section(T('DHCP leases', 'DHCP 租约'), rows.length ? leaseTable([T('Hostname', '主机名'), 'IPv4', 'MAC', T('Lease', '租期')], rows.map((l) => [esc(l.hostname || T('Unknown device', '未知设备')), esc(l.ipaddr), '<span class="cb-mono">' + esc(l.macaddr) + '</span>', l.expires === false ? T('Static', '静态') : Math.round(l.expires / 3600) + T(' hours', ' 小时')])) : '<p class="cbi-section-node">' + T('No matching devices.', '没有匹配的设备。') + '</p>');
 			};
 			document.getElementById('device-search').oninput = filter; filter();
 		}

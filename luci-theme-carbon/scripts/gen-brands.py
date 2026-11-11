@@ -66,6 +66,8 @@ BRANDS = {
     "zte":         ("ZTE",          ("mono", "Z", "#0081CC"),                r"^zte|ZTE Corporation"),
     "tcl":         ("TCL",          ("mono", "T", "#E4002B"),                r"^TCL"),
     "hisense":     ("Hisense",      ("mono", "H", "#00A99D"),                r"Hisense"),
+    "midea":       ("Midea",        ("mono", "M", "#03B0EF"),                r"Midea (Group|Air|Electric)"),
+    "haier":       ("Haier",        ("mono", "H", "#005AAB"),                r"Haier"),
     # Wi-Fi chip vendors: no brand shown, only a "computer" hint
     "_pc":         (None,           ("glyph", "pc", None),                   r"^Intel Corporate|^Liteon|^AzureWave|^Realtek"),
 }
@@ -109,6 +111,8 @@ HOST_RULES = [
     (r"hue-?bridge|philips-?hue", "philipshue", "iot"),
     (r"hisense|vidaa", "hisense", "tv"),
     (r"tcl", "tcl", "tv"),
+    (r"midea", "midea", "iot"),
+    (r"haier", "haier", "iot"),
     (r"zte", "zte", None),
     (r"^android|android-", "android", "phone"),
     # brandless device types

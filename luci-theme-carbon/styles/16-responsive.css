@@ -2,6 +2,27 @@
    16. Responsive
    ========================================================================== */
 
+/* wide screens: pages that profit from width (the dashboard grid, tables)
+   grow in steps; plain forms keep a readable 1240px */
+@media (min-width: 1800px) { :root { --cb-content-wide: 1480px; } }
+@media (min-width: 2300px) { :root { --cb-content-wide: 1720px; } }
+body.cb-has-dash,
+body:has(#maincontent .table) { --cb-content-max: var(--cb-content-wide); }
+
+/* a wide devices card lays its list out in two columns */
+.cb-clients { container-type: inline-size; }
+@container (min-width: 880px) {
+	.cb-clients .cb-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+	.cb-clients .cb-list > li:nth-child(2) { box-shadow: none; }
+	.cb-clients .cb-list > li:hover + li { box-shadow: 0 -.5px 0 var(--cb-sep); }
+	.cb-clients .cb-list > li:hover + li:nth-child(2) { box-shadow: none; }
+}
+/* columns too narrow for the MAC next to the name: keep the name readable */
+@container (min-width: 880px) and (max-width: 1099px) {
+	.cb-clients .cb-list .cb-hide-sm { display: none; }
+	.cb-clients .cb-tag-wifi .cb-tag-text { display: none; }
+}
+
 @media (max-width: 1180px) {
 	.cb-dash .span-8,
 	.cb-dash .span-4 { grid-column: span 12; }
@@ -38,7 +59,21 @@
 	.cb-dash { gap: 12px; }
 	.cb-card { padding: 16px; }
 	.cb-hero { padding: 18px 16px; }
-	.cb-hero-meta { gap: 10px 20px; }
+	/* hero meta becomes a tidy list: status pill on its own row, then
+	   label/value rows — no more crowding next to the badge */
+	.cb-hero-meta { flex: 1 1 100%; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+	.cb-hero-meta > .cb-pill { justify-self: start; margin: 0 0 12px; }
+	.cb-hero-meta .cb-meta {
+		flex-direction: row;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+		min-width: 0;
+		padding: 8px 0;
+		border-top: .5px solid var(--cb-sep);
+	}
+	.cb-hero-meta .cb-meta-label { flex: none; white-space: nowrap; }
+	.cb-hero-meta .cb-meta-val { text-align: right; }
 	.cb-rate-val { font-size: 24px; }
 	.cb-chart { height: 160px; }
 	.cb-totals { margin-left: 0; text-align: left; flex-basis: 100%; }
@@ -58,6 +93,19 @@
 	.cbi-value-title,
 	.cbi-value label.cbi-value-title { flex: none; padding-top: 0; }
 	.cbi-value-field { flex: none; width: 100%; }
+
+	/* flag values (switches) stay on one row: title left, switch right; the
+	   optional description (rendered inside the field) drops below the row */
+	.cbi-value[data-widget="CBI.FlagValue"] { flex-direction: row; align-items: center; }
+	.cbi-value[data-widget="CBI.FlagValue"] > .cbi-value-title { flex: 1 1 0; min-width: 0; }
+	.cbi-value[data-widget="CBI.FlagValue"] > .cbi-value-field { display: contents; }
+	.cbi-value[data-widget="CBI.FlagValue"] .cbi-value-description { flex: 1 1 100%; margin-top: 0; }
+
+	/* package manager (luci-app-package-manager): input + button on one line */
+	.controls .control-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+	.controls .control-group > input { flex: 1 1 12em; width: auto; min-width: 0; }
+	.controls .control-group > .btn { flex: 0 0 auto; }
+
 	input:where(:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"])),
 	textarea,
 	select,
@@ -122,8 +170,21 @@
 	.td.cbi-value-field[data-widget="dvalue"],
 	.td.cbi-value-field[data-widget="button"],
 	.td.cbi-value-field[data-widget="fvalue"] { flex-basis: 50%; text-align: left; }
+	/* data cells never share a wrapped row with button cells (e.g. Nikki's
+	   status table: the core state is a readout, not a button) */
+	.tr:has(> .td[data-widget="CBI.ButtonValue"]) > .td.cbi-value-field:not([data-widget="CBI.ButtonValue"]) { flex-basis: 100%; }
+	/* button cells share one row when they fit (Nikki's four actions),
+	   and wrap gracefully when the labels are too long for the screen;
+	   margin-left matches the field inset above so the row aligns */
+	.td.cbi-value-field[data-widget="CBI.ButtonValue"] { flex: 1 0 auto; width: auto; min-width: 0; padding-left: 0; padding-right: 0; margin-left: 10px; }
 	.td.cbi-section-actions { flex-basis: 100%; width: auto; padding-top: 8px; }
-	.td.cbi-section-actions > * { justify-content: flex-start; flex-wrap: wrap; }
+	.td.cbi-section-actions > * { justify-content: flex-start; flex-wrap: wrap; gap: 4px; }
+	/* tighter action buttons so short button sets fit on one row */
+	.td.cbi-section-actions .btn,
+	.td.cbi-section-actions .cbi-button { min-height: 28px; padding: 3px 9px; font-size: 12.5px; }
+	/* stacked-table button cells keep the regular button size; only the
+	   horizontal padding is trimmed so four actions fit one row */
+	.td.cbi-value-field[data-widget="CBI.ButtonValue"] .cbi-button { padding-left: 8px; padding-right: 8px; }
 	.tr.placeholder > .td { position: static; }
 	.col-1 { flex: 1 1 30px !important; }
 	.col-2 { flex: 2 2 60px !important; }

@@ -60,6 +60,8 @@
 	--cb-ease: cubic-bezier(.25, .1, .25, 1);
 
 	--cb-content-max: 1240px;
+	/* dashboards and table pages grow with the screen (see 16-responsive) */
+	--cb-content-wide: 1240px;
 
 	color-scheme: light;
 }

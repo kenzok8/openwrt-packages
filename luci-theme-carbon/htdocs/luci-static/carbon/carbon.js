@@ -273,6 +273,7 @@
 		openclash: 'send', passwall: 'send', passwall2: 'send', homeproxy: 'send', nikki: 'send',
 		'ssr-plus': 'send', shadowsocksr: 'send', vssr: 'send', bypass: 'send', aria2: 'download',
 		transmission: 'download', qbittorrent: 'download', minidlna: 'play', jellyfin: 'play',
+		rtp2httpd: 'fiber', rtp2httpx: 'fiber', udpxy: 'fiber', iptv: 'fiber',
 		watchcat: 'eye', diskman: 'disk', 'hd-idle': 'disk', dockerman: 'docker', docker: 'docker',
 		vlmcsd: 'key', ua2f: 'shield', accesscontrol: 'filter', timecontrol: 'clock', p910nd: 'printer',
 		usb_printer: 'printer', alist: 'folder', 'ddns-go': 'refresh', wechatpush: 'bell', serverchan: 'bell',
@@ -283,7 +284,7 @@
 		[/vlan/, 'layers'], [/(^|[-_])[xge]?pon($|[-_])|optical|fiber/, 'fiber'], [/route|routing|mwan/, 'route'],
 		[/clash|passwall|ssr|v2ray|xray|trojan|shadow|bypass|proxy|mihomo|sing-?box/, 'send'],
 		[/frp|nps|ngrok|cloud/, 'cloud'], [/accel|turbo|offload|speed/, 'zap'],
-		[/dlna|media|jellyfin|emby|music|video/, 'play'], [/aria|transmission|qbit|torrent/, 'download'],
+		[/dlna|media|jellyfin|emby|music|video/, 'play'], [/^rtp|iptv|udpxy|multicast/, 'fiber'], [/aria|transmission|qbit|torrent/, 'download'],
 		[/upload|transfer/, 'upload'], [/temp|thermal/, 'thermo'], [/print/, 'printer'], [/qos|sqm|shap/, 'sliders'],
 		[/watch/, 'eye'], [/log/, 'doc'], [/wifi|wlan|wireless/, 'wifi'],
 		[/vpn|wireguard|tunnel|ipsec|pptp|l2tp|zerotier|tailscale/, 'lock'], [/push|notif|chan|bot/, 'bell'], [/dns/, 'server'],
@@ -485,8 +486,18 @@
 		};
 		const inside = (node) => !!node && ((list && list.contains(node)) || el.contains(node) || (opener && opener.contains(node)));
 		const outside = (e) => { if (!inside(e.target)) close(false); };
-		/* page scroll or resize closes the list; scrolling inside it does not */
-		const dismiss = (e) => { if (!(e && e.type === 'scroll' && list && list.contains(e.target))) close(false); };
+		/* page scroll or resize closes the list; scrolling inside it does not,
+		   nor does a scroll that leaves the trigger in place (scroll anchoring
+		   when a card above refreshes, a late event from the opening tap) */
+		let anchorAt = null;
+		const anchorMoved = () => {
+			const r = opener ? opener.getBoundingClientRect() : null;
+			return !r || !anchorAt || Math.abs(r.top - anchorAt.top) > 1 || Math.abs(r.left - anchorAt.left) > 1;
+		};
+		const dismiss = (e) => {
+			if (e && e.type === 'scroll' && list && (list.contains(e.target) || !anchorMoved())) return;
+			close(false);
+		};
 
 		function open(o) {
 			o = o || {};
@@ -508,6 +519,7 @@
 			list.addEventListener('focusout', (e) => { if (!inside(e.relatedTarget)) close(false); });
 			document.body.appendChild(list);
 			place(o.anchor || el, !!o.beside);
+			anchorAt = opener.getBoundingClientRect();
 			list.classList.add('show');
 			el.setAttribute('aria-expanded', 'true');
 			highlight(o.last ? opts.options.length - 1 : Math.max(0, index(value)));
@@ -762,6 +774,7 @@
 	C.initShell = function (opts) {
 		opts = opts || {};
 		C.initTabs(document.getElementById('maincontent'));
+		C.initLeaseAvatars(document.getElementById('maincontent'));
 		const body = document.body;
 		const burger = document.getElementById('cb-burger');
 		const scrim = document.getElementById('cb-scrim');
@@ -1512,6 +1525,61 @@
 		return h('span', { class: 'cb-avatar', style: '--c:' + color, html: ch ? esc(ch) : icon('laptop') });
 	}
 
+	/* ------------------------------------------------------------------
+	 * Brand avatars in LuCI's own lease tables (DHCP page, overview details)
+	 *
+	 * ui.Table rebuilds every row on each poll and sorts from its data, not
+	 * the DOM, so the avatar is simply added again to each new row. The
+	 * hostname is the cell before the first IP address cell (an Interface
+	 * column may come first), the MAC is any cell holding one; DHCPv6 rows
+	 * have none, but DUID-LL/LLT carry the client's MAC.
+	 * ------------------------------------------------------------------ */
+	const LEASE_TABLES = ['#lease_status_table', '#lease6_status_table', '#status_leases', '#status_leases6'];
+	const LEASE_ROWS = LEASE_TABLES.map((sel) => sel + ' .tr:not(.table-titles):not(.cbi-section-table-titles):not(.placeholder)').join(', ');
+	const IP_CELL = /^(?:\d{1,3}(?:\.\d{1,3}){3}|[0-9a-f]{0,4}(?::[0-9a-f]{0,4}){2,})/i;
+	const MAC_TEXT = /\b[0-9a-f]{2}(?::[0-9a-f]{2}){5}\b/i;
+	const duidMac = (s) => {
+		s = String(s || '').replace(/[^0-9a-f]/gi, '');
+		if (s.length === 28 && /^00010001/i.test(s)) return s.slice(16);
+		if (s.length === 20 && /^00030001/i.test(s)) return s.slice(8);
+		return '';
+	};
+	function leaseAvatar(tr) {
+		const cells = Array.from(tr.children).filter((c) => c.classList.contains('td'));
+		const ip = cells.findIndex((c) => IP_CELL.test(c.textContent.trim()));
+		const cell = ip > 0 ? cells[ip - 1] : null;
+		if (!cell || cell.querySelector('.cb-host')) return;
+		let mac = '';
+		for (const c of cells) {
+			const text = c.textContent.trim();
+			const m = text.match(MAC_TEXT);
+			mac = m ? m[0] : duidMac(text);
+			if (mac) break;
+		}
+		let host = cell.textContent.trim();
+		if (host === '-') host = '';
+		const id = C.identify(host.replace(/\s*\(.*\)$/, ''), mac);
+		const avatar = deviceAvatar({ hostname: host, macaddr: mac }, id);
+		avatar.setAttribute('aria-hidden', 'true');
+		const name = h('span', { class: 'cb-host-name' }, Array.from(cell.childNodes));
+		cell.appendChild(h('span', { class: 'cb-host' }, [avatar, name]));
+	}
+	C.initLeaseAvatars = function (root) {
+		if (!root || !window.MutationObserver) return;
+		let ready = false;
+		const run = () => { if (ready) root.querySelectorAll(LEASE_ROWS).forEach(leaseAvatar); };
+		new MutationObserver(run).observe(root, { childList: true, subtree: true });
+		/* brand data loads only once a lease table shows up */
+		const start = () => {
+			if (!root.querySelector(LEASE_TABLES.join(', '))) return;
+			C.loadBrands().then(() => { ready = true; run(); });
+			watch.disconnect();
+		};
+		const watch = new MutationObserver(start);
+		watch.observe(root, { childList: true, subtree: true });
+		start();
+	};
+
 	C.Dashboard = {
 		mount(host, P, opts) {
 			opts = opts || {};
@@ -1615,7 +1683,7 @@
 			ui.clientCount = h('span', { class: 'cb-count' });
 			ui.clients = h('ul', { class: 'cb-list' });
 			ui.clientMore = h('button', { type: 'button', class: 'cb-more hidden' });
-			dash.appendChild(h('div', { class: 'cb-card span-8' }, [
+			dash.appendChild(h('div', { class: 'cb-card cb-clients span-8' }, [
 				h('div', { class: 'cb-card-head' }, [h('h3', null, [t('Connected Devices'), ui.clientCount]), manage(urls.devices)]),
 				ui.clients, ui.clientMore
 			]));
@@ -1668,7 +1736,9 @@
 					(list && list.some((d) => !d.lease) ? t('Recently active') : t('DHCP clients'));
 				if (!list) { ui.clients.appendChild(h('li', { class: 'cb-empty', text: t('Unavailable') })); return; }
 				if (!list.length) { ui.clients.appendChild(h('li', { class: 'cb-empty', text: t('No devices yet') })); }
-				const limit = st.showAll ? list.length : 8;
+				/* the two-column layout (wide screens) shows six rows, not four */
+				const collapsed = getComputedStyle(ui.clients).gridTemplateColumns.split(' ').length > 1 ? 12 : 8;
+				const limit = st.showAll ? list.length : collapsed;
 				list.slice(0, limit).forEach((l) => {
 					const id = C.identify(l.hostname, l.macaddr);
 					const kind = id.brand ? id.brand.n : (id.type ? t(TYPE_LABEL[id.type]) : null);
@@ -1699,7 +1769,7 @@
 						])
 					]));
 				});
-				if (list.length > 8) {
+				if (list.length > collapsed) {
 					ui.clientMore.classList.remove('hidden');
 					ui.clientMore.textContent = st.showAll ? t('Show less') : t('Show all %d devices', list.length);
 				}

@@ -152,6 +152,14 @@ test('dashboard shows merged devices, Wi-Fi details, IPv6, sensors and a traffic
 	await page.keyboard.press('Escape');
 	assert.equal(await page.$('.cb-lb-list'), null);
 	assert.equal(await page.evaluate(() => document.activeElement.classList.contains('cb-traffic-select')), true);
+	/* a scroll that leaves the trigger in place (scroll anchoring while cards refresh) keeps the list open;
+	   scrolling the page closes it */
+	await page.click(picker);
+	await page.waitForSelector('.cb-lb-list.show');
+	await page.evaluate(() => document.dispatchEvent(new Event('scroll')));
+	assert.notEqual(await page.$('.cb-lb-list'), null, 'a scroll that does not move the trigger keeps the list open');
+	await page.evaluate(() => window.scrollBy(0, 120));
+	await page.waitForFunction(() => !document.querySelector('.cb-lb-list'));
 	await context.close();
 });
 

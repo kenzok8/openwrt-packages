@@ -287,6 +287,13 @@
 	background-image: none;
 	color: var(--cb-text-2);
 }
+/* the same avatar, smaller, beside hostnames in LuCI's lease tables */
+.cb-host { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; vertical-align: middle; }
+.cb-host-name { min-width: 0; overflow-wrap: anywhere; }
+.cb-host > .cb-avatar { width: 26px; height: 26px; font-size: 12px; }
+.cb-host > .cb-avatar svg { width: 15px; height: 15px; }
+.cb-host > .cb-avatar .cb-logo { width: 14px; height: 14px; }
+.cb-host > .cb-avatar b { font-size: 12px; }
 .cb-kind { color: var(--cb-text-2); }
 .cb-kind::after { content: " · "; }
 .cb-tag {
