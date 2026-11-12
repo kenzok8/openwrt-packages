@@ -2,6 +2,7 @@
 <%
   local jsonc = require "luci.jsonc"
   local uci = require "luci.model.uci".cursor()
+    local asset_version = "0.17.1-rc20261028-release-6fb1035f6307"
   local features = { "_lua_force_array_" }
   local configs = {}
   if luci.sys.call("which ota >/dev/null 2>&1 && ota >/dev/null 2>&1") == 0 then
@@ -30,13 +31,14 @@
         disable = true
       }
   end
+  configs["deviceInventoryV2"] = uci:get("quickstart", "main", "device_inventory_v2") ~= "0"
 -%>
 <script>
     (function(){
       window.token = "<%=token%>";
       var vue_prefix="<%=prefix%>";
       window.vue_base = vue_prefix + '/';
-      window.vue_lang_data = '/luci-static/quickstart/i18n/<%=lang%>.json<%# ?v=PKG_VERSION %>';
+      window.vue_lang_data = '/luci-static/quickstart/i18n/<%=lang%>.json?v=<%=asset_version%>';
       window.vue_lang = '<%=lang%>';
       window.quickstart_features = <%=jsonc.stringify(features)%>;
       window.quickstart_configs = <%=jsonc.stringify(configs)%>;
@@ -51,6 +53,6 @@
 </script>
 <div id="app">
 </div>
-<script type="module" crossorigin src="/luci-static/quickstart/index.js<%# ?v=PKG_VERSION %>"></script>
-<link rel="stylesheet" href="/luci-static/quickstart/style.css<%# ?v=PKG_VERSION %>">
+<script type="module" crossorigin src="/luci-static/quickstart/index.js?v=<%=asset_version%>"></script>
+<link rel="stylesheet" href="/luci-static/quickstart/style.css?v=<%=asset_version%>">
 <%+footer%>

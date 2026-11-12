@@ -9,7 +9,7 @@ LUCI_TITLE:=LuCI support for quickstart
 LUCI_DEPENDS:=+quickstart +luci-app-store
 LUCI_PKGARCH:=all
 
-PKG_VERSION:=0.12.10-r1
+PKG_VERSION:=0.17.1-rc20261028-r1
 # PKG_RELEASE MUST be empty for luci.mk
 PKG_RELEASE:=
 
@@ -19,4 +19,3 @@ LUCI_MINIFY_JS:=0
 include $(TOPDIR)/feeds/luci/luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
-

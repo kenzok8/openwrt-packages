@@ -1,0 +1,18 @@
+Quickstart device-management release notice
+
+The Quickstart backend and device-management web application are developed in
+the upstream Quickstart project under its MIT license. OpenWrt/LuCI packaging
+files retain the license notices stated in those files and packages.
+
+The 30 WebP device scene icons shipped below
+/www/luci-static/quickstart/device-icons are project-original, AI-assisted
+generic illustrations generated with OpenAI's image generation tool on
+2026-09-24 and 2026-09-25. Generation required transparent backgrounds and no
+words, letters, logos, watermarks, trademarked elements, or brand-specific
+product silhouettes. Manufacturer names are rendered as ordinary text and are
+not embedded in the artwork. No artwork or logo from luci-app-oui,
+luci-app-bandix, a device manufacturer, or another third party is included.
+
+The asset manifest marks product/legal review as required before a public
+release. Generative creation does not guarantee non-infringement.
+
