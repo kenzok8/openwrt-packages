@@ -164,7 +164,8 @@ input[type="radio"].cbi-input-invalid { border-color: var(--cb-red); }
 	box-shadow: none;
 	transition: background-color .22s var(--cb-ease);
 }
-:root[data-darkmode="true"] .cbi-checkbox > input[type="checkbox"] { background: rgba(255, 255, 255, .16); }
+/* Keep the dark off-state fill from overriding the checked accent. */
+:root[data-darkmode="true"] .cbi-checkbox > input[type="checkbox"]:not(:checked) { background: rgba(255, 255, 255, .16); }
 .cbi-checkbox > input[type="checkbox"]::after {
 	content: "";
 	position: absolute;
