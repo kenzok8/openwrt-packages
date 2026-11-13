@@ -60,7 +60,6 @@ make menuconfig
 | luci-app-gost                | https proxy      | 隐蔽的https代理   |
 | luci-app-lucky               | lucky DDNS/port forwarding/reverse proxy | IPv6/4端口转发,DDNS,反向代理,证书 |
 | luci-app-wechatpush          | WeChat/DingTalk Pushed plugins    |   微信/钉钉推送        |
-| luci-theme-tomato            | Modify topic name             |  tomato主题        |
 | luci-app-smartdns            | smartdns dns pollution prevention     |  smartdns DNS防污染       |
 | luci-app-quickfile           | quickfile              | quickfile 管理       |
 | luci-app-store               | store software repository            |  应用商店   |
@@ -68,6 +67,8 @@ make menuconfig
 | luci-theme-mcat              | Modify topic name          |   mcat主题        |
 | luci-app-mosdns              | mosdns dns offload            |DNS 国内外分流解析与广告过滤        |
 | luci-app-unblockneteasemusic | Unlock NetEase Cloud Music         | 解锁网易云音乐   |
+| luci-theme-vantage           | vantage theme                      | vantage 主题      |
+| luci-app-vantage             | vantage dashboard                  | vantage 仪表盘    |
 
 ![Glass 登录](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/openwrt-packages/Login_page_light.png)
 ![Glass 概览浅色](https://raw.githubusercontent.com/kenzok8/kenzok8/main/screenshot/openwrt-packages/Overview_page_light.png)
