@@ -1383,18 +1383,27 @@
 	};
 
 	/* ------------------------------------------------------------------
-	 * Connected devices: DHCPv4/v6 leases + Wi‑Fi stations + ARP neighbours
-	 * (static-IP clients) + LuCI host hints for names. Keyed by MAC.
+	 * Discovered devices: DHCPv4/v6 leases + Wi‑Fi stations + ARP neighbours
+	 * + LuCI host hints for names. Keyed by MAC. Neither leases nor ARP cache
+	 * entries prove current reachability; "active" means observed in ARP/Wi‑Fi.
 	 *
 	 * src = { leases, leases6, stations, arp, hints, bands: { ifname: '5 GHz' } }
-	 * → [{ macaddr, hostname, ipaddr, ip6addr, expires, lease, active, wifi }]
+	 * → [{ macaddr, hostname, ipaddr, ip6addr, expires, lease, active, wifi, gateway }]
 	 * ------------------------------------------------------------------ */
 	const MAC_RE = /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/;
-	C.parseArp = function (text, devices) {
+	C.parseArp = function (text, devices, ifs) {
+		const gateways = new Set();
+		(ifs || []).forEach((i) => {
+			if (!i.up) return;
+			(i.route || []).forEach((r) => {
+				if (r.target !== '0.0.0.0' || r.mask !== 0 || !r.nexthop || r.nexthop === '0.0.0.0') return;
+				[i.l3_device, i.device].forEach((d) => { if (d) gateways.add(d + '/' + r.nexthop); });
+			});
+		});
 		return String(text || '').split('\n').slice(1).map((line) => line.trim().split(/\s+/)).filter((f) =>
 			f.length >= 6 && (parseInt(f[2], 16) & 2) && MAC_RE.test(f[3].toLowerCase()) && f[3] !== '00:00:00:00:00:00' &&
 			(!devices || devices.indexOf(f[5]) >= 0)
-		).map((f) => ({ ip: f[0], mac: f[3].toLowerCase(), dev: f[5] }));
+		).map((f) => ({ ip: f[0], mac: f[3].toLowerCase(), dev: f[5], gateway: gateways.has(f[5] + '/' + f[0]) }));
 	};
 
 	C.mergeDevices = function (src) {
@@ -1405,7 +1414,7 @@
 			if (!MAC_RE.test(mac) || mac === '00:00:00:00:00:00') return null;
 			let d = byMac.get(mac);
 			if (!d) {
-				d = { macaddr: mac, hostname: '', ipaddr: '', ip6addr: '', expires: null, lease: false, active: false, wifi: null };
+				d = { macaddr: mac, hostname: '', ipaddr: '', ip6addr: '', expires: null, lease: false, active: false, wifi: null, gateway: false };
 				byMac.set(mac, d);
 				list.push(d);
 			}
@@ -1426,12 +1435,15 @@
 			if (!d) return;
 			d.ip6addr = d.ip6addr || firstAddr(l.ip6addrs || l.ip6addr);
 			d.hostname = d.hostname || l.hostname || '';
+			if (!d.lease) d.expires = l.expires;
+			d.lease = true;
 		});
 		(src.arp || []).forEach((n) => {
 			const d = get(n.mac);
 			if (!d) return;
 			d.ipaddr = d.ipaddr || n.ip;
 			d.active = true;
+			d.gateway = d.gateway || !!n.gateway;
 		});
 		(src.stations || []).forEach((st) => {
 			const d = get(st.mac);
@@ -1450,15 +1462,27 @@
 		return list.sort((a, b) => (!a.ipaddr - !b.ipaddr) || (ipNum(a.ipaddr) - ipNum(b.ipaddr)) || a.macaddr.localeCompare(b.macaddr));
 	};
 
-	/* LAN-side devices for ARP: skip uplinks (non-static interfaces with a default route) */
+	/* Group aliases before excluding separate uplinks, regardless of address protocol.
+	 * The conventional LAN may also carry a side router's default route. Without
+	 * that role anchor, custom default-route links are ambiguous: retain them unless
+	 * explicitly WAN/PPP. Discovery does not imply that a neighbour is our client. */
 	C.lanDevices = function (ifs) {
 		if (!Array.isArray(ifs)) return null;
-		const devs = [];
+		const groups = new Map();
 		ifs.forEach((i) => {
-			if (!i.up || i.interface === 'loopback' || (hasDefaultRoute(i) && i.proto !== 'static')) return;
-			[i.l3_device, i.device].forEach((d) => { if (d && devs.indexOf(d) < 0) devs.push(d); });
+			const dev = i.l3_device || i.device;
+			if (!i.up || i.interface === 'loopback' || !dev || dev === 'lo') return;
+			let g = groups.get(dev);
+			if (!g) { g = { devices: new Set(), lan: false, wan: false, uplink: false }; groups.set(dev, g); }
+			[i.l3_device, i.device].forEach((d) => { if (d) g.devices.add(d); });
+			g.lan = g.lan || i.interface === 'lan';
+			g.wan = g.wan || /^wan\d*(?:_\d+)?$/i.test(i.interface || '') || /^ppp/.test(i.proto || '') || /^ppp/.test(dev);
+			g.uplink = g.uplink || hasDefaultRoute(i);
 		});
-		return devs;
+		const all = Array.from(groups.values());
+		const hasLan = ifs.some((i) => i.interface === 'lan');
+		const local = all.filter((g) => g.lan || (!g.wan && (!g.uplink || !hasLan)));
+		return Array.from(new Set(local.flatMap((g) => Array.from(g.devices))));
 	};
 
 	/*
@@ -1672,7 +1696,8 @@
 				dash.appendChild(el);
 				return { val: val, sub: sub, extra: extra };
 			};
-			ui.tDevices = tile('laptop', 'green', t('Devices'));
+			const deviceTitle = () => h('span', { text: t('Discovered devices'), title: t('May include offline devices.') });
+			ui.tDevices = tile('laptop', 'green', deviceTitle());
 			ui.tConn = tile('link', 'teal', t('Connections'));
 			ui.tLoad = tile('pulse', 'indigo', t('Load'));
 			ui.tUp = tile('clock', 'orange', t('Uptime'));
@@ -1684,7 +1709,7 @@
 			ui.clients = h('ul', { class: 'cb-list' });
 			ui.clientMore = h('button', { type: 'button', class: 'cb-more hidden' });
 			dash.appendChild(h('div', { class: 'cb-card cb-clients span-8' }, [
-				h('div', { class: 'cb-card-head' }, [h('h3', null, [t('Connected Devices'), ui.clientCount]), manage(urls.devices)]),
+				h('div', { class: 'cb-card-head' }, [h('h3', null, [deviceTitle(), ui.clientCount]), manage(urls.devices)]),
 				ui.clients, ui.clientMore
 			]));
 
@@ -1733,7 +1758,7 @@
 				ui.clientCount.textContent = list ? String(list.length) : '';
 				ui.tDevices.val.textContent = list ? String(list.length) : '—';
 				ui.tDevices.sub.textContent = st.wifiCount != null ? t('%d on Wi-Fi', st.wifiCount) :
-					(list && list.some((d) => !d.lease) ? t('Recently active') : t('DHCP clients'));
+					(list ? t('Known to this router') : t('Unavailable'));
 				if (!list) { ui.clients.appendChild(h('li', { class: 'cb-empty', text: t('Unavailable') })); return; }
 				if (!list.length) { ui.clients.appendChild(h('li', { class: 'cb-empty', text: t('No devices yet') })); }
 				/* the two-column layout (wide screens) shows six rows, not four */
@@ -1744,11 +1769,12 @@
 					const kind = id.brand ? id.brand.n : (id.type ? t(TYPE_LABEL[id.type]) : null);
 					const name = l.hostname || (kind ? t('%s device', kind) : t('Unknown device'));
 					let lease = '';
-					if (l.lease) {
-						if (l.expires === false || l.expires == null || l.expires < 0) lease = t('Static');
-						else if (l.expires > 0) lease = t('%s left', fmt.duration(l.expires));
+					if (l.gateway) lease = t('Gateway');
+					else if (l.lease) {
+						lease = t('DHCP lease');
+						if (l.expires > 0) lease += ' · ' + t('%s left', fmt.duration(l.expires));
 					}
-					else if (l.active && !l.wifi) lease = t('Fixed IP');
+					else if (l.active && !l.wifi) lease = t('Neighbor entry');
 					const wifi = l.wifi ? [l.wifi.band, l.wifi.signal != null ? l.wifi.signal + ' dBm' : null].filter(Boolean).join(' · ') : '';
 					ui.clients.appendChild(h('li', null, [
 						deviceAvatar(l, id),
@@ -1764,7 +1790,7 @@
 							h('span', null, [
 								l.wifi ? h('span', { class: 'cb-tag cb-tag-wifi', title: t('Connected over Wi-Fi') + (wifi ? ' · ' + wifi : ''), 'aria-label': wifi || t('Wi-Fi'), html: icon('wifi') + '<span class="cb-tag-text">' + esc(wifi || t('Wi-Fi')) + '</span>' }) : null,
 								id.priv ? h('span', { class: 'cb-tag', title: t('Randomised MAC address'), text: t('Private') }) : null,
-								lease
+								lease ? h('span', { class: 'cb-device-source', text: lease }) : null
 							])
 						])
 					]));
@@ -1918,7 +1944,7 @@
 				/* first tick, or the AP set changed: one extra request */
 				const stations = same ? r[5] : (aps.ifnames.length && P.stations ? await safe(() => P.stations(aps.ifnames)) : null);
 				const leases = r[1] && Array.isArray(r[1].dhcp_leases) ? r[1].dhcp_leases : null;
-				const arp = r[3] != null ? C.parseArp(r[3], C.lanDevices(ifs)) : null;
+				const arp = r[3] != null ? C.parseArp(r[3], C.lanDevices(ifs), ifs) : null;
 				st.devices = (leases || arp || stations) ? C.mergeDevices({
 					leases: leases, leases6: r[1] && r[1].dhcp6_leases, stations: stations, arp: arp, hints: st.hints, bands: aps.bands
 				}) : null;

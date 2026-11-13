@@ -142,10 +142,6 @@ msgid "Connected"
 msgstr "接続済み"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Connected Devices"
-msgstr "接続中のデバイス"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Connected over Wi-Fi"
 msgstr "Wi-Fi で接続"
 
@@ -170,16 +166,16 @@ msgid "Dark"
 msgstr "ダーク"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Devices"
-msgstr "デバイス"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
 msgstr "DHCP クライアント"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "DHCP clients"
-msgstr "DHCP クライアント"
+msgid "DHCP lease"
+msgstr "DHCP リース"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Discovered devices"
+msgstr "検出したデバイス"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Download"
@@ -206,16 +202,16 @@ msgid "Expand sidebar"
 msgstr "サイドバーを展開"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Fixed IP"
-msgstr "固定 IP"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
 msgstr "空き"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Game console"
 msgstr "ゲーム機"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Gateway"
+msgstr "ゲートウェイ"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "GitHub (opens in a new tab)"
@@ -270,6 +266,10 @@ msgid "IPK updates are downloaded over HTTPS and checked against the release SHA
 msgstr "IPK の更新は HTTPS でダウンロードし、リリースの SHA-256 とファイルサイズで確認します。"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Known to this router"
+msgstr "このルーターが把握しているデバイス"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "LAN IP"
 msgstr "LAN IP"
 
@@ -314,6 +314,10 @@ msgid "Manage"
 msgstr "管理"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "May include offline devices."
+msgstr "オフラインのデバイスが含まれる場合があります。"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Memory"
 msgstr "メモリ"
 
@@ -328,6 +332,10 @@ msgstr "ミラーのプレフィックス"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
 msgstr "さらに設定が必要ですか？切り替え："
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Neighbor entry"
+msgstr "近隣情報"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
@@ -433,10 +441,6 @@ msgstr "ランダムな MAC アドレス"
 msgid "Reboot"
 msgstr "再起動"
 
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Recently active"
-msgstr "最近アクティブ"
-
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Release metadata or package version is invalid. Nothing was installed."
 msgstr "リリース情報またはパッケージのバージョンが無効です。何もインストールされていません。"
@@ -516,10 +520,6 @@ msgstr "ソフトウェア"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
 msgstr "スピーカー"
-
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Static"
-msgstr "静的"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Static address"

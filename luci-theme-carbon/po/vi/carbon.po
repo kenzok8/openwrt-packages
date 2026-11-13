@@ -142,10 +142,6 @@ msgid "Connected"
 msgstr "Đã kết nối"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Connected Devices"
-msgstr "Thiết bị đã kết nối"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Connected over Wi-Fi"
 msgstr "Kết nối qua Wi-Fi"
 
@@ -170,16 +166,16 @@ msgid "Dark"
 msgstr "Tối"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Devices"
-msgstr "Thiết bị"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
 msgstr "Máy khách DHCP"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "DHCP clients"
-msgstr "Máy khách DHCP"
+msgid "DHCP lease"
+msgstr "Bản thuê DHCP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Discovered devices"
+msgstr "Thiết bị đã phát hiện"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Download"
@@ -206,16 +202,16 @@ msgid "Expand sidebar"
 msgstr "Mở rộng thanh bên"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Fixed IP"
-msgstr "IP cố định"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
 msgstr "Trống"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Game console"
 msgstr "Máy chơi game"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Gateway"
+msgstr "Cổng mặc định"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "GitHub (opens in a new tab)"
@@ -270,6 +266,10 @@ msgid "IPK updates are downloaded over HTTPS and checked against the release SHA
 msgstr "Bản cập nhật IPK được tải qua HTTPS và đối chiếu với SHA-256 và kích thước tệp đã công bố."
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Known to this router"
+msgstr "Thiết bị bộ định tuyến đã biết"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "LAN IP"
 msgstr "IP LAN"
 
@@ -314,6 +314,10 @@ msgid "Manage"
 msgstr "Quản lý"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "May include offline devices."
+msgstr "Có thể bao gồm thiết bị ngoại tuyến."
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Memory"
 msgstr "Bộ nhớ"
 
@@ -328,6 +332,10 @@ msgstr "Tiền tố máy chủ gương"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
 msgstr "Cần thêm cài đặt? Chuyển sang"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Neighbor entry"
+msgstr "Bản ghi láng giềng"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
@@ -433,10 +441,6 @@ msgstr "Địa chỉ MAC ngẫu nhiên"
 msgid "Reboot"
 msgstr "Khởi động lại"
 
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Recently active"
-msgstr "Mới hoạt động"
-
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Release metadata or package version is invalid. Nothing was installed."
 msgstr "Thông tin phát hành hoặc phiên bản gói không hợp lệ. Chưa cài gì."
@@ -516,10 +520,6 @@ msgstr "Phần mềm"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
 msgstr "Loa"
-
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Static"
-msgstr "Tĩnh"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Static address"

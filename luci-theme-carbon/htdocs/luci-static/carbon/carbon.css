@@ -2763,6 +2763,7 @@ body:has(#maincontent .table) { --cb-content-max: var(--cb-content-wide); }
 @container (min-width: 880px) and (max-width: 1099px) {
 	.cb-clients .cb-list .cb-hide-sm { display: none; }
 	.cb-clients .cb-tag-wifi .cb-tag-text { display: none; }
+	.cb-clients .cb-device-source { display: block; }
 }
 
 @media (max-width: 1180px) {
@@ -2827,6 +2828,9 @@ body:has(#maincontent .table) { --cb-content-max: var(--cb-content-wide); }
 	/* keep device names readable: Wi‑Fi tag shrinks to its icon (details stay in the tooltip) */
 	.cb-tag-wifi .cb-tag-text { display: none; }
 	.cb-tag-wifi svg { margin-right: 0; }
+	/* source/lease text gets its own line so badges cannot crowd out the name */
+	.cb-clients .cb-device-source { display: block; }
+	.cb-clients .cb-list-aside { max-width: 55%; }
 
 	#view > h2, .cbi-map > h2, h2[name="content"] { font-size: 24px; }
 

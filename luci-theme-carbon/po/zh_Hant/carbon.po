@@ -142,10 +142,6 @@ msgid "Connected"
 msgstr "已連線"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Connected Devices"
-msgstr "已連線裝置"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Connected over Wi-Fi"
 msgstr "透過 Wi‑Fi 連線"
 
@@ -170,16 +166,16 @@ msgid "Dark"
 msgstr "深色"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Devices"
-msgstr "線上裝置"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
 msgstr "DHCP 用戶端"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "DHCP clients"
-msgstr "DHCP 用戶端"
+msgid "DHCP lease"
+msgstr "DHCP 租約"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Discovered devices"
+msgstr "已發現裝置"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Download"
@@ -206,16 +202,16 @@ msgid "Expand sidebar"
 msgstr "展開側邊欄"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Fixed IP"
-msgstr "固定 IP"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
 msgstr "可用"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Game console"
 msgstr "遊戲主機"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Gateway"
+msgstr "閘道"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "GitHub (opens in a new tab)"
@@ -270,6 +266,10 @@ msgid "IPK updates are downloaded over HTTPS and checked against the release SHA
 msgstr "IPK 更新透過 HTTPS 下載，並核對發布檔案的 SHA-256 與大小。"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Known to this router"
+msgstr "本機已知裝置"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "LAN IP"
 msgstr "區域網路 IP"
 
@@ -314,6 +314,10 @@ msgid "Manage"
 msgstr "管理"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "May include offline devices."
+msgstr "可能包含離線裝置。"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Memory"
 msgstr "記憶體"
 
@@ -328,6 +332,10 @@ msgstr "鏡像前綴"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
 msgstr "需要更多設定？切換到"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Neighbor entry"
+msgstr "鄰居記錄"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
@@ -433,10 +441,6 @@ msgstr "裝置使用隨機 MAC 位址，無法透過 MAC 辨識品牌"
 msgid "Reboot"
 msgstr "重新啟動"
 
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Recently active"
-msgstr "最近活躍"
-
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Release metadata or package version is invalid. Nothing was installed."
 msgstr "發布資訊或套件版本不符，未執行安裝。"
@@ -516,10 +520,6 @@ msgstr "套件"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
 msgstr "喇叭"
-
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Static"
-msgstr "靜態分配"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Static address"

@@ -142,10 +142,6 @@ msgid "Connected"
 msgstr "Conectado"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Connected Devices"
-msgstr "Dispositivos conectados"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Connected over Wi-Fi"
 msgstr "Conectado via Wi-Fi"
 
@@ -170,16 +166,16 @@ msgid "Dark"
 msgstr "Escuro"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Devices"
-msgstr "Dispositivos"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
 msgstr "Cliente DHCP"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "DHCP clients"
-msgstr "Clientes DHCP"
+msgid "DHCP lease"
+msgstr "Concessão DHCP"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Discovered devices"
+msgstr "Dispositivos detectados"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Download"
@@ -206,16 +202,16 @@ msgid "Expand sidebar"
 msgstr "Expandir barra lateral"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Fixed IP"
-msgstr "IP fixo"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
 msgstr "Livre"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Game console"
 msgstr "Console de videogame"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Gateway"
+msgstr "Gateway"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "GitHub (opens in a new tab)"
@@ -270,6 +266,10 @@ msgid "IPK updates are downloaded over HTTPS and checked against the release SHA
 msgstr "As atualizações IPK são baixadas por HTTPS e conferidas com o SHA-256 e o tamanho publicados na versão."
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Known to this router"
+msgstr "Conhecidos por este roteador"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "LAN IP"
 msgstr "IP da LAN"
 
@@ -314,6 +314,10 @@ msgid "Manage"
 msgstr "Gerenciar"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "May include offline devices."
+msgstr "Pode incluir dispositivos offline."
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Memory"
 msgstr "Memória"
 
@@ -328,6 +332,10 @@ msgstr "Prefixo do espelho"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
 msgstr "Precisa de mais configurações? Mude para o"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Neighbor entry"
+msgstr "Registro de vizinho"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
@@ -433,10 +441,6 @@ msgstr "Endereço MAC aleatório"
 msgid "Reboot"
 msgstr "Reiniciar"
 
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Recently active"
-msgstr "Ativo recentemente"
-
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Release metadata or package version is invalid. Nothing was installed."
 msgstr "Metadados da versão ou versão do pacote inválidos. Nada foi instalado."
@@ -516,10 +520,6 @@ msgstr "Software"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
 msgstr "Alto-falante"
-
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Static"
-msgstr "Estático"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Static address"

@@ -142,10 +142,6 @@ msgid "Connected"
 msgstr "연결됨"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Connected Devices"
-msgstr "연결된 기기"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Connected over Wi-Fi"
 msgstr "Wi-Fi로 연결됨"
 
@@ -170,16 +166,16 @@ msgid "Dark"
 msgstr "다크"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Devices"
-msgstr "기기"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
 msgstr "DHCP 클라이언트"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "DHCP clients"
-msgstr "DHCP 클라이언트"
+msgid "DHCP lease"
+msgstr "DHCP 임대"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Discovered devices"
+msgstr "발견된 기기"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Download"
@@ -206,16 +202,16 @@ msgid "Expand sidebar"
 msgstr "사이드바 펼치기"
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Fixed IP"
-msgstr "고정 IP"
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
 msgstr "여유"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Game console"
 msgstr "게임기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Gateway"
+msgstr "게이트웨이"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "GitHub (opens in a new tab)"
@@ -270,6 +266,10 @@ msgid "IPK updates are downloaded over HTTPS and checked against the release SHA
 msgstr "IPK 업데이트는 HTTPS로 다운로드하며 릴리스의 SHA-256과 파일 크기로 확인합니다."
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Known to this router"
+msgstr "이 라우터가 알고 있는 기기"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "LAN IP"
 msgstr "LAN IP"
 
@@ -314,6 +314,10 @@ msgid "Manage"
 msgstr "관리"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "May include offline devices."
+msgstr "오프라인 기기가 포함될 수 있습니다."
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Memory"
 msgstr "메모리"
 
@@ -328,6 +332,10 @@ msgstr "미러 접두사"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
 msgstr "설정이 더 필요하신가요? 전환:"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Neighbor entry"
+msgstr "이웃 항목"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
@@ -433,10 +441,6 @@ msgstr "무작위 MAC 주소"
 msgid "Reboot"
 msgstr "재부팅"
 
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Recently active"
-msgstr "최근 활동"
-
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Release metadata or package version is invalid. Nothing was installed."
 msgstr "릴리스 정보 또는 패키지 버전이 올바르지 않습니다. 아무것도 설치하지 않았습니다."
@@ -516,10 +520,6 @@ msgstr "소프트웨어"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
 msgstr "스피커"
-
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Static"
-msgstr "고정"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Static address"

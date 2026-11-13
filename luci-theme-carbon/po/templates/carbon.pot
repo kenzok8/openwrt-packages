@@ -141,10 +141,6 @@ msgid "Connected"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Connected Devices"
-msgstr ""
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Connected over Wi-Fi"
 msgstr ""
 
@@ -169,15 +165,15 @@ msgid "Dark"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Devices"
-msgstr ""
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "DHCP clients"
+msgid "DHCP lease"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Discovered devices"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
@@ -205,15 +201,15 @@ msgid "Expand sidebar"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
-msgid "Fixed IP"
-msgstr ""
-
-#: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Game console"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Gateway"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
@@ -269,6 +265,10 @@ msgid "IPK updates are downloaded over HTTPS and checked against the release SHA
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Known to this router"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "LAN IP"
 msgstr ""
 
@@ -313,6 +313,10 @@ msgid "Manage"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "May include offline devices."
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Memory"
 msgstr ""
 
@@ -326,6 +330,10 @@ msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Neighbor entry"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
@@ -432,10 +440,6 @@ msgstr ""
 msgid "Reboot"
 msgstr ""
 
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Recently active"
-msgstr ""
-
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Release metadata or package version is invalid. Nothing was installed."
 msgstr ""
@@ -514,10 +518,6 @@ msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
-msgstr ""
-
-#: htdocs/luci-static/carbon/carbon.js
-msgid "Static"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
