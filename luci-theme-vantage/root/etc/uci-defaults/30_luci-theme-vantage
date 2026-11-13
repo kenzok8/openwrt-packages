@@ -1,0 +1,17 @@
+#!/bin/sh
+# Register the Vantage theme with LuCI (System -> Language and Style).
+# Select it only on a fresh install and only when the entry is new, so an
+# upgrade or a reinstall never overrides the theme the administrator chose.
+
+new=0
+if [ -z "$(uci -q get luci.themes.Vantage)" ]; then
+	new=1
+fi
+uci -q set luci.themes.Vantage=/luci-static/vantage || exit 1
+
+if [ "$PKG_UPGRADE" != 1 ] && [ "$new" = 1 ]; then
+	uci -q set luci.main.mediaurlbase=/luci-static/vantage
+fi
+
+uci -q commit luci
+exit 0

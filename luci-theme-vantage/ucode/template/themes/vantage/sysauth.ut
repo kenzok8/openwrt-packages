@@ -1,0 +1,125 @@
+{#
+ Vantage theme - login page.
+ Rendered with { duser, fuser } for visitors who are not logged in. Of the
+ device it shows the hostname only, as the heading (LuCI's Bootstrap shows
+ it too): no model or firmware version.
+ fuser is attacker-controlled (formvalue also reads the query string): it is
+ only tested, never echoed; the error is generic. The form posts back to the
+ requested URL (no action attribute). The inline script is data-free: the
+ HTTPS probe reads its port list from an entity-encoded data attribute. The
+ Appearance saved for every browser (/etc/config/vantage_theme) comes as
+ data attributes of values the theme knows only.
+ LuCI's authentication plugins (25.12 has none; luci-plugin-2fa after it)
+ add auth_fields, auth_message and auth_plugin (set once the password was
+ right), encoded like the rest, and auth_html, printed as LuCI's
+ Bootstrap prints it (the installed plugin's own HTML), and auth_assets,
+ as plain script tags (LuCI keeps them to /luci-static/plugins/<uuid>/;
+ this page loads no luci.js, so a plugin script that needs L or ui would
+ not run here; luci-plugin-2fa has none).
+-#}
+{%
+	let tls = uci.get('uhttpd', 'main', 'listen_https') ?? [];
+	if (type(tls) == 'string')
+		tls = split(tls, /\s+/);
+	const tls_ports = uniq(filter(map(tls, e => +(match(e, /\d+$/)?.[0] ?? 0)), p => (p > 0 && p <= 65535)));
+	const look = (opt, ok) => { const v = uci.get('vantage_theme', 'appearance', opt); return (type(v) == 'string' && index(ok, v) >= 0) ? v : ''; };
+	const look_theme = look('theme', [ 'auto', 'light', 'dark' ]);
+	const look_login = look('login', [ 'grid', 'stars', 'none' ]);
+	const look_power = look('power', [ 'normal', 'low' ]);
+	const host = (() => { const h = uci.get_first('system', 'system', 'hostname'); return (type(h) == 'string' && length(h)) ? substr(h, 0, 63) : null; })();
+	// A pending challenge is guidance until the user submits a response.
+	const auth_failed = auth_plugin && length(filter(auth_fields ?? [], field => length(http.formvalue(field.name) ?? '')));
+-%}
+<!DOCTYPE html>
+<html lang="{{ entityencode(dispatcher.lang ?? 'en', true) }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-power="{{ look_power }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="robots" content="noindex">
+<title>{{ entityencode(_('Log in'), true) }} · LuCI</title>
+<script>
+(function (r) {
+	/* as header.ut: a pick of this browser's own, the router's, this browser's from before, auto */
+	var v = [ null, r.getAttribute('data-vt-look-theme'), null ], ok = [ 'auto', 'light', 'dark' ], p = 'auto', i;
+	try { v[0] = localStorage.getItem('vantage.theme.own'); v[2] = localStorage.getItem('vantage.theme'); } catch (e) {}
+	for (i = 2; i >= 0; i--) if (ok.indexOf(v[i]) >= 0) p = v[i];
+	var dark = (p === 'dark') || (p !== 'light' && !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches));
+	r.setAttribute('data-darkmode', dark ? 'true' : 'false');
+	r.setAttribute('data-theme', p);
+})(document.documentElement);
+</script>
+<link rel="stylesheet" href="{{ media }}/vantage.css">
+<link rel="icon" href="{{ media }}/logo.svg" type="image/svg+xml">
+</head>
+<body class="vt-login-page" data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
+<main class="vt-login">
+	<div class="vt-login-card">
+		<div class="vt-login-head">
+			<svg class="vt-login-mark" viewBox="0 0 32 32" width="44" height="44" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="7" class="vt-brand-tile"/><path d="M9 10.5 16 22" class="vt-brand-l"/><path d="M16 22 23 10.5" class="vt-brand-r"/><circle cx="23" cy="10.5" r="1.9" class="vt-brand-dot"/></svg>
+			<h1 class="vt-login-title">{{ entityencode(host ?? _('Authorization Required'), true) }}</h1>
+		</div>
+
+{% if (fuser && !auth_plugin): %}
+		<div class="vt-login-error" role="alert">{{ entityencode(_('Invalid username and/or password! Please try again.'), true) }}</div>
+{% endif %}
+
+		<form method="post" class="vt-login-form" data-https-ports="{{ entityencode(sprintf('%J', tls_ports), true) }}" data-https-probe="{{ entityencode(resource + '/icons/loading.svg', true) }}">
+			<label class="vt-field" for="luci_username">
+				<span class="vt-field-label">{{ entityencode(_('Username'), true) }}</span>
+				<input class="cbi-input-text" id="luci_username" type="text" name="luci_username" autocomplete="username" autocapitalize="off" spellcheck="false" required value="{{ entityencode(duser ?? '', true) }}">
+			</label>
+			<label class="vt-field" for="luci_password">
+				<span class="vt-field-label">{{ entityencode(_('Password'), true) }}</span>
+				<input class="cbi-input-password" id="luci_password" type="password" name="luci_password" autocomplete="current-password">
+			</label>
+{% if (auth_fields): %}
+{% for (let field in auth_fields): %}
+			<label class="vt-field" for="{{ entityencode(field.name, true) }}">
+				<span class="vt-field-label">{{ entityencode(_(field.label ?? field.name), true) }}</span>
+				<input class="cbi-input-text" id="{{ entityencode(field.name, true) }}" type="{{ entityencode(field.type ?? 'text', true) }}" name="{{ entityencode(field.name, true) }}"
+					{% if (field.placeholder): %}placeholder="{{ entityencode(field.placeholder, true) }}"{% endif %}
+					{% if (field.inputmode): %}inputmode="{{ entityencode(field.inputmode, true) }}"{% endif %}
+					{% if (field.pattern): %}pattern="{{ entityencode(field.pattern, true) }}"{% endif %}
+					{% if (field.maxlength): %}maxlength="{{ entityencode('' + field.maxlength, true) }}"{% endif %}
+					{% if (field.autocomplete): %}autocomplete="{{ entityencode(field.autocomplete, true) }}"{% endif %}
+					{% if (field.required): %}required{% endif %}>
+			</label>
+{% endfor %}
+{% endif %}
+{% if (auth_html): %}
+			<div class="vt-login-plugin">{{ auth_html }}</div>
+{% endif %}
+{% if (auth_message): %}
+			<div class="{{ auth_failed ? 'vt-login-error' : 'vt-login-info' }}" role="{{ auth_failed ? 'alert' : 'status' }}">{{ entityencode(auth_message, true) }}</div>
+{% endif %}
+			<button type="submit" class="btn cbi-button cbi-button-apply vt-login-submit">{{ entityencode(_('Log in'), true) }}</button>
+		</form>
+	</div>
+</main>
+<script>
+(function (form) {
+	var input = form && form.querySelector('input[name="luci_password"]');
+	if (input) input.focus();
+	if (!form || location.protocol === 'https:') return;
+	var ports = [];
+	try { ports = JSON.parse(form.getAttribute('data-https-ports') || '[]'); } catch (e) {}
+	var probePath = form.getAttribute('data-https-probe') || '';
+	if (!Array.isArray(ports) || probePath.charAt(0) !== '/') return;
+	ports.forEach(function (port) {
+		if (typeof port !== 'number' || port < 1 || port > 65535 || port % 1) return;
+		var probe = new Image(), base = 'https://' + location.hostname + ':' + port;
+		probe.onload = function () { location = base + location.pathname; };
+		probe.src = base + probePath + '?' + Math.random();
+		setTimeout(function () { probe.src = ''; }, 5000);
+	});
+})(document.querySelector('form.vt-login-form'));
+</script>
+<script src="{{ media }}/login.js"></script>
+{% for (let asset in auth_assets ?? []): %}
+{% if (asset?.type == 'script'): %}
+<script src="{{ entityencode(asset.src, true) }}"></script>
+{% endif %}
+{% endfor %}
+</body>
+</html>

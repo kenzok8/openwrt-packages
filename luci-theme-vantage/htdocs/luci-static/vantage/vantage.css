@@ -1,0 +1,3606 @@
+/*
+ * Vantage - a LuCI theme
+ * A precise, dark-first technical console for LuCI 25.12.
+ *
+ *  1. Tokens            5. Content: map, section, option rows
+ *  2. Base              6. Widgets: inputs, buttons, dropdown, dynlist
+ *  3. Shell             7. Tables, tabs, badges, feedback, modal
+ *  4. Palette           8. Login, responsive, motion
+ */
+
+/* ------------------------------------------------------------ 1. tokens */
+
+:root {
+	color-scheme: light;
+
+	--font: system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, sans-serif;
+	--mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
+
+	--fs-micro: 10.5px;
+	--fs-sm: 12px;
+	--fs-base: 13px;
+	--fs-md: 14px;
+	--fs-lg: 16px;
+	--fs-xl: 20px;
+	--fs-2xl: 24px;
+
+	/* spacing: steps of 4px, with 2px and 6px for tight insides */
+	--sp-0-5: 2px;
+	--sp-1: 4px;
+	--sp-1-5: 6px;
+	--sp-2: 8px;
+	--sp-3: 12px;
+	--sp-4: 16px;
+	--sp-5: 20px;
+	--sp-6: 24px;
+	--sp-8: 32px;
+
+	/* font weights: four steps only (static fonts draw 620-680 as bold) */
+	--fw-regular: 400;
+	--fw-medium: 500;
+	--fw-semibold: 600;
+	--fw-bold: 700;
+
+	/* radii: bars, small controls, controls, cards, large icon tiles
+	   (pills are 999px, dots 50%) */
+	--r-xs: 2px;
+	--r-sm: 4px;
+	--r: 6px;
+	--r-lg: 8px;
+	--r-xl: 12px;
+
+	--rail-w: 56px;
+	--rail-w-pinned: 224px;
+	--top-h: 52px;
+	--ctl-h: 36px;              /* every control: inputs, selects, buttons, tabs, chips */
+	--label-w: 180px;           /* form label column */
+	--field-max: 360px;         /* widest single-line field */
+	--content-max: 1320px;      /* content column, on windows up to ~1920px */
+	--content-wide: 2400px;     /* wider windows: the column grows to this */
+	/* the column's width with its padding: grows with the window past
+	   1920px, ~200px clear each side, so 2K and 4K screens at 100% fill */
+	--main-max: clamp(calc(var(--content-max) + 2 * var(--sp-6)), 100% - 400px, calc(var(--content-wide) + 2 * var(--sp-6)));
+
+	/* light: cool paper grey, olive accent text */
+	--bg: #e9ecef;
+	--bg-rail: #f4f5f7;
+	--s1: #f8f9fa;
+	--s2: #ffffff;
+	--s3: #eef0f3;
+	--s4: #e1e4e8;
+	--line: #d6dade;
+	--line-2: #c1c7ce;
+	--text: #14171a;
+	--text-2: #4a515a;
+	--text-3: #5f666f;
+	--accent: #c8f031;
+	--accent-hover: #b9e421;
+	--accent-ink: #151b00;
+	--accent-text: #4b6600;
+	--accent-soft: rgba(122, 163, 0, .13);
+	--accent-line: #8db20f;
+	--focus: #4b6600;
+	--ok: #0b7f6c;
+	--ok-soft: rgba(11, 127, 108, .11);
+	--warn: #9a5b00;
+	--warn-soft: rgba(214, 138, 0, .15);
+	--err: #c42b2b;
+	--err-soft: rgba(196, 43, 43, .1);
+	--err-ink: #ffffff;         /* text on an --err / --info fill, >= 4.5:1 */
+	--warn-ink: #ffffff;        /* text on a --warn fill (counts, warning tooltips); #1a1200 was 3.4:1 */
+	--info: #1c64c4;
+	--info-ink: #ffffff;
+	--ok-text: #0a7262;         /* --ok as text on control fills (s3, s4) */
+	/* red, blue and amber as text on their own soft fill, which a hovered
+	   row darkens: >= 4.5:1 there too (--err itself was 4.4:1) */
+	--err-text: #b02525;
+	--info-text: #1a5cb5;
+	--warn-text: #875000;
+	--info-soft: rgba(28, 100, 196, .1);
+	--scrim: rgba(20, 23, 26, .38);
+	--shadow-pop: 0 12px 32px rgba(20, 23, 26, .16), 0 2px 6px rgba(20, 23, 26, .08);
+	--zone-mix: .22;
+	--seg-bg: var(--s3);        /* segmented control: track, selected segment and its ring */
+	--seg-on: var(--s2);
+	--seg-on-ring: inset 0 0 0 1px var(--accent-line);   /* inset: drawn at the segment's padding edge */
+}
+
+html[data-darkmode="true"] {
+	color-scheme: dark;
+
+	/* dark: charcoal neutrals, cool grey steps, lime signal */
+	--bg: #0d0e10;
+	--bg-rail: #111214;
+	--s1: #15171a;
+	--s2: #1b1d21;
+	--s3: #22252a;
+	--s4: #2b2f35;
+	--line: #262a2f;
+	--line-2: #353a41;
+	--text: #e8eaed;
+	--text-2: #a9afb7;
+	--text-3: #8a9099;
+	--accent: #c8f031;
+	--accent-hover: #d6fb4c;
+	--accent-ink: #141a00;
+	--accent-text: #c8f031;
+	--accent-soft: rgba(200, 240, 49, .1);
+	--accent-line: rgba(200, 240, 49, .5);
+	--focus: #c8f031;
+	--ok: #2dd4bf;
+	--ok-soft: rgba(45, 212, 191, .12);
+	--warn: #f5b84a;
+	--warn-soft: rgba(245, 184, 74, .13);
+	--err: #ff6b6b;
+	--err-soft: rgba(255, 107, 107, .12);
+	--err-ink: #1a0505;         /* white on the light dark-mode red was 2.8:1 */
+	--warn-ink: #1a1200;
+	--info: #6cb4ff;
+	--info-ink: #0d0e10;
+	--ok-text: var(--ok);
+	--err-text: var(--err);
+	--info-text: var(--info);
+	--warn-text: var(--warn);
+	--info-soft: rgba(108, 180, 255, .12);
+	--scrim: rgba(0, 0, 0, .58);
+	--shadow-pop: 0 16px 40px rgba(0, 0, 0, .55), 0 0 0 1px rgba(255, 255, 255, .02);
+	--zone-mix: .2;
+	--seg-bg: var(--bg);
+	--seg-on: var(--s3);
+}
+
+/* touch: controls are sized by the pointer, not the screen width */
+@media (pointer: coarse) {
+	:root { --ctl-h: 44px; }
+}
+
+/* Shared Vantage tokens (--v-*): the stable contract other Vantage views
+   (the dashboard app) style against, mapped onto this theme's palette.
+   --v-accent is always legible as text/strokes on --v-surface*; it is a
+   fill only together with --v-accent-ink. */
+:root {
+	--v-bg: var(--bg);
+	--v-surface: var(--s1);
+	--v-surface-2: var(--s2);
+	--v-surface-3: var(--s3);
+	--v-line: var(--line);
+	--v-line-2: var(--line-2);
+	--v-text: var(--text);
+	--v-text-2: var(--text-2);
+	--v-text-3: var(--text-3);
+	--v-accent: var(--accent-text);      /* olive: lime is unreadable on light */
+	--v-accent-ink: #ffffff;
+	--v-accent-soft: var(--accent-soft);
+	/* the accent by role, as the theme's own controls use it: text and
+	   icons; borders, rings and selection bars; the lime fill of primary
+	   buttons and pressed picks with its ink */
+	--v-accent-text: var(--accent-text);
+	--v-accent-line: var(--accent-line);
+	--v-accent-fill: var(--accent);
+	--v-accent-fill-hover: var(--accent-hover);
+	--v-accent-fill-ink: var(--accent-ink);
+	--v-ok: var(--ok);
+	--v-ok-soft: var(--ok-soft);
+	--v-warn: var(--warn);
+	--v-warn-soft: var(--warn-soft);
+	--v-err: var(--err);
+	--v-err-soft: var(--err-soft);
+	--v-info: var(--info);
+	--v-info-soft: var(--info-soft);
+	/* status colours as text on their soft fill, >= 4.5:1 on a hovered row too */
+	--v-ok-text: var(--ok-text);
+	--v-warn-text: var(--warn-text);
+	--v-err-text: var(--err-text);
+	--v-info-text: var(--info-text);
+	--v-focus: var(--focus);             /* a focused field: border plus a 1px ring of it */
+	--v-scrim: var(--scrim);             /* under dialogs, drawers and sheets */
+	--v-seg-bg: var(--seg-bg);           /* segmented control: track, selected segment, its ring */
+	--v-seg-on: var(--seg-on);
+	--v-seg-on-ring: var(--seg-on-ring);
+	--v-hover: color-mix(in srgb, var(--s3) 55%, transparent);   /* a hovered row on a card */
+	--v-surface-4: var(--s4);            /* a hovered item in a menu (menus are --v-surface-2) */
+	--v-meter: var(--info);              /* memory and storage bars: blue (lime is download) */
+	--v-card-px: var(--card-px);         /* card insides: 20 / 16px, 14px on phones */
+	--v-card-py: var(--card-py);
+	--v-sp-0-5: var(--sp-0-5);           /* spacing: 2 4 6 8 12 16 20 24 32 px */
+	--v-sp-1: var(--sp-1);
+	--v-sp-1-5: var(--sp-1-5);
+	--v-sp-2: var(--sp-2);
+	--v-sp-3: var(--sp-3);
+	--v-sp-4: var(--sp-4);
+	--v-sp-5: var(--sp-5);
+	--v-sp-6: var(--sp-6);
+	--v-sp-8: var(--sp-8);
+	--v-fw-regular: var(--fw-regular);   /* weights: 400 500 600 700 */
+	--v-fw-medium: var(--fw-medium);
+	--v-fw-semibold: var(--fw-semibold);
+	--v-fw-bold: var(--fw-bold);
+	--v-font: var(--font);
+	--v-mono: var(--mono);
+	--v-fs-micro: var(--fs-micro);       /* the type scale: 10.5 12 13 14 16 20 24 px */
+	--v-fs-sm: var(--fs-sm);
+	--v-fs-base: var(--fs-base);
+	--v-fs-md: var(--fs-md);
+	--v-fs-lg: var(--fs-lg);
+	--v-fs-xl: var(--fs-xl);
+	--v-fs-2xl: var(--fs-2xl);
+	--v-r-xs: var(--r-xs);               /* radii: 2 4 6 8 12 px */
+	--v-r-sm: var(--r-sm);
+	--v-r: var(--r);
+	--v-r-lg: var(--r-lg);
+	--v-r-xl: var(--r-xl);
+	--v-ctl-h: var(--ctl-h);             /* every control: 36px, 44px on touch */
+	--v-shadow: 0 1px 2px rgba(20, 23, 26, .06), 0 1px 0 rgba(20, 23, 26, .03);
+	--v-shadow-raise: 0 6px 16px rgba(20, 23, 26, .08);   /* a card lifted under the pointer */
+	--v-shadow-pop: var(--shadow-pop);   /* lists and menus that open over the page */
+	/* the dashboard's drawer and its scrim: over the rail and the top bar
+	   (300), under modals (1000) and menus (1100) */
+	--v-z-drawer: 890;
+	/* where sticky content may start: below the top bar (page tabs scroll) */
+	--v-stick-top: var(--stick-top);
+
+	/* charts (stock realtime graphs, channel analysis, the dashboard app).
+	   Categorical, fixed order, never cycled by rank: lime (the accent, series 1
+	   only), blue, orange, cyan, violet, magenta. Validated as a set against the
+	   card surface in both modes (adjacent-pair CVD dE >= 9.8, normal-vision
+	   dE >= 18, >= 3:1 contrast); only the dark lime sits above the lightness
+	   band, on purpose, as the brand signal. */
+	--v-chart-1: #6f9c00;
+	--v-chart-2: #2a78d6;
+	--v-chart-3: #e0632f;
+	--v-chart-4: #0f9fb0;
+	--v-chart-5: #8b5cf6;
+	--v-chart-6: #d55181;
+	--v-chart-grid: color-mix(in srgb, var(--text) 8%, transparent);
+	--v-chart-axis: var(--text-3);
+	--v-chart-fill-opacity: .22;
+}
+html[data-darkmode="true"] {
+	--v-accent: var(--accent);           /* lime signal */
+	--v-accent-ink: var(--accent-ink);
+	--v-shadow: 0 1px 0 rgba(0, 0, 0, .35);
+	--v-shadow-raise: 0 6px 16px rgba(0, 0, 0, .4);
+
+	--v-chart-1: #c8f031;
+	--v-chart-2: #3f8fe8;
+	--v-chart-3: #de6d33;
+	--v-chart-4: #1aa6b8;
+	--v-chart-5: #9a7cf2;
+	--v-chart-6: #d9588c;
+	--v-chart-grid: color-mix(in srgb, var(--text) 7%, transparent);
+	--v-chart-axis: var(--text-3);
+	--v-chart-fill-opacity: .2;
+}
+
+/* -------------------------------------------------------------- 2. base */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+	background: var(--bg);
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	background: var(--bg);
+	color: var(--text);
+	font: 400 var(--fs-base)/1.5 var(--font);
+	font-feature-settings: "cv11", "ss01";
+	-webkit-font-smoothing: antialiased;
+}
+
+[hidden], .hidden { display: none !important; }
+
+a { color: var(--accent-text); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+:focus { outline: none; }
+:focus-visible {
+	outline: 2px solid var(--focus);
+	outline-offset: 2px;
+	border-radius: var(--r-sm);
+}
+
+h1, h2, h3, h4, h5 { margin: 0 0 var(--sp-3); line-height: 1.25; font-weight: 600; color: var(--text); letter-spacing: -.005em; }
+h2 { font-size: var(--fs-xl); }
+h3 { font-size: var(--fs-md); }
+h4 { font-size: var(--fs-md); }
+h5 { font-size: var(--fs-base); }
+p { margin: 0 0 var(--sp-3); }
+small { font-size: var(--fs-sm); }
+strong, b { font-weight: 600; }
+hr { border: 0; border-top: 1px solid var(--line); margin: var(--sp-4) 0; }
+img { max-width: 100%; vertical-align: middle; }
+
+code, kbd, pre, samp, tt, var, .vt-num {
+	font-family: var(--mono);
+	font-variant-numeric: tabular-nums slashed-zero;
+}
+code { font-size: .92em; padding: 1px 5px; border-radius: var(--r-sm); background: var(--s3); border: 1px solid var(--line); }
+pre {
+	margin: 0 0 var(--sp-3);
+	padding: var(--sp-3);
+	font-size: var(--fs-sm);
+	line-height: 1.55;
+	background: var(--s2);
+	border: 1px solid var(--line);
+	border-radius: var(--r);
+	overflow: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+pre code { border: 0; padding: 0; background: none; }
+.vt-num { font-size: .96em; letter-spacing: -.01em; }
+
+ul, ol { padding-left: var(--sp-5); }
+
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+.vt-skip {
+	position: absolute; left: var(--sp-2); top: -40px; z-index: 2000;
+	padding: var(--sp-2) var(--sp-3);
+	background: var(--accent); color: var(--accent-ink);
+	border-radius: var(--r); font-weight: 600;
+}
+.vt-skip:focus { top: var(--sp-2); }
+
+/* scrollbars: thin hairline style */
+* { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+
+/* ------------------------------------------------------------- 3. shell */
+
+.vt-shell { position: relative; min-height: 100vh; }
+
+/* the rail's column, painted for the full document height: the fixed rail
+   covers the viewport (and scrolls its own list), this keeps the column
+   continuous wherever the page is taller than the viewport - full-page
+   captures, overscroll, print preview */
+body.vt-auth .vt-shell::before {
+	content: "";
+	position: absolute; z-index: 0;
+	top: 0; bottom: 0; left: 0;
+	width: var(--rail-w);
+	background: var(--bg-rail);
+	border-right: 1px solid var(--line);
+	pointer-events: none;
+}
+html[data-rail="pinned"] body.vt-auth .vt-shell::before { width: var(--rail-w-pinned); }
+
+/* brand mark */
+.vt-brand-tile { fill: var(--s2); stroke: var(--line-2); stroke-width: 1; }
+.vt-brand-l, .vt-brand-r { fill: none; stroke-width: 2.6; stroke-linecap: round; }
+.vt-brand-l { stroke: var(--text); }
+.vt-brand-r { stroke: var(--accent-text); }
+.vt-brand-dot { fill: var(--accent-text); }
+html[data-darkmode="true"] .vt-brand-tile { fill: #16181b; }
+
+/* rail */
+.vt-rail {
+	position: fixed; z-index: 300;
+	top: 0; bottom: 0; left: 0;
+	width: var(--rail-w);
+	display: flex; flex-direction: column; align-items: stretch;
+	background: var(--bg-rail);
+	border-right: 1px solid var(--line);
+}
+
+.vt-brand {
+	display: flex; align-items: center; gap: var(--sp-3);
+	height: var(--top-h);
+	padding: 0 12px;
+	color: var(--text);
+	border-bottom: 1px solid var(--line);
+	flex: none;
+	text-decoration: none !important;
+}
+.vt-brand svg { flex: none; }
+/* Appearance "Next to the logo" (menu-vantage.js applyBrand): beside the
+   logo while the rail is pinned open, else first in the top bar, as
+   "name / page"; not on phones, where the logo isn't shown either */
+.vt-brand-name { display: none; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+html[data-rail="pinned"] .vt-brand-name:not([hidden]) { display: block; }
+.vt-top-name { flex: none; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); font-weight: 600; }
+.vt-top-name[hidden], html[data-rail="pinned"] .vt-top-name { display: none; }
+.vt-top-name + .vt-crumbs::before { content: "/"; flex: none; margin-inline-end: 4px; color: var(--text-3); font-family: var(--mono); font-size: var(--fs-sm); }
+.vt-top-name[hidden] + .vt-crumbs::before, html[data-rail="pinned"] .vt-top-name + .vt-crumbs::before { content: none; }
+
+.vt-rail-list {
+	list-style: none; margin: 0; padding: var(--sp-2) 0;
+	flex: 1 1 auto;
+	display: flex; flex-direction: column; gap: 2px;
+	overflow-y: auto; overflow-x: hidden;
+}
+
+.vt-rail-item { position: relative; padding: 0 8px; }
+
+.vt-rail-link {
+	position: relative;
+	display: flex; align-items: center; gap: var(--sp-3);
+	width: 100%; height: 40px;
+	padding: 0 10px;
+	border: 0; border-radius: var(--r-lg);
+	background: none;
+	color: var(--text-2);
+	font: inherit; font-weight: 500;
+	text-align: left;
+	cursor: pointer;
+	text-decoration: none !important;
+	white-space: nowrap;
+}
+.vt-rail-link svg { flex: none; width: 20px; height: 20px; }
+.vt-rail-label { overflow: hidden; text-overflow: ellipsis; display: none; flex: 1 1 auto; }
+.vt-rail-caret { display: none; width: 14px; height: 14px; color: var(--text-3); transition: transform .15s; }
+
+.vt-rail-link:hover, .vt-rail-item.is-open > .vt-rail-link { background: var(--s3); color: var(--text); }
+.vt-rail-item.is-active > .vt-rail-link { color: var(--accent-text); background: var(--accent-soft); }
+.vt-rail-item.is-active > .vt-rail-link::before {
+	content: ""; position: absolute; left: -8px; top: 9px; bottom: 9px;
+	width: 3px; border-radius: 0 3px 3px 0;
+	background: var(--accent-text);
+}
+
+.vt-rail-sub { display: none; list-style: none; margin: 2px 0 6px; padding: 0 0 0 20px; }
+
+.vt-rail-foot { flex: none; padding: var(--sp-2); border-top: 1px solid var(--line); }
+.vt-rail-pin {
+	display: flex; align-items: center; justify-content: center;
+	width: 40px; height: 36px;
+	border: 0; border-radius: var(--r-lg);
+	background: none; color: var(--text-3);
+	cursor: pointer;
+}
+.vt-rail-pin:hover { background: var(--s3); color: var(--text); }
+.vt-rail-pin svg, .vt-icon-btn svg, .vt-search svg, .vt-rail-link svg, .vt-flyout svg, .vt-pal svg, .vt-crumb-switch svg {
+	fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
+.vt-rail-pin svg { transition: transform .15s; }
+
+/* pinned rail: labels + inline accordion instead of flyouts */
+html[data-rail="pinned"] .vt-rail { width: var(--rail-w-pinned); }
+html[data-rail="pinned"] .vt-rail-label { display: block; }
+html[data-rail="pinned"] .vt-rail-caret { display: block; }
+html[data-rail="pinned"] .vt-rail-item.is-expanded > .vt-rail-link .vt-rail-caret { transform: rotate(90deg); }
+html[data-rail="pinned"] .vt-rail-item.is-expanded > .vt-rail-sub { display: block; }
+html[data-rail="pinned"] .vt-rail-pin { width: 100%; justify-content: flex-end; padding-right: 12px; }
+html[data-rail="pinned"] .vt-rail-pin svg { transform: scaleX(-1); }
+html[data-rail="pinned"] .vt-frame { margin-left: var(--rail-w-pinned); }
+
+.vt-rail-sub a {
+	display: block;
+	padding: 5px 10px;
+	border-left: 1px solid var(--line-2);
+	color: var(--text-2);
+	font-size: var(--fs-sm);
+	white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+	text-decoration: none !important;
+}
+.vt-rail-sub a:hover { color: var(--text); border-left-color: var(--text-3); }
+.vt-rail-sub a[aria-current] { color: var(--accent-text); border-left: 2px solid var(--accent-text); padding-left: 9px; font-weight: 600; }
+
+/* flyout */
+.vt-flyout {
+	position: fixed; z-index: 290;
+	top: 0; bottom: 0; left: var(--rail-w);
+	width: 272px;
+	display: flex; flex-direction: column;
+	background: var(--s1);
+	border-right: 1px solid var(--line-2);
+	box-shadow: var(--shadow-pop);
+	animation: vt-fly-in .14s ease-out;
+}
+@keyframes vt-fly-in { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+
+.vt-fly-head {
+	display: flex; align-items: center; gap: var(--sp-3);
+	height: var(--top-h);
+	padding: 0 var(--sp-4);
+	border-bottom: 1px solid var(--line);
+	flex: none;
+}
+.vt-fly-title { font-size: var(--fs-md); font-weight: 600; }
+
+.vt-fly-list { list-style: none; margin: 0; padding: var(--sp-2); overflow-y: auto; flex: 1 1 auto; }
+.vt-fly-list > li + li { margin-top: 1px; }
+.vt-fly-link {
+	display: flex; align-items: center; gap: var(--sp-2);
+	min-height: var(--ctl-h); padding: 6px 10px;
+	border-radius: var(--r);
+	color: var(--text);
+	text-decoration: none !important;
+}
+.vt-fly-link:hover { background: var(--s3); }
+.vt-fly-link[aria-current] { background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+.vt-fly-sub { list-style: none; margin: 0 0 var(--sp-1) 18px; padding: 0; border-left: 1px solid var(--line-2); }
+.vt-fly-sub a {
+	display: block; padding: 4px 10px;
+	color: var(--text-2); font-size: var(--fs-sm);
+	border-radius: 0 var(--r-sm) var(--r-sm) 0;
+	text-decoration: none !important;
+}
+.vt-fly-sub a:hover { color: var(--text); background: var(--s3); }
+.vt-fly-sub a[aria-current] { color: var(--accent-text); font-weight: 600; box-shadow: inset 2px 0 0 var(--accent-text); }
+
+.vt-scrim { position: fixed; inset: 0; z-index: 280; background: var(--scrim); }
+
+/* frame + top bar */
+.vt-frame {
+	margin-left: var(--rail-w);
+	min-height: 100vh;
+	display: flex; flex-direction: column;
+}
+.vt-anon .vt-frame { margin-left: 0; }
+
+.vt-topbar {
+	position: sticky; top: 0; z-index: 200;
+	display: flex; align-items: center; gap: var(--sp-4);
+	height: var(--top-h);
+	padding: 0 var(--sp-5);
+	background: color-mix(in srgb, var(--bg) 88%, transparent);
+	backdrop-filter: saturate(1.2) blur(10px);
+	-webkit-backdrop-filter: saturate(1.2) blur(10px);
+	border-bottom: 1px solid var(--line);
+}
+
+.vt-crumbs {
+	display: flex; align-items: center; gap: 6px;
+	min-width: 0; flex: 1 .001 auto;     /* gives way last: see .vt-top-actions */
+	align-self: stretch;                 /* the bar's height: room for focus rings */
+	margin-inline: -8px; padding-inline: 8px;   /* room for the switch's ring (it sits 6px out) */
+	font-size: var(--fs-base);
+	white-space: nowrap; overflow: hidden;
+}
+.vt-crumb { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; text-decoration: none !important; }
+/* a link crumb is a control high to click; the padding adds no height to the bar */
+a.vt-crumb { padding-block: calc((var(--ctl-h) - 1.5em) / 2); }
+a.vt-crumb:hover { color: var(--text); }
+.vt-crumb-current { color: var(--text); font-weight: 600; }
+.vt-crumb-sep { color: var(--text-3); flex: none; font-family: var(--mono); font-size: var(--fs-sm); }
+/* the current crumb of a page with page tabs: opens its sibling pages.
+   A control high; the ring sits on its edge, inside the crumbs' clip. */
+.vt-crumb-switch {
+	display: inline-flex; align-items: center; gap: 4px;
+	min-width: 0; min-height: var(--ctl-h); margin: 0 -6px; padding: 0 6px;
+	border: 0; border-radius: var(--r);
+	background: none;
+	font: inherit; font-weight: 600; color: var(--text);
+	cursor: pointer;
+}
+.vt-crumb-switch > span { overflow: hidden; text-overflow: ellipsis; }
+.vt-crumb-switch > svg { flex: none; width: 14px; height: 14px; color: var(--text-3); transition: transform .15s; }
+.vt-crumb-switch:hover, .vt-crumb-switch[aria-expanded="true"] { background: var(--s3); }
+.vt-crumb-switch:focus-visible { outline-offset: 0; }
+.vt-crumb-switch[aria-expanded="true"] > svg { transform: rotate(180deg); }
+@media (width > 720px) {
+	/* the flyout as a dropdown under the crumb (left: set from the crumb) */
+	.vt-flyout.is-switch {
+		top: calc(var(--top-h) - 4px); bottom: auto; left: var(--x, var(--rail-w));
+		width: auto; min-width: 240px; max-width: 320px;
+		max-height: calc(100vh - var(--top-h) - var(--sp-4));
+		border: 1px solid var(--line-2); border-radius: var(--r-lg);
+		animation: vt-drop-in .12s ease-out;
+	}
+}
+@keyframes vt-drop-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* when the bar is short of room, the host chip gives way first, then the
+   search field's label, and only then the crumbs */
+.vt-top-actions { display: flex; align-items: center; gap: var(--sp-2); flex: 0 1 auto; min-width: 0; }
+.vt-top-actions > :not(.vt-host, .vt-search) { flex: none; }
+
+.vt-search {
+	display: inline-flex; align-items: center; gap: var(--sp-2);
+	height: 32px; width: 248px;
+	padding: 0 6px 0 10px;
+	border: 1px solid var(--line-2); border-radius: var(--r);
+	background: var(--s2);
+	color: var(--text-3);
+	font: inherit; cursor: pointer;
+	text-align: left;
+}
+.vt-search:hover { border-color: var(--text-3); color: var(--text-2); }
+.vt-search-label { flex: 1 1 auto; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.vt-kbd, kbd {
+	display: inline-flex; align-items: center;
+	height: 20px; padding: 0 6px;
+	border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: var(--r-sm);
+	background: var(--s3);
+	color: var(--text-2);
+	font: 500 var(--fs-micro)/1 var(--mono);
+	letter-spacing: .02em;
+}
+
+.vt-icon-btn {
+	display: inline-flex; align-items: center; justify-content: center;
+	width: 32px; height: 32px;
+	border: 1px solid transparent; border-radius: var(--r);
+	background: none; color: var(--text-2);
+	cursor: pointer;
+	text-decoration: none !important;
+}
+.vt-icon-btn:hover { background: var(--s3); color: var(--text); border-color: var(--line); }
+.vt-icon-btn .vt-fill, .vt-pal .vt-fill, .vt-appearance .vt-fill { fill: currentColor; stroke: none; }
+.vt-icon-btn[aria-expanded="true"] { background: var(--s3); color: var(--text); border-color: var(--line); }
+
+/* Appearance (menu-vantage.js), under the gear button: each
+   setting a native radio group drawn as segments, like the page tabs */
+.vt-appearance {
+	position: fixed; z-index: 1100;
+	display: flex; flex-direction: column; gap: var(--sp-4);
+	width: max-content; max-width: calc(100vw - 16px); padding: var(--sp-4);
+	overflow-y: auto; overscroll-behavior: contain;
+	border: 1px solid var(--line-2); border-radius: var(--r-lg);
+	background: var(--s2); box-shadow: var(--shadow-pop);
+}
+.vt-appearance[hidden] { display: none; }
+.vt-appear-set { min-width: 0; margin: 0; padding: 0; border: 0; }
+/* where the picks are kept, when not for every browser */
+.vt-appear-note { max-width: 32ch; margin: 0; color: var(--text-3); font-size: var(--fs-sm); line-height: 1.4; }
+.vt-appear-note[hidden] { display: none; }
+.vt-appear-ver { margin: 0; color: var(--text-3); font-size: var(--fs-micro); }
+.vt-appear-num { font-family: var(--mono); }
+.vt-appear-check { margin: 0; padding: 0; border: 0; background: none; color: var(--accent-text); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.vt-appear-check[aria-disabled="true"] { color: var(--text-3); cursor: default; text-decoration: none; }
+.vt-appear-update { display: block; margin-top: 4px; color: var(--text-2); }
+.vt-appear-update[hidden] { display: none; }
+.vt-appear-set > legend { margin: 0 0 6px; padding: 0; color: var(--text-3); font-size: var(--fs-micro); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.vt-appear-track {
+	/* every option one column of the same width, the widest label's: the
+	   panel is as wide as the row that needs most */
+	display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+	background: var(--seg-bg); border-radius: var(--r-lg); box-shadow: inset 0 0 0 1px var(--line);
+}
+.vt-appear-opt {
+	position: relative;
+	display: flex; align-items: center; justify-content: center; gap: 6px;
+	min-height: var(--ctl-h); padding: 0 6px;
+	border: 3px solid transparent; background-clip: padding-box;
+	border-radius: calc(var(--r) + 3px);
+	color: var(--text-2); font-weight: 500; white-space: nowrap;
+	cursor: pointer;
+}
+/* each label as wide as it is bold, picked: a pick changes no width */
+.vt-appear-opt > span { display: inline-flex; flex-direction: column; align-items: center; }
+.vt-appear-opt > span::after { content: attr(data-text) / ""; height: 0; overflow: hidden; visibility: hidden; font-weight: 600; pointer-events: none; user-select: none; }
+.vt-appear-opt:hover { color: var(--text); }
+.vt-appear-opt > input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; pointer-events: none; }
+.vt-appear-opt:has(> input:checked) { background-color: var(--seg-on); color: var(--accent-text); font-weight: 600; box-shadow: var(--seg-on-ring); }
+.vt-appear-opt:has(> input:focus-visible) { outline: 2px solid var(--focus); outline-offset: -1px; }
+.vt-appear-opt svg { flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+.vt-host {
+	display: inline-flex; align-items: center; gap: 6px;
+	height: 28px; max-width: 300px;
+	flex: 0 1000 auto; min-width: 0; overflow: hidden;
+	padding: 0 10px;
+	border: 1px solid var(--line); border-radius: 999px;
+	background: var(--s1);
+	color: var(--text-2);
+	font-size: var(--fs-sm);
+	white-space: nowrap;
+	text-decoration: none !important;
+}
+/* a link to Status → Overview (header.ut), drawn like the icon buttons */
+.vt-host:hover { background: var(--s3); border-color: var(--line-2); }
+.vt-host b { color: var(--text); font-weight: 600; }
+.vt-host span { overflow: hidden; text-overflow: ellipsis; }
+.vt-host-sep { color: var(--text-3); }
+
+/* indicators rendered by ui.showIndicator */
+.vt-indicators { display: flex; align-items: center; gap: 6px; }
+#indicators > span[data-indicator] {
+	display: inline-flex; align-items: center; gap: 6px;
+	height: 28px; padding: 0 10px;
+	border: 1px solid var(--line-2); border-radius: 999px;
+	background: var(--s2);
+	color: var(--text-2);
+	font-size: var(--fs-sm); font-weight: 500;
+	white-space: nowrap;
+	user-select: none;
+}
+#indicators > span[data-clickable] { cursor: pointer; }
+#indicators > span[data-clickable]:hover { border-color: var(--text-3); color: var(--text); }
+/* auto-refresh on: a dot with a slow, soft ring (#100); fast while the
+   dashboard reports a problem: amber while it reconnects or warns, red for
+   an error (luci-app-vantage sets html[data-vt-live] and [data-vt-alert]);
+   paused: a still square. The ring scales and fades on the compositor,
+   behind the dot (z-index -1 in the pill's own stack), and is transparent
+   unless it runs, so reduced motion shows none. */
+#indicators > span[data-indicator="poll-status"][data-style="active"] { position: relative; isolation: isolate; }
+#indicators > span[data-indicator="poll-status"][data-style="active"]::before {
+	content: ""; width: 7px; height: 7px; border-radius: 50%;
+	background: var(--ok);
+}
+#indicators > span[data-indicator="poll-status"][data-style="active"]::after {
+	content: ""; position: absolute; z-index: -1; left: 10px; top: calc(50% - 3.5px);
+	width: 7px; height: 7px; border-radius: 50%;
+	background: color-mix(in oklab, var(--ok) 50%, transparent);
+	opacity: 0; pointer-events: none;
+	animation: vt-live-soft 5s ease-out infinite;
+	/* its layer stays while the animation stands paused between the
+	   theme's clock ticks (menu-vantage.js stepPulses) */
+	will-change: transform, opacity;
+}
+html[data-vt-live="err"] #indicators > span[data-indicator="poll-status"][data-style="active"]::after, html[data-vt-alert="warn"] #indicators > span[data-indicator="poll-status"][data-style="active"]::after {
+	background: color-mix(in oklab, var(--warn) 50%, transparent);
+	animation: vt-live 2s ease-out infinite;
+}
+html[data-vt-alert="err"] #indicators > span[data-indicator="poll-status"][data-style="active"]::after {
+	background: color-mix(in oklab, var(--err) 50%, transparent);
+	animation: vt-live 2s ease-out infinite;
+}
+@media (width > 900px) {
+	html[data-vt-live="err"] #indicators > span[data-indicator="poll-status"][data-style="active"]::before, html[data-vt-alert="warn"] #indicators > span[data-indicator="poll-status"][data-style="active"]::before { background: var(--warn); }
+	html[data-vt-alert="err"] #indicators > span[data-indicator="poll-status"][data-style="active"]::before { background: var(--err); }
+}
+/* another window has the focus, or Low-power router is on (menu-vantage.js): no pulse */
+:is(html[data-vt-blur], html[data-vt-power="low"]) #indicators > span[data-indicator="poll-status"][data-style="active"]::after { animation: none; }
+@keyframes vt-live-soft { 0% { transform: scale(1); opacity: .6; } 70%, 100% { transform: scale(2.2); opacity: 0; } }
+@keyframes vt-live { 0% { transform: scale(1); opacity: 1; } 70%, 100% { transform: scale(2.7); opacity: 0; } }
+#indicators > span[data-indicator="poll-status"][data-style="inactive"]::before {
+	content: ""; width: 7px; height: 7px; border-radius: 1px; background: var(--text-3);
+}
+/* "Unsaved Changes: N" -> label + prominent count (text node stays for LuCI) */
+#indicators > span[data-indicator][data-count] {
+	font-size: 0; gap: 8px; padding-right: 4px;
+	border-color: color-mix(in srgb, var(--warn) 55%, transparent);
+	background: var(--warn-soft);
+}
+#indicators > span[data-indicator][data-count]::before {
+	content: attr(data-label) / "";
+	font-size: var(--fs-sm); color: var(--text);
+}
+#indicators > span[data-indicator][data-count]::after {
+	content: attr(data-count) / "";
+	display: inline-flex; align-items: center; justify-content: center;
+	min-width: 20px; height: 20px; padding: 0 6px;
+	border-radius: 999px;
+	background: var(--warn); color: var(--warn-ink);
+	font: 700 var(--fs-micro)/1 var(--mono);
+}
+#indicators > span[data-indicator="media_error"] { color: var(--err); border-color: var(--err); background: var(--err-soft); }
+
+/* level-3 page tabs: on the content column, drawn as every other tab
+   level (.vt-pagetabs shares the .cbi-tabmenu rules below). They scroll with
+   the page; the current crumb in the top bar switches between them. */
+.vt-tabs {
+	width: 100%; max-width: var(--main-max);
+	margin: 0 auto; padding: var(--sp-6) var(--sp-6) 0;
+}
+.vt-tabs:not([hidden]) + .vt-main { padding-top: var(--sp-5); }
+
+/* content column */
+.vt-main {
+	flex: 1 1 auto;
+	width: 100%;
+	max-width: var(--main-max);
+	padding: var(--sp-6);
+	margin: 0 auto;
+}
+.vt-foot {
+	display: flex; justify-content: center; flex-wrap: wrap; gap: var(--sp-2);
+	padding: var(--sp-4) var(--sp-6) var(--sp-6);
+	color: var(--text-3);
+	font: var(--fs-micro)/1.4 var(--mono);
+	letter-spacing: .03em;
+}
+.vt-foot-sep { opacity: .6; }
+
+/* ----------------------------------------------------------- 4. palette */
+
+.vt-pal-overlay {
+	position: fixed; inset: 0; z-index: 1500;
+	display: flex; justify-content: center; align-items: flex-start;
+	padding: 12vh var(--sp-4) var(--sp-4);
+	background: var(--scrim);
+}
+.vt-pal {
+	width: min(640px, 100%);
+	max-height: 72vh;
+	display: flex; flex-direction: column;
+	background: var(--s1);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r-lg);
+	box-shadow: var(--shadow-pop);
+	overflow: hidden;
+	animation: vt-pal-in .12s ease-out;
+}
+@keyframes vt-pal-in { from { opacity: 0; transform: translateY(-6px) scale(.99); } to { opacity: 1; transform: none; } }
+.vt-pal-field {
+	display: flex; align-items: center; gap: var(--sp-3);
+	padding: 0 var(--sp-4);
+	border-bottom: 1px solid var(--line);
+	flex: none;
+}
+.vt-pal-field svg { width: 18px; height: 18px; color: var(--accent-text); flex: none; }
+.vt-pal-input {
+	flex: 1 1 auto;
+	height: 52px;
+	border: 0; background: none; outline: none;
+	color: var(--text);
+	font: 400 var(--fs-lg)/1 var(--font);
+}
+.vt-pal-input::placeholder { color: var(--text-3); }
+.vt-pal-input:focus, .vt-pal-input:focus-visible { outline: none; box-shadow: none; border: 0; }
+.vt-pal-list { list-style: none; margin: 0; padding: var(--sp-2); overflow-y: auto; flex: 1 1 auto; }
+.vt-pal-group {
+	padding: var(--sp-2) 10px var(--sp-1);
+	color: var(--text-3);
+	font-size: var(--fs-micro); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+}
+.vt-pal-item {
+	position: relative;
+	display: flex; align-items: center; gap: var(--sp-3);
+	min-height: 40px; padding: 6px 10px;
+	border-radius: var(--r);
+	color: var(--text);
+	cursor: pointer;
+}
+.vt-pal-item svg { width: 18px; height: 18px; color: var(--text-3); flex: none; }
+.vt-pal-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vt-pal-title mark { background: none; color: var(--accent-text); font-weight: 700; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.vt-pal-path { color: var(--text-3); font-size: var(--fs-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 45%; }
+.vt-pal-item[aria-selected="true"] { background: var(--s3); }
+.vt-pal-item[aria-selected="true"]::before {
+	content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; border-radius: 2px;
+	background: var(--accent-text);
+}
+.vt-pal-item[aria-selected="true"] svg { color: var(--accent-text); }
+.vt-pal-enter { visibility: hidden; }
+.vt-pal-item[aria-selected="true"] .vt-pal-enter { visibility: visible; }
+.vt-pal-empty { padding: var(--sp-6); text-align: center; color: var(--text-3); }
+.vt-pal-foot {
+	display: flex; gap: var(--sp-4); align-items: center;
+	padding: var(--sp-2) var(--sp-4);
+	border-top: 1px solid var(--line);
+	background: var(--s2);
+	color: var(--text-3); font-size: var(--fs-sm);
+	flex: none;
+}
+.vt-pal-foot span { display: inline-flex; align-items: center; gap: 6px; }
+.vt-pal-foot .vt-pal-count { margin-left: auto; font-family: var(--mono); font-size: var(--fs-micro); }
+/* no keyboard, no key hints */
+/* no keyboard hints on touch; the result count stays */
+@media (hover: none) {
+	.vt-pal kbd, .vt-pal-foot > span:not(.vt-pal-count) { display: none; }
+}
+
+/* ------------------------------------ 5. content: map, section, options */
+
+#view > .spinning, .vt-main > .spinning {
+	display: flex; align-items: center; justify-content: center; gap: var(--sp-3);
+	min-height: 40vh;
+	color: var(--text-3);
+}
+
+/* page = title block + a stack of cards. Cards carry a full-bleed header
+   row (h3) and full-bleed tables; nested sections lose their chrome. */
+:root { --card-px: 20px; --card-py: 16px; --stick-top: var(--top-h); }
+
+.cbi-map { margin-bottom: var(--sp-6); }
+.cbi-map > h2, .vt-main > h2, #view > h2, #view > div > h2:first-child, .cbi-map > h2:first-child {
+	margin: 0 0 6px;
+	font-size: var(--fs-2xl); font-weight: 600; line-height: 1.2;
+	letter-spacing: -.02em;
+}
+.vt-main > h2[name="content"] { margin-bottom: var(--sp-5); }
+.cbi-map-descr {
+	margin: 0 0 var(--sp-6);
+	color: var(--text-2);
+	font-size: var(--fs-base); line-height: 1.55;
+}
+.cbi-section-descr { margin: 0 0 var(--sp-4); color: var(--text-2); }
+.cbi-map-descr:empty, .cbi-section-descr:empty { display: none; }
+.cbi-map > h2:not(.vt-repeat) + .cbi-tabmenu, .cbi-map > h2:not(.vt-repeat) + .cbi-map-descr:empty + .cbi-tabmenu { margin-top: var(--sp-4); }
+
+.cbi-section, .cbi-map > fieldset {
+	margin: 0 0 var(--sp-4);
+	padding: var(--card-py) var(--card-px);
+	background: var(--s1);
+	border: 1px solid var(--line);
+	border-radius: var(--r-lg);
+	box-shadow: var(--v-shadow);
+	min-width: 0;
+}
+/* Card padding supplies the space after the final paragraph. */
+.cbi-section > p:last-child { margin-bottom: 0; }
+/* card header row */
+.cbi-section > h3:first-child, .cbi-section > legend:first-child, .cbi-section > .cbi-title:first-child,
+.cbi-section > .cbi-section-remove:first-child + .cbi-title {
+	display: flex; align-items: center; gap: var(--sp-2);
+	min-height: 48px;
+	margin: calc(-1 * var(--card-py)) calc(-1 * var(--card-px)) var(--card-py);
+	padding: 12px var(--card-px);
+	border-bottom: 1px solid var(--line);
+	font-size: var(--fs-md); font-weight: 600; letter-spacing: -.005em;
+}
+.cbi-section > .cbi-title > h3 { display: flex; align-items: center; gap: var(--sp-2); flex: 1 1 auto; margin: 0; font-size: var(--fs-md); font-weight: 600; }
+/* headings further down a card: sub-section title with a hairline above */
+.cbi-section > h3:not(:first-child), .cbi-section > div > h3, .cbi-value > h4, .cbi-section-node > h4 {
+	display: flex; align-items: center; gap: var(--sp-2);
+	margin: var(--sp-6) 0 var(--sp-3);
+	font-size: var(--fs-base); font-weight: 600;
+	color: var(--text);
+}
+.cbi-section > div > h3:first-child { margin-top: var(--sp-2); }
+.cbi-section > .cbi-section-descr { margin-bottom: var(--sp-4); }
+.cbi-section-node { min-width: 0; }
+
+/* nested / typed sections: no card-in-card chrome */
+.cbi-section .cbi-section, .cbi-section-node .cbi-section {
+	margin: 0; padding: 0;
+	background: none; border: 0; border-radius: 0; box-shadow: none;
+}
+.cbi-section .cbi-section > h3:first-child { margin: 0 0 var(--sp-3); padding: 0; min-height: 0; border: 0; }
+.cbi-section .cbi-section + .cbi-section { margin-top: var(--sp-5); padding-top: var(--sp-5); border-top: 1px solid var(--line); }
+/* a nested table section scrolls its own table, so it takes the card bleed
+   itself (out by --card-px, padded back in): the table's bleed then stays
+   inside the scroll box instead of overflowing it by --card-px */
+.cbi-section .cbi-section.cbi-tblsection {
+	margin-left: calc(-1 * var(--card-px)); margin-right: calc(-1 * var(--card-px));
+	padding-left: var(--card-px); padding-right: var(--card-px);
+}
+
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+legend { font-size: var(--fs-md); font-weight: 600; padding: 0; margin-bottom: var(--sp-3); }
+
+/* option rows: label column + field, no rules between rows */
+.cbi-value {
+	display: grid;
+	grid-template-columns: var(--label-w) minmax(0, 1fr);
+	column-gap: var(--sp-5);
+	align-items: start;
+	padding: 6px 0;
+}
+.cbi-value > .cbi-value-title {
+	padding-top: calc((var(--ctl-h) - 1.5em) / 2);   /* 1.5em: one line at line-height 1.5 */
+	color: var(--text);
+	font-weight: 500;
+	overflow-wrap: anywhere;
+}
+.cbi-value > .cbi-value-field { grid-column: 2; min-width: 0; min-height: var(--ctl-h); display: flow-root; }
+/* rows without a title (SectionValue, status blocks): span both columns */
+.cbi-value > .cbi-value-field:only-child,
+.cbi-value > :not(.cbi-value-title, .cbi-value-field) { grid-column: 1 / -1; min-width: 0; }
+.cbi-value:has(> .cbi-section) { padding: var(--sp-2) 0; border-bottom: 0; }
+.cbi-value:has(> .cbi-section) + .cbi-value { border-top: 1px solid var(--line); }
+.cbi-value > h4:first-child { margin-top: var(--sp-2); }
+.cbi-value-field > div:not([class]) { min-height: var(--ctl-h); display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); }
+.cbi-value-description {
+	margin-top: 6px;
+	color: var(--text-3);
+	font-size: var(--fs-sm);
+	line-height: 1.5;
+}
+.cbi-value-helpicon img { width: 14px; height: 14px; opacity: .6; }
+
+/* folding help (menu-vantage.js): help longer than a line folds to one
+   and (i) shows all of it in a box. The line is one as laid out (lh): a
+   minimum font size (Firefox) raises the line height but not the em;
+   browsers without lh (Safari before 16.4, Firefox before 120) take the
+   height the script measured (--vt-line). It ends after the first
+   sentence (cut, at --vt-cut), else it fades out where its first line
+   ends (--vt-cut again).
+   The button shares the label cell, so both are placed explicitly. */
+.cbi-value[data-v-help="fold"] > .cbi-value-field > .vt-help-text {
+	max-height: var(--vt-line, 1.5em);
+	max-height: 1lh;
+	overflow: hidden;
+}
+.vt-help-text[data-v-end="cut"] { clip-path: inset(0 calc(100% - var(--vt-cut, 100%)) 0 -2px); }
+.vt-help-text[data-v-end="fade"] {
+	-webkit-mask-image: linear-gradient(to right, #000 calc(var(--vt-cut, 100%) - 4em), transparent var(--vt-cut, 100%));
+	mask-image: linear-gradient(to right, #000 calc(var(--vt-cut, 100%) - 4em), transparent var(--vt-cut, 100%));
+}
+.cbi-value[data-v-help] > .cbi-value-title { grid-row: 1; grid-column: 1; }
+.cbi-value[data-v-help] > .cbi-value-field { grid-row: 1; }
+.cbi-value:has(> .vt-help:not([hidden])) > .cbi-value-title { padding-right: 32px; }
+.cbi-value > .vt-help {
+	grid-row: 1; grid-column: 1;
+	justify-self: end;
+	display: grid; place-items: center;
+	width: 28px; height: var(--ctl-h);
+	padding: 0;
+	background: none; border: 0; border-radius: var(--r);
+	color: var(--text-3);
+	cursor: pointer;
+}
+/* a title that opens with <br> (Wireless "Operating frequency", lined up
+   with captioned selects) has its text on the second line: so has (i) */
+.cbi-value:has(> .cbi-value-title > br:first-child) > .vt-help { margin-top: 1.5em; }
+
+/* page and section intros fold the same way, (i) leading the line */
+:is(.cbi-map-descr, .cbi-section-descr)[data-v-help="fold"] {
+	max-height: var(--vt-line, 1.55em);
+	max-height: 1lh;
+	overflow: hidden;
+	cursor: pointer;
+}
+:is(.cbi-map-descr, .cbi-section-descr) > .vt-help {
+	display: inline-grid; place-items: center;
+	width: 1.5em; height: 1.5em;
+	margin: 0 6px 0 -3px; padding: 0;
+	vertical-align: top;
+	background: none; border: 0; border-radius: var(--r-sm);
+	color: var(--text-3);
+	cursor: pointer;
+}
+/* both buttons, after their placement rules */
+.vt-help svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.vt-help:hover { color: var(--text); background: var(--s3); }
+.vt-help[aria-expanded="true"] { color: var(--accent-text); }
+
+/* the box (i) opens, over the page and any modal (menu-vantage.js) */
+.vt-help-pop {
+	position: fixed; z-index: 1100;
+	width: max-content; max-width: min(34em, calc(100vw - 16px));
+	padding: 10px 12px;
+	overflow-y: auto; overscroll-behavior: contain;
+	border: 1px solid var(--line-2); border-radius: var(--r);
+	background: var(--s2); box-shadow: var(--shadow-pop);
+	color: var(--text-2);
+	font-size: var(--fs-sm); line-height: 1.5;
+	overflow-wrap: anywhere;
+}
+.vt-help-pop[hidden] { display: none; }
+
+/* a heading that repeats the breadcrumb or its tab (menu-vantage.js):
+   gone from view, still a heading for screen readers */
+.vt-repeat {
+	position: absolute !important;
+	width: 1px; height: 1px; min-height: 0 !important;
+	margin: -1px !important; padding: 0 !important; border: 0 !important;
+	overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.cbi-value.cbi-value-error .cbi-value-title,
+.cbi-value-field .cbi-input-invalid + .cbi-value-description { color: var(--err); }
+
+.cbi-section-create {
+	display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2);
+	margin-top: var(--sp-3);
+}
+.cbi-section-create > * { margin: 0; }
+.cbi-section-create > .cbi-section-create-name { max-width: 240px; }
+.cbi-section-remove { text-align: right; padding: var(--sp-2) 0; }
+/* several nodes of one typed section in a card: a rule between them */
+.cbi-section-node + :is(.cbi-section-node, .cbi-section-remove) { margin-top: var(--sp-5); padding-top: var(--sp-5); border-top: 1px solid var(--line); }
+
+/* page actions: a floating command bar docked to the bottom right */
+.cbi-page-actions {
+	position: sticky; bottom: var(--sp-4); z-index: 150;
+	display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--sp-2);
+	width: fit-content; max-width: 100%;
+	margin: var(--sp-6) 0 0 auto;
+	padding: 6px;
+	background: color-mix(in srgb, var(--s1) 86%, transparent);
+	backdrop-filter: saturate(1.3) blur(14px);
+	-webkit-backdrop-filter: saturate(1.3) blur(14px);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r-lg);
+	box-shadow: var(--shadow-pop);
+}
+.cbi-page-actions > * { margin: 0 !important; }
+.cbi-page-actions > form { display: contents; }
+.cbi-page-actions .cbi-button-reset { order: 1; }
+.cbi-page-actions .cbi-button-save { order: 2; }
+.cbi-page-actions .cbi-button-apply, .cbi-page-actions .cbi-dropdown { order: 3; }
+.cbi-page-actions:empty { display: none; }
+/* the bar sits at the bottom of the view (docked, or the page's end), so
+   its Save & Apply menu opens upwards; LuCI's touch branch would open it
+   down, under the phone's bottom bar and past the screen */
+.cbi-page-actions .cbi-dropdown[open] > ul.dropdown {
+	top: auto !important; bottom: 100% !important;
+	max-height: 50vh !important;
+}
+/* LuCI moves focus into the list when its max-height transition ends, and
+   the 50vh !important above left nothing to transition, so arrow keys never
+   reached "Apply unchecked". A length (not none) on the closed list gives
+   the open one a change to run */
+.cbi-page-actions .cbi-dropdown > ul:not(.dropdown) { max-height: 100vh; }
+
+/* ------------------------------------------------------------ 6. widgets */
+
+/* zero specificity, like the button rule below, which must win over it */
+:where(input, select, textarea, button) { font: inherit; color: inherit; }
+
+.cbi-input-text, .cbi-input-password, .cbi-input-select, .cbi-input-textarea,
+.cbi-section-create-name, .vt-main select, .vt-main textarea,
+.vt-main input[type="text"], .vt-main input[type="password"], .vt-main input[type="number"],
+.vt-main input[type="email"], .vt-main input[type="url"], .vt-main input[type="search"],
+.vt-main input[type="date"], .vt-main input[type="time"], .vt-main input[type="datetime-local"],
+.vt-main input:not([type]), .modal input[type="text"], .modal input[type="password"], .modal input:not([type]), .modal select, .modal textarea {
+	width: 100%;
+	max-width: var(--field-max);
+	min-height: var(--ctl-h);
+	padding: 5px 10px;
+	background: var(--s2);
+	color: var(--text);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r);
+	font-size: var(--fs-base);
+	line-height: 20px;
+	transition: border-color .12s, box-shadow .12s;
+}
+.vt-main textarea, .cbi-input-textarea, .modal textarea { max-width: 100%; min-height: 88px; font-family: var(--mono); font-size: var(--fs-sm); resize: vertical; }
+/* read-only text (System and Kernel log) is a viewer, not a field: full width */
+.vt-main textarea[readonly] { max-width: none; }
+/* System notes follow the neighbouring single-line fields. */
+body[data-page="admin-system-system"] .cbi-value[data-name="notes"] textarea { max-width: var(--field-max); }
+.vt-main select, .cbi-input-select, .modal select {
+	appearance: none; -webkit-appearance: none;
+	padding-right: 30px;
+	background-image: linear-gradient(45deg, transparent 50%, var(--text-3) 50%), linear-gradient(135deg, var(--text-3) 50%, transparent 50%);
+	background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+	background-size: 5px 5px, 5px 5px;
+	background-repeat: no-repeat;
+}
+/* a native select in a form row cuts a long choice off without an
+   ellipsis: let it grow past --field-max to fit (field-sizing: the chosen
+   value; elsewhere the widest option), never past its column */
+.cbi-value > .cbi-value-field > select:not([multiple]), .cbi-value > .cbi-value-field > div > select:not([multiple]) {
+	field-sizing: content;
+	width: auto; min-width: min(100%, var(--field-max)); max-width: 100%;
+}
+/* a listbox (multiple, or size above 1) has no arrow, in a page or a
+   modal (replaces `.vt-main select[multiple]`) */
+:is(.vt-main, .modal) select:is([multiple], [size]:not([size="1"])):not(.vt-app *) { background-image: none; padding-right: 10px; }
+/* adblock (DNS Report -> Refresh...) and banIP (Set Reporting -> Set
+   Content...) give the <label> around their select the select's class:
+   the label stays a label, not a second field with its own arrow */
+label.cbi-input-select {
+	display: block;
+	width: auto; max-width: none; min-height: 0;
+	padding: 0;
+	background: none;
+	border: 0; border-radius: 0;
+	transition: none;
+}
+input::placeholder, textarea::placeholder { color: var(--text-3); opacity: 1; }
+input:hover, select:hover, textarea:hover { border-color: var(--text-3); }
+input:focus, select:focus, textarea:focus {
+	outline: none;
+	border-color: var(--accent-line);
+	box-shadow: 0 0 0 3px var(--accent-soft);
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+/* fields in pages, modals and the login: the rules above lose to the field
+   rules' (0,2,1), so hover and focus are restated at their weight. Focus:
+   a --focus border plus a 1px ring of it (>= 3:1 against the field and
+   the card in both modes) and the soft halo. The dashboard styles its own. */
+:is(input, select, textarea):not([type="checkbox"], [type="radio"], [type="range"], .vt-pal-input, .vt-app *):hover { border-color: var(--text-3); }
+:is(input, select, textarea):not([type="checkbox"], [type="radio"], [type="range"], .vt-pal-input, .vt-app *):focus {
+	border-color: var(--focus);
+	box-shadow: 0 0 0 1px var(--focus), 0 0 0 4px var(--accent-soft);
+}
+/* a disabled field does not answer the pointer */
+:is(input, select, textarea):not([type="checkbox"], [type="radio"], [type="range"], .vt-pal-input, .vt-app *):disabled:hover { border-color: var(--line-2); }
+input[disabled], select[disabled], textarea[disabled], input[readonly] { opacity: .6; cursor: not-allowed; }
+input[readonly] { cursor: default; }
+
+.cbi-input-invalid, input.cbi-input-invalid, .cbi-input-invalid > .cbi-dropdown, .cbi-dropdown.cbi-input-invalid,
+.cbi-input-invalid input, select.cbi-input-invalid {
+	border-color: var(--err) !important;
+	background-color: var(--err-soft) !important;
+	color: var(--text) !important;
+	box-shadow: 0 0 0 3px var(--err-soft) !important;
+}
+
+/* a select's list drawn by the browser (Firefox, Safari, Chromium before
+   135, and the selects below that keep it) takes little from the page
+   but the options' colours. It took the field's background: a tinted
+   field (invalid, a firewall warning) opened a cream list with light
+   text in dark mode. The options carry the surface and text instead. */
+:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) :is(option, optgroup) { background-color: var(--s2); color: var(--text); }
+:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option:disabled { color: var(--text-3); }
+
+/* a select's list drawn in the page (customizable select, Chromium 135+)
+   gets the .cbi-dropdown list's look. Not listboxes, nor a select LuCI
+   sizes itself (width:auto, Wireless "Operating frequency"): base-select
+   sizes a field to its chosen label, not its longest. The dashboard
+   styles its own. */
+@supports (appearance: base-select) {
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *),
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *)::picker(select) { appearance: base-select; }
+	/* the field as before: base-select makes it a flex box with the value
+	   at the top (2px high, 6px on touch) and free to wrap; centre it on
+	   one line, cut at the content edge as the native field cuts it */
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) {
+		align-items: center;
+		white-space: nowrap;
+		overflow: clip; overflow-clip-margin: content-box;
+	}
+	/* the theme draws the arrow */
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *)::picker-icon { display: none; }
+	/* focus moves to an option while the list is open: the field keeps its
+	   ring and its arrow turns to the signal, as on an open .cbi-dropdown */
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *):open {
+		border-color: var(--focus);
+		box-shadow: 0 0 0 1px var(--focus), 0 0 0 4px var(--accent-soft);
+		background-image: linear-gradient(45deg, transparent 50%, var(--accent-text) 50%), linear-gradient(135deg, var(--accent-text) 50%, transparent 50%);
+	}
+	/* the list: 4px off the field, at least as wide, above it when there
+	   is more room there; 50vh at most, as .cbi-dropdown, and never past
+	   the screen (100% is the room beside the field: less the 8px of
+	   margins below, an 8px gutter across) */
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *)::picker(select) {
+		margin: 4px 0;
+		padding: 4px;
+		min-inline-size: anchor-size(self-inline);
+		max-inline-size: calc(100% - var(--sp-2));
+		max-block-size: min(50vh, calc(100% - 8px));
+		background: var(--s2);
+		color: var(--text);
+		border: 1px solid var(--line-2);
+		border-radius: var(--r);
+		box-shadow: var(--shadow-pop);
+		overflow: hidden auto;
+		scrollbar-width: thin;
+	}
+	/* choices as .cbi-dropdown's: long ones wrap */
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option {
+		min-block-size: calc(var(--ctl-h) - 4px);
+		padding: 4px 8px;
+		border-radius: var(--r-sm);
+		white-space: normal;
+		color: var(--text);
+		font-weight: 400;
+	}
+	/* the chosen one in the signal (fill and weight, no check mark); the
+	   one under the pointer or the keyboard on --s4, the keyboard's with
+	   the accent bar */
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option::checkmark { display: none; }
+	/* the tint over an opaque fill: apps that copy a select's option colour
+	   onto their own list (PassWall's node picker) would get a see-through one */
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option:checked { color: var(--accent-text); font-weight: 600; background: linear-gradient(var(--accent-soft) 0 0) var(--s2); }
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option:is(:hover, :focus-visible) { background: var(--s4); color: var(--text); outline: none; }
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option:focus-visible { box-shadow: inset 2px 0 0 var(--accent-text); }
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option:disabled { color: var(--text-3); background: none; cursor: not-allowed; }
+	/* a group's label: quiet, its choices as any other */
+	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) optgroup { color: var(--text-3); font-weight: 600; }
+	/* touch: each choice is a touch target, as the dropdown's */
+	@media (pointer: coarse) {
+		:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option { min-block-size: var(--ctl-h); }
+	}
+}
+
+/* password + reveal and other control groups */
+.control-group {
+	display: flex; align-items: stretch; flex-wrap: nowrap;
+	max-width: var(--field-max);
+}
+.control-group > * { margin: 0 !important; }
+.control-group > :not(:first-child) { margin-left: -1px !important; }
+.control-group > input, .control-group > .cbi-dropdown, .control-group > select { flex: 1 1 auto; min-width: 0; max-width: none; }
+.control-group > :not(:last-child) { border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; }
+.control-group > :not(:first-child) { border-top-left-radius: 0 !important; border-bottom-left-radius: 0 !important; }
+.control-group > .btn, .control-group > .cbi-button { flex: none; }
+/* a group on the line under its field (System -> Local Time's Sync buttons) */
+.cbi-value-field > br + .control-group { margin-top: var(--sp-2); }
+/* in LuCI's unclassed field wrapper (a flex row) the group sized to its
+   content, 254px for a password with its reveal button: as wide as a field */
+.cbi-value-field > div:not([class]) > .control-group { flex: 1 1 auto; }
+
+/* checkbox */
+.cbi-checkbox { display: inline-flex; align-items: center; min-height: var(--ctl-h); gap: var(--sp-2); }
+input.cbi-checkbox { min-height: 0; }   /* banIP puts the class on the box itself */
+/* its help 8px under the box, as under a field: the box (16px) sits
+   centred in a control-high row */
+@media (width > 720px) {
+	.cbi-value-field > .cbi-checkbox + .cbi-value-description { margin-top: calc((16px - var(--ctl-h)) / 2 + 8px); }
+}
+@media (pointer: coarse) and (width > 720px) {
+	.cbi-value-field > .cbi-checkbox + .cbi-value-description { margin-top: calc((20px - var(--ctl-h)) / 2 + 8px); }   /* 20px touch box */
+}
+.cbi-checkbox > label:empty { display: none; }
+input[type="checkbox"], input[type="radio"] {
+	appearance: none; -webkit-appearance: none;
+	width: 16px; height: 16px; margin: 0;
+	flex: none;
+	display: inline-grid; place-content: center;
+	vertical-align: middle;
+	background: var(--s2);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r-sm);
+	cursor: pointer;
+	transition: background-color .12s, border-color .12s;
+}
+input[type="radio"] { border-radius: 50%; }
+input[type="checkbox"]:hover, input[type="radio"]:hover { border-color: var(--text-3); }
+input[type="checkbox"]:checked, input[type="radio"]:checked { background: var(--accent); border-color: var(--accent-line); }
+input[type="checkbox"]:checked::before {
+	content: ""; width: 9px; height: 5px;
+	border: solid var(--accent-ink); border-width: 0 0 2px 2px;
+	transform: translateY(-1px) rotate(-45deg);
+}
+input[type="radio"]:checked::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent-ink); }
+input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+input[type="checkbox"][disabled]:checked { opacity: .5; }
+
+/* range slider */
+.cbi-range-slider { display: flex; align-items: center; gap: var(--sp-3); max-width: var(--field-max); min-height: var(--ctl-h); flex-wrap: wrap; }
+.cbi-range-slider input[type="range"] { flex: 1 1 160px; accent-color: var(--accent-text); }
+.cbi-range-slider-value, .cbi-range-slider-calc { font-family: var(--mono); color: var(--text-2); font-size: var(--fs-sm); }
+
+/* buttons */
+:where(.btn, .cbi-button, .vt-main button:not([class]), .modal button:not([class]),
+input[type="button"], input[type="reset"], input[type="submit"]) {
+	display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+	min-height: var(--ctl-h);
+	padding: 0 var(--sp-3);
+	background: var(--s3);
+	color: var(--text);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r);
+	font: 500 var(--fs-base)/1 var(--font);
+	white-space: nowrap;
+	cursor: pointer;
+	user-select: none;
+	text-decoration: none !important;
+	vertical-align: middle;
+	transition: background-color .12s, border-color .12s, color .12s;
+}
+:where(.btn, .cbi-button, input[type="button"], input[type="submit"]):hover { background: var(--s4); border-color: var(--text-3); }
+:where(.btn, .cbi-button):active { transform: translateY(.5px); }
+
+.btn[disabled], .cbi-button[disabled], button[disabled], .btn.disabled, .cbi-button.disabled {
+	opacity: .45; cursor: not-allowed; pointer-events: none;
+}
+
+.cbi-button-up, .cbi-button-down { min-width: var(--ctl-h); padding: 0 6px; }
+
+.button-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2); margin-top: var(--sp-4); }
+.right > .btn, .right > .cbi-button, .right > button { margin-left: var(--sp-2); }
+
+/* dropdown (ui.Dropdown / ui.ComboButton) */
+.cbi-dropdown {
+	position: relative;
+	display: inline-flex; align-items: stretch;
+	width: 100%; max-width: var(--field-max);
+	min-height: var(--ctl-h);
+	padding: 0;
+	background: var(--s2);
+	color: var(--text);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r);
+	cursor: pointer;
+	outline: none;
+	vertical-align: middle;
+}
+.cbi-dropdown:hover { border-color: var(--text-3); }
+.cbi-dropdown:focus, .cbi-dropdown[open] { border-color: var(--focus); box-shadow: 0 0 0 1px var(--focus), 0 0 0 4px var(--accent-soft); }
+.cbi-dropdown:focus-visible { outline: none; }
+.cbi-dropdown[disabled] { opacity: .55; pointer-events: none; }
+
+.cbi-dropdown > ul {
+	display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+	flex: 1 1 auto; min-width: 0;
+	margin: 0; padding: 3px 4px 3px 10px;
+	list-style: none;
+	overflow: hidden;
+}
+.cbi-dropdown > ul > li {
+	display: none;
+	align-items: center; gap: 6px;
+	min-height: 24px;
+	overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cbi-dropdown > ul > li[display] { display: flex; }
+.cbi-dropdown > ul > li[placeholder] { color: var(--text-3); }
+.cbi-dropdown > ul > li[placeholder][display] { display: flex; }
+.cbi-dropdown > ul > li img { width: 16px; height: 16px; }
+.cbi-dropdown > ul > li .hide-open { display: inline; }
+.cbi-dropdown > ul > li .hide-close { display: none; }
+
+/* multiple: selected items as chips when closed */
+.cbi-dropdown[multiple] > ul:not(.dropdown) > li[display] {
+	padding: 0 8px;
+	background: var(--s3);
+	border: 1px solid var(--line);
+	border-radius: var(--r-sm);
+	font-size: var(--fs-sm);
+}
+.cbi-dropdown[multiple] > ul > li > form { display: none; margin: 0; }
+.cbi-dropdown[multiple] > ul > li > label { display: inline-flex; align-items: center; gap: 6px; cursor: inherit; }
+
+.cbi-dropdown > .open, .cbi-dropdown > .more {
+	flex: none;
+	display: flex; align-items: center; justify-content: center;
+	padding: 0 10px;
+	color: var(--text-3);
+	font-size: var(--fs-sm);
+	outline: none;
+}
+.cbi-dropdown > .open { border-left: 1px solid transparent; }
+.cbi-dropdown > .more { display: none; padding: 0 6px; font-family: var(--mono); }
+.cbi-dropdown[more] > .more, .cbi-dropdown[multiple][empty] > .more { display: flex; }
+.cbi-dropdown[empty]:not([open]) > ul { flex: 0 0 auto; padding: 0; }
+.cbi-dropdown[empty] > .more {
+	flex: 1 1 auto; justify-content: flex-start;
+	padding: 0 10px;
+	font-family: var(--font); font-style: normal;
+	color: var(--text-3);
+}
+.cbi-dropdown[empty][open] > .more { display: none; }
+.cbi-dropdown > .more:focus-visible, .cbi-dropdown > .open:focus-visible { color: var(--accent-text); }
+.cbi-dropdown > div:last-child:empty { display: none; }
+.cbi-dropdown > script { display: none; }
+
+/* open state */
+.cbi-dropdown[open] { z-index: 400; }
+.cbi-dropdown[open] > ul.preview { display: flex; }
+.cbi-dropdown[open] > ul.preview > li:not([display]) { display: none; }
+.cbi-dropdown[open] > ul.dropdown {
+	position: absolute; z-index: 410;
+	left: -1px; right: -1px;
+	top: 100%;
+	display: block;
+	min-width: calc(100% + 2px);
+	max-width: 100vw;
+	max-height: 50vh;
+	margin: 4px 0;
+	padding: 4px;
+	background: var(--s2);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r);
+	box-shadow: var(--shadow-pop);
+	overflow-x: hidden; overflow-y: auto;
+	/* LuCI focuses the selected item on transitionend; avoid animating its scroll range. */
+	transition: max-height .001s;
+}
+.cbi-dropdown[open] > ul.dropdown[style*="bottom"] { top: auto; }
+.cbi-dropdown[open] > ul.dropdown > li {
+	display: flex; align-items: center;
+	min-height: calc(var(--ctl-h) - 4px);
+	padding: 4px 8px;
+	border-radius: var(--r-sm);
+	white-space: normal;
+}
+.cbi-dropdown[open] > ul.dropdown > li[placeholder] { display: none; }
+.cbi-dropdown[open][optional] > ul.dropdown > li[placeholder] { display: flex; }
+.cbi-dropdown[open] > ul.dropdown > li[selected] { color: var(--accent-text); font-weight: 600; background: var(--accent-soft); }
+.cbi-dropdown[open] > ul.dropdown > li:hover,
+.cbi-dropdown[open] > ul.dropdown > li.focus { background: var(--s4); color: var(--text); outline: none; }
+.cbi-dropdown[open] > ul.dropdown > li.focus { box-shadow: inset 2px 0 0 var(--accent-text); }
+.cbi-dropdown[open] > ul.dropdown > li[unselectable] { cursor: default; }
+.cbi-dropdown[open] > ul.dropdown > li .hide-open { display: none; }
+.cbi-dropdown[open] > ul.dropdown > li .hide-close { display: inline; }
+.cbi-dropdown[multiple][open] > ul.dropdown > li > form { display: inline-flex; }
+.cbi-dropdown[open] > ul.dropdown > li input.create-item-input { max-width: none; min-height: 28px; }
+.cbi-dropdown[open] > .open { color: var(--accent-text); }
+/* one arrow for every field: the select's triangle, drawn where LuCI puts
+   its "▾" glyph (ComboButtons keep theirs) */
+.cbi-dropdown:not(.btn, .cbi-button) > .open {
+	--arrow: var(--text-3);
+	width: 30px; padding: 0;
+	font-size: 0;
+	background-image: linear-gradient(45deg, transparent 50%, var(--arrow) 50%), linear-gradient(135deg, var(--arrow) 50%, transparent 50%);
+	background-position: calc(100% - 15px) 50%, calc(100% - 10px) 50%;
+	background-size: 5px 5px, 5px 5px;
+	background-repeat: no-repeat;
+}
+.cbi-dropdown:not(.btn, .cbi-button)[open] > .open { --arrow: var(--accent-text); }
+
+/* ComboButton: dropdown dressed as a split button */
+.cbi-dropdown.btn, .cbi-dropdown.cbi-button {
+	width: auto; max-width: none;
+	padding: 0;
+	gap: 0;
+}
+.cbi-dropdown.btn > ul, .cbi-dropdown.cbi-button > ul { padding: 0 var(--sp-3); flex-wrap: nowrap; }
+.cbi-dropdown.btn > ul > li, .cbi-dropdown.cbi-button > ul > li { min-height: 0; line-height: 1.3; }   /* 1: the label clips "pp" */
+.cbi-dropdown.btn > .more, .cbi-dropdown.cbi-button > .more { display: none !important; }
+.cbi-dropdown.btn > .open, .cbi-dropdown.cbi-button > .open {
+	padding: 0 8px;
+	border-left: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+	color: inherit;
+}
+.cbi-dropdown.btn:focus, .cbi-dropdown.cbi-button:focus { box-shadow: none; }
+.cbi-dropdown.btn:focus-visible, .cbi-dropdown.cbi-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.cbi-dropdown.btn[open] > ul.dropdown, .cbi-dropdown.cbi-button[open] > ul.dropdown {
+	left: auto; right: -1px; min-width: 100%;
+	color: var(--text); font-weight: 500;
+}
+.cbi-dropdown.btn[open] > ul.dropdown > li, .cbi-dropdown.cbi-button[open] > ul.dropdown > li { white-space: nowrap; }
+.cbi-dropdown.btn[open] > ul.dropdown > li[selected], .cbi-dropdown.cbi-button[open] > ul.dropdown > li[selected] { color: var(--text); background: none; font-weight: 500; }
+.cbi-dropdown.btn[open] > ul.dropdown > li:hover, .cbi-dropdown.cbi-button[open] > ul.dropdown > li:hover,
+.cbi-dropdown.btn[open] > ul.dropdown > li.focus, .cbi-dropdown.cbi-button[open] > ul.dropdown > li.focus { background: var(--s4); }
+.cbi-dropdown.btn.spinning > ul.dropdown, .cbi-dropdown.cbi-button.spinning > ul.dropdown { display: none !important; }
+.cbi-dropdown.btn[open] > ul.preview, .cbi-dropdown.cbi-button[open] > ul.preview { display: flex; }
+
+/* LuCI sizes an open list to the room left in its scroll parent, and picks
+   that parent before the list opens: a card that scrolls sideways (a
+   section holding a table, every card at 721-1180 px) capped long lists at
+   2-4 rows (DNS record types, log facility) or flipped them upwards. Focus
+   lands on the dropdown before it opens, so a focused one lifts the
+   card's scroller as an open one does */
+.cbi-section:has(.cbi-dropdown:focus-within), .cbi-tblsection:has(.cbi-dropdown:focus-within) { overflow: visible; }
+/* the bridge VLAN table sets its scroller inline (tools/network.js), which
+   beat this and the open rule: its port list showed 3 of 4 rows */
+.cbi-tblsection[style*="overflow"]:has(.cbi-dropdown:is(:focus-within, [open])) { overflow: visible !important; }
+
+/* rich choices (flow offloading, RA flags): LuCI sets each description
+   min-width: 25vw to widen its list; ours is the field's width, so from
+   1440 px the text ran past the row's clip ("indicates tl"). In the
+   chosen row only the title is bold */
+.cbi-dropdown[open] > ul.dropdown > li .hide-close[style*="min-width"] { min-width: 0 !important; }
+.cbi-dropdown[open] > ul.dropdown > li > label { min-width: 0; }
+.cbi-dropdown[open] > ul.dropdown > li .hide-close > span { font-weight: 400; }
+
+/* the current choice keeps its colour under focus and the pointer: LuCI
+   focuses it on open, and the grey left only the weight to tell it */
+.cbi-dropdown:not(.btn, .cbi-button)[open] > ul.dropdown > li[selected]:is(:hover, .focus) { color: var(--accent-text); }
+/* LuCI 25.12 never binds its mouseover-to-focus, so the pointer and the
+   keyboard each mark a row: hover takes the lighter step, and the focused
+   row (fill and edge) stays the one Enter picks */
+.cbi-dropdown[open] > ul.dropdown > li:hover:not(.focus) { background: var(--s3); }
+
+/* a chosen network or zone is already a badge: it is the chip, without a
+   second frame around it (Covered networks, zone forwards) */
+.cbi-dropdown[multiple] > ul:not(.dropdown) > li[display]:has(> label > :is(.ifacebadge, .zonebadge):only-child) { padding: 0; background: none; border: 0; }
+/* the custom-value field of a multiple choice spans its row, as in a
+   single choice (it stopped at the label's content width) */
+.cbi-dropdown[multiple][open] > ul.dropdown > li > label:has(> .create-item-input) { flex: 1 1 auto; }
+
+/* a zone's live interface inside its badge: the zone badge already frames
+   it; the active ring drew a pill in a pill (zone pickers, closed and open) */
+.zonebadge .ifacebadge-active { box-shadow: none; }
+
+/* a dropdown in a table cell is as narrow as its column (bridge VLAN
+   ports: 4em) and so was its list: "Not Member" read "Not Mem". The open
+   list takes its choices' width instead (LuCI's touch layout, which sets
+   left and right itself, keeps its full-width list) */
+.td .cbi-dropdown:not(.btn, .cbi-button)[open] > ul.dropdown:not([style*="left:"]) {
+	right: auto;
+	width: max-content;
+	max-width: min(24em, calc(100vw - 2 * var(--sp-4)));
+}
+
+/* LuCI's touch layout (any touch screen, not only phones) stretches the
+   list from the viewport's left edge to its right and hangs 50vh of it
+   under a field it scrolls to mid-screen: on a tablet it crossed the whole
+   page and the dialog, and everywhere it ended past the screen's foot.
+   It stops above the foot (and a phone's bottom bar); wider than a phone
+   it keeps to its field */
+.cbi-dropdown[open] > ul.dropdown[style*="left:"] {
+	max-height: calc(50vh - var(--ctl-h) - var(--sp-3) - var(--bar-h, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+}
+@media (width > 720px) {
+	.cbi-dropdown:not(.btn, .cbi-button)[open] > ul.dropdown[style*="left:"] { left: -1px !important; right: -1px !important; }
+	.cbi-dropdown:is(.btn, .cbi-button)[open] > ul.dropdown[style*="left:"] { left: auto !important; right: -1px !important; }
+}
+
+
+/* button variants (after the dropdown rules so ComboButtons pick them up) */
+.cbi-dropdown:is(.btn, .cbi-button) { background: var(--s3); border-color: var(--line-2); color: var(--text); font-weight: 500; }
+.cbi-dropdown:is(.btn, .cbi-button):hover { background: var(--s4); border-color: var(--text-3); }
+
+/* primary: the lime signal - Save & Apply, login, explicit primaries */
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-apply,
+:is(.btn, .cbi-button, .cbi-dropdown).primary,
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-positive.important {
+	background: var(--accent);
+	border-color: var(--accent-line);
+	color: var(--accent-ink);
+	font-weight: 600;
+}
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-apply:hover,
+:is(.btn, .cbi-button, .cbi-dropdown).primary:hover,
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-positive.important:hover {
+	background: var(--accent-hover); border-color: var(--accent-line); color: var(--accent-ink);
+}
+/* secondary emphasis (per-row Edit / Scan ...): signal outline, not fill */
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-action.important,
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-save.important {
+	background: var(--accent-soft);
+	border-color: var(--accent-line);
+	color: var(--accent-text);
+}
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-action.important:hover,
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-save.important:hover {
+	background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+/* LuCI's emphasis without .important (Bootstrap outlines these, apps mark
+   Open / Restart / Refresh with them): the signal as text and line on the
+   plain fill. In table rows only Edit keeps it: a row of Start / Restart /
+   Reload / Stop on every line (System -> Startup) stays plain */
+:is(.btn, .cbi-button):is(.cbi-button-action, .cbi-button-reload, .cbi-button-find, .cbi-button-link, .cbi-button-download):not(.important, .cbi-dropdown, .td *),
+:is(.btn, .cbi-button).cbi-button-edit:not(.important, .cbi-dropdown) {
+	border-color: var(--accent-line);
+	color: var(--accent-text);
+}
+:is(.btn, .cbi-button):is(.cbi-button-action, .cbi-button-reload, .cbi-button-find, .cbi-button-link, .cbi-button-download):not(.important, .cbi-dropdown, .td *):hover,
+:is(.btn, .cbi-button).cbi-button-edit:not(.important, .cbi-dropdown):hover {
+	background: var(--accent-soft);
+}
+.cbi-value-field :is(.btn, .cbi-button).cbi-button-apply,
+.td :is(.btn, .cbi-button).cbi-button-apply {
+	background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-text); font-weight: 500;
+}
+.cbi-value-field :is(.btn, .cbi-button).cbi-button-apply:hover,
+.td :is(.btn, .cbi-button).cbi-button-apply:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent-text); }
+:is(.btn, .cbi-button).cbi-button-positive:not(.important) { color: var(--ok-text); }
+:is(.btn, .cbi-button, .cbi-dropdown):is(.cbi-button-negative, .cbi-button-remove) {
+	background: transparent;
+	color: var(--err);
+	border-color: color-mix(in srgb, var(--err) 40%, var(--line-2));
+}
+:is(.btn, .cbi-button, .cbi-dropdown):is(.cbi-button-negative, .cbi-button-remove):hover { background: var(--err-soft); border-color: var(--err); color: var(--err-text); }
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-negative.important { background: var(--err); border-color: var(--err); color: var(--err-ink); }
+:is(.btn, .cbi-button, .cbi-dropdown).cbi-button-negative.important:hover { background: color-mix(in srgb, var(--err) 88%, var(--err-ink)); color: var(--err-ink); }
+:is(.btn, .cbi-button).cbi-button-reset { background: transparent; color: var(--text-2); }
+:is(.btn, .cbi-button).cbi-button-reset:hover { color: var(--text); }
+
+/* dynamic list */
+.cbi-dynlist { display: flex; flex-direction: column; gap: 6px; max-width: var(--field-max); }
+.cbi-dynlist > .item {
+	position: relative;
+	display: flex; align-items: center;
+	min-height: var(--ctl-h);
+	padding: 4px calc(var(--ctl-h) + 4px) 4px 10px;
+	background: var(--s2);
+	border: 1px solid var(--line);
+	border-radius: var(--r);
+	font-family: var(--mono); font-size: var(--fs-sm);
+	overflow-wrap: anywhere;
+	cursor: grab;
+}
+.cbi-dynlist > .item::after {
+	content: "\00d7";
+	position: absolute; top: 0; right: 0; bottom: 0;
+	width: var(--ctl-h);
+	display: flex; align-items: center; justify-content: center;
+	border-left: 1px solid var(--line);
+	color: var(--text-3);
+	font: 400 var(--fs-lg)/1 var(--font);
+	cursor: pointer;
+}
+.cbi-dynlist > .item:hover::after { color: var(--err); background: var(--err-soft); border-radius: 0 var(--r) var(--r) 0; }
+.cbi-dynlist > .item.dragging { opacity: .5; }
+.cbi-dynlist > .item.drag-over { border-color: var(--accent-line); box-shadow: 0 -2px 0 var(--accent-text); }
+.cbi-dynlist[disabled] > .item::after { display: none; }
+.cbi-dynlist > .add-item { max-width: none; }
+.cbi-dynlist > .add-item > .cbi-dropdown { max-width: none; }
+.cbi-dynlist > .add-item > .cbi-button-add { min-width: var(--ctl-h); font-family: var(--mono); font-size: var(--fs-md); }
+/* add rows built without .control-group (e.g. System → SSH-Keys): input and button side by side */
+.cbi-dynlist > .add-item:not(.control-group) { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); max-width: 720px; }
+.cbi-dynlist > .add-item:not(.control-group) > input { flex: 1 1 320px; min-width: 0; margin: 0; }
+.cbi-dynlist > .add-item:not(.control-group) > .cbi-button { flex: none; margin: 0; }
+
+/* file browser */
+.cbi-filebrowser { display: none; margin-top: var(--sp-2); padding: var(--sp-3); background: var(--s2); border: 1px solid var(--line); border-radius: var(--r); max-width: 640px; }
+.cbi-filebrowser.open { display: block; }
+.cbi-filebrowser .cbi-button-positive { margin-left: auto; }
+.cbi-filebrowser ul { list-style: none; padding: 0; margin: var(--sp-2) 0; max-height: 40vh; overflow: auto; }
+.cbi-filebrowser li { display: flex; align-items: center; gap: var(--sp-2); padding: 3px 6px; border-radius: var(--r-sm); }
+.cbi-filebrowser li:hover { background: var(--s3); }
+.cbi-filebrowser li .name { flex: 1 1 auto; font-family: var(--mono); font-size: var(--fs-sm); }
+.cbi-filebrowser li .mtime { color: var(--text-3); font-family: var(--mono); font-size: var(--fs-micro); }
+.cbi-filebrowser .upload { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); flex-wrap: wrap; }
+
+/* ------------------------- 7. tables, tabs, badges, feedback, modal */
+
+.table { display: table; width: 100%; border-collapse: separate; border-spacing: 0; font-variant-numeric: tabular-nums; }
+.table > .tr, .table > tbody > .tr, .table > thead > .tr, .tr { display: table-row; }
+.table > thead, thead { display: table-header-group; }
+.table > tbody, tbody { display: table-row-group; }
+.th, .td { display: table-cell; vertical-align: middle; }
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+
+.th, .table th, .cbi-section-table-titles > th, .cbi-section-table-titles > .th {
+	height: 36px;
+	padding: 6px 12px;
+	background: var(--s1);
+	border-bottom: 1px solid var(--line-2);
+	color: var(--text-3);
+	font-size: var(--fs-micro); font-weight: 600;
+	letter-spacing: .08em; text-transform: uppercase;
+	text-align: left;
+	white-space: nowrap;
+	vertical-align: middle;
+}
+.td, .table td {
+	height: 44px;
+	padding: 9px 12px;
+	border-bottom: 1px solid var(--line);
+	color: var(--text);
+	line-height: 1.45;
+	overflow-wrap: break-word;
+}
+.tr:last-child > .td, tbody > tr:last-child > td { border-bottom: 0; }
+.table .tr:not(.table-titles):not(.cbi-section-table-titles):not(.placeholder):hover > .td { background: color-mix(in srgb, var(--s3) 55%, transparent); }
+.th[data-sortable-row] { cursor: pointer; }
+.th[data-sortable-row]:hover { color: var(--text); }
+.th[data-sort-direction="asc"]::after { content: " \2191"; color: var(--accent-text); }
+.th[data-sort-direction="desc"]::after { content: " \2193"; color: var(--accent-text); }
+.tr.placeholder em, tr.placeholder em { font-style: normal; }
+/* a section's only line is a placeholder too (Overview: "No active leases found") */
+.cbi-section > div:not([class]) > em:only-child { font-style: normal; color: var(--text-3); }
+/* a header row short of the body's actions column (Repo Public Keys: two
+   titles over three cells) gets the missing cell, so its fill and line
+   run the table's width */
+.table:has(> tbody > .tr > .td.cbi-section-actions) > thead > .cbi-section-table-titles:not(:has(> .cbi-section-actions))::after {
+	content: ""; display: table-cell;
+	background: var(--s1);
+	border-bottom: 1px solid var(--line-2);
+}
+.tr.placeholder > .td, tr.placeholder > td { height: 64px; text-align: left; font-style: normal; color: var(--text-3); padding: var(--sp-5); }
+
+/* tables in a card run edge to edge; header sticks under the top bar */
+.cbi-section > .table, .cbi-section > div > .table, .cbi-section > div > div > .table.assoclist,
+.cbi-tblsection > .table, .cbi-value > .table {
+	width: calc(100% + 2 * var(--card-px)) !important;   /* beats inline width:100% */
+	margin-left: calc(-1 * var(--card-px)); margin-right: calc(-1 * var(--card-px));
+}
+.cbi-section .cbi-section.cbi-tblsection > .table { width: calc(100% + 2 * var(--card-px)); }
+:is(.cbi-section, .cbi-value) .table .tr > :is(.th, .td):first-child { padding-left: var(--card-px); }
+:is(.cbi-section, .cbi-value) .table .tr > :is(.th, .td):last-child { padding-right: var(--card-px); }
+.cbi-section > .table:last-child, .cbi-section > div:last-child > .table:last-child { margin-bottom: calc(-1 * var(--card-py) + 4px); }
+/* Nested sections have no bottom padding for the table to bleed into. */
+.cbi-section .cbi-section > .table:last-child,
+.cbi-section .cbi-section > div:last-child > .table:last-child { margin-bottom: 0; }
+.table .tr.table-titles > .th, .table .cbi-section-table-titles > .th, thead .th {
+	position: sticky; top: var(--stick-top); z-index: 20;
+}
+
+/* cells: numbers and addresses never break, rate pairs stack */
+.td:not(.cbi-value-field)[data-title*="MAC" i], .td:not(.cbi-value-field)[data-title*="address" i], .td:not(.cbi-value-field)[data-title*="IPv" i], .td:not(.cbi-value-field)[data-title*="Gateway" i],
+.td:not(.cbi-value-field)[data-title*="Target" i], .td:not(.cbi-value-field)[data-title*="Source" i], .td:not(.cbi-value-field)[data-title*="DUID" i], .td:not(.cbi-value-field)[data-title="PID"],
+.td:not(.cbi-value-field)[data-title*="Metric" i], .td:not(.cbi-value-field)[data-title*="Priority" i], .td:not(.cbi-value-field)[data-title*="Remaining" i], .td:not(.cbi-value-field)[data-title*="Usage" i] {
+	white-space: nowrap;
+	font-family: var(--mono); font-size: var(--fs-sm);
+	font-variant-numeric: tabular-nums slashed-zero;
+}
+.td > span:has(> span + br + span) { display: flex; flex-direction: column; gap: 1px; }
+.td > span:has(> span + br + span) > br { display: none; }
+.td > span:has(> span + br + span) > span { white-space: nowrap; font: var(--fs-sm)/1.5 var(--mono); }
+.td > span:has(> span + br + span) > span:not(:first-child) { color: var(--text-3); font-size: var(--fs-micro); }
+/* Wireless's stations: a rate line ("576.4 Mbit/s, 160 MHz, EHT-MCS 3,
+   EHT-NSS 2") breaks at its commas when the columns run short, which
+   kept the table wider than its card */
+.assoclist .td > span:has(> span + br + span) > span { white-space: normal; }
+
+/* badges inside cells are content, not pills: icon + text (a badge that
+   is a tooltip, Interfaces' device details, keeps the tooltip's box) */
+.td .ifacebadge:not(.cbi-tooltip) {
+	gap: 8px; padding: 0;
+	background: none; border: 0; box-shadow: none; border-radius: 0;
+	font-size: inherit; white-space: nowrap;
+}
+.td .ifacebadge img, .td .ifacebadge img[style] { width: 18px !important; height: 18px !important; flex: none; }
+.td .ifacebadge small { color: var(--text-3); font-family: var(--mono); font-size: var(--fs-micro); }
+.td > .ifacebadge + .ifacebadge, .td > span + .ifacebadge { margin-left: 10px; }
+.cbi-section-table-descr > .th { font-weight: 400; text-transform: none; letter-spacing: 0; font-size: var(--fs-sm); }
+.cbi-section-table-cell, .cbi-section-table-row > .td { vertical-align: middle; }
+.td.cbi-value-field .cbi-dropdown, .td.cbi-value-field input:not([type="checkbox"]), .td.cbi-value-field select { max-width: 220px; }
+/* A text field is width:100%, which an auto table layout counts as 0 wide, so
+   a column with a short header (Name and Path in Services > Network Shares)
+   shrank to a sliver and hid its value. Give the field a floor: 7em, which a
+   wide table (Samba's shares) still nearly fits beside; not on a phone,
+   where each row is a card of fixed columns and a floor overflows it. */
+@media (width > 720px) {
+	.td.cbi-value-field input[type="text"], .td.cbi-value-field input:not([type]) { min-width: 7em; }
+}
+
+/* key/value tables (status pages): quiet label column */
+.table:not(:has(.table-titles)) .tr > .td:first-child:nth-last-child(2) {
+	width: 32%;
+	color: var(--text-2);
+	font-weight: 500;
+}
+
+.td.cbi-value-field.inactive { visibility: hidden; }
+.td.cbi-section-actions, .th.cbi-section-actions { text-align: right; white-space: nowrap; width: 1%; }
+.td.cbi-section-actions > div:not(.btn, .cbi-button) { display: inline-flex; gap: 4px; flex-wrap: nowrap; align-items: center; }
+.td.cbi-section-actions .btn, .td.cbi-section-actions .cbi-button { padding: 0 10px; }
+/* three or more row actions: the main one plus ⋯ (menu-vantage.js
+   decorateRowActions); LuCI's other buttons stay in place, hidden, and
+   the menu clicks them */
+.vt-acts > .vt-acts-hidden { display: none !important; }
+.td.cbi-section-actions .vt-acts-more { width: var(--ctl-h); padding: 0; justify-content: center; }
+/* one width for the main action, so rows line up (Edit under Scan) */
+.td.cbi-section-actions .vt-acts > :not(.vt-acts-hidden, .vt-acts-more, .drag-handle) { min-width: 76px; justify-content: center; }
+.vt-acts-more svg { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+/* an action chosen from the menu runs on its hidden original: ⋯ shows
+   the spinner in place of the dots until it settles, and stays usable
+   for the row's other actions */
+.td.cbi-section-actions .vt-acts-more.spinning { pointer-events: auto; opacity: 1; }
+.vt-acts-more.spinning svg { display: none; }
+.td.cbi-section-actions .vt-acts-more.spinning::before { margin: 0; }
+.vt-actmenu {
+	position: fixed; z-index: 1100;
+	display: flex; flex-direction: column;
+	min-width: 168px; max-width: calc(100vw - 16px); padding: var(--sp-1);
+	overflow-y: auto; overscroll-behavior: contain;
+	border: 1px solid var(--line-2); border-radius: var(--r);
+	background: var(--s2); box-shadow: var(--shadow-pop);
+}
+.vt-actmenu[hidden] { display: none; }
+/* items as .cbi-dropdown's: the pointer's on --s4, the keyboard's with the
+   accent bar too */
+.vt-actmenu-item {
+	display: flex; align-items: center;
+	min-height: calc(var(--ctl-h) - 4px); padding: 4px 8px;
+	border: 0; border-radius: var(--r-sm);
+	background: transparent; color: var(--text);
+	font: inherit; font-size: var(--fs-base); font-weight: 400; text-align: left; white-space: nowrap; cursor: pointer;
+}
+.vt-actmenu-item:hover { background: var(--s4); }
+.vt-actmenu-item:focus-visible { background: var(--s4); outline: none; box-shadow: inset 2px 0 0 var(--accent-text); }
+.vt-actmenu-item.is-danger { color: var(--err); }
+.vt-actmenu-item[disabled] { opacity: .5; cursor: default; }
+.vt-actmenu-item[disabled]:hover { background: none; }
+.drag-handle { cursor: grab; color: var(--text-3); padding: 0 6px; font-family: var(--mono); }
+.drag-over-above > .td, .drag-over-above > td { box-shadow: inset 0 2px 0 var(--accent-text); }
+.drag-over-below > .td, .drag-over-below > td { box-shadow: inset 0 -2px 0 var(--accent-text); }
+.cbi-rowstyle-2 > .td { background: color-mix(in srgb, var(--s2) 50%, transparent); }
+
+.col-1 { width: 8.33%; } .col-2 { width: 16.66%; } .col-3 { width: 25%; } .col-4 { width: 33.33%; }
+.col-5 { width: 41.66%; } .col-6 { width: 50%; } .col-7 { width: 58.33%; } .col-8 { width: 66.66%; }
+.col-9 { width: 75%; } .col-10 { width: 83.33%; }
+
+.left { text-align: left !important; }
+.right { text-align: right !important; }
+.center { text-align: center !important; }
+.top { vertical-align: top !important; }
+.middle { vertical-align: middle !important; }
+.bottom { vertical-align: bottom !important; }
+.nowrap { white-space: nowrap; }
+div.right, div.left { display: block; }
+div.right { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-4); }
+div.right > .btn, div.right > .cbi-button, div.right > button { margin-left: 0; }
+/* a .left and .right pair on one line (the upload dialog's Browse… and
+   Cancel/Upload): the right group keeps to the line */
+#modal_overlay .modal div.left + div.right { margin-top: 0; }
+
+/* Tabs: one segmented control for every level, the menu's page tabs
+   (.vt-pagetabs in #vt-tabs), ui.tabs at page level, in a form or modal,
+   and tabs inside a tab. Nesting shows by where a control sits, not by
+   another look. It wraps its segments instead of hiding them. Every
+   segment is a whole control high (--ctl-h, 36px / 44px on touch) to
+   click or tap: the 3px between the track's edge and the drawn segment
+   is the segment's own transparent border, so the track is one control
+   high as well. */
+.cbi-tabmenu, .vt-tabs > .vt-pagetabs {
+	display: flex; flex-wrap: wrap; align-items: stretch;
+	width: fit-content; max-width: 100%; min-height: var(--ctl-h);
+	margin: 0 0 var(--sp-5); padding: 0;
+	list-style: none;
+	background: var(--seg-bg);
+	border-radius: var(--r-lg);
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+.vt-tabs > .vt-pagetabs { margin: 0; }
+.cbi-tabmenu > li { position: relative; flex: none; display: flex; max-width: 100%; }
+.cbi-tabmenu > li > a, .vt-pagetabs > .vt-tab {
+	flex: 1 1 auto;
+	display: flex; align-items: center; gap: 6px;
+	min-height: var(--ctl-h); padding: 0 10px;
+	border: 3px solid transparent; background-clip: padding-box;
+	border-radius: calc(var(--r) + 3px);
+	color: var(--text-2);
+	font-weight: 500;
+	white-space: nowrap;
+	text-decoration: none !important;
+}
+:is(.cbi-tabmenu > li > a, .vt-pagetabs > .vt-tab):hover { color: var(--text); }
+:is(.cbi-tabmenu > li > a, .vt-pagetabs > .vt-tab):focus-visible { outline-offset: -1px; border-radius: calc(var(--r) + 3px); }
+/* the selected segment carries the signal (text and ring): white on the
+   grey track alone was hard to pick out; hover keeps it */
+.cbi-tabmenu > li.cbi-tab > a, .cbi-tabmenu > li.cbi-tab > a:hover, .vt-pagetabs > .vt-tab[aria-current] { background-color: var(--seg-on); color: var(--accent-text); font-weight: 600; box-shadow: var(--seg-on-ring); }
+.cbi-tabmenu > li[data-errors] > a::after {
+	content: attr(data-errors);
+	display: inline-flex; align-items: center; justify-content: center;
+	min-width: 18px; height: 18px; padding: 0 5px;
+	border-radius: 999px;
+	background: var(--err); color: var(--err-ink);
+	font: 700 var(--fs-micro)/1 var(--mono);
+}
+.cbi-tabmenu > li.cbi-tab-disabled[data-errors] > a { color: var(--err); }
+[data-tab-title]:not([data-tab-active="true"]) { display: none; }
+.cbi-section-node-tabbed { padding-top: 0; }
+
+/* labels (status overview show/hide etc.) */
+.label {
+	display: inline-flex; align-items: center; justify-content: center;
+	height: 22px; padding: 0 8px;
+	border: 1px solid var(--line-2); border-radius: var(--r-sm);
+	background: var(--s2);
+	color: var(--text-3);
+	font-size: var(--fs-micro); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+	cursor: default;
+}
+.label[data-clickable] { cursor: pointer; }
+.label[data-clickable]:hover { color: var(--text); border-color: var(--text-3); }
+.label.notice, .label.important { color: var(--accent-text); border-color: var(--accent-line); background: var(--accent-soft); }
+.label.warning { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.label.success { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+.cbi-title > h3 > .label { margin-left: auto; }
+.cbi-title > h3::before { margin-right: 0; }
+
+/* interface badges and boxes */
+.ifacebadge {
+	display: inline-flex; align-items: center; gap: 6px;
+	padding: 3px 8px;
+	background: var(--s2);
+	border: 1px solid var(--line);
+	border-radius: var(--r);
+	font-size: var(--fs-sm);
+	vertical-align: middle;
+	white-space: nowrap;
+}
+.ifacebadge img { width: 16px; height: 16px; }
+.ifacebadge.large { padding: 6px 10px; gap: 8px; font-size: var(--fs-base); }
+.ifacebadge.large img { width: 20px; height: 20px; }
+/* a network's status (Wireless, its dialog): the signal beside the details
+   keeps one width, wide enough for "-100/-110 dBm", so the details do not
+   move as the reading changes (#122) */
+.ifacebadge.large > small:first-child { flex: none; min-width: 8.5em; text-align: center; }
+.ifacebadge-active { border-color: var(--accent-line); box-shadow: inset 0 0 0 1px var(--accent-line); }
+/* the device details tooltip (Interfaces): icon beside the details */
+.cbi-tooltip.ifacebadge { display: inline-grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; }
+
+/* "<strong>Label:</strong> value<br>" dumps (LuCI itemlist) -> aligned
+   label/value grid. Each span.nowrap becomes a subgrid row: the <strong>
+   is the label cell, the contiguous value run the anonymous value cell. */
+/* LuCI's " | " separators between the items are bare text, so each would
+   be a grid row of its own: no text size, line or row gap for them; the
+   items keep their own size and space */
+:is(.ifacebox-body, .ifacebadge) > span:has(> .nowrap) {
+	display: grid;
+	grid-template-columns: max-content minmax(0, 1fr);
+	column-gap: 14px; row-gap: 0;
+	align-items: baseline;
+	min-width: 0;
+	white-space: normal;
+	text-align: left;
+	font-size: 0; line-height: 0;
+}
+:is(.ifacebox-body, .ifacebadge) > span:has(> .nowrap) > br { display: none; }
+:is(.ifacebox-body, .ifacebadge) > span:has(> .nowrap) > :not(.nowrap) { font-size: var(--fs-sm); line-height: 1.55; }
+:is(.ifacebox-body, .ifacebadge) > span:has(> .nowrap) > .nowrap {
+	grid-column: 1 / -1;
+	display: grid; grid-template-columns: subgrid;
+	align-items: baseline;
+	min-width: 0;
+	margin-block: 1.5px;
+	white-space: normal; overflow-wrap: anywhere;
+	color: var(--text);
+	font: 400 var(--fs-sm)/1.55 var(--mono);
+	font-variant-numeric: tabular-nums slashed-zero;
+}
+:is(.ifacebox-body, .ifacebadge) > span:has(> .nowrap) > .nowrap:not(:has(> strong)) { display: block; }
+:is(.ifacebox-body, .ifacebadge) > span:has(> .nowrap) > .nowrap > strong {
+	color: var(--text-3);
+	font: 600 var(--fs-micro)/1.55 var(--font);
+	letter-spacing: .08em; text-transform: uppercase;
+	white-space: nowrap;
+}
+
+/* multi-line badges (device details in tooltips / modals): icon leads the first line */
+.ifacebadge:has(> span > .nowrap) { align-items: flex-start; white-space: normal; }
+.ifacebadge:has(> span > .nowrap) > img { margin-top: 2px; }
+
+/* status boxes (Overview: upstream, radios) -> cards */
+.network-status-table {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+	gap: var(--sp-3);
+	margin-bottom: var(--sp-2);
+}
+.ifacebox {
+	display: inline-flex; flex-direction: column;
+	min-width: 0;
+	margin: 0;
+	background: var(--s2);
+	border: 1px solid var(--line);
+	border-radius: var(--r-lg);
+	overflow: hidden;
+	text-align: left;
+	vertical-align: top;
+}
+.ifacebox-head {
+	padding: 6px 10px;
+	background: var(--s3);
+	border-bottom: 1px solid var(--line);
+	color: var(--text);
+	font-size: var(--fs-sm);
+	text-align: center;
+}
+/* a box holding a tooltip (Status -> Port status: networks, counters) must
+   let it out, so its rounded corners come from the first and last child
+   instead of from clipping */
+.ifacebox:has(.cbi-tooltip-container) { overflow: visible; }
+/* Status -> Port status: LuCI spreads the boxes over equal columns as wide
+   as the card (inline grid, boxes capped at 100 px); pack them instead.
+   ImmortalWrt fixes the boxes at 100 px and centres them in the row, so a
+   box whose counter wraps stood taller than the rest: fill the column and
+   share the row's height */
+div:has(> .ifacebox > .ifacebox-head.cbi-tooltip-container) {
+	grid-template-columns: repeat(auto-fill, minmax(108px, 124px)) !important; gap: 12px; justify-content: start;
+	align-items: stretch !important; justify-items: stretch !important;
+}
+div:has(> .ifacebox > .ifacebox-head.cbi-tooltip-container) > .ifacebox { width: 100% !important; max-width: none !important; margin: 0 !important; }
+.ifacebox:has(.cbi-tooltip-container) > :first-child { border-radius: calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px) 0 0; }
+.ifacebox:has(.cbi-tooltip-container) > :last-child { border-radius: 0 0 calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px); }
+.ifacebox-head.active { background: var(--accent-soft); color: var(--accent-text); }
+.ifacebox-body { padding: 8px 10px; font-size: var(--fs-sm); color: var(--text-2); }
+.ifacebox-body img { width: 18px; height: 18px; }
+/* Status -> Port status, each box: a ring by the name of a port without
+   link (as on the upstream and radio cards; a port with link has none),
+   the speed as its figure, the zone as a bare bar and the counters'
+   arrows in the dashboard's upload and download colours (menu-vantage.js
+   puts them in spans). LuCI's port picture only repeats the link state:
+   hidden. A port without link is muted throughout */
+.ifacebox:has(> .ifacebox-head.cbi-tooltip-container) > .ifacebox-head:first-child {
+	display: flex; align-items: center; gap: 8px;
+	padding: 10px 10px 2px;
+	background: none; border-bottom: 0;
+	font-family: var(--mono); font-weight: 600 !important; text-align: left;
+}
+.ifacebox:has(> .ifacebox-head.cbi-tooltip-container) > .ifacebox-head:first-child::before {
+	content: ""; flex: none;
+	width: 8px; height: 8px; border-radius: 50%;
+	box-shadow: inset 0 0 0 1.5px var(--text-3);
+}
+.ifacebox:has(> .ifacebox-body > img[src$="_down.svg"]) > .ifacebox-head:first-child { color: var(--text-2); }
+.ifacebox:has(> .ifacebox-body > img[src$="_up.svg"]) > .ifacebox-head:first-child::before { content: none; }
+.ifacebox:has(> .ifacebox-head.cbi-tooltip-container) > .ifacebox-head:first-child + .ifacebox-body { padding: 2px 10px 6px; color: var(--text-3); }
+.ifacebox:has(> .ifacebox-body > img[src$="_up.svg"]) > .ifacebox-head:first-child + .ifacebox-body { color: var(--text-2); }
+.ifacebox:has(> .ifacebox-head.cbi-tooltip-container) > .ifacebox-head:first-child + .ifacebox-body > :is(img, br) { display: none; }
+.ifacebox:has(> .ifacebox-head.cbi-tooltip-container) > .ifacebox-head:first-child + .ifacebox-body > span {
+	color: var(--text);
+	font: 600 var(--fs-md)/1.4 var(--font); font-variant-numeric: tabular-nums;
+}
+.ifacebox-head.cbi-tooltip-container:has(> .zonebadge) { gap: 3px; padding: 4px 10px; background: none; border-bottom: 0; }
+.ifacebox-head.cbi-tooltip-container > .zonebadge[style*="--zone-color-rgb"] {
+	height: 3px !important; padding: 0;
+	border: 0; border-radius: var(--r-xs); box-shadow: none;
+	background-color: rgb(var(--zone-color-rgb)) !important;
+}
+.ifacebox-head.cbi-tooltip-container > .zonebadge:is([style*="--zone-color-rgb: 238, 238, 238"], [style*="--zone-color-rgb:238, 238, 238"], [style*="--zone-color-rgb:238,238,238"]) { background-color: var(--text-3) !important; }
+.ifacebox-head.cbi-tooltip-container + .ifacebox-body { padding: 4px 10px 10px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+/* the PoE power line comes inline as black: black on the dark card */
+.ifacebox-head.cbi-tooltip-container + .ifacebox-body > .cbi-tooltip-container > span[style*="color:#000"] { color: inherit !important; }
+.ifacebox:has(> .ifacebox-body > img[src$="_down.svg"]) > .ifacebox-head.cbi-tooltip-container + .ifacebox-body { color: var(--text-3); }
+.vt-port-dir[data-dir="tx"] { color: var(--v-chart-5); }
+.vt-port-dir[data-dir="rx"] { color: var(--v-chart-1); }
+.ifacebox:has(> .ifacebox-body > img[src$="_down.svg"]) .vt-port-dir { color: inherit; }
+
+.network-status-table > .ifacebox { display: flex; }
+.network-status-table .ifacebox-head {
+	display: flex; align-items: center; gap: 10px;
+	padding: 14px 16px 4px;
+	background: none; border: 0; box-shadow: none;
+	color: var(--text) !important;
+	font-size: var(--fs-md); text-align: left;
+}
+.network-status-table .ifacebox-head strong { font-weight: 600; font-family: var(--mono); letter-spacing: -.01em; }
+/* up is the normal case and draws nothing; a box that is down (an
+   upstream not connected, a radio off) gets a hollow ring */
+.network-status-table .ifacebox-head::before {
+	content: ""; flex: none;
+	width: 8px; height: 8px; border-radius: 50%;
+	box-shadow: inset 0 0 0 1.5px var(--text-3);
+}
+.network-status-table .ifacebox-head.active::before { content: none; }
+.network-status-table .ifacebox-head[data-v-band]::after {
+	content: attr(data-v-band);
+	margin-left: auto;
+	padding: 2px 8px;
+	border: 1px solid var(--line-2); border-radius: 999px;
+	color: var(--text-2);
+	font: 600 var(--fs-micro)/1.5 var(--mono); letter-spacing: .02em;
+}
+.network-status-table .ifacebox-body { display: flex; flex-direction: column; gap: 14px; padding: 8px 16px 16px; }
+.network-status-table .ifacebox-body > div:not(:empty) {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+	gap: 8px;
+}
+/* SSID / device blocks: compact sub-cards, signal icon as leading glyph,
+   first line (SSID / device) promoted to the card title */
+.network-status-table .ifacebox .ifacebadge {
+	display: grid;
+	grid-template-columns: 20px minmax(0, 1fr);
+	align-items: start;
+	gap: 0 10px;
+	padding: 10px 12px;
+	background: var(--s1);
+	border: 1px solid var(--line);
+	border-radius: var(--r);
+	white-space: normal;
+}
+.network-status-table .ifacebox .ifacebadge > img { width: 18px; height: 18px; margin-top: 1px; }
+.network-status-table .ifacebox .ifacebadge > span > .nowrap:first-child { display: block; margin-bottom: 4px; font: 600 var(--fs-base)/1.4 var(--font); }
+.network-status-table .ifacebox .ifacebadge > span > .nowrap:first-child > strong { display: none; }
+
+/* zone colours arrive inline (--zone-color-rgb + background-color): tint instead */
+.zonebadge {
+	display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap;
+	padding: 2px 8px;
+	border-radius: var(--r-sm);
+	border: 1px solid var(--line);
+	color: var(--text);
+	font-size: var(--fs-sm);
+	white-space: nowrap;
+}
+.zonebadge[style*="--zone-color-rgb"], .ifacebox-head[style*="--zone-color-rgb"] {
+	background-color: rgba(var(--zone-color-rgb), var(--zone-mix)) !important;
+	border-color: rgba(var(--zone-color-rgb), .55) !important;
+	color: var(--text) !important;
+}
+.zonebadge[style*="--zone-color-rgb"] { box-shadow: inset 3px 0 0 rgb(var(--zone-color-rgb)); padding-left: 10px; }
+.ifacebox-head[style*="--zone-color-rgb"] { box-shadow: inset 0 3px 0 rgb(var(--zone-color-rgb)); border-bottom-color: rgba(var(--zone-color-rgb), .4) !important; }
+.ifacebox-head[style*="background-color:#"], .ifacebox-head[style*="background-color: #"] { color: #111 !important; }
+/* no zone: LuCI's light grey (238, 238, 238) was the brightest thing on a
+   dark page; theme neutrals instead, edge in the muted text colour */
+:is(.zonebadge, .ifacebox-head):is([style*="--zone-color-rgb: 238, 238, 238"], [style*="--zone-color-rgb:238, 238, 238"], [style*="--zone-color-rgb:238,238,238"]) {
+	background-color: var(--s3) !important;
+	border-color: var(--line-2) !important;
+}
+.zonebadge:is([style*="--zone-color-rgb: 238, 238, 238"], [style*="--zone-color-rgb:238, 238, 238"], [style*="--zone-color-rgb:238,238,238"]) { box-shadow: inset 3px 0 0 var(--text-3); }
+.ifacebox-head:is([style*="--zone-color-rgb: 238, 238, 238"], [style*="--zone-color-rgb:238, 238, 238"], [style*="--zone-color-rgb:238,238,238"]) { box-shadow: inset 0 3px 0 var(--text-3); }
+/* muted, but on the zone tint: --text-3 fell to 3.1:1 there in dark mode */
+.zonebadge > em { font-style: normal; color: color-mix(in srgb, var(--text) 78%, transparent); }
+.zonebadge .ifacebadge { padding: 0 4px; border: 0; background: transparent; }
+.zone-forwards { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.zone-forwards > span { color: var(--text-3); }
+
+/* notifications */
+.alert-message {
+	position: relative;
+	margin: 0 0 var(--sp-4);
+	padding: var(--sp-3) var(--sp-4);
+	background: var(--s1);
+	border: 1px solid var(--line-2);
+	border-left: 3px solid var(--info);
+	border-radius: var(--r);
+	color: var(--text);
+	gap: var(--sp-3);
+	transition: opacity .3s ease, transform .3s ease;
+}
+.alert-message.fade-in { animation: vt-fade-in .25s ease-out; }
+.alert-message.fade-out { opacity: 0; transform: translateY(-4px); }
+@keyframes vt-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.alert-message h4 { margin: 0 0 var(--sp-1); font-size: var(--fs-md); }
+.alert-message p:last-child, .alert-message ul:last-child { margin-bottom: 0; }
+.alert-message pre { margin-top: var(--sp-2); }
+.alert-message.info, .alert-message.notice { border-left-color: var(--info); background: color-mix(in srgb, var(--info-soft) 60%, var(--s1)); }
+.alert-message.success { border-left-color: var(--ok); background: color-mix(in srgb, var(--ok-soft) 60%, var(--s1)); }
+.alert-message.warning { border-left-color: var(--warn); background: color-mix(in srgb, var(--warn-soft) 70%, var(--s1)); }
+.alert-message.error, .alert-message.danger { border-left-color: var(--err); background: color-mix(in srgb, var(--err-soft) 70%, var(--s1)); }
+
+/* spinners */
+.spinning { position: relative; }
+.spinning::before, em.spinning::before, p.spinning::before {
+	content: "";
+	display: inline-block;
+	width: 14px; height: 14px;
+	margin-right: 8px;
+	vertical-align: -2px;
+	border: 2px solid var(--line-2);
+	border-top-color: var(--accent-text);
+	border-radius: 50%;
+	animation: vt-spin .8s linear infinite;
+}
+#view > .spinning::before, .vt-main > .spinning::before { width: 20px; height: 20px; margin: 0; }
+.btn.spinning, .cbi-button.spinning { pointer-events: none; opacity: .85; }
+.btn.spinning::before, .cbi-button.spinning::before { margin-right: 2px; border-color: color-mix(in srgb, currentColor 25%, transparent); border-top-color: currentColor; }
+.cbi-dropdown.spinning > .open { visibility: hidden; }
+@keyframes vt-spin { to { transform: rotate(360deg); } }
+
+/* tooltip */
+.cbi-tooltip {
+	position: absolute; z-index: 2100;
+	left: -10000px; top: -10000px;
+	max-width: 360px;
+	padding: 6px 10px;
+	background: var(--s4);
+	color: var(--text);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r);
+	box-shadow: var(--shadow-pop);
+	font-size: var(--fs-sm);
+	line-height: 1.45;
+	white-space: pre-line;
+	opacity: 0;
+	transition: opacity .15s;
+	pointer-events: none;
+}
+.cbi-tooltip.error { background: var(--err); border-color: var(--err); color: var(--err-ink); }
+.cbi-tooltip.warning { background: var(--warn); border-color: var(--warn); color: var(--warn-ink); }
+.cbi-tooltip.info { background: var(--info); border-color: var(--info); color: var(--info-ink); }
+.cbi-tooltip-container { position: relative; cursor: help; }
+/* sized to its text, not to a narrow container such as a 100 px port box */
+/* parked at the top while hidden, so it adds no height below its box */
+.cbi-tooltip-container > .cbi-tooltip { left: -10000px; top: 0; margin-top: 6px; white-space: normal; width: max-content; max-width: min(360px, calc(100vw - 32px)); }
+.cbi-tooltip-container:hover > .cbi-tooltip { left: 0; top: 100%; opacity: 1; translate: var(--vt-tip-dx, 0px) 0; }
+.cbi-tooltip-container > .cbi-tooltip.left { right: 0; }
+.cbi-tooltip-container:hover > .cbi-tooltip.left { left: auto; right: 0; }
+
+/* modal */
+#modal_overlay {
+	position: fixed; inset: 0; z-index: 1000;
+	display: none;
+	overflow-y: auto;
+	padding: 8vh var(--sp-4) var(--sp-8);
+	background: var(--scrim);
+}
+body.modal-overlay-active { overflow: hidden; }
+body.modal-overlay-active #modal_overlay { display: block; }
+#modal_overlay > .modal {
+	position: relative;
+	width: min(720px, 100%);
+	margin: 0 auto;
+	padding: var(--sp-5) var(--sp-6);
+	background: var(--s1);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r-lg);
+	box-shadow: var(--shadow-pop);
+	color: var(--text);
+	animation: vt-pal-in .14s ease-out;
+}
+#modal_overlay > .modal > h4:first-child {
+	margin: calc(-1 * var(--sp-5)) calc(-1 * var(--sp-6)) var(--sp-4);
+	padding: var(--sp-4) var(--sp-6);
+	border-bottom: 1px solid var(--line);
+	font-size: var(--fs-lg);
+}
+#modal_overlay > .modal.cbi-modal { width: min(960px, 100%); }
+#modal_overlay > .modal .cbi-progressbar { width: 100%; max-width: none; }
+#modal_overlay > .modal:has(> textarea[readonly]) { width: min(1080px, 100%); }
+#modal_overlay > .modal > textarea[readonly] { max-width: 100%; }
+#modal_overlay > .modal .cbi-section { background: none; border: 0; padding: 0; margin: 0; box-shadow: none; }
+/* a modal's sections have no card padding, so nothing in them bleeds out
+   by it: tables keep the modal's width (a bleed scrolled the section
+   sideways) and their first and last cells line up with the fields */
+#modal_overlay > .modal .cbi-section { --card-px: 0px; --card-py: 0px; }
+#modal_overlay > .modal .cbi-section > h3:first-child { margin: 0 0 var(--sp-3); padding: 0; min-height: 0; border: 0; }
+.uci-dialog > .cbi-section > br, .uci-change-list > br:last-child { display: none; }
+.uci-dialog > .cbi-section > strong { display: block; margin-bottom: var(--sp-2); color: var(--text-3); font-size: var(--fs-micro); letter-spacing: .08em; text-transform: uppercase; }
+#modal_overlay > .modal .cbi-map { margin-bottom: 0; }
+#modal_overlay > .modal .cbi-map > h2 { display: none; }
+#modal_overlay > .modal .cbi-page-actions,
+#modal_overlay > .modal > .right, #modal_overlay > .modal > .button-row {
+	position: static;
+	margin: var(--sp-5) calc(-1 * var(--sp-6)) calc(-1 * var(--sp-5));
+	padding: var(--sp-3) var(--sp-6);
+	background: var(--s2);
+	border-top: 1px solid var(--line);
+	border-radius: 0 0 var(--r-lg) var(--r-lg);
+	backdrop-filter: none;
+}
+#modal_overlay > .modal > .right:not(:last-child), #modal_overlay > .modal > .button-row:not(:last-child) { margin-bottom: 0; border-radius: 0; }
+
+/* apply / rollback countdown */
+#modal_overlay > .modal.alert-message {
+	width: min(520px, 100%);
+	margin-top: 18vh;
+	padding: var(--sp-5) var(--sp-6);
+	border-left-width: 1px;
+	display: flex; align-items: center; gap: var(--sp-3);
+	font-size: var(--fs-md);
+}
+#modal_overlay > .modal.alert-message::after {
+	content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+	border-radius: var(--r-lg) 0 0 var(--r-lg);
+	background: var(--info);
+}
+#modal_overlay > .modal.alert-message.notice::after { background: var(--accent-text); }
+#modal_overlay > .modal.alert-message.warning::after { background: var(--warn); }
+#modal_overlay > .modal.alert-message.error::after, #modal_overlay > .modal.alert-message.danger::after { background: var(--err); }
+#modal_overlay > .modal.alert-message.spinning::before { flex: none; width: 18px; height: 18px; margin: 0; }
+/* LuCI shows each step of the apply countdown through showModal(), which
+   resets the dialog's class to "modal" and lays it out before "spinning"
+   is back: the spinner, a ::before of .spinning, was dropped and started
+   over at 0° every second. The dialog keeps that ::before, empty, with
+   the same animation paused in between, so the spinner turns on. */
+#modal_overlay > .modal:not(.spinning)::before {
+	content: ""; position: absolute; width: 0; height: 0; border: 0;
+	animation: vt-spin .8s linear infinite paused;
+}
+#modal_overlay > .modal.alert-message > * { margin: 0; }
+#modal_overlay > .modal.alert-message .right, #modal_overlay > .modal.alert-message .button-row { margin: 0 0 0 auto; padding: 0; border: 0; background: none; }
+#modal_overlay > .modal.alert-message:has(> .right) { flex-wrap: wrap; }
+/* a warning with a title or buttons ("Connectivity change", "Configuration
+   changes have been rolled back!", "Device unreachable!" on 25.12, whose
+   buttons sit in a .button-row) stacks them, its buttons on the right;
+   side by side the text was a narrow column between title and buttons.
+   The one-line status keeps its spinner beside the text. */
+#modal_overlay > .modal.alert-message:has(> h4, > .button-row) { flex-direction: column; align-items: stretch; }
+
+/* changes dialog */
+.uci-dialog .uci-change-legend {
+	display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4);
+	margin: 0 0 var(--sp-4);
+	padding: var(--sp-2) var(--sp-3);
+	background: var(--s2);
+	border: 1px solid var(--line);
+	border-radius: var(--r);
+}
+.uci-change-legend-label { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); font-size: var(--fs-sm); }
+
+.uci-change-list {
+	margin: 0;
+	padding: var(--sp-3);
+	background: var(--s2);
+	border: 1px solid var(--line);
+	border-radius: var(--r);
+	font-family: var(--mono);
+	font-size: var(--fs-sm);
+	line-height: 1.7;
+	max-height: 52vh;
+	overflow: auto;
+}
+.uci-change-list > h5 {
+	margin: var(--sp-3) 0 var(--sp-1);
+	font: 600 var(--fs-micro)/1.4 var(--font);
+	letter-spacing: .08em; text-transform: uppercase;
+	color: var(--text-3);
+}
+.uci-change-list > h5:first-child { margin-top: 0; }
+.uci-change-list ins, .uci-change-list del, .uci-change-list var {
+	display: block;
+	padding: 1px 8px;
+	border-left: 2px solid;
+	text-decoration: none;
+	font-style: normal;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+.uci-change-list ins { border-color: var(--ok); background: var(--ok-soft); color: var(--text); }
+.uci-change-list del { border-color: var(--err); background: var(--err-soft); color: var(--text); }
+.uci-change-list var { border-color: var(--warn); background: var(--warn-soft); color: var(--text); }
+.uci-change-list ins + ins, .uci-change-list del + del, .uci-change-list var + var { margin-top: 1px; }
+.uci-change-list var ins, .uci-change-list var del { display: inline; border: 0; padding: 0 2px; }
+.uci-change-list var del { text-decoration: line-through; }
+
+
+/* legend swatches */
+.uci-change-legend-label > :is(ins, del, var) {
+	display: inline-flex; flex: none;
+	width: 14px; height: 14px; padding: 0;
+	border: 1px solid; border-radius: var(--r-xs);
+	font-size: 0; overflow: hidden;
+	text-decoration: none; font-style: normal;
+}
+.uci-change-legend-label > ins { border-color: var(--ok); background: var(--ok-soft); }
+.uci-change-legend-label > del { border-color: var(--err); background: var(--err-soft); }
+.uci-change-legend-label > var { border-color: var(--warn); background: var(--warn-soft); }
+.uci-change-legend-label > var > * { display: none; }
+.uci-change-legend-label > var:has(> del:only-child) { border-color: var(--err); background: linear-gradient(135deg, var(--warn-soft) 50%, var(--err-soft) 50%); }
+
+/* misc LuCI fragments */
+.cbi-section-error { margin: 0 0 var(--sp-3); padding: var(--sp-2) var(--sp-3); border-left: 3px solid var(--err); background: var(--err-soft); border-radius: var(--r-sm); }
+.cbi-section-error ul { margin: 0; }
+.cbi-value-field .cbi-value-description:empty { display: none; }
+.flash { animation: vt-flash .9s ease-out; }
+@keyframes vt-flash { from { background: var(--accent-soft); } to { background: transparent; } }
+.cbi-map-tabbed > .cbi-section { margin-top: 0; }
+.assoclist .td { vertical-align: middle; }
+/* free-standing tables (no section around them) become a card; clip, not
+   hidden: a scroll container would capture the sticky header */
+#view > .table, #view > div:not(.cbi-section) > .table, .cbi-map > .table, #view > div > div > [data-tab-title]:not(.cbi-section) > .table {
+	margin: 0 0 var(--sp-4);
+	background: var(--s1);
+	border: 1px solid var(--line);
+	border-radius: var(--r-lg);
+	box-shadow: var(--v-shadow);
+	overflow: clip;
+}
+:is(#view, #view > div:not(.cbi-section), .cbi-map, [data-tab-title]:not(.cbi-section)) > .table .tr > :is(.th, .td):first-child { padding-left: var(--card-px); }
+:is(#view, #view > div:not(.cbi-section), .cbi-map, [data-tab-title]:not(.cbi-section)) > .table .tr > :is(.th, .td):last-child { padding-right: var(--card-px); }
+#view > h3, #view > div > h3 { margin: var(--sp-6) 0 var(--sp-3); font-size: var(--fs-md); }
+/* LuCI 24.10: Status -> Overview's sections are #view's children with the
+   heading first (25.12 wraps it in .cbi-title): it keeps the header row's
+   bleed, which the rule above would replace */
+#view > .cbi-section > h3:first-child { margin: calc(-1 * var(--card-py)) calc(-1 * var(--card-px)) var(--card-py); }
+/* Table cells supply the spacing below a card header. */
+#view .cbi-section > .cbi-title:has(+ div > .table:first-child),
+#view > .cbi-section > h3:first-child:has(+ div > .table:first-child),
+#view .cbi-section:not(.cbi-tblsection, .cbi-section .cbi-section) > h3:first-child:has(+ .table) { margin-bottom: 0; }
+/* a table section whose table starts with its rows, no column titles
+   (Network -> Wireless): the band read as a taller first row (#122).
+   LuCI 25.12 adds a thead only for titles; 24.10 puts rows in the table */
+#view .cbi-tblsection:not(.cbi-section .cbi-section) > h3:first-child:has(+ .table > :is(tbody, .tbody):first-child, + .table > .tr:first-child:not(.cbi-section-table-titles, .table-titles)) { margin-bottom: 0; }
+#view > h2:not(:first-child), #view > h3:not(:first-child) { margin-top: var(--sp-6); }
+.cbi-section > .table + h3, .cbi-section > .table + .cbi-title, .cbi-section > div + h3 { margin-top: var(--sp-6); }
+.includes { margin-top: var(--sp-4); }
+#view > .cbi-section:first-child { margin-top: 0; }
+.cbi-section > div[style*="display: none"] + div { display: block; }
+/* the QR image gets a white tile; the "Generate QR" button (also .qr-code) stays a button */
+.wifi-qr-code-content, div.qr-code { background: #fff; padding: var(--sp-2); border-radius: var(--r); }
+iframe { border: 1px solid var(--line); border-radius: var(--r); }
+
+/* ------------------------------------------------------ 7b. stock charts
+
+   Status -> Realtime Graphs and Channel Analysis. The views insert their
+   svg/*.svg templates inline, so everything below reaches the chart; LuCI's
+   inline presentation (white box, black hairlines, #eee text with shadow,
+   blue/green/red fills) needs !important to lose against style="". Series
+   colours come from --v-chart-N; area gradients live in #v-chart-defs
+   (added by menu-vantage.js). Host box: a view draws with the width of
+   #view, so the chart runs edge to edge in its card to match that width. */
+
+#v-chart-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+.v-grad stop { stop-color: currentColor; }
+.v-grad .v-stop-top { stop-opacity: calc(var(--v-chart-fill-opacity) * 1.6); }
+.v-grad .v-stop-bottom { stop-opacity: .02; }
+.v-grad-1 { color: var(--v-chart-1); } .v-grad-2 { color: var(--v-chart-2); } .v-grad-3 { color: var(--v-chart-3); }
+.v-grad-4 { color: var(--v-chart-4); } .v-grad-5 { color: var(--v-chart-5); } .v-grad-6 { color: var(--v-chart-6); }
+
+/* chart host (height:300px realtime, #channel_graph 400px) */
+#view div[style*="height:300px"][style*="background"], #view div[id="channel_graph"] {
+	position: relative;
+	width: calc(100% + 2 * var(--card-px)) !important;
+	margin: 0 calc(-1 * var(--card-px));
+	background: transparent !important;
+	border: 0 !important;
+	border-bottom: 1px solid var(--v-line) !important;
+	border-radius: 0;
+	overflow: hidden;
+}
+#view div[style*="height:300px"][style*="background"] > svg, #view div[id="channel_graph"] > svg { display: block; overflow: hidden; }
+/* the area polylines close along x=0 and x=width: keep those edges out of view */
+#view div[style*="height:300px"][style*="background"] > svg { clip-path: inset(0 1px 0 1px); }
+#view div[style*="height:300px"][style*="background"] svg line, #view div[id="channel_graph"] svg line {
+	stroke: var(--v-chart-grid) !important;
+	stroke-width: 1px !important;
+	stroke-dasharray: none !important;
+	shape-rendering: crispEdges;
+}
+#view div[style*="height:300px"][style*="background"] svg text, #view div[id="channel_graph"] svg text {
+	fill: var(--v-chart-axis) !important;
+	text-shadow: none !important;
+	font: 500 var(--fs-micro)/1 var(--v-mono) !important;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: .02em;
+	paint-order: stroke;                   /* halo: labels stay legible over areas */
+	stroke: var(--s1); stroke-width: 3px; stroke-linejoin: round;
+}
+
+/* realtime series: 1.75px strokes over a fading area */
+body[data-page^="admin-status-realtime"] #view svg polyline {
+	stroke-width: 1.75px !important;
+	stroke-linejoin: round; stroke-linecap: round;
+	fill-opacity: 1 !important;
+	fill: none !important;
+}
+body[data-page^="admin-status-realtime"] #view svg polyline:is(#load01, #rx, #rssi, #udp) { stroke: var(--v-chart-1) !important; fill: url(#v-grad-1) !important; }
+body[data-page^="admin-status-realtime"] #view svg polyline:is(#load05, #tx, #rate, #tcp) { stroke: var(--v-chart-2) !important; fill: url(#v-grad-2) !important; }
+body[data-page^="admin-status-realtime"] #view svg polyline:is(#load15, #noise, #other) { stroke: var(--v-chart-3) !important; fill: url(#v-grad-3) !important; }
+/* overlapping areas: only the lead series carries a full wash */
+body[data-page^="admin-status-realtime"] #view svg polyline:is(#load05, #tx, #tcp, #load15, #noise, #other) { fill-opacity: .5 !important; }
+
+/* "(4 minute window, 3 second interval)" */
+body[data-page^="admin-status-realtime"] #view .cbi-section > br { display: none; }
+body[data-page^="admin-status-realtime"] #view .cbi-section > div.right:has(> small[id^="scale"]) { margin: 6px 0 0; }
+body[data-page^="admin-status-realtime"] #view small[id^="scale"] { color: var(--v-chart-axis); font: var(--fs-micro)/1.4 var(--v-mono); letter-spacing: .02em; }
+body[data-page^="admin-status-realtime"] #view .cbi-section > .table ~ div[style*="height:300px"] { margin-top: var(--sp-6); }
+body[data-page^="admin-status-realtime"] #view .cbi-section-create:empty { display: none; }
+
+/* legend tables -> stat rows: colour key + label | current | avg | peak */
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) {
+	display: block !important;
+	width: auto !important;
+	margin: var(--sp-2) 0 0 !important;
+	background: none; border: 0; box-shadow: none;
+}
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr {
+	display: grid;
+	grid-template-columns: minmax(150px, 220px) minmax(110px, 200px) max-content minmax(90px, 170px) max-content minmax(90px, 1fr);
+	align-items: baseline;
+	column-gap: var(--sp-3);
+	padding: 10px 0;
+	border-top: 1px solid var(--v-line);
+	--key: var(--v-chart-1);
+}
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr:first-child { border-top: 0; }
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr:hover > .td { background: none !important; }
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr > .td {
+	display: block;
+	height: auto; min-width: 0;
+	padding: 0 !important;
+	border: 0 !important;
+	text-align: left !important;
+	background: none;
+	line-height: 1.35;
+}
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr > .td:nth-child(1) strong {
+	display: inline-flex; align-items: center; gap: 9px;
+	border: 0 !important;
+	color: var(--v-text); font-weight: 500;
+}
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr > .td:nth-child(1) strong::before {
+	content: ""; flex: none;
+	width: 14px; height: 3px; border-radius: var(--r-xs);
+	background: var(--key);
+}
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr > .td:is(:nth-child(3), :nth-child(5)) strong {
+	color: var(--v-text-3);
+	font-size: var(--fs-micro); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+}
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr > .td:is(:nth-child(2), :nth-child(4), :nth-child(6)) {
+	font-family: var(--v-mono); font-variant-numeric: tabular-nums;
+	color: var(--v-text-3); font-size: var(--fs-micro);
+	white-space: nowrap;
+}
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr > .td:is(:nth-child(2), :nth-child(4), :nth-child(6))::first-line { color: var(--v-text-2); font-size: var(--fs-sm); }
+body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr > .td:nth-child(2)::first-line { color: var(--v-text); font-weight: 600; font-size: var(--fs-md); }
+body[data-page^="admin-status-realtime"] #view .tr:has(:is(#lb_load01_cur, #rx_bw_cur, #rssi_bw_cur, #lb_udp_cur)) { --key: var(--v-chart-1); }
+body[data-page^="admin-status-realtime"] #view .tr:has(:is(#lb_load05_cur, #tx_bw_cur, #rate_bw_cur, #lb_tcp_cur)) { --key: var(--v-chart-2); }
+body[data-page^="admin-status-realtime"] #view .tr:has(:is(#lb_load15_cur, #noise_bw_cur, #lb_otr_cur)) { --key: var(--v-chart-3); }
+
+/* connections: filter row + conntrack table */
+body[data-page^="admin-status-realtime"] #view #settings-row { gap: var(--sp-3); align-items: center; margin: var(--sp-5) 0 var(--sp-3); }
+body[data-page^="admin-status-realtime"] #view #settings-row > .right { flex: none !important; }
+body[data-page^="admin-status-realtime"] #view #settings-row input { max-width: 420px; }
+/* "Enable DNS lookups" switches the view, it saves nothing: not the lime
+   primary LuCI's apply class would make it */
+:is(.btn, .cbi-button).toggle-lookups { background: var(--s3); border-color: var(--line-2); color: var(--text); font-weight: 500; }
+:is(.btn, .cbi-button).toggle-lookups:hover { background: var(--s4); border-color: var(--text-3); color: var(--text); }
+#connections .tr > .td { height: 40px; padding-top: 7px; padding-bottom: 7px; }
+#connections .tr > .td:first-child { padding-left: var(--card-px); }
+#connections .tr > .td:last-child, #connections .tr > .th:last-child { padding-right: var(--card-px); text-align: right; white-space: nowrap; }
+#connections .tr > .th:first-child { padding-left: var(--card-px); }
+#connections .tr:not(.table-titles) > .td:is(:nth-child(1), :nth-child(2)) {
+	color: var(--v-text-2);
+	font: 600 var(--fs-micro)/1.5 var(--v-mono); letter-spacing: .05em;
+}
+#connections .tr:not(.table-titles) > .td:is(:nth-child(3), :nth-child(4)) { font-family: var(--v-mono); font-size: var(--fs-sm); overflow-wrap: break-word; }
+#connections .tr > .th:is(:nth-child(1), :nth-child(2)) { width: 9%; }
+#connections .tr > .th:is(:nth-child(3), :nth-child(4)) { width: 31%; }
+#connections .tr > .th:nth-child(5) { width: 20%; }
+#connections .tr:not(.table-titles) > .td:last-child { font: var(--fs-sm) var(--v-mono); font-variant-numeric: tabular-nums; color: var(--v-text-2); }
+
+/* channel analysis: each tab is one card (graph over table) */
+body[data-page^="admin-status-channel_analysis"] #view .cbi-title-section { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+body[data-page^="admin-status-channel_analysis"] #view .cbi-title-section > h2 { margin: 0; }
+/* the buttons keep the right edge when the title repeats the breadcrumb and is hidden */
+body[data-page^="admin-status-channel_analysis"] #view .cbi-title-section > .cbi-title-buttons { margin-left: auto; }
+body[data-page^="admin-status-channel_analysis"] #view [data-tab-title]:not(.cbi-section) {
+	padding: var(--card-py) var(--card-px) 0;
+	background: var(--s1);
+	border: 1px solid var(--line);
+	border-radius: var(--r-lg);
+	box-shadow: var(--v-shadow);
+	overflow: clip;
+}
+body[data-page^="admin-status-channel_analysis"] #view [data-tab-title]:not(.cbi-section) > br { display: none; }
+body[data-page^="admin-status-channel_analysis"] #view [data-tab-title]:not(.cbi-section) > .table {
+	width: calc(100% + 2 * var(--card-px)) !important;
+	margin: 0 calc(-1 * var(--card-px));
+	border: 0; border-radius: 0; box-shadow: none; background: none;
+}
+body[data-page^="admin-status-channel_analysis"] #view [data-tab-title] > .table .tr > :is(.th, .td):first-child { padding-left: var(--card-px); }
+body[data-page^="admin-status-channel_analysis"] #view [data-tab-title] > .table .tr > :is(.th, .td):last-child { padding-right: var(--card-px); }
+/* a hidden tab has no width, and the view sizes each band's graph once from
+   offsetWidth: keep inactive bands laid out (invisible) instead of display:none */
+body[data-page^="admin-status-channel_analysis"] #view div:has(> [data-tab-title]) { position: relative; }
+body[data-page^="admin-status-channel_analysis"] #view [data-tab-title]:not([data-tab-active="true"]) {
+	display: block;
+	position: absolute; top: 0; left: 0; right: 0;
+	visibility: hidden;
+	pointer-events: none;
+}
+#view div[id="channel_graph"] svg g > polyline { display: none; }
+/* channel axis: one faint line per channel; the view's sub-channel ticks
+   (dash 1) and, above 2.4 GHz, its half-way lines go */
+#view div[id="channel_graph"] svg > line[style*="dasharray:1"],
+#view div[id="channel_graph"][data-v-band]:not([data-v-band="2"]) svg > line:not([style*="dasharray:3"]) { display: none; }   /* replaced by path.v-ca-shape */
+#view div[id="channel_graph"] svg text.v-ca-hide { display: none; }
+.v-ca-shape { --c: var(--v-chart-2); stroke: var(--c); stroke-width: 1.5px; stroke-linejoin: round; fill: url(#v-grad-2); }
+.v-ca-shape[data-v-series="1"] { --c: var(--v-chart-1); fill: url(#v-grad-1); }
+.v-ca-shape[data-v-series="3"] { --c: var(--v-chart-3); fill: url(#v-grad-3); }
+.v-ca-shape[data-v-series="4"] { --c: var(--v-chart-4); fill: url(#v-grad-4); }
+.v-ca-shape[data-v-series="5"] { --c: var(--v-chart-5); fill: url(#v-grad-5); }
+.v-ca-shape[data-v-series="6"] { --c: var(--v-chart-6); fill: url(#v-grad-6); }
+.v-ca-shape[data-v-own] { stroke-width: 2.25px; }
+#view div[id="channel_graph"] svg text.v-ca-label {
+	fill: var(--v-text-2) !important;
+	font: 500 var(--fs-micro)/1 var(--v-font) !important;
+	letter-spacing: 0;
+	paint-order: stroke;
+	stroke: var(--s1); stroke-width: 3px; stroke-linejoin: round;
+}
+#view div[id="channel_graph"] svg text.v-ca-label[data-v-own] { fill: var(--v-accent) !important; font-weight: 600 !important; }
+#view span[data-v-series] { font-size: .75em; vertical-align: 1px; color: var(--v-chart-2) !important; }
+#view span[data-v-series="1"] { color: var(--v-chart-1) !important; }
+#view span[data-v-series="3"] { color: var(--v-chart-3) !important; }
+#view span[data-v-series="4"] { color: var(--v-chart-4) !important; }
+#view span[data-v-series="5"] { color: var(--v-chart-5) !important; }
+#view span[data-v-series="6"] { color: var(--v-chart-6) !important; }
+#view .tr.v-ca-own > .td { background: var(--v-accent-soft); }
+#view .tr.v-ca-own > .td:first-child { box-shadow: inset 3px 0 0 var(--v-accent); }
+#view .tr.v-ca-own > .td:nth-child(2) { font-weight: 600; }
+
+@media (max-width: 720px) {
+	/* on a phone: the name, the current value, then average and peak on a
+	   line each, so wide values (332.59 Mibit/s) never run into the labels */
+	body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr {
+		grid-template-columns: max-content minmax(0, 1fr);
+		row-gap: 6px; padding: 10px 0;
+	}
+	body[data-page^="admin-status-realtime"] #view .table:has(strong[style*="border-bottom"]) > .tr > .td:is(:nth-child(1), :nth-child(2)) { grid-column: 1 / -1; }
+	body[data-page^="admin-status-realtime"] #view #settings-row { flex-wrap: wrap; }
+	body[data-page^="admin-status-realtime"] #view #settings-row > * { flex: 1 1 100% !important; }
+	body[data-page^="admin-status-realtime"] #view #settings-row > .right > .btn { margin-left: 0; }
+	#connections .tr:not(.table-titles) > .td:last-child { text-align: left; }
+}
+
+/* ----------------------------------------------------------- 8. login */
+
+.vt-login-page {
+	display: flex; align-items: center; justify-content: center;
+	padding: var(--sp-4);
+}
+html[data-darkmode="true"] .vt-login-page {
+	background:
+		radial-gradient(900px 520px at 50% 0%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%),
+		linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px) 0 0 / 32px 32px,
+		linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px) 0 0 / 32px 32px,
+		var(--bg);
+}
+html:not([data-darkmode="true"]) .vt-login-page {
+	background:
+		linear-gradient(rgba(20, 23, 26, .04) 1px, transparent 1px) 0 0 / 32px 32px,
+		linear-gradient(90deg, rgba(20, 23, 26, .04) 1px, transparent 1px) 0 0 / 32px 32px,
+		var(--bg);
+}
+/* the backdrop (login.js: packets or starfield), between the grid and the card */
+.vt-login-sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.vt-login { position: relative; width: min(380px, 100%); }
+.vt-login-card {
+	padding: var(--sp-6);
+	background: var(--s1);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r-lg);
+	box-shadow: var(--shadow-pop);
+}
+.vt-login-head { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-6); }
+.vt-login-mark { flex: none; }
+.vt-login-title { margin: 0; font-size: var(--fs-lg); font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.vt-login-error, .vt-login-info {
+	margin: 0 0 var(--sp-4);
+	padding: var(--sp-2) var(--sp-3);
+	border: 1px solid color-mix(in srgb, var(--err) 45%, transparent);
+	border-left: 3px solid var(--err);
+	background: var(--err-soft);
+	border-radius: var(--r);
+	font-size: var(--fs-sm);
+}
+.vt-login-info {
+	border-color: color-mix(in srgb, var(--info) 45%, transparent);
+	border-left-color: var(--info);
+	background: var(--info-soft);
+}
+.vt-login-form { display: flex; flex-direction: column; gap: var(--sp-4); }
+/* a plugin's guidance (sysauth.ut) sits in the form, spaced by its gap */
+.vt-login-form > :is(.vt-login-error, .vt-login-info) { margin: 0; }
+.vt-field { display: flex; flex-direction: column; gap: 6px; }
+.vt-field-label { color: var(--text-3); font-size: var(--fs-micro); font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.vt-field input {
+	width: 100%; height: var(--ctl-h);
+	padding: 0 12px;
+	background: var(--s2);
+	color: var(--text);
+	border: 1px solid var(--line-2);
+	border-radius: var(--r);
+	font-size: var(--fs-md);
+}
+.vt-field input[name="luci_username"] { font-family: var(--mono); }
+.vt-login-submit { height: var(--ctl-h); margin-top: var(--sp-2); font-size: var(--fs-md) !important; width: 100%; }
+
+/* ------------------------------------------------ 9. stock page layouts */
+
+/* Statistics -> Graphs: each select and the button that applies it, one
+   control group (they touched, a pixel or two out of line) */
+body[data-page="admin-statistics-graphs"] p.controls > .nowrap {
+	display: inline-flex; align-items: stretch; vertical-align: top;
+	margin: 0 var(--sp-2) var(--sp-2) 0;
+}
+body[data-page="admin-statistics-graphs"] p.controls > .nowrap > select { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+body[data-page="admin-statistics-graphs"] p.controls > .nowrap > .cbi-button { margin-left: -1px; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+
+/* Network -> Interfaces: device box + stats grid */
+.cbi-section-table .td[data-name="_ifacebox"] { width: 1%; padding-right: var(--sp-5); }
+.cbi-section-table .ifacebox { width: 168px; }
+.cbi-section-table .ifacebox-head {
+	padding: 7px 12px;
+	font-size: var(--fs-sm); font-weight: 600; text-align: left;
+}
+.cbi-section-table .ifacebox-body {
+	display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+	padding: 10px 12px;
+}
+.cbi-section-table .ifacebox-body > br { display: none; }
+.cbi-section-table .ifacebox-body > small { flex-basis: 100%; color: var(--text-2); font: var(--fs-sm)/1.3 var(--mono); }
+/* "( dev dev dev )": drop the parentheses, group the member ports */
+.cbi-section-table .ifacebox-body > span:not(.cbi-tooltip-container) {
+	display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px;
+	padding: 2px 6px;
+	background: var(--s3); border-radius: var(--r-sm);
+	font-size: 0;
+}
+.cbi-section-table .ifacebox-body .cbi-tooltip { font-size: var(--fs-sm); }
+.cbi-section-table .ifacebox-body img { width: 18px; height: 18px; }
+[id$="-ifc-description"], .cbi-value-field > div[id$="-ifc-description"] {
+	display: flex; flex-wrap: wrap; align-items: flex-start;
+	gap: 10px 28px;
+	max-width: 72rem;
+}
+[id$="-ifc-description"] > br { display: none; }
+[id$="-ifc-description"] > .nowrap {
+	display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 0 1 auto;
+	white-space: normal; overflow-wrap: anywhere;
+	font: var(--fs-sm)/1.45 var(--mono); font-variant-numeric: tabular-nums slashed-zero;
+}
+[id$="-ifc-description"] > .nowrap > strong, .td[data-name="_stat"] .nowrap > strong {
+	color: var(--text-3);
+	font: 600 var(--fs-micro)/1.5 var(--font); letter-spacing: .08em; text-transform: uppercase;
+}
+
+/* Network -> Wireless: radios as group headers, networks as rows */
+.td[data-name="_badge"] > .center { text-align: left; }
+/* the space between items is each item's own margin, not a gap: a
+   hidden " | " is still a flex item, and a gap around it indented a line
+   that starts with one (a network's second line, #122) */
+.td[data-name="_stat"] > div, .td[data-name="_stat"] > div > div {
+	display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 0;
+	font-size: 0;                         /* hides the " | " separators */
+}
+.td[data-name="_stat"] > div > br, .td[data-name="_stat"] > div > div > br { display: none; }
+.td[data-name="_stat"] .nowrap { display: inline-flex; align-items: baseline; gap: 6px; margin-inline-end: 20px; font-size: var(--fs-base); }
+.td[data-name="_stat"] > div > big { flex-basis: 100%; font-size: var(--fs-md); }
+.td[data-name="_stat"] > div > div { flex-basis: 100%; }
+.td[data-name="_stat"] > div > .nowrap:first-child { flex-basis: 100%; margin-inline-end: 0; font-size: var(--fs-md); font-weight: 600; }
+.td[data-name="_stat"] > div > .nowrap:first-child > strong { display: none; }
+.cbi-section-table-row:has(> .td[data-name="_stat"] big) > .td { background: var(--s2); }
+/* the darker line above a radio is the row above's own bottom border:
+   a top border of its own stacked under it as a double line (#122) */
+.cbi-section-table-row:has(+ .cbi-section-table-row > .td[data-name="_stat"] big) > .td { border-bottom-color: var(--line-2); }
+.cbi-section-table-row:not(:has(big)) > .td[data-name="_badge"] { padding-left: calc(var(--card-px) + 16px); }
+
+/* progress bars (their text only exists in title): a thin track, the
+   value text above it and in flow, so larger browser fonts cannot run
+   into the heading */
+.cbi-progressbar {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: auto 6px;
+	gap: 5px;
+	width: 100%; max-width: 520px;
+	margin: 0 0 2px;
+}
+.cbi-progressbar > div {
+	grid-area: 2 / 1; z-index: 1;
+	width: 0; height: 6px;
+	border-radius: 3px;
+	background: var(--accent-text);
+	transition: width .3s ease-out;
+}
+.cbi-progressbar::before {
+	content: attr(title);
+	display: block;
+	color: var(--text-2);
+	font: 500 var(--fs-micro)/1.2 var(--mono);
+	white-space: normal; overflow-wrap: anywhere;
+}
+.cbi-progressbar::after { content: ""; grid-area: 2 / 1; height: 6px; border-radius: 3px; background: var(--s3); }
+
+/* fused memory / storage meters (built by menu-vantage.js) */
+.v-src-hidden { display: none !important; }
+.v-meter { display: grid; gap: 10px; padding: 4px 0 6px; }
+.v-meter + .v-meter { margin-top: var(--sp-3); padding-top: var(--sp-4); border-top: 1px solid var(--line); }
+.v-meter-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+/* the meter's figures, as the dashboard's: the share in tabular sans, the
+   amounts in monospace */
+.v-meter-big { font: 700 var(--fs-xl)/1 var(--font); font-variant-numeric: tabular-nums; letter-spacing: -.02em; color: var(--text); }
+.v-meter-big small { margin-left: 6px; font: 500 var(--fs-sm) var(--font); letter-spacing: 0; color: var(--text-2); }
+.v-meter-sub { margin-left: auto; color: var(--text-2); font: var(--fs-sm)/1.4 var(--mono); font-variant-numeric: tabular-nums; }
+.v-meter-bar {
+	position: relative;
+	display: flex;
+	height: 12px;
+	background: var(--s3);
+	border-radius: var(--r-xs);
+	overflow: hidden;
+	box-shadow: inset 0 0 0 1px var(--line);
+}
+.v-meter-bar.is-thin { height: 6px; }
+.v-seg { height: 100%; flex: none; transition: width .4s ease-out; }
+.v-seg + .v-seg { box-shadow: inset 1px 0 0 var(--s1); }
+/* blue, as the dashboard's meters: lime there means download */
+.v-seg-used { background: var(--v-meter); }
+.v-seg-cache {
+	background: repeating-linear-gradient(-45deg,
+		color-mix(in srgb, var(--v-meter) 55%, transparent) 0 3px,
+		color-mix(in srgb, var(--v-meter) 25%, transparent) 3px 6px);
+}
+.v-seg.is-warn { background: var(--warn); }
+.v-seg.is-crit { background: var(--err); }
+.v-meter-legend { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; list-style: none; font-size: var(--fs-sm); color: var(--text-2); }
+.v-meter-legend li { display: inline-flex; align-items: center; gap: 7px; }
+.v-meter-legend b { color: var(--text); font: 600 var(--fs-sm) var(--mono); font-variant-numeric: tabular-nums; }
+.v-meter-legend em { color: var(--text-3); font-style: normal; font-size: var(--fs-micro); }
+.v-key { width: 10px; height: 10px; border-radius: var(--r-xs); flex: none; }
+.v-key.v-seg-free { background: var(--s3); box-shadow: inset 0 0 0 1px var(--line-2); }
+.v-meter-rows { display: grid; grid-template-columns: minmax(120px, max-content) minmax(0, 1fr) max-content; gap: 14px 20px; padding: 4px 0 6px; }
+.v-meter-row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; grid-template-areas: "label bar val"; align-items: center; }
+.v-meter-row > .v-meter-label { grid-area: label; color: var(--text-2); overflow-wrap: anywhere; }
+.v-meter-row > .v-meter-label small { display: block; color: var(--text-3); font: var(--fs-micro) var(--mono); }
+.v-meter-row > .v-meter-bar { grid-area: bar; }
+.v-meter-row > .v-meter-val { grid-area: val; color: var(--text-2); font: var(--fs-sm) var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.v-meter-row > .v-meter-val b { color: var(--text); font-weight: 600; }
+
+/* Share the widest table's intrinsic width with its headings and dividers. */
+@media (width > 720px) {
+	.cbi-tblsection { display: grid; grid-template-columns: minmax(min-content, 1fr); }
+	.cbi-section.cbi-tblsection > .table { width: auto !important; }
+	.cbi-section:has(.cbi-tblsection) > .cbi-section-node { display: table; width: 100%; }
+	.cbi-value:has(> .table) { display: block; }
+}
+
+/* Table sections can sit below form wrappers; their outer card scrolls too.
+   Other status cards only scroll when narrow so their headers can stick.
+   Vertical overflow is clipped to prevent spurious scrolling on scaled
+   Firefox displays. LuCI 25.12 puts Wireless's station list in a section
+   of its own (cbi-section around the heading and table); its rates and
+   network badges don't wrap, and the table ran past the card. */
+.cbi-tblsection, .cbi-section:has(.cbi-tblsection), .cbi-section:has(> :where(#packages)), .cbi-section:has(> .table.assoclist) { overflow-x: auto; overflow-y: hidden; }
+/* overlay scrollbars show nothing until touched: a shade on the side with
+   more table says it scrolls. The covers move with the content and hide
+   the shade at either end, so a card that fits looks as before. */
+.vt-main .cbi-tblsection, .vt-main .cbi-section:has(.cbi-tblsection), .vt-main .cbi-section:has(> :where(#packages)), .vt-main .cbi-section:has(> .table.assoclist) {
+	background-image:
+		linear-gradient(to right, var(--s1) 50%, transparent), linear-gradient(to left, var(--s1) 50%, transparent),
+		linear-gradient(to right, var(--line-2), transparent), linear-gradient(to left, var(--line-2), transparent);
+	background-position: left top, right top, left top, right top;
+	background-size: 32px 100%, 32px 100%, 12px 100%, 12px 100%;
+	background-repeat: no-repeat;
+	background-attachment: local, local, scroll, scroll;
+}
+.cbi-section:has(.cbi-dropdown[open]), .cbi-tblsection:has(.cbi-dropdown[open]) { overflow: visible; }
+/* Interfaces: an open device tooltip in the last row reaches below the
+   table card; the card's scroller would clip it */
+:is(.cbi-section, .cbi-tblsection):has(.ifacebox .cbi-tooltip-container:is(:hover, :focus-within)) { overflow: visible; }
+@media (720px < width <= 1180px) {
+	.cbi-section { overflow-x: auto; }
+	.cbi-section:has(.cbi-dropdown[open]) { overflow: visible; }
+	/* Port status: boxes wrap, and their tooltips must get out */
+	.cbi-section:has(.ifacebox .cbi-tooltip-container) { overflow: visible; }
+	/* a free-standing table card (Processes, Wireless's stations) has no
+	   section to scroll in: the card itself scrolls, its rows held in one
+	   table box (LuCI puts every row, titles too, in the tbody, so the
+	   columns stay aligned), its header static as in sections */
+	:is(#view, #view > div:not(.cbi-section), .cbi-map, #view > div > div > [data-tab-title]:not(.cbi-section)) > .table:not(:has(> thead)) {
+		display: block; overflow-x: auto;
+	}
+	/* and says so with the same shade as the table cards (Processes) */
+	.vt-main :is(#view, #view > div:not(.cbi-section), .cbi-map, #view > div > div > [data-tab-title]:not(.cbi-section)) > .table:not(:has(> thead)) {
+		background-image:
+			linear-gradient(to right, var(--s1) 50%, transparent), linear-gradient(to left, var(--s1) 50%, transparent),
+			linear-gradient(to right, var(--line-2), transparent), linear-gradient(to left, var(--line-2), transparent);
+		background-position: left top, right top, left top, right top;
+		background-size: 32px 100%, 32px 100%, 12px 100%, 12px 100%;
+		background-repeat: no-repeat;
+		background-attachment: local, local, scroll, scroll;
+	}
+	:is(#view, #view > div:not(.cbi-section), .cbi-map, #view > div > div > [data-tab-title]:not(.cbi-section)) > .table:not(:has(> thead)) > tbody { display: table; width: 100%; }
+	:is(#view, #view > div:not(.cbi-section), .cbi-map, #view > div > div > [data-tab-title]:not(.cbi-section)) > .table:has(.cbi-dropdown[open]) { overflow: visible; }
+	:is(#view, #view > div:not(.cbi-section), .cbi-map, #view > div > div > [data-tab-title]:not(.cbi-section)) > .table .tr > .th.th { position: static; }
+}
+
+
+/* a sticky header inside a horizontal scroller would stick relative to that
+   scroller (pushed down by --stick-top over the rows): keep those static */
+.cbi-tblsection .table .tr > .th.th, .cbi-section:has(.cbi-tblsection) .table .tr > .th.th, #packages .tr > .th.th, .cbi-section > .table.assoclist .tr > .th.th { position: static; }
+@media (max-width: 1180px) { .cbi-section .table .tr > .th.th { position: static; } }
+
+/* add-ons: adblock and banIP inject status palettes keyed on the OS
+   colour scheme (@media prefers-color-scheme), so with the theme toggle
+   set the other way their text fell to 1.7-3:1. Their own two palettes,
+   picked by the toggle instead (html[data-darkmode] outweighs their #id
+   rules); nothing else of theirs is touched. */
+html[data-darkmode="false"] #adb-status { --adb-ok: #1f8a5f; --adb-warn: #a8760a; --adb-err: #c0392b; --adb-info: #2f6fb0; }
+html[data-darkmode="true"] #adb-status { --adb-ok: #63c79b; --adb-warn: #d9ab4e; --adb-err: #e8897e; --adb-info: #7fb3e8; }
+html[data-darkmode="false"] #adb-dash { --adb-blocked: #c0392b; --adb-allowed: #1f8a5f; --adb-neutral: #2f6fb0; --adb-warn: #a8760a; }
+html[data-darkmode="true"] #adb-dash { --adb-blocked: #e8897e; --adb-allowed: #63c79b; --adb-neutral: #7fb3e8; --adb-warn: #d9ab4e; }
+html[data-darkmode="false"] :is(#ban-status, #ban-report) { --ban-ok: #1f8a5f; --ban-err: #c0392b; --ban-info: #2f6fb0; }
+html[data-darkmode="true"] :is(#ban-status, #ban-report) { --ban-ok: #63c79b; --ban-err: #e8897e; --ban-info: #7fb3e8; }
+
+/* Network -> Firewall: what a rule does reads at a glance. LuCI marks a
+   rule's raw target on its action (var[data-tooltip], never translated)
+   and each policy on its select's option values, so none of this depends
+   on the language. */
+.cbi-section-table .td var { font-style: normal; }
+.cbi-section-table .td var:is([data-tooltip="ACCEPT"], [data-tooltip="REJECT"], [data-tooltip="DROP"],
+	[data-tooltip="DNAT"], [data-tooltip="SNAT"], [data-tooltip="MASQUERADE"], [data-tooltip="NOTRACK"], [data-tooltip="HELPER"]) {
+	display: inline-block; padding: 0 7px; margin-right: 2px;
+	border-radius: var(--r-sm);
+	background: var(--s3); color: var(--text);
+	font: 600 var(--fs-sm)/1.65 var(--font);
+}
+.cbi-section-table .td var[data-tooltip="ACCEPT"] { background: var(--ok-soft); color: var(--ok-text); }
+.cbi-section-table .td var:is([data-tooltip="REJECT"], [data-tooltip="DROP"]) { background: var(--err-soft); color: var(--err-text); }
+.cbi-section-table .td var:is([data-tooltip="DNAT"], [data-tooltip="SNAT"], [data-tooltip="MASQUERADE"]) { background: var(--info-soft); color: var(--info-text); }
+/* the match: values upright, the family/protocol line quieter than
+   where the traffic comes from and goes to */
+[id^="cbi-firewall-"] .cbi-section-table .td > small:has(> br) { display: block; font-size: var(--fs-base); line-height: 1.8; }
+[id^="cbi-firewall-"] .cbi-section-table .td > small:has(> br) > span:first-child { color: var(--text-3); font-size: var(--fs-sm); }
+[id^="cbi-firewall-"] .cbi-section-table .td > small:has(> br) > span:first-child var { color: inherit; }
+[id^="cbi-firewall-"] .cbi-section-table .td small var:not([data-tooltip]) { font-size: .92em; }
+/* names: tabular figures would widen their hyphens ("Allow - Ping") */
+.cbi-section-table .td.cbi-section-table-titles { font-variant-numeric: normal; }
+/* a zone badge coloured with a plain hex (Port Forwards' target zone)
+   gets the same tint and edge as the rgb ones above */
+.zonebadge[style*="background-color:#"] {
+	padding-left: 10px;
+	border-color: var(--line-2) !important; color: var(--text) !important;
+	background-image: linear-gradient(to right, transparent 3px, color-mix(in srgb, var(--s2) calc(100% - var(--zone-mix) * 100%), transparent) 3px);
+}
+.zone-forwards :is(.zone-src, .zone-dest) { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.zonebadge.zonebadge-empty { background: transparent !important; border-style: dashed; color: var(--text-2) !important; box-shadow: none; }
+/* zone and default policies stay plain: reject and drop are the safe
+   values, accept between your own zones is normal (as on the Overview
+   tab). The one policy that is a risk is coloured: the masquerading
+   (internet-facing) zone accepting input, in the error colours the
+   Overview tab gives it. Forwarding from it into another zone is
+   outlined in the warning colour. */
+#cbi-firewall-zone .tr:has(input[data-widget-id$=".masq"]:checked) > .td[data-name="input"] select:has(> option:checked[value="ACCEPT"]) {
+	color: var(--err-text); border-color: var(--err); background-color: var(--err-soft); font-weight: 600;
+}
+#cbi-firewall-zone .tr:has(input[data-widget-id$=".masq"]:checked) > .td[data-name="input"] select:has(> option:checked[value="ACCEPT"]) > option { color: var(--text); font-weight: 400; }
+#cbi-firewall-zone .tr:has(input[data-widget-id$=".masq"]:checked) .zone-dest > .zonebadge:not(.zonebadge-empty) {
+	outline: 2px solid var(--warn); outline-offset: 1px;
+}
+/* the zones table squeezed its policy selects to 42 px at 721-900 px; a
+   wider table scrolls inside its card instead. Its long headers
+   ("Intra zone forward", "IPv4 Masquerading") wrap, so the table fits
+   (Edit and Delete in view) down to about 880 px, as in 1.0.5. */
+#cbi-firewall-zone .td select { min-width: 6.5em; }
+#cbi-firewall-zone .table .tr > .th { white-space: normal; }
+/* a rule that is switched off looks off, from the moment it is unticked:
+   greyed rather than faded, so its name and match still read (4.5:1 and
+   up) and the row's separator stays whole */
+[id^="cbi-firewall-"] .tr:has(input[data-widget-id$=".enabled"]:not(:checked)) > .td:not(.cbi-section-actions):not(:has(input[data-widget-id$=".enabled"])) { color: var(--text-3); }
+[id^="cbi-firewall-"] .tr:has(input[data-widget-id$=".enabled"]:not(:checked)) > .td:not(.cbi-section-actions) :is(var[data-tooltip], .zonebadge) { filter: grayscale(1); }
+
+/* Status -> Firewall (nftables): each chain a card, its heading the header
+   row, hook and policy under it, the rules edge to edge. The view injects
+   ".nft-rules tr > td { padding: .25em !important }" and a margin on its
+   badges, hence #view and !important. A match (span.ifacebadge per
+   expression) is inline text, never flex columns: its words wrap. */
+.nft-table > h3 { margin: 0 0 var(--sp-3); font-size: var(--fs-md); }
+.nft-table + .nft-table { margin-top: var(--sp-6); }
+.nft-chain {
+	margin: 0 0 var(--sp-4);
+	background: var(--s1);
+	border: 1px solid var(--line);
+	border-radius: var(--r-lg);
+	box-shadow: var(--v-shadow);
+	overflow: clip;
+}
+/* the clip rounds the corners; an open counter or comment tooltip in the
+   last rows must still escape the card */
+.nft-chain:has(.cbi-tooltip-container:is(:hover, :focus-within)) { overflow: visible; }
+.nft-chain > h4 {
+	display: flex; align-items: center;
+	min-height: 48px; margin: 0;
+	padding: 12px var(--card-px);
+	border-bottom: 1px solid var(--line);
+	font-size: var(--fs-md); font-weight: 600;
+}
+.nft-chain-hook { padding: 10px var(--card-px); border-bottom: 1px solid var(--line); color: var(--text-2); font-size: var(--fs-sm); }
+.nft-chain-hook > ul { display: flex; flex-wrap: wrap; gap: 2px var(--sp-5); margin: 0; padding: 0; list-style: none; }
+.nft-chain-hook strong { color: var(--text); }
+#view .nft-rules .tr > .td { padding: 9px 12px !important; }
+#view .nft-rules .tr > :is(.th, .td):first-child { padding-left: var(--card-px) !important; }
+#view .nft-rules .tr > :is(.th, .td):last-child { padding-right: var(--card-px) !important; }
+#view .nft-rules .ifacebadge {
+	display: inline;
+	margin: 0 12px 0 0; padding: 0;
+	background: none; border: 0; border-radius: 0; box-shadow: none;
+	font-size: inherit; white-space: normal; vertical-align: baseline;
+}
+#view .nft-rules .ifacebadge .ifacebadge { margin-right: 0; }
+/* the comment (#) and counter marks: quiet, their text is the tooltip */
+#view .nft-rules :is(.nft-comment, .nft-counter) { margin-right: 8px; color: var(--text-3); font-size: var(--fs-sm); }
+.nft-rules .td > div + div { margin-top: 2px; }
+.nft-rules .td > div > span:first-child:not(.ifacebadge) { margin-right: 6px; color: var(--text-3); }
+.nft-rules em { font-style: normal; color: var(--text-3); }
+
+/* Status -> Firewall as a flow chart (vantage-theme/nftflow.js): a Flow /
+   Rules table switch over LuCI's view; Flow hides LuCI's tables (they stay
+   in the DOM). The chart: one row, in -> prerouting -> a fork (input, this
+   device, output | forward) -> postrouting -> out, the fork drawn as a
+   bracket each side, and a row for frames bridged between ports; a
+   stage's top edge is red where unmatched packets are dropped, amber where
+   some rules drop, grey on the bridged path when no bridge chain filters
+   it; ingress, bridge and egress stages dashed. When a row doesn't fit,
+   the script sets .v-nft-vertical: the rows run down and the fork's
+   branches stand side by side. Lines and arrows in --text-3 (they carry
+   the direction). The chains: a card each (details), its rules as
+   numbered steps on a rail, the verdict on the right; a jump opens its
+   chain beneath. */
+.v-nft-flowmode > .nft-table { display: none; }
+:not(.v-nft-flowmode) > .v-nft > .v-nft-panel { display: none; }
+.v-nft-panel > h3 { margin: var(--sp-5) 0 var(--sp-3); font-size: var(--fs-md); }
+.v-nft-panel > h3:first-child { margin-top: 0; }
+.v-nft-chains { display: grid; gap: var(--sp-2); }
+.v-nft-chart, .v-nft-card {
+	background: var(--s1);
+	border: 1px solid var(--line);
+	border-radius: var(--r-lg);
+	box-shadow: var(--v-shadow);
+}
+.v-nft-chart { display: grid; gap: var(--sp-3); padding: 14px var(--card-px); }
+.v-nft-chart-row { display: flex; align-items: center; min-width: 0; }
+.v-nft-chart-row + .v-nft-chart-row { padding-top: var(--sp-3); border-top: 1px dashed var(--line); }
+.v-nft-note { max-width: 90ch; margin: 0; color: var(--text-2); font-size: var(--fs-sm); }
+.v-nft-endpoint {
+	flex: none;
+	padding: 4px 10px;
+	border-radius: 999px;
+	background: var(--s3); color: var(--text-2);
+	font-size: var(--fs-sm); font-weight: 600; white-space: nowrap;
+}
+.v-nft-endpoint[data-where="device"] { background: var(--accent-soft); color: var(--accent-text); }
+.v-nft-arrow { position: relative; flex: 0 0 18px; height: 2px; margin-right: 6px; background: var(--text-3); }
+.v-nft-arrow::after {
+	content: ""; position: absolute; right: -6px; top: -4px;
+	border: 5px solid transparent; border-left: 6px solid var(--text-3); border-right: 0;
+}
+/* a line that carries a branch on to the bracket */
+.v-nft-pass { flex: 1 0 12px; height: 2px; background: var(--text-3); }
+.v-nft-stage {
+	flex: none; max-width: 210px;
+	padding: 6px 10px 8px;
+	background: var(--s2);
+	border: 1px solid var(--line); border-top: 3px solid var(--ok);
+	border-radius: var(--r);
+}
+.v-nft-stage[data-drops="all"] { border-top-color: var(--err); }
+.v-nft-stage[data-drops="some"] { border-top-color: var(--warn); }
+.v-nft-stage[data-drops="open"] { border-top-color: var(--line-2); }
+.v-nft-stage[data-edge="true"] { border-style: dashed; border-top-style: solid; border-color: var(--line-2); }
+.v-nft-stage[data-edge="true"][data-drops="all"] { border-top-color: var(--err); }
+.v-nft-stage[data-edge="true"][data-drops="some"] { border-top-color: var(--warn); }
+.v-nft-stage[data-edge="true"][data-drops="none"] { border-top-color: var(--ok); }
+.v-nft-stage-name { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 6px; margin-bottom: 5px; font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; }
+.v-nft-stage-name small { font-size: var(--fs-micro); font-weight: 500; }
+.v-nft-stage[data-drops="all"] .v-nft-stage-name small { color: var(--err-text); }
+.v-nft-stage[data-drops="some"] .v-nft-stage-name small { color: var(--warn-text); }
+.v-nft-stage[data-drops="open"] .v-nft-stage-name small { color: var(--text-2); }
+.v-nft-stage-chains { display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.v-nft-none { color: var(--text-3); font-size: var(--fs-micro); }
+.v-nft-link {
+	display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 4px;
+	min-height: 22px; max-width: 100%; margin: 0; padding: 1px 7px;
+	background: var(--s1); color: var(--text);
+	border: 1px solid var(--line-2); border-radius: var(--r-sm);
+	box-shadow: none; cursor: pointer;
+	font: 500 var(--fs-micro)/1.3 var(--mono); text-transform: none; text-align: left;
+	overflow-wrap: anywhere;
+}
+.v-nft-link:hover { border-color: var(--text-3); }
+.v-nft-link small { color: var(--text-3); font: 600 var(--fs-micro)/1.3 var(--font); letter-spacing: .02em; }
+/* the fork: two branches between brackets; each branch reaches both. The
+   brackets run between the centres of the two branches' lines */
+.v-nft-fork { position: relative; display: grid; grid-auto-rows: 1fr; gap: 10px; flex: 1 1 auto; }
+.v-nft-fork::before, .v-nft-fork::after { content: ""; position: absolute; top: calc(25% - 3.5px); bottom: calc(25% - 3.5px); width: 2px; background: var(--text-3); }
+.v-nft-fork::before { left: -6px; }
+.v-nft-fork::after { right: 0; }
+.v-nft-branch { display: flex; align-items: center; min-width: 0; }
+.v-nft-branch::before { content: ""; flex: 0 0 8px; height: 2px; margin-left: -6px; background: var(--text-3); }
+.v-nft-branch > .v-nft-pass:last-child { margin-right: 0; }
+.v-nft-vertical .v-nft-chart-row { flex-direction: column; align-items: stretch; }
+.v-nft-vertical .v-nft-endpoint { align-self: center; }
+.v-nft-vertical .v-nft-arrow { flex-basis: 16px; width: 2px; height: auto; margin: 0 auto 6px; }
+.v-nft-vertical .v-nft-arrow::after { right: -4px; top: auto; bottom: -6px; border: 5px solid transparent; border-top: 6px solid var(--text-3); border-bottom: 0; }
+/* one line a stage: its name, then its chains */
+.v-nft-vertical .v-nft-stage { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; max-width: none; padding: 5px 10px 6px; }
+.v-nft-vertical .v-nft-stage-name { margin: 0; }
+.v-nft-vertical .v-nft-fork { grid-auto-rows: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 2px 0 0; }
+.v-nft-vertical .v-nft-fork::before, .v-nft-vertical .v-nft-fork::after { left: calc(25% - 3.5px); right: calc(25% - 3.5px); width: auto; height: 2px; }
+.v-nft-vertical .v-nft-fork::before { top: 0; bottom: auto; }
+.v-nft-vertical .v-nft-fork::after { top: auto; bottom: 0; }
+.v-nft-vertical .v-nft-branch { flex-direction: column; align-items: stretch; }
+.v-nft-vertical .v-nft-branch::before { flex: 0 0 10px; width: 2px; height: auto; margin: 0 auto; }
+.v-nft-vertical :is(.v-nft-pass, .v-nft-branch > .v-nft-pass:last-child) { flex: 1 0 10px; width: 2px; height: auto; margin: 0 auto; }
+
+.v-nft-card > summary {
+	display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+	min-height: 44px; padding: 8px var(--card-px);
+	list-style: none; cursor: pointer;
+	border-radius: var(--r-lg);
+}
+.v-nft-card > summary::-webkit-details-marker { display: none; }
+.v-nft-card > summary::before {
+	content: ""; flex: none; width: 7px; height: 7px; margin: 0 4px 2px 0;
+	border-right: 2px solid var(--text-3); border-bottom: 2px solid var(--text-3);
+	transform: rotate(-45deg); transition: transform .15s;
+}
+.v-nft-card[open] > summary::before { transform: rotate(45deg); margin-bottom: 4px; }
+.v-nft-card[open] > summary { border-bottom: 1px solid var(--line); border-radius: var(--r-lg) var(--r-lg) 0 0; }
+.v-nft-card > summary > strong { font: 600 var(--fs-base) var(--mono); }
+.v-nft-card > summary > .v-nft-verdict:last-child { margin-left: auto; }
+.v-nft-meta { color: var(--text-3); font-size: var(--fs-sm); }
+
+.v-nft-flow { position: relative; margin: 0; padding: 4px var(--card-px) 6px; list-style: none; }
+/* the rail through the step numbers */
+.v-nft-flow::before { content: ""; position: absolute; left: calc(var(--card-px) + 9px); top: 16px; bottom: 16px; width: 2px; background: var(--line); }
+.v-nft-step {
+	position: relative;
+	display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: start; gap: 2px 12px;
+	padding: 6px 0;
+}
+.v-nft-step + .v-nft-step { border-top: 1px solid var(--line); }
+.v-nft-n {
+	position: relative; z-index: 1;
+	width: 20px; height: 20px;
+	border-radius: 50%;
+	background: var(--s3); color: var(--text-2); box-shadow: 0 0 0 3px var(--s1);
+	font: 600 var(--fs-micro)/20px var(--mono); text-align: center;
+}
+.v-nft-what { min-width: 0; padding-top: 1px; }
+.v-nft-what-name { font-weight: 600; overflow-wrap: anywhere; }
+.v-nft-what-name[data-muted="true"] { color: var(--text-3); font-weight: 500; }
+/* the chain's end: one quiet line */
+.v-nft-step-end { padding: 4px 0 2px; }
+.v-nft-step-end .v-nft-n { width: 10px; height: 10px; margin: 4px 5px; border-radius: var(--r-xs); background: var(--line-2); }
+.v-nft-step-end .v-nft-what { color: var(--text-3); font-size: var(--fs-sm); }
+.v-nft-step-end .v-nft-verdict { min-height: 20px; padding: 0 8px; font-size: var(--fs-micro); }
+.v-nft-step-more { grid-template-columns: 20px auto; }
+.v-nft-cond { margin-top: 2px; color: var(--text-2); font-size: var(--fs-sm); overflow-wrap: anywhere; }
+.v-nft-what > .v-nft-cond:first-child { margin-top: 0; color: var(--text); font-size: inherit; }
+.v-nft-cond .ifacebadge {
+	display: inline; margin: 0 10px 0 0; padding: 0;
+	background: none; border: 0; border-radius: 0;
+	font-size: inherit; white-space: normal; vertical-align: baseline;
+}
+.v-nft-cond .ifacebadge .ifacebadge { margin-right: 0; }
+/* LuCI's view boxes a set's items at 200px; here they run on as text */
+.v-nft-cond :is(.nft-set, .nft-list, .nft-set-items, .nft-list-items) { display: inline; max-width: none; overflow: visible; vertical-align: baseline; }
+.v-nft-cond em { font-style: normal; color: var(--text-3); }
+.v-nft-cond var { font-style: normal; }
+.v-nft-also { color: var(--text-3); }
+.v-nft-empty { margin: 0; padding: 0 var(--sp-1); color: var(--text-3); font-size: var(--fs-sm); }
+.v-nft-count { color: var(--text-3); font: var(--fs-micro) var(--mono); white-space: nowrap; }
+.v-nft-then { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.v-nft-verdict {
+	display: inline-flex; align-items: center; gap: 4px;
+	min-height: 22px; margin: 0; padding: 1px 9px;
+	background: var(--s3); color: var(--text-2);
+	border: 1px solid transparent; border-radius: 999px;
+	box-shadow: none;
+	font: 600 var(--fs-sm)/1.3 var(--font); white-space: nowrap; text-transform: none;
+}
+.v-nft-verdict[data-kind="accept"] { background: var(--ok-soft); color: var(--ok-text); }
+.v-nft-verdict:is([data-kind="drop"], [data-kind="reject"]) { background: var(--err-soft); color: var(--err-text); }
+.v-nft-verdict[data-kind="nat"] { background: var(--info-soft); color: var(--info-text); }
+.v-nft-jump { background: var(--s1); border-color: var(--line-2); color: var(--accent-text); font-family: var(--mono); font-weight: 500; cursor: pointer; }
+.v-nft-jump::after {
+	content: ""; width: 5px; height: 5px; margin: 0 1px 2px 3px;
+	border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+	transform: rotate(45deg); transition: transform .15s;
+}
+.v-nft-jump[aria-expanded="true"] { background: var(--accent-soft); border-color: var(--accent-line); }
+.v-nft-jump[aria-expanded="true"]::after { transform: rotate(-135deg); margin-bottom: -2px; }
+.v-nft-jump:hover { border-color: var(--text-3); }
+/* the chain a rule jumps to, beneath the rule */
+.v-nft-sub {
+	grid-column: 2 / -1;
+	margin: 4px 0 0;
+	background: var(--s2);
+	border: 1px solid var(--line); border-left: 3px solid var(--accent-line);
+	border-radius: var(--r);
+}
+.v-nft-sub > .v-nft-flow { padding: 2px 10px 4px; }
+.v-nft-sub > .v-nft-flow::before { left: 19px; }
+.v-nft-sub .v-nft-n { box-shadow: 0 0 0 3px var(--s2); }
+
+/* Status -> System Log / Kernel Log: LuCI's filter rows (Not, box, label,
+   field) as wrapping rows; the gap replaces LuCI's inline margins */
+#content_syslog > div:has(> :is(input, select)) {
+	display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2);
+	margin-bottom: var(--sp-3) !important;
+}
+#content_syslog > div:has(> :is(input, select)) > * { margin: 0 !important; }
+#content_syslog > div > :is(select, input:not([type="checkbox"])) { flex: 0 1 240px; min-width: 0; }
+#content_syslog > div > :is(select, input:not([type="checkbox"])) + label { margin-left: var(--sp-3) !important; }
+#content_syslog > div > #logSeveritySelect + label { margin-left: 0 !important; }   /* "and above" ends its own group */
+
+/* Network -> Diagnostics: the three tools in equal columns, top aligned */
+.table:has(.diag-action) { table-layout: fixed; }
+/* LuCI measures the scroll parent before opening a diagnostic menu. */
+#view .cbi-map > .table:has(.diag-action .cbi-dropdown) { overflow: visible; }
+.table:has(.diag-action) .tr > .td { width: calc(100% / 3); vertical-align: top; }
+.table:has(.diag-action) .td > input { max-width: none; }   /* fields fill them: even gaps */
+
+/* System -> Software: the control rows line up with the page (LuCI pads
+   each by .25em), and "Update lists…" is a plain button among plain ones */
+#view > .controls { column-gap: var(--sp-3); }
+#view > .controls > * { padding-left: 0; padding-right: 0; }
+#view > .controls :is(.btn, .cbi-button).cbi-button-positive:not(.important) { color: var(--text); }
+
+/* LuCI 24.10: a named table section (Traffic Rules, Port Forwards, NAT)
+   has no name cell; the name is the row's data-title and the theme draws
+   it, as Bootstrap does. 25.12 renders a real cell (and sets no
+   data-title on its title row), so none of this matches there. */
+.table:has(.cbi-section-table-titles.named[data-title]) .cbi-section-table-titles.named[data-title]::before {
+	content: attr(data-title);
+	display: table-cell; vertical-align: middle;
+	height: 36px; padding: 6px 12px 6px var(--card-px);
+	background: var(--s1);
+	border-bottom: 1px solid var(--line-2);
+	color: var(--text-3);
+	font-size: var(--fs-micro); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+	white-space: nowrap;
+}
+.table:has(.cbi-section-table-titles.named[data-title]) .cbi-section-table-row[data-title]:not(:has(> .cbi-section-table-titles))::before {
+	content: attr(data-title);
+	display: table-cell; vertical-align: middle;
+	padding: 9px 12px 9px var(--card-px);
+	border-bottom: 1px solid var(--line);
+	color: var(--text);
+	line-height: 1.45;
+	overflow-wrap: anywhere;
+}
+.table:has(.cbi-section-table-titles.named[data-title]) .cbi-section-table-row[data-title]:last-child::before { border-bottom: 0; }
+.table:has(.cbi-section-table-titles.named[data-title]) .cbi-section-table-row[data-title]:hover::before { background: color-mix(in srgb, var(--s3) 55%, transparent); }
+@media (width > 720px) {
+	.table:has(.cbi-section-table-titles.named[data-title]) .tr:not(.placeholder) > :is(.th, .td):first-child { padding-left: 12px; }   /* the name leads */
+}
+[id^="cbi-firewall-"] .table:has(.cbi-section-table-titles.named[data-title]) .cbi-section-table-row[data-title]:has(input[data-widget-id$=".enabled"]:not(:checked))::before { color: var(--text-3); }
+
+/* File Manager (luci-app-filemanager) injects a light palette of its own: a
+   #f9f9f9 status bar, #f0f0f0 row hover and editor gutter, #ccc rules. On the
+   dark scheme that is a white band under the theme's light ink; repaint those
+   surfaces with the theme's, and let the table's own hover show through the
+   app's !important row fill. */
+body[data-page="admin-system-filemanager"] #status-bar { background: var(--s1); border-color: var(--line); }
+body[data-page="admin-system-filemanager"] #status-bar .cbi-progressbar { background: none; }
+body[data-page="admin-system-filemanager"] :is(#file-list-container, #content-help) { border-color: var(--line); }
+body[data-page="admin-system-filemanager"] #file-table :is(th, td) { border-right-color: var(--line); }
+body[data-page="admin-system-filemanager"] #file-table tr:hover { background: none !important; }
+body[data-page="admin-system-filemanager"] .line-numbers { background: var(--s3); border-right-color: var(--line); }
+body[data-page="admin-system-filemanager"] .sort-button { border-color: var(--line-2); }
+
+/* ----------------------------------------------------- responsive */
+
+@media (max-width: 1100px) {
+	.vt-search { width: 36px; padding: 0; justify-content: center; }
+	.vt-search-label, .vt-search .vt-kbd { display: none; }
+	.vt-host { max-width: 180px; }
+	/* the name next to the logo crowded the host chip, which says it too */
+	.vt-top-name, .vt-top-name + .vt-crumbs::before { display: none !important; }
+}
+
+@media (max-width: 900px) {
+	.vt-host { display: none !important; }
+	.vt-top-name, .vt-top-name + .vt-crumbs::before { display: none !important; }
+	/* indicators go compact (a sign, a count) before the crumbs get cut;
+	   the label stays as text for screen readers and as the title */
+	#indicators > span[data-indicator] { height: 28px; padding: 0 8px; }
+	#indicators > span[data-indicator="poll-status"] { font-size: 0; gap: 0; width: 28px; justify-content: center; padding: 0; }
+	#indicators > span[data-indicator="poll-status"][data-style="active"]::after { left: calc(50% - 3.5px); }
+	/* without its label the pill is the pause / resume button: a pause
+	   sign while it refreshes, a play sign while paused */
+	#indicators > span[data-indicator="poll-status"][data-style="active"]::before {
+		width: 8px; height: 10px; border-radius: 0;
+		background: none; border-inline: 3px solid currentColor;
+	}
+	#indicators > span[data-indicator="poll-status"][data-style="inactive"]::before {
+		width: 0; height: 0; margin-left: 2px; border-radius: 0;
+		background: none; border-left: 9px solid currentColor; border-block: 5px solid transparent;
+	}
+	#indicators > span[data-indicator][data-count] { padding: 0 3px; gap: 0; }
+	#indicators > span[data-indicator][data-count]::before { content: none; }
+	html[data-rail="pinned"] .vt-rail { width: var(--rail-w); }
+	html[data-rail="pinned"] .vt-frame { margin-left: var(--rail-w); }
+	html[data-rail="pinned"] body.vt-auth .vt-shell::before { width: var(--rail-w); }
+	html[data-rail="pinned"] .vt-rail-label,
+	html[data-rail="pinned"] .vt-rail-caret, html[data-rail="pinned"] .vt-rail-sub { display: none !important; }
+	.vt-rail-pin { display: none; }
+}
+
+@media (max-width: 720px) {
+	:root { --top-h: 50px; --bar-h: 60px; }
+
+	/* rail -> bottom bar; flyout -> bottom sheet */
+	.vt-rail, html[data-rail="pinned"] .vt-rail {
+		top: auto; right: 0; bottom: 0;
+		width: auto; height: calc(var(--bar-h) + env(safe-area-inset-bottom));
+		padding-bottom: env(safe-area-inset-bottom);
+		flex-direction: row;
+		border-right: 0; border-top: 1px solid var(--line);
+		background: color-mix(in srgb, var(--bg-rail) 94%, transparent);
+		backdrop-filter: blur(12px);
+		-webkit-backdrop-filter: blur(12px);
+	}
+	.vt-rail > .vt-brand, .vt-rail-foot { display: none; }
+	body.vt-auth .vt-shell::before { display: none; }
+	/* a swipe past either end must not swipe the page. The hairline
+	   scrollbar stays: in a narrow desktop window it is the mouse's way to
+	   the entries past the edge */
+	.vt-rail-list {
+		flex-direction: row; justify-content: flex-start;
+		gap: 0; padding: 0 var(--sp-1);
+		overflow-x: auto; overflow-y: hidden;
+		overscroll-behavior-x: contain;
+	}
+	/* the buttons stay a centred group on wider screens. Centred with auto
+	   margins, not justify-content: center, which would push an overflowing
+	   list's first items past the scroll start where nothing reaches them;
+	   auto margins drop to 0 when the list overflows. */
+	.vt-rail-item { flex: 1 0 60px; max-width: 104px; padding: 6px 2px; }
+	.vt-rail-item:first-child { margin-inline-start: auto; }
+	.vt-rail-item:last-child { margin-inline-end: auto; }
+	.vt-rail-link, html[data-rail="pinned"] .vt-rail-link {
+		flex-direction: column; justify-content: center; gap: 3px;
+		height: 48px; padding: 0 4px;
+	}
+	.vt-rail-link .vt-rail-label, html[data-rail="pinned"] .vt-rail-link .vt-rail-label {
+		display: block !important;
+		flex: none; /* the rail's label grows; here it would push the icon up */
+		max-width: 100%;
+		font-size: var(--fs-micro); font-weight: 500;
+		text-align: center;
+	}
+	.vt-rail-item.is-active > .vt-rail-link::before { left: calc(50% - 10px); top: -6px; bottom: auto; width: 20px; height: 3px; border-radius: 0 0 3px 3px; }
+	.vt-frame, html[data-rail="pinned"] .vt-frame { margin-left: 0; padding-bottom: calc(var(--bar-h) + env(safe-area-inset-bottom)); }
+
+	.vt-flyout {
+		top: auto; left: 0; right: 0;
+		bottom: calc(var(--bar-h) + env(safe-area-inset-bottom));
+		width: auto;
+		max-height: 70vh;
+		border-right: 0; border-top: 1px solid var(--line-2);
+		border-radius: var(--r-lg) var(--r-lg) 0 0;
+		animation: vt-sheet-in .18s ease-out;
+	}
+	.vt-fly-head { height: 48px; }
+	.vt-fly-head::before {
+		content: ""; position: absolute; left: 50%; top: 6px; width: 36px; height: 4px; margin-left: -18px;
+		border-radius: 2px; background: var(--line-2);
+	}
+	.vt-fly-link { min-height: 44px; font-size: var(--fs-md); }
+	.vt-fly-sub a { padding: 8px 12px; font-size: var(--fs-base); }
+	@keyframes vt-sheet-in { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+	.vt-topbar { gap: var(--sp-2); padding: 0 var(--sp-3) 0 var(--sp-4); }
+	.vt-crumbs > :not(:last-child) { display: none; }
+	.vt-crumbs .vt-crumb-current { font-size: var(--fs-md); }
+	.vt-top-actions { gap: 2px; }
+	.vt-search { border-color: transparent; background: none; color: var(--text-2); width: 32px; height: 32px; }
+	.vt-tabs { padding: var(--sp-4) var(--sp-4) 0; }
+	.vt-tabs:not([hidden]) + .vt-main { padding-top: var(--sp-4); }
+
+	.vt-main { padding: var(--sp-4); }
+	.vt-foot { padding-bottom: var(--sp-4); }
+	:root { --card-px: 14px; --card-py: 14px; }
+	.cbi-map > h2, .vt-main > h2, #view > h2, #view > div > h2:first-child { font-size: var(--fs-xl); }
+	.cbi-page-actions {
+		bottom: calc(var(--bar-h) + env(safe-area-inset-bottom) + 8px);
+		width: auto;
+		margin: var(--sp-4) 0 0;
+	}
+	/* one row: the buttons share the bar from a zero basis, so the row only
+	   breaks when their longest words no longer fit, and a long label
+	   wraps inside its button instead of taking the bar to a second row */
+	.cbi-page-actions > *, .cbi-page-actions > form > * { flex: 1 1 0; }
+	.cbi-page-actions :is(.btn, .cbi-button, button, input[type="button"], input[type="submit"]):not(.cbi-dropdown) {
+		padding: 4px 8px;
+		white-space: normal; text-align: center; line-height: 1.15;
+	}
+	.cbi-section { overflow-x: visible; }
+	.cbi-tblsection, .cbi-section:has(.cbi-tblsection), .cbi-section:has(> :where(#packages)), .cbi-section:has(> .table.assoclist) { overflow: visible; }
+	.network-status-table .ifacebox-head, .network-status-table .ifacebox-body { padding-left: 12px; padding-right: 12px; }
+	:is(.ifacebox-body, .ifacebadge) > span:has(> .nowrap) { column-gap: 10px; }
+	.v-meter-sub { margin-left: 0; flex-basis: 100%; }
+
+	/* stacked forms, 16px inputs so iOS does not zoom */
+	.cbi-value { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+	.cbi-value > .cbi-value-title { padding-top: 0; }
+	.cbi-value > .cbi-value-field { grid-column: 1; }
+	.cbi-value[data-v-help] > .cbi-value-field { grid-row: 2; }
+	.cbi-value:has(> .vt-help:not([hidden])) > .cbi-value-title { align-self: center; }
+	/* stacked, there is nothing beside the title to line up with */
+	.cbi-value > .cbi-value-title > br:first-child { display: none; }
+	.cbi-value:has(> .cbi-value-title > br:first-child) > .vt-help { margin-top: 0; }
+	/* checkbox rows: box, label and (i) on one line, help below. The field
+	   box dissolves so its children join the row grid; LuCI's nodes stay put. */
+	.cbi-value:has(> .cbi-value-field > .cbi-checkbox) {
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		column-gap: var(--sp-3);
+		align-items: center;
+	}
+	.cbi-value:has(> .cbi-value-field > .cbi-checkbox) > .cbi-value-field { display: contents; }
+	.cbi-value:has(> .cbi-value-field > .cbi-checkbox) > .cbi-value-field > .cbi-checkbox { grid-row: 1; grid-column: 1; }
+	.cbi-value:has(> .cbi-value-field > .cbi-checkbox) > .cbi-value-title { grid-row: 1; grid-column: 2; padding: 0; }
+	.cbi-value:has(> .cbi-value-field > .cbi-checkbox) > .vt-help { grid-row: 1; grid-column: 3; }
+	.cbi-value:has(> .cbi-value-field > .cbi-checkbox) > .cbi-value-field > :not(.cbi-checkbox) { grid-column: 1 / -1; }
+	/* a segmented control spans the width and its segments share each row */
+	.cbi-tabmenu, .vt-tabs > .vt-pagetabs { width: auto; }
+	.cbi-tabmenu > li, .vt-pagetabs > .vt-tab { flex: 1 1 auto; }
+	.cbi-tabmenu > li > a, .vt-pagetabs > .vt-tab { justify-content: center; }
+	.cbi-dropdown, .vt-main input, .vt-main select, .control-group, .cbi-dynlist { max-width: none; }
+
+	/* tables become cards, in pages and in modals alike. Header rows go
+	   (LuCI also puts .cbi-section-table-titles on each row's name cell,
+	   which stays); every cell drops the fixed row height. */
+	.hide-xs { display: none !important; }
+	:is(.vt-main, .modal) .table, :is(.vt-main, .modal) .table > :is(tbody, thead) { display: block; width: 100%; }
+	:is(.vt-main, .modal) .table :is(tr, .tr):is(.table-titles, .cbi-section-table-titles, .cbi-section-table-descr) { display: none !important; }
+	:is(.vt-main, .modal) .table .tr {
+		display: flex; flex-wrap: wrap;
+		padding: 6px 0;
+		border-bottom: 1px solid var(--line);
+	}
+	:is(.vt-main, .modal) .table .tr:last-child { border-bottom: 0; }
+	:is(.vt-main, .modal) .table .tr > .td {
+		display: block;
+		flex: 1 1 100%;
+		min-width: 0;
+		width: auto !important;
+		height: auto;
+		padding: 4px 10px;
+		border: 0;
+		text-align: left !important;
+	}
+	/* one inset for every cell of a card, in sections and free-standing
+	   tables (Software, Diagnostics) alike */
+	:is(.vt-main, .modal) .table .tr > .td:nth-child(n) { padding: 4px var(--card-px); }
+	:is(.vt-main, .modal) .table .tr > .td[data-title]::before {
+		content: attr(data-title);
+		display: block;
+		margin-bottom: 2px;
+		font-family: var(--font);
+		color: var(--text-3);
+		font-size: var(--fs-micro); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+	}
+	:is(.vt-main, .modal) .table:not(:has(.table-titles)) .tr > .td:first-child:nth-last-child(2) {
+		width: auto !important; padding-bottom: 0;
+		color: var(--text-3); font-size: var(--fs-micro); font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+	}
+	:is(.vt-main, .modal) .table .tr > .td[data-title]:not(:only-child) { flex-basis: 50%; }
+	:is(.vt-main, .modal) .table .tr > .td[data-title]:last-child:nth-child(odd) { flex-basis: 100%; }
+	:is(.vt-main, .modal) .table .tr > .td.cbi-section-actions { flex-basis: 100%; text-align: left !important; }
+	:is(.vt-main, .modal) .table .tr > .td:not(.cbi-value-field) { white-space: normal; overflow-wrap: anywhere; }
+	/* a named grid section's name cell heads its card */
+	:is(.vt-main, .modal) .table .tr > .td.cbi-section-table-titles { flex-basis: 100%; color: var(--text); font-weight: 600; }
+	:is(.vt-main, .modal) .table .tr > .td:is([data-name="_ifacebox"], [data-name="_ifacestat"]) { flex-basis: 100%; }
+	.cbi-section-table .td[data-name="_ifacebox"] .ifacebox { width: 100%; }
+	:is(.vt-main, .modal) .table .tr > .td.cbi-section-actions > div:not(.btn, .cbi-button) { flex-wrap: wrap; }
+	/* a lone button in the cell (Software's Install…) starts at the card's inset */
+	:is(.vt-main, .modal) .table .tr > .td.cbi-section-actions > :is(.btn, .cbi-button) { margin-left: 0; }
+	:is(.vt-main, .modal) .table .tr > .td.cbi-section-actions::before { display: none !important; }
+	:is(.vt-main, .modal) .table .tr:hover > .td { background: none; }
+	/* firewall rules: the on/off switch sits in the card's corner, the
+	   match runs full width */
+	[id^="cbi-firewall-"] .table .tr:has(> .td input[data-widget-id$=".enabled"]) { position: relative; }
+	[id^="cbi-firewall-"] .table .tr > .td:has(input[data-widget-id$=".enabled"]) {
+		position: absolute; top: 10px; right: var(--card-px);
+		flex: none; width: auto !important; padding: 0 !important;
+	}
+	[id^="cbi-firewall-"] .table .tr > .td:has(input[data-widget-id$=".enabled"])::before { display: none; }
+	/* a 44 px tap target around the 20 px box: LuCI's empty label for it,
+	   stretched over the box and the space around it */
+	[id^="cbi-firewall-"] .table .tr > .td:has(input[data-widget-id$=".enabled"]) .cbi-checkbox { position: relative; }
+	[id^="cbi-firewall-"] .table .tr > .td:has(input[data-widget-id$=".enabled"]) .cbi-checkbox > label:empty {
+		display: block; position: absolute; left: 50%; top: 50%;
+		width: 44px; height: 44px; translate: -50% -50%;
+	}
+	[id^="cbi-firewall-"] .table .tr:has(> .td input[data-widget-id$=".enabled"]) > .td.cbi-section-table-titles { padding-right: calc(var(--card-px) + 40px) !important; }
+	[id^="cbi-firewall-"] .table .tr > .td:has(> small > br) { flex-basis: 100% !important; }
+	/* "From … To …" and a coloured verdict say what they are: no column labels */
+	[id^="cbi-firewall-"] .table .tr:has(> .td input[data-widget-id$=".enabled"]) > .td:has(small, var[data-tooltip])::before { display: none; }
+	[id^="cbi-firewall-"] .table .td > small:has(> br) { line-height: 1.6; }
+	.cbi-section .table, .cbi-section .cbi-section-table { border: 0; }
+	/* an empty cell says nothing: no label for it (Routing's Protocol) */
+	:is(.vt-main, .modal) .table .tr > .td[data-title]:empty { display: none; }
+	/* LuCI's wide columns (col-7 and up: a package's description, a
+	   connection's addresses) take the card's width */
+	:is(.vt-main, .modal) .table .tr > .td[data-title]:is(.col-7, .col-8, .col-9, .col-10) { flex-basis: 100%; }
+	#connections .tr:not(.table-titles) > .td:is(:nth-child(3), :nth-child(4)) { white-space: normal; overflow-wrap: anywhere; }
+	/* a zone and its forwards read across the card */
+	#cbi-firewall-zone .tr > .td:has(.zone-forwards) { flex-basis: 100%; }
+	/* LuCI 24.10: a named row's drawn name heads its card */
+	.table:has(.cbi-section-table-titles.named[data-title]) .cbi-section-table-row[data-title]:not(:has(> .cbi-section-table-titles))::before {
+		display: block; flex: 1 1 100%;
+		padding: 4px var(--card-px); border: 0;
+		font-weight: 600;
+	}
+	[id^="cbi-firewall-"] .table:has(.cbi-section-table-titles.named[data-title]) .cbi-section-table-row[data-title]:has(input[data-widget-id$=".enabled"])::before { padding-right: calc(var(--card-px) + 40px); }
+	.table:has(.cbi-section-table-titles.named[data-title]) .cbi-section-table-row[data-title]:hover::before { background: none; }
+	/* nftables rule cards: LuCI's !important cell padding, on the card's edge */
+	#view .nft-rules .tr > .td, #view .nft-rules .tr > .td:is(:first-child, :last-child) { padding: 3px var(--card-px) !important; }
+	/* firewall flow: a step's verdict goes under its text */
+	.v-nft-step { grid-template-columns: 20px minmax(0, 1fr); }
+	.v-nft-then { grid-column: 2; align-items: flex-start; }
+	.v-nft-sub { grid-column: 1 / -1; }
+	/* log filters: each field on its own line under its label */
+	#content_syslog > div > :is(select, input:not([type="checkbox"])) { flex: 1 1 100%; }
+	#content_syslog > div > :is(select, input:not([type="checkbox"])) + label { margin-left: 0 !important; }
+	/* read-only output (logs, Diagnostics) wraps instead of showing each
+	   line's first 40 characters (LuCI: wrap="off", inline white-space) */
+	.vt-main textarea[readonly] { white-space: pre-wrap !important; overflow-wrap: anywhere; }
+	.cbi-progressbar { max-width: none; }
+	.network-status-table > .ifacebox { max-width: none; }
+
+	#modal_overlay { padding: var(--sp-3); }
+	#modal_overlay > .modal { padding: var(--sp-4); }
+	#modal_overlay > .modal > h4:first-child { margin: calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)) var(--sp-3); padding: var(--sp-3) var(--sp-4); }
+	#modal_overlay > .modal .cbi-page-actions, #modal_overlay > .modal > .right, #modal_overlay > .modal > .button-row {
+		margin: var(--sp-4) calc(-1 * var(--sp-4)) calc(-1 * var(--sp-4)); padding: var(--sp-3) var(--sp-4);
+	}
+	.vt-pal-overlay { padding: var(--sp-3); align-items: flex-start; }
+	.vt-pal { max-height: 80vh; }
+	.vt-pal-foot > span:not(.vt-pal-count) { display: none; }
+}
+
+/* touch, at any width: 16px text in fields (iOS zooms below that),
+   bigger check marks, a little more air between rows */
+@media (pointer: coarse), (max-width: 720px) {
+	.vt-main input, .vt-main select, .vt-main textarea:not([readonly]), .cbi-dropdown:not(.btn, .cbi-button), .modal input, .modal select { font-size: 16px !important; }
+}
+@media (pointer: coarse) {
+	input[type="checkbox"], input[type="radio"] { width: 20px; height: 20px; }
+	/* top-bar buttons: a touch control high, at every width */
+	.vt-icon-btn, .vt-search { min-width: var(--ctl-h); height: var(--ctl-h); }
+	/* short row buttons (Processes' Kill) at least as wide as they are high */
+	.td.cbi-section-actions :is(.btn, .cbi-button):not(.drag-handle) { min-width: var(--ctl-h); }
+	/* dropdown choices (Save & Apply's too) are touch targets */
+	.cbi-dropdown[open] > ul.dropdown > li, .vt-actmenu-item { min-height: var(--ctl-h); }
+	.cbi-value { padding: 8px 0; }
+}
+
+/* ----------------------------------------------------------- motion */
+
+/* phones: content in cards wraps instead of pushing the card wider */
+@media (max-width: 720px) {
+	.td .ifacebadge:not(.cbi-tooltip), .td.nowrap, .td .nowrap,
+	.td > span:has(> span + br + span) > span { white-space: normal; }
+	.td.cbi-section-actions, .td.cbi-section-actions.nowrap { flex-basis: 100% !important; width: auto !important; min-width: 0 !important; white-space: normal; }
+	.td.cbi-section-actions > div:not(.btn, .cbi-button) { display: flex; flex-wrap: wrap; justify-content: flex-start; }
+	.cbi-value-field > div[id$="-ifc-description"] { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; }
+	.v-meter-rows { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+	.v-meter-row { grid-template-areas: "label" "bar" "val"; row-gap: 6px; }
+	.v-meter-row > .v-meter-val { text-align: left; white-space: normal; }
+	.v-meter-row > .v-meter-label small { display: inline; margin-left: 6px; }
+	/* Software: "Actions" is one group of three buttons; it ran past the
+	   card and widened the page. Groups of buttons only wrap here. */
+	:is(#view > .controls, #view > .cbi-section > .controls) > div > .control-group:not(:has(> input, > select, > .cbi-dropdown)) { flex-wrap: wrap; gap: var(--sp-2); }
+	:is(#view > .controls, #view > .cbi-section > .controls) > div > .control-group:not(:has(> input, > select, > .cbi-dropdown)) > * { flex: 1 1 auto; margin-left: 0 !important; border-radius: var(--r-sm) !important; }
+	/* a package's dependency tree: less indent per level */
+	#modal_overlay ul.deps { padding-left: var(--sp-2); }
+}
+/* Software, a package's details: a dependency line (name, size, status)
+   doesn't wrap in LuCI's own stylesheet; a few levels deep it ran past the
+   dialog and left the ↳ alone on its line */
+#modal_overlay ul.deps li > span { white-space: normal; overflow-wrap: anywhere; }
+#modal_overlay ul.deps li > span > .label { white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: .001ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+	}
+	.spinning::before, #modal_overlay > .modal::before { animation-duration: 1.6s !important; animation-iteration-count: infinite !important; }
+	.alert-message { transition-duration: .01s; }
+	/* ui.Dropdown moves focus on transitionend: keep a (near-instant) transition */
+	.cbi-dropdown[open] > ul.dropdown { transition-duration: .001s; }
+	.cbi-progressbar > div { transition: none; }
+	.vt-crumb-switch > svg, .vt-rail-caret, .vt-rail-pin svg { transition: none; }
+	.v-nft-card > summary::before, .v-nft-jump::after { transition: none; }
+}
+
+@media print {
+	.vt-rail, .vt-flyout, .vt-topbar, .vt-tabs, .cbi-page-actions, .vt-foot, body.vt-auth .vt-shell::before { display: none !important; }
+	.vt-frame { margin: 0 !important; }
+}

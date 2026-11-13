@@ -1,0 +1,32 @@
+Vantage - a LuCI theme for OpenWrt
+Copyright (C) 2026 anothaDev
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along
+with this program. If not, see <https://www.gnu.org/licenses/>.
+
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Origin
+------
+This theme is original work. Its stylesheet, templates, scripts, logo and
+icons were written for Vantage; no code, markup, styles or artwork were
+copied from other LuCI themes (Bootstrap, Material, Argon, OpenWrt 2020,
+UniWRT or others). The status icons are drawn by dev/icons/build.js in the
+Vantage source tree.
+
+The theme targets LuCI, the OpenWrt web interface (https://github.com/openwrt/luci),
+which is licensed under the Apache License 2.0 (compatible with GPL-3.0). It uses LuCI's public
+interfaces only - the template scope, luci.js (L, E, ui.menu, rpc), the
+luci.themes/luci.main.mediaurlbase configuration and the CSS classes that
+LuCI's views emit - and ships no LuCI source. The package is built with
+LuCI's luci.mk.

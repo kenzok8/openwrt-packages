@@ -1,0 +1,33 @@
+{#
+ Vantage theme - footer.
+ Versions are shortened to what a person reads: "OpenWrt 25.12.3 · LuCI 26.124"
+ (no git describe noise such as "(HEAD detached at …) branch" or "~hash"),
+ entity-encoded, and only shown to logged-in users: error pages reach
+ anonymous visitors too. The menu script is only loaded for a session.
+ (The core header's L.env script still carries the LuCI build for
+ everyone; see docs/luci-contract.md section 2.)
+-#}
+{% if (blank_page): %}
+</div>
+{% else %}
+		</main>
+{%
+	const dist_ver = match(version.distversion ?? '', /^[0-9A-Za-z][0-9A-Za-z.+-]*/);
+	const luci_name = match(version.luciname ?? '', /^[A-Za-z][A-Za-z0-9]*/);
+	const luci_ver = match(version.luciversion ?? '', /[0-9]+\.[0-9]+/);
+-%}
+		<footer class="vt-foot">
+{% if (ctx.authsession): %}
+			<span>{{ entityencode(version.distname ?? 'OpenWrt', true) }}{{ dist_ver ? ' ' + entityencode(dist_ver[0], true) : '' }}</span>
+			<span class="vt-foot-sep" aria-hidden="true">·</span>
+			<span>{{ entityencode(luci_name ? luci_name[0] : 'LuCI', true) }}{{ luci_ver ? ' ' + entityencode(luci_ver[0], true) : '' }}</span>
+{% endif %}
+		</footer>
+	</div>
+</div>
+{% endif %}
+{% if (ctx.authsession && !blank_page): %}
+<script>L.require('menu-vantage');</script>
+{% endif %}
+</body>
+</html>

@@ -1,0 +1,157 @@
+{#
+ Vantage theme - header.
+ Data-free: host details and the menu are fetched by menu-vantage.js over
+ rpc after login. Everything request-derived is entity-encoded; visitors who
+ are not logged in (login redirect, 404, CSRF error) get the bare frame with
+ no menu, no host details and a generic title from this template. LuCI's
+ core header.ut, which includes this one, then prints its own
+ L = new LuCI({...}) script (LuCI build, nodespec; on an anonymous 404 the
+ whole menu tree): upstream, see docs/luci-contract.md section 2.
+-#}
+{%
+	const authed = !!ctx.authsession;
+	/* LuCI renders its 404 with the deepest node it resolved: a category
+	   (firstchild) or a node without an action, whose title is not the
+	   page asked for. Visitors who are not logged in get no title at all. */
+	const found = !!dispatched?.action?.type && dispatched.action.type != 'firstchild';
+	const page_title = !authed ? null : !found ? _('Not found') : dispatched?.title ? striptags(_(dispatched.title)) : null;
+	const lang = entityencode(dispatcher.lang ?? 'en', true);
+	/* Appearance for every browser (/etc/config/vantage_theme): a value the
+	   theme knows, else '' (each browser keeps its own pick). Logged in only:
+	   nothing is read for an anonymous 404 or CSRF page */
+	const look = (opt, ok) => { const v = authed ? uci.get('vantage_theme', 'appearance', opt) : null; return (type(v) == 'string' && index(ok, v) >= 0) ? v : ''; };
+	const look_theme = look('theme', [ 'auto', 'light', 'dark' ]);
+	const look_login = look('login', [ 'grid', 'stars', 'none' ]);
+	const look_backdrop = look('backdrop', [ 'grid', 'stars', 'none' ]);
+	const look_power = look('power', [ 'normal', 'low' ]);
+	const look_brand = look('brand', [ 'none', 'hostname', 'model' ]);
+	/* The dashboard's chart style and layouts, saved with it. A layout passes
+	   only in the form vantage.layout reads, 'wide=hero:0:4 chart:0:2:h;mid=default' */
+	const look_chart = look('chart', [ 'overlay', 'log', 'mirror', 'mirror-split', 'lanes' ]);
+	const look_layout = (() => {
+		/* compiled once a page, not once a layout: ucode compiles a
+		   literal each time it is reached, and these counted repeats
+		   take milliseconds to compile on a router */
+		const form = /^(default|[a-z]{1,8}:[0-3]:[1-4](:h)?( [a-z]{1,8}:[0-3]:[1-4](:h)?){0,7})$/;
+		let out = [];
+		if (authed)
+			for (let k in [ 'wide', 'mid', 'narrow', 'wide_wired', 'mid_wired', 'narrow_wired' ]) {
+				const v = uci.get('vantage_theme', 'appearance', 'layout_' + k);
+				if (type(v) == 'string' && match(v, form))
+					push(out, k + '=' + v);
+			}
+		return join(';', out);
+	})();
+	/* May this login save it for every browser? 'yes'; 'relogin' when rpcd
+	   would grant the theme's group at a new login and no reload of rpcd
+	   has given it to this one yet (the install's reload reaches open
+	   logins); 'no' otherwise, and without the config's section. Only the
+	   word reaches the page. */
+	const look_save = (() => {
+		if (!authed || type(uci.get_all('vantage_theme', 'appearance')) != 'object') return 'no';
+		const held = ctx.authacl?.['access-group']?.['luci-theme-vantage'];
+		if (type(held) == 'array' && index(held, 'write') >= 0) return 'yes';
+		let would = false;
+		uci.foreach('rpcd', 'login', s => {
+			if (s.username !== ctx.authuser) return;
+			for (let p in (type(s.write) == 'array' ? s.write : [ s.write ]))
+				if (type(p) == 'string' && wildcard('luci-theme-vantage', p)) would = true;
+		});
+		return would ? 'relogin' : 'no';
+	})();
+-%}
+<!DOCTYPE html>
+<html lang="{{ lang }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-backdrop="{{ look_backdrop }}" data-vt-look-power="{{ look_power }}" data-vt-look-brand="{{ look_brand }}" data-vt-look-chart="{{ look_chart }}" data-vt-look-layout="{{ look_layout }}" data-vt-look-save="{{ look_save }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>{{ page_title ? entityencode(page_title, true) + ' · ' : '' }}LuCI</title>
+<script>
+(function (r) {
+	/* a pick made without the right to save it for everyone (not for a
+	   login that may), the router's, this browser's from before, the
+	   default (lookValue in the theme's menu) */
+	function look(name, own, before, ok) {
+		var v = [ null, r.getAttribute('data-vt-look-' + name), null ], i;
+		try { v[0] = r.getAttribute('data-vt-look-save') === 'yes' ? null : localStorage.getItem(own); v[2] = localStorage.getItem(before); } catch (e) {}
+		for (i = 0; i < 3; i++) if (ok.indexOf(v[i]) >= 0) return v[i];
+		return ok[0];
+	}
+	var p = look('theme', 'vantage.theme.own', 'vantage.theme', [ 'auto', 'light', 'dark' ]), rail = '';
+	try { rail = localStorage.getItem('vantage.rail') || ''; } catch (e) {}
+	var dark = (p === 'dark') || (p !== 'light' && !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches));
+	r.setAttribute('data-darkmode', dark ? 'true' : 'false');
+	r.setAttribute('data-theme', p);
+	/* the dashboard's network path background, read by luci-app-vantage */
+	r.setAttribute('data-vt-backdrop', look('backdrop', 'vantage.backdrop.own', 'vantage.backdrop.v1', [ 'grid', 'stars', 'none' ]));
+	/* Low-power router: the dashboard asks for the slow parts less often and nothing moves */
+	r.setAttribute('data-vt-power', look('power', 'vantage.power.own', 'vantage.power', [ 'normal', 'low' ]));
+	if (rail === 'pinned') r.setAttribute('data-rail', 'pinned');
+})(document.documentElement);
+</script>
+<link rel="stylesheet" href="{{ media }}/vantage.css">
+<link rel="stylesheet" href="{{ media }}/icons.css">
+<link rel="icon" href="{{ media }}/logo.svg" type="image/svg+xml">
+<script src="{{ entityencode(dispatcher.build_url('admin/translations', dispatcher.lang), true) }}"></script>
+<script src="{{ resource }}/cbi.js"></script>
+</head>
+<body class="lang_{{ lang }}{{ authed ? ' vt-auth' : ' vt-anon' }}" data-page="{{ entityencode(join('-', ctx.request_path), true) }}">
+{% if (blank_page): %}
+<div id="indicators" hidden></div>
+<div id="maincontent" class="vt-blank">
+{% else %}
+<a class="vt-skip" href="#maincontent">{{ entityencode(_('Skip to content'), true) }}</a>
+<div class="vt-shell">
+{% if (authed): %}
+	<nav class="vt-rail" id="vt-rail" aria-label="{{ entityencode(_('Main navigation', 'vantage-theme'), true) }}">
+		<a class="vt-brand" href="{{ dispatcher.build_url('admin') }}" aria-label="{{ entityencode(_('Home', 'vantage-theme'), true) }}">
+			<svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="7" class="vt-brand-tile"/><path d="M9 10.5 16 22" class="vt-brand-l"/><path d="M16 22 23 10.5" class="vt-brand-r"/><circle cx="23" cy="10.5" r="1.9" class="vt-brand-dot"/></svg>
+			<span class="vt-brand-name" id="vt-brand-name" hidden></span>
+		</a>
+		<ul class="vt-rail-list" id="vt-rail-list"></ul>
+		<div class="vt-rail-foot">
+			<button type="button" class="vt-rail-pin" id="vt-rail-pin" aria-pressed="false" aria-label="{{ entityencode(_('Expand navigation'), true) }}" title="{{ entityencode(_('Expand navigation'), true) }}">
+				<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 5v14M9 12h11M15 7l5 5-5 5"/></svg>
+			</button>
+		</div>
+	</nav>
+	<div class="vt-flyout" id="vt-flyout" hidden></div>
+	<div class="vt-scrim" id="vt-scrim" hidden></div>
+{% endif %}
+	<div class="vt-frame">
+		<header class="vt-topbar">
+{% if (!authed): %}
+			<span class="vt-brand vt-brand-static" aria-hidden="true">
+				<svg viewBox="0 0 32 32" width="28" height="28"><rect x="1" y="1" width="30" height="30" rx="7" class="vt-brand-tile"/><path d="M9 10.5 16 22" class="vt-brand-l"/><path d="M16 22 23 10.5" class="vt-brand-r"/><circle cx="23" cy="10.5" r="1.9" class="vt-brand-dot"/></svg>
+			</span>
+{% else %}
+			<span class="vt-top-name" id="vt-top-name" hidden></span>
+{% endif %}
+			<nav class="vt-crumbs" id="vt-crumbs" aria-label="{{ entityencode(_('Breadcrumb', 'vantage-theme'), true) }}"><span class="vt-crumb vt-crumb-current">{{ entityencode(page_title ?? 'LuCI', true) }}</span></nav>
+			<div class="vt-top-actions">
+{% if (authed): %}
+				<button type="button" class="vt-search" id="vt-search-btn" aria-haspopup="dialog" aria-keyshortcuts="Control+K /" aria-label="{{ entityencode(_('Search pages'), true) }}">
+					<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+					<span class="vt-search-label">{{ entityencode(_('Search pages'), true) }}</span>
+					<kbd class="vt-kbd">Ctrl K</kbd>
+				</button>
+{% endif %}
+				<div id="indicators" class="vt-indicators" aria-live="polite"></div>
+{% if (authed): %}
+				<a class="vt-host" id="vt-host" href="{{ dispatcher.build_url('admin/status/overview') }}" hidden></a>
+				<button type="button" class="vt-icon-btn" id="vt-theme" aria-label="{{ entityencode(_('Colour theme'), true) }}" title="{{ entityencode(_('Colour theme'), true) }}">
+					<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" class="vt-fill"/></svg>
+				</button>
+				<button type="button" class="vt-icon-btn" id="vt-look" aria-haspopup="dialog" aria-expanded="false" aria-label="{{ entityencode(_('Appearance', 'vantage-theme'), true) }}" title="{{ entityencode(_('Appearance', 'vantage-theme'), true) }}">
+					<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M10.26 5.01L10.51 2.62A9.5 9.5 0 0 1 13.49 2.62L13.74 5.01A7.2 7.2 0 0 1 15.71 5.83L17.58 4.31A9.5 9.5 0 0 1 19.69 6.42L18.17 8.29A7.2 7.2 0 0 1 18.99 10.26L21.38 10.51A9.5 9.5 0 0 1 21.38 13.49L18.99 13.74A7.2 7.2 0 0 1 18.17 15.71L19.69 17.58A9.5 9.5 0 0 1 17.58 19.69L15.71 18.17A7.2 7.2 0 0 1 13.74 18.99L13.49 21.38A9.5 9.5 0 0 1 10.51 21.38L10.26 18.99A7.2 7.2 0 0 1 8.29 18.17L6.42 19.69A9.5 9.5 0 0 1 4.31 17.58L5.83 15.71A7.2 7.2 0 0 1 5.01 13.74L2.62 13.49A9.5 9.5 0 0 1 2.62 10.51L5.01 10.26A7.2 7.2 0 0 1 5.83 8.29L4.31 6.42A9.5 9.5 0 0 1 6.42 4.31L8.29 5.83A7.2 7.2 0 0 1 10.26 5.01Z"/><circle cx="12" cy="12" r="3"/></svg>
+				</button>
+				<a class="vt-icon-btn" href="{{ dispatcher.build_url('admin/logout') }}" aria-label="{{ entityencode(_('Log out'), true) }}" title="{{ entityencode(_('Log out'), true) }}">
+					<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8l-4 4 4 4M6 12h10"/></svg>
+				</a>
+{% endif %}
+			</div>
+		</header>
+		<nav class="vt-tabs" id="vt-tabs" aria-label="{{ entityencode(_('Page tabs'), true) }}" hidden></nav>
+		<main id="maincontent" class="vt-main">
+{% endif %}
