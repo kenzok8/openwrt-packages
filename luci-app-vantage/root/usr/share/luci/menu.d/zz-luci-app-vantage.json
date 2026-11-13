@@ -1,0 +1,37 @@
+{
+	"admin/dashboard": {
+		"title": "Dashboard",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "vantage/overview"
+		},
+		"depends": {
+			"acl": [ "luci-app-vantage" ]
+		}
+	},
+	"admin/status/dashboard": {
+		"title": "Dashboard",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "dashboard/index"
+		},
+		"depends": {
+			"acl": [ "luci-mod-dashboard-index" ],
+			"fs": { "/www/luci-static/resources/view/dashboard/index.js": "file" }
+		}
+	},
+	"admin/network/firewall/overview": {
+		"title": "Overview",
+		"order": 5,
+		"action": {
+			"type": "view",
+			"path": "vantage/firewall"
+		},
+		"depends": {
+			"acl": [ "luci-app-firewall" ],
+			"uci": { "firewall": true }
+		}
+	}
+}

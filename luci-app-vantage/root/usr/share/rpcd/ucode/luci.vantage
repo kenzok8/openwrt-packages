@@ -1,0 +1,913 @@
+// luci-app-vantage: server side of the Vantage dashboard.
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// ubus object luci.vantage, loaded by rpcd-mod-ucode:
+//
+//   wireless   network.wireless status reduced to the fields the dashboard
+//              reads: no key, sae_password, RADIUS or 802.11r secrets, no
+//              EAP credentials. Where netifd has no network.wireless object
+//              (vendor drivers that bypass it, such as MediaTek's mtkwifi),
+//              the same fields from /etc/config/wireless instead. Read group
+//              luci-app-vantage.
+//   thermal    the temperature of each thermal zone in /sys/class/thermal
+//              (millidegrees Celsius) with its type; nothing else is read.
+//              Read group luci-app-vantage.
+//   wired      the hosts the Linux bridges have learned on their ports:
+//              MAC, port, bridge, VLAN and seconds since last heard, from a
+//              read-only netlink dump of the forwarding database; at most
+//              128 per port and 512 in all. Not dumped (crowded: true)
+//              when the bridges hold FDB_LIMIT entries or more between
+//              them, counted first through sysfs without reading further: a flood of
+//              made-up addresses must not make rpcd build the whole
+//              table. The dump also has a switch driver read its chip's
+//              own table (29 ms a dump on a MediaTek MT7981 router, #101),
+//              so it is taken again only when sysfs brforward, read every
+//              call, shows a host arrive, leave or change port, or after
+//              FDB_DUMP_S; in between, the last dump's hosts with
+//              brforward's times since heard. Where a port is a VLAN on a swconfig switch
+//              (eth1.1), also which switch ports that VLAN has
+//              (switches): from /etc/board.json (the CPU port's network
+//              device, the ports' roles) and the switch_vlan sections of
+//              /etc/config/network (device, vlan, vid and ports, nothing
+//              else), or board.json's roles for a switch those give no
+//              VLAN. Read group luci-app-vantage.
+//   routes     the route the kernel takes to the internet, IPv4 and IPv6:
+//              a read-only lookup of each family (as `ip route get
+//              fibmatch`) of a documentation address no network uses, so
+//              the answer is the default route ordinary traffic takes.
+//              For each family whose answer is a unicast default route in
+//              the main table: its family (4 or 6), the device it leaves by
+//              (null over several next hops) and its metric; no gateways.
+//              netifd lists the routes it asked for; of two with the same
+//              metric the kernel keeps the one added last. routes is null
+//              when a lookup could not be sent. One lookup a family, so
+//              the work does not grow with the routing table. Read group
+//              luci-app-vantage.
+//   survey     { device }: the channel survey of one Wi-Fi interface, for
+//              the noise floor: { mhz, noise } (dBm) for each channel the
+//              driver gives a noise value, at most MAX_SURVEY: one
+//              read-only NL80211 survey dump. Not through rpcd's iwinfo
+//              survey: libiwinfo has a survey for its NL80211 backend
+//              only, and for any other (the MediaTek mtwifi backend of
+//              the mt798x builds) rpcd calls the missing function and
+//              dies (#124). Only an interface that cfg80211 drives (a
+//              phy80211 link in sysfs) is asked; any other device: no
+//              channels. Read group luci-app-vantage.
+//   set_alias  { mac, name, icon }: name one station, or remove its name
+//              with name ''. Validated here, whatever the browser did, and
+//              written to /etc/config/vantage only. Write group
+//              luci-app-vantage-names.
+//   set_quiet  { mac, quiet }: whether the dashboard leaves one station's
+//              weak signal out of its warnings (#110): a quiet section
+//              with its MAC in /etc/config/vantage, at most MAX_QUIET.
+//              Write group luci-app-vantage-names.
+//
+// Keep the validation in step with names.js (validateAlias, normMac,
+// ICONS) and with dev/replay/vantage-plugin.js; tests/plugin.test.js runs
+// all three against the same cases.
+
+'use strict';
+
+import { cursor } from 'uci';
+import { connect } from 'ubus';
+import { access, lsdir, readfile } from 'fs';
+import * as rtnl from 'rtnl';
+import * as nl80211 from 'nl80211';
+
+const CONFIG = 'vantage';
+const WIRELESS = 'wireless';      // read only, by wireless_from_config()
+const NAME_MAX = 48;              // code points, after collapsing spaces
+const NAME_MAX_UNITS = NAME_MAX * 8; // raw input cap, in UTF-16 code units (as names.js)
+const MAX_ALIASES = 512;          // client sections; bounds /etc/config/vantage
+const MAX_QUIET = 512;            // quiet sections, likewise
+const ICONS = [ 'phone', 'laptop', 'tablet', 'desktop', 'tv', 'speaker', 'printer', 'camera', 'console', 'watch', 'iot', 'router', 'device' ];
+const THERMAL = '/sys/class/thermal';
+const MAX_ZONES = 16;
+const MAX_HOSTS = 512;            // wired hosts per reply
+const MAX_PER_PORT = 128;         // of them on one port (the uplink's would take them all)
+const PROBE4 = '198.51.100.1';    // routes: looked up, never sent to (documentation ranges)
+const PROBE6 = '2001:db8::1';
+const NET = '/sys/class/net';
+const FDB_LIMIT = 4096;           // forwarding entries, all bridges together, before wired() lists none
+const FDB_ENTRY = 16;             // sizeof(struct __fdb_entry), brforward's record
+const FDB_DUMP_S = 30;            // the netlink dump at least this often (VLANs, static entries)
+const FDB_PARSE = 512;            // brforward records read one by one, all bridges; above: the dump each call
+const NETWORK = 'network';        // read only, by switches(): switch_vlan sections
+const BOARD = '/etc/board.json';
+const BOARD_MAX = 65536;          // bytes read of it
+const MAX_SWITCH_VLANS = 64;
+const MAX_SURVEY = 256;          // channels in a survey reply (a tri-band wiphy has about 100)
+const MAX_MHZ = 100000;          // a channel's frequency, MHz (60 GHz is 70200)
+
+// Patterns, compiled once: ucode compiles a regular expression literal each
+// time the code reaches it, and a counted repeat ({1,64}) costs musl
+// milliseconds to compile on a router (8.5 ms against 0.07 ms for the same
+// test with the pattern compiled once, on an ARM Wi-Fi AP). rpcd keeps
+// this module loaded, these with it, between calls.
+const RE_MAC_COLON = /^[0-9a-f]{2}(:[0-9a-f]{2}){5}$/;
+const RE_MAC_DASH = /^[0-9a-f]{2}(-[0-9a-f]{2}){5}$/;
+const RE_MAC_DOTS = /^[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{4}$/;
+const RE_MAC_BARE = /^[0-9a-f]{12}$/;
+const RE_DASHES = /-/g;
+const RE_DOTS = /\./g;
+const RE_PAIRS = /../g;
+const RE_SPACES = /\s+/;
+const RE_ENCRYPTION = /^[A-Za-z0-9+_-]{1,40}/;
+const RE_NAME = /^[A-Za-z0-9_.-]{1,64}$/;          // radio sections, interfaces
+const RE_ZONE = /^thermal_zone[0-9]{1,3}$/;
+const RE_MILLIDEG = /^-?[0-9]{1,7}$/;
+const RE_ZONE_TYPE = /^[A-Za-z0-9_.-]{1,40}$/;
+const RE_NETDEV = /^[A-Za-z0-9_.-]{1,15}$/;
+const RE_SWITCH_PORT = /^([0-9]{1,2})([t*]?)$/;    // '5t'
+const RE_SWITCH = /^[A-Za-z0-9_.-]{1,32}$/;
+const RE_ROLE = /^[a-z0-9]{1,16}$/;
+const RE_VID = /^[0-9]{1,4}$/;
+const RE_VLAN_DEV = /^[A-Za-z0-9_-]{1,10}\.([0-9]{1,4})$/;  // 'eth1.1'
+
+/* ------------------------------------------------------------ helpers */
+
+// '02-00-5E-00-53-0F' / '0200.5e00.530f' / '02005e00530f' -> '02:00:5e:00:53:0f'
+function norm_mac(v) {
+	if (type(v) != 'string')
+		return null;
+
+	let h = lc(trim(v));
+
+	if (match(h, RE_MAC_COLON))
+		return h;
+
+	if (match(h, RE_MAC_DASH))
+		return replace(h, RE_DASHES, ':');
+
+	if (match(h, RE_MAC_DOTS) || match(h, RE_MAC_BARE)) {
+		h = replace(h, RE_DOTS, '');
+		return join(':', map(match(h, RE_PAIRS), (m) => m[0]));
+	}
+
+	return null;
+}
+
+function is_multicast(mac) {
+	return (hex(substr(mac, 0, 2)) & 1) == 1;
+}
+
+// UTF-8 -> [ [ code point, byte offset, byte length ], ... ]; null when the
+// bytes are not well-formed UTF-8 (overlong forms and surrogates included)
+function decode(s) {
+	let out = [], n = length(s), i = 0;
+
+	while (i < n) {
+		let b = ord(s, i), cp, need;
+
+		if (b < 0x80) { cp = b; need = 0; }
+		else if (b >= 0xc2 && b <= 0xdf) { cp = b & 0x1f; need = 1; }
+		else if (b >= 0xe0 && b <= 0xef) { cp = b & 0x0f; need = 2; }
+		else if (b >= 0xf0 && b <= 0xf4) { cp = b & 0x07; need = 3; }
+		else return null;
+
+		if (i + need >= n)
+			return null;
+
+		for (let k = 1; k <= need; k++) {
+			let c = ord(s, i + k);
+
+			if ((c & 0xc0) != 0x80)
+				return null;
+
+			cp = (cp << 6) | (c & 0x3f);
+		}
+
+		if ((need == 2 && cp < 0x800) || (need == 3 && (cp < 0x10000 || cp > 0x10ffff)) || (cp >= 0xd800 && cp <= 0xdfff))
+			return null;
+
+		push(out, [ cp, i, need + 1 ]);
+		i += need + 1;
+	}
+
+	return out;
+}
+
+// control, invisible, bidi and format characters: the C0/C1 controls plus
+// fmt.js UNSAFE_TEXT
+function forbidden(cp) {
+	return cp <= 0x1f || (cp >= 0x7f && cp <= 0x9f) ||
+		cp == 0xad || cp == 0x34f || cp == 0x61c || cp == 0x115f || cp == 0x1160 ||
+		cp == 0x17b4 || cp == 0x17b5 || cp == 0x180e || cp == 0x200b || cp == 0x200e || cp == 0x200f ||
+		(cp >= 0x2028 && cp <= 0x202e) || (cp >= 0x2060 && cp <= 0x206f) || cp == 0x3164 ||
+		(cp >= 0xfe00 && cp <= 0xfe0d) || cp == 0xfeff || cp == 0xffa0 || (cp >= 0xfff9 && cp <= 0xfffb) ||
+		(cp >= 0xe0000 && cp <= 0xe007f);
+}
+
+// space characters that collapse to one U+0020
+function is_space(cp) {
+	return cp == 0x20 || cp == 0xa0 || cp == 0x1680 || (cp >= 0x2000 && cp <= 0x200a) ||
+		cp == 0x202f || cp == 0x205f || cp == 0x3000;
+}
+
+// names.js validateAlias: -> { ok: true, value } ('' clears) or { ok: false, error }
+function validate_name(name) {
+	if (name == null)
+		name = '';
+
+	if (type(name) != 'string')
+		return { ok: false, error: 'invalid-name' };
+
+	let cps = decode(name);
+
+	if (cps == null)
+		return { ok: false, error: 'invalid-name' };
+
+	let units = 0;
+
+	for (let c in cps)
+		units += (c[0] > 0xffff) ? 2 : 1;
+
+	if (units > NAME_MAX_UNITS)
+		return { ok: false, error: 'name-too-long' };
+
+	for (let c in cps)
+		if (forbidden(c[0]))
+			return { ok: false, error: 'invalid-name' };
+
+	// collapse runs of spaces, trim both ends
+	let out = '', count = 0, pending = false;
+
+	for (let c in cps) {
+		if (is_space(c[0])) {
+			pending = true;
+			continue;
+		}
+
+		if (pending && count) {
+			out += ' ';
+			count++;
+		}
+
+		pending = false;
+		out += substr(name, c[1], c[2]);
+		count++;
+	}
+
+	if (count > NAME_MAX)
+		return { ok: false, error: 'name-too-long' };
+
+	return { ok: true, value: out };
+}
+
+function scalar(v) {
+	return (type(v) in [ 'string', 'int', 'double', 'bool' ]) ? v : null;
+}
+
+function short_string(v, max) {
+	return (type(v) == 'string' && length(v) <= max) ? v : null;
+}
+
+// a boolean option that is on, read as the init scripts read it
+// (config_get_bool; netifd takes '1' and 'true')
+function uci_true(v) {
+	return v in [ '1', 'on', 'true', 'yes', 'enabled' ];
+}
+
+/* ----------------------------------------------------------- wireless */
+
+// the encryption mode ('sae-mixed+ccmp', 'psk2', 'none', ...): its leading
+// run of mode characters and nothing after it
+function encryption(v) {
+	let m = (type(v) == 'string') ? match(v, RE_ENCRYPTION) : null;
+	return m ? m[0] : null;
+}
+
+function reduce_iface(i) {
+	let c = (type(i.config) == 'object') ? i.config : {};
+	let networks = [];
+
+	for (let n in ((type(c.network) == 'array') ? c.network : [ c.network ]))
+		if (type(n) == 'string' && length(n) <= 64)
+			push(networks, n);
+
+	return {
+		ifname: short_string(i.ifname, 64),
+		section: short_string(i.section, 64),
+		config: {
+			ssid: short_string(c.ssid, 128),
+			mode: short_string(c.mode, 32),
+			hidden: scalar(c.hidden),
+			encryption: encryption(c.encryption),
+			ieee80211w: scalar(c.ieee80211w),
+			ieee80211r: scalar(c.ieee80211r),
+			ieee80211k: scalar(c.ieee80211k),
+			ieee80211v: scalar(c.ieee80211v),
+			network: networks,
+			macaddr: norm_mac(c.macaddr)
+		}
+	};
+}
+
+function reduce_radio(r) {
+	let c = (type(r.config) == 'object') ? r.config : {};
+	let ifaces = [];
+
+	for (let i in ((type(r.interfaces) == 'array') ? r.interfaces : []))
+		if (type(i) == 'object')
+			push(ifaces, reduce_iface(i));
+
+	return {
+		up: r.up === true,
+		pending: r.pending === true,
+		disabled: r.disabled === true,
+		config: {
+			band: short_string(c.band, 16),
+			channel: scalar(c.channel),
+			htmode: short_string(c.htmode, 16),
+			country: short_string(c.country, 8),
+			txpower: scalar(c.txpower),
+			disabled: scalar(c.disabled)
+		},
+		interfaces: ifaces
+	};
+}
+
+// The same reply from /etc/config/wireless, for firmware whose driver
+// bypasses netifd. Only enabled interfaces that name their ifname, since
+// the view can look nothing else up; the first section to claim a name
+// wins. Run state stays unknown here: iwinfo is served by rpcd itself, so
+// asking it from a plugin would wait on rpcd. No txpower either: vendor
+// drivers do not configure it in dBm (mtkwifi: per cent).
+function wireless_from_config() {
+	let wl = cursor();
+	let radios = {}, taken = {}, out = {};
+
+	if (!wl.load(WIRELESS))
+		return out;
+
+	wl.foreach(WIRELESS, 'wifi-device', (s) => {
+		if (match(s['.name'], RE_NAME))
+			radios[s['.name']] = { disabled: uci_true(s.disabled), config: { ...s, txpower: null }, interfaces: [] };
+	});
+
+	wl.foreach(WIRELESS, 'wifi-iface', (s) => {
+		let r = (type(s.device) == 'string') ? radios[s.device] : null;
+		let ifname = s.ifname;
+
+		if (type(r) != 'object' || uci_true(s.disabled) || type(ifname) != 'string' ||
+		    !match(ifname, RE_NAME) || taken[ifname])
+			return;
+
+		taken[ifname] = true;
+		push(r.interfaces, {
+			ifname,
+			section: s['.name'],
+			config: { ...s, network: (type(s.network) == 'string') ? filter(split(s.network, RE_SPACES), (n) => n != '') : s.network }
+		});
+	});
+
+	for (let name, r in radios)
+		out[name] = { ...reduce_radio(r), source: 'config' };
+
+	return out;
+}
+
+/* ---------------------------------------------------------- set_alias */
+
+function set_alias(args) {
+	let mac = norm_mac(args.mac);
+
+	if (!mac || is_multicast(mac))
+		return { ok: false, error: 'invalid-mac' };
+
+	let v = validate_name(args.name);
+
+	if (!v.ok)
+		return v;
+
+	let icon = args.icon ?? '';
+
+	if (icon != '' && !(icon in ICONS))
+		return { ok: false, error: 'invalid-icon' };
+
+	let uci = cursor();
+	let mine = [], total = 0;
+
+	uci.load(CONFIG);
+	uci.foreach(CONFIG, 'client', (s) => {
+		total++;
+
+		if (norm_mac(s.mac) == mac)
+			push(mine, s['.name']);
+	});
+
+	let op;
+
+	if (v.value == '') {
+		if (!length(mine))
+			return { ok: true, op: 'none', mac };
+
+		for (let sid in mine)
+			uci.delete(CONFIG, sid);
+
+		op = 'delete';
+	}
+	else if (length(mine)) {
+		// one section per MAC: update the first, drop duplicates
+		uci.set(CONFIG, mine[0], 'mac', mac);
+		uci.set(CONFIG, mine[0], 'name', v.value);
+
+		if (icon != '')
+			uci.set(CONFIG, mine[0], 'icon', icon);
+		else
+			uci.delete(CONFIG, mine[0], 'icon');
+
+		for (let sid in slice(mine, 1))
+			uci.delete(CONFIG, sid);
+
+		op = 'set';
+	}
+	else {
+		if (total >= MAX_ALIASES)
+			return { ok: false, error: 'too-many' };
+
+		let sid = uci.add(CONFIG, 'client');
+
+		if (!sid)
+			return { ok: false, error: 'failed' };
+
+		uci.set(CONFIG, sid, 'mac', mac);
+		uci.set(CONFIG, sid, 'name', v.value);
+
+		if (icon != '')
+			uci.set(CONFIG, sid, 'icon', icon);
+
+		op = 'add';
+	}
+
+	if (!uci.commit(CONFIG)) {
+		// a failed commit leaves the change in libuci's delta, where the
+		// next commit of this config would apply it: drop it
+		uci.revert(CONFIG);
+		return { ok: false, error: 'failed' };
+	}
+
+	return { ok: true, op, mac };
+}
+
+/* ---------------------------------------------------------- set_quiet */
+
+function set_quiet(args) {
+	let mac = norm_mac(args.mac);
+
+	if (!mac || is_multicast(mac))
+		return { ok: false, error: 'invalid-mac' };
+
+	if (type(args.quiet) != 'bool')
+		return { ok: false, error: 'invalid-value' };
+
+	let uci = cursor();
+	let mine = [], total = 0;
+
+	uci.load(CONFIG);
+	uci.foreach(CONFIG, 'quiet', (s) => {
+		total++;
+
+		if (norm_mac(s.mac) == mac)
+			push(mine, s['.name']);
+	});
+
+	let op;
+
+	if (args.quiet) {
+		if (length(mine))
+			return { ok: true, op: 'none', mac };
+
+		if (total >= MAX_QUIET)
+			return { ok: false, error: 'too-many' };
+
+		let sid = uci.add(CONFIG, 'quiet');
+
+		if (!sid)
+			return { ok: false, error: 'failed' };
+
+		uci.set(CONFIG, sid, 'mac', mac);
+		op = 'add';
+	}
+	else {
+		if (!length(mine))
+			return { ok: true, op: 'none', mac };
+
+		for (let sid in mine)
+			uci.delete(CONFIG, sid);
+
+		op = 'delete';
+	}
+
+	if (!uci.commit(CONFIG)) {
+		uci.revert(CONFIG);
+		return { ok: false, error: 'failed' };
+	}
+
+	return { ok: true, op, mac };
+}
+
+/* ------------------------------------------------------------ thermal */
+
+// [ { zone, type, temp } ] in zone order, at most MAX_ZONES; a zone whose
+// temperature cannot be read (switched off, no sensor yet) is left out,
+// a type that is not a plain word is sent as ''
+function thermal() {
+	let zones = filter(lsdir(THERMAL) ?? [], n => match(n, RE_ZONE));
+	let out = [];
+
+	for (let n in sort(zones, (a, b) => int(substr(a, 12)) - int(substr(b, 12)))) {
+		if (length(out) >= MAX_ZONES)
+			break;
+
+		let temp = trim(readfile(THERMAL + '/' + n + '/temp', 16) ?? '');
+
+		if (!match(temp, RE_MILLIDEG))
+			continue;
+
+		let kind = trim(readfile(THERMAL + '/' + n + '/type', 64) ?? '');
+
+		push(out, { zone: n, type: match(kind, RE_ZONE_TYPE) ? kind : '', temp: int(temp) });
+	}
+
+	return out;
+}
+
+/* -------------------------------------------------------------- wired */
+
+function netdev(v) {
+	return type(v) == 'string' && match(v, RE_NETDEV) ? v : null;
+}
+
+// The last netlink dump: { at, sig, hosts } (at: monotonic seconds; sig:
+// the brforward identity it was taken with), and the byte order of
+// brforward's ageing field (the host's: true little-endian), learned
+// from the first dump that pairs a record with a time since heard.
+// rpcd keeps this module, these with it, between calls.
+let fdb_last = null;
+let fdb_le = null;
+
+// The bridges' sysfs brforward tables: FDB_ENTRY-byte records (MAC, port
+// number, is_local, ageing in 1/100 s, the port number's high byte),
+// and the kernel fills only as many as asked for, so no more than the
+// budget left is read. null when the bridges hold FDB_LIMIT entries or
+// more between them (one dump returns them all); else { sig, ages,
+// multi }: sig names each learned entry (bridge, MAC, port) in the
+// kernel's order, which holds while the entries do; ages[bridge|mac] its
+// ageing field read both ways, [ little-endian, big-endian ], the
+// youngest of a MAC there more than once (on several VLANs); multi: a
+// MAC on two ports of one bridge, whose ages one key cannot tell apart.
+// Over FDB_PARSE records between them, { sig: null }: the records are
+// only counted, as before, and the caller dumps (a host making up
+// addresses near FDB_LIMIT must not make every call parse them all)
+function bridge_table() {
+	let left = FDB_LIMIT * FDB_ENTRY;
+	let sig = '', ages = {}, ports = {}, multi = false, tables = [];
+
+	for (let n in (lsdir(NET) ?? [])) {
+		let b = netdev(n) ? readfile(NET + '/' + n + '/brforward', left) : null;
+
+		if (type(b) != 'string')
+			continue;
+
+		left -= length(b);
+
+		if (left <= 0)
+			return null;
+
+		push(tables, [ n, b ]);
+	}
+
+	if (FDB_LIMIT * FDB_ENTRY - left > FDB_PARSE * FDB_ENTRY)
+		return { sig: null, ages, multi };
+
+	for (let t in tables) {
+		let n = t[0], b = t[1];
+
+		for (let o = 0; o + FDB_ENTRY <= length(b); o += FDB_ENTRY) {
+			if (ord(b, o + 7))
+				continue;
+
+			let k = n + '|' + sprintf('%02x:%02x:%02x:%02x:%02x:%02x', ord(b, o), ord(b, o + 1), ord(b, o + 2), ord(b, o + 3), ord(b, o + 4), ord(b, o + 5));
+			let le = ord(b, o + 8) | (ord(b, o + 9) << 8) | (ord(b, o + 10) << 16) | (ord(b, o + 11) << 24);
+			let be = (ord(b, o + 8) << 24) | (ord(b, o + 9) << 16) | (ord(b, o + 10) << 8) | ord(b, o + 11);
+			let a = ages[k], port = ord(b, o + 12) * 256 + ord(b, o + 6);
+
+			sig += k + '/' + port + ',';
+			ages[k] = a ? [ min(a[0], le), min(a[1], be) ] : [ le, be ];
+
+			if (ports[k] != null && ports[k] != port)
+				multi = true;
+
+			ports[k] = port;
+		}
+	}
+
+	return { sig, ages, multi };
+}
+
+// [ { mac, port, bridge, vlan, seen } ] in dump order, at most MAX_HOSTS
+// and MAX_PER_PORT a port: what the bridges learned from their ports.
+// Left out: the bridges' own addresses (permanent), the switch drivers'
+// copies (self, no master) and group addresses. seen: seconds since the
+// bridge last heard from the host (the kernel counts in 1/100 s), null
+// for a static entry. null when a bridge is crowded.
+function wired() {
+	let tb = bridge_table();
+
+	if (tb == null)
+		return null;
+
+	let now = clock(true)?.[0] ?? 0;
+
+	// the same hosts on the same ports: the last dump's, heard as now
+	// (not when a MAC sits on two ports: each row's own time is the dump's)
+	if (fdb_last && tb.sig != null && !tb.multi && fdb_last.sig === tb.sig && now - fdb_last.at < FDB_DUMP_S)
+		return map(fdb_last.hosts, h => {
+			let a = (h.seen != null && fdb_le != null) ? tb.ages[h.bridge + '|' + h.mac] : null;
+
+			return { mac: h.mac, port: h.port, bridge: h.bridge, vlan: h.vlan, seen: a ? int(a[fdb_le ? 0 : 1] / 100) : h.seen };
+		});
+
+	let fdb = rtnl.request(rtnl.const.RTM_GETNEIGH, rtnl.const.NLM_F_DUMP, { family: rtnl.const.AF_BRIDGE });
+	let out = [], per = {};
+
+	for (let n in ((type(fdb) == 'array') ? fdb : [])) {
+		if (length(out) >= MAX_HOSTS)
+			break;
+
+		let mac = (type(n) == 'object') ? norm_mac(n.lladdr) : null;
+
+		if (!mac || is_multicast(mac) || type(n.state) != 'int' || (n.state & rtnl.const.NUD_PERMANENT) ||
+		    (type(n.flags) == 'int' && (n.flags & rtnl.const.NTF_SELF)) || !netdev(n.master) || !netdev(n.dev) ||
+		    (per[n.dev] ?? 0) >= MAX_PER_PORT)
+			continue;
+
+		per[n.dev] = (per[n.dev] ?? 0) + 1;
+
+		let upd = n.cacheinfo?.updated;
+		let heard = !(n.state & rtnl.const.NUD_NOARP) && type(upd) == 'int' && upd >= 0;
+
+		push(out, {
+			mac,
+			port: n.dev,
+			bridge: n.master,
+			vlan: (type(n.vlan) == 'int' && n.vlan > 0 && n.vlan < 4095) ? n.vlan : null,
+			seen: heard ? int(upd / 100) : null
+		});
+
+		// brforward's byte order: the reading nearer the dump's own
+		let a = (heard && fdb_le == null) ? tb.ages[n.master + '|' + mac] : null;
+
+		if (a && a[0] != a[1]) {
+			let dl = a[0] - upd, db = a[1] - upd;
+
+			fdb_le = (dl < 0 ? -dl : dl) <= (db < 0 ? -db : db);
+		}
+	}
+
+	fdb_last = (type(fdb) == 'array') ? { at: now, sig: tb.sig, hosts: out } : null;
+
+	return out;
+}
+
+// [ { family, dev, metric } ] for the families whose lookup answers with
+// a unicast default route in the main table (no dst), IPv4 then IPv6; dev
+// null over several next hops (multipath, no single oif). null when a
+// lookup could not be sent; false is the kernel's error, for a lookup that
+// there is no route (ENETUNREACH), so that family is left out.
+function routes() {
+	let out = [];
+
+	for (let q in [ { family: rtnl.const.AF_INET, dst: PROBE4 }, { family: rtnl.const.AF_INET6, dst: PROBE6 } ]) {
+		let r = rtnl.request(rtnl.const.RTM_GETROUTE, 0, { family: q.family, dst: q.dst, flags: rtnl.const.RTM_F_FIB_MATCH });
+
+		if (r === null)
+			return null;
+
+		if (type(r) != 'object' || r.family != q.family || r.dst != null || r.table != rtnl.const.RT_TABLE_MAIN || r.type != rtnl.const.RTN_UNICAST)
+			continue;
+
+		let m = r.priority ?? 0;
+
+		push(out, { family: (q.family == rtnl.const.AF_INET) ? 4 : 6, dev: netdev(r.oif), metric: (type(m) == 'int' && m >= 0) ? m : 0 });
+	}
+
+	return out;
+}
+
+/* ------------------------------------------------------------- survey */
+
+// The channel survey of one Wi-Fi interface: [ { mhz, noise } ] for each
+// channel the driver reports with a noise value (dBm, a signed byte as
+// NL80211 carries it; 0 is "none"), at most MAX_SURVEY. Asked of the
+// kernel only for an interface cfg80211 drives (its phy80211 link): any
+// other device would be refused by the kernel anyway, and is not asked.
+// The reply of a dump is an array of messages; null when it had none or
+// failed, false when it was cut short.
+function survey(dev) {
+	let out = [];
+
+	if (!netdev(dev) || dev == '.' || dev == '..' || !access(NET + '/' + dev + '/phy80211'))
+		return out;
+
+	let res = nl80211.request(nl80211.const.NL80211_CMD_GET_SURVEY, nl80211.const.NLM_F_DUMP, { dev });
+
+	for (let m in ((type(res) == 'array') ? res : ((type(res) == 'object') ? [ res ] : []))) {
+		let s = (type(m) == 'object' && type(m.survey_info) == 'object') ? m.survey_info : null;
+		let mhz = s?.frequency, noise = s?.noise;
+
+		if (type(mhz) != 'int' || mhz <= 0 || mhz > MAX_MHZ || type(noise) != 'int' || noise == 0 || noise < -128 || noise > 127)
+			continue;
+
+		push(out, { mhz, noise });
+
+		if (length(out) >= MAX_SURVEY)
+			break;
+	}
+
+	return out;
+}
+
+// a switch port's number (0..63), or null
+function switch_port(v) {
+	return (type(v) == 'int' && v >= 0 && v < 64) ? v : null;
+}
+
+// the network devices a switch VLAN reaches this device as (each CPU
+// port's device in it, with .vid where that port is tagged) and its other
+// ports, from a port list such as '0 1 2 3 5t'; null without a CPU port
+function vlan_ports(sw, list, vid) {
+	let devs = [], members = [];
+
+	for (let t in split(list, RE_SPACES)) {
+		let m = match(t, RE_SWITCH_PORT);
+		let num = m ? switch_port(+m[1]) : null;
+
+		if (num == null || length(members) >= 64)
+			continue;
+
+		if (sw.cpu[num] != null) {
+			let dev = netdev((m[2] == 't') ? sw.cpu[num] + '.' + vid : sw.cpu[num]);
+
+			if (dev && index(devs, dev) < 0)
+				push(devs, dev);
+		}
+		else
+			push(members, sw.ports[num] ?? { num, role: null, index: null });
+	}
+
+	return length(devs) ? { devs, members } : null;
+}
+
+// { 'eth1.1': { name: 'switch0', vlan: 1, ports: [ { num, role, index } ] } }
+// for each VLAN of a swconfig switch: the network device it reaches this
+// device as and its other ports, as LuCI's switch page lays them out.
+// From the switch_vlan sections of the network config, or for a switch
+// they give no VLAN, from the roles board.json gives it (the first boot's
+// layout). Only switches /etc/board.json describes; {} without one, so a
+// device whose ports are all Linux ports (DSA) loads no network config.
+function switches() {
+	let board = null, known = {}, used = {}, out = {}, n = 0;
+
+	try { board = json(readfile(BOARD, BOARD_MAX) ?? 'null'); }
+	catch (e) { return out; }
+
+	for (let name, sw in ((type(board?.switch) == 'object') ? board.switch : {})) {
+		if (!match(name, RE_SWITCH) || type(sw?.ports) != 'array')
+			continue;
+
+		let ports = {}, cpu = {};
+
+		for (let p in sw.ports) {
+			let num = switch_port(p?.num);
+
+			if (num == null)
+				continue;
+
+			if (netdev(p.device))
+				cpu[num] = p.device;
+			else
+				ports[num] = {
+					num,
+					role: (type(p.role) == 'string' && match(p.role, RE_ROLE)) ? p.role : null,
+					index: (type(p.index) == 'int' && p.index >= 0 && p.index < 100) ? p.index : null
+				};
+		}
+
+		if (length(cpu))
+			known[name] = { ports, cpu, roles: (type(sw.roles) == 'array') ? slice(sw.roles, 0, 16) : [] };
+	}
+
+	if (!length(known))
+		return out;
+
+	let nw = cursor();
+
+	if (nw.load(NETWORK))
+		nw.foreach(NETWORK, 'switch_vlan', (s) => {
+			let sw = (type(s.device) == 'string') ? known[s.device] : null;
+			let id = s.vid ?? s.vlan;
+			let vid = (type(id) == 'string' && match(id, RE_VID)) ? +id : null;
+
+			if (!sw || vid == null || vid > 4094 || type(s.ports) != 'string')
+				return;
+
+			if (++n > MAX_SWITCH_VLANS)
+				return false;
+
+			let v = vlan_ports(sw, s.ports, vid);
+
+			for (let dev in (v?.devs ?? [])) {
+				if (!out[dev])
+					out[dev] = { name: s.device, vlan: vid, ports: v.members };
+
+				used[s.device] = true;
+			}
+		});
+
+	for (let name, sw in known) {
+		if (used[name])
+			continue;
+
+		for (let r in sw.roles) {
+			let m = (type(r?.device) == 'string' && type(r.ports) == 'string') ? match(r.device, RE_VLAN_DEV) : null;
+			let vid = m ? +m[1] : null;
+			let v = (vid != null && vid <= 4094) ? vlan_ports(sw, r.ports, vid) : null;
+
+			if (v && index(v.devs, r.device) >= 0 && !out[r.device])
+				out[r.device] = { name, vlan: vid, ports: v.members };
+		}
+	}
+
+	return out;
+}
+
+/* ------------------------------------------------------------ methods */
+
+const methods = {
+	wireless: {
+		call: function() {
+			let reply = connect()?.call('network.wireless', 'status');
+			let out = {};
+
+			// no object, or one that skipped every radio (netifd has no
+			// handler for the vendor's driver type): the config instead
+			if (type(reply) != 'object' || !length(reply))
+				return wireless_from_config();
+
+			for (let name, r in reply)
+				if (type(r) == 'object' && match(name, RE_NAME))
+					out[name] = reduce_radio(r);
+
+			return out;
+		}
+	},
+
+	thermal: {
+		call: function() {
+			return { zones: thermal() };
+		}
+	},
+
+	wired: {
+		call: function() {
+			let hosts = wired(), sw = switches();
+			let reply = (hosts == null) ? { hosts: [], crowded: true } : { hosts };
+
+			if (length(sw))
+				reply.switches = sw;
+
+			return reply;
+		}
+	},
+
+	routes: {
+		call: function() {
+			return { routes: routes() };
+		}
+	},
+
+	survey: {
+		args: { device: 'device' },
+		call: function(request) {
+			return { results: survey(request.args?.device) };
+		}
+	},
+
+	set_alias: {
+		args: { mac: 'mac', name: 'name', icon: 'icon' },
+		call: function(request) {
+			return set_alias(request.args);
+		}
+	},
+
+	set_quiet: {
+		args: { mac: 'mac', quiet: true },
+		call: function(request) {
+			return set_quiet(request.args);
+		}
+	}
+};
+
+return { 'luci.vantage': methods };

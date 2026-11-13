@@ -1,0 +1,46 @@
+{
+	"luci-app-vantage": {
+		"description": "Vantage dashboard: read-only status of the device, uplink, radios and stations (wireless configuration without keys, through luci.vantage wireless), its temperature sensors (luci.vantage thermal), the wired hosts its bridges have learned (luci.vantage wired: MAC, port and when last heard, and which switch ports a port's VLAN has), the link state of those switch ports (luci getSwconfigPortState), the default route the kernel takes to the internet (luci.vantage routes: family, device and metric, no gateways) and each radio's noise floor (luci.vantage survey: the channel survey read through nl80211)",
+		"read": {
+			"file": {
+				"/proc/stat": [ "read" ]
+			},
+			"ubus": {
+				"file": [ "read" ],
+				"system": [ "board", "info" ],
+				"network.interface": [ "dump" ],
+				"network.device": [ "status" ],
+				"luci-rpc": [ "getHostHints" ],
+				"luci": [ "getSwconfigPortState" ],
+				"luci.vantage": [ "routes", "survey", "thermal", "wired", "wireless" ],
+				"iwinfo": [ "assoclist", "info" ],
+				"hostapd.*": [ "get_clients", "get_status" ],
+				"umdns": [ "hosts" ],
+				"uci": [ "get" ]
+			},
+			"uci": [ "vantage" ]
+		}
+	},
+	"luci-app-vantage-rdns": {
+		"description": "Vantage dashboard: client names from reverse DNS (lets the holder make the device send DNS PTR queries to any DNS server and port it names)",
+		"read": {
+			"ubus": {
+				"network.rrdns": [ "lookup" ]
+			}
+		}
+	},
+	"luci-app-vantage-names": {
+		"description": "Vantage dashboard: name stations and keep a station's weak signal out of the warnings (luci.vantage set_alias and set_quiet: validated names and quiet MACs in /etc/config/vantage only, at most 512 each)",
+		"read": {
+			"ubus": {
+				"uci": [ "get" ]
+			},
+			"uci": [ "vantage" ]
+		},
+		"write": {
+			"ubus": {
+				"luci.vantage": [ "set_alias", "set_quiet" ]
+			}
+		}
+	}
+}

@@ -1,0 +1,11 @@
+# Vantage dashboard settings (luci-app-vantage).
+#
+# Station names given in the dashboard's inspector are stored here, one
+# section per station (MAC in lower case, name at most 48 characters):
+#
+#   config client
+#   	option mac '00:00:5e:00:53:01'
+#   	option name 'Living room TV'
+#   	option icon 'tv'
+
+config vantage 'main'
