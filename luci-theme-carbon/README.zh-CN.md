@@ -20,9 +20,9 @@
 
 ## 界面预览
 
-<p align="center"><img src=".github/screenshots/overview-light.jpg" alt="浅色" width="100%"></p>
+<p align="center"><img src="docs/screenshots/overview-light.jpg" alt="浅色" width="100%"></p>
 
-<p align="center"><img src=".github/screenshots/overview-dark.jpg" alt="深色" width="100%"></p>
+<p align="center"><img src="docs/screenshots/overview-dark.jpg" alt="深色" width="100%"></p>
 
 ## 功能
 
