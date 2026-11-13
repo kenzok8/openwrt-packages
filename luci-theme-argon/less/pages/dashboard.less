@@ -25,6 +25,11 @@
         min-width: ~"min(100%, 18rem)";
         padding-block-end: var(--field-gap);
 
+        // Newer dashboard styles reset chart headings after the theme loads.
+        > h3:first-child {
+            padding: var(--field-gap) var(--section-inset);
+        }
+
         // Keep the native full-width heading; inset its chart and legend.
         > :not(h3:first-child) {
             margin-inline: var(--section-inset);
@@ -76,5 +81,59 @@
     // The layout editor keeps its actions inside the card, unlike normal pages.
     [data-tab="layout"] .cbi-page-actions {
         padding: var(--field-gap) var(--section-inset);
+    }
+
+    .dashboard-widget-list > .item {
+        align-items: flex-start;
+        // Dashboard entries support dragging and contain native form controls.
+        pointer-events: auto;
+
+        // Fill the row so the delete button stays at LuCI's right-edge hit area.
+        > span {
+            flex: 1 1 auto;
+            width: auto;
+        }
+    }
+
+    .dashboard-widget-settings {
+        flex: 1 1 0;
+        min-width: 0;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-control) 0 0 var(--radius-control);
+
+        > summary {
+            box-sizing: border-box;
+            min-height: calc(2.5rem - 2px);
+            padding: .5rem .75rem;
+            line-height: 1.5;
+            list-style-position: inside;
+            overflow-wrap: anywhere;
+
+            &:focus-visible {
+                outline: 2px solid var(--focus-ring);
+                outline-offset: -2px;
+                border-radius: inherit;
+            }
+        }
+
+        // The item remains LTR because its native delete hit area is physical.
+        [dir="rtl"] & {
+            direction: rtl;
+        }
+    }
+
+    .dashboard-widget-options {
+        margin: 0;
+        padding: var(--control-gap) .75rem;
+
+        .cbi-checkbox {
+            height: auto;
+            min-height: 2.5rem;
+        }
+
+        // Each checkbox is already a flex row; native <br> nodes add empty rows.
+        .cbi-checkbox + br {
+            display: none;
+        }
     }
 }

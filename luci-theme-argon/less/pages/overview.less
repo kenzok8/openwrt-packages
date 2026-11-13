@@ -76,7 +76,8 @@
   }
 
   // Match native port cards by their icons, independently of inline CSS formatting.
-  #view div:has(> .ifacebox > .ifacebox-body > img[src*="/icons/port_"]) {
+  @port-grid-selector: ~":is(:has(> .ifacebox > .ifacebox-body > img[src*=\"/icons/port_\"]), .argon-port-grid)";
+  #view div@{port-grid-selector} {
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(~"min(100%, 8.5rem)", 1fr)) !important;
     // ImmortalWrt centers fixed-width cards; let both native variants fill a row.

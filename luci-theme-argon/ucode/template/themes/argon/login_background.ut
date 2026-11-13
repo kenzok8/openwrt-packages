@@ -70,25 +70,50 @@
 			<source src="{{ entityencode(bgArry.bgUrl, true) }}" type="{{ bgArry.mimeType }}">
 		</video>
 	</div>
-	<button type="button" class="volume-control mute" aria-label="{{ entityencode(_('Mute background video'), true) }}" aria-pressed="true"></button>
+	<div class="background-controls">
+		<button type="button" class="playback-control" aria-controls="video" aria-label="{{ entityencode(_('Play background video'), true) }}" data-play-label="{{ entityencode(_('Play background video'), true) }}" data-pause-label="{{ entityencode(_('Pause background video'), true) }}"></button>
+		<button type="button" class="volume-control mute" aria-controls="video" aria-label="{{ entityencode(_('Mute background video'), true) }}" aria-pressed="true"></button>
+	</div>
 	<script>
 		var backgroundVideo = document.getElementById("video");
+		var playbackControl = document.querySelector('.playback-control');
 		var motionPreference = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+		var playbackChoice = null;
+		function syncBackgroundPlayback() {
+			playbackControl.classList.toggle('playing', !backgroundVideo.paused);
+			playbackControl.setAttribute('aria-label', backgroundVideo.paused
+				? playbackControl.dataset.playLabel : playbackControl.dataset.pauseLabel);
+		}
 		function updateBackgroundMotion() {
-			if (motionPreference && motionPreference.matches)
+			var shouldPlay = playbackChoice === true || (playbackChoice !== false &&
+				!(motionPreference && motionPreference.matches));
+			if (!shouldPlay || document.hidden)
 				backgroundVideo.pause();
 			else {
 				var playResult = backgroundVideo.play();
 				if (playResult && playResult.catch)
-					playResult.catch(function() {});
+					playResult.catch(syncBackgroundPlayback);
 			}
+			syncBackgroundPlayback();
 		}
+		backgroundVideo.addEventListener('play', syncBackgroundPlayback);
+		backgroundVideo.addEventListener('pause', syncBackgroundPlayback);
+		playbackControl.addEventListener('click', function() {
+			playbackChoice = backgroundVideo.paused;
+			updateBackgroundMotion();
+		});
+		document.addEventListener('visibilitychange', updateBackgroundMotion);
 		updateBackgroundMotion();
 		if (motionPreference) {
+			var onMotionChange = function() {
+				if (motionPreference.matches && playbackChoice === true)
+					playbackChoice = null;
+				updateBackgroundMotion();
+			};
 			if (motionPreference.addEventListener)
-				motionPreference.addEventListener('change', updateBackgroundMotion);
+				motionPreference.addEventListener('change', onMotionChange);
 			else if (motionPreference.addListener)
-				motionPreference.addListener(updateBackgroundMotion);
+				motionPreference.addListener(onMotionChange);
 		}
 		document.querySelector(".volume-control").addEventListener("click", function(){
 			if(this.classList.contains("mute")){

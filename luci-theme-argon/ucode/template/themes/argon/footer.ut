@@ -32,7 +32,8 @@
 				<ul class="breadcrumb pull-right" id="modemenu" style="display:none"></ul>
 			</div>
 		</footer>
-	</div>
+	</main>
+</div>
 </div>
 {% include('themes/' + theme + '/page_scripts', { is_login: false }) %}
 </body>

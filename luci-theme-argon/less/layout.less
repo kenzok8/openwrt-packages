@@ -517,7 +517,8 @@ footer {
         box-shadow: var(--section-shadow);
     }
 
-    &>div:first-child:not(.cbi-map) {
+    // The native dashboard supplies its own grid layout.
+    &>div:first-child:not(.cbi-map, .Dashboard) {
         display: flex;
         flex-direction: column;
         min-width: 0;

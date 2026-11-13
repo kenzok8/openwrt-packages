@@ -12,6 +12,25 @@
   border: 0;
 }
 
+.skip-link {
+  position: fixed;
+  z-index: 1200;
+  inset-block-start: var(--control-gap);
+  inset-inline-start: var(--page-gutter);
+  padding: .5rem .75rem;
+  color: var(--text-strong);
+  background: var(--surface-panel);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-control);
+  transform: translateY(calc(-100% - var(--control-gap)));
+
+  &:focus {
+    transform: none;
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .main-left,
   .main-right,

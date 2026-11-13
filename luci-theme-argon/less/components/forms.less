@@ -212,7 +212,9 @@
   }
 }
 
-.control-group:has(> input:first-child + .cbi-button) {
+// Interpolation preserves the forgiving selector list with the pinned Less 4 parser.
+@joined-control-selector: ~":is(:has(> input:first-child + .cbi-button), .argon-joined-control)";
+.control-group@{joined-control-selector} {
   flex-wrap: nowrap;
   gap: 0;
 

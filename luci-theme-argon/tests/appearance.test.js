@@ -75,6 +75,7 @@ test('failed writes reconcile stored state and restore usable controls', async (
 test('read-only, unavailable, invalid, and repeated mode changes never write', async () => {
  const readonly = fixture({ writable: false }); await readonly.start(); await readonly.api.saveMode('dark');
  assert.ok(readonly.api.radios.every(r => r.disabled)); assert.equal(readonly.calls.filter(c => c[0] === 'set').length, 0);
+ assert.ok(readonly.api.panel.children.filter(node => node.tag === 'label').every(node => node.attrs['aria-disabled'] === 'true'));
  const offline = fixture({ getError: true }); await offline.start(); assert.equal(offline.root.hidden, true);
  const state = fixture(); await state.start(); await state.api.saveMode('bogus'); await state.api.saveMode('normal');
  assert.equal(state.calls.filter(c => c[0] === 'set').length, 0);

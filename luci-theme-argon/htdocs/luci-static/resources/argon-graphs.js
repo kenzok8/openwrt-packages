@@ -13,6 +13,7 @@ return baseclass.extend({
 		var frame = null;
 		var update = function() {
 			frame = null;
+			var pending = [];
 			view.querySelectorAll('svg').forEach(function(svg) {
 				if (graphs.has(svg) || svg.hasAttribute('viewBox'))
 					return;
@@ -28,11 +29,16 @@ return baseclass.extend({
 				if (width <= 0 || !(height > 0))
 					return;
 
-				graphs.set(svg, width);
-				svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-				svg.setAttribute('preserveAspectRatio', 'none');
+				pending.push({ svg: svg, width: width, height: height });
 			});
 
+			pending.forEach(function(graph) {
+				graphs.set(graph.svg, graph.width);
+				graph.svg.setAttribute('viewBox', '0 0 ' + graph.width + ' ' + graph.height);
+				graph.svg.setAttribute('preserveAspectRatio', 'none');
+			});
+
+			var labels = [];
 			graphs.forEach(function(width, svg) {
 				if (!svg.isConnected) {
 					graphs.delete(svg);
@@ -47,17 +53,25 @@ return baseclass.extend({
 				svg.querySelectorAll('text').forEach(function(text) {
 					var x = parseFloat(text.getAttribute('x')) || 0;
 					var offset = x * (1 - inverse);
-					var transform = function(shift) {
-						text.style.transform = 'translateX(' + shift + 'px) scaleX(' + inverse + ')';
-					};
-					text.style.transformOrigin = '0 0';
-					transform(offset);
-					var label = text.getBoundingClientRect();
-					var shift = Math.max(0, bounds.left + 4 - label.left) -
-						Math.max(0, label.right - bounds.right + 4);
-					if (shift)
-						transform(offset + shift / ratio);
+					labels.push({ text: text, bounds: bounds, ratio: ratio, inverse: inverse, offset: offset });
 				});
+			});
+
+			// Apply every provisional transform before measuring any label. Alternating
+			// a style write and a bounds read forces layout once per chart label.
+			labels.forEach(function(label) {
+				label.text.style.transformOrigin = '0 0';
+				label.text.style.transform = 'translateX(' + label.offset + 'px) scaleX(' + label.inverse + ')';
+			});
+			labels.forEach(function(label) {
+				var bounds = label.text.getBoundingClientRect();
+				label.shift = Math.max(0, label.bounds.left + 4 - bounds.left) -
+					Math.max(0, bounds.right - label.bounds.right + 4);
+			});
+			labels.forEach(function(label) {
+				if (label.shift)
+					label.text.style.transform = 'translateX(' + (label.offset + label.shift / label.ratio) +
+						'px) scaleX(' + label.inverse + ')';
 			});
 		};
 		var schedule = function() {

@@ -144,3 +144,5 @@ UCODE_BIN=/path/to/ucode sh .github/scripts/check_theme.sh
 脚本检查 JavaScript、Shell、Ucode 语法，核对 LESS 与 CSS 产物，并运行 Node / Python 测试。CI 的 Ucode 构建步骤见 [check.yml](../.github/workflows/check.yml)。
 
 UI 改动应检查实际受影响页面的亮暗色、桌面与窄屏，以及相关的键盘焦点、长文本和减少动画场景。网络和硬件行为仍需相应 OpenWrt 环境验证。
+
+登录和主题设置的检查应包含 Firefox ESR 115、128、140、153，保留浏览器默认的特性设置。`argon-compat.js` 仅在缺少原生 `:has()` 时为组合控件和下拉表格添加 DOM 标记，通过可容错的 `:is()` 选择器提供样式。新增浏览器 API 应检测能力，JavaScript 查询应避免不受支持的选择器。此兼容处理覆盖主题常用控件，插件专属布局仍需单独验证。

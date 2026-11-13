@@ -29,6 +29,7 @@
 	class="lang_{{ dispatcher.lang }} {{ node?.title ? ` - ${striptags(node.title)}` : '' }} {% if (ctx.authsession): %}logged-in{% endif %}"
 	data-page="{{ entityencode(join('-', page_path), true) }}">
 
+	<a class="skip-link" href="#maincontent">{{ _('Skip to content') }}</a>
 	<div class="main">
 		<div class="main-left" id="mainmenu" style="display:none">
 			<div class="sidenav-header d-flex align-items-center">
@@ -62,7 +63,7 @@
 				</div>
 			</header>
 			<div class="darkMask"></div>
-			<div id="maincontent">
+			<main id="maincontent" tabindex="-1">
 				<div class="container">
 					{% if (getuid() == 0 && getspnam('root')?.pwdp === ''): %}
 					<div class="alert-message error">

@@ -28,7 +28,7 @@
 	</div>
 	<a href="{{ version.disturl }}" target="_blank" title="{{ entityencode(firmware_info, true) }}">{{ firmware_info }}</a>
 </footer>
-</div>
+</main>
 </div>
 {% include('themes/' + theme + '/page_scripts', { is_login: true }) %}
 </body>

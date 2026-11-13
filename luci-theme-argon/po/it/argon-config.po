@@ -163,8 +163,8 @@ msgid "Grant UCI access for luci-theme-argon"
 msgstr "Consenti l’accesso UCI a luci-theme-argon"
 
 #: htdocs/luci-static/resources/view/argon-config.js:114
-msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos. Chrome is recommended."
-msgstr "Qui puoi impostare la sfocatura e la trasparenza della pagina di accesso del tema Argon e gestire le immagini e i video di sfondo. Si consiglia Chrome."
+msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos."
+msgstr "Qui puoi impostare la sfocatura e la trasparenza della pagina di accesso del tema Argon e gestire le immagini e i video di sfondo."
 
 #: htdocs/luci-static/resources/argon/branding.js:60
 msgid "Invalid PNG image or dimensions."
@@ -536,3 +536,15 @@ msgstr "Annulla"
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Try again after %s."
 msgstr "Riprovare dopo le %s."
+
+#: ucode/template/themes/argon/login_background.ut
+msgid "Play background video"
+msgstr "Riproduci il video di sfondo"
+
+#: ucode/template/themes/argon/login_background.ut
+msgid "Pause background video"
+msgstr "Metti in pausa il video di sfondo"
+
+#: ucode/template/themes/argon/header.ut
+msgid "Skip to content"
+msgstr "Vai al contenuto"

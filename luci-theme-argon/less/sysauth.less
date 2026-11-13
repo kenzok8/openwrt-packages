@@ -42,24 +42,60 @@
         }
     }
 
-    .volume-control {
+    .background-controls {
         position: fixed;
-        top: 1rem;
-        right: 1rem;
-        width: 1.5rem;
-        height: 1.5rem;
+        inset-block-start: var(--field-gap);
+        inset-inline-end: var(--field-gap);
+        display: flex;
+        gap: var(--control-gap);
         z-index: 5000;
-        cursor: pointer;
-        border: 0 !important;
-        background: url(../img/volume_high.svg) no-repeat center/contain;
 
-        &:focus-visible {
-            outline: 2px solid var(--focus-ring);
-            outline-offset: 4px;
+        > button {
+            display: grid;
+            place-items: center;
+            min-width: 2.5rem;
+            min-height: 2.5rem;
+            padding: .5rem;
+            cursor: pointer;
+            background: var(--surface-panel);
+            color: var(--text-strong);
+
+            &::before {
+                content: '';
+                width: 1rem;
+                height: 1rem;
+                background-color: currentColor;
+                mask: var(--background-control-icon) center / contain no-repeat;
+                -webkit-mask: var(--background-control-icon) center / contain no-repeat;
+            }
+
+            &:focus-visible {
+                outline: 2px solid var(--focus-ring);
+                outline-offset: 2px;
+            }
+
+            @media (forced-colors: active) {
+                &::before {
+                    forced-color-adjust: none;
+                    background-color: ButtonText;
+                }
+            }
         }
+    }
+
+    .playback-control {
+        --background-control-icon: url(../icon/play.svg);
+
+        &.playing {
+            --background-control-icon: url(../icon/pause.svg);
+        }
+    }
+
+    .volume-control {
+        --background-control-icon: url(../img/volume_high.svg);
 
         &.mute {
-            background-image: url(../img/volume_off.svg);
+            --background-control-icon: url(../img/volume_off.svg);
         }
     }
 

@@ -160,7 +160,7 @@ msgstr ""
 #: htdocs/luci-static/resources/view/argon-config.js:114
 msgid ""
 "Here you can set the blur and transparency of the login page of argon theme, "
-"and manage the background pictures and videos. Chrome is recommended."
+"and manage the background pictures and videos."
 msgstr ""
 
 #: htdocs/luci-static/resources/argon/branding.js:60
@@ -542,4 +542,16 @@ msgstr ""
 
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Try again after %s."
+msgstr ""
+
+#: ucode/template/themes/argon/login_background.ut
+msgid "Play background video"
+msgstr ""
+
+#: ucode/template/themes/argon/login_background.ut
+msgid "Pause background video"
+msgstr ""
+
+#: ucode/template/themes/argon/header.ut
+msgid "Skip to content"
 msgstr ""

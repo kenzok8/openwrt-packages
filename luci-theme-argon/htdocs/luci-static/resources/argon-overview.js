@@ -11,7 +11,12 @@ return baseclass.extend({
 		var frame = null;
 		var update = function() {
 			frame = null;
-			view.querySelectorAll('.ifacebox:has(> .ifacebox-body > img[src*="/icons/port_"]) > .ifacebox-body:last-child > .cbi-tooltip-container').forEach(function(container) {
+			view.querySelectorAll('.ifacebox > .ifacebox-body > img[src*="/icons/port_"]').forEach(function(icon) {
+				var box = icon.parentNode.parentNode;
+				box.parentNode.classList.add('argon-port-grid');
+				var container = box.lastElementChild.querySelector('.cbi-tooltip-container');
+				if (!container)
+					return;
 				if (container.querySelector('.argon-port-traffic'))
 					return;
 

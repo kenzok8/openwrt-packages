@@ -122,6 +122,15 @@
 
 .cbi-tblsection {
   overflow-x: auto;
+
+  // A horizontal scroller also computes overflow-y:auto. LuCI then sizes
+  // dropdowns against this short section instead of the page or modal.
+  // Native responsive tables wrap their fields when the viewport narrows.
+  @dropdown-section-selector: ~":is(:has(.cbi-dropdown), .argon-dropdown-section)";
+  &@{dropdown-section-selector},
+  .table@{dropdown-section-selector} {
+    overflow: visible;
+  }
 }
 
 table {

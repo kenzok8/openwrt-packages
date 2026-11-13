@@ -144,3 +144,5 @@ UCODE_BIN=/path/to/ucode sh .github/scripts/check_theme.sh
 The script checks JavaScript, shell and Ucode syntax, verifies compiled CSS against LESS, and runs the Node/Python tests. CI's Ucode build is defined in [check.yml](../.github/workflows/check.yml).
 
 For UI changes, check the actual affected LuCI pages in light/dark modes and desktop/mobile widths, including keyboard focus, long text and reduced motion where relevant. Network and hardware behavior still needs a suitable OpenWrt environment.
+
+Include Firefox ESR 115, 128, 140 and 153 when checking login and theme settings. Leave browser feature preferences at their defaults. `argon-compat.js` supplies DOM markers for joined controls and dropdown table sections only when native `:has()` is unavailable; use forgiving `:is()` lists to keep those fallback selectors valid. Keep new browser API use feature-detected, and avoid unsupported selectors in JavaScript queries. The fallback covers common theme controls; plugin-specific layouts need their own checks.

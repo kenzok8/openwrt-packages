@@ -60,7 +60,10 @@ return baseclass.extend({
 		this.panel = E('fieldset', { id: 'argon-appearance-options', 'class': 'argon-appearance-panel', hidden: true }, [
 			E('legend', { 'class': 'visually-hidden' }, _('Theme mode')),
 			...this.radios.map(function(radio) {
-				return E('label', { 'class': 'argon-appearance-option', 'data-mode': radio.value }, [
+				return E('label', {
+					'class': 'argon-appearance-option', 'data-mode': radio.value,
+					'aria-disabled': !this.writable ? 'true' : null
+				}, [
 					radio, E('span', {}, this.labels[radio.value])
 				]);
 			}.bind(this)),

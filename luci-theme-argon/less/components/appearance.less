@@ -162,21 +162,12 @@ header .header-actions {
         overflow-wrap: anywhere;
       }
 
-      &:has(input:checked) {
-        color: var(--dropdown-selected-text);
-        background: var(--dropdown-selected-bg);
-
-        &::after {
-          visibility: visible;
-        }
-      }
-
-      &:has(input:focus-visible) {
+      &:focus-within {
         outline: 2px solid var(--focus-ring);
         outline-offset: -2px;
       }
 
-      &:has(input:disabled) {
+      &[aria-disabled="true"] {
         cursor: default;
         opacity: .6;
       }
@@ -201,7 +192,7 @@ header .header-actions {
       background-color: var(--surface-active);
     }
 
-    .argon-appearance-option:has(input:not(:disabled)):not(:has(input:checked)):hover {
+    .argon-appearance-option:not([aria-disabled="true"]):hover {
       background: var(--dropdown-hover-bg);
     }
   }
@@ -223,6 +214,19 @@ header .header-actions {
       forced-color-adjust: none;
       background-color: CanvasText;
     }
+  }
+}
+
+// The existing mode attribute tracks the checked radio, including save rollback.
+// Explicit selectors also preserve selection and its checkmark on Firefox ESR 115.
+#argon-appearance[data-mode="light"] .argon-appearance-option[data-mode="light"],
+#argon-appearance[data-mode="dark"] .argon-appearance-option[data-mode="dark"],
+#argon-appearance[data-mode="normal"] .argon-appearance-option[data-mode="normal"] {
+  color: var(--dropdown-selected-text);
+  background: var(--dropdown-selected-bg);
+
+  &::after {
+    visibility: visible;
   }
 }
 

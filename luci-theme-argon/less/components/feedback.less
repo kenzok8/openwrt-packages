@@ -152,6 +152,9 @@
 .alert-message {
   transform: none;
   position: static;
+  // Inline banners can be flex items, where z-index applies even without positioning.
+  // Keep them below dropdowns instead of inheriting the fixed alert's overlay layer.
+  z-index: auto;
   transition: opacity .4s ease;
 
   &.fade-out {

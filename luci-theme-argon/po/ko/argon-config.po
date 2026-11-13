@@ -163,8 +163,8 @@ msgid "Grant UCI access for luci-theme-argon"
 msgstr "luci-theme-argon에 UCI 접근 허용"
 
 #: htdocs/luci-static/resources/view/argon-config.js:114
-msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos. Chrome is recommended."
-msgstr "Argon 테마 로그인 페이지의 흐림 효과와 투명도를 설정하고 배경 이미지와 동영상을 관리할 수 있습니다. Chrome 사용을 권장합니다."
+msgid "Here you can set the blur and transparency of the login page of argon theme, and manage the background pictures and videos."
+msgstr "Argon 테마 로그인 페이지의 흐림 효과와 투명도를 설정하고 배경 이미지와 동영상을 관리할 수 있습니다."
 
 #: htdocs/luci-static/resources/argon/branding.js:60
 msgid "Invalid PNG image or dimensions."
@@ -536,3 +536,15 @@ msgstr "취소"
 #: htdocs/luci-static/resources/argon/updates.js
 msgid "Try again after %s."
 msgstr "%s 이후에 다시 시도하세요."
+
+#: ucode/template/themes/argon/login_background.ut
+msgid "Play background video"
+msgstr "배경 동영상 재생"
+
+#: ucode/template/themes/argon/login_background.ut
+msgid "Pause background video"
+msgstr "배경 동영상 일시 중지"
+
+#: ucode/template/themes/argon/header.ut
+msgid "Skip to content"
+msgstr "본문으로 건너뛰기"
