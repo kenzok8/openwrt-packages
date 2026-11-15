@@ -245,7 +245,9 @@ func canonicalKey(n model.ProxyNode) string {
 		n.Cipher, n.Password, n.UUID, n.Username,
 		n.Transport, n.TransportMode, n.Plugin, boolStr(n.TLS),
 		n.SNI, n.HostHeader, n.Path, n.ALPN,
-		n.RealityPublicKey, n.RealityShortID, n.Fingerprint, n.Flow,
+		n.RealityPublicKey, n.RealityShortID, n.RealitySpiderX, n.Fingerprint, n.Flow,
+		n.VLESSEncryption,
+		boolPtrString(n.RealitySupportX25519MLKEM768),
 		boolStr(n.SkipCertificateVerification),
 		intOrEmpty(n.AlterID), n.ProtocolName, n.ProtocolParam, n.Obfs, n.ObfsParam,
 		intOrEmpty(n.IdleSessionCheckInterval), intOrEmpty(n.IdleSessionTimeout),
@@ -403,6 +405,15 @@ func boolPtrString(value *bool) string {
 		return ""
 	}
 	return strconv.FormatBool(*value)
+}
+
+// boolPtr parses a tri-state boolean string: true/false values (and 1/0,
+// yes/no) yield a pointer, anything else yields nil so "unset" is preserved.
+func boolPtr(value string) *bool {
+	if v, ok := udpRelayPreference(value); ok {
+		return v
+	}
+	return nil
 }
 
 func udpRelayPreference(value string) (*bool, bool) {

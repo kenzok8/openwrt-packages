@@ -339,12 +339,21 @@ func buildStandardQuery(node model.ProxyNode) string {
 	if node.Transport == "xhttp" && node.TransportMode != "" {
 		add("mode", node.TransportMode)
 	}
+	if node.UsesVLESSEncryption() {
+		add("encryption", node.VLESSEncryption)
+	}
 
 	if node.UsesReality() {
 		add("security", "reality")
 		add("pbk", node.RealityPublicKey)
 		if node.RealityShortID != "" {
 			add("sid", node.RealityShortID)
+		}
+		if node.RealitySpiderX != "" {
+			add("spx", node.RealitySpiderX)
+		}
+		if node.RealitySupportX25519MLKEM768 != nil {
+			add("support-x25519mlkem768", strconv.FormatBool(*node.RealitySupportX25519MLKEM768))
 		}
 		if node.Fingerprint != "" {
 			add("fp", node.Fingerprint)

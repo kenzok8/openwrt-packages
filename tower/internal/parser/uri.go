@@ -461,27 +461,34 @@ func parseLegacyVLESS(raw, sourceID string) *model.ProxyNode {
 	if name == "" {
 		name = fragmentName
 	}
+	var supportX25519MLKEM768 *bool
+	if realityPublicKey != "" {
+		supportX25519MLKEM768 = boolPtr(percentDecode(query["support-x25519mlkem768"]))
+	}
 	return &model.ProxyNode{
-		SourceID:                    sourceID,
-		Kind:                        model.KindVLESS,
-		Name:                        normalizedName(name, host),
-		Server:                      host,
-		Port:                        port,
-		UUID:                        rawUUID,
-		Transport:                   transport,
-		TransportMode:               transportMode(query, transport),
-		TLS:                         realityPublicKey != "" || isTrueish(tlsValue) || tlsValue == "reality",
-		SNI:                         percentDecode(firstNonEmpty(query["peer"], query["sni"], query["servername"])),
-		HostHeader:                  percentDecode(firstNonEmpty(query["authority"], query["host"])),
-		Path:                        transportPath(query, transport),
-		ALPN:                        percentDecode(query["alpn"]),
-		RealityPublicKey:            realityPublicKey,
-		RealityShortID:              percentDecode(query["sid"]),
-		CertificateFingerprint:      percentDecode(firstNonEmpty(query["pcs"], query["pinsha256"], query["pin-sha256"])),
-		Fingerprint:                 realityFingerprint(query, realityPublicKey != ""),
-		Flow:                        flow,
-		SkipCertificateVerification: isTrueish(firstNonEmpty(query["allowinsecure"], query["insecure"])),
-		RawURI:                      raw,
+		SourceID:                     sourceID,
+		Kind:                         model.KindVLESS,
+		Name:                         normalizedName(name, host),
+		Server:                       host,
+		Port:                         port,
+		UUID:                         rawUUID,
+		Transport:                    transport,
+		TransportMode:                transportMode(query, transport),
+		TLS:                          realityPublicKey != "" || isTrueish(tlsValue) || tlsValue == "reality",
+		SNI:                          percentDecode(firstNonEmpty(query["peer"], query["sni"], query["servername"])),
+		HostHeader:                   percentDecode(firstNonEmpty(query["authority"], query["host"])),
+		Path:                         transportPath(query, transport),
+		ALPN:                         percentDecode(query["alpn"]),
+		RealityPublicKey:             realityPublicKey,
+		RealityShortID:               percentDecode(query["sid"]),
+		RealitySpiderX:               percentDecode(query["spx"]),
+		RealitySupportX25519MLKEM768: supportX25519MLKEM768,
+		VLESSEncryption:              normalizeVLESSEncryption(percentDecode(query["encryption"])),
+		CertificateFingerprint:       percentDecode(firstNonEmpty(query["pcs"], query["pinsha256"], query["pin-sha256"])),
+		Fingerprint:                  realityFingerprint(query, realityPublicKey != ""),
+		Flow:                         flow,
+		SkipCertificateVerification:  isTrueish(firstNonEmpty(query["allowinsecure"], query["insecure"])),
+		RawURI:                       raw,
 	}
 }
 
@@ -612,31 +619,34 @@ func parseStandardURL(raw string, kind model.ProxyKind, sourceID string) *model.
 	}
 
 	node := &model.ProxyNode{
-		SourceID:                    sourceID,
-		Kind:                        kind,
-		Name:                        name,
-		Server:                      server,
-		Port:                        port,
-		Password:                    nodePassword,
-		UUID:                        nodeUUID,
-		Username:                    username,
-		Transport:                   transport,
-		TransportMode:               transportMode(query, transport),
-		TLS:                         isTLSKind(kind) || isTrueish(security) || carriesReality || strings.HasPrefix(strings.ToLower(u.Scheme), "https"),
-		SNI:                         sni,
-		HostHeader:                  hostHeader,
-		Path:                        transportPath(query, transport),
-		ALPN:                        normalizedALPN(queryValues(u, "alpn")),
-		RealityPublicKey:            map[bool]string{true: realityPublicKey, false: ""}[carriesReality],
-		RealityShortID:              map[bool]string{true: query["sid"], false: ""}[carriesReality],
-		CertificateFingerprint:      firstNonEmpty(query["pinsha256"], query["pin-sha256"], query["tls-fingerprint"], query["pcs"]),
-		Fingerprint:                 firstNonEmpty(query["fp"], query["client_fingerprint"], query["client-fingerprint"], map[bool]string{true: query["fingerprint"], false: ""}[carriesReality]),
-		Flow:                        flow,
-		SkipCertificateVerification: isTrueish(firstNonEmpty(query["allowinsecure"], query["insecure"], query["allow_insecure"])),
-		ProtocolName:                map[bool]string{true: query["protocol"], false: ""}[kind == model.KindHysteria],
-		Obfs:                        obfs,
-		ObfsParam:                   obfsParam,
-		RawURI:                      raw,
+		SourceID:                     sourceID,
+		Kind:                         kind,
+		Name:                         name,
+		Server:                       server,
+		Port:                         port,
+		Password:                     nodePassword,
+		UUID:                         nodeUUID,
+		Username:                     username,
+		Transport:                    transport,
+		TransportMode:                transportMode(query, transport),
+		TLS:                          isTLSKind(kind) || isTrueish(security) || carriesReality || strings.HasPrefix(strings.ToLower(u.Scheme), "https"),
+		SNI:                          sni,
+		HostHeader:                   hostHeader,
+		Path:                         transportPath(query, transport),
+		ALPN:                         normalizedALPN(queryValues(u, "alpn")),
+		RealityPublicKey:             map[bool]string{true: realityPublicKey, false: ""}[carriesReality],
+		RealityShortID:               map[bool]string{true: query["sid"], false: ""}[carriesReality],
+		RealitySpiderX:               map[bool]string{true: query["spx"], false: ""}[carriesReality],
+		RealitySupportX25519MLKEM768: map[bool]*bool{true: boolPtr(query["support-x25519mlkem768"]), false: nil}[carriesReality],
+		VLESSEncryption:              map[bool]string{true: normalizeVLESSEncryption(query["encryption"]), false: ""}[kind == model.KindVLESS],
+		CertificateFingerprint:       firstNonEmpty(query["pinsha256"], query["pin-sha256"], query["tls-fingerprint"], query["pcs"]),
+		Fingerprint:                  firstNonEmpty(query["fp"], query["client_fingerprint"], query["client-fingerprint"], map[bool]string{true: query["fingerprint"], false: ""}[carriesReality]),
+		Flow:                         flow,
+		SkipCertificateVerification:  isTrueish(firstNonEmpty(query["allowinsecure"], query["insecure"], query["allow_insecure"])),
+		ProtocolName:                 map[bool]string{true: query["protocol"], false: ""}[kind == model.KindHysteria],
+		Obfs:                         obfs,
+		ObfsParam:                    obfsParam,
+		RawURI:                       raw,
 	}
 
 	if kind == model.KindAnyTLS {
@@ -976,6 +986,16 @@ func transportPath(query map[string]string, transport string) string {
 		return firstNonEmpty(query["servicename"], query["service_name"], query["path"])
 	}
 	return query["path"]
+}
+
+// normalizeVLESSEncryption drops `none` and blanks: generators must not emit a
+// field that means "no encryption".
+func normalizeVLESSEncryption(value string) string {
+	value = strings.TrimSpace(value)
+	if strings.EqualFold(value, "none") {
+		return ""
+	}
+	return value
 }
 
 func realityFingerprint(query map[string]string, reality bool) string {

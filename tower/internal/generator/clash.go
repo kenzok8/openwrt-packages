@@ -213,6 +213,7 @@ func clashNode(node model.ProxyNode, target model.ClientTarget) string {
 			"    uuid: "+yaml(exportableUUID(node.UUID)),
 			"    udp: true",
 		)
+		appendClashVLESSEncryption(node, target, &values)
 		appendClashTransport(node, target, &values)
 	case model.KindTrojan:
 		values = append(values,
@@ -329,7 +330,7 @@ func clashNode(node model.ProxyNode, target model.ClientTarget) string {
 		appendClashCertificateFingerprint(node, &values)
 		if target == model.ClientShadowrocket || target == model.ClientKaring {
 			values = append(values, "    tls: true")
-			appendClashReality(node, &values)
+			appendClashReality(node, target, &values)
 		}
 		appendClashClientFingerprint(node, &values)
 	case model.KindSnell:
@@ -362,7 +363,7 @@ func clashNode(node model.ProxyNode, target model.ClientTarget) string {
 			appendClashALPN(node, &values)
 			appendClashCertificateFingerprint(node, &values)
 			if target == model.ClientShadowrocket || target == model.ClientKaring {
-				appendClashReality(node, &values)
+				appendClashReality(node, target, &values)
 			}
 			appendClashClientFingerprint(node, &values)
 		}
@@ -370,14 +371,40 @@ func clashNode(node model.ProxyNode, target model.ClientTarget) string {
 	return strings.Join(values, "\n")
 }
 
-// appendClashReality writes the REALITY options block.
-func appendClashReality(node model.ProxyNode, values *[]string) {
+// appendClashVLESSEncryption writes mihomo's top-level vless `encryption`
+// option. Only mihomo-based targets parse it; Stash and Clash Apple treat it as
+// an unknown key and may reject the whole proxy.
+func appendClashVLESSEncryption(node model.ProxyNode, target model.ClientTarget, values *[]string) {
+	if !node.UsesVLESSEncryption() || !mihomoFamily(target) {
+		return
+	}
+	*values = append(*values, "    encryption: "+yaml(node.VLESSEncryption))
+}
+
+// mihomoFamily lists the Clash-family clients built on mihomo's option parser.
+func mihomoFamily(target model.ClientTarget) bool {
+	switch target {
+	case model.ClientOpenClash, model.ClientNikki, model.ClientClashoo,
+		model.ClientClashVerge, model.ClientMihomoParty, model.ClientFlClash,
+		model.ClientClashMi, model.ClientClashMac, model.ClientKaring:
+		return true
+	}
+	return false
+}
+
+// appendClashReality writes the REALITY options block. support-x25519mlkem768
+// is only emitted for mihomo-based targets; other Clash-family parsers may
+// reject the unknown key.
+func appendClashReality(node model.ProxyNode, target model.ClientTarget, values *[]string) {
 	if !node.UsesReality() {
 		return
 	}
 	*values = append(*values, "    reality-opts:", "      public-key: "+yaml(node.RealityPublicKey))
 	if node.RealityShortID != "" {
 		*values = append(*values, "      short-id: "+yaml(node.RealityShortID))
+	}
+	if node.RealitySupportX25519MLKEM768 != nil && mihomoFamily(target) {
+		*values = append(*values, "      support-x25519mlkem768: "+strconv.FormatBool(*node.RealitySupportX25519MLKEM768))
 	}
 	*values = append(*values, "    client-fingerprint: "+yaml(firstNonEmpty(node.Fingerprint, "chrome")))
 }
@@ -419,7 +446,7 @@ func appendClashTransport(node model.ProxyNode, target model.ClientTarget, value
 		*values = append(*values, "    "+key+": "+yaml(node.SNI))
 	}
 	appendClashCertificateFingerprint(node, values)
-	appendClashReality(node, values)
+	appendClashReality(node, target, values)
 	if node.Kind == model.KindVLESS && node.Flow != "" {
 		*values = append(*values, "    flow: "+yaml(node.Flow))
 	}

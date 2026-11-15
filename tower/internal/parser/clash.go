@@ -82,40 +82,42 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 		hasReality := hasKey(d, "reality-opts") || strings.EqualFold(str(d["security"]), "reality")
 
 		node := &model.ProxyNode{
-			SourceID:                    sourceID,
-			Kind:                        kind,
-			Name:                        normalizedName(str(d["name"]), server),
-			Server:                      normalizedHost(server),
-			Port:                        port,
-			Cipher:                      str(d["cipher"]),
-			Password:                    firstNonEmpty(str(d["password"]), str(d["auth-str"]), str(d["auth_str"]), str(d["auth"]), str(d["psk"])),
-			UUID:                        str(d["uuid"]),
-			Username:                    str(d["username"]),
-			Transport:                   firstNonEmpty(pluginTransport, network),
-			TransportMode:               transportMode(map[string]string{"mode": str(d["mode"])}, network),
-			Plugin:                      sip003Plugin,
-			PluginMux:                   pluginMux,
-			TLS:                         kind == model.KindTrojan || pluginTLS || boolString(str(d["tls"])),
-			SNI:                         firstNonEmpty(str(d["servername"]), str(d["sni"])),
-			HostHeader:                  firstNonEmpty(str(d["authority"]), str(d["host"])),
-			Path:                        clashPath(d, network, pluginPath),
-			ALPN:                        normalizedALPN(csvValues(str(d["alpn"]))),
-			RealityPublicKey:            map[bool]string{true: firstNonEmpty(str(d["public-key"]), str(d["pbk"])), false: ""}[hasReality],
-			RealityShortID:              map[bool]string{true: clashYAMLScalar(firstNonEmpty(str(d["short-id"]), str(d["sid"]))), false: ""}[hasReality],
-			CertificateFingerprint:      firstNonEmpty(str(d["tls-fingerprint"]), str(d["fingerprint"])),
-			Fingerprint:                 firstNonEmpty(str(d["client-fingerprint"]), str(d["fp"])),
-			Flow:                        str(d["flow"]),
-			SkipCertificateVerification: boolString(str(d["skip-cert-verify"])),
-			AlterID:                     numPtr(firstNonEmpty(str(d["alterid"]), str(d["alter-id"]))),
-			ProtocolName:                str(d["protocol"]),
-			ProtocolParam:               str(d["protocol-param"]),
-			Obfs:                        obfsMode,
-			ObfsParam:                   map[bool]string{true: "", false: obfsHost}[sip003Plugin != ""],
-			Version:                     numPtr(str(d["version"])),
-			CongestionControl:           firstNonEmpty(str(d["congestion-controller"]), str(d["congestion_control"])),
-			UDPRelayMode:                str(d["udp-relay-mode"]),
-			PortHopping:                 firstNonEmpty(str(d["ports"]), str(d["mport"]), str(d["server-ports"]), str(d["port-hopping"])),
-			RawURI:                      "clash://local/" + server,
+			SourceID:                     sourceID,
+			Kind:                         kind,
+			Name:                         normalizedName(str(d["name"]), server),
+			Server:                       normalizedHost(server),
+			Port:                         port,
+			Cipher:                       str(d["cipher"]),
+			Password:                     firstNonEmpty(str(d["password"]), str(d["auth-str"]), str(d["auth_str"]), str(d["auth"]), str(d["psk"])),
+			UUID:                         str(d["uuid"]),
+			Username:                     str(d["username"]),
+			Transport:                    firstNonEmpty(pluginTransport, network),
+			TransportMode:                transportMode(map[string]string{"mode": str(d["mode"])}, network),
+			Plugin:                       sip003Plugin,
+			PluginMux:                    pluginMux,
+			TLS:                          kind == model.KindTrojan || pluginTLS || boolString(str(d["tls"])),
+			SNI:                          firstNonEmpty(str(d["servername"]), str(d["sni"])),
+			HostHeader:                   firstNonEmpty(str(d["authority"]), str(d["host"])),
+			Path:                         clashPath(d, network, pluginPath),
+			ALPN:                         normalizedALPN(csvValues(str(d["alpn"]))),
+			RealityPublicKey:             map[bool]string{true: firstNonEmpty(str(d["public-key"]), str(d["pbk"])), false: ""}[hasReality],
+			RealityShortID:               map[bool]string{true: clashYAMLScalar(firstNonEmpty(str(d["short-id"]), str(d["sid"]))), false: ""}[hasReality],
+			RealitySupportX25519MLKEM768: map[bool]*bool{true: boolPtr(str(d["support-x25519mlkem768"])), false: nil}[hasReality],
+			CertificateFingerprint:       firstNonEmpty(str(d["tls-fingerprint"]), str(d["fingerprint"])),
+			Fingerprint:                  firstNonEmpty(str(d["client-fingerprint"]), str(d["fp"])),
+			Flow:                         str(d["flow"]),
+			VLESSEncryption:              map[bool]string{true: normalizeVLESSEncryption(clashYAMLScalar(str(d["encryption"]))), false: ""}[kind == model.KindVLESS],
+			SkipCertificateVerification:  boolString(str(d["skip-cert-verify"])),
+			AlterID:                      numPtr(firstNonEmpty(str(d["alterid"]), str(d["alter-id"]))),
+			ProtocolName:                 str(d["protocol"]),
+			ProtocolParam:                str(d["protocol-param"]),
+			Obfs:                         obfsMode,
+			ObfsParam:                    map[bool]string{true: "", false: obfsHost}[sip003Plugin != ""],
+			Version:                      numPtr(str(d["version"])),
+			CongestionControl:            firstNonEmpty(str(d["congestion-controller"]), str(d["congestion_control"])),
+			UDPRelayMode:                 str(d["udp-relay-mode"]),
+			PortHopping:                  firstNonEmpty(str(d["ports"]), str(d["mport"]), str(d["server-ports"]), str(d["port-hopping"])),
+			RawURI:                       "clash://local/" + server,
 		}
 		if kind == model.KindHysteria {
 			node.UpMbps = mbps(firstNonEmpty(str(d["up"]), str(d["up-speed"])))
@@ -162,6 +164,9 @@ func flattenClashProxy(src map[string]any) map[string]any {
 		}
 		if result["short-id"] == nil {
 			result["short-id"] = reality["short-id"]
+		}
+		if result["support-x25519mlkem768"] == nil {
+			result["support-x25519mlkem768"] = reality["support-x25519mlkem768"]
 		}
 	}
 	for _, key := range []string{"ws-opts", "http-opts", "h2-opts", "http-upgrade-opts", "xhttp-opts"} {
