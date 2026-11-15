@@ -222,7 +222,7 @@ return view.extend({
 				ss: [ 'cipher', 'password', 'plugin' ],
 				ssr: [ 'cipher', 'password', 'protocol_name', 'protocol_param', 'obfs', 'obfs_param' ],
 				vmess: [ 'uuid', 'alter_id', 'transport', 'tls', 'sni', 'host_header', 'path', 'alpn', 'skip_cert_verify' ],
-				vless: [ 'uuid', 'flow', 'transport', 'tls', 'sni', 'host_header', 'path', 'alpn', 'reality_public_key', 'reality_short_id', 'fingerprint', 'skip_cert_verify' ],
+				vless: [ 'uuid', 'flow', 'transport', 'tls', 'sni', 'host_header', 'path', 'alpn', 'vless_encryption', 'reality_public_key', 'reality_short_id', 'reality_spider_x', 'reality_support_x25519mlkem768', 'fingerprint', 'skip_cert_verify' ],
 				trojan: [ 'password', 'transport', 'tls', 'sni', 'host_header', 'path', 'alpn', 'fingerprint', 'skip_cert_verify' ],
 				hysteria: [ 'password', 'sni', 'alpn', 'up_mbps', 'down_mbps', 'congestion_control', 'udp_relay_mode', 'skip_cert_verify' ],
 				hysteria2: [ 'password', 'sni', 'alpn', 'obfs', 'obfs_param', 'up_mbps', 'down_mbps', 'skip_cert_verify' ],
@@ -239,6 +239,8 @@ return view.extend({
 				host_header: _('Host'), path: _('传输路径'), alpn: 'ALPN', plugin: _('插件'), protocol_name: _('协议'),
 				protocol_param: _('协议参数'), obfs: _('混淆方式'), obfs_param: _('混淆参数'), alter_id: 'Alter ID',
 				reality_public_key: 'REALITY Public Key', reality_short_id: 'REALITY Short ID', fingerprint: 'Fingerprint',
+				vless_encryption: _('VLESS Encryption'), reality_spider_x: 'REALITY SpiderX',
+				reality_support_x25519mlkem768: 'REALITY X25519MLKEM768',
 				skip_cert_verify: _('跳过证书验证'), up_mbps: 'Upload Mbps', down_mbps: 'Download Mbps',
 				congestion_control: _('拥塞控制'), udp_relay_mode: 'UDP Relay Mode', wireguard_private_key: _('私钥'),
 				wireguard_public_key: _('公钥'), wireguard_preshared_key: _('预共享密钥'), wireguard_ipv4: 'IPv4',
@@ -249,15 +251,27 @@ return view.extend({
 			var controls = {};
 			var fieldRows = fields.map(function(key) {
 				var checkbox = key === 'tls' || key === 'skip_cert_verify';
+				var tristate = key === 'reality_support_x25519mlkem768';
 				var number = [ 'port', 'alter_id', 'up_mbps', 'down_mbps', 'wireguard_mtu', 'wireguard_persistent_keepalive', 'version' ].indexOf(key) >= 0;
 				var secret = key === 'password' || key.indexOf('private_key') >= 0 || key.indexOf('preshared_key') >= 0;
-				var input = E('input', { 'type': checkbox ? 'checkbox' : number ? 'number' : secret ? 'password' : 'text' });
-				if (checkbox)
-					input.checked = !!node[key];
-				else if (secret)
-					input.placeholder = node[key] ? _('留空保持原值') : '';
-				else
+				var input;
+				if (tristate) {
+					/* Tri-state: unset must stay distinct from explicit false. */
+					input = E('select', {}, [
+						E('option', { 'value': '' }, [ _('未设置') ]),
+						E('option', { 'value': 'true' }, [ _('开启') ]),
+						E('option', { 'value': 'false' }, [ _('关闭') ])
+					]);
 					input.value = node[key] == null ? '' : String(node[key]);
+				} else {
+					input = E('input', { 'type': checkbox ? 'checkbox' : number ? 'number' : secret ? 'password' : 'text' });
+					if (checkbox)
+						input.checked = !!node[key];
+					else if (secret)
+						input.placeholder = node[key] ? _('留空保持原值') : '';
+					else
+						input.value = node[key] == null ? '' : String(node[key]);
+				}
 				controls[key] = input;
 				var label = E('label', {}, [ labels[key] || key ]);
 				return E('div', { 'class': 'tower-node-field' + (checkbox ? ' tower-node-field-check' : '') }, checkbox ? [ input, label ] : [ label, input ]);
@@ -271,7 +285,12 @@ return view.extend({
 						fields.forEach(function(key) {
 							var control = controls[key];
 							var secret = key === 'password' || key.indexOf('private_key') >= 0 || key.indexOf('preshared_key') >= 0;
-							if (control.type === 'checkbox') {
+							if (control.tagName === 'SELECT') {
+								if (control.value === '')
+									delete updated[key];
+								else
+									updated[key] = control.value === 'true';
+							} else if (control.type === 'checkbox') {
 								updated[key] = control.checked;
 							} else if (secret && control.value.trim() === '') {
 								return;
