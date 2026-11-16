@@ -16,6 +16,10 @@ msgid "%d on Wi-Fi"
 msgstr "Wi-Fi %d대"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d s average"
+msgstr "최근 %d초 평균"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%dd %dh"
 msgstr "%d일 %d시간"
 
@@ -164,6 +168,14 @@ msgstr "현재 로고"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
 msgstr "다크"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds"
+msgstr "기기 통신 속도"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds use existing traffic statistics. Only traffic observed by this router is included."
+msgstr "기기 속도는 기존 트래픽 통계를 사용합니다. 이 라우터에서 관측한 트래픽만 포함됩니다."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
@@ -652,6 +664,10 @@ msgstr "업데이트 확인 중…"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "View releases on GitHub"
 msgstr "GitHub에서 릴리스 보기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Waiting for next sample"
+msgstr "다음 측정 대기 중"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "WAN IP"

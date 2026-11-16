@@ -16,6 +16,10 @@ msgid "%d on Wi-Fi"
 msgstr "%d qua Wi-Fi"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d s average"
+msgstr "Trung bình %d giây"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%dd %dh"
 msgstr "%d ngày %d giờ"
 
@@ -164,6 +168,14 @@ msgstr "Logo hiện tại"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
 msgstr "Tối"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds"
+msgstr "Tốc độ thiết bị"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds use existing traffic statistics. Only traffic observed by this router is included."
+msgstr "Tốc độ thiết bị sử dụng thống kê lưu lượng hiện có. Chỉ bao gồm lưu lượng được bộ định tuyến này quan sát."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
@@ -652,6 +664,10 @@ msgstr "Đang xác minh bản cập nhật…"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "View releases on GitHub"
 msgstr "Xem các bản phát hành trên GitHub"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Waiting for next sample"
+msgstr "Đang chờ lần lấy mẫu tiếp theo"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "WAN IP"

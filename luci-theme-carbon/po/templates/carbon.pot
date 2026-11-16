@@ -15,6 +15,10 @@ msgid "%d on Wi-Fi"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d s average"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%dd %dh"
 msgstr ""
 
@@ -162,6 +166,14 @@ msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds use existing traffic statistics. Only traffic observed by this router is included."
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
@@ -650,6 +662,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "View releases on GitHub"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Waiting for next sample"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js

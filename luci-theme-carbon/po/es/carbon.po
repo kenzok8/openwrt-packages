@@ -16,6 +16,10 @@ msgid "%d on Wi-Fi"
 msgstr "%d por Wi-Fi"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d s average"
+msgstr "Promedio de %d s"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%dd %dh"
 msgstr "%d d %d h"
 
@@ -164,6 +168,14 @@ msgstr "Logotipo actual"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
 msgstr "Oscuro"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds"
+msgstr "Velocidad de los dispositivos"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds use existing traffic statistics. Only traffic observed by this router is included."
+msgstr "La velocidad utiliza estadísticas de tráfico existentes. Solo incluye el tráfico observado por este router."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
@@ -652,6 +664,10 @@ msgstr "Verificando actualización…"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "View releases on GitHub"
 msgstr "Ver versiones en GitHub"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Waiting for next sample"
+msgstr "Esperando la siguiente muestra"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "WAN IP"

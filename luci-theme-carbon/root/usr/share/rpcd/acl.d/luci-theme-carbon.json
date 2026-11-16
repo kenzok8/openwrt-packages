@@ -2,6 +2,7 @@
 	"luci-theme-carbon": {
 		"description": "Carbon theme: read-only dashboard data and the interface language switch",
 		"read": {
+			"cgi-io": [ "exec" ],
 			"ubus": {
 				"system": [ "board", "info" ],
 				"network.interface": [ "dump" ],
@@ -13,6 +14,7 @@
 				"uci": [ "get" ]
 			},
 			"file": {
+				"/usr/sbin/nlbw -c json -g mac -n": [ "exec" ],
 				"/proc/stat": [ "read" ],
 				"/proc/net/arp": [ "read" ],
 				"/proc/[0-9]*/net/arp": [ "read" ],
@@ -31,7 +33,7 @@
 				"/sys/devices/*/hwmon[0-9]*/name": [ "read" ],
 				"/sys/devices/*/hwmon[0-9]*/temp*_input": [ "read" ]
 			},
-			"uci": [ "luci" ]
+			"uci": [ "luci", "nlbwmon" ]
 		},
 		"write": {
 			"ubus": {

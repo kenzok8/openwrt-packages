@@ -1879,6 +1879,9 @@ table { border-collapse: collapse; border-spacing: 0; }
 	position: relative;
 	overflow: hidden;
 }
+/* LuCI keeps dropdown menus inside the cell; let an open menu extend beyond
+   the last row without changing the rounded clipping of closed tables. */
+.table:has(.cbi-dropdown[open]) { overflow: visible; }
 .thead { display: table-header-group; }
 .tbody { display: table-row-group; }
 .tr { display: table-row; }
@@ -2438,6 +2441,9 @@ textarea#syslog {
 	max-width: 60%;
 }
 .cb-card-link { font-size: 13px; font-weight: 500; white-space: nowrap; }
+.cb-device-rate-note { margin: -4px 0 12px; color: var(--cb-text-2); font-size: 12px; }
+.cb-device-rates { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 4px; color: var(--cb-text-2); }
+.cb-device-rate { font-family: var(--cb-mono); font-size: 11px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 /* hero */
 .cb-hero {
@@ -2889,7 +2895,10 @@ body:has(#maincontent .table) { --cb-content-max: var(--cb-content-wide); }
 		text-overflow: ellipsis;
 		word-wrap: break-word;
 	}
-	.table .td.cbi-dropdown-open { overflow: visible; }
+	/* Plugin cells may contain a dropdown without LuCI's .cbi-value-field,
+	   so they never receive the .cbi-dropdown-open helper class. */
+	.table .td.cbi-dropdown-open,
+	.table .td:has(.cbi-dropdown[open]) { overflow: visible; }
 	.table .tr:hover > .td { background: transparent !important; }
 	.tr.table-titles,
 	.cbi-section-table-titles,

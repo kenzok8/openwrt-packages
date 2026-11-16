@@ -16,6 +16,10 @@ msgid "%d on Wi-Fi"
 msgstr "Wi‑Fi 連線 %d 台"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d s average"
+msgstr "近 %d 秒平均"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%dd %dh"
 msgstr "%d 天 %d 小時"
 
@@ -164,6 +168,14 @@ msgstr "目前的 Logo"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
 msgstr "深色"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds"
+msgstr "裝置網速"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Device speeds use existing traffic statistics. Only traffic observed by this router is included."
+msgstr "裝置網速讀取既有流量統計，僅包含本機觀測到的流量。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "DHCP client"
@@ -652,6 +664,10 @@ msgstr "正在驗證更新…"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "View releases on GitHub"
 msgstr "在 GitHub 查看發布版本"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Waiting for next sample"
+msgstr "等待下一次取樣"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "WAN IP"

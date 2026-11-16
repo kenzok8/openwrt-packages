@@ -711,6 +711,71 @@
 		schedule();
 	};
 
+	/* LuCI's legacy realtime plots cache their pixel width at initialization.
+	 * Fit their existing coordinates to the current viewport without changing
+	 * samples, polling or the time window. Only curves and time-grid positions
+	 * scale horizontally; text and stroke widths retain their original size. */
+	const realtimeRoots = new WeakSet();
+	C.initRealtimeCharts = function (root) {
+		if (!root || realtimeRoots.has(root) ||
+			!/(?:^|-)status-realtime(?:-|$)/.test(document.body.getAttribute('data-page') || '')) return;
+		realtimeRoots.add(root);
+		const graphs = new Set();
+		let pending = false;
+		const schedule = () => {
+			if (pending) return;
+			pending = true;
+			requestAnimationFrame(sync);
+		};
+		const resize = window.ResizeObserver ? new ResizeObserver(schedule) : null;
+		function sync() {
+			pending = false;
+			for (const svg of graphs) {
+				if (!root.contains(svg)) {
+					if (resize) resize.unobserve(svg);
+					graphs.delete(svg);
+				}
+			}
+			root.querySelectorAll('#view svg').forEach((svg) => {
+				// Leave modern responsive SVGs and unrelated plugin charts alone.
+				if (svg.hasAttribute('viewBox') || svg.getAttribute('width') !== '100%' ||
+					!svg.querySelector('#label_25') || !svg.querySelector('#label_50') || !svg.querySelector('#label_75')) return;
+				if (!graphs.has(svg)) {
+					graphs.add(svg);
+					if (resize) resize.observe(svg);
+				}
+				const lines = Array.from(svg.children).filter((el) => el.localName === 'polyline');
+				const drawn = lines.find((el) => el.points.numberOfItems > 1);
+				if (!drawn || !svg.clientWidth) return;
+				// LuCI closes each filled curve at (cached width, baseline).
+				const width = drawn.points.getItem(drawn.points.numberOfItems - 1).x;
+				if (!(width > 0)) return;
+				const scale = svg.clientWidth / width;
+				for (const el of svg.children) {
+					const vertical = el.localName === 'line' &&
+						el.getAttribute('x1') === el.getAttribute('x2');
+					if (el.localName === 'polyline' || vertical) {
+						el.setAttribute('transform', 'scale(' + scale + ' 1)');
+						el.setAttribute('vector-effect', 'non-scaling-stroke');
+					}
+					else if (el.localName === 'text' && !el.id && el.x.baseVal.numberOfItems) {
+						const x = el.x.baseVal.getItem(0).value;
+						el.setAttribute('transform', 'translate(' + (x * (scale - 1)) + ' 0)');
+					}
+				}
+			});
+		}
+		const watch = new MutationObserver(schedule);
+		watch.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['points'] });
+		window.addEventListener('resize', schedule, { passive: true });
+		if (!resize) {
+			// Older browsers: cover sidebar transitions and reduced-motion changes.
+			watch.observe(rootEl, { attributes: true, attributeFilter: ['class'] });
+			window.addEventListener('transitionend', schedule);
+		}
+		schedule();
+	};
+
 	/* ------------------------------------------------------------------
 	 * Language switch (rendered once the installed catalogues are known)
 	 * ------------------------------------------------------------------ */
@@ -774,6 +839,7 @@
 	C.initShell = function (opts) {
 		opts = opts || {};
 		C.initTabs(document.getElementById('maincontent'));
+		C.initRealtimeCharts(document.getElementById('maincontent'));
 		C.initLeaseAvatars(document.getElementById('maincontent'));
 		const body = document.body;
 		const burger = document.getElementById('cb-burger');
@@ -1267,6 +1333,8 @@
 	 *   wireless()         → ubus network.wireless status
 	 *   stations(ifnames)  → [{ ifname, mac, signal }] from iwinfo assoclist (optional)
 	 *   neighbors()        → contents of /proc/net/arp (optional)
+	 *   deviceTraffic()    → { interval: seconds, columns, data } from an existing
+	 *                        per-MAC collector (optional, read-only)
 	 *   hostHints()        → luci-rpc getHostHints (optional)
 	 *   conntrack()        → [count, max]
 	 *   temperatures()     → [{ name, value (millidegrees) }]
@@ -1391,6 +1459,43 @@
 	 * → [{ macaddr, hostname, ipaddr, ip6addr, expires, lease, active, wifi, gateway }]
 	 * ------------------------------------------------------------------ */
 	const MAC_RE = /^([0-9a-f]{2}:){5}[0-9a-f]{2}$/;
+
+	/* Sampled averages from cumulative per-MAC counters. Missing records, resets,
+	 * failed reads and suspended tabs never count as zero. Records cannot create
+	 * discovered devices, and query frequency never exceeds the collector cadence. */
+	C.DeviceRates = function () { this.previous = null; };
+	C.DeviceRates.prototype.reset = function () { this.previous = null; };
+	C.DeviceRates.prototype.update = function (sample, now) {
+		const invalid = () => { this.reset(); return null; };
+		if (!sample || !Number.isFinite(now) || !Number.isFinite(sample.interval) || sample.interval < 5 ||
+			!Array.isArray(sample.columns) || !Array.isArray(sample.data)) return invalid();
+		const fields = ['mac', 'rx_bytes', 'tx_bytes'].map((k) => sample.columns.indexOf(k));
+		if (fields.some((i) => i < 0)) return invalid();
+		const counters = new Map();
+		for (const row of sample.data) {
+			if (!Array.isArray(row)) return invalid();
+			const mac = String(row[fields[0]] || '').toLowerCase();
+			if (!MAC_RE.test(mac) || mac === '00:00:00:00:00:00') continue;
+			const rx = row[fields[1]], tx = row[fields[2]];
+			if (!Number.isSafeInteger(rx) || rx < 0 || !Number.isSafeInteger(tx) || tx < 0) return invalid();
+			const old = counters.get(mac) || { rx: 0, tx: 0 };
+			if (!Number.isSafeInteger(old.rx + rx) || !Number.isSafeInteger(old.tx + tx)) return invalid();
+			counters.set(mac, { rx: old.rx + rx, tx: old.tx + tx });
+		}
+		const rates = new Map(), previous = this.previous;
+		const dt = previous ? (now - previous.time) / 1000 : 0;
+		const continuous = previous && previous.interval === sample.interval && dt >= sample.interval && dt <= sample.interval * 2.5;
+		if (continuous) counters.forEach((value, mac) => {
+			const old = previous.counters.get(mac);
+			if (old && value.rx >= old.rx && value.tx >= old.tx)
+				rates.set(mac, { down: (value.rx - old.rx) / dt, up: (value.tx - old.tx) / dt });
+		});
+		// An early read must not move the baseline closer to the next sample.
+		if (!previous || dt <= 0 || dt >= sample.interval || previous.interval !== sample.interval)
+			this.previous = { counters: counters, interval: sample.interval, time: now };
+		return { rates: rates, interval: sample.interval, seconds: continuous ? dt : null };
+	};
+
 	C.parseArp = function (text, devices, ifs) {
 		const gateways = new Set();
 		(ifs || []).forEach((i) => {
@@ -1708,9 +1813,11 @@
 			ui.clientCount = h('span', { class: 'cb-count' });
 			ui.clients = h('ul', { class: 'cb-list' });
 			ui.clientMore = h('button', { type: 'button', class: 'cb-more hidden' });
+			ui.clientRateNodes = new Map();
+			ui.clientRateNote = h('p', { class: 'cb-device-rate-note hidden', title: t('Device speeds use existing traffic statistics. Only traffic observed by this router is included.') });
 			dash.appendChild(h('div', { class: 'cb-card cb-clients span-8' }, [
 				h('div', { class: 'cb-card-head' }, [h('h3', null, [deviceTitle(), ui.clientCount]), manage(urls.devices)]),
-				ui.clients, ui.clientMore
+				ui.clientRateNote, ui.clients, ui.clientMore
 			]));
 
 			/* wireless + interfaces */
@@ -1736,8 +1843,10 @@
 			const st = {
 				dev: null, devAlt: null, prevNet: null, prevCpu: null, showAll: false, devices: [], wifiCount: null,
 				traffic: store.get('carbon.traffic', 'auto'), trafficKey: '', ifs: null, hints: null, hintsAt: 0, aps: null,
-				netdevs: null, netdevsAt: 0
+				netdevs: null, netdevsAt: 0,
+				rateData: null, rateSeen: false, rateNext: 0, rateGeneration: 0
 			};
+			const deviceRates = new C.DeviceRates();
 			const safe = (fn) => {
 				if (typeof fn !== 'function') return Promise.resolve(null);
 				try { return Promise.resolve(fn()).catch(() => null); }
@@ -1755,6 +1864,7 @@
 			function renderClients() {
 				const list = st.devices;
 				ui.clients.innerHTML = '';
+				ui.clientRateNodes.clear();
 				ui.clientCount.textContent = list ? String(list.length) : '';
 				ui.tDevices.val.textContent = list ? String(list.length) : '—';
 				ui.tDevices.sub.textContent = st.wifiCount != null ? t('%d on Wi-Fi', st.wifiCount) :
@@ -1776,6 +1886,10 @@
 					}
 					else if (l.active && !l.wifi) lease = t('Neighbor entry');
 					const wifi = l.wifi ? [l.wifi.band, l.wifi.signal != null ? l.wifi.signal + ' dBm' : null].filter(Boolean).join(' · ') : '';
+					const down = h('span', { class: 'cb-device-rate', title: t('Download') });
+					const up = h('span', { class: 'cb-device-rate', title: t('Upload') });
+					const speeds = h('span', { class: 'cb-device-rates hidden' }, [down, up]);
+					ui.clientRateNodes.set(l.macaddr, { row: speeds, down: down, up: up });
 					ui.clients.appendChild(h('li', null, [
 						deviceAvatar(l, id),
 						h('div', { class: 'cb-list-main' }, [
@@ -1783,7 +1897,8 @@
 							h('span', { class: 'cb-list-sub' }, [
 								kind ? h('span', { class: 'cb-kind', text: kind }) : null,
 								h('span', { class: 'cb-mono', text: l.ipaddr || l.ip6addr || '' })
-							])
+							]),
+							speeds
 						]),
 						h('div', { class: 'cb-list-aside' }, [
 							h('span', { class: 'cb-mono cb-hide-sm', text: (l.macaddr || '').toUpperCase() }),
@@ -1800,7 +1915,44 @@
 					ui.clientMore.textContent = st.showAll ? t('Show less') : t('Show all %d devices', list.length);
 				}
 				else ui.clientMore.classList.add('hidden');
+				renderDeviceRates();
 			}
+
+			function renderDeviceRates() {
+				const data = st.rateData;
+				ui.clientRateNote.classList.toggle('hidden', !st.rateSeen);
+				ui.clientRateNote.textContent = t('Device speeds') + ' · ' + (!data ? t('Unavailable') :
+					(data.seconds == null ? t('Waiting for next sample') : t('%d s average', Math.round(data.seconds))));
+				ui.clientRateNodes.forEach((nodes, mac) => {
+					nodes.row.classList.toggle('hidden', !st.rateSeen);
+					const rate = data && data.rates.get(mac);
+					const text = (v) => v == null ? '—' : fmt.bytes(v, true).join(' ');
+					nodes.down.textContent = '↓ ' + text(rate && rate.down);
+					nodes.up.textContent = '↑ ' + text(rate && rate.up);
+					nodes.down.setAttribute('aria-label', t('Download') + ' ' + text(rate && rate.down));
+					nodes.up.setAttribute('aria-label', t('Upload') + ' ' + text(rate && rate.up));
+				});
+			}
+
+			async function readDeviceRates() {
+				if (Date.now() < st.rateNext) return;
+				const generation = st.rateGeneration;
+				const sample = await safe(P.deviceTraffic);
+				if (generation !== st.rateGeneration) return;
+				const now = Date.now();
+				// Responses arriving after the page is hidden cannot establish a baseline.
+				st.rateData = deviceRates.update(document.hidden ? null : sample, now);
+				if (st.rateData) st.rateSeen = true;
+				st.rateNext = now + (st.rateData ? st.rateData.interval : 60) * 1000;
+				renderDeviceRates();
+			}
+			document.addEventListener('visibilitychange', () => {
+				st.rateGeneration++;
+				deviceRates.reset();
+				st.rateData = null;
+				st.rateNext = 0;
+				renderDeviceRates();
+			});
 			ui.clientMore.addEventListener('click', () => { st.showAll = !st.showAll; renderClients(); });
 			C.loadBrands().then((d) => { if (d && st.devices) renderClients(); });
 
@@ -2067,6 +2219,7 @@
 				setTimeout(() => loop(slow, 10000), 10000);
 			});
 			loop(mid, 5000);
+			if (typeof P.deviceTraffic === 'function') loop(readDeviceRates, 5000);
 
 			return dash;
 		}
