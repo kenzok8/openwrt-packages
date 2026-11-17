@@ -16,6 +16,7 @@
 			"file": {
 				"/usr/sbin/nlbw -c json -g mac -n": [ "exec" ],
 				"/proc/stat": [ "read" ],
+				"/proc/meminfo": [ "read" ],
 				"/proc/net/arp": [ "read" ],
 				"/proc/[0-9]*/net/arp": [ "read" ],
 				"/proc/sys/net/netfilter/nf_conntrack_count": [ "read" ],

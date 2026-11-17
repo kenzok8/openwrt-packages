@@ -16,6 +16,8 @@
 
 **[在线演示](https://mrjoechen.github.io/luci-theme-carbon/) · [English demo](https://mrjoechen.github.io/luci-theme-carbon/?lang=en)**
 
+https://github.com/user-attachments/assets/b78ccf2b-679e-459b-88ea-b4f82da6e03f
+
 </div>
 
 ## 界面预览

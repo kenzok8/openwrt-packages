@@ -68,9 +68,44 @@ const language = {
 	})
 };
 
+/* system.info mixes sysinfo() and /proc/meminfo, which can describe different
+ * memory limits under LXC/lxcfs. Keep all memory fields in the proc view. */
+function readMemoryInfo(text) {
+	if (typeof text !== 'string') return null;
+	const values = {};
+	text.split('\n').forEach((line) => {
+		const match = line.match(/^(MemTotal|MemFree|MemAvailable|Buffers|Cached|Shmem|SwapTotal|SwapFree):\s+(\d+)\s+kB\s*$/);
+		if (!match) return;
+		const bytes = Number(match[2]) * 1024;
+		if (Number.isSafeInteger(bytes)) values[match[1]] = bytes;
+	});
+	if (!(values.MemTotal > 0) || values.MemFree == null) return null;
+	const memory = {
+		total: values.MemTotal,
+		free: values.MemFree,
+		buffered: values.Buffers || 0,
+		cached: values.Cached || 0,
+		shared: values.Shmem || 0
+	};
+	/* Leave available absent on older kernels so the dashboard uses
+	 * free + buffered + cached, rather than treating cache as used. */
+	if (values.MemAvailable != null) memory.available = values.MemAvailable;
+	const result = { memory: memory };
+	if (values.SwapTotal != null && values.SwapFree != null)
+		result.swap = { total: values.SwapTotal, free: values.SwapFree };
+	return result;
+}
+
 const provider = {
 	board: () => callBoard().then((r) => (r && r.hostname) ? r : null),
-	info: () => callInfo().then((r) => (r && (r.memory || r.uptime != null)) ? r : null),
+	info: () => Promise.all([
+		callInfo(),
+		fs.read('/proc/meminfo').catch(() => null)
+	]).then(([r, text]) => {
+		if (!r || !(r.memory || r.uptime != null)) return null;
+		const meminfo = readMemoryInfo(text);
+		return meminfo ? Object.assign({}, r, meminfo) : r;
+	}),
 	cpuStat: () => fs.read('/proc/stat'),
 	interfaces: () => callIfaces().then((r) => (Array.isArray(r) && r.length) ? r : null),
 	devStats: (dev, alt) => callDevice(dev).then((r) => {
