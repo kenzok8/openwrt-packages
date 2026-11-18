@@ -202,6 +202,10 @@ func planSchemeRules(opts Options) ([]plannedRule, []plannedProvider, error) {
 			continue
 		}
 		resource := *source.Resource
+		resource, mixed, err := reconcileRuleProvider(resource, opts.RuleSetLines[resource.URL])
+		if err != nil {
+			return nil, nil, err
+		}
 		format := strings.ToLower(strings.TrimSpace(resource.Format))
 		if format == "" {
 			format = "text"
@@ -209,7 +213,7 @@ func planSchemeRules(opts Options) ([]plannedRule, []plannedProvider, error) {
 		mappedURL, _, mapped := mapSingBoxMRS(resource)
 		mappedMRS := opts.PreferRuleSets && singBoxTarget && singBoxMRSMappingAllowed(opts.Target) && mapped
 		mappedClashoo := opts.PreferRuleSets && opts.Target == model.ClientClashooSB && mapped
-		native := mappedMRS || mappedClashoo || opts.PreferRuleSets && ((clashTarget && (format == "text" || format == "yaml" || format == "mrs")) || (surgeTarget && format == "text") || (singBoxTarget && opts.Target != model.ClientClashooSB && isSingBoxSource(resource, opts.RuleSetLines[resource.URL])))
+		native := !mixed && (mappedMRS || mappedClashoo || opts.PreferRuleSets && ((clashTarget && (format == "text" || format == "yaml" || format == "mrs")) || (surgeTarget && format == "text") || (singBoxTarget && opts.Target != model.ClientClashooSB && isSingBoxSource(resource, opts.RuleSetLines[resource.URL]))))
 		if native {
 			id := ruleSetID(resource)
 			rules = append(rules, plannedRule{rule: source, native: true, providerID: id})
@@ -248,7 +252,6 @@ func planSchemeRules(opts Options) ([]plannedRule, []plannedProvider, error) {
 		if !ok || len(lines) == 0 {
 			return nil, nil, fmt.Errorf("规则集 %s 没有可用的本地缓存；请刷新规则后重试", resource.URL)
 		}
-		var err error
 		lines, err = resourceLines(resource, lines)
 		if err != nil {
 			return nil, nil, err
@@ -263,7 +266,7 @@ func planSchemeRules(opts Options) ([]plannedRule, []plannedProvider, error) {
 			}
 			var body string
 			var options []string
-			if mappedMRSYAML {
+			if mappedMRSYAML || mixed && len(splitRuleFields(line)) < 2 {
 				body, err = normalizeMappedMRSYAMLLine(resource, line)
 				if err != nil {
 					return nil, nil, fmt.Errorf("规则集 %s 的 payload[%d] %q：%w", resource.URL, i, line, err)
@@ -280,6 +283,36 @@ func planSchemeRules(opts Options) ([]plannedRule, []plannedProvider, error) {
 		}
 	}
 	return rules, providers, nil
+}
+
+// A typed rule cannot be consumed by a domain/ipcidr provider; mixed lists
+// must be expanded because no single provider behavior represents both forms.
+func reconcileRuleProvider(resource model.RuleSchemeRuleSet, rawLines []string) (model.RuleSchemeRuleSet, bool, error) {
+	behavior := strings.ToLower(strings.TrimSpace(resource.Behavior))
+	format := strings.ToLower(strings.TrimSpace(resource.Format))
+	if (behavior != "domain" && behavior != "ipcidr") || (format != "" && format != "text" && format != "yaml") || len(rawLines) == 0 {
+		return resource, false, nil
+	}
+	lines, err := resourceLines(resource, rawLines)
+	if err != nil {
+		return resource, false, err
+	}
+	typed, bare := false, false
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, ";") || strings.HasPrefix(line, "//") {
+			continue
+		}
+		if len(splitRuleFields(line)) >= 2 {
+			typed = true
+		} else {
+			bare = true
+		}
+	}
+	if typed && !bare {
+		resource.Behavior = "classical"
+	}
+	return resource, typed && bare, nil
 }
 
 func normalizeMappedMRSYAMLLine(resource model.RuleSchemeRuleSet, line string) (string, error) {
@@ -462,19 +495,19 @@ func safeProviderName(raw string) string {
 
 func normalizeResourceLine(resource model.RuleSchemeRuleSet, line string) (string, []string) {
 	behavior := strings.ToLower(strings.TrimSpace(resource.Behavior))
-	if behavior == "domain" {
+	fields := splitRuleFields(line)
+	if behavior == "domain" && len(fields) < 2 {
 		domain := strings.TrimPrefix(line, "+.")
 		domain = strings.TrimPrefix(domain, ".")
 		return "DOMAIN-SUFFIX," + domain, nil
 	}
-	if behavior == "ipcidr" {
+	if behavior == "ipcidr" && len(fields) < 2 {
 		kind := "IP-CIDR"
 		if strings.Contains(line, ":") {
 			kind = "IP-CIDR6"
 		}
 		return kind + "," + line, nil
 	}
-	fields := splitRuleFields(line)
 	if len(fields) < 2 {
 		return "", nil
 	}

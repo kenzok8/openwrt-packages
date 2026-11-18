@@ -84,7 +84,6 @@ func generateSingBox(opts Options) string {
 				"tag":         dnsTag,
 				"server":      "223.5.5.5",
 				"server_port": 53,
-				"detour":      singBoxDirectTag,
 			}},
 			"final": dnsTag,
 		}

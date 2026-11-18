@@ -13,6 +13,7 @@ import (
 func parseClashYAML(text, sourceID string) ParsedContent {
 	var doc struct {
 		Proxies []map[string]any `yaml:"proxies"`
+		Hosts   any              `yaml:"hosts"`
 	}
 	if err := yaml.Unmarshal([]byte(text), &doc); err != nil {
 		return ParsedContent{RejectedLineCount: 1}
@@ -20,6 +21,7 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 
 	var nodes []model.ProxyNode
 	rejected := 0
+	hosts := clashHosts(asMap(doc.Hosts))
 	for _, raw := range doc.Proxies {
 		d := flattenClashProxy(raw)
 		kind := clashKind(str(d["type"]))
@@ -33,10 +35,18 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 			rejected++
 			continue
 		}
+		if normalizedTransport(str(d["network"])) == "xhttp" && !clashXHTTPOptionsAreExpressible(raw) {
+			rejected++
+			continue
+		}
+		if kind == model.KindSnell && !snellModeIsDefault(str(d["mode"])) {
+			rejected++
+			continue
+		}
 
 		obfsMode := str(d["obfs"])
 		obfsHost := firstNonEmpty(str(d["obfs-param"]), str(d["obfs-password"]), str(d["obfs_password"]))
-		sip003Plugin, pluginTransport, pluginPath := "", "", ""
+		sip003Plugin, pluginTransport, pluginPath, pluginHost := "", "", "", ""
 		var pluginTLS bool
 		var pluginMux *bool
 
@@ -65,6 +75,7 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 					sip003Plugin = "v2ray-plugin"
 					pluginTransport = "ws"
 					pluginPath = opts["path"]
+					pluginHost = opts["host"]
 					pluginTLS = boolString(opts["tls"])
 					if opts["mux"] != "" {
 						b := boolString(opts["mux"])
@@ -97,7 +108,7 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 			PluginMux:                    pluginMux,
 			TLS:                          kind == model.KindTrojan || pluginTLS || boolString(str(d["tls"])),
 			SNI:                          firstNonEmpty(str(d["servername"]), str(d["sni"])),
-			HostHeader:                   firstNonEmpty(str(d["authority"]), str(d["host"])),
+			HostHeader:                   firstNonEmpty(str(d["authority"]), pluginHost, clashHostHeader(d["host"])),
 			Path:                         clashPath(d, network, pluginPath),
 			ALPN:                         normalizedALPN(csvValues(str(d["alpn"]))),
 			RealityPublicKey:             map[bool]string{true: firstNonEmpty(str(d["public-key"]), str(d["pbk"])), false: ""}[hasReality],
@@ -138,6 +149,7 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 			node.WireGuardPersistentKeepalive = numPtr(firstNonEmpty(str(d["persistent-keepalive"]), str(d["keepalive"])))
 			node.WireGuardDNS = strings.Join(csvValues(str(d["dns"])), ",")
 		}
+		applyClashHosts(node, hosts)
 		nodes = append(nodes, *node)
 	}
 
@@ -220,6 +232,13 @@ func clashPath(d map[string]any, network, pluginPath string) string {
 		return firstNonEmpty(str(d["grpc-service-name"]), str(d["service-name"]), str(d["path"]))
 	}
 	return str(d["path"])
+}
+
+func clashHostHeader(value any) string {
+	if values := list(value); len(values) > 0 {
+		return str(values[0])
+	}
+	return str(value)
 }
 
 // clashKind maps a Clash proxy type to ProxyKind.

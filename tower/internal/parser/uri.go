@@ -320,6 +320,15 @@ func parseVMess(raw, sourceID string) *model.ProxyNode {
 	if rawTransport == "" {
 		rawTransport = stringValue(j["type"])
 	}
+	transport := normalizedVMessTransport(rawTransport)
+	if transport == "xhttp" {
+		if extra, exists := j["extra"]; exists && !xhttpExtraValueIsEmpty(extra) {
+			return nil
+		}
+		if qi := strings.IndexByte(encoded, '?'); qi >= 0 && !xhttpExtraIsEmpty(percentDecode(queryDictionaryLower(encoded[qi+1:])["extra"])) {
+			return nil
+		}
+	}
 	return &model.ProxyNode{
 		SourceID:                    sourceID,
 		Kind:                        model.KindVMess,
@@ -328,7 +337,7 @@ func parseVMess(raw, sourceID string) *model.ProxyNode {
 		Port:                        port,
 		Cipher:                      firstNonEmpty(stringValue(j["scy"]), "auto"),
 		UUID:                        uuid,
-		Transport:                   firstNonEmpty(normalizedVMessTransport(rawTransport), "tcp"),
+		Transport:                   firstNonEmpty(transport, "tcp"),
 		TLS:                         tlsValue == "tls" || tlsValue == "true",
 		SNI:                         stringValue(j["sni"]),
 		HostHeader:                  stringValue(j["host"]),
@@ -374,6 +383,9 @@ func parseLegacyVMess(raw, sourceID string) *model.ProxyNode {
 	}
 	obfs := percentDecode(query["obfs"])
 	transport := normalizedVMessTransport(obfs)
+	if transport == "xhttp" && !xhttpExtraIsEmpty(percentDecode(query["extra"])) {
+		return nil
+	}
 	name := percentDecode(query["remarks"])
 	if name == "" {
 		if fi := strings.IndexByte(raw, '#'); fi >= 0 {
@@ -453,6 +465,9 @@ func parseLegacyVLESS(raw, sourceID string) *model.ProxyNode {
 	tlsValue := strings.ToLower(firstNonEmpty(query["security"], query["tls"]))
 	rawTransport := percentDecode(firstNonEmpty(query["type"], query["network"], query["obfs"]))
 	transport := normalizedTransport(strings.ToLower(rawTransport))
+	if transport == "xhttp" && !xhttpExtraIsEmpty(percentDecode(query["extra"])) {
+		return nil
+	}
 	flow := percentDecode(query["flow"])
 	if flow == "" && query["xtls"] == "2" {
 		flow = "xtls-rprx-vision"
@@ -556,6 +571,9 @@ func parseStandardURL(raw string, kind model.ProxyKind, sourceID string) *model.
 		query["type"], query["network"],
 		wsIfObfs(query["obfs"]),
 	))
+	if transport == "xhttp" && !xhttpExtraIsEmpty(query["extra"]) {
+		return nil
+	}
 
 	security := strings.ToLower(firstNonEmpty(query["security"], query["tls"]))
 	realityPublicKey := query["pbk"]
@@ -898,7 +916,7 @@ func parseSnellLine(raw, sourceID string) *model.ProxyNode {
 		options[key] = val
 	}
 	psk := options["psk"]
-	if psk == "" {
+	if psk == "" || !snellModeIsDefault(options["mode"]) {
 		return nil
 	}
 	return &model.ProxyNode{

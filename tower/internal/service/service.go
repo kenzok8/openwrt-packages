@@ -663,6 +663,16 @@ func (s *Service) exportOptionsWithServiceRegions(target model.ClientTarget, pro
 			}
 			// 保持远程链接的目标不需要规则集内容，跳过以免每个规则集都白等一次网络。
 			if !generator.RuleSetNeedsLines(target, *resource, preferRuleSets) {
+				// 已有文本缓存可纠正规则类型；远程引用仍不触发额外下载。
+				if resource.Format != "mrs" && (resource.Behavior == "domain" || resource.Behavior == "ipcidr") {
+					if cached, ok := s.ruleSourceLinesCached(resource.URL, maxRuleSetBytes); ok {
+						lines[resource.URL] = cached
+					} else if name := rules.LocalRuleFilename(resource.URL); name != "" {
+						if b, err := os.ReadFile(filepath.Join(s.rulesDir, name)); err == nil {
+							lines[resource.URL] = strings.Split(string(b), "\n")
+						}
+					}
+				}
 				continue
 			}
 			// 读取顺序按代价排：缓存 → 随包分发的本地列表 → 网络（直连失败会走镜像）。
