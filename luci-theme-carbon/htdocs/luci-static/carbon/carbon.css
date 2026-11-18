@@ -3145,6 +3145,14 @@ body:has(#maincontent .table) { --cb-content-max: var(--cb-content-wide); }
 	[data-page^="admin-system-diskman"] .cbi-section-table td[colspan]:has(> div[title]) { padding: 4px 10px 8px !important; }
 }
 
+/* --- Open-Box: download channel radios ----------------------------------
+   The plugin resets these inputs to position: static. Carbon's checked dot
+   is absolutely positioned with inset: 4px, so it must stay anchored to the
+   input rather than expanding across the page's containing block. */
+[data-page^="admin-services-openbox"] .ob-chan-row .ob-chan-radio input[type="radio"] {
+	position: relative;
+}
+
 /* --- luci-app-ttyd: the terminal fills the window ------------------------
    The view sets an inline min-height of 500px and nothing else. */
 [data-page^="admin-services-ttyd"] #view iframe {
