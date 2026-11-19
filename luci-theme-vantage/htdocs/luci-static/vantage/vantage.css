@@ -1744,7 +1744,10 @@ table { border-collapse: separate; border-spacing: 0; width: 100%; }
 	position: sticky; top: var(--stick-top); z-index: 20;
 }
 
-/* cells: numbers and addresses never break, rate pairs stack */
+/* cells: numbers and addresses never break, rate pairs stack. The titles
+   are matched in English; under a translated one, menu-vantage.js marks
+   the same columns' cells .vt-nowrap (#111) */
+.td.vt-nowrap:not(.cbi-value-field),
 .td:not(.cbi-value-field)[data-title*="MAC" i], .td:not(.cbi-value-field)[data-title*="address" i], .td:not(.cbi-value-field)[data-title*="IPv" i], .td:not(.cbi-value-field)[data-title*="Gateway" i],
 .td:not(.cbi-value-field)[data-title*="Target" i], .td:not(.cbi-value-field)[data-title*="Source" i], .td:not(.cbi-value-field)[data-title*="DUID" i], .td:not(.cbi-value-field)[data-title="PID"],
 .td:not(.cbi-value-field)[data-title*="Metric" i], .td:not(.cbi-value-field)[data-title*="Priority" i], .td:not(.cbi-value-field)[data-title*="Remaining" i], .td:not(.cbi-value-field)[data-title*="Usage" i] {
@@ -2230,9 +2233,16 @@ div:has(> .ifacebox > .ifacebox-head.cbi-tooltip-container) > .ifacebox { width:
 }
 body.modal-overlay-active { overflow: hidden; }
 body.modal-overlay-active #modal_overlay { display: block; }
+/* a plain dialog is sized by max-width, as in LuCI's own themes: a page
+   that needs it wider sets an inline max-width (Wireless and travelmate
+   scans, banIP's and adblock's maps: 90%), which a fixed width left at
+   720px (#128). LuCI's own kinds below keep a fixed width: nothing clears
+   that inline value, so after a scan it would stretch the Join form, the
+   changes dialog and the apply countdown too */
 #modal_overlay > .modal {
 	position: relative;
-	width: min(720px, 100%);
+	width: 100%;
+	max-width: 720px;
 	margin: 0 auto;
 	padding: var(--sp-5) var(--sp-6);
 	background: var(--s1);
@@ -2248,9 +2258,12 @@ body.modal-overlay-active #modal_overlay { display: block; }
 	border-bottom: 1px solid var(--line);
 	font-size: var(--fs-lg);
 }
-#modal_overlay > .modal.cbi-modal { width: min(960px, 100%); }
+/* showModal(null, ...) still adds the title, empty: no bar for it */
+#modal_overlay > .modal > h4:first-child:empty { display: none; }
+#modal_overlay > .modal.cbi-modal { width: min(960px, 100%); max-width: none; }
+#modal_overlay > .modal.uci-dialog { width: min(720px, 100%); max-width: none; }
 #modal_overlay > .modal .cbi-progressbar { width: 100%; max-width: none; }
-#modal_overlay > .modal:has(> textarea[readonly]) { width: min(1080px, 100%); }
+#modal_overlay > .modal:has(> textarea[readonly]) { width: min(1080px, 100%); max-width: none; }
 #modal_overlay > .modal > textarea[readonly] { max-width: 100%; }
 #modal_overlay > .modal .cbi-section { background: none; border: 0; padding: 0; margin: 0; box-shadow: none; }
 /* a modal's sections have no card padding, so nothing in them bleeds out
@@ -2277,6 +2290,7 @@ body.modal-overlay-active #modal_overlay { display: block; }
 /* apply / rollback countdown */
 #modal_overlay > .modal.alert-message {
 	width: min(520px, 100%);
+	max-width: none;
 	margin-top: 18vh;
 	padding: var(--sp-5) var(--sp-6);
 	border-left-width: 1px;

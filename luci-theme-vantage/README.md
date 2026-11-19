@@ -185,8 +185,9 @@ behaviour, tracked in [`docs/luci-contract.md`](docs/luci-contract.md).
 
 ## Languages
 
-Vantage is available in English and Simplified Chinese (dashboard
-translation by [@ntbowen](https://github.com/ntbowen)). Each language
+Vantage is available in English, Simplified Chinese (dashboard
+translation by [@ntbowen](https://github.com/ntbowen)) and Russian
+([@akorshun](https://github.com/akorshun)). Each language
 installs as its own packages, for example
 `apk add luci-i18n-vantage-zh-cn luci-i18n-vantage-theme-zh-cn`; see
 [Languages](docs/INSTALL.md#languages) in the install guide.

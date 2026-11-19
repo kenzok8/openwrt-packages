@@ -5,8 +5,9 @@
  * (sysauth.ut's data-vt-look-login), else in this browser (localStorage
  * vantage.login.own for one who may not save it for everyone, vantage.login
  * from before; menu-vantage.js lookValue). One canvas, no libraries: a
- * frame is a handful of batched draws, at most about 60 a second, and nothing runs while the
- * window is in the background. With reduced motion it draws one still
+ * frame is a handful of batched draws, at most about 60 a second, and nothing runs while
+ * another window has the focus (unless Appearance's Motion when not in
+ * focus is on, picked the same way). With reduced motion it draws one still
  * frame, with Low-power router (Appearance, picked the same way) none: the
  * page grid alone. Logging in speeds it up while the form posts.
  *
@@ -24,6 +25,9 @@
 	try { p[0] = localStorage.getItem('vantage.power.own'); p[2] = localStorage.getItem('vantage.power'); } catch (e) {}
 	for (i = 2; i >= 0; i--) if (p[i] === 'normal' || p[i] === 'low') power = p[i];
 	if (pick === 'none' || power === 'low') return;
+	var u = [ null, document.documentElement.getAttribute('data-vt-look-unfocused'), null ], unfocused = 'still';
+	try { u[0] = localStorage.getItem('vantage.unfocused.own'); u[2] = localStorage.getItem('vantage.unfocused'); } catch (e) {}
+	for (i = 2; i >= 0; i--) if (u[i] === 'still' || u[i] === 'moving') unfocused = u[i];
 	var cv = document.createElement('canvas'), ctx = cv.getContext && cv.getContext('2d');
 	if (!ctx || typeof Path2D !== 'function') return;
 	cv.className = 'vt-login-sky';
@@ -217,8 +221,10 @@
 	draw();
 	window.addEventListener('resize', function () { size(); draw(); });
 	if (still) return;
-	window.addEventListener('blur', function () { paused = true; if (raf) cancelAnimationFrame(raf); raf = 0; });
-	window.addEventListener('focus', function () { paused = false; run(); });
+	if (unfocused !== 'moving') {
+		window.addEventListener('blur', function () { paused = true; if (raf) cancelAnimationFrame(raf); raf = 0; });
+		window.addEventListener('focus', function () { paused = false; run(); });
+	}
 	var form = document.querySelector('form.vt-login-form');
 	if (form) form.addEventListener('submit', function () { scene.go(); });
 	run();

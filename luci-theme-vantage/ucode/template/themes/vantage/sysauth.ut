@@ -26,12 +26,13 @@
 	const look_theme = look('theme', [ 'auto', 'light', 'dark' ]);
 	const look_login = look('login', [ 'grid', 'stars', 'none' ]);
 	const look_power = look('power', [ 'normal', 'low' ]);
+	const look_unfocused = look('unfocused', [ 'still', 'moving' ]);
 	const host = (() => { const h = uci.get_first('system', 'system', 'hostname'); return (type(h) == 'string' && length(h)) ? substr(h, 0, 63) : null; })();
 	// A pending challenge is guidance until the user submits a response.
 	const auth_failed = auth_plugin && length(filter(auth_fields ?? [], field => length(http.formvalue(field.name) ?? '')));
 -%}
 <!DOCTYPE html>
-<html lang="{{ entityencode(dispatcher.lang ?? 'en', true) }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-power="{{ look_power }}">
+<html lang="{{ entityencode(dispatcher.lang ?? 'en', true) }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-power="{{ look_power }}" data-vt-look-unfocused="{{ look_unfocused }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

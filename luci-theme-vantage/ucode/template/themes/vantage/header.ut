@@ -24,6 +24,7 @@
 	const look_login = look('login', [ 'grid', 'stars', 'none' ]);
 	const look_backdrop = look('backdrop', [ 'grid', 'stars', 'none' ]);
 	const look_power = look('power', [ 'normal', 'low' ]);
+	const look_unfocused = look('unfocused', [ 'still', 'moving' ]);
 	const look_brand = look('brand', [ 'none', 'hostname', 'model' ]);
 	/* The dashboard's chart style and layouts, saved with it. A layout passes
 	   only in the form vantage.layout reads, 'wide=hero:0:4 chart:0:2:h;mid=default' */
@@ -61,7 +62,7 @@
 	})();
 -%}
 <!DOCTYPE html>
-<html lang="{{ lang }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-backdrop="{{ look_backdrop }}" data-vt-look-power="{{ look_power }}" data-vt-look-brand="{{ look_brand }}" data-vt-look-chart="{{ look_chart }}" data-vt-look-layout="{{ look_layout }}" data-vt-look-save="{{ look_save }}">
+<html lang="{{ lang }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-backdrop="{{ look_backdrop }}" data-vt-look-power="{{ look_power }}" data-vt-look-unfocused="{{ look_unfocused }}" data-vt-look-brand="{{ look_brand }}" data-vt-look-chart="{{ look_chart }}" data-vt-look-layout="{{ look_layout }}" data-vt-look-save="{{ look_save }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -87,6 +88,8 @@
 	r.setAttribute('data-vt-backdrop', look('backdrop', 'vantage.backdrop.own', 'vantage.backdrop.v1', [ 'grid', 'stars', 'none' ]));
 	/* Low-power router: the dashboard asks for the slow parts less often and nothing moves */
 	r.setAttribute('data-vt-power', look('power', 'vantage.power.own', 'vantage.power', [ 'normal', 'low' ]));
+	/* Motion when not in focus: whether things go on moving while another window has the focus */
+	r.setAttribute('data-vt-unfocused', look('unfocused', 'vantage.unfocused.own', 'vantage.unfocused', [ 'still', 'moving' ]));
 	if (rail === 'pinned') r.setAttribute('data-rail', 'pinned');
 })(document.documentElement);
 </script>

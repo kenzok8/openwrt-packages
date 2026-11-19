@@ -35,6 +35,12 @@ const BACKDROP_EVENT = 'vantage:backdrop';
    login page either); the dashboard reads data-vt-power and listens for
    POWER_EVENT */
 const POWER_EVENT = 'vantage:power';
+/* Motion when not in focus (#131): off, nothing moves while another
+   window has the focus (the refresh dot here, the dashboard's ring, flow
+   dots and backdrop, the login page's particles), as a moving part keeps
+   the browser drawing; on, they go on. The dashboard reads
+   data-vt-unfocused and listens for UNFOCUSED_EVENT */
+const UNFOCUSED_EVENT = 'vantage:unfocused';
 /* The refresh dot's pulse is a CSS animation; running on the compositor it
    makes the browser draw a frame on every display refresh, sixty a second,
    on every page that polls, for a pulse five seconds long. Paused through
@@ -56,7 +62,7 @@ const MOTION_EVENT = 'vantage:tick';
    key, also what the dashboard reads under another theme) counts until
    the router has one. */
 /* this package's version, as its Makefile has it (tests/version.test.js) */
-const VERSION = '1.0.20';
+const VERSION = '1.0.21';
 /* Check for updates (Appearance): when asked, never on its own, the browser
    reads the project's 24.10 package list on GitHub Pages (the same release
    as 25.12's), without cookies or a referrer. Only a version number passes;
@@ -72,6 +78,7 @@ const LOOK = {
 	login: { own: 'vantage.login.own', before: LOGIN_KEY, ok: [ 'grid', 'stars', 'none' ] },
 	backdrop: { own: 'vantage.backdrop.own', before: BACKDROP_KEY, ok: [ 'grid', 'stars', 'none' ] },
 	power: { own: 'vantage.power.own', before: 'vantage.power', ok: [ 'normal', 'low' ] },
+	unfocused: { own: 'vantage.unfocused.own', before: 'vantage.unfocused', ok: [ 'still', 'moving' ] },
 	/* what shows next to the logo; the hostname and model come from system board */
 	brand: { own: 'vantage.brand.own', before: 'vantage.brand', ok: [ 'none', 'hostname', 'model' ] }
 };
@@ -224,6 +231,7 @@ function setLookAttr(root, name, value) {
 	else if (name === 'login') root.setAttribute('data-vt-look-login', value);
 	else if (name === 'backdrop') root.setAttribute('data-vt-look-backdrop', value);
 	else if (name === 'power') root.setAttribute('data-vt-look-power', value);
+	else if (name === 'unfocused') root.setAttribute('data-vt-look-unfocused', value);
 	else if (name === 'brand') root.setAttribute('data-vt-look-brand', value);
 }
 function storageSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
@@ -334,6 +342,37 @@ function technical(text) {
 	if (!t || t.length > 120 || !/\d/.test(t)) return false;
 	const rest = t.replace(UNITS, '');
 	return /\d/.test(rest) && /^[\s0-9a-fA-F.:,\/%()+\-x[\]~=]*$/.test(rest);
+}
+
+/* Columns of numbers and addresses: LuCI's titles for the columns that
+   vantage.css keeps on one line by English words in a cell's data-title
+   ("cells: numbers and addresses never break"), in LuCI 25.12 and 24.10.
+   A cell's data-title is its column's title as shown, so in another
+   language those rules miss it and "11h 50m 29s" wraps (#111); a cell
+   whose title is LuCI's translation of one of these takes .vt-nowrap. */
+const NOWRAP_TITLES = [ 'CPU usage (%)', 'DUID', 'Gateway', 'IP address', 'IPv4 address', 'IPv6 address', 'IPv6 addresses',
+	'Lease time remaining', 'MAC address', 'Memory usage (%)', 'Metric', 'PID', 'Priority', 'Remaining time', 'Source',
+	'Start priority', 'Target' ];
+
+/* a column title as compared: uppercase, as the theme shows it (LuCI takes
+   a cell's data-title from its heading's innerText), spaces collapsed. The
+   browser uppercases by the page's language (lang: Turkish i becomes İ,
+   Greek loses its accents), so this does too */
+function titleKey(text, lang) {
+	const s = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+	try { return s.toLocaleUpperCase(lang || undefined); }
+	catch (e) { return s.toUpperCase(); }
+}
+
+/* the titleKey()s of NOWRAP_TITLES as tr (LuCI's _) translates them, those
+   that differ from the English the CSS matches: none in English */
+function nowrapTitles(tr, lang) {
+	const out = new Set();
+	NOWRAP_TITLES.forEach(t => {
+		const s = tr(t);
+		if (typeof s === 'string' && s !== t && s.trim()) out.add(titleKey(s, lang));
+	});
+	return out;
 }
 
 /* heading text as compared for repeats: case, spacing and a trailing colon don't count */
@@ -892,7 +931,7 @@ return baseclass.extend({
 		/* Appearance opened before the menu came in lacks the network
 		   path's group (hasDashboard): add it now */
 		if (this.appear && this.hasDashboard() && !this.appear.querySelector('input[name="vt-backdrop"]')) {
-			this.dashboardGroups().forEach(g => this.appear.insertBefore(g, this.appearNote));
+			this.dashboardGroups().forEach(g => this.appear.insertBefore(g, this.appearUnfocused));
 			this.syncAppearance();
 		}
 		this.dp = (L.env.dispatchpath || []).slice();
@@ -1700,6 +1739,25 @@ return baseclass.extend({
 		this.syncAppearance();
 	},
 
+	unfocusedPref() {
+		return this.lookPref('unfocused');
+	},
+
+	setUnfocusedPref(pref) {
+		this.setLook('unfocused', pref, () => this.applyUnfocused());
+	},
+
+	/* the dashboard reads the one in force from data-vt-unfocused; the
+	   refresh dot follows it too (setupIndicators) */
+	applyUnfocused() {
+		const v = this.unfocusedPref();
+		if (this.root.getAttribute('data-vt-unfocused') !== v) {
+			this.root.setAttribute('data-vt-unfocused', v);
+			window.dispatchEvent(new CustomEvent(UNFOCUSED_EVENT));
+		}
+		this.syncAppearance();
+	},
+
 	setupTheme() {
 		const toggle = document.getElementById('vt-theme');
 		if (toggle) toggle.addEventListener('click', () => { if (this.themeNext) this.setTheme(this.themeNext); });
@@ -1737,6 +1795,7 @@ return baseclass.extend({
 			this.applyTheme();
 			this.applyBackdrop();
 			this.applyPower();
+			this.applyUnfocused();
 			this.applyBrand();
 		});
 		/* the dashboard's own picker (Customize), saved as Appearance's */
@@ -1760,6 +1819,7 @@ return baseclass.extend({
 		this.applyTheme();
 		this.applyBackdrop();
 		this.applyPower();
+		this.applyUnfocused();
 		this.applyBrand();
 	},
 
@@ -1771,7 +1831,7 @@ return baseclass.extend({
 	   scrolling the page close it. */
 	/* one of Appearance's radio groups */
 	appearGroup(name, legend, opts, set) {
-		const look = { 'vt-colour': 'theme', 'vt-logo-name': 'brand', 'vt-login': 'login', 'vt-backdrop': 'backdrop', 'vt-power': 'power' }[name];
+		const look = { 'vt-colour': 'theme', 'vt-logo-name': 'brand', 'vt-login': 'login', 'vt-backdrop': 'backdrop', 'vt-power': 'power', 'vt-unfocused': 'unfocused' }[name];
 		return E('fieldset', { 'class': 'vt-appear-set' }, [
 			E('legend', {}, [ legend ]),
 			E('div', { 'class': 'vt-appear-track' }, opts.map(o => {
@@ -1812,6 +1872,7 @@ return baseclass.extend({
 			], v => this.setBrandPref(v)),
 			group('vt-login', _('Login background'), [ [ 'grid', login.grid ], [ 'stars', login.stars ], [ 'none', login.none ] ], v => this.setLoginPref(v))
 		].concat(this.hasDashboard() ? this.dashboardGroups() : [], [
+			(this.appearUnfocused = group('vt-unfocused', _('Motion when not in focus'), [ [ 'still', _('Off') ], [ 'moving', _('On') ] ], v => this.setUnfocusedPref(v))),
 			/* where the picks are kept, when not for every browser (syncAppearance) */
 			(this.appearNote = E('p', { 'class': 'vt-appear-note', 'role': 'status', 'hidden': 'hidden' })),
 			this.versionEl()
@@ -1884,7 +1945,7 @@ return baseclass.extend({
 
 	syncAppearance() {
 		if (!this.appear) return;
-		const now = { 'vt-colour': this.themePref(), 'vt-logo-name': this.brandPref(), 'vt-login': this.loginPref(), 'vt-backdrop': this.backdropPref(), 'vt-power': this.powerPref() };
+		const now = { 'vt-colour': this.themePref(), 'vt-logo-name': this.brandPref(), 'vt-login': this.loginPref(), 'vt-backdrop': this.backdropPref(), 'vt-power': this.powerPref(), 'vt-unfocused': this.unfocusedPref() };
 		Array.prototype.forEach.call(this.appear.querySelectorAll('input[type="radio"]'), r => { r.checked = (now[r.name] === r.value); });
 		const state = this.lookState();
 		const note = state === 'relogin' ? _('Log in again to save Appearance for every browser.')
@@ -1988,11 +2049,13 @@ return baseclass.extend({
 		new MutationObserver(decorate).observe(box, { childList: true, subtree: true, characterData: true });
 		decorate();
 		/* another window has the focus: the refresh dot's pulse stops
-		   (vantage.css), as a moving part keeps the browser drawing */
+		   (vantage.css), as a moving part keeps the browser drawing;
+		   not with Motion when not in focus on */
 		const root = document.documentElement;
-		const focus = () => root.toggleAttribute('data-vt-blur', !document.hasFocus());
+		const focus = () => root.toggleAttribute('data-vt-blur', !document.hasFocus() && root.getAttribute('data-vt-unfocused') !== 'moving');
 		window.addEventListener('blur', focus);
 		window.addEventListener('focus', focus);
+		window.addEventListener(UNFOCUSED_EVENT, focus);
 		focus();
 		this.setupMotionClock(box);
 	},
@@ -2077,10 +2140,16 @@ return baseclass.extend({
 		if (document.body.getAttribute('data-page') === 'admin-dashboard') return;
 		let queued = false;
 		const skip = 'input,select,textarea,button,.btn,.cbi-button,.cbi-dropdown,img,.ifacebadge,.zonebadge,.cbi-progressbar,table,.table';
+		/* columns of numbers and addresses under a translated title (#111) */
+		const lang = document.documentElement.lang, nowrap = nowrapTitles(_, lang);
 		const scan = () => {
 			queued = false;
 			main.querySelectorAll('td, .td, .ifacebox-body > span > span').forEach(cell => {
 				if (cell.closest('.vt-app')) return;
+				if (nowrap.size && cell._vtNowrap === undefined) {
+					cell._vtNowrap = !cell.classList.contains('cbi-value-field') && nowrap.has(titleKey(cell.getAttribute('data-title'), lang));
+					if (cell._vtNowrap) cell.classList.add('vt-nowrap');
+				}
 				const text = cell.textContent;
 				if (cell._vtText === text) return;
 				cell._vtText = text;

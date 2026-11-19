@@ -6,6 +6,48 @@ Each release ships both packages, `luci-theme-vantage` and
 <https://github.com/anothaDev/luci-theme-vantage/releases> and in the
 [signed repositories](https://anothadev.github.io/luci-theme-vantage/).
 
+## 1.0.21 - 2026-11-19
+
+- **Dashboard: the client lists keep their order** (#132,
+  [@comozen](https://github.com/comozen)). The Wi-Fi list was in order
+  of live traffic and the wired one in order of last heard, so the rows
+  changed places at every refresh. Both now start in name order, and the
+  column you click is remembered in that browser.
+- **Appearance: Motion when not in focus** (#131,
+  [@smallprogram](https://github.com/smallprogram)). Since 1.0.19
+  nothing moves while another window has the focus. A new option under
+  the gear, off by default, lets the dashboard, the refresh dot and the
+  login page keep moving then, for a dashboard kept in view beside other
+  work. A hidden tab, reduced motion and Low-power router still stop
+  motion.
+- **Network path: a device can no longer pass for the gateway by
+  claiming its address.** The dashboard took the last device that
+  claimed the gateway's address for the gateway, and one ARP packet from
+  any LAN or guest device was enough to claim it: that device was then
+  marked as the gateway among the wired hosts, and its port could be
+  taken for the uplink. The gateway is now the device the line itself
+  hears; where two cannot be told apart, none is marked. Not told apart:
+  a device on the uplink's own network that replaces the gateway's
+  entry (ARP spoofing).
+- **Network path: each line shows its own address** (#88). Two lines of
+  one provider, such as two PPPoE sessions, end at the same gateway, so
+  both showed the same address. A line now shows its own IPv4 address,
+  with the gateway in its tooltip and details; this device shows its LAN
+  address. An access point's path is unchanged.
+- **Tables: numbers and addresses stay on one line in every language**
+  (#111, [@VIKINGYFY](https://github.com/VIKINGYFY)). Under a translated
+  column title, a value such as a lease's remaining time ("11h 50m 29s")
+  wrapped.
+- **Dialogs: wide dialogs are wide again** (#128,
+  [@smallprogram](https://github.com/smallprogram)). The maps of banIP
+  and adblock and the Wireless scan ask for a dialog 90% wide; the theme
+  held them at its own width.
+- **Russian translation** (#135,
+  [@akorshun](https://github.com/akorshun)), dashboard and theme:
+  `apk add luci-i18n-vantage-ru luci-i18n-vantage-theme-ru` (24.10:
+  `opkg install` the same two). See
+  [Languages](docs/INSTALL.md#languages).
+
 ## 1.0.20 - 2026-11-12
 
 - **rpcd no longer crashes on MediaTek mtwifi routers** (#124,
