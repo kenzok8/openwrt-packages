@@ -552,7 +552,8 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-rsum:hover { background: var(--vt-hover); }
 .vt-app .vt-rsum .vt-status { margin: 0; }
 .vt-app .vt-rsum-main { font-weight: var(--vt-fw-semibold); font-size: var(--vt-fs-base); white-space: nowrap; }
-.vt-app .vt-rsum-sub { font-size: var(--vt-fs-sm); color: var(--vt-text-3); white-space: nowrap; }
+/* the count gives way when the row is short of room (a longer language, a narrow phone) */
+.vt-app .vt-rsum-sub { font-size: var(--vt-fs-sm); color: var(--vt-text-3); white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .vt-app .vt-rsum-rate { margin-left: auto; font-size: var(--vt-fs-sm); color: var(--vt-text-2); white-space: nowrap; }
 .vt-app .vt-rsum > .vt-ico { color: var(--vt-text-3); }
 

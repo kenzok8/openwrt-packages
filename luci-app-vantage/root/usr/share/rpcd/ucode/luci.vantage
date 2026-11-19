@@ -114,6 +114,7 @@ const RE_PAIRS = /../g;
 const RE_SPACES = /\s+/;
 const RE_ENCRYPTION = /^[A-Za-z0-9+_-]{1,40}/;
 const RE_NAME = /^[A-Za-z0-9_.-]{1,64}$/;          // radio sections, interfaces
+const RE_HT = /^HT(20|40|80|160)$/;                 // qcawificfg80211's htmode, whatever the standard
 const RE_ZONE = /^thermal_zone[0-9]{1,3}$/;
 const RE_MILLIDEG = /^-?[0-9]{1,7}$/;
 const RE_ZONE_TYPE = /^[A-Za-z0-9_.-]{1,40}$/;
@@ -327,27 +328,64 @@ function reduce_radio(r) {
 	};
 }
 
+// the names in /sys/class/net
+function netdevs() {
+	return lsdir(NET) ?? [];
+}
+
+// Qualcomm's qcawificfg80211 (QSDK firmware such as QWRT) names no ifname:
+// each wifi-iface section is named after its interface (ath0, ath1), so
+// take the section's name when that device exists (in devs, the names in
+// /sys/class/net). Its htmode is HT20 to HT160 whatever the standard,
+// which hwmode carries ('11axa', '11ac', ...): without this its radios
+// read as Wi-Fi 4.
+function qca_ifname(s, devs) {
+	let n = s['.name'];
+
+	return (match(n, RE_NETDEV) && n != '.' && n != '..' && index(devs, n) >= 0) ? n : null;
+}
+
+function qca_htmode(c) {
+	let ht = (type(c.htmode) == 'string') ? match(c.htmode, RE_HT) : null;
+	let hw = (type(c.hwmode) == 'string') ? lc(c.hwmode) : '';
+
+	if (!ht)
+		return c.htmode;
+
+	return (index(hw, 'be') >= 0) ? 'EHT' + ht[1] : (index(hw, 'ax') >= 0) ? 'HE' + ht[1] : (index(hw, 'ac') >= 0) ? 'VHT' + ht[1] : c.htmode;
+}
+
 // The same reply from /etc/config/wireless, for firmware whose driver
-// bypasses netifd. Only enabled interfaces that name their ifname, since
-// the view can look nothing else up; the first section to claim a name
-// wins. Run state stays unknown here: iwinfo is served by rpcd itself, so
-// asking it from a plugin would wait on rpcd. No txpower either: vendor
-// drivers do not configure it in dBm (mtkwifi: per cent).
+// bypasses netifd. Only enabled interfaces that name their ifname (or, on
+// qcawificfg80211, are named after one), since the view can look nothing
+// else up; the first section to claim a name wins. Run state stays unknown
+// here: iwinfo is served by rpcd itself, so asking it from a plugin would
+// wait on rpcd. No txpower either: vendor drivers do not configure it in
+// dBm (mtkwifi: per cent).
 function wireless_from_config() {
 	let wl = cursor();
-	let radios = {}, taken = {}, out = {};
+	let radios = {}, taken = {}, out = {}, devs = null;
 
 	if (!wl.load(WIRELESS))
 		return out;
 
 	wl.foreach(WIRELESS, 'wifi-device', (s) => {
 		if (match(s['.name'], RE_NAME))
-			radios[s['.name']] = { disabled: uci_true(s.disabled), config: { ...s, txpower: null }, interfaces: [] };
+			radios[s['.name']] = {
+				disabled: uci_true(s.disabled),
+				config: { ...s, txpower: null, htmode: (s.type == 'qcawificfg80211') ? qca_htmode(s) : s.htmode },
+				interfaces: []
+			};
 	});
 
 	wl.foreach(WIRELESS, 'wifi-iface', (s) => {
 		let r = (type(s.device) == 'string') ? radios[s.device] : null;
-		let ifname = s.ifname;
+		let qca = (s.ifname == null && r?.config?.type == 'qcawificfg80211');
+
+		if (qca && devs == null)
+			devs = netdevs();
+
+		let ifname = qca ? qca_ifname(s, devs) : s.ifname;
 
 		if (type(r) != 'object' || uci_true(s.disabled) || type(ifname) != 'string' ||
 		    !match(ifname, RE_NAME) || taken[ifname])
@@ -564,7 +602,7 @@ function bridge_table() {
 	let left = FDB_LIMIT * FDB_ENTRY;
 	let sig = '', ages = {}, ports = {}, multi = false, tables = [];
 
-	for (let n in (lsdir(NET) ?? [])) {
+	for (let n in netdevs()) {
 		let b = netdev(n) ? readfile(NET + '/' + n + '/brforward', left) : null;
 
 		if (type(b) != 'string')

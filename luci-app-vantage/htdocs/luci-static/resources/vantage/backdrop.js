@@ -234,9 +234,11 @@ function starfield(env) {
    opts.external: no frame loop of its own; the caller's clock asks for
    each frame with frame(t) and takes the rate from period(), so the
    backdrop, the flow dots and the pulses share one frame (overview.js
-   tickMotion) */
+   tickMotion). opts.unfocused: asked whether it goes on moving while
+   another window has the focus */
 function mount(host, band, style, opts) {
 	var external = !!(opts && opts.external), live = false;
+	var unfocused = opts && typeof opts.unfocused === 'function' ? opts.unfocused : function() { return false; };
 	var cv = document.createElement('canvas'), ctx = cv.getContext && cv.getContext('2d');
 	var env = { w: 0, h: 0, box: { t: 0, b: 0 }, origin: { x: 0, y: 0 }, count: 2, speed: packetSpeed(0), share: 0.7, frame: frameMs(0), colour: '#7a9a3a', muted: '#8a9099' };
 	var down = null, up = null, originEl = null;
@@ -360,7 +362,7 @@ function mount(host, band, style, opts) {
 	}
 	function again() { timer = 0; if (running() && !raf) raf = requestAnimationFrame(tick); }
 
-	function running() { return !!scene && !still && !paused && !hidden && focused && inView && usable(); }
+	function running() { return !!scene && !still && !paused && !hidden && (focused || unfocused()) && inView && usable(); }
 	function halt() {
 		if (raf) cancelAnimationFrame(raf);
 		if (timer) clearTimeout(timer);
@@ -417,7 +419,7 @@ function mount(host, band, style, opts) {
 	}
 	var onVis = function() { hidden = !!document.hidden; run(); };
 	document.addEventListener('visibilitychange', onVis);
-	/* another window has the focus: the last frame stays */
+	/* another window has the focus: the last frame stays (unless opts.unfocused says on) */
 	var onBlur = function() { focused = false; run(); }, onFocus = function() { focused = true; run(); };
 	window.addEventListener('blur', onBlur);
 	window.addEventListener('focus', onFocus);

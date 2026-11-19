@@ -70,7 +70,7 @@ var GONE_KEEP_MS = 5 * 60 * 1000;     /* disconnected stations stay listed */
 var TALKERS = 3;                      /* top talkers shown; the tile keeps room for all */
 var SWITCH_MS = 30 * 1000;            /* LuCI runs swconfig for each switch's link state: at most this often */
 var STORE_KEY = 'vantage.hist.v1';
-var VERSION = '1.0.20';               /* this package's, as its Makefile has it (tests/version.test.js) */
+var VERSION = '1.0.21';               /* this package's, as its Makefile has it (tests/version.test.js) */
 var SVGNS = 'http://www.w3.org/2000/svg';
 var HOSTAPD_OBJ = /^[A-Za-z0-9_.-]{1,64}$/;
 
@@ -370,6 +370,22 @@ var CHECK_ICONS = { uplink: 'port', cpu: 'cpu', memory: 'memory', radios: 'wifi'
 function txt(el, s) { s = (s == null ? '' : String(s)); if (el.textContent !== s) el.textContent = s; return el; }
 function setClass(el, c) { if (el.getAttribute('class') !== c) el.setAttribute('class', c); }
 function setTitle(el, v) { if (el.getAttribute('title') !== v) el.setAttribute('title', v); }
+/* a line's own IPv4 address, without its prefix length */
+function lineAddr(x) { return x && x.ipv4 && x.ipv4[0] ? String(x.ipv4[0]).split('/')[0] : null; }
+/* the address this device has on its own network: lan's; without a
+   network of that name, that of the one its SSIDs and wired hosts are on
+   (a LAN by another name, beside a container bridge); else that of the
+   first network that is up */
+function lanAddr(nets, m) {
+	var with4 = (nets || []).filter(function(n) { return n && n.ipv4; }), on = Object.create(null);
+	function add(name, k) { if (typeof name === 'string') on[name] = (on[name] || 0) + k; }
+	((m && m.wiredHosts) || []).forEach(function(h) { if (h) add(h.network, 1); });
+	((m && m.ssids) || []).forEach(function(s) { ((s && s.networks) || []).forEach(function(n) { add(n, 1 + (s.clients > 0 ? s.clients : 0)); }); });
+	var up = with4.filter(function(n) { return n.up; }), most = null;
+	up.forEach(function(n) { if (on[n.name] > 0 && (!most || on[n.name] > on[most.name])) most = n; });
+	var n = with4.filter(function(n) { return n.name === 'lan'; })[0] || most || up[0];
+	return n ? String(n.ipv4).split('/')[0] : null;
+}
 /* the throughput history of a line to the internet, the main one too,
    by its interface: a failover starts the new main line's own history
    instead of continuing the old one's. ':' keeps it apart from a radio's
@@ -595,6 +611,26 @@ function writeFolds(v) {
 	try { window.localStorage.setItem(FOLD_KEY, JSON.stringify(v)); } catch (e) {}
 }
 
+/* The client table's order, Wi-Fi and wired: by name until a header is
+   clicked, and that pick is remembered per browser (#132: by live
+   traffic the rows changed places at every poll). */
+var SORT_KEY = 'vantage.sort.v1';
+var SORT_COLS = { wifi: [ 'name', 'signal', 'ssid', 'rate', 'live', 'exp', 'time' ], wired: [ 'name', 'link', 'net', 'live', 'seen' ] };
+
+function readSorts() {
+	var out = { wifi: { key: 'name', dir: 1 }, wired: { key: 'name', dir: 1 } }, v = null;
+	try { v = JSON.parse(window.localStorage.getItem(SORT_KEY) || 'null'); } catch (e) { v = null; }
+	Object.keys(out).forEach(function(k) {
+		var s = v && typeof v === 'object' ? v[k] : null;
+		if (s && SORT_COLS[k].indexOf(s.key) >= 0 && (s.dir === 1 || s.dir === -1)) out[k] = { key: s.key, dir: s.dir };
+	});
+	return out;
+}
+
+function writeSorts(v) {
+	try { window.localStorage.setItem(SORT_KEY, JSON.stringify(v)); } catch (e) {}
+}
+
 /* What the Vantage theme's template hands over (data-vt-look-*): under it
    the router keeps the layouts and the chart style with the Appearance */
 function lookAttr(name) {
@@ -699,6 +735,14 @@ function gapMs() { return lowPower() ? LOW_IDLE_POLL_MS * 1.75 : POLL_S * 3500; 
 function lowPower() {
 	var root = typeof document !== 'undefined' ? document.documentElement : null;
 	return !!(root && root.getAttribute && root.getAttribute('data-vt-power') === 'low');
+}
+
+/* Motion when not in focus (#131; the Vantage theme's Appearance,
+   data-vt-unfocused): things go on moving while another window has the
+   focus */
+function movesUnfocused() {
+	var root = typeof document !== 'undefined' ? document.documentElement : null;
+	return !!(root && root.getAttribute && root.getAttribute('data-vt-unfocused') === 'moving');
 }
 
 function writeBackdrop(v) {
@@ -978,7 +1022,7 @@ return view.extend({
 			wireless: null,
 			lastOk: 0, lastErr: null, paused: false
 		};
-		this.ui = { sorts: { wifi: { key: 'live', dir: -1 }, wired: { key: 'seen', dir: 1 } }, kind: 'wifi', filter: '', chip: 'all', drawer: null, editing: null, hover: null };
+		this.ui = { sorts: readSorts(), kind: 'wifi', filter: '', chip: 'all', drawer: null, editing: null, hover: null };
 		this.folds = readFolds();
 		this.foldEls = {};
 		this.foldBtns = {};
@@ -1408,6 +1452,7 @@ return view.extend({
 		poll.add(L.bind(this.refreshFast, this), FAST_S);
 		poll.add(L.bind(this.refresh, this), POLL_S);
 		window.addEventListener('vantage:power', function() { self.applyPower(); });
+		window.addEventListener('vantage:unfocused', function() { self.paintLive(); });
 		[ 'pointerdown', 'pointermove', 'keydown', 'wheel', 'touchstart', 'focus' ].forEach(function(t) {
 			window.addEventListener(t, function() { self.noteInput(); }, { passive: true });
 		});
@@ -2014,11 +2059,12 @@ return view.extend({
 		this.el.live.hidden = (state === 'ok' || stopped) && vantageTheme();
 		this.el.live.setAttribute('title', label);
 		txt(this.el.liveText, label);
-		this.setMotion(state !== 'paused' && this.focused !== false && !lowPower());
+		this.setMotion(state !== 'paused' && (this.focused !== false || movesUnfocused()) && !lowPower());
 	},
 
 	/* Nothing moves while the page is paused or another window has the
-	   focus (the numbers still update): the status circle's ring and the
+	   focus (the numbers still update; with Motion when not in focus on,
+	   the focus stops nothing): the status circle's ring and the
 	   live beat (app.css, .vt-still), the flow dots stay where they are
 	   and the backdrop keeps its last frame. A moving part keeps the
 	   browser drawing every frame. */
@@ -2257,7 +2303,7 @@ return view.extend({
 			el.path
 		]));
 		/* packets or stars behind the path, moved by the uplink's rate */
-		this.backdrop = backdrop.mount(tile, el.path, lowPower() ? 'none' : this.backdropStyle, { external: true });
+		this.backdrop = backdrop.mount(tile, el.path, lowPower() ? 'none' : this.backdropStyle, { external: true, unfocused: movesUnfocused });
 		return tile;
 	},
 
@@ -2465,9 +2511,19 @@ return view.extend({
 		   name once one is known beyond its vendor */
 		var gwHost = (m.wiredHosts || []).filter(function(c) { return c.gateway; })[0];
 		var gwName = gwHost && /^(alias|dhcp|mdns|dns)$/.test(gwHost.nameSource) ? gwHost.name : null;
+		/* A line to the internet shows its own address, the one its
+		   provider gave it: two lines of one provider end at the same
+		   gateway and would read alike (#88). The gateway is in the
+		   tooltip and the details. A device on its gateway's own network
+		   (an access point: one line, not a WAN) shows the gateway as
+		   before, and its own address stays on its node. */
+		var own = up && (h.lines.length || up.isWan) ? lineAddr(up) : null;
+		var probe = up && up.dns.length ? _('DNS %s').format(up.dns[0]) : _('Reachability not probed');
 		txt(h.gwKicker, h.lines.length && up ? up.iface : up && up.isWan ? _('Internet') : _('Gateway'));
-		txt(h.gwTitle, gwName || (up && up.gateway ? up.gateway : up && up.defaultRoute ? up.l3dev : _('No default route', 'vantage')));
-		txt(h.gwSub, gwName ? up.gateway : up && up.dns.length ? _('DNS %s').format(up.dns[0]) : _('Reachability not probed'));
+		txt(h.gwTitle, own || gwName || (up && up.gateway ? up.gateway : up && up.defaultRoute ? up.l3dev : _('No default route', 'vantage')));
+		txt(h.gwSub, own ? gwName || probe : gwName ? up.gateway : probe);
+		if (own && up.gateway) setTitle(h.gw, _('Gateway %s').format(up.gateway));
+		else if (h.gw.getAttribute('title') != null) h.gw.removeAttribute('title');
 
 		txt(h.dnVal, upR ? fmt.bitsParts(upR.rx).v : fmt.DASH);
 		txt(h.dnUnit, upR ? fmt.bitsParts(upR.rx).u : '');
@@ -2484,7 +2540,9 @@ return view.extend({
 
 		txt(h.apKicker, m.wired ? _('This device') : _('This access point'));
 		txt(h.apTitle, d.model);
-		txt(h.apAddr, up && up.ipv4[0] ? up.ipv4[0].split('/')[0] : fmt.DASH);
+		/* beside a line that shows its own address, this device shows the
+		   one its own network reaches it at; else the uplink's, as before */
+		txt(h.apAddr, (own ? lanAddr(m.networks, m) : up ? lineAddr(up) : null) || fmt.DASH);
 		txt(h.apUp, d.uptime != null ? _('up %s').format(fmt.duration(d.uptime)) : '');
 		h.upActive = !!(upR && upR.rx + upR.tx > 50e3);
 		h.upRate = upR ? upR.rx + upR.tx : 0;
@@ -2495,10 +2553,11 @@ return view.extend({
 		h.lines.forEach(function(ln) {
 			var x = lines[ln.id], r = x ? st.devRates[x.statsDev] : null;
 			if (!x) return;
-			setTitle(ln.el, [ x.iface, x.dev, x.speed ? model.speedLabel(x.speed) : null ].filter(Boolean).join(' · '));
+			var addr = lineAddr(x);
+			setTitle(ln.el, [ x.iface, x.dev, x.speed ? model.speedLabel(x.speed) : null, addr && x.gateway ? _('Gateway %s').format(x.gateway) : null ].filter(Boolean).join(' · '));
 			setClass(ln.el, 'vt-node vt-node-gw vt-node-line' + (x.carrier === false ? ' vt-node-off' : ''));
 			txt(ln.kicker, x.iface);
-			txt(ln.title, x.gateway || x.l3dev);
+			txt(ln.title, addr || x.gateway || x.l3dev);
 			var p = r && !(r.rx === 0 && r.tx === 0) ? fmt.rateParts(r.rx, r.tx) : null;
 			txt(ln.dn, p ? '↓ ' + p.dn : r ? _('idle') : fmt.DASH);
 			txt(ln.up, p ? '↑ ' + p.up + (p.unit ? ' ' + p.unit : '') : '');
@@ -3358,6 +3417,18 @@ return view.extend({
 		}));
 	},
 
+	/* a header's click: its column, or the other way round on a second
+	   one. Only this list's pick is written: the other one's may be newer
+	   in the store, from another tab. */
+	setSort: function(key) {
+		var so = this.ui.sorts[this.ui.kind], all = readSorts();
+		if (so.key === key) so.dir = -so.dir;
+		else { so.key = key; so.dir = (key === 'name' || key === 'ssid' || key === 'net' || key === 'seen') ? 1 : -1; }
+		all[this.ui.kind] = { key: so.key, dir: so.dir };
+		writeSorts(all);
+		this.paintClients();
+	},
+
 	paintClients: function() {
 		var self = this, m = this.m, st = this.st, el = this.el, ui = this.ui;
 
@@ -3394,10 +3465,7 @@ return view.extend({
 		var headSig = ui.kind + ' ' + so.key + ' ' + so.dir;
 		if (this.headSig !== headSig) dom.content(el.thead, [ E('tr', {}, cols.map(function(c) {
 			var on = so.key === c[0];
-			var btn = E('button', { 'type': 'button', 'class': 'vt-sort' + (on ? ' vt-sort-on' : ''), 'click': function() {
-				if (so.key === c[0]) so.dir = -so.dir; else { so.key = c[0]; so.dir = (c[0] === 'name' || c[0] === 'ssid' || c[0] === 'net' || c[0] === 'seen') ? 1 : -1; }
-				self.paintClients();
-			} }, [ E('span', {}, [ c[1] ]), E('span', { 'class': 'vt-sort-ind', 'aria-hidden': 'true' }, [ on ? (so.dir > 0 ? '↑' : '↓') : '' ]) ]);
+			var btn = E('button', { 'type': 'button', 'class': 'vt-sort' + (on ? ' vt-sort-on' : ''), 'click': function() { self.setSort(c[0]); } }, [ E('span', {}, [ c[1] ]), E('span', { 'class': 'vt-sort-ind', 'aria-hidden': 'true' }, [ on ? (so.dir > 0 ? '↑' : '↓') : '' ]) ]);
 			if (c[2]) btn.setAttribute('title', c[2]);
 			return E('th', { 'class': 'vt-th-' + c[0], 'scope': 'col', 'aria-sort': on ? (so.dir > 0 ? 'ascending' : 'descending') : 'none' }, [ btn ]);
 		})) ]);
