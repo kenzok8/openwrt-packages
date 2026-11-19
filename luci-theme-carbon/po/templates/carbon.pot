@@ -120,6 +120,10 @@ msgstr ""
 msgid "Checking for updates…"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose a valid traffic source."
+msgstr ""
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr ""
@@ -169,6 +173,7 @@ msgid "Dark"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Device speeds"
 msgstr ""
 
@@ -350,6 +355,14 @@ msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nlbwmon (default)"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
@@ -594,6 +607,14 @@ msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Traffic interface"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source saved."
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js

@@ -121,6 +121,10 @@ msgstr "En son kararlı Carbon sürümünü denetleyin."
 msgid "Checking for updates…"
 msgstr "Güncellemeler denetleniyor…"
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose a valid traffic source."
+msgstr "Geçerli bir trafik verisi kaynağı seçin."
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "değiştirmek için tıklayın"
@@ -170,6 +174,7 @@ msgid "Dark"
 msgstr "Koyu"
 
 #: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Device speeds"
 msgstr "Cihaz hızları"
 
@@ -352,6 +357,14 @@ msgstr "Komşu kaydı"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
 msgstr "Ağ aygıtları"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators."
+msgstr "nftables için inet carbon_acct tablosunda carbon_down_MAC ve carbon_up_MAC adlı sayaçlar bulunmalıdır. MAC yerine ayraç kullanmadan 12 küçük harfli onaltılık basamak yazın."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nlbwmon (default)"
+msgstr "nlbwmon (varsayılan)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
@@ -596,6 +609,14 @@ msgstr "Bu SVG betik, olay işleyicisi, bağlantı veya gömülü belge içerdi�
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Traffic interface"
 msgstr "Trafik arayüzü"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source"
+msgstr "Trafik verisi kaynağı"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source saved."
+msgstr "Trafik verisi kaynağı kaydedildi."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "TV"

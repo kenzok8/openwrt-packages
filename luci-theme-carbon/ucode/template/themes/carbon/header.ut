@@ -19,6 +19,7 @@
 	   We keep LuCI's own login form (so auth plugins keep working) and
 	   only switch to a centered card layout. */
 	const is_login = (duser != null);
+	const traffic_source = !is_login && ubus.call('uci', 'get', { config: 'carbon', section: 'traffic', option: 'source' })?.value == 'nftables' ? 'nftables' : 'nlbwmon';
 
 	/* One version source: the packaged version file busts browser caches. */
 	let carbon_version = trim(readfile('/usr/share/carbon/version') ?? '');
@@ -85,7 +86,7 @@
 			</div>
 			<div id="maincontent" class="cb-login-card">
 	{% elif (!blank_page): %}
-		<div class="cb-app">
+		<div class="cb-app" data-traffic-source="{{ traffic_source }}">
 			<aside class="cb-sidebar" id="cb-sidebar">
 				<button type="button" class="cb-collapse" id="cb-collapse" aria-label="Collapse sidebar"></button>
 				<a class="cb-brand" href="{{ dispatcher.build_url() }}">

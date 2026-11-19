@@ -15,6 +15,7 @@
 			},
 			"file": {
 				"/usr/sbin/nlbw -c json -g mac -n": [ "exec" ],
+				"/usr/sbin/nft -j list counters table inet carbon_acct": [ "exec" ],
 				"/proc/stat": [ "read" ],
 				"/proc/meminfo": [ "read" ],
 				"/proc/net/arp": [ "read" ],

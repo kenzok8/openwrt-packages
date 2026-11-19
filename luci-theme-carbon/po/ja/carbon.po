@@ -121,6 +121,10 @@ msgstr "Carbon の最新安定版を確認します。"
 msgid "Checking for updates…"
 msgstr "更新を確認しています…"
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose a valid traffic source."
+msgstr "有効なトラフィックデータの取得元を選択してください。"
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "クリックで切り替え"
@@ -170,6 +174,7 @@ msgid "Dark"
 msgstr "ダーク"
 
 #: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Device speeds"
 msgstr "端末の通信速度"
 
@@ -352,6 +357,14 @@ msgstr "近隣情報"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
 msgstr "ネットワークデバイス"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators."
+msgstr "nftables を使用するには、inet carbon_acct テーブルに carbon_down_MAC と carbon_up_MAC という名前のカウンターが必要です。MAC は区切り文字を除いた小文字の16進数12桁に置き換えてください。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nlbwmon (default)"
+msgstr "nlbwmon（既定）"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
@@ -596,6 +609,14 @@ msgstr "この SVG にはスクリプト、イベントハンドラー、リン�
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Traffic interface"
 msgstr "通信量のインターフェイス"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source"
+msgstr "トラフィックデータの取得元"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source saved."
+msgstr "トラフィックデータの取得元を保存しました。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "TV"

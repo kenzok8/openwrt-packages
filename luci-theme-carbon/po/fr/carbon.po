@@ -121,6 +121,10 @@ msgstr "Vérifier la dernière version stable de Carbon."
 msgid "Checking for updates…"
 msgstr "Recherche de mises à jour…"
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose a valid traffic source."
+msgstr "Choisissez une source de données de trafic valide."
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "cliquer pour changer"
@@ -170,6 +174,7 @@ msgid "Dark"
 msgstr "Sombre"
 
 #: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Device speeds"
 msgstr "Débit des appareils"
 
@@ -352,6 +357,14 @@ msgstr "Entrée de voisinage"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
 msgstr "Périphériques réseau"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators."
+msgstr "nftables nécessite des compteurs nommés carbon_down_MAC et carbon_up_MAC dans la table inet carbon_acct. Remplacez MAC par 12 chiffres hexadécimaux en minuscules, sans séparateurs."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nlbwmon (default)"
+msgstr "nlbwmon (par défaut)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
@@ -596,6 +609,14 @@ msgstr "Ce SVG contient des scripts, des gestionnaires d’événements, des lie
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Traffic interface"
 msgstr "Interface du trafic"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source"
+msgstr "Source des données de trafic"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source saved."
+msgstr "Source de données de trafic enregistrée."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "TV"

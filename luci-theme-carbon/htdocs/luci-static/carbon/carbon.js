@@ -1471,6 +1471,7 @@
 			!Array.isArray(sample.columns) || !Array.isArray(sample.data)) return invalid();
 		const fields = ['mac', 'rx_bytes', 'tx_bytes'].map((k) => sample.columns.indexOf(k));
 		if (fields.some((i) => i < 0)) return invalid();
+		const identityIndex = sample.columns.indexOf('identity');
 		const counters = new Map();
 		for (const row of sample.data) {
 			if (!Array.isArray(row)) return invalid();
@@ -1480,20 +1481,24 @@
 			if (!Number.isSafeInteger(rx) || rx < 0 || !Number.isSafeInteger(tx) || tx < 0) return invalid();
 			const old = counters.get(mac) || { rx: 0, tx: 0 };
 			if (!Number.isSafeInteger(old.rx + rx) || !Number.isSafeInteger(old.tx + tx)) return invalid();
-			counters.set(mac, { rx: old.rx + rx, tx: old.tx + tx });
+			const identity = identityIndex < 0 ? null : row[identityIndex];
+			if (identityIndex >= 0 && (typeof identity !== 'string' || counters.has(mac))) return invalid();
+			counters.set(mac, { rx: old.rx + rx, tx: old.tx + tx, identity: identity });
 		}
+		// Different collectors have unrelated totals.
+		if (this.previous && this.previous.source !== sample.source) this.reset();
 		const rates = new Map(), previous = this.previous;
 		const dt = previous ? (now - previous.time) / 1000 : 0;
 		const continuous = previous && previous.interval === sample.interval && dt >= sample.interval && dt <= sample.interval * 2.5;
 		if (continuous) counters.forEach((value, mac) => {
 			const old = previous.counters.get(mac);
-			if (old && value.rx >= old.rx && value.tx >= old.tx)
+			if (old && value.identity === old.identity && value.rx >= old.rx && value.tx >= old.tx)
 				rates.set(mac, { down: (value.rx - old.rx) / dt, up: (value.tx - old.tx) / dt });
 		});
 		// An early read must not move the baseline closer to the next sample.
 		if (!previous || dt <= 0 || dt >= sample.interval || previous.interval !== sample.interval)
-			this.previous = { counters: counters, interval: sample.interval, time: now };
-		return { rates: rates, interval: sample.interval, seconds: continuous ? dt : null };
+			this.previous = { counters: counters, interval: sample.interval, time: now, source: sample.source };
+		return { rates: rates, interval: sample.interval, seconds: continuous ? dt : null, source: sample.source };
 	};
 
 	C.parseArp = function (text, devices, ifs) {
@@ -1844,7 +1849,7 @@
 				dev: null, devAlt: null, prevNet: null, prevCpu: null, showAll: false, devices: [], wifiCount: null,
 				traffic: store.get('carbon.traffic', 'auto'), trafficKey: '', ifs: null, hints: null, hintsAt: 0, aps: null,
 				netdevs: null, netdevsAt: 0,
-				rateData: null, rateSeen: false, rateNext: 0, rateGeneration: 0
+				rateData: null, rateSeen: false, rateSource: '', rateNext: 0, rateGeneration: 0
 			};
 			const deviceRates = new C.DeviceRates();
 			const safe = (fn) => {
@@ -1921,7 +1926,7 @@
 			function renderDeviceRates() {
 				const data = st.rateData;
 				ui.clientRateNote.classList.toggle('hidden', !st.rateSeen);
-				ui.clientRateNote.textContent = t('Device speeds') + ' · ' + (!data ? t('Unavailable') :
+				ui.clientRateNote.textContent = t('Device speeds') + ' · ' + (st.rateSource ? st.rateSource + ' · ' : '') + (!data ? t('Unavailable') :
 					(data.seconds == null ? t('Waiting for next sample') : t('%d s average', Math.round(data.seconds))));
 				ui.clientRateNodes.forEach((nodes, mac) => {
 					nodes.row.classList.toggle('hidden', !st.rateSeen);
@@ -1942,7 +1947,10 @@
 				const now = Date.now();
 				// Responses arriving after the page is hidden cannot establish a baseline.
 				st.rateData = deviceRates.update(document.hidden ? null : sample, now);
-				if (st.rateData) st.rateSeen = true;
+				if (st.rateData) {
+					st.rateSeen = true;
+					st.rateSource = st.rateData.source === 'nftables' ? 'nftables' : '';
+				}
 				st.rateNext = now + (st.rateData ? st.rateData.interval : 60) * 1000;
 				renderDeviceRates();
 			}

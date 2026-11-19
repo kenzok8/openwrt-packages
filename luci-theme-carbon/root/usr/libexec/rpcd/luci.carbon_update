@@ -99,6 +99,7 @@ status_reply() {
 	json_add_string latest "$target"; json_add_string tag "$tag"; json_add_string notes "$notes"
 	mirror_prefix; json_add_string mirror "$mirror"
 	json_add_string logo "$(logo_url)"
+	json_add_string traffic_source "$(traffic_source)"
 	json_add_int checked_at "$checked"; json_add_boolean busy "$busy"
 	json_add_boolean can_upgrade "$can_upgrade"; json_add_string reason "$reason"
 	json_dump
@@ -224,6 +225,17 @@ start_job() {
 	json_init; json_add_boolean started 1; json_dump
 }
 
+traffic_source() {
+	case "$(uci -q get carbon.traffic.source)" in nftables) printf nftables ;; *) printf nlbwmon ;; esac
+}
+set_traffic_source() {
+	json_load "$input" && json_get_var value source || { error_reply invalid_source; return; }
+	case "$value" in nlbwmon|nftables) ;; *) error_reply invalid_source; return ;; esac
+	[ -f /etc/config/carbon ] || touch /etc/config/carbon || { error_reply state; return; }
+	uci set carbon.traffic=traffic && uci set "carbon.traffic.source=$value" && uci commit carbon || { error_reply state; return; }
+	json_init; json_add_string traffic_source "$value"; json_dump
+}
+
 configure() {
 	json_load "$input" 2>/dev/null && json_get_var value mirror || { error_reply invalid_mirror; return; }
 	value=$(printf '%s' "$value" | tr -d ' \t\r\n')
@@ -292,11 +304,11 @@ logo() {
 }
 
 case "$1" in
-	list) printf '%s\n' '{"status":{},"check":{},"upgrade":{"version":""},"configure":{"mirror":""},"logo":{"action":""}}' ;;
+	list) printf '%s\n' '{"status":{},"check":{},"upgrade":{"version":""},"configure":{"mirror":""},"logo":{"action":""},"set_traffic_source":{"source":""}}' ;;
 	call)
 		input=$(cat)
 		prepare || { error_reply state; exit 0; }
-		case "$2" in status) status_reply ;; check|upgrade) start_job "$2" ;; configure) configure ;; logo) logo ;; *) error_reply invalid ;; esac
+		case "$2" in status) status_reply ;; check|upgrade) start_job "$2" ;; configure) configure ;; set_traffic_source) set_traffic_source ;; logo) logo ;; *) error_reply invalid ;; esac
 		;;
 	worker)
 		job=${0%/*}; requested=${3:-}; failure=interrupted; complete=0

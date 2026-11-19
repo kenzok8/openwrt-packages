@@ -15,6 +15,7 @@ const status = call('status');
 const check = call('check');
 const upgrade = call('upgrade', [ 'version' ]);
 const configure = call('configure', [ 'mirror' ]);
+const setTrafficSource = call('set_traffic_source', [ 'source' ]);
 const setLogo = call('logo', [ 'action' ]);
 
 /* Must match the rpcd backend and its ACL (the only file cgi-upload may write). */
@@ -49,6 +50,7 @@ const errors = {
 	manual_install: N_('apk/opkg has no record of this Carbon install (for example, it was copied by an older carbon-install.sh). Run the latest carbon-install.sh once, or install the APK/IPK package, to enable online upgrades.'),
 	space: N_('Not enough temporary storage or unable to create update files.'),
 	state: N_('Unable to access update state storage.'),
+	invalid_source: N_('Choose a valid traffic source.'),
 	invalid_mirror: N_('Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters, digits and . _ ~ % + - only).'),
 	/* logo */
 	logo_missing: N_('The uploaded file did not reach the router. Try again.'),
@@ -148,6 +150,32 @@ function logoSection(data) {
 
 	return section(tr('Logo'), tr('Shown in the sidebar, on the login page, on the overview and as the browser icon. PNG, JPEG, WebP, GIF or SVG up to 256 KB; a square image of at least 128 × 128 pixels looks best. The logo is kept across theme updates and firmware upgrades that keep settings.'), [
 		E('div', { 'class': 'cb-logo-row' }, [preview, E('div', { 'class': 'cb-logo-actions' }, [uploadButton, resetButton, input, state])])
+	]);
+}
+
+function trafficSection(data) {
+	const input = E('select', { 'id': 'carbon-traffic-source', 'class': 'cbi-input-select' }, [
+		E('option', { 'value': 'nlbwmon' }, tr('nlbwmon (default)')),
+		E('option', { 'value': 'nftables' }, 'nftables')
+	]);
+	input.value = data.traffic_source === 'nftables' ? 'nftables' : 'nlbwmon';
+	const state = E('span', { 'class': 'cb-update-note', 'role': 'status', 'aria-live': 'polite' });
+	const save = E('button', { 'class': 'cbi-button cbi-button-save', 'click': async () => {
+		input.disabled = save.disabled = true;
+		state.textContent = tr('Saving…');
+		try {
+			const result = await setTrafficSource(input.value);
+			state.textContent = result.error ? message(result.error) : tr('Traffic source saved.');
+		}
+		catch (e) { state.textContent = e.message; }
+		finally { input.disabled = save.disabled = !writable(); }
+	} }, tr('Save'));
+	input.disabled = save.disabled = !writable();
+	return section(tr('Device speeds'), tr('nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators.'), [
+		E('div', { 'class': 'cbi-value' }, [
+			E('label', { 'class': 'cbi-value-title', 'for': 'carbon-traffic-source' }, tr('Traffic source')),
+			E('div', { 'class': 'cbi-value-field cb-update-field' }, [input, save, state])
+		])
 	]);
 }
 
@@ -284,6 +312,7 @@ return view.extend({
 			E('h2', {}, tr('Carbon Theme Settings')),
 			E('p', { 'class': 'cbi-map-descr' }, tr('Personalise the logo and update the theme without changing your router configuration.')),
 			logoSection(data),
+			trafficSection(data),
 			updates.main,
 			updates.notes,
 			mirrorSection(data),

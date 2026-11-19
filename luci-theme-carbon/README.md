@@ -32,7 +32,7 @@ https://github.com/user-attachments/assets/b78ccf2b-679e-459b-88ea-b4f82da6e03f
 ## Features
 
 - **Dashboard** on *Status → Overview*: live traffic chart for any interface, CPU / memory / storage rings, memory breakdown, load sparkline, connection count, uptime, temperature sensors (thermal zones and hwmon), WAN IPv4/IPv6, connected devices and interface status. LuCI's original status widgets are kept behind *Show detailed status* and stop polling while collapsed.
-- **Device upload/download speeds**: when an existing `nlbwmon` collector is available, Carbon reads its per-MAC counters and displays sampled averages at the configured collection interval (normally 30 seconds, minimum display interval 5 seconds). Only traffic observed by this router is included; bridge traffic, offloaded traffic and traffic through other gateways may be missing. The theme does not install or start a collector, change its settings, or modify firewall/offload rules. Unsupported systems keep the existing device list; initial samples, missing records and counter resets show `—`. Reads pause while the page is hidden. DHCP leases and their remaining time are independent of speed readings.
+- **Device upload/download speeds** use `nlbwmon` by default, at its configured interval (normally 30 seconds, minimum display interval 5 seconds). Carbon never probes nftables in this mode, even if `nlbwmon` is unavailable. To sample nftables every 5 seconds, configure named counters and select **nftables** under **System → Carbon Theme Settings**. Anonymous counters require migration. If the selected source fails, the device list stays available. Initial samples, missing records and counter resets show `—`. Reads pause while the page is hidden. DHCP leases update independently. [Counter setup and accounting limits](docs/device-traffic.md)
 - **Discovered devices** — DHCPv4/v6 leases, Wi‑Fi stations (band and signal) and IPv4 ARP neighbours are merged by MAC. Discovery still works with the local DHCP server disabled, including when LAN obtains its own address by DHCP. Gateways, neighbour entries and DHCP leases are labelled separately; a missing local lease does not imply a fixed IP. Devices are recognised by hostname and MAC vendor prefix (35 brands, ~9,200 IEEE OUI prefixes). The count includes devices known to this router, possibly offline ones, and is not a live census of the entire network. Recognisable separate uplinks are excluded; a gateway sharing LAN is retained and labelled. Without an interface named `lan`, custom interface roles may be ambiguous, so discoveries on those interfaces are retained.
 - **Simple / Pro navigation** — *Simple* shows only the pages most people need (overview, internet, Wi‑Fi, software, password, backup, reboot); *Pro* shows the full LuCI menu with an icon for every page.
 - **Frosted-glass sidebar** that collapses into an icon rail (button on the sidebar edge or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>\\</kbd>); hovering a rail icon opens its sub-menu.
@@ -60,6 +60,12 @@ All files are on the [Releases](https://github.com/mrjoechen/luci-theme-carbon/r
 ### Option 1 — install script (any firmware)
 
 Run on the router (SSH):
+
+```bash
+curl -fsSL -o /tmp/carbon-install.sh https://github.com/mrjoechen/luci-theme-carbon/releases/latest/download/carbon-install.sh && sh /tmp/carbon-install.sh
+```
+
+Or use `wget`.
 
 ```bash
 wget -O /tmp/carbon-install.sh https://github.com/mrjoechen/luci-theme-carbon/releases/latest/download/carbon-install.sh && sh /tmp/carbon-install.sh

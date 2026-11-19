@@ -121,6 +121,10 @@ msgstr "Проверьте последнюю стабильную версию 
 msgid "Checking for updates…"
 msgstr "Проверка обновлений…"
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose a valid traffic source."
+msgstr "Выберите допустимый источник данных о трафике."
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "нажмите, чтобы переключить"
@@ -170,6 +174,7 @@ msgid "Dark"
 msgstr "Тёмная"
 
 #: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Device speeds"
 msgstr "Скорость устройств"
 
@@ -352,6 +357,14 @@ msgstr "Запись соседа"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
 msgstr "Сетевые устройства"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators."
+msgstr "Для nftables нужны существующие счётчики carbon_down_MAC и carbon_up_MAC в таблице inet carbon_acct. Замените MAC на 12 шестнадцатеричных цифр в нижнем регистре без разделителей."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nlbwmon (default)"
+msgstr "nlbwmon (по умолчанию)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
@@ -596,6 +609,14 @@ msgstr "Этот SVG содержит скрипты, обработчики с�
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Traffic interface"
 msgstr "Интерфейс трафика"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source"
+msgstr "Источник данных о трафике"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source saved."
+msgstr "Источник данных о трафике сохранён."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "TV"

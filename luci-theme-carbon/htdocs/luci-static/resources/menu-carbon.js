@@ -130,7 +130,7 @@ const provider = {
 		return [].concat.apply([], lists.filter(Boolean));
 	}),
 	neighbors: () => fs.read('/proc/net/arp'),
-	deviceTraffic: () => traffic.read(),
+	deviceTraffic: () => traffic.read(document.querySelector('.cb-app')?.dataset.trafficSource === 'nftables' ? 'nftables' : 'nlbwmon'),
 	conntrack: () => Promise.all([
 		fs.read('/proc/sys/net/netfilter/nf_conntrack_count'),
 		fs.read('/proc/sys/net/netfilter/nf_conntrack_max').catch(() => null)

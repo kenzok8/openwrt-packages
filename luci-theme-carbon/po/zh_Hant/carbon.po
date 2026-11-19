@@ -121,6 +121,10 @@ msgstr "檢查 Carbon 最新穩定版。"
 msgid "Checking for updates…"
 msgstr "正在檢查更新…"
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose a valid traffic source."
+msgstr "請選擇有效的流量資料來源。"
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "點選切換"
@@ -170,6 +174,7 @@ msgid "Dark"
 msgstr "深色"
 
 #: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Device speeds"
 msgstr "裝置網速"
 
@@ -352,6 +357,14 @@ msgstr "鄰居記錄"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
 msgstr "網路裝置"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators."
+msgstr "使用 nftables 時，inet carbon_acct 資料表中必須已有名為 carbon_down_MAC 和 carbon_up_MAC 的計數器。請將 MAC 替換為 12 位小寫十六進位數字，不含分隔符。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nlbwmon (default)"
+msgstr "nlbwmon（預設）"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
@@ -596,6 +609,14 @@ msgstr "此 SVG 含有指令碼、事件處理、連結或內嵌文件，已被�
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Traffic interface"
 msgstr "流量統計介面"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source"
+msgstr "流量資料來源"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source saved."
+msgstr "已儲存流量資料來源。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "TV"

@@ -29,7 +29,7 @@ https://github.com/user-attachments/assets/b78ccf2b-679e-459b-88ea-b4f82da6e03f
 ## 功能
 
 - **仪表盘**（状态 → 概览）：可选接口的实时流量图、CPU / 内存 / 存储圆环、内存构成条、负载迷你图、连接数、运行时间、温度传感器（热区与 hwmon）、外网 IPv4/IPv6、已发现设备和网络接口状态。LuCI 原有的状态信息保留在「显示详细状态」里，收起时停止轮询。
-- **设备上下行网速**：检测到已有的 `nlbwmon` 采集服务后，读取按 MAC 汇总的计数，按其现有采样周期显示平均网速（通常 30 秒，界面最快 5 秒）。仅包含本机观测到的流量，桥接、流量卸载及经过其他网关的流量可能不完整。主题不会安装或启动采集服务，不修改采样设置、防火墙或卸载规则。不支持时保留原设备列表；首次采样、记录缺失或计数重置时显示 `—`。页面隐藏时暂停读取，DHCP 租约与剩余时间独立刷新。
+- **设备上下行网速**默认使用 `nlbwmon`，按其采集周期显示平均网速（通常 30 秒，界面最快 5 秒）。即使 `nlbwmon` 不可用，也不会探测 nftables。如需每 5 秒采样一次，请配置命名计数器，再到 **系统 → Carbon 主题** 选择 **nftables**。已有匿名计数器需要迁移。所选来源不可用时仍保留设备列表；首次采样、记录缺失或计数重置时显示 `—`。页面隐藏时暂停读取，DHCP 租约独立刷新。[计数器配置与统计范围](docs/device-traffic.md)
 - **已发现设备**：合并 DHCPv4/v6 租约、Wi‑Fi 关联列表（频段和信号）与 IPv4 ARP 邻居，按 MAC 去重。关闭本机 DHCP 服务后，仍可发现邻居和 Wi‑Fi 设备；LAN 自身通过 DHCP 获取地址也受支持。列表区分网关、邻居记录和 DHCP 租约，不把缺少本机租约的设备标为固定 IP；根据主机名和 MAC 厂商前缀识别品牌（35 个品牌，约 9200 条 IEEE OUI 前缀）。数量表示本机已发现的设备，可能包含离线设备，不代表全网实时在线数。自动排除可识别的独立上联接口；共用 LAN 的网关保留并标注。没有名为 `lan` 的接口时，自定义接口的角色可能无法判定，会保留不确定接口的发现结果。
 - **简洁 / 专业双模式**：简洁模式只显示常用功能（概览、上网、Wi‑Fi、软件包、密码、备份、重启）；专业模式显示完整 LuCI 菜单，每个页面都有对应图标。
 - **毛玻璃侧栏**，可收起为只显示图标的窄栏（点侧栏边缘的圆形按钮，或按 <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>\\</kbd>），鼠标悬停图标弹出子菜单。
@@ -57,6 +57,12 @@ https://github.com/user-attachments/assets/b78ccf2b-679e-459b-88ea-b4f82da6e03f
 ### 方式一：安装脚本（所有固件通用）
 
 在路由器上执行（SSH 登录后）：
+
+```bash
+curl -fsSL -o /tmp/carbon-install.sh https://github.com/mrjoechen/luci-theme-carbon/releases/latest/download/carbon-install.sh && sh /tmp/carbon-install.sh
+```
+
+或者使用 `wget`。
 
 ```bash
 wget -O /tmp/carbon-install.sh https://github.com/mrjoechen/luci-theme-carbon/releases/latest/download/carbon-install.sh && sh /tmp/carbon-install.sh

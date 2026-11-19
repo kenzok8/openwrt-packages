@@ -121,6 +121,10 @@ msgstr "Kiểm tra bản Carbon ổn định mới nhất."
 msgid "Checking for updates…"
 msgstr "Đang kiểm tra cập nhật…"
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose a valid traffic source."
+msgstr "Hãy chọn nguồn dữ liệu lưu lượng hợp lệ."
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "nhấn để chuyển"
@@ -170,6 +174,7 @@ msgid "Dark"
 msgstr "Tối"
 
 #: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Device speeds"
 msgstr "Tốc độ thiết bị"
 
@@ -352,6 +357,14 @@ msgstr "Bản ghi láng giềng"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
 msgstr "Thiết bị mạng"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators."
+msgstr "nftables yêu cầu có sẵn các bộ đếm mang tên carbon_down_MAC và carbon_up_MAC trong bảng inet carbon_acct. Thay MAC bằng 12 chữ số thập lục phân viết thường, không có dấu phân cách."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nlbwmon (default)"
+msgstr "nlbwmon (mặc định)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
@@ -596,6 +609,14 @@ msgstr "Tệp SVG này chứa script, trình xử lý sự kiện, liên kết h
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Traffic interface"
 msgstr "Giao tiếp mạng cho lưu lượng"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source"
+msgstr "Nguồn dữ liệu lưu lượng"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source saved."
+msgstr "Đã lưu nguồn dữ liệu lưu lượng."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "TV"

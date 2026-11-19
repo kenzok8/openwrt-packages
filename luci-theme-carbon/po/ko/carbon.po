@@ -121,6 +121,10 @@ msgstr "Carbon 최신 안정 버전을 확인합니다."
 msgid "Checking for updates…"
 msgstr "업데이트 확인 중…"
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose a valid traffic source."
+msgstr "유효한 트래픽 데이터 소스를 선택하세요."
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "클릭하여 전환"
@@ -170,6 +174,7 @@ msgid "Dark"
 msgstr "다크"
 
 #: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Device speeds"
 msgstr "기기 통신 속도"
 
@@ -352,6 +357,14 @@ msgstr "이웃 항목"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Network devices"
 msgstr "네트워크 장치"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nftables requires existing counters named carbon_down_MAC and carbon_up_MAC in the inet carbon_acct table. Replace MAC with 12 lowercase hexadecimal digits, without separators."
+msgstr "nftables를 사용하려면 inet carbon_acct 테이블에 carbon_down_MAC 및 carbon_up_MAC 카운터가 있어야 합니다. MAC을 구분 기호 없이 소문자 16진수 12자리로 바꾸세요."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "nlbwmon (default)"
+msgstr "nlbwmon (기본값)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
@@ -596,6 +609,14 @@ msgstr "이 SVG에는 스크립트, 이벤트 핸들러, 링크 또는 포함된
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Traffic interface"
 msgstr "트래픽 인터페이스"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source"
+msgstr "트래픽 데이터 소스"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Traffic source saved."
+msgstr "트래픽 데이터 소스를 저장했습니다."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "TV"
