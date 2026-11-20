@@ -60,6 +60,10 @@ msgid "About this setting"
 msgstr "À propos de ce réglage"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Add live traffic"
+msgstr "Ajouter un trafic en direct"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "All settings"
 msgstr "Tous les réglages"
 
@@ -99,6 +103,7 @@ msgstr "Cache"
 msgid "Camera"
 msgstr "Caméra"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Cancel"
 msgstr "Annuler"
@@ -125,9 +130,21 @@ msgstr "Recherche de mises à jour…"
 msgid "Choose a valid traffic source."
 msgstr "Choisissez une source de données de trafic valide."
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose which panels appear on Overview and arrange them in sections. Saved on this router across devices and firmware upgrades."
+msgstr "Choisissez les panneaux affichés dans Vue d’ensemble et organisez-les par sections. Enregistré sur ce routeur pour tous les appareils et conservé après les mises à jour."
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "cliquer pour changer"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Close"
+msgstr "Fermer"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Collapse panel to preview"
+msgstr "Réduire le panneau pour prévisualiser"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Collapse sidebar"
@@ -162,6 +179,10 @@ msgid "Connections"
 msgstr "Connexions"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Core monitoring"
+msgstr "Suivi principal"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "CPU"
 msgstr "CPU"
 
@@ -170,8 +191,36 @@ msgid "Current logo"
 msgstr "Logo actuel"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Customize"
+msgstr "Personnaliser"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Customize dashboard"
+msgstr "Personnaliser le tableau de bord"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Customize on Overview"
+msgstr "Personnaliser dans Vue d’ensemble"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
 msgstr "Sombre"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Dashboard layout"
+msgstr "Disposition du tableau de bord"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Default"
+msgstr "Par défaut"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Default dashboard layout restored."
+msgstr "Disposition par défaut du tableau de bord rétablie."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Details"
+msgstr "Détails"
 
 #: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
@@ -215,8 +264,16 @@ msgid "Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters
 msgstr "Saisissez un préfixe de miroir HTTPS comme https://mirror.example.com/ (lettres, chiffres et . _ ~ % + - uniquement)."
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Expand"
+msgstr "Développer"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Expand sidebar"
 msgstr "Développer la barre latérale"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Failed to save layout."
+msgstr "Échec de l’enregistrement de la disposition."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
@@ -241,6 +298,10 @@ msgstr "Réseau masqué"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Hide detailed status"
 msgstr "Masquer l’état détaillé"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Home Wi-Fi"
+msgstr "Wi-Fi maison"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
@@ -274,6 +335,11 @@ msgstr "Interfaces"
 msgid "Internet & Network"
 msgstr "Internet et réseau"
 
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid dashboard layout."
+msgstr "Disposition du tableau de bord invalide."
+
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Invalid update request."
 msgstr "Requête de mise à jour invalide."
@@ -281,6 +347,10 @@ msgstr "Requête de mise à jour invalide."
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
 msgstr "Les mises à jour IPK sont téléchargées en HTTPS et comparées au SHA-256 et à la taille publiés pour la version."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Keep at least one panel visible."
+msgstr "Conservez au moins un panneau visible."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Known to this router"
@@ -345,6 +415,18 @@ msgstr "Menu"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Mirror prefix"
 msgstr "Préfixe du miroir"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Move down"
+msgstr "Descendre"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Move up"
+msgstr "Monter"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Multi-WAN"
+msgstr "Multi-WAN"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
@@ -426,6 +508,7 @@ msgstr "Vue d’ensemble"
 msgid "Password"
 msgstr "Mot de passe"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Permission denied. Log out and log in again once after updating Carbon, then retry."
 msgstr "Permission refusée. Après la mise à jour de Carbon, déconnectez-vous puis reconnectez-vous une fois, puis réessayez."
@@ -441,6 +524,10 @@ msgstr "Téléphone"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "PPPoE"
 msgstr "PPPoE"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Preset"
+msgstr "Préréglage"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Printer"
@@ -483,13 +570,23 @@ msgid "Reload page"
 msgstr "Recharger la page"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Remove"
+msgstr "Supprimer"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Resources"
 msgstr "Ressources"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Restore default"
 msgstr "Rétablir par défaut"
 
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Router overview"
+msgstr "Vue du routeur"
+
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Save"
 msgstr "Enregistrer"
@@ -502,6 +599,7 @@ msgstr "Enregistré. Les téléchargements essaient d’abord le miroir, puis Gi
 msgid "Saved. Downloads use GitHub directly."
 msgstr "Enregistré. Les téléchargements utilisent GitHub directement."
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Saving…"
 msgstr "Enregistrement…"
@@ -545,6 +643,10 @@ msgstr "Logiciels"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
 msgstr "Enceinte"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Stat tiles"
+msgstr "Indicateurs"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Static address"
@@ -677,6 +779,14 @@ msgstr "Temps de fonctionnement"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Used"
 msgstr "Utilisé"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using a custom dashboard layout."
+msgstr "Disposition personnalisée du tableau de bord active."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using the default dashboard layout."
+msgstr "Disposition par défaut du tableau de bord active."
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Verifying update…"

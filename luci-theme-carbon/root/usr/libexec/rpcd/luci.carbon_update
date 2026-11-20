@@ -100,6 +100,7 @@ status_reply() {
 	mirror_prefix; json_add_string mirror "$mirror"
 	json_add_string logo "$(logo_url)"
 	json_add_string traffic_source "$(traffic_source)"
+	json_add_boolean dashboard_custom "$(dashboard_custom)"
 	json_add_int checked_at "$checked"; json_add_boolean busy "$busy"
 	json_add_boolean can_upgrade "$can_upgrade"; json_add_string reason "$reason"
 	json_dump
@@ -236,6 +237,131 @@ set_traffic_source() {
 	json_init; json_add_string traffic_source "$value"; json_dump
 }
 
+dashboard_custom() {
+	if uci -q get carbon.dashboard >/dev/null 2>&1; then printf 1; else printf 0; fi
+}
+dash_chars_ok() {
+	case "$1" in *'
+'*) return 1 ;; esac
+	[ "${#1}" -gt 0 ] && [ "${#1}" -le 256 ] && printf '%s\n' "$1" | grep -Eq '^[A-Za-z0-9._:@ -]+$'
+}
+dash_has_tok() {
+	case " $1 " in *" $2 "*) return 0 ;; *) return 1 ;; esac
+}
+set_dashboard() {
+	action=''; hero=''; sections=''; monitor=''; tiles=''; details=''
+	json_load "$input" 2>/dev/null || { error_reply invalid_dashboard; return; }
+	json_get_var action action
+	[ -n "$action" ] || action=set
+	case "$action" in
+		reset)
+			uci -q delete carbon.dashboard || :
+			[ ! -f /etc/config/carbon ] || uci commit carbon || { error_reply state; return; }
+			json_init; json_add_boolean dashboard_custom 0; json_dump
+			return
+			;;
+		set) ;;
+		*) error_reply invalid_dashboard; return ;;
+	esac
+	json_get_var hero hero
+	json_get_var sections sections
+	json_get_var monitor monitor
+	json_get_var tiles tiles
+	json_get_var details details
+	case "$hero" in 0|1) ;; *) error_reply invalid_dashboard; return ;; esac
+	dash_chars_ok "$sections" && dash_chars_ok "$monitor" && dash_chars_ok "$tiles" && dash_chars_ok "$details" || { error_reply invalid_dashboard; return; }
+
+	# Validate sections: exact 3-token permutation of monitor, tiles, details
+	sec_norm=''; sec_cnt=0
+	for tok in $sections; do
+		case "$tok" in
+			monitor|tiles|details) ;;
+			*) error_reply invalid_dashboard; return ;;
+		esac
+		dash_has_tok "$sec_norm" "$tok" && { error_reply invalid_dashboard; return; }
+		sec_norm="${sec_norm:+$sec_norm }$tok"
+		sec_cnt=$((sec_cnt + 1))
+	done
+	[ "$sec_cnt" = 3 ] || { error_reply invalid_dashboard; return; }
+
+	# Validate monitor: none OR up to 4 traffic:<dev> and at most 1 resources
+	mon_norm=''; mon_cnt=0; t_cnt=0; r_cnt=0
+	if [ "$monitor" = none ]; then
+		mon_norm=none
+	else
+		for tok in $monitor; do
+			case "$tok" in
+				resources)
+					[ "$r_cnt" = 0 ] || { error_reply invalid_dashboard; return; }
+					r_cnt=1
+					;;
+				traffic:*)
+					dev=${tok#traffic:}
+					[ "$t_cnt" -lt 4 ] && [ "${#dev}" -ge 1 ] && [ "${#dev}" -le 32 ] &&
+					printf '%s\n' "$dev" | grep -Eq '^[A-Za-z0-9._:@-]+$' || { error_reply invalid_dashboard; return; }
+					t_cnt=$((t_cnt + 1))
+					;;
+				*) error_reply invalid_dashboard; return ;;
+			esac
+			mon_norm="${mon_norm:+$mon_norm }$tok"
+			mon_cnt=$((mon_cnt + 1))
+		done
+		[ "$mon_cnt" -gt 0 ] || { error_reply invalid_dashboard; return; }
+	fi
+
+	# Validate tiles: none OR unique subset of built-in tiles
+	tile_norm=''; tile_cnt=0
+	if [ "$tiles" = none ]; then
+		tile_norm=none
+	else
+		for tok in $tiles; do
+			case "$tok" in
+				devices|connections|load|uptime|wifi|temp) ;;
+				*) error_reply invalid_dashboard; return ;;
+			esac
+			dash_has_tok "$tile_norm" "$tok" && { error_reply invalid_dashboard; return; }
+			tile_norm="${tile_norm:+$tile_norm }$tok"
+			tile_cnt=$((tile_cnt + 1))
+		done
+		[ "$tile_cnt" -gt 0 ] || { error_reply invalid_dashboard; return; }
+	fi
+
+	# Validate details: none OR unique subset of built-in detail cards
+	det_norm=''; det_cnt=0
+	if [ "$details" = none ]; then
+		det_norm=none
+	else
+		for tok in $details; do
+			case "$tok" in
+				clients|wireless|interfaces) ;;
+				*) error_reply invalid_dashboard; return ;;
+			esac
+			dash_has_tok "$det_norm" "$tok" && { error_reply invalid_dashboard; return; }
+			det_norm="${det_norm:+$det_norm }$tok"
+			det_cnt=$((det_cnt + 1))
+		done
+		[ "$det_cnt" -gt 0 ] || { error_reply invalid_dashboard; return; }
+	fi
+
+	[ $((hero + mon_cnt + tile_cnt + det_cnt)) -ge 1 ] || { error_reply invalid_dashboard; return; }
+	[ -f /etc/config/carbon ] || touch /etc/config/carbon || { error_reply state; return; }
+	uci set carbon.dashboard=dashboard &&
+	uci set "carbon.dashboard.hero=$hero" &&
+	uci set "carbon.dashboard.sections=$sec_norm" &&
+	uci set "carbon.dashboard.monitor=$mon_norm" &&
+	uci set "carbon.dashboard.tiles=$tile_norm" &&
+	uci set "carbon.dashboard.details=$det_norm" &&
+	uci commit carbon || { error_reply state; return; }
+	json_init
+	json_add_boolean dashboard_custom 1
+	json_add_string hero "$hero"
+	json_add_string sections "$sec_norm"
+	json_add_string monitor "$mon_norm"
+	json_add_string tiles "$tile_norm"
+	json_add_string details "$det_norm"
+	json_dump
+}
+
 configure() {
 	json_load "$input" 2>/dev/null && json_get_var value mirror || { error_reply invalid_mirror; return; }
 	value=$(printf '%s' "$value" | tr -d ' \t\r\n')
@@ -304,11 +430,11 @@ logo() {
 }
 
 case "$1" in
-	list) printf '%s\n' '{"status":{},"check":{},"upgrade":{"version":""},"configure":{"mirror":""},"logo":{"action":""},"set_traffic_source":{"source":""}}' ;;
+	list) printf '%s\n' '{"status":{},"check":{},"upgrade":{"version":""},"configure":{"mirror":""},"logo":{"action":""},"set_traffic_source":{"source":""},"set_dashboard":{"action":"","hero":"","sections":"","monitor":"","tiles":"","details":""}}' ;;
 	call)
 		input=$(cat)
 		prepare || { error_reply state; exit 0; }
-		case "$2" in status) status_reply ;; check|upgrade) start_job "$2" ;; configure) configure ;; set_traffic_source) set_traffic_source ;; logo) logo ;; *) error_reply invalid ;; esac
+		case "$2" in status) status_reply ;; check|upgrade) start_job "$2" ;; configure) configure ;; set_traffic_source) set_traffic_source ;; set_dashboard) set_dashboard ;; logo) logo ;; *) error_reply invalid ;; esac
 		;;
 	worker)
 		job=${0%/*}; requested=${3:-}; failure=interrupted; complete=0

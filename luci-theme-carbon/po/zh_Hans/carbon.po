@@ -60,6 +60,10 @@ msgid "About this setting"
 msgstr "关于此设置"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Add live traffic"
+msgstr "添加实时流量"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "All settings"
 msgstr "全部设置"
 
@@ -99,6 +103,7 @@ msgstr "缓存"
 msgid "Camera"
 msgstr "摄像头"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Cancel"
 msgstr "取消"
@@ -125,9 +130,21 @@ msgstr "正在检查更新…"
 msgid "Choose a valid traffic source."
 msgstr "请选择有效的流量数据源。"
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose which panels appear on Overview and arrange them in sections. Saved on this router across devices and firmware upgrades."
+msgstr "选择概览页显示的面板并调整各区块顺序。配置保存在路由器上，跨设备同步并在固件升级后保留。"
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "点击切换"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Close"
+msgstr "关闭"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Collapse panel to preview"
+msgstr "收起面板以预览效果"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Collapse sidebar"
@@ -162,6 +179,10 @@ msgid "Connections"
 msgstr "活动连接"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Core monitoring"
+msgstr "核心监控"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "CPU"
 msgstr "CPU"
 
@@ -170,8 +191,36 @@ msgid "Current logo"
 msgstr "当前 Logo"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Customize"
+msgstr "自定义"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Customize dashboard"
+msgstr "自定义仪表盘"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Customize on Overview"
+msgstr "前往概览自定义"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
 msgstr "深色"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Dashboard layout"
+msgstr "仪表盘布局"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Default"
+msgstr "默认"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Default dashboard layout restored."
+msgstr "已恢复默认仪表盘布局。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Details"
+msgstr "详情列表"
 
 #: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
@@ -215,8 +264,16 @@ msgid "Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters
 msgstr "请输入 HTTPS 镜像前缀，例如 https://mirror.example.com/（仅限字母、数字及 . _ ~ % + -）。"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Expand"
+msgstr "展开"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Expand sidebar"
 msgstr "展开侧边栏"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Failed to save layout."
+msgstr "保存布局失败。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
@@ -241,6 +298,10 @@ msgstr "隐藏网络"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Hide detailed status"
 msgstr "收起详细状态"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Home Wi-Fi"
+msgstr "家用无线"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
@@ -274,6 +335,11 @@ msgstr "网络接口"
 msgid "Internet & Network"
 msgstr "上网与网络"
 
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid dashboard layout."
+msgstr "仪表盘布局配置无效。"
+
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Invalid update request."
 msgstr "更新请求无效。"
@@ -281,6 +347,10 @@ msgstr "更新请求无效。"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
 msgstr "IPK 更新通过 HTTPS 下载，并核对发布文件的 SHA-256 和大小。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Keep at least one panel visible."
+msgstr "至少保留一个面板。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Known to this router"
@@ -345,6 +415,18 @@ msgstr "菜单"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Mirror prefix"
 msgstr "镜像前缀"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Move down"
+msgstr "下移"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Move up"
+msgstr "上移"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Multi-WAN"
+msgstr "多口监控"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
@@ -426,6 +508,7 @@ msgstr "概览"
 msgid "Password"
 msgstr "管理密码"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Permission denied. Log out and log in again once after updating Carbon, then retry."
 msgstr "没有权限。升级 Carbon 后请先退出并重新登录一次，然后重试。"
@@ -441,6 +524,10 @@ msgstr "手机"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "PPPoE"
 msgstr "PPPoE 拨号"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Preset"
+msgstr "布局预设"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Printer"
@@ -483,13 +570,23 @@ msgid "Reload page"
 msgstr "刷新页面"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Remove"
+msgstr "移除"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Resources"
 msgstr "系统资源"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Restore default"
 msgstr "恢复默认"
 
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Router overview"
+msgstr "路由器概览"
+
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Save"
 msgstr "保存"
@@ -502,6 +599,7 @@ msgstr "已保存。下载时先尝试镜像，再使用 GitHub。"
 msgid "Saved. Downloads use GitHub directly."
 msgstr "已保存。下载将直接使用 GitHub。"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Saving…"
 msgstr "正在保存…"
@@ -545,6 +643,10 @@ msgstr "软件包"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
 msgstr "音箱"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Stat tiles"
+msgstr "指标磁贴"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Static address"
@@ -677,6 +779,14 @@ msgstr "运行时间"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Used"
 msgstr "已用"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using a custom dashboard layout."
+msgstr "当前使用自定义仪表盘布局。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using the default dashboard layout."
+msgstr "当前使用默认仪表盘布局。"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Verifying update…"

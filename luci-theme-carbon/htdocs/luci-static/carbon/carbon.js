@@ -172,6 +172,9 @@
 		clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
 		chevron: '<path d="M9 6l6 6-6 6"/>',
 		chevdown: '<path d="M6 9l6 6 6-6"/>',
+		chevup: '<path d="M6 15l6-6 6 6"/>',
+		plus: '<path d="M12 5v14M5 12h14"/>',
+		close: '<path d="M6 6l12 12M18 6L6 18"/>',
 		check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
 		shield: '<path d="M12 3l7.5 3v5.5c0 4.6-3.1 8.2-7.5 9.5-4.4-1.3-7.5-4.9-7.5-9.5V6z"/>',
 		phone: '<rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M11 18h2"/>',
@@ -390,12 +393,13 @@
 		const seg = h('div', { class: 'cb-seg', role: 'radiogroup', 'aria-label': label || null });
 		const buttons = [];
 		const select = (idx, fire) => {
-			seg.style.setProperty('--i', idx);
+			seg.classList.toggle('cb-seg-none', idx < 0);
+			if (idx >= 0) seg.style.setProperty('--i', idx);
 			buttons.forEach((b, i) => {
 				b.setAttribute('aria-checked', i === idx ? 'true' : 'false');
-				b.tabIndex = i === idx ? 0 : -1;
+				b.tabIndex = (idx < 0 ? i === 0 : i === idx) ? 0 : -1;
 			});
-			if (fire) onChange(options[idx].value);
+			if (fire && idx >= 0) onChange(options[idx].value);
 		};
 		seg.addEventListener('keydown', (e) => {
 			const cur = buttons.indexOf(document.activeElement);
@@ -419,7 +423,11 @@
 			buttons.push(b);
 			seg.appendChild(b);
 		});
-		seg._select = (v) => select(Math.max(0, options.findIndex((o) => o.value === v)), false);
+		seg._select = (v) => {
+			const idx = options.findIndex((o) => o.value === v);
+			select(v == null ? -1 : (idx >= 0 ? idx : (options.length ? 0 : -1)), false);
+		};
+		seg._selectExact = (v) => select(options.findIndex((o) => o.value === v), false);
 		seg._select(value);
 		return seg;
 	}
@@ -1157,7 +1165,11 @@
 		this.n = opts.points || 60;
 		this.interval = opts.interval || 2;
 		this.id = uid();
-		this.series = opts.series.map((s) => ({ color: s.color, label: s.label, data: new Array(this.n).fill(0) }));
+		this.series = opts.series.map((s, i) => {
+			const init = opts.initial && Array.isArray(opts.initial[i]) ? opts.initial[i].slice(-this.n) : null;
+			const data = init && init.length === this.n ? init : new Array(this.n).fill(0);
+			return { color: s.color, label: s.label, data: data };
+		});
 		this.hover = null;
 
 		this.svg = document.createElementNS(SVGNS, 'svg');
@@ -1178,10 +1190,26 @@
 		el.addEventListener('pointerdown', move);
 		el.addEventListener('pointerleave', () => { this.hover = null; this.draw(); });
 
-		if (window.ResizeObserver) new ResizeObserver(() => this.draw()).observe(el);
-		else window.addEventListener('resize', () => this.draw());
+		this._onResize = () => this.draw();
+		if (window.ResizeObserver) {
+			this._ro = new ResizeObserver(this._onResize);
+			this._ro.observe(el);
+		}
+		else window.addEventListener('resize', this._onResize);
 		this.draw();
 	}
+	AreaChart.prototype.destroy = function () {
+		if (this._ro) { this._ro.disconnect(); this._ro = null; }
+		else if (this._onResize) window.removeEventListener('resize', this._onResize);
+	};
+	AreaChart.prototype.setData = function (seriesData) {
+		this.series.forEach((s, i) => {
+			const src = seriesData && Array.isArray(seriesData[i]) ? seriesData[i].slice(-this.n) : null;
+			s.data = src && src.length === this.n ? src : new Array(this.n).fill(0);
+		});
+		this.hover = null;
+		this.draw();
+	};
 	AreaChart.prototype.push = function (values) {
 		this.series.forEach((s, i) => {
 			s.data.push(Math.max(0, +values[i] || 0));
@@ -1292,8 +1320,9 @@
 		this.n = opts.points || 30;
 		this.color = opts.color;
 		this.id = uid();
-		this.data = [];
+		this.data = Array.isArray(opts.initial) ? opts.initial.slice(-this.n) : [];
 		el.classList.add('cb-spark');
+		if (this.data.length >= 2) this.draw();
 	}
 	Sparkline.prototype.push = function (v) {
 		/* seed with the first reading so the line starts flat, not as a stub */
@@ -1714,12 +1743,240 @@
 		start();
 	};
 
+	/* ------------------------------------------------------------------
+	 * Dashboard layout model: 4 visual tiers with automatic 12-col row
+	 * packing so customised views stay balanced on desktop and phones.
+	 * ------------------------------------------------------------------ */
+	const DASH_SECTIONS = ['monitor', 'tiles', 'details'];
+	const DASH_TILES = ['devices', 'connections', 'load', 'uptime', 'wifi', 'temp'];
+	const DASH_DETAILS = ['clients', 'wireless', 'interfaces'];
+	const DASH_MAX_TRAFFIC = 4;
+	const DASH_DEV_RE = /^[A-Za-z0-9._:@-]{1,32}$/;
+
+	const splitTokens = (val) => {
+		if (Array.isArray(val)) return val.map((x) => String(x || '').trim()).filter(Boolean);
+		const s = String(val == null ? '' : val).trim();
+		if (!s || s === 'none') return [];
+		return s.split(/\s+/).filter(Boolean);
+	};
+	const cleanDev = (v) => {
+		const s = String(v == null ? '' : v).trim();
+		return DASH_DEV_RE.test(s) ? s : 'auto';
+	};
+	const cloneLayout = (l) => ({
+		hero: !!l.hero,
+		sections: l.sections.slice(),
+		monitor: l.monitor.map((m) => m.type === 'traffic' ? { type: 'traffic', source: m.source } : { type: 'resources' }),
+		tiles: l.tiles.slice(),
+		details: l.details.slice()
+	});
+
+	const DASH_PRESETS = [
+		{
+			id: 'default', label: N_('Default'),
+			layout: {
+				hero: true,
+				sections: ['monitor', 'tiles', 'details'],
+				monitor: [{ type: 'traffic', source: 'auto' }, { type: 'resources' }],
+				tiles: ['devices', 'connections', 'load', 'uptime'],
+				details: ['clients', 'wireless', 'interfaces']
+			}
+		},
+		{
+			id: 'wifi', label: N_('Home Wi-Fi'),
+			layout: {
+				hero: true,
+				sections: ['monitor', 'tiles', 'details'],
+				monitor: [{ type: 'traffic', source: 'auto' }, { type: 'resources' }],
+				tiles: ['wifi', 'load', 'temp', 'uptime'],
+				details: ['clients', 'wireless', 'interfaces']
+			}
+		},
+		{
+			id: 'multi', label: N_('Multi-WAN'),
+			layout: {
+				hero: true,
+				sections: ['monitor', 'tiles', 'details'],
+				monitor: [{ type: 'traffic', source: 'auto' }, { type: 'traffic', source: 'br-lan' }, { type: 'resources' }],
+				tiles: ['connections', 'load', 'temp', 'uptime'],
+				details: ['interfaces', 'clients']
+			}
+		}
+	];
+
+	function defaultLayout(legacyTraffic) {
+		const l = cloneLayout(DASH_PRESETS[0].layout);
+		if (legacyTraffic && DASH_DEV_RE.test(String(legacyTraffic)))
+			l.monitor[0].source = String(legacyTraffic);
+		return l;
+	}
+
+	function normalizeLayout(raw) {
+		if (!raw || typeof raw !== 'object') return defaultLayout();
+		const hero = raw.hero === false || raw.hero === 0 || raw.hero === '0' ? false : true;
+
+		const sections = [];
+		splitTokens(raw.sections).forEach((s) => {
+			if (DASH_SECTIONS.indexOf(s) >= 0 && sections.indexOf(s) < 0) sections.push(s);
+		});
+		DASH_SECTIONS.forEach((s) => { if (sections.indexOf(s) < 0) sections.push(s); });
+
+		const monitor = [];
+		let trafficCount = 0, hasRes = false;
+		const hasMonitorField = Object.prototype.hasOwnProperty.call(raw, 'monitor');
+		const rawMonitor = hasMonitorField ? (Array.isArray(raw.monitor) ? raw.monitor : splitTokens(raw.monitor)) : DASH_PRESETS[0].layout.monitor;
+		rawMonitor.forEach((item) => {
+			if (item && typeof item === 'object') {
+				if (item.type === 'traffic' && trafficCount < DASH_MAX_TRAFFIC) {
+					monitor.push({ type: 'traffic', source: cleanDev(item.source) });
+					trafficCount++;
+				}
+				else if (item.type === 'resources' && !hasRes) {
+					monitor.push({ type: 'resources' });
+					hasRes = true;
+				}
+				return;
+			}
+			const tok = String(item || '').trim();
+			if (tok === 'resources' && !hasRes) {
+				monitor.push({ type: 'resources' });
+				hasRes = true;
+			}
+			else if ((tok === 'traffic' || tok.indexOf('traffic:') === 0) && trafficCount < DASH_MAX_TRAFFIC) {
+				monitor.push({ type: 'traffic', source: tok === 'traffic' ? 'auto' : cleanDev(tok.slice(8)) });
+				trafficCount++;
+			}
+		});
+
+		const tiles = [];
+		const hasTilesField = Object.prototype.hasOwnProperty.call(raw, 'tiles');
+		(hasTilesField ? splitTokens(raw.tiles) : DASH_PRESETS[0].layout.tiles).forEach((k) => {
+			if (DASH_TILES.indexOf(k) >= 0 && tiles.indexOf(k) < 0) tiles.push(k);
+		});
+
+		const details = [];
+		const hasDetailsField = Object.prototype.hasOwnProperty.call(raw, 'details');
+		(hasDetailsField ? splitTokens(raw.details) : DASH_PRESETS[0].layout.details).forEach((k) => {
+			if (DASH_DETAILS.indexOf(k) >= 0 && details.indexOf(k) < 0) details.push(k);
+		});
+
+		if (!hero && !monitor.length && !tiles.length && !details.length) return defaultLayout();
+		return { hero: hero, sections: sections, monitor: monitor, tiles: tiles, details: details };
+	}
+
+	function serializeLayout(layout) {
+		const l = normalizeLayout(layout);
+		return {
+			hero: l.hero ? '1' : '0',
+			sections: l.sections.join(' '),
+			monitor: l.monitor.length ? l.monitor.map((m) => m.type === 'traffic' ? 'traffic:' + cleanDev(m.source) : 'resources').join(' ') : 'none',
+			tiles: l.tiles.length ? l.tiles.join(' ') : 'none',
+			details: l.details.length ? l.details.join(' ') : 'none'
+		};
+	}
+
+	function encodeLayoutAttr(layout) {
+		const s = serializeLayout(layout);
+		return ['hero', 'sections', 'monitor', 'tiles', 'details'].map((k) => k + '=' + s[k]).join(';');
+	}
+
+	function parseLayoutAttr(str) {
+		const s = String(str || '').trim();
+		if (!s) return null;
+		const obj = {};
+		let any = false;
+		s.split(';').forEach((part) => {
+			const i = part.indexOf('=');
+			if (i <= 0) return;
+			const k = part.slice(0, i).trim(), v = part.slice(i + 1).trim();
+			if (['hero', 'sections', 'monitor', 'tiles', 'details'].indexOf(k) >= 0) { obj[k] = v; any = true; }
+		});
+		return any ? normalizeLayout(obj) : null;
+	}
+
+	function layoutKey(l, structural) {
+		const n = normalizeLayout(l);
+		return JSON.stringify({
+			hero: n.hero,
+			sections: n.sections,
+			monitor: n.monitor.map((m) => structural ? m.type : (m.type === 'traffic' ? 'traffic:' + m.source : 'resources')),
+			tiles: n.tiles,
+			details: n.details
+		});
+	}
+
+	function monitorSpans(items) {
+		const spans = [];
+		for (let i = 0; i < (items || []).length; ) {
+			if (i + 1 < items.length) {
+				const a = items[i].type, b = items[i + 1].type;
+				if (a === 'traffic' && b === 'resources') spans.push(8, 4);
+				else if (a === 'resources' && b === 'traffic') spans.push(4, 8);
+				else spans.push(6, 6);
+				i += 2;
+			}
+			else {
+				spans.push(12);
+				i += 1;
+			}
+		}
+		return spans;
+	}
+
+	function tileSpans(count) {
+		const map = { 0: [], 1: [12], 2: [6, 6], 3: [4, 4, 4], 4: [3, 3, 3, 3], 5: [4, 4, 4, 6, 6], 6: [4, 4, 4, 4, 4, 4] };
+		return (map[count] || []).slice();
+	}
+
+	function detailSpans(visibleTypes) {
+		const list = visibleTypes || [], spans = [];
+		for (let i = 0; i < list.length; ) {
+			if (list[i] === 'clients') { spans.push(12); i += 1; }
+			else if (i + 1 < list.length && list[i + 1] !== 'clients') { spans.push(6, 6); i += 2; }
+			else { spans.push(12); i += 1; }
+		}
+		return spans;
+	}
+
+	C.dashboardLayout = {
+		SECTIONS: DASH_SECTIONS,
+		TILES: DASH_TILES,
+		DETAILS: DASH_DETAILS,
+		MAX_TRAFFIC: DASH_MAX_TRAFFIC,
+		defaultLayout: defaultLayout,
+		clone: cloneLayout,
+		normalize: normalizeLayout,
+		serialize: serializeLayout,
+		encodeAttr: encodeLayoutAttr,
+		parseAttr: parseLayoutAttr,
+		countEnabled: (l) => (l.hero ? 1 : 0) + l.monitor.length + l.tiles.length + l.details.length,
+		isDefault: (l) => layoutKey(l, false) === layoutKey(DASH_PRESETS[0].layout, false),
+		presets: () => DASH_PRESETS.map((p) => ({ id: p.id, label: p.label, layout: cloneLayout(p.layout) })),
+		matchPreset: (l) => {
+			const k = layoutKey(l, true);
+			const hit = DASH_PRESETS.find((p) => layoutKey(p.layout, true) === k);
+			return hit ? hit.id : 'custom';
+		},
+		monitorSpans: monitorSpans,
+		tileSpans: tileSpans,
+		detailSpans: detailSpans
+	};
+
 	C.Dashboard = {
 		mount(host, P, opts) {
 			opts = opts || {};
 			const urls = opts.urls || {};
-			const ui = {};
+			const L = C.dashboardLayout;
+			const hasUciSave = typeof opts.saveLayout === 'function';
 			const dash = h('section', { class: 'cb-dash', 'aria-label': t('Overview') });
+			host.appendChild(dash);
+
+			/* initial layout: UCI attribute (router) → localStorage (preview) → default (+ legacy traffic) */
+			const fromAttr = opts.dashboardAttr ? L.parseAttr(opts.dashboardAttr) : null;
+			let hasRouterLayout = !!fromAttr;
+			const fromLocal = !hasUciSave ? L.parseAttr(store.get('carbon.dashboard', '')) : null;
+			let savedLayout = fromAttr || fromLocal || L.defaultLayout(store.get('carbon.traffic', 'auto'));
+			let activeLayout = L.clone(savedLayout);
 
 			const card = (cls, title, aside, body) => {
 				const head = title ? h('div', { class: 'cb-card-head' }, [h('h3', null, title), aside]) : null;
@@ -1727,129 +1984,28 @@
 			};
 			const metaItem = (label, valEl) => h('div', { class: 'cb-meta' }, [h('span', { class: 'cb-meta-label', text: label }), valEl]);
 			const manage = (href) => href ? h('a', { class: 'cb-card-link', href: href, text: t('Manage') }) : null;
-
-			/* hero: the router's logo (a custom one from Carbon Theme Settings when set) */
+			const deviceTitle = () => h('span', { text: t('Discovered devices'), title: t('May include offline devices.') });
 			const heroIcon = () => {
 				const custom = document.querySelector('.cb-brand-logo[data-custom]');
 				return custom ? h('div', { class: 'cb-hero-icon custom' }, h('img', { src: custom.getAttribute('src'), alt: '' }))
 					: h('div', { class: 'cb-hero-icon', html: LOGO });
 			};
-			ui.host = h('h2', { class: 'cb-hero-title', text: '…' });
-			ui.sub = h('p', { class: 'cb-hero-sub' });
-			ui.net = h('span', { class: 'cb-pill off', text: '…' });
-			ui.wan = h('span', { class: 'cb-meta-val cb-mono', text: '—' });
-			ui.lan = h('span', { class: 'cb-meta-val cb-mono', text: '—' });
-			ui.wan6 = h('span', { class: 'cb-meta-val cb-mono cb-ip6', text: '—' });
-			ui.wan6Item = metaItem(t('WAN IPv6'), ui.wan6);
-			ui.wan6Item.classList.add('hidden');
-			dash.appendChild(h('div', { class: 'cb-card cb-hero span-12' }, [
-				h('div', { class: 'cb-hero-id' }, [
-					heroIcon(),
-					h('div', { class: 'cb-hero-text' }, [ui.host, ui.sub])
-				]),
-				h('div', { class: 'cb-hero-meta' }, [ui.net, metaItem(t('WAN IP'), ui.wan), ui.wan6Item, metaItem(t('LAN IP'), ui.lan)])
-			]));
-
-			/* traffic */
-			const rate = (label, color) => {
-				const val = h('span', { class: 'cb-rate-val', html: '0<small>B/s</small>' });
-				return { val: val, el: h('div', { class: 'cb-rate' }, [h('span', { class: 'cb-rate-label', style: '--c:' + color }, [h('i'), label]), val]) };
+			const setRate = (r, v) => { const b = fmt.bytes(v, true); r.val.innerHTML = esc(b[0]) + '<small>' + esc(b[1]) + '</small>'; };
+			const setSpan = (el, n) => {
+				el.className = el.className.replace(/\bspan-\d+\b/g, '').trim() + ' span-' + n;
 			};
-			ui.dl = rate(t('Download'), COLORS.blue);
-			ui.ul = rate(t('Upload'), COLORS.purple);
-			ui.totals = h('div', { class: 'cb-totals' });
-			ui.trafficSel = listbox({
-				options: [{ value: 'auto', label: t('Auto') }], value: 'auto',
-				label: t('Traffic interface'), className: 'cb-traffic-select',
-				onChange: (v) => {
-					st.traffic = v;
-					store.set('carbon.traffic', st.traffic);
-					updateTraffic();
-				}
-			});
-			ui.chart = h('div', { class: 'cb-chart' });
-			dash.appendChild(card('cb-traffic span-8', t('Live Traffic'), ui.trafficSel.el, [
-				h('div', { class: 'cb-rates' }, [ui.dl.el, ui.ul.el, ui.totals]),
-				ui.chart,
-				h('div', { class: 'cb-chart-foot' }, [h('span', { text: t('2 min ago') }), h('span', { text: t('Now') })])
-			]));
 
-			/* resources */
-			const ringCpu = h('div'), ringMem = h('div'), ringDisk = h('div');
-			ui.memTitle = h('span');
-			ui.membar = h('div', { class: 'cb-membar' });
-			ui.memLegend = h('div', { class: 'cb-legend' });
-			ui.kv = h('ul', { class: 'cb-kv' });
-			dash.appendChild(card('cb-resources span-4', t('Resources'), null, [
-				h('div', { class: 'cb-res-body' }, [
-					h('div', { class: 'cb-rings' }, [ringCpu, ringMem, ringDisk]),
-					h('div', null, [
-						h('div', { class: 'cb-membar-wrap' }, [
-							h('div', { class: 'cb-membar-title' }, [t('Memory'), ui.memTitle]),
-							ui.membar, ui.memLegend
-						]),
-						ui.kv
-					])
-				])
-			]));
-
-			/* tiles */
-			const tile = (iconName, color, label) => {
-				const val = h('div', { class: 'cb-tile-val', text: '—' });
-				const sub = h('div', { class: 'cb-tile-sub' });
-				const extra = h('div');
-				const el = h('div', { class: 'cb-card cb-tile span-3' }, [
-					h('div', { class: 'cb-tile-head' }, [h('span', { class: 'cb-ico', style: '--c:' + COLORS[color], html: icon(iconName) }), label]),
-					h('div', { class: 'cb-tile-row' }, [val, extra]),
-					sub
-				]);
-				dash.appendChild(el);
-				return { val: val, sub: sub, extra: extra };
-			};
-			const deviceTitle = () => h('span', { text: t('Discovered devices'), title: t('May include offline devices.') });
-			ui.tDevices = tile('laptop', 'green', deviceTitle());
-			ui.tConn = tile('link', 'teal', t('Connections'));
-			ui.tLoad = tile('pulse', 'indigo', t('Load'));
-			ui.tUp = tile('clock', 'orange', t('Uptime'));
-			ui.connBar = h('div', { class: 'cb-mini-bar', style: '--c:' + COLORS.teal }, h('i'));
-			ui.tConn.sub.parentNode.insertBefore(ui.connBar, ui.tConn.sub);
-
-			/* clients */
-			ui.clientCount = h('span', { class: 'cb-count' });
-			ui.clients = h('ul', { class: 'cb-list' });
-			ui.clientMore = h('button', { type: 'button', class: 'cb-more hidden' });
-			ui.clientRateNodes = new Map();
-			ui.clientRateNote = h('p', { class: 'cb-device-rate-note hidden', title: t('Device speeds use existing traffic statistics. Only traffic observed by this router is included.') });
-			dash.appendChild(h('div', { class: 'cb-card cb-clients span-8' }, [
-				h('div', { class: 'cb-card-head' }, [h('h3', null, [deviceTitle(), ui.clientCount]), manage(urls.devices)]),
-				ui.clientRateNote, ui.clients, ui.clientMore
-			]));
-
-			/* wireless + interfaces */
-			ui.wifi = h('ul', { class: 'cb-list' });
-			ui.ifaces = h('ul', { class: 'cb-list' });
-			ui.wifiHead = h('div', { class: 'cb-card-head' }, [h('h3', null, t('Wireless')), manage(urls.wireless)]);
-			ui.ifHead = h('div', { class: 'cb-card-head', style: 'margin-top:18px' }, [h('h3', null, t('Interfaces')), manage(urls.network)]);
-			dash.appendChild(h('div', { class: 'cb-card span-4' }, [ui.wifiHead, ui.wifi, ui.ifHead, ui.ifaces]));
-
-			host.appendChild(dash);
-
-			/* charts need the DOM to measure */
-			const chart = new AreaChart(ui.chart, {
-				points: 60, interval: 2,
-				series: [{ color: COLORS.blue, label: t('Download') }, { color: COLORS.purple, label: t('Upload') }]
-			});
-			const rCpu = new Ring(ringCpu, { color: COLORS.blue, label: t('CPU') });
-			const rMem = new Ring(ringMem, { color: COLORS.orange, label: t('Memory') });
-			const rDisk = new Ring(ringDisk, { color: COLORS.purple, label: t('Storage') });
-			const loadSpark = new Sparkline(ui.tLoad.extra, { color: COLORS.indigo, points: 30 });
-
-			/* ---------------- data ---------------- */
+			/* ---------------- cached telemetry (survives live layout re-renders) ---------------- */
 			const st = {
-				dev: null, devAlt: null, prevNet: null, prevCpu: null, showAll: false, devices: [], wifiCount: null,
-				traffic: store.get('carbon.traffic', 'auto'), trafficKey: '', ifs: null, hints: null, hintsAt: 0, aps: null,
-				netdevs: null, netdevsAt: 0,
-				rateData: null, rateSeen: false, rateSource: '', rateNext: 0, rateGeneration: 0
+				board: null, ifs: null, netdevs: null, netdevsAt: 0,
+				info: null, conntrack: null, temps: null,
+				wireless: undefined, noRadio: !urls.wireless,
+				aps: null, hints: null, hintsAt: 0, devices: null, wifiCount: null,
+				prevCpu: null, cpuPct: null, cpuCores: 0, loadHistory: [],
+				showAll: false,
+				rateData: null, rateSeen: false, rateSource: '', rateNext: 0, rateGeneration: 0,
+				devTrack: new Map(),
+				fetched: { ifs: false, devices: false, wireless: false, stations: false, info: false, conntrack: false, temps: false, cpu: false }
 			};
 			const deviceRates = new C.DeviceRates();
 			const safe = (fn) => {
@@ -1858,26 +2014,409 @@
 				catch (e) { return Promise.resolve(null); }
 			};
 
-			const setRate = (r, v) => { const b = fmt.bytes(v, true); r.val.innerHTML = esc(b[0]) + '<small>' + esc(b[1]) + '</small>'; };
+			/* ---------------- active DOM handles ---------------- */
+			let view = { hero: null, traffic: [], resources: null, tiles: {}, clients: null, wireless: null, interfaces: null };
+			let drawer = null;
 
-			function renderBoard(b) {
-				if (!b) return;
-				ui.host.textContent = b.hostname || 'OpenWrt';
-				ui.sub.textContent = [b.model, b.release && b.release.description].filter(Boolean).join(' · ');
+			function computeNeeds(layout) {
+				const hasTraffic = layout.monitor.some((m) => m.type === 'traffic');
+				const hasRes = layout.monitor.some((m) => m.type === 'resources');
+				const hasTile = (k) => layout.tiles.indexOf(k) >= 0;
+				const hasDet = (k) => layout.details.indexOf(k) >= 0;
+				const needClients = hasDet('clients');
+				const needDevices = needClients || hasTile('devices');
+				const needWireless = hasDet('wireless') || hasTile('wifi') || needDevices;
+				return {
+					board: !!layout.hero,
+					interfaces: !!layout.hero || hasTraffic || hasDet('interfaces') || needDevices,
+					netdevs: hasTraffic,
+					devStats: hasTraffic,
+					cpu: hasRes,
+					info: hasRes || hasTile('load') || hasTile('uptime'),
+					conntrack: hasTile('connections'),
+					temps: hasRes || hasTile('temp'),
+					wireless: needWireless,
+					stations: needDevices || hasTile('wifi'),
+					leases: needDevices,
+					neighbors: needDevices,
+					hints: needDevices,
+					deviceRates: needClients
+				};
 			}
 
-			function renderClients() {
+			function uplinks(ifs) {
+				const wan = ifs.find((i) => i.up && hasDefaultRoute(i) && i['ipv4-address'] && i['ipv4-address'].length) ||
+					ifs.find((i) => i.up && hasDefaultRoute(i)) ||
+					ifs.find((i) => i.interface === 'wan');
+				return { wan: wan, lan: ifs.find((i) => i.interface === 'lan') };
+			}
+
+			function buildTrafficPickerInfo() {
+				const ifs = st.ifs;
+				if (!ifs) return { options: [{ value: 'auto', label: t('Auto') }], groups: [], devices: [], auto: null, autoDev: null, key: 'empty' };
+				const src = C.trafficSources(ifs, st.netdevs);
+				const groups = src.ifaces;
+				const u = uplinks(ifs);
+				const auto = (u.wan && u.wan.up) ? u.wan : u.lan;
+				const autoDev = auto ? (auto.l3_device || auto.device) : null;
+				const grouped = src.devices.length > 0;
+				const options = [{
+					value: 'auto',
+					label: t('Auto') + (auto ? ' · ' + (auto.interface || '').toUpperCase() + (autoDev ? ' (' + autoDev + ')' : '') : '')
+				}].concat(
+					groups.map((g) => ({ value: g.dev, label: g.names.join(' / ') + ' (' + g.dev + ')', group: grouped ? t('Interfaces') : null })),
+					src.devices.map((d) => ({ value: d.dev, label: d.dev, group: t('Network devices') }))
+				);
+				const key = groups.map((g) => g.dev + '=' + g.names.join(',')).join('|') + '#' +
+					src.devices.map((d) => d.dev).join(',') + '#' + autoDev;
+				return { options: options, groups: groups, devices: src.devices, auto: auto, autoDev: autoDev, key: key };
+			}
+
+			function secondaryDeviceFallback() {
+				if (!st.ifs) return 'br-lan';
+				const src = C.trafficSources(st.ifs, st.netdevs);
+				const u = uplinks(st.ifs);
+				const auto = (u.wan && u.wan.up) ? u.wan : u.lan;
+				const autoDev = auto ? (auto.l3_device || auto.device) : null;
+				const lan = src.ifaces.find((g) => g.dev === 'br-lan') || src.ifaces.find((g) => g.dev !== autoDev) || src.devices.find((d) => d.dev !== autoDev);
+				return lan ? lan.dev : 'auto';
+			}
+
+			function syncLegacyTrafficStorage(layout) {
+				const first = layout.monitor.find((m) => m.type === 'traffic');
+				if (first) store.set('carbon.traffic', first.source);
+			}
+
+			async function persistLayout(nextLayout) {
+				const clean = L.normalize(nextLayout);
+				if (hasUciSave) {
+					if (L.isDefault(clean) && typeof opts.resetLayout === 'function') {
+						await opts.resetLayout();
+						hasRouterLayout = false;
+					}
+					else {
+						await opts.saveLayout(clean);
+						hasRouterLayout = true;
+					}
+					syncLegacyTrafficStorage(clean);
+				}
+				else {
+					if (L.isDefault(clean)) {
+						try { window.localStorage.removeItem('carbon.dashboard'); } catch (e) { /* ignore */ }
+						store.set('carbon.traffic', 'auto');
+					}
+					else {
+						store.set('carbon.dashboard', L.encodeAttr(clean));
+						syncLegacyTrafficStorage(clean);
+					}
+				}
+				savedLayout = L.clone(clean);
+			}
+
+			function destroyView() {
+				view.traffic.forEach((tc) => {
+					if (tc.sel) tc.sel.close(false);
+					if (tc.chart) tc.chart.destroy();
+				});
+				view = { hero: null, traffic: [], resources: null, tiles: {}, clients: null, wireless: null, interfaces: null };
+			}
+
+			function applyDetailSpans() {
+				const items = [];
+				activeLayout.details.forEach((k) => {
+					const node = view[k];
+					if (!node) return;
+					if (k === 'wireless' && st.noRadio) {
+						node.el.classList.add('hidden');
+						return;
+					}
+					node.el.classList.remove('hidden');
+					items.push({ type: k, el: node.el });
+				});
+				const spans = L.detailSpans(items.map((x) => x.type));
+				items.forEach((x, i) => setSpan(x.el, spans[i]));
+			}
+
+			function buildHero() {
+				const hostEl = h('h2', { class: 'cb-hero-title', text: '…' });
+				const subEl = h('p', { class: 'cb-hero-sub' });
+				const netEl = h('span', { class: 'cb-pill off', text: '…' });
+				const wanEl = h('span', { class: 'cb-meta-val cb-mono', text: '—' });
+				const lanEl = h('span', { class: 'cb-meta-val cb-mono', text: '—' });
+				const wan6El = h('span', { class: 'cb-meta-val cb-mono cb-ip6', text: '—' });
+				const wan6Item = metaItem(t('WAN IPv6'), wan6El);
+				wan6Item.classList.add('hidden');
+				const el = h('div', { class: 'cb-card cb-hero span-12', 'data-panel-key': 'hero' }, [
+					h('div', { class: 'cb-hero-id' }, [
+						heroIcon(),
+						h('div', { class: 'cb-hero-text' }, [hostEl, subEl])
+					]),
+					h('div', { class: 'cb-hero-meta' }, [netEl, metaItem(t('WAN IP'), wanEl), wan6Item, metaItem(t('LAN IP'), lanEl)])
+				]);
+				dash.appendChild(el);
+				view.hero = { el: el, host: hostEl, sub: subEl, net: netEl, wan: wanEl, lan: lanEl, wan6: wan6El, wan6Item: wan6Item };
+			}
+
+			function buildTraffic(monitorIndex, source, span, panelKey) {
+				const rate = (label, color) => {
+					const val = h('span', { class: 'cb-rate-val', html: '0<small>B/s</small>' });
+					return { val: val, el: h('div', { class: 'cb-rate' }, [h('span', { class: 'cb-rate-label', style: '--c:' + color }, [h('i'), label]), val]) };
+				};
+				const dl = rate(t('Download'), COLORS.blue);
+				const ul = rate(t('Upload'), COLORS.purple);
+				const totals = h('div', { class: 'cb-totals' });
+				const chartEl = h('div', { class: 'cb-chart' });
+				const tc = { monitorIndex: monitorIndex, source: source, dev: null, devAlt: null, key: '', dl: dl, ul: ul, totals: totals, sel: null, chart: null, el: null };
+				tc.sel = listbox({
+					options: [{ value: 'auto', label: t('Auto') }], value: source || 'auto',
+					label: t('Traffic interface'), className: 'cb-traffic-select',
+					onChange: (v) => {
+						tc.source = v;
+						if (activeLayout.monitor[monitorIndex] && activeLayout.monitor[monitorIndex].type === 'traffic')
+							activeLayout.monitor[monitorIndex].source = v;
+						if (drawer) {
+							if (drawer.isSaving()) return;
+							if (drawer.draft.monitor[monitorIndex] && drawer.draft.monitor[monitorIndex].type === 'traffic')
+								drawer.draft.monitor[monitorIndex].source = v;
+							drawer.sync();
+						}
+						else {
+							persistLayout(activeLayout).catch(() => {
+								if (!hasRouterLayout) syncLegacyTrafficStorage(activeLayout);
+							});
+						}
+						syncTrafficCards();
+						fast();
+					}
+				});
+				tc.el = card('cb-traffic span-' + span, t('Live Traffic'), tc.sel.el, [
+					h('div', { class: 'cb-rates' }, [dl.el, ul.el, totals]),
+					chartEl,
+					h('div', { class: 'cb-chart-foot' }, [h('span', { text: t('2 min ago') }), h('span', { text: t('Now') })])
+				]);
+				tc.el.dataset.panelKey = panelKey;
+				dash.appendChild(tc.el);
+				tc.chart = new AreaChart(chartEl, {
+					points: 60, interval: 2,
+					series: [{ color: COLORS.blue, label: t('Download') }, { color: COLORS.purple, label: t('Upload') }]
+				});
+				view.traffic.push(tc);
+			}
+
+			function buildResources(span) {
+				const ringCpu = h('div'), ringMem = h('div'), ringDisk = h('div');
+				const memTitle = h('span');
+				const membar = h('div', { class: 'cb-membar' });
+				const memLegend = h('div', { class: 'cb-legend' });
+				const kv = h('ul', { class: 'cb-kv' });
+				const el = card('cb-resources span-' + span, t('Resources'), null, [
+					h('div', { class: 'cb-res-body' }, [
+						h('div', { class: 'cb-rings' }, [ringCpu, ringMem, ringDisk]),
+						h('div', null, [
+							h('div', { class: 'cb-membar-wrap' }, [
+								h('div', { class: 'cb-membar-title' }, [t('Memory'), memTitle]),
+								membar, memLegend
+							]),
+							kv
+						])
+					])
+				]);
+				el.dataset.panelKey = 'resources';
+				dash.appendChild(el);
+				view.resources = {
+					el: el, memTitle: memTitle, membar: membar, memLegend: memLegend, kv: kv,
+					rCpu: new Ring(ringCpu, { color: COLORS.blue, label: t('CPU') }),
+					rMem: new Ring(ringMem, { color: COLORS.orange, label: t('Memory') }),
+					rDisk: new Ring(ringDisk, { color: COLORS.purple, label: t('Storage') })
+				};
+			}
+
+			function buildTile(type, span, wideMobile) {
+				const meta = {
+					devices: { icon: 'laptop', color: 'green', label: deviceTitle() },
+					connections: { icon: 'link', color: 'teal', label: t('Connections') },
+					load: { icon: 'pulse', color: 'indigo', label: t('Load') },
+					uptime: { icon: 'clock', color: 'orange', label: t('Uptime') },
+					wifi: { icon: 'wifi', color: 'blue', label: t('Wi-Fi') },
+					temp: { icon: 'thermo', color: 'orange', label: t('Temperature') }
+				}[type];
+				const ico = h('span', { class: 'cb-ico', style: '--c:' + COLORS[meta.color], html: icon(meta.icon) });
+				const val = h('div', { class: 'cb-tile-val', text: '—' });
+				const sub = h('div', { class: 'cb-tile-sub' });
+				const extra = h('div');
+				const el = h('div', { class: 'cb-card cb-tile cb-tile-' + type + ' span-' + span + (wideMobile ? ' cb-tile-wide' : ''), 'data-panel-key': 'tile:' + type }, [
+					h('div', { class: 'cb-tile-head' }, [ico, meta.label]),
+					h('div', { class: 'cb-tile-row' }, [val, extra]),
+					sub
+				]);
+				let bar = null, spark = null;
+				if (type === 'connections') {
+					bar = h('div', { class: 'cb-mini-bar', style: '--c:' + COLORS.teal }, h('i'));
+					sub.parentNode.insertBefore(bar, sub);
+				}
+				dash.appendChild(el);
+				if (type === 'load') spark = new Sparkline(extra, { color: COLORS.indigo, points: 30, initial: st.loadHistory });
+				view.tiles[type] = { el: el, ico: ico, val: val, sub: sub, extra: extra, bar: bar, spark: spark };
+			}
+
+			function buildClients() {
+				const count = h('span', { class: 'cb-count' });
+				const list = h('ul', { class: 'cb-list' });
+				const more = h('button', { type: 'button', class: 'cb-more hidden' });
+				const rateNote = h('p', { class: 'cb-device-rate-note hidden', title: t('Device speeds use existing traffic statistics. Only traffic observed by this router is included.') });
+				more.addEventListener('click', () => { st.showAll = !st.showAll; paintClients(); });
+				const el = h('div', { class: 'cb-card cb-clients span-12', 'data-panel-key': 'detail:clients' }, [
+					h('div', { class: 'cb-card-head' }, [h('h3', null, [deviceTitle(), count]), manage(urls.devices)]),
+					rateNote, list, more
+				]);
+				dash.appendChild(el);
+				view.clients = { el: el, count: count, list: list, more: more, rateNote: rateNote, rateNodes: new Map() };
+			}
+
+			function buildWireless() {
+				const list = h('ul', { class: 'cb-list' });
+				const el = h('div', { class: 'cb-card cb-wireless span-6' + (st.noRadio ? ' hidden' : ''), 'data-panel-key': 'detail:wireless' }, [
+					h('div', { class: 'cb-card-head' }, [h('h3', null, t('Wireless')), manage(urls.wireless)]),
+					list
+				]);
+				dash.appendChild(el);
+				view.wireless = { el: el, list: list };
+			}
+
+			function buildInterfaces() {
+				const list = h('ul', { class: 'cb-list' });
+				const el = h('div', { class: 'cb-card cb-interfaces span-6', 'data-panel-key': 'detail:interfaces' }, [
+					h('div', { class: 'cb-card-head' }, [h('h3', null, t('Interfaces')), manage(urls.network)]),
+					list
+				]);
+				dash.appendChild(el);
+				view.interfaces = { el: el, list: list };
+			}
+
+			/* ---------------- painters (pure render from cached st into active view) ---------------- */
+			function paintBoard() {
+				if (!view.hero || !st.board) return;
+				view.hero.host.textContent = st.board.hostname || 'OpenWrt';
+				view.hero.sub.textContent = [st.board.model, st.board.release && st.board.release.description].filter(Boolean).join(' · ');
+			}
+
+			function paintHeroNet() {
+				if (!view.hero || !st.ifs) return;
+				const ifs = st.ifs;
+				const u = uplinks(ifs);
+				const online = ifs.some((i) => i.up && hasDefaultRoute(i));
+				view.hero.net.className = 'cb-pill ' + (online ? 'ok' : 'bad');
+				view.hero.net.textContent = online ? t('Online') : t('Offline');
+				const wv4 = u.wan && (u.wan['ipv4-address'] || [])[0];
+				view.hero.wan.textContent = wv4 ? wv4.address : '—';
+				const lv4 = u.lan && (u.lan['ipv4-address'] || [])[0];
+				view.hero.lan.textContent = lv4 ? lv4.address : '—';
+				const v6 = C.wanIPv6(ifs);
+				view.hero.wan6Item.classList.toggle('hidden', !v6);
+				view.hero.wan6.textContent = v6 ? v6.address : '—';
+				view.hero.wan6.title = v6 ? v6.address + (v6.mask ? '/' + v6.mask : '') : '';
+			}
+
+			function paintTrafficCardTrack(tc, dev) {
+				const tr = dev ? st.devTrack.get(dev) : null;
+				if (tr) {
+					tc.chart.setData(tr.series);
+					setRate(tc.dl, tr.lastRates ? tr.lastRates[0] : 0);
+					setRate(tc.ul, tr.lastRates ? tr.lastRates[1] : 0);
+					if (tr.lastTotals)
+						tc.totals.innerHTML = esc(t('Since boot')) + '<br>↓ <b>' + esc(fmt.bytesStr(tr.lastTotals.rx)) + '</b> &nbsp; ↑ <b>' + esc(fmt.bytesStr(tr.lastTotals.tx)) + '</b>';
+					else tc.totals.innerHTML = '';
+				}
+				else {
+					tc.chart.reset();
+					setRate(tc.dl, 0);
+					setRate(tc.ul, 0);
+					tc.totals.innerHTML = '';
+				}
+			}
+
+			/*
+			 * traffic source: "auto" follows the uplink (the L3 device, e.g. pppoe-wan),
+			 * or an interface / network device the user picked. The physical port
+			 * below the uplink is not chosen automatically: on xPON it also carries
+			 * IPTV and management VLANs, but on a one-armed router it carries LAN too.
+			 */
+			function syncTrafficCards() {
+				if (!st.ifs || !view.traffic.length) return;
+				const info = buildTrafficPickerInfo();
+				view.traffic.forEach((tc) => {
+					const pick = info.groups.find((g) => g.dev === tc.source) || info.devices.find((d) => d.dev === tc.source);
+					const val = pick ? pick.dev : 'auto';
+					if (info.key !== tc.key) {
+						tc.key = info.key;
+						tc.sel.setOptions(info.options, val);
+					}
+					else tc.sel.set(val);
+					const dev = pick ? pick.dev : info.autoDev;
+					const devAlt = pick ? pick.alt : (info.auto ? info.auto.device : null);
+					if (dev !== tc.dev) {
+						tc.dev = dev;
+						tc.devAlt = devAlt;
+						paintTrafficCardTrack(tc, dev);
+					}
+					else tc.devAlt = devAlt;
+				});
+			}
+
+			function paintIfaces() {
+				if (!view.interfaces || !st.fetched.ifs) return;
+				const list = st.ifs;
+				view.interfaces.list.innerHTML = '';
+				if (!list) { view.interfaces.list.appendChild(h('li', { class: 'cb-empty', text: t('Unavailable') })); return; }
+				list.filter((i) => i.interface !== 'loopback').forEach((i) => {
+					const v4 = (i['ipv4-address'] || [])[0];
+					const v6 = (i['ipv6-address'] || [])[0] || ((i['ipv6-prefix-assignment'] || [])[0] || {})['local-address'];
+					const addr = v4 ? v4.address + '/' + v4.mask : (v6 ? v6.address + '/' + v6.mask : '');
+					const proto = PROTO[i.proto] ? t(PROTO[i.proto]) : (i.proto || '').toUpperCase();
+					const up = !!i.up;
+					view.interfaces.list.appendChild(h('li', null, [
+						h('span', { class: 'cb-ico', style: '--c:' + (up ? (hasDefaultRoute(i) ? COLORS.green : COLORS.teal) : COLORS.gray), html: icon('globe') }),
+						h('div', { class: 'cb-list-main' }, [
+							h('span', { class: 'cb-list-title', text: (i.interface || '').toUpperCase() }),
+							h('span', { class: 'cb-list-sub' }, [proto, addr ? ' · ' : '', addr ? h('span', { class: 'cb-mono', text: addr }) : null])
+						]),
+						h('span', { class: 'cb-pill sm ' + (up ? 'ok' : 'off'), text: up ? t('Connected') : t('Not connected') })
+					]));
+				});
+			}
+
+			function paintDeviceRates() {
+				if (!view.clients) return;
+				const data = st.rateData;
+				view.clients.rateNote.classList.toggle('hidden', !st.rateSeen);
+				view.clients.rateNote.textContent = t('Device speeds') + ' · ' + (st.rateSource ? st.rateSource + ' · ' : '') + (!data ? t('Unavailable') :
+					(data.seconds == null ? t('Waiting for next sample') : t('%d s average', Math.round(data.seconds))));
+				view.clients.rateNodes.forEach((nodes, mac) => {
+					nodes.row.classList.toggle('hidden', !st.rateSeen);
+					const rate = data && data.rates.get(mac);
+					const text = (v) => v == null ? '—' : fmt.bytes(v, true).join(' ');
+					nodes.down.textContent = '↓ ' + text(rate && rate.down);
+					nodes.up.textContent = '↑ ' + text(rate && rate.up);
+					nodes.down.setAttribute('aria-label', t('Download') + ' ' + text(rate && rate.down));
+					nodes.up.setAttribute('aria-label', t('Upload') + ' ' + text(rate && rate.up));
+				});
+			}
+
+			function paintClients() {
+				if (!st.fetched.devices) return;
 				const list = st.devices;
-				ui.clients.innerHTML = '';
-				ui.clientRateNodes.clear();
-				ui.clientCount.textContent = list ? String(list.length) : '';
-				ui.tDevices.val.textContent = list ? String(list.length) : '—';
-				ui.tDevices.sub.textContent = st.wifiCount != null ? t('%d on Wi-Fi', st.wifiCount) :
-					(list ? t('Known to this router') : t('Unavailable'));
-				if (!list) { ui.clients.appendChild(h('li', { class: 'cb-empty', text: t('Unavailable') })); return; }
-				if (!list.length) { ui.clients.appendChild(h('li', { class: 'cb-empty', text: t('No devices yet') })); }
-				/* the two-column layout (wide screens) shows six rows, not four */
-				const collapsed = getComputedStyle(ui.clients).gridTemplateColumns.split(' ').length > 1 ? 12 : 8;
+				if (view.tiles.devices) {
+					view.tiles.devices.val.textContent = list ? String(list.length) : '—';
+					view.tiles.devices.sub.textContent = st.wifiCount != null ? t('%d on Wi-Fi', st.wifiCount) :
+						(list ? t('Known to this router') : t('Unavailable'));
+				}
+				if (!view.clients) return;
+				view.clients.list.innerHTML = '';
+				view.clients.rateNodes.clear();
+				view.clients.count.textContent = list ? String(list.length) : '';
+				if (!list) { view.clients.list.appendChild(h('li', { class: 'cb-empty', text: t('Unavailable') })); view.clients.more.classList.add('hidden'); return; }
+				if (!list.length) { view.clients.list.appendChild(h('li', { class: 'cb-empty', text: t('No devices yet') })); }
+				const collapsed = getComputedStyle(view.clients.list).gridTemplateColumns.split(' ').length > 1 ? 12 : 8;
 				const limit = st.showAll ? list.length : collapsed;
 				list.slice(0, limit).forEach((l) => {
 					const id = C.identify(l.hostname, l.macaddr);
@@ -1894,8 +2433,8 @@
 					const down = h('span', { class: 'cb-device-rate', title: t('Download') });
 					const up = h('span', { class: 'cb-device-rate', title: t('Upload') });
 					const speeds = h('span', { class: 'cb-device-rates hidden' }, [down, up]);
-					ui.clientRateNodes.set(l.macaddr, { row: speeds, down: down, up: up });
-					ui.clients.appendChild(h('li', null, [
+					view.clients.rateNodes.set(l.macaddr, { row: speeds, down: down, up: up });
+					view.clients.list.appendChild(h('li', null, [
 						deviceAvatar(l, id),
 						h('div', { class: 'cb-list-main' }, [
 							h('span', { class: 'cb-list-title', text: name }),
@@ -1916,30 +2455,374 @@
 					]));
 				});
 				if (list.length > collapsed) {
-					ui.clientMore.classList.remove('hidden');
-					ui.clientMore.textContent = st.showAll ? t('Show less') : t('Show all %d devices', list.length);
+					view.clients.more.classList.remove('hidden');
+					view.clients.more.textContent = st.showAll ? t('Show less') : t('Show all %d devices', list.length);
 				}
-				else ui.clientMore.classList.add('hidden');
-				renderDeviceRates();
+				else view.clients.more.classList.add('hidden');
+				paintDeviceRates();
 			}
 
-			function renderDeviceRates() {
-				const data = st.rateData;
-				ui.clientRateNote.classList.toggle('hidden', !st.rateSeen);
-				ui.clientRateNote.textContent = t('Device speeds') + ' · ' + (st.rateSource ? st.rateSource + ' · ' : '') + (!data ? t('Unavailable') :
-					(data.seconds == null ? t('Waiting for next sample') : t('%d s average', Math.round(data.seconds))));
-				ui.clientRateNodes.forEach((nodes, mac) => {
-					nodes.row.classList.toggle('hidden', !st.rateSeen);
-					const rate = data && data.rates.get(mac);
-					const text = (v) => v == null ? '—' : fmt.bytes(v, true).join(' ');
-					nodes.down.textContent = '↓ ' + text(rate && rate.down);
-					nodes.up.textContent = '↑ ' + text(rate && rate.up);
-					nodes.down.setAttribute('aria-label', t('Download') + ' ' + text(rate && rate.down));
-					nodes.up.setAttribute('aria-label', t('Upload') + ' ' + text(rate && rate.up));
+			function wirelessRows(w) {
+				const rows = [];
+				if (w) Object.keys(w).sort().forEach((radio) => {
+					const r = w[radio] || {}, cfg = r.config || {};
+					const band = radioBand(cfg);
+					(r.interfaces || []).forEach((i) => {
+						const ic = i.config || {};
+						if (ic.mode && ic.mode !== 'ap') return;
+						rows.push({
+							ssid: ic.ssid || t('Hidden network'),
+							band: band,
+							sub: [band, cfg.channel && cfg.channel !== 'auto' ? 'CH ' + cfg.channel : null, (ic.encryption || '').toUpperCase().replace(/^PSK2.*/, 'WPA2').replace(/^SAE.*/, 'WPA3').replace(/^NONE$/, '') || null].filter(Boolean).join(' · '),
+							on: !!r.up && !r.disabled && !ic.disabled && !cfg.disabled
+						});
+					});
 				});
+				return rows;
 			}
 
+			function paintWireless() {
+				if (!st.fetched.wireless) return;
+				const w = st.wireless;
+				const rows = wirelessRows(w);
+				applyDetailSpans();
+				if (view.wireless && !st.noRadio) {
+					view.wireless.list.innerHTML = '';
+					if (!rows.length) view.wireless.list.appendChild(h('li', { class: 'cb-empty', text: w ? t('No wireless') : t('Unavailable') }));
+					else rows.forEach((x) => view.wireless.list.appendChild(h('li', null, [
+						h('span', { class: 'cb-ico', style: '--c:' + (x.on ? COLORS.blue : COLORS.gray), html: icon('wifi') }),
+						h('div', { class: 'cb-list-main' }, [h('span', { class: 'cb-list-title', text: x.ssid }), h('span', { class: 'cb-list-sub', text: x.sub })]),
+						h('span', { class: 'cb-pill sm ' + (x.on ? 'ok' : 'off'), text: x.on ? t('On') : t('Off') })
+					])));
+				}
+				if (view.tiles.wifi) {
+					const tw = view.tiles.wifi;
+					if (st.noRadio) {
+						tw.val.textContent = '—';
+						tw.sub.textContent = t('No wireless');
+						tw.el.title = '';
+					}
+					else if (!w) {
+						tw.val.textContent = '—';
+						tw.sub.textContent = t('Unavailable');
+						tw.el.title = '';
+					}
+					else {
+						const active = rows.filter((x) => x.on);
+						const bands = [];
+						active.forEach((x) => { if (x.band && bands.indexOf(x.band) < 0) bands.push(x.band); });
+						if (!active.length) {
+							tw.val.textContent = t('Off');
+							tw.sub.textContent = rows.length ? rows.map((x) => x.ssid).slice(0, 2).join(' · ') : t('No wireless');
+						}
+						else {
+							tw.val.textContent = st.wifiCount != null ? String(st.wifiCount) : t('On');
+							tw.sub.textContent = bands.length ? bands.join(' · ') : active.map((x) => x.ssid).slice(0, 2).join(' · ');
+						}
+						tw.el.title = rows.map((x) => x.ssid + (x.sub ? ' (' + x.sub + ')' : '') + ' · ' + (x.on ? t('On') : t('Off'))).join('\n');
+					}
+				}
+			}
+
+			function paintCpu() {
+				if (!view.resources || !st.fetched.cpu) return;
+				if (st.cpuPct != null) view.resources.rCpu.set(st.cpuPct, st.cpuCores ? t('%d cores', st.cpuCores) : '');
+				else if (!st.prevCpu) view.resources.rCpu.set(null, t('Unavailable'));
+			}
+
+			function paintKv() {
+				if (!view.resources) return;
+				const kv = view.resources.kv;
+				kv.innerHTML = '';
+				if (st.info && st.info.load) {
+					const l = st.info.load.map((x) => (x / 65536).toFixed(2));
+					kv.appendChild(h('li', null, [h('span', { text: t('Load average') }), h('span', { class: 'cb-mono', text: l.join(' · ') })]));
+				}
+				if (st.temps && st.temps.length) {
+					const sensorName = (n) => String(n || '').replace(/[-_ ]?thermal$/i, '').replace(/[-_]+/g, ' ').trim();
+					const all = st.temps.map((x) => (sensorName(x.name) || t('Temperature')) + ': ' + (x.value / 1000).toFixed(1) + ' °C').join('\n');
+					st.temps.slice(0, 3).forEach((x) => {
+						const label = st.temps.length > 1 && sensorName(x.name) ? t('Temperature') + ' · ' + sensorName(x.name) : t('Temperature');
+						kv.appendChild(h('li', { title: all }, [h('span', { text: label }), h('span', { text: (x.value / 1000).toFixed(1) + ' °C' })]));
+					});
+				}
+			}
+
+			function paintInfo() {
+				if (!st.fetched.info) return;
+				const info = st.info;
+				if (view.resources) {
+					if (info) {
+						const m = info.memory || {};
+						if (m.total) {
+							const avail = m.available != null ? m.available : (m.free || 0) + (m.buffered || 0) + (m.cached || 0);
+							const used = Math.max(0, m.total - avail);
+							const cache = Math.min(Math.max(0, m.total - used), (m.buffered || 0) + (m.cached || 0));
+							const free = Math.max(0, m.total - used - cache);
+							view.resources.rMem.set(used / m.total * 100, fmt.pair(used, m.total));
+							view.resources.memTitle.textContent = fmt.bytesStr(m.total);
+							view.resources.membar.innerHTML = '';
+							[[used, COLORS.orange, t('Used')], [cache, COLORS.yellow, t('Cache')], [free, 'var(--cb-fill)', t('Free')]].forEach((s) => {
+								view.resources.membar.appendChild(h('i', { style: '--c:' + s[1] + ';flex-basis:' + (s[0] / m.total * 100).toFixed(2) + '%' }));
+							});
+							view.resources.memLegend.innerHTML = '';
+							[[used, COLORS.orange, t('Used')], [cache, COLORS.yellow, t('Cache')], [free, 'var(--cb-gray)', t('Free')]].forEach((s) => {
+								view.resources.memLegend.appendChild(h('span', { style: '--c:' + s[1] }, [h('i'), s[2] + ' ' + fmt.bytesStr(s[0])]));
+							});
+						}
+						const root = info.root || {};
+						if (root.total) {
+							const used = root.used != null ? root.used : root.total - root.free;
+							view.resources.rDisk.set(used / root.total * 100, fmt.pair(used * 1024, root.total * 1024));
+						}
+						else view.resources.rDisk.set(null, t('Unavailable'));
+					}
+					else {
+						view.resources.rMem.set(null, t('Unavailable'));
+						view.resources.rDisk.set(null, t('Unavailable'));
+					}
+				}
+				if (info && info.load && view.tiles.load) {
+					const l = info.load.map((x) => (x / 65536).toFixed(2));
+					view.tiles.load.val.textContent = l[0];
+					view.tiles.load.sub.textContent = t('1 min average');
+				}
+				if (info && info.uptime != null && view.tiles.uptime) {
+					view.tiles.uptime.val.textContent = fmt.duration(info.uptime);
+					view.tiles.uptime.sub.textContent = t('Since %s', fmt.since(info.uptime));
+				}
+				paintKv();
+			}
+
+			function paintConntrack() {
+				if (!view.tiles.connections || !st.fetched.conntrack) return;
+				const ct = st.conntrack;
+				if (ct && ct[0] != null) {
+					const n = parseInt(ct[0], 10), max = parseInt(ct[1], 10);
+					view.tiles.connections.val.textContent = fmt.num(n);
+					view.tiles.connections.sub.textContent = max ? t('of %s max', fmt.num(max)) : '';
+					view.tiles.connections.bar.firstChild.style.width = max ? clamp(n / max * 100, 1, 100).toFixed(1) + '%' : '0';
+				}
+				else view.tiles.connections.sub.textContent = t('Unavailable');
+			}
+
+			function paintTemps() {
+				if (!st.fetched.temps) return;
+				paintKv();
+				if (!view.tiles.temp) return;
+				const tt = view.tiles.temp;
+				const temps = st.temps || [];
+				const sensorName = (n) => String(n || '').replace(/[-_ ]?thermal$/i, '').replace(/[-_]+/g, ' ').trim();
+				if (!temps.length) {
+					tt.val.textContent = '—';
+					tt.sub.textContent = t('Unavailable');
+					tt.el.title = '';
+					return;
+				}
+				const top = temps[0], deg = top.value / 1000;
+				tt.ico.style.setProperty('--c', deg >= 75 ? COLORS.red : COLORS.orange);
+				tt.val.innerHTML = esc(deg.toFixed(1)) + '<small>°C</small>';
+				const name = sensorName(top.name) || t('Temperature');
+				tt.sub.textContent = temps.length > 1 ? name + ' (+' + (temps.length - 1) + ')' : name;
+				tt.el.title = temps.map((x) => (sensorName(x.name) || t('Temperature')) + ': ' + (x.value / 1000).toFixed(1) + ' °C').join('\n');
+			}
+
+			/* ---------------- grid mount & live layout apply ---------------- */
+			const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
+			const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+			const canWaapi = () => typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
+			let hasRendered = false;
+			let ghostLayer = null;
+
+			function renderLayout(layout, animate) {
+				const isUpdate = hasRendered;
+				hasRendered = true;
+				const doAnim = !!(animate && isUpdate && canWaapi());
+				const reduce = doAnim && reducedMotion();
+
+				if (ghostLayer) { ghostLayer.remove(); ghostLayer = null; }
+
+				const scrollX = window.scrollX;
+				const scrollY = window.scrollY;
+				const prevH = dash.offsetHeight;
+				const prevMap = new Map();
+
+				if (doAnim) {
+					const dashRect = dash.getBoundingClientRect();
+					dash.querySelectorAll(':scope > .cb-card:not(.hidden)[data-panel-key]').forEach((el) => {
+						const r = el.getBoundingClientRect();
+						if (!r.width || !r.height) return;
+						prevMap.set(el.dataset.panelKey, {
+							left: r.left - dashRect.left,
+							top: r.top - dashRect.top,
+							width: r.width,
+							height: r.height,
+							el: el
+						});
+					});
+				}
+
+				if (prevH) dash.style.minHeight = prevH + 'px';
+				if (isUpdate) dash.classList.add('cb-dash-live');
+				try {
+					activeLayout = L.normalize(layout);
+					destroyView();
+					dash.innerHTML = '';
+
+					if (activeLayout.hero) buildHero();
+					activeLayout.sections.forEach((sec) => {
+						if (sec === 'monitor' && activeLayout.monitor.length) {
+							const spans = L.monitorSpans(activeLayout.monitor);
+							const seenSrc = Object.create(null);
+							activeLayout.monitor.forEach((m, i) => {
+								if (m.type === 'traffic') {
+									const src = m.source || 'auto';
+									const occ = seenSrc[src] || 0;
+									seenSrc[src] = occ + 1;
+									buildTraffic(i, src, spans[i], 'traffic:' + src + '#' + occ);
+								}
+								else if (m.type === 'resources') buildResources(spans[i]);
+							});
+						}
+						else if (sec === 'tiles' && activeLayout.tiles.length) {
+							const spans = L.tileSpans(activeLayout.tiles.length);
+							const odd = activeLayout.tiles.length % 2 === 1;
+							activeLayout.tiles.forEach((k, i) => buildTile(k, spans[i], odd && i === activeLayout.tiles.length - 1));
+						}
+						else if (sec === 'details' && activeLayout.details.length) {
+							activeLayout.details.forEach((k) => {
+								if (k === 'clients') buildClients();
+								else if (k === 'wireless') buildWireless();
+								else if (k === 'interfaces') buildInterfaces();
+							});
+							applyDetailSpans();
+						}
+					});
+
+					paintBoard();
+					paintHeroNet();
+					syncTrafficCards();
+					paintIfaces();
+					paintClients();
+					paintWireless();
+					paintCpu();
+					paintInfo();
+					paintConntrack();
+					paintTemps();
+				}
+				finally {
+					dash.style.minHeight = '';
+				}
+				if (window.scrollX !== scrollX || window.scrollY !== scrollY)
+					window.scrollTo(scrollX, scrollY);
+
+				if (!doAnim || !prevMap.size) return;
+
+				const newDashRect = dash.getBoundingClientRect();
+				const nextKeys = new Set();
+				let enterIdx = 0;
+
+				dash.querySelectorAll(':scope > .cb-card:not(.hidden)[data-panel-key]').forEach((el) => {
+					const key = el.dataset.panelKey;
+					nextKeys.add(key);
+					const prev = prevMap.get(key);
+					if (!prev) {
+						const delay = Math.min(enterIdx * 28, 112);
+						enterIdx++;
+						const kf = reduce
+							? [{ opacity: 0 }, { opacity: 1 }]
+							: [{ opacity: 0, transform: 'translate3d(0,10px,0) scale(0.96)' }, { opacity: 1, transform: 'translate3d(0,0,0) scale(1)' }];
+						el.animate(kf, { duration: reduce ? 140 : 240, delay: delay, easing: EASE_OUT, fill: delay ? 'backwards' : 'none' });
+						return;
+					}
+					if (reduce) return;
+					const nr = el.getBoundingClientRect();
+					const newLeft = nr.left - newDashRect.left;
+					const newTop = nr.top - newDashRect.top;
+					const newRight = newLeft + nr.width;
+					const prevRight = prev.left + prev.width;
+					const dy = prev.top - newTop;
+					const dw = nr.width - prev.width;
+
+					if (dw > 24) {
+						const clipL = Math.max(0, prev.left - newLeft);
+						const clipR = Math.max(0, newRight - prevRight);
+						if (clipL + clipR < nr.width - 20) {
+							el.animate([
+								{ transform: 'translate3d(0,' + dy + 'px,0)', clipPath: 'inset(0 ' + clipR + 'px 0 ' + clipL + 'px round 18px)' },
+								{ transform: 'translate3d(0,0,0)', clipPath: 'inset(0 0 0 0 round 18px)' }
+							], { duration: 260, easing: EASE_OUT });
+							return;
+						}
+					}
+
+					let dx = prev.left - newLeft;
+					if (dw < -24 && newLeft >= prev.left - 2 && newRight <= prevRight + 2) dx = 0;
+					else if (Math.abs(dw) > 24) dx = clamp(dx, -newLeft, Math.max(0, newDashRect.width - newRight));
+
+					if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+						el.animate([
+							{ transform: 'translate3d(' + dx + 'px,' + dy + 'px,0)' },
+							{ transform: 'translate3d(0,0,0)' }
+						], { duration: 260, easing: EASE_OUT });
+					}
+				});
+
+				const leaving = [];
+				prevMap.forEach((prev, key) => { if (!nextKeys.has(key)) leaving.push(prev); });
+				if (leaving.length) {
+					const layer = h('div', { class: 'cb-dash-ghosts', 'aria-hidden': 'true', inert: '' });
+					ghostLayer = layer;
+					dash.insertBefore(layer, dash.firstChild);
+					let pending = leaving.length;
+					const done = () => {
+						pending--;
+						if (pending <= 0) {
+							layer.remove();
+							if (ghostLayer === layer) ghostLayer = null;
+						}
+					};
+					leaving.forEach((prev) => {
+						const ghost = prev.el.cloneNode(true);
+						ghost.removeAttribute('data-panel-key');
+						ghost.setAttribute('inert', '');
+						ghost.classList.remove(
+							'cb-traffic', 'cb-wireless', 'cb-interfaces',
+							'cb-tile-devices', 'cb-tile-connections', 'cb-tile-load', 'cb-tile-uptime', 'cb-tile-wifi', 'cb-tile-temp'
+						);
+						ghost.classList.add('cb-card-leaving');
+						ghost.style.left = prev.left + 'px';
+						ghost.style.top = prev.top + 'px';
+						ghost.style.width = prev.width + 'px';
+						ghost.style.height = prev.height + 'px';
+						layer.appendChild(ghost);
+						const kf = reduce
+							? [{ opacity: 1 }, { opacity: 0 }]
+							: [{ opacity: 1, transform: 'translate3d(0,0,0) scale(1)' }, { opacity: 0, transform: 'translate3d(0,6px,0) scale(0.95)' }];
+						const anim = ghost.animate(kf, { duration: reduce ? 120 : 180, easing: EASE_OUT, fill: 'forwards' });
+						anim.onfinish = done;
+						anim.oncancel = done;
+					});
+				}
+			}
+
+			function ensureFreshForLayout() {
+				const needs = computeNeeds(activeLayout);
+				if (needs.board && !st.board) safe(P.board).then((b) => { if (b) { st.board = b; paintBoard(); } });
+				if ((needs.interfaces && !st.fetched.ifs) || (needs.leases && !st.fetched.devices) ||
+					(needs.wireless && !st.fetched.wireless) || (needs.stations && !st.fetched.stations))
+					slow();
+				if ((needs.info && !st.fetched.info) || (needs.conntrack && !st.fetched.conntrack) || (needs.temps && !st.fetched.temps))
+					mid();
+				if ((needs.cpu && !st.fetched.cpu) || (needs.devStats && view.traffic.some((tc) => tc.dev && !st.devTrack.has(tc.dev))))
+					fast();
+				if (needs.deviceRates && typeof P.deviceTraffic === 'function' && !st.rateSeen)
+					readDeviceRates();
+			}
+
+			/* ---------------- polling (demand-driven by activeLayout) ---------------- */
 			async function readDeviceRates() {
+				if (!computeNeeds(activeLayout).deviceRates) return;
 				if (Date.now() < st.rateNext) return;
 				const generation = st.rateGeneration;
 				const sample = await safe(P.deviceTraffic);
@@ -1952,265 +2835,652 @@
 					st.rateSource = st.rateData.source === 'nftables' ? 'nftables' : '';
 				}
 				st.rateNext = now + (st.rateData ? st.rateData.interval : 60) * 1000;
-				renderDeviceRates();
+				paintDeviceRates();
 			}
 			document.addEventListener('visibilitychange', () => {
 				st.rateGeneration++;
 				deviceRates.reset();
 				st.rateData = null;
 				st.rateNext = 0;
-				renderDeviceRates();
+				paintDeviceRates();
 			});
-			ui.clientMore.addEventListener('click', () => { st.showAll = !st.showAll; renderClients(); });
-			C.loadBrands().then((d) => { if (d && st.devices) renderClients(); });
-
-			function renderWireless(w) {
-				ui.wifi.innerHTML = '';
-				/* devices without Wi‑Fi hardware (no radios, or no wireless menu
-				   and the ubus object is missing): drop the section entirely */
-				const noRadio = w ? !Object.keys(w).length : !urls.wireless;
-				ui.wifiHead.classList.toggle('hidden', noRadio);
-				ui.wifi.classList.toggle('hidden', noRadio);
-				ui.ifHead.style.marginTop = noRadio ? '0' : '18px';
-				if (noRadio) return;
-				const rows = [];
-				if (w) Object.keys(w).sort().forEach((radio) => {
-					const r = w[radio] || {}, cfg = r.config || {};
-					const band = radioBand(cfg);
-					(r.interfaces || []).forEach((i) => {
-						const ic = i.config || {};
-						if (ic.mode && ic.mode !== 'ap') return;
-						rows.push({
-							ssid: ic.ssid || t('Hidden network'),
-							sub: [band, cfg.channel && cfg.channel !== 'auto' ? 'CH ' + cfg.channel : null, (ic.encryption || '').toUpperCase().replace(/^PSK2.*/, 'WPA2').replace(/^SAE.*/, 'WPA3').replace(/^NONE$/, '') || null].filter(Boolean).join(' · '),
-							on: !!r.up && !r.disabled && !ic.disabled && !cfg.disabled
-						});
-					});
-				});
-				if (!rows.length) { ui.wifi.appendChild(h('li', { class: 'cb-empty', text: w ? t('No wireless') : t('Unavailable') })); return; }
-				rows.forEach((x) => ui.wifi.appendChild(h('li', null, [
-					h('span', { class: 'cb-ico', style: '--c:' + (x.on ? COLORS.blue : COLORS.gray), html: icon('wifi') }),
-					h('div', { class: 'cb-list-main' }, [h('span', { class: 'cb-list-title', text: x.ssid }), h('span', { class: 'cb-list-sub', text: x.sub })]),
-					h('span', { class: 'cb-pill sm ' + (x.on ? 'ok' : 'off'), text: x.on ? t('On') : t('Off') })
-				])));
-			}
-
-			function renderIfaces(list) {
-				ui.ifaces.innerHTML = '';
-				if (!list) { ui.ifaces.appendChild(h('li', { class: 'cb-empty', text: t('Unavailable') })); return; }
-				list.filter((i) => i.interface !== 'loopback').forEach((i) => {
-					const v4 = (i['ipv4-address'] || [])[0];
-					const v6 = (i['ipv6-address'] || [])[0] || ((i['ipv6-prefix-assignment'] || [])[0] || {})['local-address'];
-					const addr = v4 ? v4.address + '/' + v4.mask : (v6 ? v6.address + '/' + v6.mask : '');
-					const proto = PROTO[i.proto] ? t(PROTO[i.proto]) : (i.proto || '').toUpperCase();
-					const up = !!i.up;
-					ui.ifaces.appendChild(h('li', null, [
-						h('span', { class: 'cb-ico', style: '--c:' + (up ? (hasDefaultRoute(i) ? COLORS.green : COLORS.teal) : COLORS.gray), html: icon('globe') }),
-						h('div', { class: 'cb-list-main' }, [
-							h('span', { class: 'cb-list-title', text: (i.interface || '').toUpperCase() }),
-							h('span', { class: 'cb-list-sub' }, [proto, addr ? ' · ' : '', addr ? h('span', { class: 'cb-mono', text: addr }) : null])
-						]),
-						h('span', { class: 'cb-pill sm ' + (up ? 'ok' : 'off'), text: up ? t('Connected') : t('Not connected') })
-					]));
-				});
-			}
-
-			function uplinks(ifs) {
-				const wan = ifs.find((i) => i.up && hasDefaultRoute(i) && i['ipv4-address'] && i['ipv4-address'].length) ||
-					ifs.find((i) => i.up && hasDefaultRoute(i)) ||
-					ifs.find((i) => i.interface === 'wan');
-				return { wan: wan, lan: ifs.find((i) => i.interface === 'lan') };
-			}
-
-			/*
-			 * traffic source: "auto" follows the uplink (the L3 device, e.g. pppoe-wan),
-			 * or an interface / network device the user picked. The physical port
-			 * below the uplink is not chosen automatically: on xPON it also carries
-			 * IPTV and management VLANs, but on a one-armed router it carries LAN too.
-			 */
-			function updateTraffic() {
-				const ifs = st.ifs;
-				if (!ifs) return;
-				const src = C.trafficSources(ifs, st.netdevs);
-				const groups = src.ifaces;
-				const u = uplinks(ifs);
-				const auto = (u.wan && u.wan.up) ? u.wan : u.lan;
-				const autoDev = auto ? (auto.l3_device || auto.device) : null;
-				const key = groups.map((g) => g.dev + '=' + g.names.join(',')).join('|') + '#' +
-					src.devices.map((d) => d.dev).join(',') + '#' + autoDev;
-				const pick = groups.find((g) => g.dev === st.traffic) || src.devices.find((d) => d.dev === st.traffic);
-				if (key !== st.trafficKey) {
-					st.trafficKey = key;
-					/* interfaces and kernel devices get headings only when both are listed */
-					const grouped = src.devices.length > 0;
-					ui.trafficSel.setOptions([{
-						value: 'auto',
-						label: t('Auto') + (auto ? ' · ' + (auto.interface || '').toUpperCase() + (autoDev ? ' (' + autoDev + ')' : '') : '')
-					}].concat(
-						groups.map((g) => ({ value: g.dev, label: g.names.join(' / ') + ' (' + g.dev + ')', group: grouped ? t('Interfaces') : null })),
-						src.devices.map((d) => ({ value: d.dev, label: d.dev, group: t('Network devices') }))
-					), pick ? pick.dev : 'auto');
-				}
-				else ui.trafficSel.set(pick ? pick.dev : 'auto');
-				const dev = pick ? pick.dev : autoDev;
-				if (dev !== st.dev) {
-					st.prevNet = null;
-					chart.reset();
-					setRate(ui.dl, 0);
-					setRate(ui.ul, 0);
-				}
-				st.dev = dev;
-				st.devAlt = pick ? pick.alt : (auto ? auto.device : null);
-			}
+			C.loadBrands().then((d) => { if (d && st.devices) paintClients(); });
 
 			async function slow() {
-				const hintsDue = Date.now() - st.hintsAt > 30000;
-				const netdevsDue = Date.now() - st.netdevsAt > 30000;
-				/* stations use the AP list from the previous tick, so everything goes in one batch */
+				const needs = computeNeeds(activeLayout);
+				const hintsDue = needs.hints && Date.now() - st.hintsAt > 30000;
+				const netdevsDue = needs.netdevs && Date.now() - st.netdevsAt > 30000;
 				const known = st.aps;
 				const r = await Promise.all([
-					safe(P.interfaces), safe(P.leases), safe(P.wireless), safe(P.neighbors),
+					needs.interfaces ? safe(P.interfaces) : Promise.resolve(undefined),
+					needs.leases ? safe(P.leases) : Promise.resolve(undefined),
+					needs.wireless ? safe(P.wireless) : Promise.resolve(undefined),
+					needs.neighbors ? safe(P.neighbors) : Promise.resolve(undefined),
 					hintsDue ? safe(P.hostHints) : Promise.resolve(st.hints),
-					known && known.length && P.stations ? safe(() => P.stations(known)) : Promise.resolve(null),
+					needs.stations && known && known.length && P.stations ? safe(() => P.stations(known)) : Promise.resolve(null),
 					netdevsDue ? safe(P.netDevices) : Promise.resolve(st.netdevs)
 				]);
-				const ifs = Array.isArray(r[0]) ? r[0] : null;
-				st.ifs = ifs;
-				/* device list for the traffic picker; keep the last good one if a refresh fails */
-				if (netdevsDue && r[6] && typeof r[6] === 'object') { st.netdevs = r[6]; st.netdevsAt = Date.now(); }
 
-				if (ifs) {
-					const u = uplinks(ifs);
-					const online = ifs.some((i) => i.up && hasDefaultRoute(i));
-					ui.net.className = 'cb-pill ' + (online ? 'ok' : 'bad');
-					ui.net.textContent = online ? t('Online') : t('Offline');
-					const wv4 = u.wan && (u.wan['ipv4-address'] || [])[0];
-					ui.wan.textContent = wv4 ? wv4.address : '—';
-					const lv4 = u.lan && (u.lan['ipv4-address'] || [])[0];
-					ui.lan.textContent = lv4 ? lv4.address : '—';
-					const v6 = C.wanIPv6(ifs);
-					ui.wan6Item.classList.toggle('hidden', !v6);
-					ui.wan6.textContent = v6 ? v6.address : '—';
-					ui.wan6.title = v6 ? v6.address + (v6.mask ? '/' + v6.mask : '') : '';
-					updateTraffic();
+				if (needs.interfaces) {
+					const ifs = Array.isArray(r[0]) ? r[0] : null;
+					st.ifs = ifs;
+					st.fetched.ifs = true;
+					if (netdevsDue && r[6] && typeof r[6] === 'object') { st.netdevs = r[6]; st.netdevsAt = Date.now(); }
+					paintHeroNet();
+					syncTrafficCards();
+					paintIfaces();
+					if (drawer) drawer.refreshSources();
 				}
-				renderIfaces(ifs);
 
 				if (hintsDue && r[4] && typeof r[4] === 'object') { st.hints = r[4]; st.hintsAt = Date.now(); }
-				const w = r[2] && typeof r[2] === 'object' ? r[2] : null;
-				const aps = apInterfaces(w);
-				const same = known && known.join() === aps.ifnames.join();
-				st.aps = aps.ifnames;
-				/* first tick, or the AP set changed: one extra request */
-				const stations = same ? r[5] : (aps.ifnames.length && P.stations ? await safe(() => P.stations(aps.ifnames)) : null);
-				const leases = r[1] && Array.isArray(r[1].dhcp_leases) ? r[1].dhcp_leases : null;
-				const arp = r[3] != null ? C.parseArp(r[3], C.lanDevices(ifs), ifs) : null;
-				st.devices = (leases || arp || stations) ? C.mergeDevices({
-					leases: leases, leases6: r[1] && r[1].dhcp6_leases, stations: stations, arp: arp, hints: st.hints, bands: aps.bands
-				}) : null;
-				st.wifiCount = (st.devices && Array.isArray(stations)) ? st.devices.filter((d) => d.wifi).length : null;
-				renderClients();
-				renderWireless(w || (r[2] == null ? null : {}));
+				let w = st.wireless;
+				let aps = { ifnames: st.aps || [], bands: {} };
+				if (needs.wireless) {
+					w = r[2] && typeof r[2] === 'object' ? r[2] : null;
+					st.wireless = w || (r[2] == null ? null : {});
+					st.noRadio = st.wireless ? !Object.keys(st.wireless).length : !urls.wireless;
+					st.fetched.wireless = true;
+					aps = apInterfaces(w);
+				}
+
+				let stations = null;
+				if (needs.stations) {
+					const same = known && known.join() === aps.ifnames.join();
+					st.aps = aps.ifnames;
+					stations = same ? r[5] : (aps.ifnames.length && P.stations ? await safe(() => P.stations(aps.ifnames)) : null);
+					st.fetched.stations = true;
+					if (!needs.leases && !needs.neighbors) {
+						if (Array.isArray(stations)) {
+							const macs = new Set();
+							stations.forEach((s) => {
+								const mac = String((s && s.mac) || '').toLowerCase();
+								if (MAC_RE.test(mac) && mac !== '00:00:00:00:00:00') macs.add(mac);
+							});
+							st.wifiCount = macs.size;
+						}
+						else st.wifiCount = null;
+					}
+				}
+
+				if (needs.leases || needs.neighbors) {
+					const leases = r[1] && Array.isArray(r[1].dhcp_leases) ? r[1].dhcp_leases : null;
+					const arp = r[3] != null ? C.parseArp(r[3], C.lanDevices(st.ifs), st.ifs) : null;
+					st.devices = (leases || arp || stations) ? C.mergeDevices({
+						leases: leases, leases6: r[1] && r[1].dhcp6_leases, stations: stations, arp: arp, hints: st.hints, bands: aps.bands
+					}) : null;
+					st.wifiCount = (st.devices && Array.isArray(stations)) ? st.devices.filter((d) => d.wifi).length : null;
+					st.fetched.devices = true;
+					paintClients();
+				}
+				if (needs.wireless) paintWireless();
 			}
 
 			async function mid() {
-				const r = await Promise.all([safe(P.info), safe(P.conntrack), safe(P.temperatures || P.temperature)]);
-				const info = r[0];
-				ui.kv.innerHTML = '';
-				if (info) {
-					const m = info.memory || {};
-					if (m.total) {
-						const avail = m.available != null ? m.available : (m.free || 0) + (m.buffered || 0) + (m.cached || 0);
-						const used = Math.max(0, m.total - avail);
-						const cache = Math.min(Math.max(0, m.total - used), (m.buffered || 0) + (m.cached || 0));
-						const free = Math.max(0, m.total - used - cache);
-						rMem.set(used / m.total * 100, fmt.pair(used, m.total));
-						ui.memTitle.textContent = fmt.bytesStr(m.total);
-						ui.membar.innerHTML = '';
-						[[used, COLORS.orange, t('Used')], [cache, COLORS.yellow, t('Cache')], [free, 'var(--cb-fill)', t('Free')]].forEach((s) => {
-							ui.membar.appendChild(h('i', { style: '--c:' + s[1] + ';flex-basis:' + (s[0] / m.total * 100).toFixed(2) + '%' }));
-						});
-						ui.memLegend.innerHTML = '';
-						[[used, COLORS.orange, t('Used')], [cache, COLORS.yellow, t('Cache')], [free, 'var(--cb-gray)', t('Free')]].forEach((s) => {
-							ui.memLegend.appendChild(h('span', { style: '--c:' + s[1] }, [h('i'), s[2] + ' ' + fmt.bytesStr(s[0])]));
-						});
-					}
-					const root = info.root || {};
-					if (root.total) {
-						const used = root.used != null ? root.used : root.total - root.free;
-						rDisk.set(used / root.total * 100, fmt.pair(used * 1024, root.total * 1024));
-					}
-					else rDisk.set(null, t('Unavailable'));
+				const needs = computeNeeds(activeLayout);
+				if (!needs.info && !needs.conntrack && !needs.temps) return;
+				const r = await Promise.all([
+					needs.info ? safe(P.info) : Promise.resolve(undefined),
+					needs.conntrack ? safe(P.conntrack) : Promise.resolve(undefined),
+					needs.temps ? safe(P.temperatures || P.temperature) : Promise.resolve(undefined)
+				]);
 
-					if (info.load) {
-						const l = info.load.map((x) => (x / 65536).toFixed(2));
-						ui.tLoad.val.textContent = l[0];
-						ui.tLoad.sub.textContent = t('1 min average');
-						loadSpark.push(+l[0]);
-						ui.kv.appendChild(h('li', null, [h('span', { text: t('Load average') }), h('span', { class: 'cb-mono', text: l.join(' · ') })]));
+				if (needs.info) {
+					st.info = r[0];
+					st.fetched.info = true;
+					if (st.info && st.info.load) {
+						const v = +(st.info.load[0] / 65536).toFixed(2);
+						if (!st.loadHistory.length) st.loadHistory = new Array(29).fill(v);
+						st.loadHistory.push(v);
+						while (st.loadHistory.length > 30) st.loadHistory.shift();
+						if (view.tiles.load && view.tiles.load.spark) view.tiles.load.spark.push(v);
 					}
-					if (info.uptime != null) {
-						ui.tUp.val.textContent = fmt.duration(info.uptime);
-						ui.tUp.sub.textContent = t('Since %s', fmt.since(info.uptime));
-					}
+					paintInfo();
 				}
-				else {
-					rMem.set(null, t('Unavailable'));
-					rDisk.set(null, t('Unavailable'));
+				if (needs.conntrack) {
+					st.conntrack = r[1];
+					st.fetched.conntrack = true;
+					paintConntrack();
 				}
-
-				const ct = r[1];
-				if (ct && ct[0] != null) {
-					const n = parseInt(ct[0], 10), max = parseInt(ct[1], 10);
-					ui.tConn.val.textContent = fmt.num(n);
-					ui.tConn.sub.textContent = max ? t('of %s max', fmt.num(max)) : '';
-					ui.connBar.firstChild.style.width = max ? clamp(n / max * 100, 1, 100).toFixed(1) + '%' : '0';
+				if (needs.temps) {
+					st.temps = (Array.isArray(r[2]) ? r[2] : (r[2] != null ? [{ name: '', value: parseInt(r[2], 10) }] : []))
+						.filter((x) => x && !isNaN(x.value) && x.value > 0).sort((a, b) => b.value - a.value);
+					st.fetched.temps = true;
+					paintTemps();
 				}
-				else ui.tConn.sub.textContent = t('Unavailable');
-
-				/* sensors: [{ name, value (m°C) }] — or a bare reading from older providers */
-				const temps = (Array.isArray(r[2]) ? r[2] : (r[2] != null ? [{ name: '', value: parseInt(r[2], 10) }] : []))
-					.filter((x) => x && !isNaN(x.value) && x.value > 0).sort((a, b) => b.value - a.value);
-				const sensorName = (n) => String(n || '').replace(/[-_ ]?thermal$/i, '').replace(/[-_]+/g, ' ').trim();
-				const all = temps.map((x) => (sensorName(x.name) || t('Temperature')) + ': ' + (x.value / 1000).toFixed(1) + ' °C').join('\n');
-				temps.slice(0, 3).forEach((x) => {
-					const label = temps.length > 1 && sensorName(x.name) ? t('Temperature') + ' · ' + sensorName(x.name) : t('Temperature');
-					ui.kv.appendChild(h('li', { title: all }, [h('span', { text: label }), h('span', { text: (x.value / 1000).toFixed(1) + ' °C' })]));
-				});
 			}
 
 			async function fast() {
-				const dev = st.dev;
+				const needs = computeNeeds(activeLayout);
+				if (!needs.cpu && !needs.devStats) return;
+				const uniqueDevs = [];
+				const seen = new Set();
+				if (needs.devStats) {
+					view.traffic.forEach((tc) => {
+						if (tc.dev && !seen.has(tc.dev)) {
+							seen.add(tc.dev);
+							uniqueDevs.push({ dev: tc.dev, alt: tc.devAlt });
+						}
+					});
+				}
 				const r = await Promise.all([
-					safe(P.cpuStat),
-					dev ? safe(() => P.devStats(dev, st.devAlt)) : Promise.resolve(null)
+					needs.cpu ? safe(P.cpuStat) : Promise.resolve(undefined)
+				].concat(uniqueDevs.map((d) => safe(() => P.devStats(d.dev, d.alt)))));
+
+				if (needs.cpu) {
+					const cpu = parseCpu(r[0]);
+					st.fetched.cpu = true;
+					if (cpu) {
+						if (st.prevCpu && cpu.total > st.prevCpu.total) {
+							const dt = cpu.total - st.prevCpu.total, di = cpu.idle - st.prevCpu.idle;
+							st.cpuPct = (1 - di / dt) * 100;
+							st.cpuCores = cpu.cores;
+						}
+						st.prevCpu = cpu;
+					}
+					paintCpu();
+				}
+
+				const now = Date.now();
+				uniqueDevs.forEach((d, idx) => {
+					const s = r[idx + 1];
+					if (!s || s.rx_bytes == null) return;
+					let tr = st.devTrack.get(d.dev);
+					if (!tr) {
+						tr = { prevNet: null, lastRates: [0, 0], lastTotals: null, series: [new Array(60).fill(0), new Array(60).fill(0)] };
+						st.devTrack.set(d.dev, tr);
+					}
+					let pushed = false;
+					const dtMs = tr.prevNet ? (now - tr.prevNet.t) : 0;
+					if (tr.prevNet && dtMs > 0 && dtMs <= 15000 && s.rx_bytes >= tr.prevNet.rx && s.tx_bytes >= tr.prevNet.tx) {
+						const dt = dtMs / 1000;
+						const rx = (s.rx_bytes - tr.prevNet.rx) / dt, tx = (s.tx_bytes - tr.prevNet.tx) / dt;
+						tr.lastRates = [rx, tx];
+						tr.series[0].push(Math.max(0, rx));
+						tr.series[1].push(Math.max(0, tx));
+						while (tr.series[0].length > 60) tr.series[0].shift();
+						while (tr.series[1].length > 60) tr.series[1].shift();
+						pushed = true;
+					}
+					tr.prevNet = { rx: s.rx_bytes, tx: s.tx_bytes, t: now };
+					tr.lastTotals = { rx: s.rx_bytes, tx: s.tx_bytes };
+
+					view.traffic.forEach((tc) => {
+						if (tc.dev !== d.dev) return;
+						if (pushed) {
+							tc.chart.push(tr.lastRates);
+							setRate(tc.dl, tr.lastRates[0]);
+							setRate(tc.ul, tr.lastRates[1]);
+						}
+						tc.totals.innerHTML = esc(t('Since boot')) + '<br>↓ <b>' + esc(fmt.bytesStr(s.rx_bytes)) + '</b> &nbsp; ↑ <b>' + esc(fmt.bytesStr(s.tx_bytes)) + '</b>';
+					});
+				});
+			}
+
+			/* ---------------- Customize drawer (reuses Carbon controls) ---------------- */
+			const SECTION_META = {
+				monitor: N_('Core monitoring'),
+				tiles: N_('Stat tiles'),
+				details: N_('Details')
+			};
+			const TILE_META = {
+				devices: { label: N_('Discovered devices'), icon: 'laptop', color: 'green' },
+				connections: { label: N_('Connections'), icon: 'link', color: 'teal' },
+				load: { label: N_('Load'), icon: 'pulse', color: 'indigo' },
+				uptime: { label: N_('Uptime'), icon: 'clock', color: 'orange' },
+				wifi: { label: N_('Wi-Fi'), icon: 'wifi', color: 'blue' },
+				temp: { label: N_('Temperature'), icon: 'thermo', color: 'orange' }
+			};
+			const DETAIL_META = {
+				clients: { label: N_('Discovered devices'), icon: 'laptop', color: 'green' },
+				wireless: { label: N_('Wireless'), icon: 'wifi', color: 'blue' },
+				interfaces: { label: N_('Interfaces'), icon: 'globe', color: 'teal' }
+			};
+
+			function openCustomizer(opener) {
+				if (drawer) {
+					if (drawer.collapsed) drawer.expand();
+					return;
+				}
+				const appEl = document.querySelector('.cb-app');
+				const draft = L.clone(savedLayout);
+				let saving = false;
+				let collapsed = false;
+				let rowListboxes = [];
+				let lastPickerKey = '';
+
+				const closeListboxes = () => { rowListboxes.forEach((lb) => lb.close(false)); rowListboxes = []; };
+				const titleId = uid();
+				const scrim = h('div', { class: 'cb-sheet-scrim' });
+				const collapseBtn = h('button', {
+					type: 'button', class: 'cb-sheet-collapse',
+					'aria-expanded': 'true', 'aria-label': t('Collapse panel to preview'),
+					title: t('Collapse panel to preview'), html: icon('chevron')
+				});
+				const closeBtn = h('button', { type: 'button', class: 'cb-sheet-close', 'aria-label': t('Close'), title: t('Close'), html: icon('close') });
+				const body = h('div', { class: 'cb-sheet-body' });
+				const statusEl = h('div', { class: 'cb-sheet-status', role: 'status', 'aria-live': 'polite' });
+				const resetBtn = h('button', { type: 'button', class: 'cbi-button cbi-button-reset', text: t('Restore default') });
+				const cancelBtn = h('button', { type: 'button', class: 'cbi-button', text: t('Cancel') });
+				const saveBtn = h('button', { type: 'button', class: 'cbi-button cbi-button-save', text: t('Save') });
+
+				const sheet = h('aside', { class: 'cb-sheet', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId }, [
+					collapseBtn,
+					h('div', { class: 'cb-sheet-head' }, [
+						h('h3', { id: titleId, text: t('Customize dashboard') }),
+						closeBtn
+					]),
+					body,
+					h('div', { class: 'cb-sheet-foot' }, [
+						statusEl,
+						h('div', { class: 'cb-sheet-actions' }, [resetBtn, h('div', { class: 'cb-sheet-actions-end' }, [cancelBtn, saveBtn])])
+					])
 				]);
 
-				const cpu = parseCpu(r[0]);
-				if (cpu) {
-					if (st.prevCpu && cpu.total > st.prevCpu.total) {
-						const dt = cpu.total - st.prevCpu.total, di = cpu.idle - st.prevCpu.idle;
-						rCpu.set((1 - di / dt) * 100, cpu.cores ? t('%d cores', cpu.cores) : '');
-					}
-					st.prevCpu = cpu;
-				}
-				else if (!st.prevCpu) rCpu.set(null, t('Unavailable'));
+				const expandBtn = h('button', {
+					type: 'button', class: 'cbi-button cbi-button-action cb-sheet-expand',
+					'aria-expanded': 'false',
+					html: icon('sliders') + '<span>' + esc(t('Expand')) + '</span>'
+				});
+				const dockCancelBtn = h('button', { type: 'button', class: 'cbi-button', text: t('Cancel') });
+				const dockSaveBtn = h('button', { type: 'button', class: 'cbi-button cbi-button-save', text: t('Save') });
+				const dock = h('div', { class: 'cb-sheet-dock', role: 'region', 'aria-label': t('Customize dashboard'), inert: '' }, [
+					expandBtn, dockCancelBtn, dockSaveBtn
+				]);
 
-				const s = r[1];
-				/* the traffic source may have changed while this sample was in flight */
-				if (s && s.rx_bytes != null && dev === st.dev) {
-					const now = Date.now();
-					if (st.prevNet && s.rx_bytes >= st.prevNet.rx && s.tx_bytes >= st.prevNet.tx) {
-						const dt = (now - st.prevNet.t) / 1000 || 1;
-						const rx = (s.rx_bytes - st.prevNet.rx) / dt, tx = (s.tx_bytes - st.prevNet.tx) / dt;
-						chart.push([rx, tx]);
-						setRate(ui.dl, rx);
-						setRate(ui.ul, tx);
+				const presetItems = L.presets();
+				const presetSeg = segmented(
+					presetItems.map((p) => ({ value: p.id, label: t(p.label) })),
+					L.matchPreset(draft),
+					(id) => {
+						const found = presetItems.find((p) => p.id === id);
+						if (!found) return;
+						const next = L.clone(found.layout);
+						if (id === 'multi' && next.monitor.length >= 2 && next.monitor[1].type === 'traffic')
+							next.monitor[1].source = secondaryDeviceFallback();
+						Object.assign(draft, next);
+						statusEl.textContent = '';
+						applyDraft();
+					},
+					t('Preset')
+				);
+
+				const makeSwitch = (checked, disabled, label, onToggle) => {
+					const input = h('input', { type: 'checkbox', 'aria-label': label });
+					input.checked = !!checked;
+					input.disabled = !!disabled;
+					input.addEventListener('change', () => onToggle(input.checked));
+					return h('div', { class: 'cbi-checkbox' }, [input, h('label')]);
+				};
+				const makeMoveBtn = (dir, disabled, label, onClick) => {
+					const b = h('button', {
+						type: 'button',
+						class: 'cbi-button ' + (dir < 0 ? 'cbi-button-up' : 'cbi-button-down') + ' cb-sheet-ico-btn',
+						title: label, 'aria-label': label, html: icon(dir < 0 ? 'chevup' : 'chevdown')
+					});
+					b.disabled = !!disabled;
+					b.addEventListener('click', onClick);
+					return b;
+				};
+				const swap = (arr, i, j) => { const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp; };
+
+				function paintDrawer(animate) {
+					const scrollTop = body.scrollTop;
+					const doRowAnim = !!(animate && canWaapi() && !reducedMotion());
+					const prevGroups = new Map();
+					const prevRows = new Map();
+					if (doRowAnim) {
+						const br = body.getBoundingClientRect();
+						body.querySelectorAll('[data-sec-key]').forEach((el) => {
+							prevGroups.set(el.dataset.secKey, el.getBoundingClientRect().top - br.top + scrollTop);
+						});
+						body.querySelectorAll('[data-row-key]').forEach((el) => {
+							prevRows.set(el.dataset.rowKey, el.getBoundingClientRect().top - br.top + scrollTop);
+						});
 					}
-					st.prevNet = { rx: s.rx_bytes, tx: s.tx_bytes, t: now };
-					ui.totals.innerHTML = esc(t('Since boot')) + '<br>↓ <b>' + esc(fmt.bytesStr(s.rx_bytes)) + '</b> &nbsp; ↑ <b>' + esc(fmt.bytesStr(s.tx_bytes)) + '</b>';
+					closeListboxes();
+					body.innerHTML = '';
+					const onlyOne = L.countEnabled(draft) <= 1;
+					const pickerInfo = buildTrafficPickerInfo();
+					lastPickerKey = pickerInfo.key;
+
+					/* presets */
+					presetSeg._selectExact(L.matchPreset(draft));
+					body.appendChild(h('div', { class: 'cb-sheet-presets' }, [
+						h('span', { class: 'cb-sheet-label', text: t('Preset') }),
+						presetSeg
+					]));
+
+					/* top banner toggle */
+					body.appendChild(h('div', { class: 'cb-sheet-group' }, [
+						h('div', { class: 'cb-sheet-row', 'data-row-key': 'hero' }, [
+							h('span', { class: 'cb-ico', style: '--c:' + COLORS.indigo, html: icon('carbon') }),
+							h('span', { class: 'cb-sheet-name', text: t('Router overview') }),
+							makeSwitch(draft.hero, draft.hero && onlyOne, t('Router overview'), (on) => {
+								if (!on && L.countEnabled(draft) <= 1) { statusEl.textContent = t('Keep at least one panel visible.'); paintDrawer(false); return; }
+								draft.hero = on;
+								statusEl.textContent = '';
+								applyDraft(true);
+							})
+						])
+					]));
+
+					/* 3 reorderable tier sections */
+					draft.sections.forEach((sec, secIdx) => {
+						const rows = [];
+						if (sec === 'monitor') {
+							let tCount = 0;
+							const seenSrc = Object.create(null);
+							draft.monitor.forEach((m, idx) => {
+								if (m.type === 'traffic') {
+									tCount++;
+									const src = m.source || 'auto';
+									const occ = seenSrc[src] || 0;
+									seenSrc[src] = occ + 1;
+									const lb = listbox({
+										options: pickerInfo.options, value: src,
+										label: t('Traffic interface'), className: 'cb-sheet-select',
+										onChange: (v) => { m.source = v; statusEl.textContent = ''; applyDraft(false); }
+									});
+									rowListboxes.push(lb);
+									const rm = h('button', {
+										type: 'button', class: 'cbi-button cbi-button-remove cb-sheet-ico-btn',
+										title: t('Remove'), 'aria-label': t('Remove'), html: icon('close')
+									});
+									rm.disabled = onlyOne;
+									rm.addEventListener('click', () => {
+										if (L.countEnabled(draft) <= 1) { statusEl.textContent = t('Keep at least one panel visible.'); return; }
+										draft.monitor.splice(idx, 1);
+										statusEl.textContent = '';
+										applyDraft(true);
+									});
+									rows.push(h('div', { class: 'cb-sheet-row cb-sheet-row-traffic', 'data-row-key': 'traffic:' + src + '#' + occ }, [
+										h('span', { class: 'cb-ico', style: '--c:' + COLORS.blue, html: icon('chart') }),
+										h('div', { class: 'cb-sheet-traffic-main' }, [
+											h('span', { class: 'cb-sheet-name', text: t('Live Traffic') }),
+											lb.el
+										]),
+										h('div', { class: 'cb-sheet-ctrl' }, [
+											makeMoveBtn(-1, idx === 0, t('Move up'), () => { swap(draft.monitor, idx, idx - 1); applyDraft(true); }),
+											makeMoveBtn(1, idx === draft.monitor.length - 1, t('Move down'), () => { swap(draft.monitor, idx, idx + 1); applyDraft(true); }),
+											rm
+										])
+									]));
+								}
+								else {
+									rows.push(h('div', { class: 'cb-sheet-row', 'data-row-key': 'resources' }, [
+										h('span', { class: 'cb-ico', style: '--c:' + COLORS.purple, html: icon('cpu') }),
+										h('span', { class: 'cb-sheet-name', text: t('Resources') }),
+										h('div', { class: 'cb-sheet-ctrl' }, [
+											makeMoveBtn(-1, idx === 0, t('Move up'), () => { swap(draft.monitor, idx, idx - 1); applyDraft(true); }),
+											makeMoveBtn(1, idx === draft.monitor.length - 1, t('Move down'), () => { swap(draft.monitor, idx, idx + 1); applyDraft(true); }),
+											makeSwitch(true, onlyOne, t('Resources'), (on) => {
+												if (!on) {
+													if (L.countEnabled(draft) <= 1) { statusEl.textContent = t('Keep at least one panel visible.'); paintDrawer(false); return; }
+													draft.monitor.splice(idx, 1);
+													statusEl.textContent = '';
+													applyDraft(true);
+												}
+											})
+										])
+									]));
+								}
+							});
+							if (!draft.monitor.some((m) => m.type === 'resources')) {
+								rows.push(h('div', { class: 'cb-sheet-row is-off', 'data-row-key': 'resources' }, [
+									h('span', { class: 'cb-ico', style: '--c:' + COLORS.gray, html: icon('cpu') }),
+									h('span', { class: 'cb-sheet-name', text: t('Resources') }),
+									makeSwitch(false, false, t('Resources'), (on) => {
+										if (on) { draft.monitor.push({ type: 'resources' }); statusEl.textContent = ''; applyDraft(true); }
+									})
+								]));
+							}
+							const addBtn = h('button', {
+								type: 'button', class: 'cbi-button cbi-button-add cb-sheet-add',
+								html: icon('plus') + '<span>' + esc(t('Add live traffic')) + '</span>'
+							});
+							addBtn.disabled = tCount >= L.MAX_TRAFFIC;
+							addBtn.addEventListener('click', () => {
+								if (tCount >= L.MAX_TRAFFIC) return;
+								const used = new Set(draft.monitor.filter((m) => m.type === 'traffic').map((m) => m.source));
+								const nextSrc = used.has('auto') ? secondaryDeviceFallback() : 'auto';
+								const resIdx = draft.monitor.findIndex((m) => m.type === 'resources');
+								const entry = { type: 'traffic', source: nextSrc };
+								if (resIdx >= 0) draft.monitor.splice(resIdx, 0, entry);
+								else draft.monitor.push(entry);
+								statusEl.textContent = '';
+								applyDraft(true);
+							});
+							rows.push(h('div', { class: 'cb-sheet-add-row', 'data-row-key': 'monitor:add' }, [
+								addBtn,
+								h('span', { class: 'cb-sheet-count', text: tCount + ' / ' + L.MAX_TRAFFIC })
+							]));
+						}
+						else {
+							const active = sec === 'tiles' ? draft.tiles : draft.details;
+							const catalog = sec === 'tiles' ? L.TILES : L.DETAILS;
+							const metaMap = sec === 'tiles' ? TILE_META : DETAIL_META;
+							active.forEach((k, idx) => {
+								const m = metaMap[k];
+								rows.push(h('div', { class: 'cb-sheet-row', 'data-row-key': sec + ':' + k }, [
+									h('span', { class: 'cb-ico', style: '--c:' + COLORS[m.color], html: icon(m.icon) }),
+									h('span', { class: 'cb-sheet-name', text: t(m.label) }),
+									h('div', { class: 'cb-sheet-ctrl' }, [
+										makeMoveBtn(-1, idx === 0, t('Move up'), () => { swap(active, idx, idx - 1); applyDraft(true); }),
+										makeMoveBtn(1, idx === active.length - 1, t('Move down'), () => { swap(active, idx, idx + 1); applyDraft(true); }),
+										makeSwitch(true, onlyOne, t(m.label), (on) => {
+											if (!on) {
+												if (L.countEnabled(draft) <= 1) { statusEl.textContent = t('Keep at least one panel visible.'); paintDrawer(false); return; }
+												active.splice(idx, 1);
+												statusEl.textContent = '';
+												applyDraft(true);
+											}
+										})
+									])
+								]));
+							});
+							catalog.filter((k) => active.indexOf(k) < 0).forEach((k) => {
+								const m = metaMap[k];
+								rows.push(h('div', { class: 'cb-sheet-row is-off', 'data-row-key': sec + ':' + k }, [
+									h('span', { class: 'cb-ico', style: '--c:' + COLORS.gray, html: icon(m.icon) }),
+									h('span', { class: 'cb-sheet-name', text: t(m.label) }),
+									makeSwitch(false, false, t(m.label), (on) => {
+										if (on) { active.push(k); statusEl.textContent = ''; applyDraft(true); }
+									})
+								]));
+							});
+						}
+
+						body.appendChild(h('div', { class: 'cb-sheet-group', 'data-sec-key': sec }, [
+							h('div', { class: 'cb-sheet-group-head' }, [
+								h('span', { class: 'cb-sheet-group-title', text: t(SECTION_META[sec]) }),
+								h('div', { class: 'cb-sheet-ctrl' }, [
+									makeMoveBtn(-1, secIdx === 0, t('Move up'), () => { swap(draft.sections, secIdx, secIdx - 1); applyDraft(true); }),
+									makeMoveBtn(1, secIdx === draft.sections.length - 1, t('Move down'), () => { swap(draft.sections, secIdx, secIdx + 1); applyDraft(true); })
+								])
+							]),
+							h('div', { class: 'cb-sheet-list' }, rows)
+						]));
+					});
+
+					resetBtn.disabled = saving || L.isDefault(draft);
+					saveBtn.disabled = saving;
+					cancelBtn.disabled = saving;
+					closeBtn.disabled = saving;
+					collapseBtn.disabled = saving;
+					expandBtn.disabled = saving;
+					dockCancelBtn.disabled = saving;
+					dockSaveBtn.disabled = saving;
+					if (saving) body.setAttribute('inert', '');
+					else body.removeAttribute('inert');
+					body.scrollTop = scrollTop;
+
+					if (doRowAnim && prevRows.size) {
+						const br = body.getBoundingClientRect();
+						const groupShift = new Map();
+						body.querySelectorAll('[data-sec-key]').forEach((el) => {
+							const sk = el.dataset.secKey;
+							const prevTop = prevGroups.get(sk);
+							if (prevTop == null) return;
+							const dy = prevTop - (el.getBoundingClientRect().top - br.top + body.scrollTop);
+							if (Math.abs(dy) > 2 && Math.abs(dy) < 520) {
+								groupShift.set(sk, dy);
+								el.animate([
+									{ transform: 'translate3d(0,' + dy + 'px,0)' },
+									{ transform: 'translate3d(0,0,0)' }
+								], { duration: 240, easing: EASE_OUT });
+							}
+						});
+						body.querySelectorAll('[data-row-key]').forEach((el) => {
+							const rk = el.dataset.rowKey;
+							const prevTop = prevRows.get(rk);
+							if (prevTop == null) {
+								el.animate([
+									{ opacity: 0, transform: 'translate3d(0,-6px,0) scale(0.97)' },
+									{ opacity: 1, transform: 'translate3d(0,0,0) scale(1)' }
+								], { duration: 200, easing: EASE_OUT });
+								return;
+							}
+							const parentGroup = el.closest('[data-sec-key]');
+							const gDy = parentGroup ? (groupShift.get(parentGroup.dataset.secKey) || 0) : 0;
+							const dy = (prevTop - (el.getBoundingClientRect().top - br.top + body.scrollTop)) - gDy;
+							if (Math.abs(dy) > 2 && Math.abs(dy) < 360) {
+								el.animate([
+									{ transform: 'translate3d(0,' + dy + 'px,0)' },
+									{ transform: 'translate3d(0,0,0)' }
+								], { duration: 220, easing: EASE_OUT });
+							}
+						});
+					}
 				}
+
+				function applyDraft(animate) {
+					const anim = animate !== false;
+					renderLayout(draft, anim);
+					ensureFreshForLayout();
+					paintDrawer(anim);
+				}
+
+				function setCollapsed(on) {
+					on = !!on;
+					if (collapsed === on) return;
+					collapsed = on;
+					if (drawer) drawer.collapsed = on;
+					closeListboxes();
+					scrim.classList.toggle('show', !on);
+					sheet.classList.toggle('show', !on);
+					sheet.classList.toggle('collapsed', on);
+					dock.classList.toggle('show', on);
+					collapseBtn.setAttribute('aria-expanded', on ? 'false' : 'true');
+					expandBtn.setAttribute('aria-expanded', on ? 'false' : 'true');
+					if (on) {
+						sheet.setAttribute('inert', '');
+						sheet.setAttribute('aria-hidden', 'true');
+						dock.removeAttribute('inert');
+						if (appEl) appEl.removeAttribute('inert');
+						expandBtn.focus({ preventScroll: true });
+					}
+					else {
+						sheet.removeAttribute('inert');
+						sheet.removeAttribute('aria-hidden');
+						dock.setAttribute('inert', '');
+						if (appEl) appEl.setAttribute('inert', '');
+						paintDrawer(false);
+						collapseBtn.focus({ preventScroll: true });
+					}
+				}
+
+				function close(commit) {
+					if (!drawer) return;
+					closeListboxes();
+					document.removeEventListener('keydown', onKey);
+					scrim.remove();
+					sheet.remove();
+					dock.remove();
+					document.body.classList.remove('cb-sheet-open');
+					if (appEl) appEl.removeAttribute('inert');
+					drawer = null;
+					if (!commit) {
+						renderLayout(savedLayout, true);
+						ensureFreshForLayout();
+					}
+					if (opener && opener.offsetParent !== null) opener.focus({ preventScroll: true });
+				}
+
+				async function doSave() {
+					if (saving) return;
+					saving = true;
+					statusEl.textContent = t('Saving…');
+					paintDrawer();
+					try {
+						await persistLayout(draft);
+						saving = false;
+						close(true);
+					}
+					catch (err) {
+						saving = false;
+						statusEl.textContent = (err && err.code === 'denied')
+							? t('Permission denied. Log out and log in again once after updating Carbon, then retry.')
+							: (err && err.code === 'invalid_dashboard' ? t('Invalid dashboard layout.') : t('Failed to save layout.'));
+						if (collapsed) setCollapsed(false);
+						else paintDrawer();
+					}
+				}
+
+				const onKey = (e) => {
+					if (e.key === 'Escape' && !saving && !collapsed) { e.preventDefault(); close(false); }
+				};
+
+				resetBtn.addEventListener('click', () => {
+					if (saving) return;
+					Object.assign(draft, L.defaultLayout());
+					statusEl.textContent = '';
+					applyDraft();
+				});
+				collapseBtn.addEventListener('click', () => { if (!saving) setCollapsed(true); });
+				expandBtn.addEventListener('click', () => { if (!saving) setCollapsed(false); });
+				cancelBtn.addEventListener('click', () => { if (!saving) close(false); });
+				dockCancelBtn.addEventListener('click', () => { if (!saving) close(false); });
+				closeBtn.addEventListener('click', () => { if (!saving) close(false); });
+				scrim.addEventListener('click', () => { if (!saving) setCollapsed(true); });
+				saveBtn.addEventListener('click', doSave);
+				dockSaveBtn.addEventListener('click', doSave);
+
+				drawer = {
+					draft: draft,
+					collapsed: false,
+					isSaving: () => saving,
+					expand: () => setCollapsed(false),
+					sync: () => paintDrawer(false),
+					refreshSources: () => {
+						if (!drawer || saving) return;
+						const info = buildTrafficPickerInfo();
+						if (info.key === lastPickerKey) return;
+						if (rowListboxes.some((lb) => lb.el.getAttribute('aria-expanded') === 'true')) return;
+						lastPickerKey = info.key;
+						const trafficItems = draft.monitor.filter((m) => m.type === 'traffic');
+						rowListboxes.forEach((lb, i) => {
+							const src = trafficItems[i] ? trafficItems[i].source : 'auto';
+							const pick = info.groups.find((g) => g.dev === src) || info.devices.find((d) => d.dev === src);
+							lb.setOptions(info.options, pick ? pick.dev : 'auto');
+						});
+					}
+				};
+				paintDrawer();
+				document.body.appendChild(scrim);
+				document.body.appendChild(sheet);
+				document.body.appendChild(dock);
+				document.body.classList.add('cb-sheet-open');
+				if (appEl) appEl.setAttribute('inert', '');
+				document.addEventListener('keydown', onKey);
+				requestAnimationFrame(() => {
+					scrim.classList.add('show');
+					sheet.classList.add('show');
+					closeBtn.focus({ preventScroll: true });
+				});
 			}
+
+			host._cbCustomize = openCustomizer;
+			renderLayout(activeLayout);
 
 			/* poll with setTimeout chains; pause while the tab is hidden */
 			const loop = (fn, ms) => {
@@ -2221,13 +3491,19 @@
 				run();
 			};
 
-			safe(P.board).then(renderBoard);
+			if (computeNeeds(activeLayout).board) safe(P.board).then((b) => { if (b) { st.board = b; paintBoard(); } });
 			slow().then(() => {
 				loop(fast, 2000);
 				setTimeout(() => loop(slow, 10000), 10000);
 			});
 			loop(mid, 5000);
 			if (typeof P.deviceTraffic === 'function') loop(readDeviceRates, 5000);
+
+			if (window.location && window.location.hash === '#customize') {
+				if (window.history && window.history.replaceState)
+					window.history.replaceState(null, '', window.location.pathname + window.location.search);
+				setTimeout(() => openCustomizer(host.querySelector('.cb-customize-btn')), 0);
+			}
 
 			return dash;
 		}
@@ -2252,7 +3528,17 @@
 		});
 		body.classList.add('cb-has-dash');
 		sync(open);
-		const bar = h('div', { class: 'cb-details-bar' }, btn);
+		const items = [btn];
+		if (host && typeof host._cbCustomize === 'function') {
+			const customBtn = h('button', {
+				type: 'button',
+				class: 'cb-details-btn cb-customize-btn',
+				html: icon('sliders') + '<span>' + esc(t('Customize')) + '</span>'
+			});
+			customBtn.addEventListener('click', () => host._cbCustomize(customBtn));
+			items.push(customBtn);
+		}
+		const bar = h('div', { class: 'cb-details-bar' }, items);
 		host.appendChild(bar);
 		return bar;
 	};

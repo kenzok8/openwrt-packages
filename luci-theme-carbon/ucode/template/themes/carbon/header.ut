@@ -20,6 +20,17 @@
 	   only switch to a centered card layout. */
 	const is_login = (duser != null);
 	const traffic_source = !is_login && ubus.call('uci', 'get', { config: 'carbon', section: 'traffic', option: 'source' })?.value == 'nftables' ? 'nftables' : 'nlbwmon';
+	const dash_uci = !is_login ? ubus.call('uci', 'get', { config: 'carbon', section: 'dashboard' })?.values : null;
+	let dashboard_attr = '';
+	if (type(dash_uci) == 'object') {
+		const dash_parts = [];
+		for (let k in [ 'hero', 'sections', 'monitor', 'tiles', 'details' ]) {
+			const v = dash_uci[k];
+			if (type(v) == 'string' && length(v) > 0 && length(v) <= 256 && match(v, /^[A-Za-z0-9._:@ -]+$/))
+				push(dash_parts, `${k}=${v}`);
+		}
+		dashboard_attr = join(';', dash_parts);
+	}
 
 	/* One version source: the packaged version file busts browser caches. */
 	let carbon_version = trim(readfile('/usr/share/carbon/version') ?? '');
@@ -86,7 +97,7 @@
 			</div>
 			<div id="maincontent" class="cb-login-card">
 	{% elif (!blank_page): %}
-		<div class="cb-app" data-traffic-source="{{ traffic_source }}">
+		<div class="cb-app" data-traffic-source="{{ traffic_source }}"{% if (dashboard_attr): %} data-dashboard="{{ entityencode(dashboard_attr, true) }}"{% endif %}>
 			<aside class="cb-sidebar" id="cb-sidebar">
 				<button type="button" class="cb-collapse" id="cb-collapse" aria-label="Collapse sidebar"></button>
 				<a class="cb-brand" href="{{ dispatcher.build_url() }}">

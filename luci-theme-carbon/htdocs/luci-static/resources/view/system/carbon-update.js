@@ -16,6 +16,7 @@ const check = call('check');
 const upgrade = call('upgrade', [ 'version' ]);
 const configure = call('configure', [ 'mirror' ]);
 const setTrafficSource = call('set_traffic_source', [ 'source' ]);
+const setDashboard = call('set_dashboard', [ 'action', 'hero', 'sections', 'monitor', 'tiles', 'details' ]);
 const setLogo = call('logo', [ 'action' ]);
 
 /* Must match the rpcd backend and its ACL (the only file cgi-upload may write). */
@@ -51,6 +52,7 @@ const errors = {
 	space: N_('Not enough temporary storage or unable to create update files.'),
 	state: N_('Unable to access update state storage.'),
 	invalid_source: N_('Choose a valid traffic source.'),
+	invalid_dashboard: N_('Invalid dashboard layout.'),
 	invalid_mirror: N_('Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters, digits and . _ ~ % + - only).'),
 	/* logo */
 	logo_missing: N_('The uploaded file did not reach the router. Try again.'),
@@ -176,6 +178,37 @@ function trafficSection(data) {
 			E('label', { 'class': 'cbi-value-title', 'for': 'carbon-traffic-source' }, tr('Traffic source')),
 			E('div', { 'class': 'cbi-value-field cb-update-field' }, [input, save, state])
 		])
+	]);
+}
+
+function dashboardSection(data) {
+	let custom = !!data.dashboard_custom;
+	const state = E('span', { 'class': 'cb-update-note', 'role': 'status', 'aria-live': 'polite' });
+	const openLink = E('a', {
+		'class': 'cbi-button cbi-button-action',
+		'href': (typeof L.url === 'function' ? L.url('admin', 'status', 'overview') : '#') + '#customize'
+	}, tr('Customize on Overview'));
+	const resetButton = E('button', {
+		'type': 'button',
+		'class': 'cbi-button cbi-button-reset',
+		'click': async () => {
+			resetButton.disabled = true;
+			state.textContent = tr('Saving…');
+			try {
+				const result = await setDashboard('reset', '', '', '', '', '');
+				if (result && result.error) state.textContent = message(result.error);
+				else { custom = false; state.textContent = tr('Default dashboard layout restored.'); }
+			}
+			catch (e) {
+				state.textContent = /denied|forbidden|403|-32002|ubus code 6/i.test(String(e && e.message || e)) ? message('logo_denied') : e.message;
+			}
+			finally { resetButton.disabled = !custom || !writable(); }
+		}
+	}, tr('Restore default'));
+	state.textContent = custom ? tr('Using a custom dashboard layout.') : tr('Using the default dashboard layout.');
+	resetButton.disabled = !custom || !writable();
+	return section(tr('Dashboard layout'), tr('Choose which panels appear on Overview and arrange them in sections. Saved on this router across devices and firmware upgrades.'), [
+		actions([openLink, resetButton, state])
 	]);
 }
 
@@ -313,6 +346,7 @@ return view.extend({
 			E('p', { 'class': 'cbi-map-descr' }, tr('Personalise the logo and update the theme without changing your router configuration.')),
 			logoSection(data),
 			trafficSection(data),
+			dashboardSection(data),
 			updates.main,
 			updates.notes,
 			mirrorSection(data),

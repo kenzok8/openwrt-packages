@@ -60,6 +60,10 @@ msgid "About this setting"
 msgstr "이 설정 정보"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Add live traffic"
+msgstr "실시간 트래픽 추가"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "All settings"
 msgstr "모든 설정"
 
@@ -99,6 +103,7 @@ msgstr "캐시"
 msgid "Camera"
 msgstr "카메라"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Cancel"
 msgstr "취소"
@@ -125,9 +130,21 @@ msgstr "업데이트 확인 중…"
 msgid "Choose a valid traffic source."
 msgstr "유효한 트래픽 데이터 소스를 선택하세요."
 
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose which panels appear on Overview and arrange them in sections. Saved on this router across devices and firmware upgrades."
+msgstr "개요에 표시할 패널과 섹션 구성을 선택합니다. 이 라우터에 저장되어 여러 기기와 펌웨어 업그레이드 후에도 유지됩니다."
+
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
 msgstr "클릭하여 전환"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Close"
+msgstr "닫기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Collapse panel to preview"
+msgstr "패널을 접어 미리보기"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Collapse sidebar"
@@ -162,6 +179,10 @@ msgid "Connections"
 msgstr "연결"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Core monitoring"
+msgstr "핵심 모니터링"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "CPU"
 msgstr "CPU"
 
@@ -170,8 +191,36 @@ msgid "Current logo"
 msgstr "현재 로고"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Customize"
+msgstr "사용자 지정"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Customize dashboard"
+msgstr "대시보드 사용자 지정"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Customize on Overview"
+msgstr "개요에서 사용자 지정"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
 msgstr "다크"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Dashboard layout"
+msgstr "대시보드 레이아웃"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Default"
+msgstr "기본값"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Default dashboard layout restored."
+msgstr "기본 대시보드 레이아웃이 복원되었습니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Details"
+msgstr "상세 목록"
 
 #: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
@@ -215,8 +264,16 @@ msgid "Enter an HTTPS mirror prefix such as https://mirror.example.com/ (letters
 msgstr "https://mirror.example.com/ 과 같은 HTTPS 미러 접두사를 입력하세요(영문자, 숫자, . _ ~ % + - 만 사용)."
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Expand"
+msgstr "펼치기"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Expand sidebar"
 msgstr "사이드바 펼치기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Failed to save layout."
+msgstr "레이아웃 저장에 실패했습니다."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
@@ -241,6 +298,10 @@ msgstr "숨겨진 네트워크"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Hide detailed status"
 msgstr "자세한 상태 숨기기"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Home Wi-Fi"
+msgstr "가정용 Wi-Fi"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
@@ -274,6 +335,11 @@ msgstr "인터페이스"
 msgid "Internet & Network"
 msgstr "인터넷 및 네트워크"
 
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid dashboard layout."
+msgstr "유효하지 않은 대시보드 레이아웃입니다."
+
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Invalid update request."
 msgstr "잘못된 업데이트 요청입니다."
@@ -281,6 +347,10 @@ msgstr "잘못된 업데이트 요청입니다."
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
 msgstr "IPK 업데이트는 HTTPS로 다운로드하며 릴리스의 SHA-256과 파일 크기로 확인합니다."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Keep at least one panel visible."
+msgstr "패널을 하나 이상 표시해야 합니다."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Known to this router"
@@ -345,6 +415,18 @@ msgstr "메뉴"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Mirror prefix"
 msgstr "미러 접두사"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Move down"
+msgstr "아래로 이동"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Move up"
+msgstr "위로 이동"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Multi-WAN"
+msgstr "멀티 WAN"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Need more settings? Switch to"
@@ -426,6 +508,7 @@ msgstr "개요"
 msgid "Password"
 msgstr "비밀번호"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Permission denied. Log out and log in again once after updating Carbon, then retry."
 msgstr "권한이 없습니다. Carbon을 업데이트한 뒤 한 번 로그아웃했다가 다시 로그인하고 다시 시도하세요."
@@ -441,6 +524,10 @@ msgstr "휴대폰"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "PPPoE"
 msgstr "PPPoE"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Preset"
+msgstr "프리셋"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Printer"
@@ -483,13 +570,23 @@ msgid "Reload page"
 msgstr "페이지 새로 고침"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Remove"
+msgstr "제거"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Resources"
 msgstr "리소스"
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Restore default"
 msgstr "기본값 복원"
 
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Router overview"
+msgstr "라우터 개요"
+
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Save"
 msgstr "저장"
@@ -502,6 +599,7 @@ msgstr "저장했습니다. 다운로드는 먼저 미러를 시도한 다음 Gi
 msgid "Saved. Downloads use GitHub directly."
 msgstr "저장했습니다. 다운로드는 GitHub를 직접 사용합니다."
 
+#: htdocs/luci-static/carbon/carbon.js
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Saving…"
 msgstr "저장 중…"
@@ -545,6 +643,10 @@ msgstr "소프트웨어"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Speaker"
 msgstr "스피커"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Stat tiles"
+msgstr "상태 타일"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Static address"
@@ -677,6 +779,14 @@ msgstr "가동 시간"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Used"
 msgstr "사용 중"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using a custom dashboard layout."
+msgstr "사용자 지정 대시보드 레이아웃을 사용 중입니다."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using the default dashboard layout."
+msgstr "기본 대시보드 레이아웃을 사용 중입니다."
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Verifying update…"

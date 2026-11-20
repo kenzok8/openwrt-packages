@@ -26,6 +26,11 @@ const callAssoc = rpc.declare({ object: 'iwinfo', method: 'assoclist', params: [
 const callUciGet = rpc.declare({ object: 'uci', method: 'get', params: [ 'config', 'section' ], expect: { values: {} } });
 const callUciSet = rpc.declare({ object: 'uci', method: 'set', params: [ 'config', 'section', 'values' ] });
 const callUciCommit = rpc.declare({ object: 'uci', method: 'commit', params: [ 'config' ] });
+const callSetDashboard = rpc.declare({
+	object: 'luci.carbon_update', method: 'set_dashboard',
+	params: [ 'action', 'hero', 'sections', 'monitor', 'tiles', 'details' ],
+	expect: { '': {} }, raise: true
+});
 
 /*
  * Interface language: lists the installed LuCI catalogues (luci.languages)
@@ -284,16 +289,51 @@ return baseclass.extend({
 			return;
 
 		const link = (p) => known[rootName + '/' + p] ? L.url(rootName, p) : null;
+		const app = document.querySelector('.cb-app');
 		const host = E('div', { 'id': 'cb-dashboard' });
 
 		main.insertBefore(host, (view && view.parentNode === main) ? view : null);
+
+		const mapRpcError = (err) => {
+			const msg = String(err && (err.message || err.code || err) || '');
+			if (/denied|forbidden|403|-32002|ubus code 6/i.test(msg)) {
+				const denied = new Error('denied');
+				denied.code = 'denied';
+				throw denied;
+			}
+			throw err;
+		};
 
 		C.Dashboard.mount(host, provider, {
 			urls: {
 				network: link('network/network'),
 				wireless: link('network/wireless'),
 				devices: link('network/dhcp')
-			}
+			},
+			dashboardAttr: (app && app.dataset && app.dataset.dashboard) || '',
+			saveLayout: (layout) => {
+				const s = C.dashboardLayout.serialize(layout);
+				return callSetDashboard('set', s.hero, s.sections, s.monitor, s.tiles, s.details).then((res) => {
+					if (res && res.error) {
+						const err = new Error(res.error);
+						err.code = res.error;
+						throw err;
+					}
+					if (app && app.dataset)
+						app.dataset.dashboard = C.dashboardLayout.encodeAttr(layout);
+					return res;
+				}, mapRpcError);
+			},
+			resetLayout: () => callSetDashboard('reset', '', '', '', '', '').then((res) => {
+				if (res && res.error) {
+					const err = new Error(res.error);
+					err.code = res.error;
+					throw err;
+				}
+				if (app && app.dataset)
+					delete app.dataset.dashboard;
+				return res;
+			}, mapRpcError)
 		});
 
 		/* LuCI's own status widgets stay below the dashboard. While they are
