@@ -1545,6 +1545,13 @@
 		).map((f) => ({ ip: f[0], mac: f[3].toLowerCase(), dev: f[5], gateway: gateways.has(f[5] + '/' + f[0]) }));
 	};
 
+	const IP_ADDR = /^(?:(?:\d{1,3}\.){3}\d{1,3}(?:\/\d{1,2})?|(?:(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}|(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{0,4}::(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{0,4}(?:(?:\d{1,3}\.){3}\d{1,3})?)(?:\/\d{1,3})?)$/i;
+	const PLACEHOLDER_HOST = /^[-*?]+$/;
+	const cleanHostname = (s) => {
+		const v = String(s || '').trim();
+		return (!v || PLACEHOLDER_HOST.test(v) || IP_ADDR.test(v)) ? '' : v;
+	};
+
 	C.mergeDevices = function (src) {
 		src = src || {};
 		const byMac = new Map(), list = [];
@@ -1564,16 +1571,17 @@
 		(src.leases || []).forEach((l) => {
 			const d = get(l.macaddr);
 			if (!d) return;
-			d.hostname = d.hostname || l.hostname || '';
+			d.hostname = d.hostname || cleanHostname(l.hostname);
 			d.ipaddr = d.ipaddr || l.ipaddr || '';
 			d.expires = l.expires;
 			d.lease = true;
 		});
 		(src.leases6 || []).forEach((l) => {
-			const d = (l.macaddr && get(l.macaddr)) || (l.hostname ? list.find((x) => x.hostname === l.hostname) : null);
+			const name = cleanHostname(l.hostname);
+			const d = (l.macaddr && get(l.macaddr)) || (name ? list.find((x) => x.hostname === name) : null);
 			if (!d) return;
 			d.ip6addr = d.ip6addr || firstAddr(l.ip6addrs || l.ip6addr);
-			d.hostname = d.hostname || l.hostname || '';
+			d.hostname = d.hostname || name;
 			if (!d.lease) d.expires = l.expires;
 			d.lease = true;
 		});
@@ -1594,7 +1602,7 @@
 		list.forEach((d) => {
 			const hint = hints[d.macaddr.toUpperCase()] || hints[d.macaddr];
 			if (!hint) return;
-			d.hostname = d.hostname || hint.name || '';
+			d.hostname = d.hostname || cleanHostname(hint.name);
 			d.ipaddr = d.ipaddr || firstAddr(hint.ipaddrs || hint.ipv4);
 			d.ip6addr = d.ip6addr || firstAddr(hint.ip6addrs || hint.ipv6);
 		});
@@ -1682,9 +1690,10 @@
 		if (id.type)
 			return h('span', { class: 'cb-avatar cb-type', title: t(TYPE_LABEL[id.type]), html: icon(TYPE_GLYPH[id.type] || id.type) });
 
-		const key = (l.macaddr || l.hostname || '').toLowerCase();
+		const host = cleanHostname(l.hostname);
+		const key = (l.macaddr || host || '').toLowerCase();
 		const color = COLORS[AVATAR_COLORS[hash(key) % AVATAR_COLORS.length]];
-		const ch = l.hostname ? Array.from(l.hostname)[0] : null;
+		const ch = host ? Array.from(host)[0] : null;
 		return h('span', { class: 'cb-avatar', style: '--c:' + color, html: ch ? esc(ch) : icon('laptop') });
 	}
 
@@ -1692,14 +1701,16 @@
 	 * Brand avatars in LuCI's own lease tables (DHCP page, overview details)
 	 *
 	 * ui.Table rebuilds every row on each poll and sorts from its data, not
-	 * the DOM, so the avatar is simply added again to each new row. The
-	 * hostname is the cell before the first IP address cell (an Interface
-	 * column may come first), the MAC is any cell holding one; DHCPv6 rows
-	 * have none, but DUID-LL/LLT carry the client's MAC.
+	 * the DOM, so the avatar is simply added again to each new row. The IP
+	 * column is detected at the table level so rows whose hostname itself
+	 * falls back to an IP address (e.g. DHCPv6 host hints or clients without
+	 * a hostname) still decorate the hostname column rather than a preceding
+	 * status or interface column. MAC addresses come from any cell holding
+	 * one, or from a DUID-LL/LLT on DHCPv6 rows.
 	 * ------------------------------------------------------------------ */
 	const LEASE_TABLES = ['#lease_status_table', '#lease6_status_table', '#status_leases', '#status_leases6'];
-	const LEASE_ROWS = LEASE_TABLES.map((sel) => sel + ' .tr:not(.table-titles):not(.cbi-section-table-titles):not(.placeholder)').join(', ');
-	const IP_CELL = /^(?:\d{1,3}(?:\.\d{1,3}){3}|[0-9a-f]{0,4}(?::[0-9a-f]{0,4}){2,})/i;
+	const LEASE_TABLE_SEL = LEASE_TABLES.join(', ');
+	const LEASE_ROW_SEL = '.tr:not(.table-titles):not(.cbi-section-table-titles):not(.placeholder)';
 	const MAC_TEXT = /\b[0-9a-f]{2}(?::[0-9a-f]{2}){5}\b/i;
 	const duidMac = (s) => {
 		s = String(s || '').replace(/[^0-9a-f]/gi, '');
@@ -1707,10 +1718,24 @@
 		if (s.length === 20 && /^00030001/i.test(s)) return s.slice(8);
 		return '';
 	};
-	function leaseAvatar(tr) {
-		const cells = Array.from(tr.children).filter((c) => c.classList.contains('td'));
-		const ip = cells.findIndex((c) => IP_CELL.test(c.textContent.trim()));
-		const cell = ip > 0 ? cells[ip - 1] : null;
+	function cellFirstLine(cell) {
+		const root = cell.querySelector('.cb-host-name') || cell;
+		let out = '';
+		for (const node of root.childNodes) {
+			if (node.nodeType === 1 && node.tagName === 'BR') {
+				if (out.trim()) break;
+				continue;
+			}
+			const parts = (node.textContent || '').split('\n');
+			for (let i = 0; i < parts.length; i++) {
+				if (i > 0 && out.trim()) return out.trim();
+				out += parts[i];
+			}
+		}
+		return out.trim();
+	}
+	function leaseAvatar(cells, hostCol) {
+		const cell = cells[hostCol];
 		if (!cell || cell.querySelector('.cb-host')) return;
 		let mac = '';
 		for (const c of cells) {
@@ -1719,22 +1744,45 @@
 			mac = m ? m[0] : duidMac(text);
 			if (mac) break;
 		}
-		let host = cell.textContent.trim();
-		if (host === '-') host = '';
+		const host = cleanHostname(cell.textContent);
 		const id = C.identify(host.replace(/\s*\(.*\)$/, ''), mac);
 		const avatar = deviceAvatar({ hostname: host, macaddr: mac }, id);
 		avatar.setAttribute('aria-hidden', 'true');
 		const name = h('span', { class: 'cb-host-name' }, Array.from(cell.childNodes));
 		cell.appendChild(h('span', { class: 'cb-host' }, [avatar, name]));
 	}
+	function decorateLeaseTable(table) {
+		const rows = Array.from(table.querySelectorAll(LEASE_ROW_SEL))
+			.map((tr) => Array.from(tr.children).filter((c) => c.classList.contains('td')))
+			.filter((cells) => cells.length > 1);
+		if (!rows.length || rows.every((cells) => cells.some((c) => c.querySelector('.cb-host')))) return;
+		const counts = [];
+		for (const cells of rows) {
+			for (let i = 1; i < cells.length; i++) {
+				if (IP_ADDR.test(cellFirstLine(cells[i])))
+					counts[i] = (counts[i] || 0) + 1;
+			}
+		}
+		let ipCol = -1, best = 0;
+		for (let i = 1; i < counts.length; i++) {
+			const n = counts[i] || 0;
+			/* break ties toward the later column: if every row's hostname is an IP,
+			   the real IP address column sits immediately after the hostname column */
+			if (n > 0 && n >= best) { best = n; ipCol = i; }
+		}
+		if (ipCol < 1) return;
+		const hostCol = ipCol - 1;
+		for (const cells of rows)
+			leaseAvatar(cells, hostCol);
+	}
 	C.initLeaseAvatars = function (root) {
 		if (!root || !window.MutationObserver) return;
 		let ready = false;
-		const run = () => { if (ready) root.querySelectorAll(LEASE_ROWS).forEach(leaseAvatar); };
+		const run = () => { if (ready) root.querySelectorAll(LEASE_TABLE_SEL).forEach(decorateLeaseTable); };
 		new MutationObserver(run).observe(root, { childList: true, subtree: true });
 		/* brand data loads only once a lease table shows up */
 		const start = () => {
-			if (!root.querySelector(LEASE_TABLES.join(', '))) return;
+			if (!root.querySelector(LEASE_TABLE_SEL)) return;
 			C.loadBrands().then(() => { ready = true; run(); });
 			watch.disconnect();
 		};

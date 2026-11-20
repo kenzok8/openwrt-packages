@@ -1042,14 +1042,27 @@ h2[name="content"] {
 .cbi-value > .cbi-tblsection { width: 100%; }
 .cbi-value-field > .cbi-checkbox,
 .cbi-value-field > div > .cbi-radio { min-height: 32px; display: inline-flex; align-items: center; }
-/* inline button groups inside a field (e.g. System → Local time) */
-.cbi-value-field .control-group {
+/* inline input + button / button groups (package manager, diagnostics, password reveal, Local time) */
+.control-group:not(.cbi-page-actions) {
 	display: inline-flex;
 	flex-wrap: wrap;
+	align-items: center;
 	gap: 6px;
-	margin-top: 8px;
+	max-width: 100%;
 }
-.cbi-value-field .control-group > * { margin: 0 !important; }
+.control-group:not(.cbi-page-actions) > * { margin: 0 !important; }
+.cbi-value-field .control-group:not(:first-child) { margin-top: 8px; }
+
+/* package manager (luci-app-package-manager / luci-app-opkg): align input + button
+   on desktop and phones with a consistent gap instead of baseline/middle drift */
+.controls .control-group { display: flex; gap: 8px; }
+.controls .control-group > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]) {
+	flex: 1 1 10em;
+	width: auto;
+	min-width: 0;
+	max-width: 260px;
+}
+.controls .control-group > :is(.btn, .cbi-button, button) { flex: 0 0 auto; }
 
 /* multi-line fields: keep the label at the top of the box */
 .cbi-value[data-widget="CBI.TextValue"],
@@ -1167,7 +1180,8 @@ select,
 }
 input:where(:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"])),
 select,
-.cbi-select { height: 34px; }
+.cbi-select { height: 34px; vertical-align: middle; }
+.cbi-dropdown:not(.btn):not(.cbi-button) { vertical-align: middle; }
 
 textarea { width: 100%; min-height: 120px; font-family: var(--cb-mono); font-size: 12.5px; resize: vertical; }
 
@@ -1378,7 +1392,11 @@ button:where(:not([class*="cb-"])):hover { --btn-ring: var(--cb-accent); color: 
 .cbi-button:active,
 button:where(:not([class*="cb-"])):active { transform: translateY(1px); }
 .btn:focus-visible,
-.cbi-button:focus-visible { outline: 0; box-shadow: inset 0 0 0 1px var(--cb-accent), 0 0 0 4px var(--cb-focus); }
+.cbi-button:focus-visible,
+input[type="submit"]:focus-visible,
+input[type="button"]:focus-visible,
+input[type="reset"]:focus-visible,
+button:where(:not([class*="cb-"])):focus-visible { outline: 0; box-shadow: inset 0 0 0 1px var(--cb-accent), 0 0 0 4px var(--cb-focus); }
 
 /* primary: solid Carbon indigo */
 .btn.primary,
@@ -1457,7 +1475,11 @@ input[type="submit"].cbi-button-apply {
 .cbi-button-fieldadd,
 .cbi-button-reload { --btn-bg: var(--cb-fill); --btn-ring: transparent; }
 :root[data-darkmode="true"] .cbi-button-reset,
-:root[data-darkmode="true"] .cbi-button-neutral { --btn-bg: var(--cb-fill); }
+:root[data-darkmode="true"] .cbi-button-neutral,
+:root[data-darkmode="true"] .cbi-button-up,
+:root[data-darkmode="true"] .cbi-button-down,
+:root[data-darkmode="true"] .cbi-button-fieldadd,
+:root[data-darkmode="true"] .cbi-button-reload { --btn-bg: var(--cb-fill); }
 
 .cbi-page-actions .cbi-button-apply + .cbi-button-save,
 .cbi-page-actions .cbi-button-negative + .cbi-button-save {
@@ -1754,7 +1776,7 @@ input[type="submit"].cbi-button-apply {
 .cbi-dynlist > .item > span { pointer-events: none; }
 .cbi-dynlist > .item.drag-over { box-shadow: inset 0 2px 0 var(--cb-accent); }
 .cbi-dynlist > .item.dragging { opacity: .5; }
-.cbi-dynlist > .add-item { display: flex; gap: 6px; }
+.cbi-dynlist > .add-item { display: flex; align-items: center; gap: 6px; }
 .cbi-dynlist > .add-item > input,
 .cbi-dynlist > .add-item > button {
 	flex: 1 1 auto;
@@ -1762,6 +1784,7 @@ input[type="submit"].cbi-button-apply {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+.cbi-dynlist > .add-item > .btn,
 .cbi-dynlist > .add-item > .cbi-button { flex: 0 0 auto; }
 .cbi-dynlist > .add-item > .cbi-dropdown { flex: 1; min-width: 0; width: 100%; }
 .cbi-dynlist > .add-item > .cbi-input-text.drag-over,
@@ -1979,10 +2002,18 @@ table { border-collapse: collapse; border-spacing: 0; }
 	width: 1%;
 	white-space: nowrap;
 }
-.td.cbi-section-actions > * { display: flex; gap: 6px; justify-content: flex-end; }
-.td.cbi-section-actions > :not(.cbi-dropdown) > *,
+.td.cbi-section-actions > :not(.btn):not(.cbi-button):not(.cbi-dropdown):not(button):not(input) {
+	display: flex;
+	gap: 6px;
+	justify-content: flex-end;
+}
+.td.cbi-section-actions > :not(.btn):not(.cbi-button):not(.cbi-dropdown):not(button):not(input) > *,
 .td.cbi-section-actions > * > form > * { flex: 0 0 auto; margin: 0; }
 .td.cbi-section-actions > * > form { display: inline-flex; margin: 0; }
+.td.cbi-section-actions > :is(.btn, .cbi-button, .cbi-dropdown, button, input) + :is(.btn, .cbi-button, .cbi-dropdown, button, input) {
+	margin-inline-start: 6px;
+}
+.td.cbi-section-actions .btn,
 .td.cbi-section-actions .cbi-button { min-height: 28px; padding: 3px 11px; font-size: 12.5px; }
 
 .table.valign-middle .td { vertical-align: middle; }
@@ -2374,8 +2405,8 @@ textarea#syslog {
 .cbi-filebrowser > ul > li > div:last-child { flex: none; }
 .cbi-filebrowser > ul > li > div:last-child > button { min-height: 24px; padding: 0 8px; font-size: 12px; }
 .cbi-filebrowser .upload { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.cbi-filebrowser .upload > div { display: flex; flex: 1; gap: 6px; }
-.cbi-filebrowser .upload > div > input { flex: 1; }
+.cbi-filebrowser .upload > div { display: flex; flex: 1; align-items: center; gap: 6px; }
+.cbi-filebrowser .upload > div > input { flex: 1; min-width: 0; }
 .cbi-filebrowser > div:last-child { border-bottom: 0; display: flex; justify-content: flex-end; gap: 6px; }
 
 #cbi-network-switch_vlan .td { text-align: center; }
@@ -3152,10 +3183,12 @@ body:has(#maincontent .table) { --cb-content-max: var(--cb-content-wide); }
 	.cbi-value[data-widget="CBI.FlagValue"] > .cbi-value-field { display: contents; }
 	.cbi-value[data-widget="CBI.FlagValue"] .cbi-value-description { flex: 1 1 100%; margin-top: 0; }
 
-	/* package manager (luci-app-package-manager): input + button on one line */
-	.controls .control-group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-	.controls .control-group > input { flex: 1 1 12em; width: auto; min-width: 0; }
-	.controls .control-group > .btn { flex: 0 0 auto; }
+	/* control groups (package manager, diagnostics, password reveal): input + button on one line */
+	.cbi-value-field > .control-group { display: flex; width: 100%; }
+	.control-group:not(.cbi-page-actions) > input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]),
+	.control-group:not(.cbi-page-actions) > select,
+	.control-group:not(.cbi-page-actions) > .cbi-select { flex: 1 1 12em; width: auto; min-width: 0; max-width: 100%; }
+	.control-group:not(.cbi-page-actions) > :is(.btn, .cbi-button, button) { flex: 0 0 auto; }
 
 	input:where(:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"])),
 	textarea,
@@ -3231,13 +3264,21 @@ body:has(#maincontent .table) { --cb-content-max: var(--cb-content-wide); }
 	   and wrap gracefully when the labels are too long for the screen;
 	   margin-left matches the field inset above so the row aligns */
 	.td.cbi-value-field[data-widget="CBI.ButtonValue"] { flex: 1 0 auto; width: auto; min-width: 0; padding-left: 0; padding-right: 0; margin-left: 10px; }
-	.td.cbi-section-actions { flex-basis: 100%; width: auto; padding-top: 8px; }
-	.td.cbi-section-actions > * { justify-content: flex-start; flex-wrap: wrap; gap: 4px; }
+	.td.cbi-section-actions { flex-basis: 100%; width: auto; padding-top: 8px; text-align: left !important; }
+	.td.cbi-section-actions > :not(.btn):not(.cbi-button):not(.cbi-dropdown):not(button):not(input) {
+		justify-content: flex-start;
+		flex-wrap: wrap;
+		gap: 4px;
+	}
+	.td.cbi-section-actions > :is(.btn, .cbi-button, .cbi-dropdown, button, input) + :is(.btn, .cbi-button, .cbi-dropdown, button, input) {
+		margin-inline-start: 4px;
+	}
 	/* tighter action buttons so short button sets fit on one row */
 	.td.cbi-section-actions .btn,
 	.td.cbi-section-actions .cbi-button { min-height: 28px; padding: 3px 9px; font-size: 12.5px; }
 	/* stacked-table button cells keep the regular button size; only the
 	   horizontal padding is trimmed so four actions fit one row */
+	.td.cbi-value-field[data-widget="CBI.ButtonValue"] .btn,
 	.td.cbi-value-field[data-widget="CBI.ButtonValue"] .cbi-button { padding-left: 8px; padding-right: 8px; }
 	.tr.placeholder > .td { position: static; }
 	.col-1 { flex: 1 1 30px !important; }
