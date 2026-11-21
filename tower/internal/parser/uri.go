@@ -161,8 +161,36 @@ func parseShadowsocks(raw, sourceID string) *model.ProxyNode {
 	}
 }
 
+// sip003Fields splits a SIP003 plugin option string on unescaped `;`. A
+// backslash escapes the next character, so `path=/foo\;bar` is one field,
+// not two. It returns nil when the string ends on a dangling backslash.
+func sip003Fields(plugin string) []string {
+	var parts []string
+	var part strings.Builder
+	escaped := false
+	for _, r := range plugin {
+		switch {
+		case escaped:
+			part.WriteRune(r)
+			escaped = false
+		case r == '\\':
+			escaped = true
+		case r == ';':
+			parts = append(parts, part.String())
+			part.Reset()
+		default:
+			part.WriteRune(r)
+		}
+	}
+	if escaped {
+		return nil
+	}
+	parts = append(parts, part.String())
+	return parts
+}
+
 func simpleObfsOptions(plugin string) (mode, host string) {
-	parts := strings.Split(plugin, ";")
+	parts := sip003Fields(plugin)
 	if len(parts) == 0 {
 		return "", ""
 	}
@@ -195,7 +223,7 @@ type v2rayPluginOpts struct {
 }
 
 func v2rayPluginOptions(plugin string) *v2rayPluginOpts {
-	parts := strings.Split(plugin, ";")
+	parts := sip003Fields(plugin)
 	if len(parts) == 0 || strings.ToLower(strings.TrimSpace(parts[0])) != "v2ray-plugin" {
 		return nil
 	}
@@ -939,7 +967,7 @@ func parseSnellLine(raw, sourceID string) *model.ProxyNode {
 type trojanWS struct{ transport, host, path string }
 
 func shadowrocketTrojanWebSocketOptions(plugin string) *trojanWS {
-	parts := strings.Split(plugin, ";")
+	parts := sip003Fields(plugin)
 	if len(parts) == 0 {
 		return nil
 	}

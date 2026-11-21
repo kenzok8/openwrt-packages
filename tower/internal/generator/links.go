@@ -146,16 +146,16 @@ func shadowsocksLink(node model.ProxyNode) (string, bool) {
 			plugin += ";tls"
 		}
 		if node.HostHeader != "" {
-			plugin += ";host=" + node.HostHeader
+			plugin += ";host=" + sip003Value(node.HostHeader)
 		}
 		if p := node.ExportablePath(); p != "" {
-			plugin += ";path=" + p
+			plugin += ";path=" + sip003Value(p)
 		}
 		b.WriteString("?plugin=" + percentEncode(plugin, "-._~"))
 	} else if mode := strings.ToLower(node.Obfs); mode == "http" || mode == "tls" {
 		plugin := "obfs-local;obfs=" + mode
 		if node.ObfsParam != "" {
-			plugin += ";obfs-host=" + node.ObfsParam
+			plugin += ";obfs-host=" + sip003Value(node.ObfsParam)
 		}
 		b.WriteString("?plugin=" + percentEncode(plugin, "-._~"))
 	}

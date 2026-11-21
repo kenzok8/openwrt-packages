@@ -132,14 +132,21 @@ func surgeNode(node model.ProxyNode, shadowrocket bool) string {
 	case model.KindVLESS:
 		components = []string{"vless", node.Server, strconv.Itoa(node.Port),
 			"username=" + exportableUUID(node.UUID)}
-		appendSurgeTransport(node, true, shadowrocket, &components)
-		if shadowrocket && node.UsesReality() {
-			appendValue(node.RealityPublicKey, "pbk", &components)
-			appendValue(node.RealityShortID, "sid", &components)
-			appendValue(node.Fingerprint, "fingerprint", &components)
-			if xtls := shadowrocketXTLSMode(node); xtls != 0 {
-				components = append(components, "xtls="+strconv.Itoa(xtls))
+		if shadowrocket {
+			appendSurgeTransport(node, true, shadowrocket, &components)
+			// Shadowrocket's vocabulary is its own: `pbk`/`sid`/`fingerprint`
+			// rather than Surge's reality-public-key/reality-short-id, and the
+			// flow is an enum (`xtls=2` for vision) rather than the flow string.
+			if node.UsesReality() {
+				appendValue(node.RealityPublicKey, "pbk", &components)
+				appendValue(node.RealityShortID, "sid", &components)
+				appendValue(node.Fingerprint, "fingerprint", &components)
+				if xtls := shadowrocketXTLSMode(node); xtls != 0 {
+					components = append(components, "xtls="+strconv.Itoa(xtls))
+				}
 			}
+		} else {
+			appendSurgeVLESS(node, &components)
 		}
 	case model.KindTrojan:
 		components = []string{"trojan", node.Server, strconv.Itoa(node.Port),
@@ -255,8 +262,15 @@ func shadowrocketXTLSMode(node model.ProxyNode) int {
 
 func appendSurgeTransport(node model.ProxyNode, includeTLSFlag, shadowrocket bool, values *[]string) {
 	appendSurgeTLS(node, includeTLSFlag, values)
-	if node.Transport == "ws" {
+	// Surge writes HTTPUpgrade as WebSocket plus `ws-http-upgrade=true`
+	// (manual.nssurge.com/policies/vmess.html, iOS 6.0.0+ / Mac 6.12.0+).
+	// Shadowrocket keeps its own `obfs=httpupgrade` below.
+	httpUpgrade := !shadowrocket && node.Transport == "httpupgrade"
+	if node.Transport == "ws" || httpUpgrade {
 		*values = append(*values, "ws=true")
+		if httpUpgrade {
+			*values = append(*values, "ws-http-upgrade=true")
+		}
 		appendValue(firstNonEmpty(node.ExportablePath(), "/"), "ws-path", values)
 		if h := exportableTransportHost(node); h != "" {
 			*values = append(*values, "ws-headers=Host:"+confValue(h))
@@ -284,6 +298,153 @@ func appendSurgeTLS(node model.ProxyNode, includeTLSFlag bool, values *[]string)
 		*values = append(*values, "skip-cert-verify=true")
 	}
 	appendValue(node.ALPN, "alpn", values)
+}
+
+// appendSurgeVLESS writes Surge 6's `vless` policy
+// (manual.nssurge.com/policies/vless.html). Only nodes surgeAcceptsVLESS
+// passed reach here. REALITY implies TLS, and Surge ignores skip-cert-verify
+// under it, so neither is written; `fp` has no field because Surge sends its
+// own ClientHello. UDP is always XUDP and needs no switch. XHTTP picks its
+// HTTP version from the TLS settings and `alpn`, exactly as Xray does, so
+// `alpn` is passed on unchanged.
+func appendSurgeVLESS(node model.ProxyNode, values *[]string) {
+	if flow := strings.ToLower(strings.TrimSpace(node.Flow)); flow != "" {
+		*values = append(*values, "flow="+flow)
+	}
+	if enc := strings.TrimSpace(node.VLESSEncryption); enc != "" {
+		*values = append(*values, "encryption="+enc)
+	}
+	if node.UsesReality() {
+		appendValue(node.SNI, "sni", values)
+		appendValue(node.RealityPublicKey, "reality-public-key", values)
+		appendValue(strings.TrimSpace(node.RealityShortID), "reality-short-id", values)
+		appendValue(node.ALPN, "alpn", values)
+	} else {
+		appendSurgeTLS(node, true, values)
+	}
+	switch strings.ToLower(node.Transport) {
+	case "ws", "httpupgrade":
+		*values = append(*values, "ws=true")
+		if strings.ToLower(node.Transport) == "httpupgrade" {
+			*values = append(*values, "ws-http-upgrade=true")
+		}
+		appendValue(firstNonEmpty(node.ExportablePath(), "/"), "ws-path", values)
+		if h := exportableTransportHost(node); h != "" {
+			*values = append(*values, "ws-headers=Host:"+confValue(h))
+		}
+	case "grpc":
+		*values = append(*values, "grpc=true")
+		// Kept verbatim: like Xray, Surge reads a leading `/` as a custom
+		// path and a bare name as `/<name>/Tun`.
+		appendValue(node.Path, "grpc-service-name", values)
+		appendValue(node.HostHeader, "grpc-authority", values)
+	case "xhttp":
+		*values = append(*values, "xhttp=true")
+		appendValue(node.ExportablePath(), "xhttp-path", values)
+		appendValue(node.HostHeader, "xhttp-host", values)
+		if mode := strings.ToLower(strings.TrimSpace(node.TransportMode)); mode != "" && mode != "auto" {
+			appendValue(mode, "xhttp-mode", values)
+		}
+	}
+}
+
+// surgeAcceptsVLESS reports whether Surge's `vless` policy can carry this
+// node unchanged, per manual.nssurge.com/policies/vless.html: RAW with none,
+// TLS or REALITY; WebSocket with none or TLS; gRPC with TLS or REALITY;
+// XHTTP with none, TLS or REALITY. VLESS Encryption can be added to any of
+// them. Vision needs RAW with TLS or REALITY, or VLESS Encryption on RAW,
+// WebSocket or XHTTP; never gRPC. HTTPUpgrade (`ws=true,
+// ws-http-upgrade=true`) takes none or TLS, like WebSocket. mKCP is
+// unsupported, and a profile line Surge cannot parse breaks the whole
+// profile, so anything else is skipped. All of it shipped in Surge iOS 6.0 /
+// Mac 6.12.
+func surgeAcceptsVLESS(node model.ProxyNode) bool {
+	if node.Kind != model.KindVLESS {
+		return false
+	}
+	encrypted := node.VLESSEncryption != ""
+	if encrypted && !surgeAcceptsVLESSEncryption(node.VLESSEncryption) {
+		return false
+	}
+	transport := strings.ToLower(strings.TrimSpace(node.Transport))
+	isRaw := transport == "" || transport == "tcp" || transport == "raw"
+	secured := node.TLS || node.UsesReality()
+	if node.UsesReality() {
+		if !isRaw && transport != "grpc" && transport != "xhttp" {
+			return false
+		}
+		shortID := strings.TrimSpace(node.RealityShortID)
+		if len(shortID) > 16 || !isHexString(shortID) {
+			return false
+		}
+	}
+	if flow := strings.ToLower(strings.TrimSpace(node.Flow)); flow != "" {
+		if flow != "xtls-rprx-vision" && flow != "xtls-rprx-vision-udp443" {
+			return false
+		}
+		visionCarrier := (isRaw && secured) || (encrypted && (isRaw || transport == "ws" || transport == "httpupgrade" || transport == "xhttp"))
+		if !visionCarrier {
+			return false
+		}
+	}
+	if transport == "xhttp" {
+		mode := strings.ToLower(strings.TrimSpace(node.TransportMode))
+		switch mode {
+		case "", "auto", "packet-up", "stream-up", "stream-one":
+			return true
+		default:
+			return false
+		}
+	}
+	if isRaw || transport == "ws" || transport == "httpupgrade" {
+		return true
+	}
+	return transport == "grpc" && secured
+}
+
+// surgeAcceptsVLESSEncryption checks Surge's `encryption` value: the client
+// string `xray vlessenc` prints, `mlkem768x25519plus.<native|xorpub|random>.
+// <1rtt|0rtt>`, an optional padding segment, then one or more URL-safe Base64
+// keys. Anything else (a future method, a stray comma) would break the line.
+func surgeAcceptsVLESSEncryption(value string) bool {
+	parts := strings.Split(strings.TrimSpace(value), ".")
+	if len(parts) < 4 || !strings.EqualFold(parts[0], "mlkem768x25519plus") {
+		return false
+	}
+	switch strings.ToLower(parts[1]) {
+	case "native", "xorpub", "random":
+	default:
+		return false
+	}
+	switch strings.ToLower(parts[2]) {
+	case "1rtt", "0rtt":
+	default:
+		return false
+	}
+	for _, part := range parts[3:] {
+		if part == "" {
+			return false
+		}
+		for _, r := range part {
+			if !isBase64URLChar(r) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func isHexString(s string) bool {
+	for _, r := range s {
+		if !isHex(r) {
+			return false
+		}
+	}
+	return true
+}
+
+func isBase64URLChar(r rune) bool {
+	return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' || r == '_' || r == '='
 }
 
 func surgeSelect(name string, values []string, hidden bool) string {
@@ -330,6 +491,11 @@ func confName(value string) string {
 		",", "，",
 		"#", "＃",
 		";", "；",
+		// `//` is Surge's third comment marker: a whole comment line at
+		// the start, an inline comment after a space
+		// (manual.nssurge.com/profile/format.md). "HK // Backup" cut the
+		// proxy line and every policy group member list at " //".
+		"//", "／／",
 		"[", "［",
 		"]", "］",
 	).Replace(v)

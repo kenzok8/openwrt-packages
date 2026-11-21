@@ -67,6 +67,7 @@ func Generate(opts Options) (string, error) {
 		return "", fmt.Errorf("unknown client target %q", opts.Target)
 	}
 	opts.Nodes = FilterNodes(opts.Nodes, opts.Protocols)
+	opts.Nodes = filterExpressibleNodes(opts.Target, opts.Nodes)
 	family := opts.Target.Family()
 	if family != model.FamilyDAE && opts.Scheme != nil {
 		for _, group := range opts.Scheme.Groups {
@@ -201,6 +202,39 @@ func FilterNodes(nodes []model.ProxyNode, protocols []model.ProxyKind) []model.P
 		}
 	}
 	return out
+}
+
+// filterExpressibleNodes drops nodes the target client cannot express at
+// all: VLESS combinations Surge 6 cannot write, and Snell versions a Clash
+// client cannot parse. Like FilterNodes it runs before scheme planning, so a
+// rule group left with no nodes fails the export instead of silently
+// pointing at nothing. There is no skipped-node count channel outside the
+// sing-box preflight, so the nodes are dropped the same way FilterNodes
+// drops disabled protocols.
+func filterExpressibleNodes(target model.ClientTarget, nodes []model.ProxyNode) []model.ProxyNode {
+	family := target.Family()
+	if family != model.FamilySurge && family != model.FamilyClash {
+		return nodes
+	}
+	out := make([]model.ProxyNode, 0, len(nodes))
+	for _, n := range nodes {
+		if family == model.FamilySurge && n.Kind == model.KindVLESS && !surgeAcceptsVLESS(n) {
+			continue
+		}
+		if family == model.FamilyClash && n.Kind == model.KindSnell && !clashAcceptsSnell(target, n) {
+			continue
+		}
+		out = append(out, n)
+	}
+	return out
+}
+
+// sip003Value escapes a SIP003 plugin option value: a `;` inside a value (a
+// WebSocket path like `/foo;bar`) must be backslash-escaped, and backslashes
+// go first so the escape itself survives the round trip.
+func sip003Value(value string) string {
+	value = strings.ReplaceAll(value, "\\", "\\\\")
+	return strings.ReplaceAll(value, ";", "\\;")
 }
 
 // resolveGroupMembers expands a scheme group's members against the available

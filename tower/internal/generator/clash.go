@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -49,17 +50,38 @@ func generateClash(opts Options) string {
 	b.WriteString("  default-nameserver:\n")
 	b.WriteString("    - 223.5.5.5\n")
 	b.WriteString("    - 119.29.29.29\n")
-	b.WriteString("  nameserver:\n")
-	for _, server := range dnsServers {
-		b.WriteString("    - " + yaml(server) + "\n")
+	if dnsGroup := clashStrictDNSGroup(opts); dnsGroup != "" {
+		// Strict mode: lookups go through the proxy with a Chinese client
+		// subnet, so an unlisted foreign name never reaches a domestic
+		// resolver and an unlisted Chinese one still gets a Chinese answer.
+		// The old `fallback` + `fallback-filter` pair, which asked 1.1.1.1
+		// and Google directly for every lookup, is gone.
+		b.WriteString("  proxy-server-nameserver:\n")
+		for _, server := range dnsServers {
+			b.WriteString("    - " + yaml(server) + "\n")
+		}
+		b.WriteString("  nameserver:\n")
+		for _, server := range clashProxiedResolvers(dnsGroup) {
+			b.WriteString("    - " + yaml(server) + "\n")
+		}
+		b.WriteString("  direct-nameserver:\n")
+		for _, server := range dnsServers {
+			b.WriteString("    - " + yaml(server) + "\n")
+		}
+	} else {
+		b.WriteString("  nameserver:\n")
+		for _, server := range dnsServers {
+			b.WriteString("    - " + yaml(server) + "\n")
+		}
+		b.WriteString("  fallback:\n")
+		for _, server := range fallbackServers {
+			b.WriteString("    - " + yaml(server) + "\n")
+		}
+		b.WriteString("  fallback-filter:\n")
+		b.WriteString("    geoip: true\n")
+		b.WriteString("    geoip-code: CN\n")
 	}
-	b.WriteString("  fallback:\n")
-	for _, server := range fallbackServers {
-		b.WriteString("    - " + yaml(server) + "\n")
-	}
-	b.WriteString("  fallback-filter:\n")
-	b.WriteString("    geoip: true\n")
-	b.WriteString("    geoip-code: CN\n\n")
+	b.WriteString("\n")
 
 	b.WriteString("proxies:\n")
 	for _, n := range opts.Nodes {
@@ -115,6 +137,84 @@ func generateClash(opts Options) string {
 		b.WriteString("  - MATCH," + selectGroupName + "\n")
 	}
 	return b.String()
+}
+
+// clashStrictDNSGroup returns the proxy group strict-DNS nameservers resolve
+// through, or "" when this target does not take mihomo's `#<proxy>&ecs=`
+// nameserver suffix or no group qualifies. Only the Clash app gets the strict
+// variant: its mihomo 1.19.33-derived core documents `ecs-override`. A group
+// qualifies when it holds nodes only, so the DNS path never lands on DIRECT,
+// and its name carries neither `#` nor `&`. Without a scheme the url-test
+// group qualifies; with a scheme and no qualifying group the export falls
+// back to the standard DNS block instead of inventing a group.
+func clashStrictDNSGroup(opts Options) string {
+	if opts.Target != model.ClientClashApple || len(opts.Nodes) == 0 {
+		return ""
+	}
+	if opts.Scheme == nil {
+		return autoGroupName
+	}
+	names := uniquedNames(opts.Nodes)
+	for _, g := range opts.Scheme.Groups {
+		if strings.ContainsAny(g.Name, "#&") {
+			continue
+		}
+		nodesOnly := true
+		for _, m := range g.Members {
+			if m.Type != model.MemberNodePattern {
+				nodesOnly = false
+				break
+			}
+		}
+		if !nodesOnly || len(resolveGroupMembers(g, names)) == 0 {
+			continue
+		}
+		return g.Name
+	}
+	return ""
+}
+
+// clashProxiedResolvers returns the resolvers strict-DNS nameservers use:
+// the tower-default remote resolvers that honour EDNS Client Subnet, each
+// suffixed to resolve through the DNS group with a Chinese client subnet.
+func clashProxiedResolvers(group string) []string {
+	var out []string
+	for _, server := range clashRemoteDNSServers {
+		if !dnsSupportsClientSubnet(server) {
+			continue
+		}
+		separator := "#"
+		if strings.Contains(server, "#") {
+			separator = "&"
+		}
+		out = append(out, server+separator+group+"&ecs="+chinaClientSubnet+"&ecs-override=true")
+	}
+	return out
+}
+
+const chinaClientSubnet = "114.114.114.0/24"
+
+// clashRemoteDNSServers mirrors upstream's tower-default remote resolvers.
+// Google first: it honours EDNS Client Subnet, which lets Tower ask for a
+// Chinese answer through the proxy. Cloudflare ignores ECS.
+var clashRemoteDNSServers = []string{
+	"https://8.8.8.8/dns-query",
+	"https://1.1.1.1/dns-query",
+}
+
+// dnsSupportsClientSubnet reports whether a resolver answers with the client
+// subnet it is given.
+func dnsSupportsClientSubnet(value string) bool {
+	u, err := url.Parse(value)
+	if err != nil {
+		return false
+	}
+	switch strings.ToLower(u.Hostname()) {
+	case "dns.google", "8.8.8.8", "8.8.4.4", "dns11.quad9.net", "9.9.9.11", "149.112.112.11":
+		return true
+	default:
+		return false
+	}
 }
 
 // clashSchemeGroups renders a rule scheme's strategy groups as Clash YAML.
@@ -390,6 +490,49 @@ func mihomoFamily(target model.ClientTarget) bool {
 		return true
 	}
 	return false
+}
+
+// clashAcceptsSnell reports whether a Snell node can be written for the
+// target. Stash caps at v3; mihomo clients cap at v5 except the Clash app and
+// Clashoo, whose bundled mihomo 1.19.34 reads v6. Never rewrite the version:
+// it must match the server. v6 has no HTTP/TLS obfs (its `mode` replaces it)
+// and takes a 12–255 byte PSK; mihomo 1.19.34 `-t` rejects both violations,
+// and one bad proxy fails the whole file. Karing embeds mihomo but documents
+// no Snell version support, so it stays ungated like upstream.
+func clashAcceptsSnell(target model.ClientTarget, node model.ProxyNode) bool {
+	if node.Kind != model.KindSnell {
+		return true
+	}
+	version := 4
+	newest := 5
+	switch target {
+	case model.ClientStash:
+		version = 1
+		newest = 3
+	case model.ClientClashApple, model.ClientClashoo:
+		newest = 6
+	case model.ClientClashVerge, model.ClientClashMac, model.ClientFlClash,
+		model.ClientMihomoParty, model.ClientClashMi, model.ClientOpenClash,
+		model.ClientNikki:
+		// newest stays 5.
+	default:
+		return true
+	}
+	if node.Version != nil {
+		version = *node.Version
+	}
+	if version < 1 || version > newest {
+		return false
+	}
+	if version == 6 {
+		if obfs := node.Obfs; obfs != "" && !strings.EqualFold(obfs, "none") {
+			return false
+		}
+		if psk := len(node.Password); psk < 12 || psk > 255 {
+			return false
+		}
+	}
+	return true
 }
 
 // appendClashReality writes the REALITY options block. support-x25519mlkem768

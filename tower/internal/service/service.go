@@ -1287,7 +1287,11 @@ func ParseProtocols(raw string) []model.ProxyKind {
 // parser also understands, so the first attempt usually succeeds.
 func FetchSubscription(url, userAgent string) ([]byte, *model.SubscriptionUsage, error) {
 	if strings.TrimSpace(userAgent) != "" {
-		return fetchOnce(url, userAgent)
+		body, usage, err := fetchOnce(url, userAgent)
+		if err != nil {
+			return nil, nil, err
+		}
+		return body, usageOrProbe(url, userAgent, usage), nil
 	}
 
 	for _, ua := range []string{"clash-verge/v2.4.2", "ClashMeta", "ClashForWindows/0.20.39", "Clash"} {
@@ -1296,10 +1300,124 @@ func FetchSubscription(url, userAgent string) ([]byte, *model.SubscriptionUsage,
 			continue
 		}
 		if len(parser.Parse(body, "").Nodes) > 0 {
-			return body, usage, nil
+			return body, usageOrProbe(url, ua, usage), nil
 		}
 	}
 	return nil, nil, fmt.Errorf("no nodes found at %s", url)
+}
+
+// usageOrProbe fills a missing quota from a second request that reads only
+// the Subscription-Userinfo header. It runs only when the node fetch carried
+// no usable quota, and only after it, so a refresh never puts two requests
+// on one airport panel at once. The probe body is never used: the panel's
+// Clash converter drops whatever it cannot express.
+func usageOrProbe(url, userAgent string, usage *model.SubscriptionUsage) *model.SubscriptionUsage {
+	if usage != nil {
+		return usage
+	}
+	probe := quotaProbeURL(url)
+	if probe == "" {
+		return nil
+	}
+	probed, err := fetchUsageHeader(probe, userAgent)
+	if err != nil {
+		return nil
+	}
+	return probed
+}
+
+// quotaProbeURL returns the URL to ask for a plan quota: the airport link a
+// subconverter request wraps, or the link itself, with flag=clash appended
+// so the airport answers in Clash's dialect. It returns "" when the caller
+// already pinned a flag themselves.
+func quotaProbeURL(rawurl string) string {
+	if wrapped := convertedSubscriptionURL(rawurl); wrapped != "" {
+		if flagged := clashFlaggedURL(wrapped); flagged != "" {
+			return flagged
+		}
+		return wrapped
+	}
+	return clashFlaggedURL(rawurl)
+}
+
+// convertedSubscriptionURL returns the airport link inside a subconverter
+// request, when there is exactly one.
+func convertedSubscriptionURL(rawurl string) string {
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		return ""
+	}
+	q := u.Query()
+	if !hasQueryKey(q, "target") {
+		return ""
+	}
+	wrapped := strings.TrimSpace(firstQueryValue(q, "url"))
+	if wrapped == "" || strings.Contains(wrapped, "|") {
+		return ""
+	}
+	w, err := url.Parse(wrapped)
+	if err != nil || w.Host == "" {
+		return ""
+	}
+	switch strings.ToLower(w.Scheme) {
+	case "http", "https":
+		return wrapped
+	default:
+		return ""
+	}
+}
+
+// clashFlaggedURL appends flag=clash, unless a flag is already pinned.
+func clashFlaggedURL(rawurl string) string {
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		return ""
+	}
+	q := u.Query()
+	if hasQueryKey(q, "flag") {
+		return ""
+	}
+	q.Add("flag", "clash")
+	u.RawQuery = q.Encode()
+	return u.String()
+}
+
+func hasQueryKey(q url.Values, key string) bool {
+	for k := range q {
+		if strings.EqualFold(k, key) {
+			return true
+		}
+	}
+	return false
+}
+
+func firstQueryValue(q url.Values, key string) string {
+	for k, vals := range q {
+		if strings.EqualFold(k, key) && len(vals) > 0 {
+			return vals[0]
+		}
+	}
+	return ""
+}
+
+// fetchUsageHeader reads only the Subscription-Userinfo header of a quota
+// probe response; the body is never used.
+func fetchUsageHeader(probeURL, userAgent string) (*model.SubscriptionUsage, error) {
+	client := &http.Client{Timeout: 20 * time.Second}
+	req, err := http.NewRequest(http.MethodGet, probeURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", userAgent)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
+	}
+	return parseSubscriptionUserinfo(resp.Header.Get("Subscription-Userinfo")), nil
 }
 
 func fetchOnce(url, userAgent string) ([]byte, *model.SubscriptionUsage, error) {
@@ -1351,6 +1469,13 @@ func parseSubscriptionUserinfo(value string) *model.SubscriptionUsage {
 		}
 	}
 	if !found {
+		return nil
+	}
+	// Online subconverter instances answer `upload=0; download=1; total=1`
+	// whenever the airport's own header did not reach them. A one-byte plan
+	// is never real, and treating it as one shows the plan as used up while
+	// also stopping the quota probe that would find the true numbers.
+	if usage.TotalBytes == 1 && usage.ExpiresAt == nil {
 		return nil
 	}
 	return usage

@@ -290,17 +290,17 @@ func singBoxOutbound(node model.ProxyNode, tag string) map[string]any {
 				opts = append(opts, "tls")
 			}
 			if node.HostHeader != "" {
-				opts = append(opts, "host="+node.HostHeader)
+				opts = append(opts, "host="+sip003Value(node.HostHeader))
 			}
 			if p := node.ExportablePath(); p != "" {
-				opts = append(opts, "path="+p)
+				opts = append(opts, "path="+sip003Value(p))
 			}
 			outbound["plugin_opts"] = strings.Join(opts, ";")
 		} else if mode := simpleObfsMode(node); mode != "" {
 			outbound["plugin"] = "obfs-local"
 			opts := []string{"obfs=" + mode}
 			if node.ObfsParam != "" {
-				opts = append(opts, "obfs-host="+node.ObfsParam)
+				opts = append(opts, "obfs-host="+sip003Value(node.ObfsParam))
 			}
 			outbound["plugin_opts"] = strings.Join(opts, ";")
 		}
