@@ -623,6 +623,17 @@ a.vt-crumb:hover { color: var(--text); }
 .vt-icon-btn:hover { background: var(--s3); color: var(--text); border-color: var(--line); }
 .vt-icon-btn .vt-fill, .vt-pal .vt-fill, .vt-appearance .vt-fill { fill: currentColor; stroke: none; }
 .vt-icon-btn[aria-expanded="true"] { background: var(--s3); color: var(--text); border-color: var(--line); }
+/* the daily check knows of a newer version (menu-vantage.js applyUpdate):
+   a still dot at the gear's corner, the indicators' size, in the notice
+   colour, ringed in what is behind it */
+#vt-look[data-vt-update] { position: relative; }
+#vt-look[data-vt-update]::after {
+	content: ""; position: absolute; left: calc(50% + 5px); top: calc(50% - 12px);
+	width: 7px; height: 7px; border-radius: 50%;
+	background: var(--info); box-shadow: 0 0 0 2px var(--bg);
+	pointer-events: none;
+}
+#vt-look[data-vt-update]:is(:hover, [aria-expanded="true"])::after { box-shadow: 0 0 0 2px var(--s3); }
 
 /* Appearance (menu-vantage.js), under the gear button: each
    setting a native radio group drawn as segments, like the page tabs */
@@ -639,6 +650,8 @@ a.vt-crumb:hover { color: var(--text); }
 /* where the picks are kept, when not for every browser */
 .vt-appear-note { max-width: 32ch; margin: 0; color: var(--text-3); font-size: var(--fs-sm); line-height: 1.4; }
 .vt-appear-note[hidden] { display: none; }
+/* the daily check's line of help, under its options */
+.vt-appear-set > .vt-appear-note { margin-top: 6px; }
 .vt-appear-ver { margin: 0; color: var(--text-3); font-size: var(--fs-micro); }
 .vt-appear-num { font-family: var(--mono); }
 .vt-appear-check { margin: 0; padding: 0; border: 0; background: none; color: var(--accent-text); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
@@ -1794,7 +1807,11 @@ table { border-collapse: separate; border-spacing: 0; width: 100%; }
 }
 
 .td.cbi-value-field.inactive { visibility: hidden; }
-.td.cbi-section-actions, .th.cbi-section-actions { text-align: right; white-space: nowrap; width: 1%; }
+.td.cbi-section-actions, .th.cbi-section-actions { white-space: nowrap; width: 1%; }
+/* the buttons end the row, the filter row's Reset with them; a title
+   over them (Static Lease) starts where they start, as every other
+   column's title does */
+.td.cbi-section-actions, .cbi-section-table-filter > .th.cbi-section-actions { text-align: right; }
 .td.cbi-section-actions > div:not(.btn, .cbi-button) { display: inline-flex; gap: 4px; flex-wrap: nowrap; align-items: center; }
 .td.cbi-section-actions .btn, .td.cbi-section-actions .cbi-button { padding: 0 10px; }
 /* three or more row actions: the main one plus ⋯ (menu-vantage.js
@@ -3555,6 +3572,11 @@ body[data-page="admin-system-filemanager"] .sort-button { border-color: var(--li
 	.vt-pal-overlay { padding: var(--sp-3); align-items: flex-start; }
 	.vt-pal { max-height: 80vh; }
 	.vt-pal-foot > span:not(.vt-pal-count) { display: none; }
+	/* a client, radio or network from the dashboard: its second text
+	   (address, network, access point) under its name, whole */
+	.vt-pal-two { flex-wrap: wrap; row-gap: 0; }
+	.vt-pal-two .vt-pal-title { flex-basis: 0; }
+	.vt-pal-two .vt-pal-path { order: 1; flex: 0 0 100%; max-width: none; white-space: normal; overflow-wrap: anywhere; }
 }
 
 /* touch, at any width: 16px text in fields (iOS zooms below that),

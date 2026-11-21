@@ -25,6 +25,7 @@
 	const look_backdrop = look('backdrop', [ 'grid', 'stars', 'none' ]);
 	const look_power = look('power', [ 'normal', 'low' ]);
 	const look_unfocused = look('unfocused', [ 'still', 'moving' ]);
+	const look_units = look('units', [ 'bits', 'bytes' ]);
 	const look_brand = look('brand', [ 'none', 'hostname', 'model' ]);
 	/* The dashboard's chart style and layouts, saved with it. A layout passes
 	   only in the form vantage.layout reads, 'wide=hero:0:4 chart:0:2:h;mid=default' */
@@ -33,7 +34,7 @@
 		/* compiled once a page, not once a layout: ucode compiles a
 		   literal each time it is reached, and these counted repeats
 		   take milliseconds to compile on a router */
-		const form = /^(default|[a-z]{1,8}:[0-3]:[1-4](:h)?( [a-z]{1,8}:[0-3]:[1-4](:h)?){0,7})$/;
+		const form = /^(default|[a-z]{1,8}:[0-3]:[1-4](:h)?( [a-z]{1,8}:[0-3]:[1-4](:h)?){0,11})$/;
 		let out = [];
 		if (authed)
 			for (let k in [ 'wide', 'mid', 'narrow', 'wide_wired', 'mid_wired', 'narrow_wired' ]) {
@@ -62,7 +63,7 @@
 	})();
 -%}
 <!DOCTYPE html>
-<html lang="{{ lang }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-backdrop="{{ look_backdrop }}" data-vt-look-power="{{ look_power }}" data-vt-look-unfocused="{{ look_unfocused }}" data-vt-look-brand="{{ look_brand }}" data-vt-look-chart="{{ look_chart }}" data-vt-look-layout="{{ look_layout }}" data-vt-look-save="{{ look_save }}">
+<html lang="{{ lang }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-backdrop="{{ look_backdrop }}" data-vt-look-power="{{ look_power }}" data-vt-look-unfocused="{{ look_unfocused }}" data-vt-look-units="{{ look_units }}" data-vt-look-brand="{{ look_brand }}" data-vt-look-chart="{{ look_chart }}" data-vt-look-layout="{{ look_layout }}" data-vt-look-save="{{ look_save }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -90,6 +91,8 @@
 	r.setAttribute('data-vt-power', look('power', 'vantage.power.own', 'vantage.power', [ 'normal', 'low' ]));
 	/* Motion when not in focus: whether things go on moving while another window has the focus */
 	r.setAttribute('data-vt-unfocused', look('unfocused', 'vantage.unfocused.own', 'vantage.unfocused', [ 'still', 'moving' ]));
+	/* Speed units: what the dashboard reads its traffic in (fmt) */
+	r.setAttribute('data-vt-units', look('units', 'vantage.units.own', 'vantage.units', [ 'bits', 'bytes' ]));
 	if (rail === 'pinned') r.setAttribute('data-rail', 'pinned');
 })(document.documentElement);
 </script>

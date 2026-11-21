@@ -10,8 +10,8 @@
  * Renders the icon rail + flyouts (bottom bar + sheet on phones), the
  * breadcrumb, level-3 page tabs, the Ctrl+K / "/" command palette, the host
  * chip, the theme switch and decorates LuCI's #indicators. Everything here is
- * built from ui.menu (ACL filtered server side) and rpc; the templates stay
- * data-free.
+ * built from ui.menu (ACL filtered server side) and rpc, but for what a page
+ * hands the palette (PALETTE_EVENT); the templates stay data-free.
  *
  * DOM rule: LuCI's E()/dom.append() assign a plain string argument to
  * innerHTML, so every piece of text (menu titles, breadcrumbs, palette
@@ -41,6 +41,9 @@ const POWER_EVENT = 'vantage:power';
    the browser drawing; on, they go on. The dashboard reads
    data-vt-unfocused and listens for UNFOCUSED_EVENT */
 const UNFOCUSED_EVENT = 'vantage:unfocused';
+/* Speed units (the dashboard's traffic, the Appearance group the app reads
+   too): the dashboard reads data-vt-units and listens for UNITS_EVENT */
+const UNITS_EVENT = 'vantage:units';
 /* The refresh dot's pulse is a CSS animation; running on the compositor it
    makes the browser draw a frame on every display refresh, sixty a second,
    on every page that polls, for a pulse five seconds long. Paused through
@@ -62,16 +65,30 @@ const MOTION_EVENT = 'vantage:tick';
    key, also what the dashboard reads under another theme) counts until
    the router has one. */
 /* this package's version, as its Makefile has it (tests/version.test.js) */
-const VERSION = '1.0.21';
-/* Check for updates (Appearance): when asked, never on its own, the browser
-   reads the project's 24.10 package list on GitHub Pages (the same release
-   as 25.12's), without cookies or a referrer. Only a version number passes;
-   the link is a constant, to the latest release. */
+const VERSION = '1.1.1';
+/* Check for updates (Appearance): when asked, and never on its own unless
+   the daily check below is on, the browser reads the project's 24.10
+   package list on GitHub Pages (the same release as 25.12's), without
+   cookies or a referrer. Only a version number passes; the link is a
+   constant, to the latest release. */
 const UPDATE_INDEX = 'https://anothadev.github.io/luci-theme-vantage/24.10/Packages';
 /* the theme's entry in that list; up here, as jsmin reads a "/" right
    after => as a division and drops the space inside it (every packaged
    check before 1.0.18 failed that way) */
 const UPDATE_ENTRY = /^Package: luci-theme-vantage$/m;
+/* The daily check (#133), off unless picked under Appearance: this browser
+   then asks that list by itself, at most once in UPDATE_EVERY, from a page
+   of this theme that is open and in view. Asking shows the list's host
+   this computer's address, so the pick is this browser's alone: it is not
+   in LOOK, never goes to /etc/config/vantage_theme, and the login page
+   knows nothing of it. Kept with it: the last try and the version the
+   list had, { at, latest }. */
+const UPDATE_AUTO_KEY = 'vantage.update.auto';
+const UPDATE_LAST_KEY = 'vantage.update.last';
+const UPDATE_EVERY = 24 * 3600 * 1000;
+/* the list is a few kilobytes: one that says it is larger than this is
+   not read, and no more than this of one is looked at */
+const UPDATE_MAX = 262144;
 
 const LOOK = {
 	theme: { own: 'vantage.theme.own', before: THEME_KEY, ok: [ 'auto', 'light', 'dark' ] },
@@ -80,7 +97,9 @@ const LOOK = {
 	power: { own: 'vantage.power.own', before: 'vantage.power', ok: [ 'normal', 'low' ] },
 	unfocused: { own: 'vantage.unfocused.own', before: 'vantage.unfocused', ok: [ 'still', 'moving' ] },
 	/* what shows next to the logo; the hostname and model come from system board */
-	brand: { own: 'vantage.brand.own', before: 'vantage.brand', ok: [ 'none', 'hostname', 'model' ] }
+	brand: { own: 'vantage.brand.own', before: 'vantage.brand', ok: [ 'none', 'hostname', 'model' ] },
+	/* what the dashboard reads traffic in; the app's own (fmt.setSpeedUnits) */
+	units: { own: 'vantage.units.own', before: 'vantage.units', ok: [ 'bits', 'bytes' ] }
 };
 const LOOK_SYNC = 'vantage.look';         /* another tab saved one: { name, value } */
 const LOOK_SET_EVENT = 'vantage:backdrop-set';   /* the dashboard's own picker hands its pick over */
@@ -89,7 +108,28 @@ const LOOK_SET_EVENT = 'vantage:backdrop-set';   /* the dashboard's own picker h
    template reads them back with these same rules. */
 const VIEW_SAVE_EVENT = 'vantage:view-save';
 const VIEW_CHARTS = [ 'overlay', 'log', 'mirror', 'mirror-split', 'lanes' ];
-const VIEW_LAYOUT = /^(default|[a-z]{1,8}:[0-3]:[1-4](:h)?( [a-z]{1,8}:[0-3]:[1-4](:h)?){0,7})$/;
+const VIEW_LAYOUT = /^(default|[a-z]{1,8}:[0-3]:[1-4](:h)?( [a-z]{1,8}:[0-3]:[1-4](:h)?){0,11})$/;
+/* The palette finds more than pages where someone answers PALETTE_EVENT:
+   the dashboard, while its page is open, with its clients, radios, Wi-Fi
+   networks and interfaces (luci-app-vantage view/vantage/overview.js,
+   searchEntries). The palette sends the event on window when it opens and
+   each time the query changes, detail { query, add }; a listener hands
+   add(), there and then, a list narrowed to the query, of at most
+   PROVIDED_MAX entries a kind:
+     kind    'client', 'radio', 'ssid' or 'interface': the header it goes under
+     title   its name, matched as a page's title is
+     detail  the row's second text (an address, a channel); optional
+     words   what else finds it and is never shown (a MAC); optional
+     run     a function: what Enter or a click does
+   With no one listening (any other page, no dashboard) it lists pages
+   only. What comes back is someone else's data: an entry not of this form
+   is dropped (providedEntries), its texts only ever become text nodes and
+   nothing of it goes into a URL. */
+const PALETTE_EVENT = 'vantage:palette';
+const PROVIDED_KINDS = [ 'client', 'radio', 'ssid', 'interface' ];
+const PROVIDED_MAX = 8;
+const PROVIDED_SCAN = 64;                 /* entries looked at, of however many came */
+const PROVIDED_TEXT = 128, PROVIDED_WORDS = 512;
 const callLookSet = rpc.declare({ object: 'uci', method: 'set', params: [ 'config', 'section', 'values' ], reject: true });
 const callLookCommit = rpc.declare({ object: 'uci', method: 'commit', params: [ 'config' ], reject: true });
 /* While an apply awaits its rollback, rpcd refuses commit and revert alike, but not set: a pick set
@@ -207,6 +247,24 @@ function listedVersion(text) {
 	const m = block && /^Version: (\S+)$/m.exec(block);
 	return m && versionParts(m[1]) ? m[1].replace(/-r\d+$/, '') : null;
 }
+/* the daily check's last try as kept, { at, latest }: a time, and a
+   version or null (none read); null for anything else */
+function updateMemory(text) {
+	let m = null;
+	try { m = JSON.parse(text); } catch (e) {}
+	if (!m || typeof m.at !== 'number' || !isFinite(m.at)) return null;
+	return { at: m.at, latest: (typeof m.latest === 'string' && versionParts(m.latest)) ? m.latest : null };
+}
+/* a check is due unless one was tried in the UPDATE_EVERY before `now`
+   (a try dated ahead of the clock does not count) */
+function updateDue(mem, now) {
+	return !(mem && mem.at <= now && now - mem.at < UPDATE_EVERY);
+}
+/* the version to tell about: the one the list had, when newer than `running` */
+function newerKnown(mem, running) {
+	const a = mem && versionParts(mem.latest), b = versionParts(running);
+	return (a && b && newerVersion(a, b)) ? mem.latest : null;
+}
 
 /* the value in force, from [ pending, own, router, before ]: the first
    the theme knows, else the first choice (the default); the templates'
@@ -233,6 +291,7 @@ function setLookAttr(root, name, value) {
 	else if (name === 'power') root.setAttribute('data-vt-look-power', value);
 	else if (name === 'unfocused') root.setAttribute('data-vt-look-unfocused', value);
 	else if (name === 'brand') root.setAttribute('data-vt-look-brand', value);
+	else if (name === 'units') root.setAttribute('data-vt-look-units', value);
 }
 function storageSet(k, v) { try { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} }
 
@@ -302,33 +361,89 @@ function pathScore(query, path) {
 }
 
 /* Palette results for a query, best first: entries whose title matches,
-   or only when no title does, those whose path does. Equal scores go to
-   the shallower entry (Network › Wireless before a Wireless tab). */
+   or only when no title does, those whose path does (a provider's entry:
+   its second text and its words, `find`). Equal scores go to the
+   shallower entry (Network › Wireless before a Wireless tab). */
 function rankPalette(query, pool) {
 	const onTitle = [], onPath = [];
 	for (const e of pool) {
 		const t = fuzzy(query, e.title);
 		if (t) { onTitle.push({ e, score: t.score, idx: t.idx }); continue; }
-		const p = pathScore(query, e.path);
+		const p = pathScore(query, e.find || e.path);
 		if (p != null) onPath.push({ e, score: p, idx: [] });
 	}
 	const depth = r => (r.e.segs || []).length;
 	return (onTitle.length ? onTitle : onPath).sort((a, b) => (b.score - a.score) || (depth(a) - depth(b)));
 }
 
+/* the header of a provider's kind (PROVIDED_KINDS); null for any other */
+function kindTitle(kind) {
+	switch (kind) {
+	case 'client': return _('Clients');
+	case 'radio': return _('Radios');
+	case 'ssid': return _('Wireless networks', 'vantage-theme');
+	case 'interface': return _('Interfaces');
+	}
+	return null;
+}
+
+/* What a provider handed over (see PALETTE_EVENT), as palette entries:
+   those of the form only, the first PROVIDED_MAX of a kind, of the first
+   PROVIDED_SCAN looked at. An entry's function is kept as it came and
+   called with nothing; what it throws stays with it. */
+function providedEntries(list) {
+	const out = [], n = new Map();
+	const within = (v, max) => typeof v === 'string' && v.length <= max;
+	for (const p of Array.isArray(list) ? list.slice(0, PROVIDED_SCAN) : []) {
+		if (!p || typeof p !== 'object') continue;
+		const kind = p.kind, title = p.title, run = p.run;
+		const detail = p.detail == null ? '' : p.detail, words = p.words == null ? '' : p.words;
+		const group = kindTitle(kind);
+		if (!group || typeof run !== 'function' || !within(title, PROVIDED_TEXT) || !title.trim() ||
+		    !within(detail, PROVIDED_TEXT) || !within(words, PROVIDED_WORDS)) continue;
+		n.set(kind, (n.get(kind) || 0) + 1);
+		if (n.get(kind) > PROVIDED_MAX) continue;
+		out.push({ kind, group, title, path: detail, find: detail + ' ' + words, run: () => {
+			try { run(); }
+			catch (e) { if (window.console) console.warn('vantage: palette entry', e); }
+		} });
+	}
+	return out;
+}
+
+/* The palette with a query: the pages as rankPalette left them and, where
+   a provider answered, its entries ranked the same way a kind at a time,
+   each kind under its header. The part that holds the best match comes
+   first, the pages on a tie; while they lead they go without a header,
+   as they do alone. pages: [ { e, score, idx } ]; provided:
+   providedEntries'; pagesHead: the pages' header -> [ { r, head, path } ] */
+function paletteSections(query, pages, provided, pagesHead) {
+	const parts = [ { rows: pages, head: pagesHead, pages: true } ];
+	for (const kind of PROVIDED_KINDS) {
+		const mine = provided.filter(e => e.kind === kind);
+		if (mine.length) parts.push({ rows: rankPalette(query, mine), head: mine[0].group });
+	}
+	/* sort() keeps the order of equals: the pages, then the kinds as listed */
+	const order = parts.filter(p => p.rows.length).sort((a, b) => b.rows[0].score - a.rows[0].score);
+	return order.flatMap((p, n) => p.rows.map((r, i) => ({ r, head: (i || (p.pages && !n)) ? null : p.head, path: r.e.path })));
+}
+
 /* The palette without a query: rows under their category's header, which
    a category of one row goes without. Under a header a row's path leaves
    the category out (a tab shows its page only); a row without one keeps
-   its whole path. results: [ { e } ] in index order -> [ { r, head, path } ] */
+   its whole path. A provider's entries (e.kind) always have their header,
+   as their second text is no path and says nothing of the kind.
+   results: [ { e } ] in index order -> [ { r, head, path } ] */
 function paletteLayout(results) {
 	const size = new Map();
 	for (const r of results) size.set(r.e.group, (size.get(r.e.group) || 0) + 1);
 	let prev = null;
 	return results.map(r => {
-		const g = r.e.group, headed = size.get(g) > 1;
+		const g = r.e.group, headed = size.get(g) > 1 || !!r.e.kind;
 		const head = (headed && g !== prev) ? g : null;
 		prev = g;
 		let path = r.e.path || '';
+		if (r.e.kind) return { r, head, path };
 		if (headed && path === g) path = '';
 		else if (headed && path.startsWith(g + ' › ')) path = path.slice(g.length + 3);
 		return { r, head, path };
@@ -406,6 +521,20 @@ function notFound(spec) {
 	if (!spec || typeof spec !== 'object') return false;
 	const type = spec.action && typeof spec.action === 'object' ? spec.action.type : null;
 	return !type || type === 'firstchild';
+}
+
+/* What the tab's title starts with while the dashboard says something
+   needs attention: luci-app-vantage sets data-vt-alert on <html> ('warn'
+   or 'err', as the refresh dot reads it in vantage.css) and, since 1.1,
+   data-vt-alert-count, how many checks say so. "(2) " then, the form a
+   mail tab has made familiar, and in front, as a narrow tab cuts the
+   title's end; "(!) " where no count comes with the level (an older
+   dashboard), or what comes is not a number from 1 to 999. Signs and
+   digits only: nothing in it to translate. */
+function alertMark(level, count) {
+	if (level !== 'warn' && level !== 'err') return '';
+	const n = String(count == null ? '' : count), counted = /^[1-9]\d{0,2}$/.test(n);
+	return counted ? '(' + n + ') ' : '(!) ';
 }
 
 /* Does help text carry a warning? LuCI writes them as a paragraph that
@@ -916,7 +1045,9 @@ return baseclass.extend({
 		setupCharts();
 		setupNftFlow();
 		this.setupKeys();
+		this.watchAlert();
 		this.loadHost();
+		this.setupUpdate();
 
 		ui.menu.load().then(L.bind(this.render, this));
 	},
@@ -1476,19 +1607,43 @@ return baseclass.extend({
 		if (this.palReturn && this.palReturn.focus) this.palReturn.focus();
 	},
 
+	/* what whoever answers PALETTE_EVENT has for the query: its entries as
+	   providedEntries leaves them, and whether anyone answered at all. Only
+	   what is handed over while the event is out counts. */
+	provided(query) {
+		const raw = [];
+		let asking = true, answered = false;
+		window.dispatchEvent(new CustomEvent(PALETTE_EVENT, { detail: { query, add: list => {
+			if (!asking || !Array.isArray(list)) return;
+			answered = true;
+			for (const p of list.slice(0, PROVIDED_SCAN - raw.length)) raw.push(p);
+		} } }));
+		asking = false;
+		let entries = [];
+		try { entries = providedEntries(raw); }
+		catch (e) { if (window.console) console.warn('vantage: palette entries', e); }
+		return { entries, answered };
+	},
+
 	filterPalette() {
 		const pal = this.pal;
 		const q = pal.input.value.trim();
 		const pool = this.entries.concat(this.actions());
+		const got = this.provided(q);
 		const found = q ? rankPalette(q, pool) : null;
 		const results = q ? found.slice(0, 40) : pool.map(e => ({ e, idx: [] }));
-		const rows = q ? results.map(r => ({ r, head: null, path: r.e.path })) : paletteLayout(results);
+		/* without a query a provider's entries come after the pages and
+		   actions, which stay where they are on every page */
+		const rows = q ? paletteSections(q, results, got.entries, _('Pages and actions'))
+			: paletteLayout(results.concat(got.entries.map(e => ({ e, idx: [] }))));
 
 		pal.list.textContent = '';
 		pal.items = [];
 		rows.forEach(({ r, head, path }, n) => {
 			if (head) pal.list.appendChild(E('li', { 'class': 'vt-pal-group', 'role': 'presentation' }, [ head ]));
-			const li = E('li', { 'class': 'vt-pal-item', 'role': 'option', 'id': 'vt-pal-opt-' + n, 'aria-selected': 'false' }, [
+			/* a provider's row has more to say beside its name than a page's:
+			   on a phone it goes under the name (vantage.css) */
+			const li = E('li', { 'class': r.e.kind ? 'vt-pal-item vt-pal-two' : 'vt-pal-item', 'role': 'option', 'id': 'vt-pal-opt-' + n, 'aria-selected': 'false' }, [
 				r.e.icon ? svg(r.e.icon, 18) : '',
 				highlight(r.e.title, r.idx),
 				path ? E('span', { 'class': 'vt-pal-path' }, [ path ]) : '',
@@ -1500,10 +1655,12 @@ return baseclass.extend({
 			pal.items.push({ li, e: r.e });
 		});
 
-		if (!results.length)
-			pal.list.appendChild(E('li', { 'class': 'vt-pal-empty', 'role': 'presentation' }, [ _('No matching pages') ]));
+		if (!rows.length)
+			pal.list.appendChild(E('li', { 'class': 'vt-pal-empty', 'role': 'presentation' }, [ got.answered ? _('Nothing found') : _('No matching pages') ]));
 
-		pal.count.textContent = q ? N_(found.length, '%d result', '%d results', 'vantage-theme').format(found.length) : '';
+		/* every page that matched, shown or not, and the provider's rows */
+		const total = q ? found.length + rows.length - results.length : 0;
+		pal.count.textContent = q ? N_(total, '%d result', '%d results', 'vantage-theme').format(total) : '';
 		this.setPaletteActive(0, true);
 	},
 
@@ -1758,6 +1915,24 @@ return baseclass.extend({
 		this.syncAppearance();
 	},
 
+	unitsPref() {
+		return this.lookPref('units');
+	},
+
+	setUnitsPref(pref) {
+		this.setLook('units', pref, () => this.applyUnits());
+	},
+
+	/* the dashboard reads the one in force from data-vt-units (fmt) */
+	applyUnits() {
+		const v = this.unitsPref();
+		if (this.root.getAttribute('data-vt-units') !== v) {
+			this.root.setAttribute('data-vt-units', v);
+			window.dispatchEvent(new CustomEvent(UNITS_EVENT));
+		}
+		this.syncAppearance();
+	},
+
 	setupTheme() {
 		const toggle = document.getElementById('vt-theme');
 		if (toggle) toggle.addEventListener('click', () => { if (this.themeNext) this.setTheme(this.themeNext); });
@@ -1781,6 +1956,8 @@ return baseclass.extend({
 		const keys = [ LOOK_SYNC ];
 		Object.keys(LOOK).forEach(n => keys.push(LOOK[n].own, LOOK[n].before));
 		window.addEventListener('storage', ev => {
+			/* the daily check, switched or answered in another tab */
+			if (ev.key === UPDATE_AUTO_KEY || ev.key === UPDATE_LAST_KEY) this.applyUpdate();
 			if (keys.indexOf(ev.key) < 0) return;
 			if (ev.key === LOOK_SYNC) {
 				let m = null;
@@ -1796,6 +1973,7 @@ return baseclass.extend({
 			this.applyBackdrop();
 			this.applyPower();
 			this.applyUnfocused();
+			this.applyUnits();
 			this.applyBrand();
 		});
 		/* the dashboard's own picker (Customize), saved as Appearance's */
@@ -1820,7 +1998,9 @@ return baseclass.extend({
 		this.applyBackdrop();
 		this.applyPower();
 		this.applyUnfocused();
+		this.applyUnits();
 		this.applyBrand();
+		this.applyUpdate();
 	},
 
 	/* Appearance, under the gear button: the colour theme, the
@@ -1831,7 +2011,7 @@ return baseclass.extend({
 	   scrolling the page close it. */
 	/* one of Appearance's radio groups */
 	appearGroup(name, legend, opts, set) {
-		const look = { 'vt-colour': 'theme', 'vt-logo-name': 'brand', 'vt-login': 'login', 'vt-backdrop': 'backdrop', 'vt-power': 'power', 'vt-unfocused': 'unfocused' }[name];
+		const look = { 'vt-colour': 'theme', 'vt-logo-name': 'brand', 'vt-login': 'login', 'vt-backdrop': 'backdrop', 'vt-units': 'units', 'vt-power': 'power', 'vt-unfocused': 'unfocused' }[name];
 		return E('fieldset', { 'class': 'vt-appear-set' }, [
 			E('legend', {}, [ legend ]),
 			E('div', { 'class': 'vt-appear-track' }, opts.map(o => {
@@ -1852,10 +2032,11 @@ return baseclass.extend({
 		return this.appearGroup('vt-backdrop', _('Network path background'), [ [ 'grid', n.grid ], [ 'stars', n.stars ], [ 'none', n.none ] ], v => this.setBackdropPref(v));
 	},
 
-	/* the dashboard's groups: its network path's background, and the
-	   low-power mode */
+	/* the dashboard's groups: its network path's background, its traffic's
+	   unit, and the low-power mode */
 	dashboardGroups() {
 		return [ this.backdropGroup(),
+			this.appearGroup('vt-units', _('Speed units'), [ [ 'bits', _('Bits/s') ], [ 'bytes', _('Bytes/s') ] ], v => this.setUnitsPref(v)),
 			this.appearGroup('vt-power', _('Low-power router'), [ [ 'normal', _('Off') ], [ 'low', _('On') ] ], v => this.setPowerPref(v)) ];
 	},
 
@@ -1875,6 +2056,7 @@ return baseclass.extend({
 			(this.appearUnfocused = group('vt-unfocused', _('Motion when not in focus'), [ [ 'still', _('Off') ], [ 'moving', _('On') ] ], v => this.setUnfocusedPref(v))),
 			/* where the picks are kept, when not for every browser (syncAppearance) */
 			(this.appearNote = E('p', { 'class': 'vt-appear-note', 'role': 'status', 'hidden': 'hidden' })),
+			this.updateGroup(),
 			this.versionEl()
 		]));
 		box.addEventListener('keydown', ev => {
@@ -1905,11 +2087,51 @@ return baseclass.extend({
 		const btn = E('button', { 'type': 'button', 'class': 'vt-appear-check' }, [ _('Check for updates') ]);
 		const out = E('span', { 'class': 'vt-appear-update', 'role': 'status', 'hidden': 'hidden' });
 		btn.addEventListener('click', () => this.checkUpdates(btn, out));
+		this.updateOut = out;
+		this.applyUpdate();
 		return E('p', { 'class': 'vt-appear-ver' }, [ E('span', { 'class': 'vt-appear-num' }, [ 'Vantage ' + VERSION ]), ' · ', btn, out ]);
 	},
 
 	releaseLink(label) {
 		return E('a', { 'href': 'https://github.com/anothaDev/luci-theme-vantage/releases/latest', 'target': '_blank', 'rel': 'noopener noreferrer' }, [ label ]);
+	},
+
+	/* "Version 1.0.17 is available. What's new" */
+	tellNewer(out, latest) {
+		out.textContent = '';
+		out.appendChild(document.createTextNode(_('Version %s is available.').format(latest) + ' '));
+		out.appendChild(this.releaseLink(_('What\'s new')));
+		out.hidden = false;
+	},
+
+	/* The theme's version in the list: the one place that asks, for the
+	   manual check and the daily one. With the daily check on, the try
+	   is kept before the answer comes (a reload or another tab asks
+	   nothing more that day, and a try that fails still counts, with what
+	   was known before), then what the list had. */
+	askLatest(daily) {
+		const at = Date.now(), mem = updateMemory(storageGet(UPDATE_LAST_KEY));
+		const keep = latest => { if (this.updatePref() === 'on') storageSet(UPDATE_LAST_KEY, JSON.stringify({ at: at, latest: latest })); };
+		keep(mem ? mem.latest : null);
+		/* the daily check asks only once its try is kept: where the
+		   browser's storage takes no more, every page would ask again */
+		const kept = updateMemory(storageGet(UPDATE_LAST_KEY));
+		if (daily && !(kept && kept.at === at)) return Promise.reject(new Error('try not kept'));
+		const ctl = window.AbortController ? new AbortController() : null;
+		const timer = ctl ? setTimeout(() => ctl.abort(), 10000) : 0;
+		return fetch(UPDATE_INDEX, { cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined })
+			.then(r => {
+				const size = r.headers && r.headers.get ? +r.headers.get('content-length') : 0;
+				return r.ok && !(size > UPDATE_MAX) ? r.text() : Promise.reject(new Error(r.ok ? 'too large' : 'HTTP ' + r.status));
+			})
+			.then(text => {
+				clearTimeout(timer);
+				const latest = listedVersion(String(text).slice(0, UPDATE_MAX));
+				if (!latest) throw new Error('no version');
+				keep(latest);
+				this.applyUpdate();
+				return latest;
+			}, e => { clearTimeout(timer); throw e; });
 	},
 
 	checkUpdates(btn, out) {
@@ -1919,18 +2141,9 @@ return baseclass.extend({
 		btn.setAttribute('aria-disabled', 'true');
 		out.textContent = _('Checking…');
 		out.hidden = false;
-		const ctl = window.AbortController ? new AbortController() : null;
-		const timer = ctl ? setTimeout(() => ctl.abort(), 10000) : 0;
-		fetch(UPDATE_INDEX, { cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined })
-			.then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-			.then(text => {
-				const latest = listedVersion(text);
-				if (!latest) throw new Error('no version');
-				out.textContent = '';
-				if (newerVersion(versionParts(latest), versionParts(VERSION))) {
-					out.appendChild(document.createTextNode(_('Version %s is available.').format(latest) + ' '));
-					out.appendChild(this.releaseLink(_('What\'s new')));
-				}
+		this.askLatest()
+			.then(latest => {
+				if (newerVersion(versionParts(latest), versionParts(VERSION))) this.tellNewer(out, latest);
 				else out.textContent = _('Up to date');
 			})
 			/* offline, or a router whose pages forbid the request (a
@@ -1940,12 +2153,79 @@ return baseclass.extend({
 				out.textContent = _('Could not check for updates.') + ' ';
 				out.appendChild(this.releaseLink(_('See the latest release')));
 			})
-			.then(() => { clearTimeout(timer); btn.removeAttribute('aria-disabled'); });
+			/* shown again: a notice that went meanwhile hid the line (applyUpdate) */
+			.then(() => { out.hidden = false; btn.removeAttribute('aria-disabled'); });
+	},
+
+	/* ------------------------------------------------ the daily check */
+
+	updatePref() {
+		return storageGet(UPDATE_AUTO_KEY) === 'on' ? 'on' : 'off';
+	},
+
+	/* This browser's alone, so not through setLook: nothing of it is
+	   saved on the router. Switched off, what it learned goes too; on,
+	   the first check comes with the next page. */
+	setUpdatePref(pref) {
+		storageSet(UPDATE_AUTO_KEY, pref === 'on' ? 'on' : null);
+		if (pref !== 'on') storageSet(UPDATE_LAST_KEY, null);
+		this.applyUpdate();
+	},
+
+	/* its group, with what it costs in a line under it */
+	updateGroup() {
+		const set = this.appearGroup('vt-update', _('Daily update check'), [ [ 'off', _('Off') ], [ 'on', _('On') ] ], v => this.setUpdatePref(v));
+		set.setAttribute('aria-describedby', 'vt-update-help');
+		set.appendChild(E('p', { 'class': 'vt-appear-note', 'id': 'vt-update-help' }, [
+			_('Once a day this browser reads the project\'s package list on GitHub Pages, which shows GitHub this computer\'s IP address and the address this page was opened at. For this browser only.') ]));
+		return set;
+	},
+
+	/* A newer version the daily check knows of: a dot on the gear, said
+	   in its label, and under Appearance the line the manual check
+	   shows. Gone once this version is that one or a later one, or the
+	   check is switched off. */
+	applyUpdate() {
+		const latest = this.updatePref() === 'on' ? newerKnown(updateMemory(storageGet(UPDATE_LAST_KEY)), VERSION) : null;
+		const btn = document.getElementById('vt-look'), out = this.updateOut;
+		if (btn) {
+			const name = _('Appearance', 'vantage-theme');
+			const label = latest ? '%s: %s'.format(name, _('Version %s is available.').format(latest)) : name;
+			btn.toggleAttribute('data-vt-update', !!latest);
+			if (btn.getAttribute('aria-label') !== label) {
+				btn.setAttribute('aria-label', label);
+				btn.setAttribute('title', label);
+			}
+		}
+		if (out && latest !== (this.updateTold || null)) {
+			if (latest) this.tellNewer(out, latest);
+			else { out.textContent = ''; out.hidden = true; }
+			this.updateTold = latest;
+		}
+		this.syncAppearance();
+	},
+
+	/* Once this page is idle, so it waits for nothing: never from a tab
+	   out of view or a page without a login (the login page does not
+	   load this script either), and not within UPDATE_EVERY of the last
+	   try, whichever page or tab of this browser made it. A check that
+	   fails says nothing. A page left open for days, or loaded in a tab
+	   out of view, checks when its tab comes into view. */
+	setupUpdate() {
+		if (document.addEventListener) document.addEventListener('visibilitychange', () => this.dailyCheck());
+		if (this.updatePref() !== 'on') return;
+		if (window.requestIdleCallback) window.requestIdleCallback(() => this.dailyCheck());
+		else setTimeout(() => this.dailyCheck(), 2000);
+	},
+
+	dailyCheck() {
+		if (this.updatePref() !== 'on' || document.visibilityState !== 'visible' || !document.body.classList.contains('vt-auth')) return;
+		if (updateDue(updateMemory(storageGet(UPDATE_LAST_KEY)), Date.now())) this.askLatest(true).catch(() => {});
 	},
 
 	syncAppearance() {
 		if (!this.appear) return;
-		const now = { 'vt-colour': this.themePref(), 'vt-logo-name': this.brandPref(), 'vt-login': this.loginPref(), 'vt-backdrop': this.backdropPref(), 'vt-power': this.powerPref(), 'vt-unfocused': this.unfocusedPref() };
+		const now = { 'vt-colour': this.themePref(), 'vt-logo-name': this.brandPref(), 'vt-login': this.loginPref(), 'vt-backdrop': this.backdropPref(), 'vt-units': this.unitsPref(), 'vt-power': this.powerPref(), 'vt-unfocused': this.unfocusedPref(), 'vt-update': this.updatePref() };
 		Array.prototype.forEach.call(this.appear.querySelectorAll('input[type="radio"]'), r => { r.checked = (now[r.name] === r.value); });
 		const state = this.lookState();
 		const note = state === 'relogin' ? _('Log in again to save Appearance for every browser.')
@@ -2013,9 +2293,25 @@ return baseclass.extend({
 		});
 	},
 
+	/* "Page · hostname", with alertMark in front while the dashboard
+	   reports a problem, so a tab left in the background shows it. The
+	   one place that writes the title: the level is read from <html> each
+	   time, so whichever comes last (the menu, the hostname, the
+	   dashboard's word) finds the rest. */
 	updateTitle() {
 		const parts = [ this.pageTitle, this.hostname ].filter(Boolean);
-		if (parts.length) document.title = parts.join(' · ');
+		if (!parts.length) return;
+		const title = alertMark(this.root.getAttribute('data-vt-alert'), this.root.getAttribute('data-vt-alert-count')) + parts.join(' · ');
+		if (document.title !== title) document.title = title;
+	},
+
+	/* The dashboard sets its level again at every poll: the title is
+	   written only when it changes (updateTitle). Any other page, or no
+	   dashboard, sets nothing and the title stays as it was; leaving the
+	   dashboard loads a new page, which starts without the mark. */
+	watchAlert() {
+		if (!window.MutationObserver) return;
+		new window.MutationObserver(() => this.updateTitle()).observe(this.root, { attributes: true, attributeFilter: [ 'data-vt-alert', 'data-vt-alert-count' ] });
 	},
 
 	/* -------------------------------------------------- indicators */

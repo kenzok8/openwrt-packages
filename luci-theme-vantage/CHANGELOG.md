@@ -6,6 +6,117 @@ Each release ships both packages, `luci-theme-vantage` and
 <https://github.com/anothaDev/luci-theme-vantage/releases> and in the
 [signed repositories](https://anothadev.github.io/luci-theme-vantage/).
 
+## 1.1.1 - 2026-11-21
+
+- **Speed units** ([#145](https://github.com/anothaDev/luci-theme-vantage/pull/145),
+  [@m38d1](https://github.com/m38d1)). A new option under Appearance,
+  between the network path's background and Low-power router: the
+  dashboard's traffic in Bits/s, as before, or in Bytes/s (B/s, kB/s,
+  MB/s). The cards, the charts and their axes, the client rows and Top
+  talkers follow it at once; link and Wi-Fi rates stay in bits, since
+  they are negotiated speeds, not traffic.
+- **Login page: a switch to stay on HTTP** (#137,
+  [@qiyuey](https://github.com/qiyuey)). Opened over plain HTTP, the
+  login page moves to HTTPS where the browser accepts the router's
+  certificate, as LuCI's base login page does (Bootstrap's does not). An
+  administrator can now switch that off:
+  `uci set luci.main.vantage_https='stay'`, then
+  `uci commit luci`. The default is unchanged. See
+  [Troubleshooting](docs/INSTALL.md#the-login-page-moves-from-http-to-https).
+
+## 1.1.0 - 2026-11-21
+
+- **Your other access points on the dashboard** (optional add-on
+  `luci-app-vantage-aps`; ideas from #5 by
+  [@nhAsif](https://github.com/nhAsif), #127 and #130 by
+  [@Vikk20](https://github.com/Vikk20)). Pair each OpenWrt access point
+  once under Network → Access points and the router's dashboard shows
+  its Wi-Fi networks, their clients and its wired hosts beside its own:
+  in the network path, in the Clients list and in a client's details.
+  An access point plugged into another is drawn under it. The router
+  reads each access point over SSH with a key that can do one thing
+  there, run a read-only report, and only from the access point whose
+  host key it pinned at pairing; nothing is broadcast on the network.
+  When an access point's address changes the router finds it again by
+  its MAC, on the network it was paired on, also after that network was
+  given another subnet. Seeing the paired access points needs its own
+  permission, `luci-app-vantage-aps-view`; pairing needs
+  `luci-app-vantage-aps`, for administrators. Install the add-on on the
+  router and on each access point:
+  `apk add luci-app-vantage-aps` (24.10: `opkg install
+  luci-app-vantage-aps`). See
+  [Other access points](docs/INSTALL.md#other-access-points-optional).
+- **Search finds clients, radios and networks** (Ctrl+K or `/`). On the
+  dashboard the command palette also lists clients by name, MAC or
+  address, radios by band or channel, Wi-Fi networks and interfaces,
+  and Enter opens what a click on them opens.
+- **WireGuard tile** (#129, [@nubbhr](https://github.com/nubbhr)).
+  Where a tunnel exists, a tile lists its peers with their name, the
+  time since the last handshake and their traffic. It reads LuCI's own
+  WireGuard status, so it shows for logins that may open that page; the
+  dashboard's own permissions are unchanged.
+- **Ports tile.** On a device with two Ethernet ports or more, a tile
+  with a cell for each port: its link and negotiated speed, its
+  traffic, how many wired hosts sit behind it, and a mark on the port a
+  line to the internet leaves through. Error, drop and collision
+  counters show only where they are not zero. It is read from what the
+  dashboard already polls. A saved layout may now hold twelve tiles.
+- **Top talkers on routers without Wi-Fi** (#129). Wired devices that
+  have a port to themselves are ranked with the Wi-Fi clients, and the
+  tile now exists on a wired-only device, whose default layout has five
+  tiles. The clients of a paired access point are not ranked: the
+  router counts their traffic on the access point's port, not per
+  device.
+- **Named devices that are offline.** A device you gave a name is no
+  longer gone from the Clients tile five minutes after it left: an
+  Offline filter lists the named devices that are not connected, with
+  their last address and when they were last seen where the page knows.
+- **Daily update check, if you want one** (#133,
+  [@HyperdrivzZ](https://github.com/HyperdrivzZ)). A new option under
+  Appearance, off by default and kept in this browser only: once a day
+  the browser reads the project's package list and puts a dot on the
+  gear when a newer version is out. It tells the list's host (GitHub
+  Pages) your computer's address, which is why it is off unless you
+  switch it on. Updating stays with the package manager.
+- **Attention in the tab's title.** While something needs attention the
+  dashboard's tab reads "(2) Dashboard · hostname", so a tab left in
+  the background shows it.
+- **"What's new" after an upgrade.** The first time a browser loads the
+  dashboard after an upgrade, one line links to this file; it goes when
+  closed or followed. Nothing is fetched for it.
+- **Details that were missing.** The uplink's details show the
+  delegated IPv6 prefix and say when the line sits behind another NAT
+  (a private or carrier-grade address); MAC and IP addresses have a
+  Copy button; the device's details list every temperature sensor and
+  the firmware's build date.
+- **No slow-link warning for a port that can do no better.** An uplink
+  under 1 Gbit/s warned for good on a router with Fast Ethernet ports
+  or behind a 100 Mbit/s modem. The warning now stays away when the
+  link runs at the fastest speed both ends offer.
+- **Qualcomm QSDK radios from the wireless config** (#138,
+  [@milkman-wang](https://github.com/milkman-wang)). On firmware whose
+  radios are driven by `qcawificfg80211` (QWRT) the dashboard listed no
+  Wi-Fi; it now reads the networks from the wireless configuration and
+  shows Wi-Fi 6 and 7 radios as such.
+- **Firewall overview: a negative prefix length is a rule in effect**
+  (#144, [@FanxJK](https://github.com/FanxJK)). A rule that matches an
+  address by its last bits, such as `::1234/-64`, was listed under "Not
+  in effect" as refused by firewall4, which loads it. The overview now
+  reads a prefix length the way firewall4 does.
+- **Tables: the title of an actions column lines up with its buttons**
+  (#143, [@VIKINGYFY](https://github.com/VIKINGYFY)). "Static Lease"
+  over the leases' buttons was right-aligned, apart from every other
+  title, wherever the button is the wider of the two.
+- **Smaller fixes.** A client's Radio row no longer prints "channel 0 ·
+  20 MHz" for a radio whose channel is not known; the storage check
+  reads the root filesystem by name.
+- **Translations.** German is new ([#142](https://github.com/anothaDev/luci-theme-vantage/pull/142),
+  [@bakaranadnan-a11y](https://github.com/bakaranadnan-a11y)): the
+  dashboard, the theme and the access points page, as
+  `luci-i18n-vantage-de`, `luci-i18n-vantage-theme-de` and
+  `luci-i18n-vantage-aps-de`. Russian covers the new texts and the
+  access points page (`luci-i18n-vantage-aps-ru`).
+
 ## 1.0.21 - 2026-11-19
 
 - **Dashboard: the client lists keep their order** (#132,

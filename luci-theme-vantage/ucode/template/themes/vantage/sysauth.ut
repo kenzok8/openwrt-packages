@@ -6,7 +6,10 @@
  fuser is attacker-controlled (formvalue also reads the query string): it is
  only tested, never echoed; the error is generic. The form posts back to the
  requested URL (no action attribute). The inline script is data-free: the
- HTTPS probe reads its port list from an entity-encoded data attribute. The
+ HTTPS probe reads its port list from an entity-encoded data attribute, an
+ empty one where an administrator set luci.main.vantage_https to 'stay'
+ (#137): that config is not the theme's, so a login that may only save
+ Appearance cannot keep everyone's password on plain HTTP. The
  Appearance saved for every browser (/etc/config/vantage_theme) comes as
  data attributes of values the theme knows only.
  LuCI's authentication plugins (25.12 has none; luci-plugin-2fa after it)
@@ -21,7 +24,8 @@
 	let tls = uci.get('uhttpd', 'main', 'listen_https') ?? [];
 	if (type(tls) == 'string')
 		tls = split(tls, /\s+/);
-	const tls_ports = uniq(filter(map(tls, e => +(match(e, /\d+$/)?.[0] ?? 0)), p => (p > 0 && p <= 65535)));
+	const tls_ports = (uci.get('luci', 'main', 'vantage_https') === 'stay') ? []
+		: uniq(filter(map(tls, e => +(match(e, /\d+$/)?.[0] ?? 0)), p => (p > 0 && p <= 65535)));
 	const look = (opt, ok) => { const v = uci.get('vantage_theme', 'appearance', opt); return (type(v) == 'string' && index(ok, v) >= 0) ? v : ''; };
 	const look_theme = look('theme', [ 'auto', 'light', 'dark' ]);
 	const look_login = look('login', [ 'grid', 'stars', 'none' ]);

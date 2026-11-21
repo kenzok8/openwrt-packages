@@ -24,7 +24,8 @@ replaced. The larger access point further down is generated.</sub></p>
 ## What you get
 
 Two packages that work together or alone: the theme doesn't need the
-dashboard, and the dashboard on its own works under any LuCI theme.
+dashboard, and the dashboard on its own works under any LuCI theme. A
+third, optional one adds your other access points to the dashboard.
 
 **The dashboard** (`luci-app-vantage`) is the page you land on after login.
 
@@ -34,13 +35,26 @@ dashboard, and the dashboard on its own works under any LuCI theme.
 - **A live network path.** Your internet lines, this device, its radios
   and SSIDs, and its wired ports, with packets that move at the real
   uplink rate. Click anything for details.
+- **Your other access points too** (optional add-on,
+  `luci-app-vantage-aps`). Pair each access point once and the router's
+  dashboard shows its SSIDs, clients and wired devices beside its own.
+  The router reads them over SSH with a key that can only fetch that
+  report; nothing is shared until you pair.
 - **Every client, by name.** Your alias, a name from DHCP, mDNS, WPS or
   reverse DNS, or else the vendor. You get signal, link rate, Wi-Fi
   generation, live traffic and an experience score that explains itself.
   Wired devices are listed too, with their port and link speed.
 - **Live charts.** Five minutes of throughput for the uplink and every
-  radio, in the chart style you choose, plus radio cards, top talkers and
-  a system tile.
+  radio, in the chart style you choose, plus radio cards, top talkers
+  (Wi-Fi clients, and wired devices that have a port to themselves, so a
+  router without Wi-Fi has them too) and a system tile.
+- **WireGuard peers.** Where a tunnel is up, a tile lists its peers by
+  name, with the time since their last handshake and their live traffic.
+  For logins that may open LuCI's own WireGuard status.
+- **Every port.** On a device with two Ethernet ports or more, a tile
+  shows each one: link and speed, live traffic, the wired devices behind
+  it and which port your internet line leaves through. Errors and drops
+  show up only where there are any.
 - **Firewall overview.** What's open from the internet, which zones reach
   which, and warnings for risky setups. Every item links to the LuCI page
   that changes it.
@@ -64,7 +78,10 @@ dashboard, and the dashboard on its own works under any LuCI theme.
 
 Nothing loads from the internet: Vantage uses system fonts and its own
 icons, with no CDNs or frameworks. The one exception is **Check for
-updates** under Appearance, and only when you click it. The dashboard's only write is device
+updates** under Appearance, and only when you click it, or once a day in
+a browser where you switch **Daily update check** on (off by default; it
+shows GitHub Pages your computer's IP address and the address you opened
+LuCI at). The dashboard's only write is device
 names, and it never reads Wi-Fi keys. See [Security](#security).
 
 ## Install
@@ -93,8 +110,8 @@ apk add luci-theme-vantage luci-app-vantage
 stands for your router's address.
 
 ```sh
-f=$(awk '/ luci-(theme|app)-vantage-.*\.apk$/ {print $2}' SHA256SUMS) &&
-grep -E ' luci-(theme|app)-vantage-.*\.apk$' SHA256SUMS | sha256sum -c - &&
+f=$(awk '/ luci-(theme|app)-vantage-[0-9].*\.apk$/ {print $2}' SHA256SUMS) &&
+grep -E ' luci-(theme|app)-vantage-[0-9].*\.apk$' SHA256SUMS | sha256sum -c - &&
 ssh root@192.0.2.1 'mkdir -m 700 /tmp/vantage' &&
 scp -O $f root@192.0.2.1:/tmp/vantage/ &&
 ssh root@192.0.2.1 'apk add --no-network --allow-untrusted /tmp/vantage/*.apk; s=$?; rm -r /tmp/vantage; exit $s'
@@ -163,10 +180,20 @@ the [spec](docs/SPEC.md#6-security-requirements).
 - **The theme writes one file.** Appearance, and the dashboard's layout
   and chart style, go to `/etc/config/vantage_theme` and nowhere else. A
   user without that permission keeps their picks in their own browser.
+- **Other access points are opt-in.** The optional `luci-app-vantage-aps`
+  is the one part that does more than read: pairing creates the router's
+  own SSH key and, on an access point, adds that key to Dropbear limited
+  to one read-only report command. It has its own permission
+  (`luci-app-vantage-aps`), meant for administrators. Seeing the paired
+  access points on the dashboard is a second one
+  (`luci-app-vantage-aps-view`), since asking for their reports makes the
+  router log in to them with that key; the dashboard's own read
+  permission does not include it.
 - **Extras are separate permissions.** Renaming devices
   (`luci-app-vantage-names`) and reverse DNS (`luci-app-vantage-rdns`) are
   their own groups, so you can leave them out. The firewall overview only
-  appears for users who already hold LuCI's firewall permission.
+  appears for users who already hold LuCI's firewall permission, and the
+  WireGuard tile for those who hold LuCI's WireGuard one.
 - **Checked by tests.** They reject HTML built from data, render the
   theme's templates with hostile input, confirm the permissions match what
   the code calls, and keep real addresses, MACs and SSIDs out of the
@@ -186,14 +213,15 @@ behaviour, tracked in [`docs/luci-contract.md`](docs/luci-contract.md).
 ## Languages
 
 Vantage is available in English, Simplified Chinese (dashboard
-translation by [@ntbowen](https://github.com/ntbowen)) and Russian
-([@akorshun](https://github.com/akorshun)). Each language
+translation by [@ntbowen](https://github.com/ntbowen)), Russian
+([@akorshun](https://github.com/akorshun)) and German
+([@bakaranadnan-a11y](https://github.com/bakaranadnan-a11y)). Each language
 installs as its own packages, for example
 `apk add luci-i18n-vantage-zh-cn luci-i18n-vantage-theme-zh-cn`; see
 [Languages](docs/INSTALL.md#languages) in the install guide.
 
 Translations are very welcome. In a fork, run
-`dev/i18n/update.sh --add <lang>`, translate the two new `.po` files and
+`dev/i18n/update.sh --add <lang>`, translate the new `.po` files and
 open a pull request that touches only `po/` files.
 [Translations](CONTRIBUTING.md#translations) has the details.
 

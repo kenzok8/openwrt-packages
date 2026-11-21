@@ -10,7 +10,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-theme-vantage
-PKG_VERSION:=1.0.21
+PKG_VERSION:=1.1.1
 PKG_RELEASE:=1
 PKG_LICENSE:=GPL-3.0-or-later
 
@@ -55,6 +55,8 @@ define Package/luci-theme-vantage/postrm
 		[ -z "$$alt" ] || uci -q set luci.main.mediaurlbase="$$alt"
 	fi
 	uci -q delete luci.themes.Vantage
+	# the login page's switch (docs/INSTALL.md, Troubleshooting) is the theme's
+	uci -q delete luci.main.vantage_https
 	uci -q commit luci
 }
 exit 0
