@@ -568,6 +568,14 @@ html[data-darkmode="true"] .vt-app {
 
 /* ----------------------------------------------------- 4. head, health */
 
+/* "What's new", once after an upgrade (overview.js buildNews): the
+   details' banner above the head, as high as its close button, which
+   goes to the end. The text is the link, as high as the line for a
+   finger, and wraps where a phone has no room for it in one line */
+.vt-app .vt-banner.vt-news { margin: 0 0 var(--vt-sp-4); padding: 0 0 0 10px; }
+.vt-app .vt-news .vt-link { align-self: stretch; min-width: 0; padding: 4px 0; white-space: normal; }
+.vt-app .vt-news .vt-icon-action { margin-left: auto; }
+
 .vt-app .vt-head {
 	display: flex; align-items: center; gap: 14px;
 	margin: 2px 0 var(--vt-sp-4);
@@ -816,6 +824,35 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-node-idle .vt-node-title { color: var(--vt-text-2); font-weight: var(--vt-fw-semibold); }
 .vt-app .vt-node-off { opacity: .6; border-style: dashed; }
 
+/* Paired access points: everything under .vt-path-mesh, which the path
+   has only with at least one, so without one it is as before. The
+   devices at a branch's end, a row each (name, address, signal or link,
+   traffic), in one grid so the columns line up */
+.vt-app .vt-path-mesh .vt-leaf-rows { display: grid; grid-template-columns: minmax(0, 1fr) 13.5ch 8.5ch 6.5ch 6.5ch; column-gap: 10px; row-gap: 1px; margin-top: 4px; min-width: 0; }
+.vt-app .vt-path-mesh .vt-leaf-rows:empty { display: none; }
+.vt-app .vt-path-mesh .vt-leaf-row { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: baseline; font-size: var(--vt-fs-sm); color: var(--vt-text-2); padding: 1px 4px; margin: 0 -4px; border-radius: 4px; cursor: pointer; }
+.vt-app .vt-path-mesh .vt-leaf-row:hover { background: var(--vt-surface-3); }
+.vt-app .vt-path-mesh .vt-leaf-row:hover .vt-leaf-name { text-decoration: underline; }
+.vt-app .vt-path-mesh .vt-leaf-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--vt-text); }
+.vt-app .vt-path-mesh .vt-leaf-sig { text-align: right; white-space: nowrap; }
+.vt-app .vt-path-mesh .vt-leaf-sig.vt-lvl-ok { color: var(--vt-ok); }
+.vt-app .vt-path-mesh .vt-leaf-sig.vt-lvl-warn { color: var(--vt-warn); }
+.vt-app .vt-path-mesh .vt-leaf-sig.vt-lvl-crit { color: var(--vt-err); }
+.vt-app .vt-path-mesh .vt-leaf-rate { white-space: nowrap; }
+.vt-app .vt-path-mesh .vt-leaf-ip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--vt-text-3); }
+.vt-app .vt-path-mesh .vt-leaf-more { grid-column: 1 / -1; font-size: var(--vt-fs-sm); color: var(--vt-text-3); }
+.vt-app .vt-path-mesh .vt-node-peer { padding: 10px 12px; border-color: color-mix(in oklab, var(--vt-accent-line) 40%, var(--vt-line)); }
+.vt-app .vt-path-mesh .vt-node-peer .vt-node-ico { background: var(--vt-accent-fill); color: var(--vt-accent-fill-ink); }
+.vt-app .vt-path-mesh .vt-node-peer .vt-node-title { font-size: var(--vt-fs-md); }
+.vt-app .vt-path-mesh .vt-node-peer .vt-node-kicker { display: block; overflow: hidden; text-overflow: ellipsis; }
+/* the paired access points, after this device's own branches */
+/* an access point plugged into another: its branch further in, a step a
+   level (--vt-nest: wider where the path is wide, below) */
+.vt-app .vt-path-mesh { --vt-nest: 28px; }
+.vt-app .vt-path-mesh .vt-branch-d1 { margin-inline-start: var(--vt-nest); }
+.vt-app .vt-path-mesh .vt-branch-d2 { margin-inline-start: calc(2 * var(--vt-nest)); }
+.vt-app .vt-path-mesh .vt-branch-d3 { margin-inline-start: calc(3 * var(--vt-nest)); }
+.vt-app .vt-path-mesh .vt-branches-label { margin: 6px 0 -8px; font-size: var(--vt-fs-micro); font-weight: var(--vt-fw-semibold); color: var(--vt-text-3); text-transform: uppercase; letter-spacing: .08em; }
 .vt-app .vt-dots { display: inline-flex; gap: 3px; }
 /* no clients, no dots: the count starts where the name does */
 .vt-app .vt-dots:empty { display: none; }
@@ -889,6 +926,16 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-branch { display: grid; grid-template-columns: minmax(136px, 172px) minmax(0, 1fr); column-gap: 34px; align-items: center; min-width: 0; }
 .vt-app .vt-branch-ssids { display: flex; flex-direction: column; gap: var(--vt-sp-2); min-width: 0; }
 .vt-app .vt-branch-ssids .vt-node { max-width: 260px; }
+/* with paired access points: room for the rows at the ends; each node
+   the container its rows ask how wide it is */
+.vt-app .vt-path-mesh .vt-branch-ssids .vt-node { width: 100%; max-width: 340px; container: vtleaf / inline-size; }
+/* a narrow node (a phone, medium widths): the address goes and the other
+   columns take what their text needs, so the name keeps its room */
+@container vtleaf (max-width: 27em) {
+	.vt-app .vt-path-mesh .vt-leaf-rows { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+	.vt-app .vt-path-mesh .vt-leaf-ip { display: none; }
+}
+.vt-app .vt-path-mesh .vt-branch-ssids .vt-node-body { flex: 1 1 auto; }
 /* a network has no second column: its rates take that room */
 .vt-app .vt-branch > .vt-node-net { grid-column: 1 / -1; justify-self: start; width: 100%; max-width: 260px; }
 /* with subgrid every branch shares one radio column: 172px, or wider up
@@ -903,6 +950,29 @@ html[data-darkmode="true"] .vt-app {
 	.vt-app .vt-branch > .vt-node:first-child:not(.vt-node-net) { max-width: 240px; }
 }
 
+/* paired access points (wide only): the gateway, link and device give up
+   room to the branches; every branch's node column alike, and the nodes
+   at the ends fill what is left, so their rows line up and nothing is cut */
+@container vthero (min-width: 1021px) {
+	.vt-app .vt-path-mesh { grid-template-columns: minmax(150px, .7fr) minmax(90px, .4fr) minmax(184px, .85fr) minmax(0, 3.4fr); --vt-nest: 48px; }
+	.vt-app .vt-path-mesh .vt-branches { padding-left: clamp(40px, 5cqi, 120px); }
+	/* an access point's own page: gateway, link and device at the top, so
+	   the gateway's wires to the other access points pass below them */
+	.vt-app .vt-path-sib > .vt-node-gw, .vt-app .vt-path-sib > .vt-node-ap { align-self: start; margin-top: 56px; }
+	.vt-app .vt-path-sib > .vt-link-label { align-self: start; margin-top: 50px; height: 72px; }
+	/* the gateway's clients and address: wrapped, not cut */
+	.vt-app .vt-path-mesh .vt-node-gw .vt-node-sub { white-space: normal; }
+	/* the client cards at the column's far end: the wires take the slack */
+	.vt-app .vt-path-mesh .vt-branch { grid-template-columns: minmax(230px, 280px) minmax(0, 600px); column-gap: clamp(34px, 4cqi, 96px); justify-content: space-between; }
+	.vt-app .vt-path-mesh .vt-branch > .vt-node, .vt-app .vt-path-mesh .vt-branch > .vt-node:first-child:not(.vt-node-net) { width: 100%; max-width: none; justify-self: stretch; }
+	/* as wide as a ~20-character name, the address, signal and rates need */
+	.vt-app .vt-path-mesh .vt-branch-ssids .vt-node { max-width: none; }
+	/* the tree carries more text: a step larger inside its cards */
+	.vt-app .vt-path-mesh .vt-node-sub, .vt-app .vt-path-mesh .vt-leaf-row, .vt-app .vt-path-mesh .vt-leaf-more { font-size: var(--vt-fs-base); }
+	.vt-app .vt-path-mesh .vt-node-title, .vt-app .vt-path-mesh .vt-node-ssid .vt-node-title { font-size: var(--vt-fs-md); }
+	.vt-app .vt-path-mesh .vt-node-ap .vt-node-title, .vt-app .vt-path-mesh .vt-node-peer .vt-node-title { font-size: var(--vt-fs-lg); }
+	.vt-app .vt-path-mesh .vt-node-kicker { font-size: var(--vt-fs-sm); }
+}
 /* medium widths: the rates need their column, and the branches have room
    to give; what a radio or the Wired node leads to goes under it, too
    narrow beside it */
@@ -927,6 +997,7 @@ html[data-darkmode="true"] .vt-app {
 	.vt-app .vt-path-lines > .vt-branches, .vt-app .vt-lines { grid-area: auto; }
 	.vt-app .vt-lines { gap: 8px; padding: 0 0 0 34px; }
 	.vt-app .vt-lines > .vt-node { align-self: flex-start; min-width: 200px; max-width: 100%; }
+	.vt-app .vt-path-mesh .vt-branch-ssids .vt-node { max-width: none; }
 }
 
 /* ------------------------------------------------------------ 6. system */
@@ -1269,6 +1340,11 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-net { display: flex; flex-direction: column; gap: 3px; }
 .vt-app .vt-net-ssid { font-weight: var(--vt-fw-medium); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
 .vt-app .vt-net-badges { display: flex; align-items: center; gap: 6px; }
+.vt-app .vt-net-via { font-size: var(--vt-fs-sm); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+/* a paired access point's name (up to 63 characters) in a pill or with
+   its port under the link: cut like the line above, the whole in the title */
+.vt-app .vt-pill-ap { display: inline-block; line-height: 18px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-phy.vt-phy-ap { display: block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
 .vt-app .vt-phy { display: flex; align-items: center; gap: 4px; font-size: var(--vt-fs-sm); white-space: nowrap; }
 .vt-app .vt-phy b { font-weight: var(--vt-fw-semibold); }
 .vt-app .vt-phy .vt-ico { color: var(--vt-text-3); stroke-width: 2; width: 12px; height: 12px; }
@@ -1334,6 +1410,59 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-ssid-side { display: flex; flex-direction: column; align-items: flex-end; flex: none; }
 .vt-app .vt-ssid-n { font-size: var(--vt-fs-lg); font-weight: var(--vt-fw-bold); line-height: 1.1; }
 .vt-app .vt-ssid-idle .vt-ssid-n { color: var(--vt-text-3); }
+
+/* WireGuard: a block per tunnel; its peers a row each, side by side
+   where the tile is wide enough for two */
+.vt-app .vt-wg { display: flex; flex-direction: column; gap: var(--vt-sp-3); }
+.vt-app .vt-wg-tun { display: flex; flex-direction: column; gap: var(--vt-sp-1); min-width: 0; }
+.vt-app .vt-wg-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; }
+.vt-app .vt-wg-name { font-weight: var(--vt-fw-semibold); }
+.vt-app .vt-wg-peers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 0 var(--vt-sp-5); }
+.vt-app .vt-wg-peer { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px 0; }
+.vt-app .vt-wg-peer .vt-status { margin: 0; flex: none; }
+.vt-app .vt-wg-main, .vt-app .vt-wg-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vt-app .vt-wg-main { flex: 1; }
+.vt-app .vt-wg-side { flex: none; align-items: flex-end; }
+.vt-app .vt-wg-peer-name, .vt-app .vt-wg-ep { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-wg-peer-name { font-weight: var(--vt-fw-semibold); line-height: 1.3; }
+.vt-app .vt-wg-ep { font-size: var(--vt-fs-sm); color: var(--vt-text-3); }
+.vt-app .vt-wg-rate { font-size: var(--vt-fs-sm); font-weight: var(--vt-fw-semibold); white-space: nowrap; }
+/* a peer without a session now: there, but quieter */
+.vt-app .vt-wg-away .vt-wg-peer-name { color: var(--vt-text-2); }
+.vt-app .vt-wg-away .vt-wg-rate { color: var(--vt-text-3); font-weight: var(--vt-fw-medium); }
+.vt-app .vt-wg-more {
+	align-self: flex-start; display: inline-flex; align-items: center; margin: 0 0 0 -8px; padding: 4px 8px;
+	border: 0; border-radius: var(--vt-r-sm); background: transparent; box-shadow: none; min-width: 0;
+	color: var(--vt-accent-text); font-size: var(--vt-fs-sm); font-weight: var(--vt-fw-semibold); cursor: pointer;
+}
+.vt-app .vt-wg-more:hover { background: var(--vt-hover); color: var(--vt-text); }
+
+/* Ports: a cell per Ethernet port, as many in a row as fit and no wider
+   than they need, so two ports do not stretch over a wide tile. A port
+   without a link is quieter: a dashed outline, as a line that is down
+   has on the path, with its text left readable */
+.vt-app .vt-ports { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 148px), 1fr)); gap: var(--vt-sp-2); }
+.vt-app .vt-ports > .vt-empty-inline { grid-column: 1 / -1; }
+.vt-app .vt-port {
+	display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 2px; min-width: 0;
+	margin: 0; padding: 8px 10px; border: 1px solid var(--vt-line); border-radius: var(--vt-r);
+	background: var(--vt-surface); box-shadow: none; color: var(--vt-text);
+	text-align: left; height: auto; line-height: 1.3; text-transform: none; font-weight: var(--vt-fw-regular);
+}
+.vt-app button.vt-port { cursor: pointer; transition: border-color .15s; }
+.vt-app button.vt-port:hover { border-color: color-mix(in oklab, var(--vt-accent-line) 60%, var(--vt-line)); background: var(--vt-surface); }
+.vt-app .vt-port-off, .vt-app button.vt-port-off:hover { background: transparent; border-style: dashed; }
+/* as tall as the uplink's mark, so the names line up along a row */
+.vt-app .vt-port-top { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 18px; }
+.vt-app .vt-port-top .vt-status { margin: 0; flex: none; }
+.vt-app .vt-port-name { flex: 1; min-width: 0; font-weight: var(--vt-fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-port-off .vt-port-name { color: var(--vt-text-2); }
+/* the line's name where there are several: cut, the name of the port stays */
+.vt-app .vt-port-top .vt-pill { display: inline-block; flex: none; line-height: 18px; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-port-link, .vt-app .vt-port-hosts { font-size: var(--vt-fs-sm); color: var(--vt-text-2); }
+.vt-app .vt-port-off .vt-port-link { color: var(--vt-text-3); }
+.vt-app .vt-port-rates { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: var(--vt-fs-sm); font-weight: var(--vt-fw-semibold); white-space: nowrap; }
+.vt-app .vt-port-note { font-size: var(--vt-fs-micro); color: var(--vt-text-3); }
 
 /* ------------------------------------------------------------ 11. drawer */
 
@@ -1410,12 +1539,26 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-dspark { padding-top: 14px; }
 .vt-app .vt-dspark .vt-spark { height: 48px; }
 .vt-app .vt-dsec-title { font-size: var(--vt-fs-micro); font-weight: var(--vt-fw-semibold); text-transform: uppercase; letter-spacing: .08em; color: var(--vt-text-3); margin: 0 0 6px; padding: 0; border: 0; }
+/* a sensor is labelled with the device's own name for it: up to 32
+   characters, often without a place to break */
+.vt-app .vt-dsec-temps dt { overflow-wrap: anywhere; }
 .vt-app .vt-kvs { display: flex; flex-direction: column; }
 .vt-app .vt-kvs .vt-kv { display: grid; grid-template-columns: 132px minmax(0, 1fr); gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--vt-line); }
 .vt-app .vt-kvs .vt-kv:last-child { border-bottom: 0; }
 .vt-app .vt-kvs .vt-kv dt { font-size: var(--vt-fs-sm); text-transform: none; letter-spacing: 0; font-weight: var(--vt-fw-medium); color: var(--vt-text-3); }
 .vt-app .vt-kvs .vt-kv dd { font-size: var(--vt-fs-base); font-weight: var(--vt-fw-medium); margin: 0; white-space: pre-line; overflow-wrap: anywhere; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
 .vt-app .vt-kvs .vt-kv dd small { font-size: var(--vt-fs-micro); color: var(--vt-text-3); font-weight: var(--vt-fw-regular); }
+/* Copy beside a MAC or an address, on the value's own line. The button
+   is a control like any other (--vt-ctl high), so the line is as high as
+   it and the row gives up its own padding; the label stays beside the
+   first line. The button's text is the text font's, in a mono row too. */
+.vt-app .vt-kvs .vt-kv:has(.vt-copyline) { padding: 0; }
+.vt-app .vt-kvs .vt-kv:has(.vt-copyline) dt { display: flex; align-items: center; align-self: start; min-height: var(--vt-ctl); }
+.vt-app .vt-kvs .vt-kv:has(.vt-copyline) dd { gap: 0; }
+.vt-app .vt-copyline { display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; min-height: var(--vt-ctl); max-width: 100%; }
+/* a long address wraps: room above and below it, as a row has */
+.vt-app .vt-copyline > span { padding: 5px 0; }
+.vt-app .vt-btn.vt-copy { flex: none; font-family: var(--vt-font); font-size: var(--vt-fs-sm); letter-spacing: 0; }
 .vt-app .vt-dlist { display: flex; flex-direction: column; }
 .vt-app .vt-dlist-name { flex: 1; min-width: 0; font-weight: var(--vt-fw-semibold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -1564,6 +1707,11 @@ html[data-darkmode="true"] .vt-app {
 	.vt-app .vt-live-cell .vt-mini, .vt-app .vt-live-split { display: none; }
 	.vt-app .vt-ctable td.vt-td-exp, .vt-app .vt-ctable td.vt-td-seen { grid-column: 1 / -1; grid-row: 3; padding-left: 44px; }
 	.vt-app .vt-ctable td.vt-td-seen { font-size: var(--vt-fs-sm); color: var(--vt-text-3); }
+	/* a named device that is offline: what is not known takes no line,
+	   and what is known says what it is (the cards have no header) */
+	.vt-app .vt-ctable td.vt-td-none { display: none; }
+	.vt-app .vt-ctable .vt-row-off td.vt-td-net { font-size: var(--vt-fs-sm); color: var(--vt-text-2); }
+	.vt-app .vt-ctable .vt-row-off td.vt-td-net::before, .vt-app .vt-ctable .vt-row-off td.vt-td-seen::before { content: attr(data-title) " "; color: var(--vt-text-3); }
 	.vt-app .vt-exp-text span { max-width: none; -webkit-line-clamp: 1; }
 	.vt-app .vt-exp { gap: 8px; }
 	.vt-app .vt-exp-text { flex-direction: row; align-items: baseline; gap: 6px; min-width: 0; }
@@ -1598,6 +1746,7 @@ html[data-darkmode="true"] .vt-app {
 	.vt-app .vt-filter .vt-filter-input, .vt-app .vt-rename .vt-rename-input { font-size: 16px; }
 	/* menu items are touch targets, as the theme's dropdown choices */
 	.vt-app .vt-fmenu-item, .vt-app .vt-select option { min-height: var(--vt-ctl); }
+	.vt-app .vt-wg-more { min-height: var(--vt-ctl); }
 }
 
 @media (prefers-reduced-motion: reduce) {

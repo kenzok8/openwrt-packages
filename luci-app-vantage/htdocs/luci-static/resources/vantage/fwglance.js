@@ -273,10 +273,10 @@ function cmpBytes(a, b) {
 /* an address, address/bits, address/mask or range -> { family, all,
    bytes, bits, nc } or { family, all, range: [ lo, hi ] } (all: the
    whole address space, as 0.0.0.0/0 or ::/0; nc: a mask that is not
-   contiguous, which fw4 applies to the address); null when it is
+   a prefix, for which fw4 writes a masked comparison); null when it is
    malformed, undefined when it is no address (a network name) */
 function subnet(s) {
-	var p = s.split('/'), r, a, b, bits;
+	var p = s.split('/'), r, a, b, bits, m;
 	if (p.length === 2) {
 		a = ipBytes(p[0]);
 		if (!a) return null;
@@ -287,8 +287,18 @@ function subnet(s) {
 			return { family: a.length === 4 ? 4 : 6, all: bits === 0, nc: bits < 0,
 				bytes: bits < 0 ? a.map(function(x, i) { return x & b[i]; }) : a, bits: bits };
 		}
-		if (!/^\d+$/.test(p[1])) return null;
-		return { family: a.length === 4 ? 4 : 6, all: +p[1] === 0, bytes: a, bits: +p[1] };
+		/* the length is a number as ucode converts one: a sign, then
+		   digits (decimal, 0x, 0b, 0o); none, or a bare 0b or 0o, is 0.
+		   Not followed: a blank before it, a blank or sign after 0b or 0o */
+		m = /^([-+]?)(0x[0-9a-f]+|0b[01]*|0o[0-7]*|\d*)$/i.exec(p[1]);
+		if (!m) return null;
+		bits = Number(m[2]) || 0;
+		/* a negative length compares the address's last bits instead
+		   (::1234/-64), all of them when none is left to compare */
+		if (m[1] === '-' && bits > 0)
+			return { family: a.length === 4 ? 4 : 6, nc: true, bytes: a, bits: -1,
+				all: bits === a.length * 8 && a.every(function(x) { return x === 0; }) };
+		return { family: a.length === 4 ? 4 : 6, all: bits === 0, bytes: a, bits: bits };
 	}
 	if (p.length > 2) return null;
 	r = s.split('-');

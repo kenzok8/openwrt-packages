@@ -48,7 +48,10 @@ return baseclass.extend({
 			detail: _('%s has no carrier: cable unplugged or switch port down').format(up.dev), page: PAGES.network });
 		else if (up.speed && up.speed.duplex === 'half') out.push({ id: 'uplink', level: 'warn', title: _('Uplink', 'vantage'), value: _('Half duplex'), reason: _('%s · check cable').format(up.dev),
 			detail: _('%s negotiated half duplex; check the cable and switch port').format(up.dev), page: PAGES.network });
-		else if (up.speed && up.speed.mbps < 1000) out.push({ id: 'uplink', level: 'warn', title: _('Uplink', 'vantage'), value: _('%s Mbit/s').format(up.speed.mbps), reason: _('%s · slow link').format(up.dev),
+		/* under 1 Gbit/s, unless that is the fastest the port and the one
+		   at the other end both offer (a Fast Ethernet port, a modem's
+		   100 Mbit/s hand-off); where that is not known, as before */
+		else if (up.speed && up.speed.mbps < 1000 && !(finite(up.linkMax) && up.speed.mbps >= up.linkMax)) out.push({ id: 'uplink', level: 'warn', title: _('Uplink', 'vantage'), value: _('%s Mbit/s').format(up.speed.mbps), reason: _('%s · slow link').format(up.dev),
 			detail: _('%s negotiated only %d Mbit/s; a cable pair or port may be faulty').format(up.dev, up.speed.mbps), page: PAGES.network });
 		else {
 			var rate = live.uplinkRate && finite(live.uplinkRate.rx) && finite(live.uplinkRate.tx) ? live.uplinkRate : null;
@@ -88,10 +91,12 @@ return baseclass.extend({
 		/* radios and signal; neither applies to a wired-only device */
 		if (!model.wired) this.wifiHealth(model, out, live.quiet);
 
-		/* storage */
-		var root = (dev.storage || [])[0];
+		/* storage: the root filesystem, by its key (the model's list starts
+		   with /tmp where system info has no root); without one, no check.
+		   An overlay on most devices, a plain ext4 root on others */
+		var root = (dev.storage || []).filter(function(s) { return s && s.key === 'root'; })[0];
 		if (root) out.push({ id: 'storage', level: root.usedPct >= 95 ? 'err' : root.usedPct >= 85 ? 'warn' : 'ok', title: _('Storage'), value: _('%s used').format(fmt.pct(root.usedPct)),
-			reason: _('%s free').format(fmt.bytes(root.free)), detail: _('%s free on the overlay (%s used)').format(fmt.bytes(root.free), fmt.pct(root.usedPct)), page: PAGES.mounts });
+			reason: _('%s free').format(fmt.bytes(root.free)), detail: _('%s free on the root filesystem (%s used)').format(fmt.bytes(root.free), fmt.pct(root.usedPct)), page: PAGES.mounts });
 
 		return out;
 	},
@@ -115,8 +120,9 @@ return baseclass.extend({
 			page: PAGES.wireless });
 
 		/* signal; a station set quiet (#110: far away on purpose) is left
-		   out, of the warning and of the weakest */
-		var clients = model.clients || [], quiet = quietMacs || {};
+		   out, of the warning and of the weakest; so are a paired access
+		   point's stations (this device cannot help them) */
+		var clients = (model.clients || []).filter(function(c) { return !c.ap; }), quiet = quietMacs || {};
 		var counted = clients.filter(function(c) { return !quiet[c.mac]; });
 		var weak = counted.filter(function(c) { return c.signal != null && c.signal < WEAK_DBM; }).sort(function(a, b) { return a.signal - b.signal; });
 		var heard = counted.filter(function(c) { return c.signal != null; }).sort(function(a, b) { return a.signal - b.signal; });
@@ -195,17 +201,26 @@ return baseclass.extend({
 	/* ------------------------------------------------------ top talkers */
 
 	/* clients + rates { mac: { rx, tx } } (AP view: tx = to the client)
-	   -> top n [ { mac, name, down, up, total, share } ] with total > 0 */
-	topTalkers: function(clients, rates, n) {
+	   -> top n [ { mac, name, down, up, total, share } ] with total > 0.
+	   This device's clients: a paired access point's (c.ap) push none of
+	   them out.
+	   hosts + hostRates: the wired hosts that have a rate of their own
+	   (the view's pick: a port to themselves), ranked with the stations
+	   and marked wired. A port counts as a radio does, from this side of
+	   the link: its tx went to the device, so down is tx in every row */
+	topTalkers: function(clients, rates, n, hosts, hostRates) {
 		var list = [], sum = 0;
-		(clients || []).forEach(function(c) {
-			var r = own(rates, c.mac) ? rates[c.mac] : null;
+		function add(c, r, wired) {
 			if (!r) return;
 			var down = num(r.tx), up = num(r.rx), total = down + up;
 			if (!(total > 0)) return;
 			sum += total;
-			list.push({ mac: c.mac, name: c.name, down: down, up: up, total: total });
-		});
+			var t = { mac: c.mac, name: c.name, down: down, up: up, total: total };
+			if (wired) t.wired = true;
+			list.push(t);
+		}
+		(clients || []).forEach(function(c) { add(c, !c.ap && own(rates, c.mac) ? rates[c.mac] : null, false); });
+		(hosts || []).forEach(function(h) { add(h, own(hostRates, h.mac) ? hostRates[h.mac] : null, true); });
 		list.sort(function(a, b) { return b.total - a.total || (a.mac < b.mac ? -1 : 1); });
 		list.forEach(function(t) { t.share = sum > 0 ? t.total / sum : 0; });
 		return list.slice(0, n > 0 ? n : 5);
@@ -214,15 +229,27 @@ return baseclass.extend({
 	/* --------------------------------------------------------- presence */
 
 	/* Session presence. state: { baseline: [macs] | null, present: { mac: client },
-	   gone: { mac: { client, at } }, firstSeen: { mac: ms } }.
+	   gone: { mac: { client, at } }, firstSeen: { mac: ms }, aps: [ id ] }.
 	   The first call fixes the baseline (what was there when the page
 	   opened); later arrivals are "new". Stations that leave are kept as
-	   gone for keepMs. -> { state, isNew: { mac: true }, gone: [ { client, at } ] } */
-	presence: function(state, clients, now, keepMs) {
+	   gone for keepMs. -> { state, isNew: { mac: true }, gone: [ { client, at } ] }
+	   okAps: the paired access points reporting now, by id. One that
+	   reports for the first time (state.aps has those that did) brings
+	   stations that were there before the page opened: they join the
+	   baseline. A station of one (c.ap) that is no longer listed is not
+	   kept as gone: its access point may only have stopped reporting, and
+	   how many they are is the access points' say. */
+	presence: function(state, clients, now, keepMs, okAps) {
 		state = state || {};
 		var baseline = Array.isArray(state.baseline) ? state.baseline : null;
 		var present = Object.create(null), gone = Object.create(null), firstSeen = Object.create(null), isNew = Object.create(null);
 		var prevPresent = state.present || {}, prevGone = state.gone || {}, prevFirst = state.firstSeen || {};
+		var reported = Array.isArray(state.aps) ? state.aps : [];
+		var first = (Array.isArray(okAps) ? okAps : []).filter(function(id) { return reported.indexOf(id) < 0; });
+		if (baseline && first.length) {
+			baseline = baseline.slice();
+			(clients || []).forEach(function(c) { if (c.ap && first.indexOf(c.ap.id) >= 0 && baseline.indexOf(c.mac) < 0) baseline.push(c.mac); });
+		}
 
 		(clients || []).forEach(function(c) {
 			present[c.mac] = c;
@@ -234,12 +261,12 @@ return baseclass.extend({
 			if (!own(present, mac) && g && now - g.at < keepMs) { gone[mac] = g; firstSeen[mac] = prevFirst[mac]; }
 		});
 		Object.keys(prevPresent).forEach(function(mac) {
-			if (!own(present, mac)) { gone[mac] = { client: prevPresent[mac], at: now }; firstSeen[mac] = prevFirst[mac]; }
+			if (!own(present, mac) && !prevPresent[mac].ap) { gone[mac] = { client: prevPresent[mac], at: now }; firstSeen[mac] = prevFirst[mac]; }
 		});
 
 		var goneList = Object.keys(gone).map(function(k) { return gone[k]; }).sort(function(a, b) { return b.at - a.at; });
 		return {
-			state: { baseline: baseline || Object.keys(present), present: present, gone: gone, firstSeen: firstSeen },
+			state: { baseline: baseline || Object.keys(present), present: present, gone: gone, firstSeen: firstSeen, aps: reported.concat(first) },
 			isNew: isNew,
 			gone: goneList
 		};

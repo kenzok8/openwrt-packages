@@ -121,7 +121,9 @@ return baseclass.extend({
 	   to a height for each direction (frac: 0 at the top of the plot, 1 at
 	   the bottom) and gives the baselines, grid lines and scale labels.
 	   Linear scales never go below CHART_FLOOR, so an idle link stays a
-	   flat line, and round up with niceCeil. */
+	   flat line, and round up with niceCeil. unit: what one step of the
+	   labels counts, 8 where they read in bytes, so the scales are round
+	   in that unit (1, bits, unless given). */
 	CHART_STYLES: [ 'overlay', 'log', 'mirror', 'mirror-split', 'lanes' ],
 
 	/* the style in force: the router's first for a login that may save
@@ -133,12 +135,12 @@ return baseclass.extend({
 	},
 	CHART_FLOOR: 1e4,
 
-	chartGeom: function(style, peakDn, peakUp) {
-		var self = this, floor = this.CHART_FLOOR;
+	chartGeom: function(style, peakDn, peakUp, unit) {
+		var self = this, floor = this.CHART_FLOOR, k = unit === 8 ? 8 : 1;
 		/* peaks are capped so the scale arithmetic stays finite */
 		var cap = function(v) { return finite(v) ? Math.min(Math.max(v, 0), 1e13) : 0; };
 		var pd = cap(peakDn), pu = cap(peakUp);
-		var nice = function(v) { return self.niceCeil(Math.max(v * 1.05, floor)); };
+		var nice = function(v) { return self.niceCeil(Math.max(v * 1.05, floor) / k) * k; };
 		var clamp = function(x) { return Math.max(0, Math.min(1, x)); };
 		/* a direction drawn over [top, base] (rising) or [base, top] (hanging) */
 		var lin = function(scale, top, base) {
@@ -149,8 +151,9 @@ return baseclass.extend({
 		switch (style) {
 		case 'log':
 			/* a grid line per x10 from 1 kbit/s (less sits on the baseline)
-			   to at least 1 Mbit/s, so idle chatter stays low */
-			var lo = 1e3, hi = Math.max(1e6, Math.pow(10, Math.ceil(Math.log10(Math.max(pd, pu, 1) * 1.05))));
+			   to at least 1 Mbit/s, so idle chatter stays low; from 1 kB/s
+			   to at least 1 MB/s in bytes */
+			var lo = 1e3 * k, hi = Math.max(1e6, Math.pow(10, Math.ceil(Math.log10(Math.max(pd, pu, 1) / k * 1.05)))) * k;
 			var span = Math.log10(hi / lo), grid = [];
 			var lf = function(v) { return 1 - clamp(Math.log10(Math.max(v, lo) / lo) / span); };
 			for (var v = lo * 10; v < hi; v *= 10) grid.push(lf(v));
