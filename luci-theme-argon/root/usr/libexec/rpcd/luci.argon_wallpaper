@@ -25,17 +25,24 @@ fi
 
 fetch_url() {
 	# GNU wget may retry beyond -T. Bound the whole request below rpcd's timeout.
-	timeout -k 1 6 "$WGET" -T 5 -qO- "$1"
+	timeout -k 1 "${2:-6}" "$WGET" -T 5 -qO- "$1"
 }
 
 fetch_pic_url() {
 	case "$WEB_PIC_SRC" in
 	bing)
-		local picpath="$(fetch_url \
-			"https://www.bing.com/HPImageArchive.aspx?format=js&n=1" |
-			jsonfilter -qe '@.images[0].url' |
-			sed 's/1920x1080/UHD/g')"
-		[ -n "${picpath}" ] && echo "https://www.bing.com${picpath}"
+		local host picpath
+		# Give each Bing endpoint half of the normal request budget.
+		for host in www.bing.com cn.bing.com; do
+			picpath="$(fetch_url "https://${host}/HPImageArchive.aspx?format=js&n=1" 3 |
+				jsonfilter -qe '@.images[0].url')"
+			case "$picpath" in
+				/th\?id=*)
+					printf 'https://%s%s\n' "$host" "$picpath"
+					return
+					;;
+			esac
+		done
 		;;
 	unsplash)
 		if [ -n "$API_KEY" ]; then

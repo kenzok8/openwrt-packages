@@ -43,6 +43,13 @@
 				const picurl = ubus.call("luci.argon_wallpaper", "get_url") ?? {};
 				if (type(picurl?.url) == 'string' && match(picurl.url, /^https:\/\/[^[:space:]"'<>]+$/)) {
 					bgUrl = picurl.url;
+					if (online_wallpaper == 'bing') {
+						const bing = match(bgUrl, /^https:\/\/(www\.bing\.com|cn\.bing\.com)(\/th\?id=.+)$/);
+						if (bing) {
+							const mirror = bing[1] == 'www.bing.com' ? 'cn.bing.com' : 'www.bing.com';
+							return {bgUrl, backgroundType, mimeType, mirrorUrl: 'https://' + mirror + bing[2]};
+						}
+					}
 					return {bgUrl, backgroundType, mimeType};
 				}
 			}
@@ -130,6 +137,8 @@
 	<!-- Video Player End -->
 	{% else %}
 	<!-- Image Background Start -->
-	<div class="main-bg" id="main-bg"><img src="{{ entityencode(bgArry.bgUrl, true) }}" data-fallback="{{ media }}/img/bg1.webp" onerror="this.onerror=null;this.src=this.dataset.fallback" alt=""></div>
+	<div class="main-bg" id="main-bg"><img src="{{ entityencode(bgArry.bgUrl, true) }}"
+		{% if (bgArry.mirrorUrl): %}data-mirror="{{ entityencode(bgArry.mirrorUrl, true) }}"{% endif %}
+		data-fallback="{{ media }}/img/bg1.webp" onerror="if(this.dataset.mirror){this.src=this.dataset.mirror;delete this.dataset.mirror;}else{this.onerror=null;this.src=this.dataset.fallback;}" alt=""></div>
 	<!-- Image Background End -->
 	{% endif %}

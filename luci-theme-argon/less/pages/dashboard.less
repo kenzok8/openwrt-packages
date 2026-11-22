@@ -63,6 +63,16 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    @media screen and (max-width: 1152px) {
+        // Count the badge's vertical padding in the line below the mobile label.
+        #dashboard-wifi-table .td .label {
+            display: inline-block;
+            max-inline-size: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
+    }
+
     .ifacebox {
         min-width: 0;
         max-width: 100%;

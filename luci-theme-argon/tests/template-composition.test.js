@@ -107,6 +107,30 @@ test('login partials retain image/video, branding and authentication scope and s
 	} finally { renderer.close(); }
 });
 
+test('anonymous login renders the alternate Bing image origin for old and new cache entries', () => {
+	const renderer = createRenderer(templates);
+	try {
+		const hosts = ['www.bing.com', 'cn.bing.com'];
+		const imagePath = '/th?id=Fixture_UHD.jpg&pid=hp';
+		for (const [index, host] of hosts.entries()) {
+			const { html } = renderer.render('sysauth', {
+				ctx: { path: [], request_path: [] },
+				settings: index === 0 ? { bing_background: '1' } : { online_wallpaper: 'bing' },
+				wallpaper: { url: 'https://' + host + imagePath }
+			});
+			assert.ok(html.includes('src="https://' + host + imagePath.replace('&', '&amp;') + '"'));
+			assert.ok(html.includes('data-mirror="https://' + hosts[1 - index] + imagePath.replace('&', '&amp;') + '"'));
+			assert.match(html, /data-fallback="\/luci-static\/argon\/img\/bg1\.webp"/);
+		}
+		const { html } = renderer.render('sysauth', {
+			settings: { online_wallpaper: 'unsplash' },
+			wallpaper: { url: 'https://images.unsplash.com/example.jpg' }
+		});
+		assert.match(html, /src="https:\/\/images\.unsplash\.com\/example\.jpg"/);
+		assert.doesNotMatch(html, /data-mirror=/);
+	} finally { renderer.close(); }
+});
+
 test('automatic palette and shared glass are emitted on application and anonymous login before styles paint', () => {
 	const renderer = createRenderer(templates);
 	try {

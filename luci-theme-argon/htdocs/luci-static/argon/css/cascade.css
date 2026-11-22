@@ -6673,6 +6673,14 @@ pre.command-output {
 #view > .Dashboard .dashboard-net-fields {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
+@media screen and (max-width: 1152px) {
+  #view > .Dashboard #dashboard-wifi-table .td .label {
+    display: inline-block;
+    max-inline-size: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
 #view > .Dashboard .ifacebox {
   min-width: 0;
   max-width: 100%;
@@ -8769,8 +8777,8 @@ pre.command-output {
     padding-inline: var(--control-gap);
   }
 }
-#cbi-wireless,
-#cbi-wireless *,
+#view #cbi-wireless,
+#view #cbi-wireless *,
 #wifi_assoclist_table,
 #wifi_assoclist_table * {
   overflow: visible !important;
@@ -8780,10 +8788,23 @@ pre.command-output {
   contain: none !important;
   clip-path: none !important;
 }
-#cbi-wireless,
+#view #cbi-wireless,
 #wifi_assoclist_table {
   height: auto !important;
   min-height: 0 !important;
+}
+.cbi-modal [data-name="_wifistat_modal"] .ifacebadge.large {
+  max-inline-size: 100%;
+}
+.cbi-modal [data-name="_wifistat_modal"] .ifacebadge.large > small {
+  flex: none;
+}
+.cbi-modal [data-name="_wifistat_modal"] .ifacebadge.large > span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.cbi-modal [data-name="_wifistat_modal"] .ifacebadge.large > span .nowrap {
+  white-space: normal;
 }
 /* samba */
 #cbi-samba [data-tab="template"] .cbi-value-field {

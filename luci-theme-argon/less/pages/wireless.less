@@ -91,8 +91,9 @@
     }
 }
 
-#cbi-wireless,
-#cbi-wireless *,
+// The overview needs unclipped table menus. The edit dialog reuses the map ID.
+#view #cbi-wireless,
+#view #cbi-wireless *,
 #wifi_assoclist_table,
 #wifi_assoclist_table * {
     overflow: visible !important;
@@ -103,8 +104,25 @@
     clip-path: none !important;
 }
 
-#cbi-wireless,
+#view #cbi-wireless,
 #wifi_assoclist_table {
     height: auto !important;
     min-height: 0 !important;
+}
+
+.cbi-modal [data-name="_wifistat_modal"] .ifacebadge.large {
+    max-inline-size: 100%;
+
+    > small {
+        flex: none;
+    }
+
+    > span {
+        min-inline-size: 0;
+        overflow-wrap: anywhere;
+
+        .nowrap {
+            white-space: normal;
+        }
+    }
 }
