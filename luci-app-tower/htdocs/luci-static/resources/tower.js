@@ -38,7 +38,7 @@ const clients = [
 	{ id: 'clash-apple', name: 'Clash', icon: 'ClientClash.png' },
 	{ id: 'clashmac', name: 'ClashMac', icon: 'ClientClashMac.png' },
 	{ id: 'flclash', name: 'FlClash', icon: 'ClientFlClash.png' },
-	{ id: 'mihomo-party', name: 'Mihomo Party', icon: 'ClientMihomoParty.png' },
+	{ id: 'mihomo-party', name: 'Clash Party', icon: 'ClientMihomoParty.png' },
 	{ id: 'clash-mi', name: 'Clash Mi', icon: 'ClientClashMi.png' },
 	{ id: 'karing', name: 'Karing', icon: 'ClientKaring.png' },
 	{ id: 'sing-box', name: 'sing-box MT', icon: 'ClientSingBox.png' },
