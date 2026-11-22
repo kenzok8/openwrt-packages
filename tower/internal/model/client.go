@@ -103,7 +103,7 @@ func (c ClientTarget) Name() string {
 	case ClientFlClash:
 		return "FlClash"
 	case ClientMihomoParty:
-		return "Mihomo Party"
+		return "Clash Party"
 	case ClientKaring:
 		return "Karing"
 	case ClientOpenClash:

@@ -493,12 +493,15 @@ func mihomoFamily(target model.ClientTarget) bool {
 }
 
 // clashAcceptsSnell reports whether a Snell node can be written for the
-// target. Stash caps at v3; mihomo clients cap at v5 except the Clash app and
-// Clashoo, whose bundled mihomo 1.19.34 reads v6. Never rewrite the version:
-// it must match the server. v6 has no HTTP/TLS obfs (its `mode` replaces it)
-// and takes a 12–255 byte PSK; mihomo 1.19.34 `-t` rejects both violations,
-// and one bad proxy fails the whole file. Karing embeds mihomo but documents
-// no Snell version support, so it stays ungated like upstream.
+// target. Stash caps at v3; mihomo clients cap at v5 except the Clash app,
+// FlClash, Clash Party and Clashoo, whose bundled mihomo 1.19.34 reads v6
+// (FlClash from 0.9.4, Clash Party from 2.0.5; the Party core is inferred
+// from its prepare script and still needs a device check). Never rewrite
+// the version: it must match the server. v6 has no HTTP/TLS obfs (its
+// `mode` replaces it) and takes a 12–255 byte PSK; mihomo 1.19.34 `-t`
+// rejects both violations, and one bad proxy fails the whole file. Karing
+// embeds mihomo but documents no Snell version support, so it stays
+// ungated like upstream.
 func clashAcceptsSnell(target model.ClientTarget, node model.ProxyNode) bool {
 	if node.Kind != model.KindSnell {
 		return true
@@ -509,11 +512,11 @@ func clashAcceptsSnell(target model.ClientTarget, node model.ProxyNode) bool {
 	case model.ClientStash:
 		version = 1
 		newest = 3
-	case model.ClientClashApple, model.ClientClashoo:
+	case model.ClientClashApple, model.ClientFlClash, model.ClientMihomoParty,
+		model.ClientClashoo:
 		newest = 6
-	case model.ClientClashVerge, model.ClientClashMac, model.ClientFlClash,
-		model.ClientMihomoParty, model.ClientClashMi, model.ClientOpenClash,
-		model.ClientNikki:
+	case model.ClientClashVerge, model.ClientClashMac, model.ClientClashMi,
+		model.ClientOpenClash, model.ClientNikki:
 		// newest stays 5.
 	default:
 		return true
