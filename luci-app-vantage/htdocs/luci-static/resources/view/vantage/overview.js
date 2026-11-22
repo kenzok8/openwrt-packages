@@ -78,13 +78,23 @@ var COLLECTOR_WAIT_MS = 4 * 1000;
 /* where no collector answers at all (the add-on installed and nothing
    paired: no such object), it is asked again only this often */
 var COLLECTOR_RETRY_MS = 60 * 1000;
+/* how long a poll waits for a switch chip's own counters (askSwitch):
+   the plugin reads no port after its first second */
+var SWITCH_WAIT_MS = 2 * 1000;
+/* After a slow answer (slowWait) the next call waits ten times as long as
+   that one took, SLOW_WAIT_MAX_MS at most. A call measured over
+   REQUEST_MAX_MS (LuCI gives a request up after 20 s) was out while the
+   computer slept or the tab was frozen: it says nothing of the router
+   and makes no wait */
+var REQUEST_MAX_MS = 30 * 1000;
+var SLOW_WAIT_MAX_MS = 4 * 60 * 1000;
 /* LuCI's WireGuard status (luci.wireguard getWgInstances) has the router
    run `wg show all dump` and, for each peer whose endpoint is configured
    by name, look that name up: inside rpcd, which answers nothing else
    meanwhile. So after an answer that took longer than WG_SLOW_MS (or no
    answer after as long) it is asked again only after ten times that,
-   WG_RETRY_MS at most: a resolver that does not answer cannot keep the
-   router busy for this tile. WG_RETRY_MS also when the object went away
+   SLOW_WAIT_MAX_MS at most: a resolver that does not answer cannot keep
+   the router busy for this tile. WG_RETRY_MS when the object went away
    under an open page */
 var WG_SLOW_MS = 1000;
 var WG_RETRY_MS = 60 * 1000;
@@ -92,6 +102,25 @@ var WG_RETRY_MS = 60 * 1000;
    object (the package is not installed) or method, or access denied */
 var WG_ABSENT = /ubus code [346]\b|error -3200[02]\b/;
 var WG_PEERS = 5;                     /* peers a tunnel lists before "+n more" */
+/* Provider tiles (#129): tiles another package fills with data, never
+   with markup or script. A provider is the ubus object vantage.tile.<id>
+   (id: a-z, 1-7 letters) of that package, with one method, status, which
+   takes nothing and answers what model.tile reads. No group of the
+   dashboard grants it: the provider's package ships an rpcd ACL group of
+   its own, and a login has the tile only where that group gives it the
+   call by name. Which ones it has, the page reads once from rpcd: the
+   session's own ACL (askTiles). A provider is asked with the slow part
+   of the poll, in a request of its own, and the poll waits for it
+   TILE_WAIT_MS at most; an answer that took over TILE_SLOW_MS makes the
+   next wait ten times as long (slowWait), as LuCI's WireGuard status
+   does: a provider answers inside rpcd, which answers nothing else
+   meanwhile */
+var TILE_OBJ = /^vantage\.tile\.[a-z]{1,7}$/;
+var TILE_WAIT_MS = 2 * 1000;
+var TILE_SLOW_MS = 500;
+/* a provider gone under an open page is asked once a minute; its last
+   answer stands that long after a call that failed */
+var TILE_RETRY_MS = 60 * 1000;
 var STORE_KEY = 'vantage.hist.v1';
 var VERSION = '1.1.1';                /* this package's, as its Makefile has it (tests/version.test.js) */
 var SVGNS = 'http://www.w3.org/2000/svg';
@@ -119,6 +148,25 @@ var callRoutes = rpc.declare({ object: 'luci.vantage', method: 'routes', expect:
    and answers them together, so a collector that does not answer would
    hold back every other reply of the poll */
 var callCollector = rpc.declare({ object: 'vantage.collector', method: 'report', expect: { '': {} }, nobatch: true });
+/* luci-app-vantage-traffic's plugin (experimental, #110): the bytes from
+   and to each host as this router's connection tracking counts them, by
+   MAC, one read shared by every caller. No group of the dashboard grants
+   it: the package's own does, so only a login that holds that one asks
+   (canTraffic, looked up once a page). It takes no argument. In a request
+   of its own (nobatch), never waited for (takeTraffic): rpcd runs the
+   plugin as a process, and a read of a large table takes it a second or
+   two. A failed call rejects (reject), so that one that says the plugin
+   is not there (WG_ABSENT) is told from its empty answer ({}: no read
+   yet); then it is asked again only TRAFFIC_RETRY_MS later */
+var callTraffic = rpc.declare({ object: 'luci.vantage.traffic', method: 'hosts', expect: { '': {} }, reject: true, nobatch: true });
+var TRAFFIC_RETRY_MS = 60 * 1000;
+/* the byte counters a DSA switch chip keeps for its ports, which count
+   what it forwards from port to port too (#156): the app's executable
+   rpcd plugin, which runs ethtool once a port in a process of its own.
+   It takes no argument. In a request of its own (nobatch), so that its
+   runs hold back no other reply of the poll; a failed call is rejected,
+   so that no object is told from an answer */
+var callSwitchCounters = rpc.declare({ object: 'luci.vantage.ports', method: 'counters', expect: { '': {} }, reject: true, nobatch: true });
 /* LuCI's own (luci-proto-wireguard's rpcd plugin, its status page's
    call): every WireGuard interface with its peers, without private or
    preshared keys; it takes no argument and writes nothing. No group of
@@ -145,6 +193,12 @@ var callUciGet = rpc.declare({ object: 'uci', method: 'get', params: [ 'config' 
 var callSetAlias = rpc.declare({ object: 'luci.vantage', method: 'set_alias', params: [ 'mac', 'name', 'icon' ] });
 var callSetQuiet = rpc.declare({ object: 'luci.vantage', method: 'set_quiet', params: [ 'mac', 'quiet' ] });
 var callAccess = rpc.declare({ object: 'session', method: 'access', params: [ 'scope', 'object', 'function' ], expect: { access: false } });
+/* the session's own ACL as rpcd keeps it: session access without an
+   object and a function answers all of it, { scope: { object: [ method ]
+   } } (the call LuCI's dispatcher makes for every request). Read once a
+   page (again only after a read that failed), for the providers this
+   login may ask (tileIds), and for nothing else */
+var callAcls = rpc.declare({ object: 'session', method: 'access', expect: { '': {} } });
 
 var hostapdCalls = {};
 function hostapd(ifname, method) {
@@ -152,6 +206,39 @@ function hostapd(ifname, method) {
 	if (!HOSTAPD_OBJ.test(obj)) return Promise.resolve(null);
 	if (!hostapdCalls[key]) hostapdCalls[key] = rpc.declare({ object: obj, method: method, expect: { '': {} } });
 	return L.resolveDefault(hostapdCalls[key](), null);
+}
+
+/* A provider's status call: its object made from an id of the session's
+   ACL (tileIds) and checked again (TILE_OBJ.test(obj)), its one method, no
+   parameters. A request of its own (nobatch): LuCI answers the calls of
+   one request together, and a slow provider would hold back every other
+   reply of the poll. A failed call is rejected: {} would be an answer */
+var tileCalls = {};
+function tileCall(id) {
+	var obj = 'vantage.tile.' + id;
+	if (!TILE_OBJ.test(obj)) return Promise.reject(new Error('not a provider'));
+	if (!tileCalls[obj]) tileCalls[obj] = rpc.declare({ object: obj, method: 'status', expect: { '': {} }, reject: true, nobatch: true });
+	return tileCalls[obj]();
+}
+
+/* The providers a session's ACL (session access without an object)
+   lets it ask: the objects of its ubus part named vantage.tile.<id>
+   exactly, granted status by name (an object glob names no provider),
+   the first layout.EXTRA_MAX by id. Nothing else of the answer is read */
+function tileIds(acl) {
+	var ubus = acl && typeof acl === 'object' && !Array.isArray(acl) ? acl.ubus : null, out = [];
+	if (!ubus || typeof ubus !== 'object' || Array.isArray(ubus)) return out;
+	Object.keys(ubus).forEach(function(obj) {
+		if (TILE_OBJ.test(obj) && Array.isArray(ubus[obj]) && ubus[obj].indexOf('status') >= 0) out.push(obj.slice(13));
+	});
+	return out.sort().slice(0, layout.EXTRA_MAX);
+}
+
+/* the wait after a call that took `took` ms, where over `slow` ms is
+   slow: ten times as long, SLOW_WAIT_MAX_MS at most; none for one
+   measured longer than a request can take (REQUEST_MAX_MS) */
+function slowWait(took, slow) {
+	return took > slow && took <= REQUEST_MAX_MS ? Math.min(10 * took, SLOW_WAIT_MAX_MS) : 0;
 }
 
 /* versioned as LuCI versions its scripts (LuCI's version and the time
@@ -406,7 +493,12 @@ var CHECK_ICONS = { uplink: 'port', cpu: 'cpu', memory: 'memory', radios: 'wifi'
    node, and its layout, alone */
 function txt(el, s) { s = (s == null ? '' : String(s)); if (el.textContent !== s) el.textContent = s; return el; }
 function setClass(el, c) { if (el.getAttribute('class') !== c) el.setAttribute('class', c); }
-function setTitle(el, v) { if (el.getAttribute('title') !== v) el.setAttribute('title', v); }
+/* a line of the compact path (paintLine) puts its full name, which its
+   cell may cut, above what the node's tooltip says, unless that names it */
+function setTitle(el, v) {
+	if (el.vtTip != null) { el.vtTitle = v; if (el.vtTip && String(v || '').indexOf(el.vtTip) < 0) v = el.vtTip + (v ? '\n' + v : ''); }
+	if (el.getAttribute('title') !== v) el.setAttribute('title', v);
+}
 /* a line's own IPv4 address, without its prefix length */
 function lineAddr(x) { return x && x.ipv4 && x.ipv4[0] ? String(x.ipv4[0]).split('/')[0] : null; }
 /* the address this device has on its own network: lan's; without a
@@ -510,6 +602,20 @@ function rateLine(down, up, cls) {
 	]);
 }
 
+/* a rate in few characters, so columns fit every card alike: 176, 62.2k,
+   3.42M (bit/s, or B/s where the traffic reads in bytes) */
+function shortBits(bps) {
+	var u = [ '', 'k', 'M', 'G' ], i = 0;
+	bps /= rateUnit();
+	while (bps >= 1000 && i < u.length - 1) { bps /= 1000; i++; }
+	return (i ? (bps >= 100 ? bps.toFixed(0) : bps >= 10 ? bps.toFixed(1) : bps.toFixed(2)) : bps.toFixed(0)) + u[i];
+}
+
+/* several rates ({ rx, tx } or null) added up; null when none is known */
+function sumRates(list) {
+	return list.reduce(function(out, r) { return r ? { rx: (out ? out.rx : 0) + r.rx, tx: (out ? out.tx : 0) + r.tx } : out; }, null);
+}
+
 /* a switch VLAN's ports, a line each: "LAN 2 · 2.5 Gbit/s" (model.switchOf) */
 function switchLines(sw) {
 	return sw.ports.map(function(p) {
@@ -560,6 +666,59 @@ function hasPage(page) {
 function pageLink(page, label) {
 	if (!hasPage(page)) return '';
 	return E('a', { 'class': 'vt-link', 'href': L.url.apply(L, page) }, [ E('span', {}, [ label ]), icon('chevron') ]);
+}
+
+/* A provider tile's page (model.tile: its menu path, checked steps) where
+   this login's menu has it: LuCI's title of it, translated as LuCI's
+   menu translates it, to name the link with; null where the menu lacks
+   it, does not let this login in or was not loaded */
+function menuPage(page) {
+	var n = menuTree;
+	for (var i = 0; n && i < page.length; i++) {
+		n = n.children && Object.prototype.hasOwnProperty.call(n.children, page[i]) ? n.children[page[i]] : null;
+		if (n && !n.satisfied) return null;
+	}
+	return n && n !== menuTree && typeof n.title === 'string' && n.title ? _(n.title) : null;
+}
+
+/* A provider tile's value as the dashboard writes it (model.tile's
+   units): a number in the dashboard's own formats, a counter as its rate
+   (perSec: of the counter's unit, or null before two answers), a text as
+   it came */
+function tileNum(v) { return Math.abs(v) >= 100 || v % 1 === 0 ? fmt.count(v) : (v < 0 ? '−' : '') + String(+Math.abs(v).toPrecision(3)); }
+function tileValue(x, perSec) {
+	if (x.text != null) return x.text;
+	if (x.rate) return perSec == null ? fmt.DASH : x.unit === 'B' ? fmt.bits(perSec * 8) : _('%s/s').format(tileNum(perSec));
+	var v = x.value;
+	switch (x.unit) {
+	case '%': return fmt.pct(v, Math.abs(v) < 10 && v % 1 ? 1 : 0);
+	case 'ms': return _('%s ms').format(tileNum(v));
+	case 's': return fmt.duration(v);
+	/* the forms of fmt.dbm and fmt.mhz, with 0 a value and a fraction cut
+	   to three digits: these are another package's numbers */
+	case 'dBm': return tileNum(v) + ' ' + _('dBm');
+	case 'dB': return _('%s dB').format(tileNum(v));
+	case 'MHz': return _('%s MHz').format(tileNum(v));
+	case 'B': return fmt.bytes(v);
+	case 'bit/s': return fmt.bits(v);
+	}
+	return tileNum(v);
+}
+/* the page's values of an item (trend) as a bare line between their
+   lowest and their highest: a provider's numbers may all be below zero
+   (a level in dBm), where a sparkline's scale starts at 0. One that
+   holds still: a line across the middle */
+function tileTrend(hist) {
+	var lo = Infinity, hi = -Infinity;
+	hist.forEach(function(p) { lo = Math.min(lo, p[1]); hi = Math.max(hi, p[1]); });
+	var span = hi - lo;
+	return sparkline(hist.map(function(p) { return [ p[0], span > 0 ? p[1] - lo : 1 ]; }), [ 1 ], span > 0 ? span : 2, 'vt-spark-ext', { quiet: true, bare: true });
+}
+/* value of max as a thin bar, in the level's colours */
+function tileMeter(x) {
+	var f = E('span', { 'class': 'vt-bar-fill' + (x.level === 'err' ? ' vt-bg-err' : x.level === 'warn' ? ' vt-bg-warn' : '') });
+	setW(f, x.value / x.max * 100);
+	return E('span', { 'class': 'vt-bar vt-ext-bar' }, [ f ]);
 }
 
 /* LuCI's own landing pages: luci-mod-dashboard's, where the app's menu.d
@@ -744,7 +903,7 @@ var UNSAVED_KEY = 'vantage.view.unsaved';
 function readUnsaved() {
 	var v = null;
 	try { v = JSON.parse(window.localStorage.getItem(UNSAVED_KEY) || 'null'); } catch (e) { v = null; }
-	return Array.isArray(v) ? v.filter(function(k) { return /^(chart|layout_(wide|mid|narrow)(_wired)?)$/.test(k); }) : [];
+	return Array.isArray(v) ? v.filter(function(k) { return /^(chart|path|layout_(wide|mid|narrow)(_wired)?)$/.test(k); }) : [];
 }
 
 function writeUnsaved(list) {
@@ -806,6 +965,35 @@ function writeChartStyle(v) {
 		/* the default needs no entry, unless the router has another */
 		if (v === series.CHART_STYLES[0] && !lookAttr('data-vt-look-chart')) window.localStorage.removeItem(CHART_KEY);
 		else window.localStorage.setItem(CHART_KEY, v);
+	} catch (e) {}
+}
+
+/* The network path's form, picked under Customize beside the chart
+   style (#157): full, its cards as always (the default), or compact,
+   every node of its branches one line. Kept as the chart style is:
+   this browser's copy of it and the router's */
+var PATH_KEY = 'vantage.path.v1';
+var PATH_FORMS = [ 'full', 'compact' ];
+
+/* the pick in force, as series.chartPick decides the chart style's: the
+   router's first for a login that may save there, for any other only
+   where this browser has none */
+function lookPick(ok, saved, mine, first) {
+	if (ok.indexOf(saved) >= 0 && (first || ok.indexOf(mine) < 0)) return saved;
+	return ok.indexOf(mine) >= 0 ? mine : ok[0];
+}
+
+function readPathForm() {
+	var v = null;
+	try { v = window.localStorage.getItem(PATH_KEY); } catch (e) { v = null; }
+	return lookPick(PATH_FORMS, lookAttr('data-vt-look-path'), v, lookSaves() && readUnsaved().indexOf('path') < 0);
+}
+
+function writePathForm(v) {
+	try {
+		/* the default needs no entry, unless the router has another */
+		if (v === PATH_FORMS[0] && !lookAttr('data-vt-look-path')) window.localStorage.removeItem(PATH_KEY);
+		else window.localStorage.setItem(PATH_KEY, v);
 	} catch (e) {}
 }
 
@@ -914,11 +1102,13 @@ return view.extend({
 				self.fetch(),
 				/* reverse DNS is an optional grant: without it, skip it quietly */
 				L.resolveDefault(callAccess('access-group', 'luci-app-vantage-rdns', 'read'), false),
-				L.resolveDefault(ui.menu.load(), null)
+				L.resolveDefault(ui.menu.load(), null),
+				/* per-device traffic is a package and a group of its own: without either, no call (takeTraffic) */
+				L.resolveDefault(callAccess('access-group', 'luci-app-vantage-traffic', 'read'), false)
 			]);
 		}).then(function(r) {
 			menuTree = r[7] || null;
-			return { board: r[1] || {}, canWrite: r[2] === true, mdns: r[4], raw: r[5], canRdns: r[6] === true };
+			return { board: r[1] || {}, canWrite: r[2] === true, mdns: r[4], raw: r[5], canRdns: r[6] === true, canTraffic: r[8] === true };
 		});
 	},
 
@@ -1006,6 +1196,39 @@ return view.extend({
 		return this.collector && !(Date.now() - this.collectorAt > limit) ? this.collector : null;
 	},
 
+	/* A switch chip's own byte counters for its ports (#156), checked
+	   (model.switchCounters), or null. Asked every poll, in a request of
+	   its own; the poll waits SWITCH_WAIT_MS for it at most, and while a
+	   call is out no other is made (that poll has none). Where the first
+	   answer says there is nothing to get (no DSA port, no ethtool, a
+	   driver whose counters the plugin does not know), or the object is
+	   not there (the answers WG_ABSENT names), the page asks no more: a
+	   device without a switch starts no process for it every poll. Only
+	   the first: once it has answered, any later answer is that poll's
+	   and no more (rpcd's objects are gone for a moment while it reloads,
+	   at every package install) */
+	askSwitch: function() {
+		var self = this;
+		if (this.hwOff || this.hwCall) return Promise.resolve(null);
+		var call = this.hwCall = callSwitchCounters().then(function(v) {
+			return model.switchCounters(v);
+		}, function(e) {
+			if (!self.hwAnswered && WG_ABSENT.test(String(e && e.message))) self.hwOff = true;
+			return null;
+		}).then(function(c) {
+			self.hwCall = null;
+			if (c && !self.hwAnswered) {
+				self.hwAnswered = true;
+				if (c.none) self.hwOff = true;
+			}
+			return c;
+		});
+		return new Promise(function(resolve) {
+			var timer = setTimeout(function() { resolve(null); }, SWITCH_WAIT_MS);
+			call.then(function(c) { clearTimeout(timer); resolve(c); });
+		});
+	},
+
 	/* LuCI's WireGuard status for a slow poll: { reply, at } (at: when it
 	   came in) or null, kept in this.wgLast. Asked only by a login that
 	   holds LuCI's own group for it, looked up once (wgMay): without
@@ -1037,11 +1260,116 @@ return view.extend({
 				   WG_RETRY_MS old */
 				var last = self.wgLast;
 				self.wgLast = a.reply ? { reply: a.reply, at: at } : !a.absent && last && at - last.at < WG_RETRY_MS ? last : null;
-				var wait = a.absent ? WG_RETRY_MS : took > WG_SLOW_MS ? 10 * took : 0;
+				var wait = a.absent ? WG_RETRY_MS : slowWait(took, WG_SLOW_MS);
 				self.wgWait = wait ? { from: at, until: at + wait } : null;
 				return self.wgLast;
 			});
 		});
+	},
+
+	/* The provider tiles' answers for a slow poll: { id: { data, at,
+	   failed } }, each model.tile's reading of the last answer (null for
+	   one it cannot read; at: when it came in, 0 before one). The answer
+	   itself is not kept: only what the reading holds, capped.
+	   Which providers this login may ask comes from rpcd once a page
+	   (session access without an object, read by tileIds): without a
+	   provider package no group grants one, and none is asked. A read
+	   that failed is made again at the next slow poll (a provider found
+	   then gets its tile: addProvided); an answer, with providers or
+	   without, is not read again. A
+	   provider whose first answer says it is not there (WG_ABSENT's
+	   answers: no such object, access denied) is not asked again on this
+	   page and has no tile (tileState[id].off); one that went away
+	   later, once a minute; one whose call failed otherwise, ever less
+	   often (askTile). One whose tile the layout hides is not asked once
+	   it has answered. The poll waits for them TILE_WAIT_MS at most; a
+	   call that stays out is not made again beside itself and no later
+	   poll waits for it: its answer, late, is the next poll's */
+	askTiles: function() {
+		var self = this;
+		if (!this.tilesMay) this.tilesMay = callAcls().then(tileIds, function() { self.tilesMay = null; return []; });
+		return this.tilesMay.then(function(ids) {
+			self.tileIds = ids;
+			var now = Date.now(), asks = ids.map(function(id) { return self.askTile(id, now); }).filter(Boolean);
+			if (!asks.length) return null;
+			return new Promise(function(resolve) {
+				var timer = setTimeout(resolve, TILE_WAIT_MS);
+				Promise.all(asks).then(function() { clearTimeout(timer); resolve(); });
+			});
+		}).then(function() { return self.tileAnswers(); });
+	},
+
+	/* one provider's call, unless it is off, out, waited for or hidden
+	   (then null: nothing for the poll to wait for) */
+	askTile: function(id, now) {
+		var self = this, ts = this.tileState || (this.tileState = Object.create(null));
+		var s = ts[id] || (ts[id] = { off: false, answered: false, last: null, failed: false, fails: 0, wait: null, call: null });
+		if (s.off || s.call) return null;
+		if (s.wait && now >= s.wait.from && now < s.wait.until) return null;
+		if (s.answered && this.tileHidden(id)) return null;
+		var asked = Date.now();
+		s.call = tileCall(id).then(function(v) {
+			return { reply: v && typeof v === 'object' && !Array.isArray(v) ? v : null };
+		}, function(e) {
+			return { absent: WG_ABSENT.test(String(e && e.message)) };
+		}).then(function(a) {
+			/* first: whatever follows, this provider can be asked again */
+			s.call = null;
+			var at = Date.now(), took = at - asked, d = a.reply ? model.tile(a.reply) : null;
+			if (a.absent && !s.answered) { s.off = true; return; }
+			if (a.reply) { s.answered = true; s.last = { data: d, at: at }; }
+			s.failed = !a.reply;
+			s.fails = a.reply || a.absent ? 0 : s.fails + 1;
+			/* asked again: a minute on when it went away; ten times as late
+			   as a slow answer took (slowWait); after a call that failed
+			   otherwise, two polls on and twice as late after each further
+			   one, SLOW_WAIT_MAX_MS at most; and never sooner than its data
+			   changes (every) after this question */
+			var back = s.fails ? Math.min(POLL_S * 1000 * Math.pow(2, s.fails), SLOW_WAIT_MAX_MS) : 0;
+			var until = Math.max(at + (a.absent ? TILE_RETRY_MS : Math.max(slowWait(took, TILE_SLOW_MS), back)), d && d.every ? asked + d.every * 1000 : 0);
+			s.wait = until > at ? { from: asked, until: until } : null;
+		});
+		return s.call;
+	},
+
+	/* a provider's tile hidden in the layout in use: nothing to show */
+	tileHidden: function(id) {
+		var l = this.lay, i = l ? layout.indexOf(l.list, 'x' + id) : -1;
+		return i >= 0 && l.list[i].hide === true;
+	},
+
+	tileAnswers: function() {
+		var self = this, out = Object.create(null);
+		(this.tileIds || []).forEach(function(id) {
+			var s = self.tileState && self.tileState[id];
+			if (s && !s.off) out[id] = { data: s.last ? s.last.data : null, at: s.last ? s.last.at : 0, failed: s.failed };
+		});
+		return out;
+	},
+
+	/* luci-app-vantage-traffic's answer for a poll: the one that came in
+	   since the last poll (undefined: none; null: a failed call). With the
+	   slow part, a login that may ask (canTraffic) asks again, one call at
+	   a time, and no poll waits for it: its answer is the next poll's.
+	   After a call that says the plugin is not there (trafficNext), not
+	   before TRAFFIC_RETRY_MS: the package removed under the page, or
+	   rpcd's objects gone for a moment while it reloads at a package
+	   install. That never ends the asking, first answer or later: the
+	   page found the package's group, so it was there when the page
+	   loaded */
+	takeTraffic: function(slow) {
+		var self = this, got = this.trafficGot, now = Date.now();
+		this.trafficGot = undefined;
+		if (slow && this.canTraffic && !this.trafficCall && !(now < this.trafficNext))
+			this.trafficCall = callTraffic().then(null, function(e) { return self.trafficFailed(e); }).then(function(v) { self.trafficGot = v; self.trafficCall = null; });
+		return got;
+	},
+
+	/* a failed call (takeTraffic): none, and the next a minute later
+	   where it says the plugin is not there */
+	trafficFailed: function(e) {
+		if (WG_ABSENT.test(String(e && e.message))) this.trafficNext = Date.now() + TRAFFIC_RETRY_MS;
+		return null;
 	},
 
 	/* one poll's worth of raw replies; missing pieces degrade to {} */
@@ -1061,6 +1389,11 @@ return view.extend({
 		/* and so does LuCI's WireGuard status, for a login that may ask
 		   (askWireguard): its last answer between slow polls */
 		var tunnels = slow ? this.askWireguard() : Promise.resolve(this.wgLast || null);
+		/* and so do the provider tiles (askTiles): their last answers between slow polls */
+		var provided = slow ? this.askTiles() : Promise.resolve(this.tileAnswers());
+		var traffic = this.takeTraffic(slow);
+		/* and a switch chip's own counters, every poll (askSwitch) */
+		var counted = this.askSwitch();
 		return Promise.all([
 			L.resolveDefault(callInfo(), {}),
 			L.resolveDefault(callRead('/proc/stat'), ''),
@@ -1209,9 +1542,9 @@ return view.extend({
 					/* no answer (an older plugin, a lookup not sent, a failed call)
 					   keeps the last one: no tunnel blinking off */
 					routes: r[8] && Array.isArray(r[8].routes) ? (self.kernelRoutes = r[8].routes) : (self.kernelRoutes || null),
-					collector: null, wg: null,
+					collector: null, wg: null, provided: null, traffic: traffic,
 					assoc: assoc, hapd: hapd, hapdStatus: hapdStatus, iwinfo: iwinfo, survey: survey, at: Date.now(), started: started };
-				return Promise.all([ collected, tunnels ]).then(function(x) { raw.collector = self.collectorAnswer(); raw.wg = x[1]; return raw; });
+				return Promise.all([ collected, tunnels, provided, counted ]).then(function(x) { raw.collector = self.collectorAnswer(); raw.wg = x[1]; raw.provided = x[2]; raw.hw = x[3]; return raw; });
 			});
 		});
 	},
@@ -1235,6 +1568,7 @@ return view.extend({
 			});
 		this.board = data.board || {};
 		this.canWrite = data.canWrite;
+		this.canTraffic = data.canTraffic === true;
 		var held = heldCpu(readCpu(), now);
 		this.st = {
 			clock: null, stat: null, cpu: held, cores: held ? held.cores.length : null, cpuMeasured: false,
@@ -1248,6 +1582,8 @@ return view.extend({
 			wireless: null,
 			wg: [], wgSeen: false, wgPrev: null, wgRates: Object.create(null),
 			portsSeen: false,
+			traffic: null, trafficRates: null, trafficPrev: null, trafficSeen: 0, trafficNew: 0, trafficAt: null,
+			ext: Object.create(null),
 			lastOk: 0, lastErr: null, paused: false
 		};
 		this.ui = { sorts: readSorts(), kind: 'wifi', filter: '', chip: 'all', drawer: null, editing: null, hover: null, wgOpen: Object.create(null) };
@@ -1256,6 +1592,7 @@ return view.extend({
 		this.foldBtns = {};
 		this.layouts = readLayouts();
 		this.chartStyle = readChartStyle();
+		this.pathForm = readPathForm();
 		this.backdropStyle = readBackdrop();
 		/* picked under the theme's Appearance (menu-vantage.js), here or
 		   in another tab */
@@ -1311,13 +1648,24 @@ return view.extend({
 		this.markWired(m, raw);
 		this.noteTunnels(m, raw.wg, now);
 		this.notePorts(m);
+		this.noteTiles(m, raw.provided, now);
 		if (m.device.memory) series.push(st.hist.mem, [ at, m.device.memory.usedPct ], WINDOW_MS, HIST_MAX);
 
-		/* interface counters */
+		/* interface counters; a DSA port's from its switch chip where this
+		   poll has them (askSwitch, #156): the kernel's count only what
+		   passes the CPU. Not a line's own device, whose rate the line, the
+		   chart and the fast lane take from the kernel's. A port whose
+		   chip's counters stayed out has no rate for that step (model.rates):
+		   none rather than one of the kernel's against the chip's. The
+		   chip's are rated by when the device read them (at), not by this
+		   poll's clock: they come in a request of their own, up to
+		   SWITCH_WAIT_MS later, and when says nothing of when ethtool ran */
+		var hw = raw.hw && raw.hw.counters, lineDevs = m.uplinks.map(function(x) { return x.statsDev; });
 		var devCounters = Object.create(null);
 		Object.keys(raw.devs || {}).forEach(function(n) {
-			var s = raw.devs[n] && raw.devs[n].statistics;
-			if (s) devCounters[n] = { rx: s.rx_bytes, tx: s.tx_bytes };
+			var s = raw.devs[n] && raw.devs[n].statistics, c = hw && hw[n] && lineDevs.indexOf(n) < 0 ? hw[n] : null;
+			if (c) devCounters[n] = { rx: c.rx, tx: c.tx, src: 'switch', at: c.at };
+			else if (s) devCounters[n] = { rx: s.rx_bytes, tx: s.tx_bytes };
 		});
 		var dr = model.rates(st.devPrev, devCounters, at);
 		st.devPrev = dr.next;
@@ -1365,6 +1713,8 @@ return view.extend({
 			var r = st.staRates[c.mac];
 			series.push(h, [ at, c.signal != null ? -c.signal : NaN, r ? r.tx : NaN, r ? r.rx : NaN ], 10 * 60 * 1000, 150);
 		});
+
+		this.noteTraffic(raw.traffic);
 
 		/* presence: new since the page opened, recently gone */
 		var p = insight.presence(st.presence, m.clients, now, GONE_KEEP_MS,
@@ -1464,6 +1814,49 @@ return view.extend({
 	notePorts: function(m) {
 		if (m.ports.length > 1) this.st.portsSeen = true;
 		m.portsTile = this.st.portsSeen === true;
+	},
+
+	/* Provider tiles: the poll's answers (tiles: tileAnswers') -> the
+	   tiles this page has (m.extra: their layout ids, 'x' and the
+	   provider's id; not one whose first answer said it is not there)
+	   and what each shows (st.ext[id]: { data, readable, state, at,
+	   rates, hist }). data is model.tile's reading of the last answer,
+	   readable that of the last one it could read (the tile's name, icon
+	   and page stay while a later answer cannot be read); state 'wait'
+	   before an answer, 'bad' for one it cannot read, 'gone' when the
+	   last call failed and the last answer is TILE_RETRY_MS old (or there
+	   is none), else 'ok'. A counter's rate between two answers, and a
+	   trend item's values for the page: the same answer again (between
+	   slow polls, or a model built again: rerender) is no sample */
+	noteTiles: function(m, tiles, now) {
+		var byTile = this.st.ext, ts = this.tileState;
+		m.extra = [];
+		Object.keys(tiles || {}).forEach(function(id) {
+			/* its first answer came after the poll's (which waits 2 s at
+			   most) and said it is not there: no tile (buildProvided) */
+			if (ts && ts[id] && ts[id].off) return;
+			var a = tiles[id], t = byTile[id] || (byTile[id] = { data: null, readable: null, state: 'wait', at: 0, prev: null, rates: Object.create(null), hist: Object.create(null) });
+			m.extra.push('x' + id);
+			if (a.at && a.at !== t.at) {
+				t.at = a.at;
+				t.data = a.data || null;
+				if (t.data) t.readable = t.data;
+				var counters = Object.create(null), labels = Object.create(null);
+				(t.data ? t.data.items : []).forEach(function(x) {
+					labels[x.label] = true;
+					if (x.rate) counters[x.label] = { rx: x.value, tx: 0 };
+				});
+				var r = model.rates(t.prev, counters, a.at);
+				t.prev = r.next;
+				t.rates = r.rates;
+				(t.data ? t.data.items : []).forEach(function(x) {
+					var v = x.rate ? (r.rates[x.label] ? r.rates[x.label].rx / 8 : null) : x.value;
+					if (x.trend && v != null) series.push(t.hist[x.label] || (t.hist[x.label] = []), [ a.at, v ], WINDOW_MS, HIST_MAX);
+				});
+				Object.keys(t.hist).forEach(function(k) { if (!labels[k]) delete t.hist[k]; });
+			}
+			t.state = !a.at ? (a.failed ? 'gone' : 'wait') : !t.data ? 'bad' : a.failed && !(now - a.at < TILE_RETRY_MS) ? 'gone' : 'ok';
+		});
 	},
 
 	/* The generation shown is the best standard a station used this
@@ -1639,6 +2032,8 @@ return view.extend({
 		m.wg = st.wgSeen === true;
 		this.markOffline(m, raw, null);
 		this.notePorts(m);
+		/* the provider tiles from the poll's answers again: no new sample */
+		this.noteTiles(m, raw.provided, Date.now());
 		this.stickyGen(m);
 		m.clients.forEach(function(c) { c.exp = insight.experience(c); c.firstSeen = st.presence && st.presence.firstSeen[c.mac]; c.isNew = !!st.isNew[c.mac]; });
 		st.talkers = this.talkers(m);
@@ -1789,7 +2184,9 @@ return view.extend({
 		if (window.ResizeObserver) {
 			var ro = new ResizeObserver(function() { self.scheduleLayout(); });
 			ro.observe(this.el.grid);
-			layout.TILES.forEach(function(id) {
+			/* and a provider's tile made later (addProvided) */
+			this.tileRo = ro;
+			this.tileList.forEach(function(id) {
 				ro.observe(self.tiles[id]);
 				/* a held min-height keeps the tile's box still while its
 				   content changes: watch the content as well */
@@ -1807,6 +2204,7 @@ return view.extend({
 	},
 
 	paint: function() {
+		this.addProvided();
 		this.el.root.classList.toggle('vt-wired', !!this.m.wired);
 		this.paintHead();
 		this.paintHealth();
@@ -1819,15 +2217,18 @@ return view.extend({
 		this.paintSsids();
 		this.paintWireguard();
 		this.paintPorts();
+		this.paintTiles();
 		this.paintDrawer();
 		this.paintLive();
 		if (!this.wireRo) this.scheduleWires();
 		/* the tiles' ResizeObserver lays out again when a tile changes
 		   size, so a poll lays out only when the tile set may change (the
 		   first one, wired or not, a WireGuard tunnel or none, ports or
-		   none); one that changes nothing measures nothing */
-		if (this.laidWired !== !!this.m.wired || this.laidWg !== !!this.m.wg || this.laidPorts !== !!this.m.portsTile) {
-			this.laidWired = !!this.m.wired; this.laidWg = !!this.m.wg; this.laidPorts = !!this.m.portsTile;
+		   none, the provider tiles); one that changes nothing measures
+		   nothing */
+		var extra = (this.m.extra || []).join(' ');
+		if (this.laidWired !== !!this.m.wired || this.laidWg !== !!this.m.wg || this.laidPorts !== !!this.m.portsTile || this.laidExtra !== extra) {
+			this.laidWired = !!this.m.wired; this.laidWg = !!this.m.wg; this.laidPorts = !!this.m.portsTile; this.laidExtra = extra;
 			this.scheduleLayout();
 		}
 	},
@@ -1879,9 +2280,11 @@ return view.extend({
 			ports: _('Ports'),
 			sys: _('System'), talk: _('Top talkers', 'vantage'), ssids: _('Wireless networks', 'vantage'), wg: _('WireGuard')
 		};
+		/* and one for each provider this login may ask (buildProvided) */
+		this.tileList = layout.TILES.concat(this.buildProvided());
 		this.ov = {};
 		this.el.ghost = E('div', { 'class': 'vt-drop-ghost', 'aria-hidden': 'true' });
-		return [ this.el.ghost ].concat(layout.TILES.map(function(id) {
+		return [ this.el.ghost ].concat(this.tileList.map(function(id) {
 			var t = self.tiles[id];
 			t.classList.add('vt-cell');
 			t.appendChild(self.buildOverlay(id));
@@ -1891,10 +2294,10 @@ return view.extend({
 
 	/* the stored layout for this screen class, or the default; wg: with
 	   the WireGuard tile (a tunnel was seen); ports: with the Ports tile
-	   (two ports were) */
-	layoutFor: function(tier, wired, wg, ports) {
+	   (two ports were); extra: with these provider tiles */
+	layoutFor: function(tier, wired, wg, ports, extra) {
 		var k = layout.key(tier, wired);
-		return layout.normalize(this.layouts[k] || null, tier, wired, wg, ports);
+		return layout.normalize(this.layouts[k] || null, tier, wired, wg, ports, extra);
 	},
 
 	scheduleLayout: function() {
@@ -1910,8 +2313,8 @@ return view.extend({
 		var self = this, grid = this.el.grid, tiles = this.tiles;
 		var width = grid.clientWidth;
 		if (!width || !this.m) return;
-		var tier = layout.tier(width), cols = layout.cols(tier), wired = !!this.m.wired, wg = !!this.m.wg, ports = !!this.m.portsTile;
-		var list = this.drag ? this.drag.list : this.layoutFor(tier, wired, wg, ports);
+		var tier = layout.tier(width), cols = layout.cols(tier), wired = !!this.m.wired, wg = !!this.m.wg, ports = !!this.m.portsTile, extra = this.m.extra;
+		var list = this.drag ? this.drag.list : this.layoutFor(tier, wired, wg, ports, extra);
 		var gap = parseFloat(window.getComputedStyle(grid).getPropertyValue('--vt-gap')) || 14;
 		var shown = list.filter(function(e) { return !e.hide; });
 		var on = Object.create(null);
@@ -1927,7 +2330,7 @@ return view.extend({
 		}
 
 		grid.style.setProperty('--cols', cols.toFixed(0));
-		layout.TILES.forEach(function(id) { tiles[id].classList.toggle('vt-cell-off', !on[id]); });
+		Object.keys(tiles).forEach(function(id) { tiles[id].classList.toggle('vt-cell-off', !on[id]); });
 		shown.forEach(function(e) {
 			var t = tiles[e.id];
 			t.style.setProperty('--c', Math.min(e.c, cols - 1).toFixed(0));
@@ -1967,7 +2370,7 @@ return view.extend({
 			ghost.style.setProperty('--y', g.top.toFixed(1) + 'px');
 			ghost.style.height = g.h.toFixed(1) + 'px';
 		}
-		this.lay = { tier: tier, cols: cols, wired: wired, wg: wg, ports: ports, list: list, rects: p.rects, gap: gap, width: width };
+		this.lay = { tier: tier, cols: cols, wired: wired, wg: wg, ports: ports, extra: extra, list: list, rects: p.rects, gap: gap, width: width };
 
 		/* reading and tab order follow the layout; not while dragging,
 		   moving the dragged tile would end the drag */
@@ -1992,7 +2395,7 @@ return view.extend({
 		var l = this.lay;
 		if (!l) return;
 		var k = layout.key(l.tier, l.wired);
-		if (layout.same(list, layout.defaults(l.tier, l.wired, l.wg, l.ports))) this.clearLayout(k);
+		if (layout.same(list, layout.defaults(l.tier, l.wired, l.wg, l.ports, l.extra))) this.clearLayout(k);
 		else this.layouts[k] = layout.compact(this.keepAbsent(list, this.layouts[k]));
 		writeLayouts(this.layouts);
 		this.viewChanged(layout.option(k));
@@ -2000,15 +2403,20 @@ return view.extend({
 		this.doLayout();
 	},
 
-	/* A tile that does not exist right now (no tunnel is reported) is in
-	   no list being arranged. Where the stored layout has it, it keeps
-	   its entry, hidden or not, after the tile it followed there, so
-	   that it is where it was put once it is back. */
+	/* A tile that does not exist right now (no tunnel is reported, a
+	   provider not answering or not installed) is in no list being
+	   arranged. Where the stored layout has it, it keeps its entry,
+	   hidden or not, after the tile it followed there, so that it is
+	   where it was put once it is back. Provider tiles only while the
+	   list has room: layout.EXTRA_MAX in all, those shown now first, so
+	   a stored layout stays within the twelve tiles the theme keeps */
 	keepAbsent: function(list, stored) {
 		var out = list.slice(), prev = null;
+		var room = layout.EXTRA_MAX - list.filter(function(e) { return layout.isExtra(e.id); }).length;
 		(Array.isArray(stored) ? stored : []).forEach(function(e) {
 			var at = -1, i;
-			if (!e || layout.TILES.indexOf(e.id) < 0) return;
+			if (!e || !(layout.TILES.indexOf(e.id) >= 0 || layout.isExtra(e.id))) return;
+			if (layout.isExtra(e.id) && layout.indexOf(out, e.id) < 0 && room-- <= 0) return;
 			for (i = 0; i < out.length; i++) {
 				if (out[i].id === e.id) { prev = e.id; return; }
 				if (out[i].id === prev) at = i;
@@ -2069,7 +2477,7 @@ return view.extend({
 
 	/* the options of /etc/config/vantage_theme this dashboard stands for */
 	viewValues: function() {
-		var self = this, out = { chart: this.chartStyle };
+		var self = this, out = { chart: this.chartStyle, path: this.pathForm };
 		[ 'wide', 'mid', 'narrow' ].forEach(function(tier) {
 			[ false, true ].forEach(function(wired) {
 				var k = layout.key(tier, wired);
@@ -2121,6 +2529,18 @@ return view.extend({
 		return E('div', { 'class': 'vt-edit-field' }, [ E('label', { 'for': 'vt-chart-style' }, [ _('Throughput chart') ]), pick ]);
 	},
 
+	/* the network path's form, picked beside the chart style */
+	buildPathPick: function() {
+		var self = this, names = {
+			'full': _('Full', 'vantage'),
+			'compact': _('Compact, one line each')
+		};
+		var pick = E('select', { 'class': 'vt-select', 'id': 'vt-path-form', 'change': function(ev) { self.setPathForm(ev.target.value); } },
+			PATH_FORMS.map(function(k) { return E('option', { 'value': k }, [ names[k] ]); }));
+		pick.value = this.pathForm;
+		return E('div', { 'class': 'vt-edit-field' }, [ E('label', { 'for': 'vt-path-form' }, [ _('Network path') ]), pick ]);
+	},
+
 	/* the network path's backdrop, picked under Customize; under the
 	   Vantage theme it is in Appearance instead (menu-vantage.js) */
 	buildBackdropPick: function() {
@@ -2158,6 +2578,18 @@ return view.extend({
 		this.paintChart();
 	},
 
+	/* the path built again in the other form; its tile takes its new
+	   height at once, not after the 30 s a shrinking tile is held */
+	setPathForm: function(v) {
+		if (PATH_FORMS.indexOf(v) < 0 || v === this.pathForm) return;
+		this.pathForm = v;
+		writePathForm(v);
+		this.viewChanged('path');
+		if (this.held) delete this.held.hero;
+		if (this.m && this.hero) this.paintHero();
+		if (!this.wireRo) this.scheduleWires();
+	},
+
 	buildEditBar: function() {
 		var self = this, el = this.el;
 		el.editHint = E('span', { 'class': 'vt-hint' });
@@ -2167,7 +2599,7 @@ return view.extend({
 		el.editBar = E('div', { 'class': 'vt-editbar', 'role': 'region', 'aria-label': _('Customize the dashboard'), 'hidden': 'hidden' }, [
 			E('div', { 'class': 'vt-editbar-text' }, [ E('strong', {}, [ _('Customize the dashboard') ]), el.editHint, el.editNote ]),
 			el.editHidden,
-			E('div', { 'class': 'vt-edit-picks' }, [ this.buildChartPick(), this.buildBackdropPick() ]),
+			E('div', { 'class': 'vt-edit-picks' }, [ this.buildChartPick(), this.buildPathPick(), this.buildBackdropPick() ]),
 			E('div', { 'class': 'vt-editbar-actions' }, [
 				E('button', { 'type': 'button', 'class': 'vt-btn', 'click': function() {
 					var l = self.lay;
@@ -2682,7 +3114,7 @@ return view.extend({
 	heroKey: function() {
 		/* an SSID node by its interface, 's:' before it: never the wired node's 'w' */
 		var m = this.m, aps = this.aps().map(function(a) { return a.id + (a.parent ? '<' + a.parent.id : '') + '=' + a.nodes.map(function(n) { return 's:' + n.id; }).concat(a.wired ? [ 'w' ] : []).join(','); }).join(';');
-		var tail = '\nwired=' + this.wiredPorts().join(',') + '\nlines=' + this.extraLines().map(function(x) { return x.iface; }).join(',') + (aps ? '\naps=' + aps : '');
+		var tail = (this.pathForm === 'compact' ? '\ncompact' : '') + '\nwired=' + this.wiredPorts().join(',') + '\nlines=' + this.extraLines().map(function(x) { return x.iface; }).join(',') + (aps ? '\naps=' + aps : '');
 		if (m.wired) return 'w\n' + m.networks.filter(function(n) { return n.up; }).slice(0, 8).map(function(n) { return n.name; }).join('\n') + tail;
 		return 'r\n' + m.radios.map(function(r) {
 			return r.id + '=' + m.ssids.filter(function(s) { return s.radio === r.id; }).map(function(s) { return s.id; }).join(',');
@@ -2875,7 +3307,8 @@ return view.extend({
 		   path is as it was). On an access point the others are its
 		   siblings, wired from the gateway, this device's node at the top */
 		var mesh = this.aps().length > 0, sib = mesh && !(m.uplink && m.uplink.isWan);
-		setClass(path, 'vt-path' + (extra.length ? ' vt-path-lines' : '') + (mesh ? ' vt-path-mesh' : '') + (sib ? ' vt-path-sib' : ''));
+		h.compact = this.pathForm === 'compact';
+		setClass(path, 'vt-path' + (extra.length ? ' vt-path-lines' : '') + (mesh ? ' vt-path-mesh' : '') + (sib ? ' vt-path-sib' : '') + (h.compact ? ' vt-path-compact' : ''));
 
 		h.dnVal = E('b'); h.dnUnit = E('small'); h.upVal = E('b'); h.upUnit = E('small'); h.linkMeta = span('vt-link-meta');
 		/* a full-tunnel VPN over the line: named on the link it runs through */
@@ -2986,6 +3419,7 @@ return view.extend({
 			ab.wrap = E('div', { 'class': 'vt-branch vt-branch-peer' + (a.parent ? ' vt-branch-d' + Math.min(a.depth, 3) : '') }, [ ab.el, acol ]);
 			h.radios.push(ab);
 		});
+		if (h.compact) this.lineNodes(h);
 		/* the paired access points after this device's own branches,
 		   under a label of their own */
 		var firstPeer = true;
@@ -3090,6 +3524,7 @@ return view.extend({
 				txt(b.sub, r ? fmt.rates(r.tx, r.rx) : fmt.DASH);
 				b.active = !!(r && r.rx + r.tx > 50e3);
 				b.rate = r ? r.rx + r.tx : 0;
+				if (h.compact) self.paintLine(b, r || null);
 			});
 			return;
 		}
@@ -3110,6 +3545,7 @@ return view.extend({
 			txt(b.sub, r.disabled ? _('Disabled') : !r.up ? _('Down', 'vantage') : rr ? '↓ ' + fmt.bits(rr.tx) : fmt.DASH);
 			b.active = !!(rr && rr.rx + rr.tx > 50e3);
 			b.rate = rr ? rr.rx + rr.tx : 0;
+			if (h.compact) self.paintLine(b, rr || null, r.disabled ? _('Disabled') : !r.up ? _('Down', 'vantage') : null);
 			b.ssids.forEach(function(sn) {
 				var s = ssids[sn.id];
 				if (!s) return;
@@ -3138,24 +3574,29 @@ return view.extend({
 				}), false);
 				var sr = st.ssidRates[s.id];
 				sn.active = !!(sr && sr.rx + sr.tx > 50e3);
+				if (h.compact) self.paintLine(sn, sr || null, null, self.weakOf(m.clients.filter(function(c) { return c.ssidId === s.id; })));
 			});
 		});
 	},
 
 	/* the Wired branch of the path: its hosts, and per port the one host
 	   with its link speed or how many share the port, and the port's
-	   traffic: all of its hosts' together, never split between them */
+	   traffic: all of its hosts' together, never split between them. A
+	   host behind a paired access point is counted in that one's branch,
+	   not here; the access point itself goes by its pairing name */
 	updateWiredBranch: function(b) {
-		var st = this.st, hosts = this.m.wiredHosts || [], n = 0, rx = 0, tx = 0, seen = false;
+		var st = this.st, hosts = (this.m.wiredHosts || []).filter(function(c) { return !c.behind; }), n = 0, rx = 0, tx = 0, seen = false;
+		var apHosts = this.m.apHosts || {};
 		b.ssids.forEach(function(sn) {
 			var on = hosts.filter(function(c) { return c.port === sn.port; }), r = st.devRates[sn.port], one = on.length === 1 ? on[0] : null;
+			var peer = one && apHosts[one.mac], oneName = one ? (peer && peer.port === one.port ? peer.name : one.name) : null;
 			var sw = on.length ? on[0].switch : null;
 			n += on.length;
 			if (r) { rx += r.rx; tx += r.tx; seen = true; }
 			setClass(sn.el, 'vt-node vt-node-ssid' + (on.length ? '' : ' vt-node-idle'));
 			setTitle(sn.el, _('Show the devices on %s').format(sn.port) + (r ? '\n' + _('Port total: %s').format('↓ ' + fmt.bits(r.tx) + ' · ↑ ' + fmt.bits(r.rx)) : '') +
 				(sw ? '\n' + switchNote(sw) : ''));
-			txt(sn.name, one ? sn.port + ' · ' + one.name : sn.port);
+			txt(sn.name, one ? sn.port + ' · ' + oneName : sn.port);
 			txt(sn.count, one ? (one.speed ? fmt.phyRate(one.speed.mbps * 1000) : fmt.DASH) : _('%d devices').format(on.length));
 			txt(sn.rate, r ? fmt.rates(r.tx, r.rx) : fmt.DASH);
 			sn.active = !!(r && r.rx + r.tx > 50e3);
@@ -3164,6 +3605,9 @@ return view.extend({
 		txt(b.sub, seen ? '↓ ' + fmt.bits(tx) : fmt.DASH);
 		b.active = !!(seen && rx + tx > 50e3);
 		b.rate = seen ? rx + tx : 0;
+		if (!b.dn) return;
+		this.paintLine(b, seen ? { rx: rx, tx: tx } : null);
+		b.ssids.forEach(function(sn) { this.paintLine(sn, st.devRates[sn.port] || null); }, this);
 	},
 
 	/* a paired access point's branch: its pairing name, address, uptime
@@ -3178,7 +3622,8 @@ return view.extend({
 		var nodes = Object.create(null);
 		a.nodes.forEach(function(n) { nodes[n.id] = n; });
 		/* what it calls itself only as a detail: the name is the pairing's */
-		setTitle(b.el, [ ok ? _('Show the clients of %s').format(a.name) : this.apState(a), ok ? null : this.apStateMore(a),
+		/* the compact line counts all in one: the split in its tooltip */
+		setTitle(b.el, [ ok ? _('Show the clients of %s').format(a.name) : this.apState(a), ok ? (b.dn ? this.apCounts(a) : null) : this.apStateMore(a),
 			info.name && info.name !== a.name ? _('Calls itself %s').format(info.name) : null, info.model, a.addr,
 			a.parent ? _('Wired to %s on %s').format(a.parent.name, a.parent.port) : null,
 			ok && a.age != null ? _('Last report %s').format(fmt.ago(a.age * 1000)) : null ].filter(Boolean).join('\n'));
@@ -3216,6 +3661,96 @@ return view.extend({
 		});
 		b.active = !!(ok && r && r.rx + r.tx > 50e3);
 		b.rate = ok && r ? r.rx + r.tx : 0;
+		if (!b.dn) return;
+		/* compact: all it has in one count, its state beside its name;
+		   a node's rate is what its rows would have added up to */
+		var all = a.clients + a.wired;
+		txt(b.cstate, ok ? '' : this.apState(a));
+		txt(b.cnum, ok ? (all === 1 ? _('1 device') : _('%d devices').format(all)) : '');
+		this.paintLine(b, ok ? r : null, ok ? null : '');
+		b.ssids.forEach(function(sn) {
+			var list = (sn.wiredNode ? given.wired[a.id] : given.sta[a.id + ' ' + sn.node]) || [];
+			/* none there: nothing moves */
+			var rate = list.length ? sumRates(list.map(function(c) { return (c.ap || c.behind).rate; })) : { rx: 0, tx: 0 };
+			self.paintLine(sn, rate, null, sn.wiredNode ? null : self.weakOf(list));
+		});
+	},
+
+	/* The compact path (Customize, #157): every node of the branches one
+	   line. A node keeps its element, its click, its classes and the
+	   spans a poll writes; instead of a card's body it holds cells: its
+	   name, how many (after a dot where a client there has a weak
+	   signal), and its rate down and up, in columns every line shares
+	   (app.css). Left out: the client rows, the signal dot of every
+	   client, a radio's generation, a network's protocol, an access
+	   point's address and uptime (in its tooltip) */
+	lineNodes: function(h) {
+		function span(cls) { return E('span', { 'class': cls }); }
+		function oneLine(x, name, num, weak) {
+			x.cname = E('span', { 'class': 'vt-cl-name' }, name);
+			/* its tooltip carries the name from now on (setTitle) */
+			x.el.vtTip = '';
+			x.weak = weak ? span('vt-dots') : null;
+			x.cnum = E('span', { 'class': 'vt-cl-num vt-tn' }, (x.weak ? [ x.weak ] : []).concat(num));
+			/* the rate down in full, and short for a narrow tree (app.css) */
+			x.dnl = span('vt-cl-long');
+			x.dns = span('vt-cl-short');
+			x.dn = E('span', { 'class': 'vt-cl-dn vt-tn' }, [ x.dnl, x.dns ]);
+			x.up = span('vt-cl-up vt-tn');
+			x.rows = null;
+			dom.content(x.el, [ x.cname, x.cnum, x.dn, x.up ]);
+		}
+		h.radios.forEach(function(b) {
+			if (b.ap) {
+				b.cstate = span('vt-cl-state');
+				oneLine(b, [ icon('ap', 'vt-ico-sm'), b.title, ' ', b.cstate ], []);
+				/* its name in the tooltip, not why it is not reporting: that follows there */
+				b.tip = b.title;
+			}
+			else if (b.wired) oneLine(b, [ E('span', { 'class': 'vt-node-kicker' }, [ _('Wired') ]) ], [ b.title ]);
+			else if (b.badge) oneLine(b, [ b.badge, ' ', b.title ], []);
+			else oneLine(b, [ b.title, ' ', b.addr ], []);
+			b.ssids.forEach(function(sn) {
+				if (sn.data) oneLine(sn, [ sn.title ], [ sn.count ], true);
+				else oneLine(sn, [ E('span', { 'class': 'vt-node-title vt-ssid-name' }, sn.badge ? [ sn.badge, ' ', sn.name ] : [ sn.name ]) ], [ sn.count ], !!sn.badge);
+			});
+		});
+	},
+
+	/* a compact line's rate, its weak-signal dot and its label: one
+	   control, named with every cell's text and both directions of the
+	   rate (the narrow layouts show only the first). r: { rx, tx } as the
+	   node counts them, ↓ what went towards its devices as the cards
+	   read; null before the first counters. state: words in the rate's
+	   place ('' for none). weak: the clients there whose signal is weak */
+	paintLine: function(x, r, state, weak) {
+		var idle = !!r && r.rx === 0 && r.tx === 0, word = state != null ? state : !r ? fmt.DASH : idle ? _('idle') : null;
+		txt(x.dnl, word != null ? word : '↓ ' + fmt.bits(r.tx));
+		txt(x.dns, word != null ? word : '↓' + shortBits(r.tx));
+		txt(x.up, state != null || !r || idle ? '' : '↑ ' + fmt.bits(r.rx));
+		if (x.weak) {
+			var tip = (weak || []).slice(0, 8).map(function(c) { return c.name + ' · ' + fmt.dbm(c.signal); }).join('\n');
+			if (x.weakSig !== tip) {
+				x.weakSig = tip;
+				dom.content(x.weak, tip ? [ E('span', { 'class': 'vt-dot vt-lvl-crit', 'title': tip }) ] : []);
+			}
+		}
+		/* without a count (a radio, a network, an access point not
+		   reporting) the name takes the count's cell too (app.css) */
+		setClass(x.cname, 'vt-cl-name' + (x.cnum.textContent ? '' : ' vt-cl-wide'));
+		var tip = (x.tip || x.cname).textContent.replace(/\s+/g, ' ').trim();
+		if (x.el.vtTip !== tip) { x.el.vtTip = tip; setTitle(x.el, x.el.vtTitle || ''); }
+		var label = [ x.cname.textContent.trim(), x.cnum.textContent, state != null ? state : r ? fmt.rates(r.tx, r.rx) : '',
+			weak && weak.length ? _('%d weak').format(weak.length) : '' ].filter(Boolean).join(', ');
+		if (x.el.getAttribute('aria-label') !== label) x.el.setAttribute('aria-label', label);
+	},
+
+	/* the clients whose signal the Signal check would call weak, those
+	   set quiet left out (#110); a paired access point's too, on its own
+	   lines, where its rows would have shown them red */
+	weakOf: function(list) {
+		var quiet = this.quiet || {};
+		return list.filter(function(c) { return c.signal != null && c.signal < insight.WEAK_DBM && !quiet[c.mac]; });
 	},
 
 	/* the devices at the end of a branch (only with paired access points),
@@ -3223,27 +3758,23 @@ return view.extend({
 	   traffic; the busiest first, at most five.
 	   list: [ { mac, name, ips, signal, level, speed, rate: { rx, tx } } ] */
 	paintLeaf: function(el, list, wired) {
+		if (!el) return;
 		var self = this, MAX = 5;
 		var rows = list.slice().sort(function(a, b) {
 			var va = a.rate ? a.rate.rx + a.rate.tx : -1, vb = b.rate ? b.rate.rx + b.rate.tx : -1;
 			return vb - va || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 		});
-		var shown = rows.slice(0, MAX), more = rows.length - shown.length;
-		/* compact, so the columns fit every card alike: 176, 62.2k, 3.42M
-		   (bit/s, or B/s where the traffic reads in bytes) */
-		function short(bps) {
-			var u = [ '', 'k', 'M', 'G' ], i = 0;
-			bps /= rateUnit();
-			while (bps >= 1000 && i < u.length - 1) { bps /= 1000; i++; }
-			return (i ? (bps >= 100 ? bps.toFixed(0) : bps >= 10 ? bps.toFixed(1) : bps.toFixed(2)) : bps.toFixed(0)) + u[i];
-		}
+		/* the "+n more" line opens the rest, as the WireGuard tile's does
+		   (a click like the rows' own); "Show fewer" closes it again */
+		el.vtAll = el.vtAll === true && rows.length > MAX;
+		var shown = el.vtAll ? rows : rows.slice(0, MAX), more = rows.length - shown.length;
 		var cells = shown.map(function(c) {
 			var r = c.rate, live = !!(r && r.rx + r.tx > 0);
 			var mid = wired ? (c.speed ? fmt.phyRate(c.speed.mbps * 1000) : '') : (c.signal != null ? String(c.signal) : '');
-			return [ c.mac, c.name, mid, c.level || '', live ? '↓' + short(r.tx) : '', (c.ips || []).filter(function(ip) { return model.parseIPv4(ip); })[0] || '',
-				live ? '↑' + short(r.rx) : '', live ? '↓ ' + fmt.bits(r.tx) + ' · ↑ ' + fmt.bits(r.rx) : '' ];
+			return [ c.mac, c.name, mid, c.level || '', live ? '↓' + shortBits(r.tx) : '', (c.ips || []).filter(function(ip) { return model.parseIPv4(ip); })[0] || '',
+				live ? '↑' + shortBits(r.rx) : '', live ? '↓ ' + fmt.bits(r.tx) + ' · ↑ ' + fmt.bits(r.rx) : '' ];
 		});
-		var sig = JSON.stringify([ cells, more ]);
+		var sig = JSON.stringify([ cells, more, el.vtAll ]);
 		if (el.vtSig === sig) return;
 		el.vtSig = sig;
 		/* a row opens the device's details, the click its own, not the
@@ -3260,7 +3791,9 @@ return view.extend({
 				E('span', { 'class': 'vt-leaf-rate vt-tn' }, [ x[4] ]),
 				E('span', { 'class': 'vt-leaf-rate vt-tn' }, [ x[6] ])
 			]);
-		}).concat(more > 0 ? [ E('span', { 'class': 'vt-leaf-more' }, [ _('+%d more').format(more) ]) ] : []));
+		}).concat(more > 0 || el.vtAll ? [ E('span', { 'class': 'vt-leaf-more', 'title': el.vtAll ? _('Show fewer') : _('Show all'),
+			'click': function(ev) { ev.preventDefault(); ev.stopPropagation(); el.vtAll = !el.vtAll; el.vtSig = null; self.paintLeaf(el, list, wired); } },
+			[ el.vtAll ? _('Show fewer') : _('+%d more').format(more) ]) ] : []));
 	},
 
 	scheduleWires: function() {
@@ -3952,8 +4485,82 @@ return view.extend({
 		return c.shared ? null : this.st.devRates[c.port] || null;
 	},
 
+	/* what the Clients list shows for a wired host: portRate's, except
+	   for one sharing its port here that a paired access point has alone
+	   on a port of its own: the rate that access point reports for it;
+	   else, for one sharing its port, the rate through this router
+	   (trafficRate; null without luci-app-vantage-traffic). Top talkers
+	   keeps portRate: neither kind of host is ranked */
+	listRate: function(c) {
+		return c.shared && c.behind && c.behind.rate ? c.behind.rate : c.shared ? this.trafficRate(c) : this.portRate(c);
+	},
+
+	/* luci-app-vantage-traffic's answer for a poll (takeTraffic; undefined:
+	   none came; null: a failed call): the rates between its last two reads,
+	   by MAC, in st.trafficRates, and the answer in st.traffic. They stand
+	   while answers come (st.trafficSeen) at least every two slow polls
+	   and a new read (st.trafficNew, its at in st.trafficAt) at least
+	   every twice its every or twice the slow poll, whichever is longer:
+	   the plugin answers its last read while one runs or within its
+	   every, but no longer than that. Else none, whatever the poll (no
+	   call made: the plugin not there is asked a minute later), until two
+	   new reads: no rate rather than an old one shown as current, nor
+	   one taken over the gap */
+	noteTraffic: function(reply) {
+		var st = this.st, now = Date.now(), slowMs = lowPower() ? LOW_SLOW_MS : POLL_S * 1000;
+		var t = reply === undefined ? null : model.trafficHosts(reply);
+		if (t) {
+			st.trafficSeen = now;
+			/* a read the plugin already gave: its rates stand, a while */
+			if (t.at !== st.trafficAt) {
+				var r = model.rates(st.trafficPrev, t.counters, t.at);
+				st.trafficPrev = r.next;
+				st.trafficRates = r.rates;
+				st.trafficAt = t.at;
+				st.trafficNew = now;
+			}
+			st.traffic = t;
+		}
+		if (st.traffic && !(now - st.trafficSeen <= 2 * slowMs && now - st.trafficNew <= 2 * Math.max(st.traffic.every, slowMs)))
+			st.traffic = st.trafficRates = st.trafficPrev = null;
+	},
+
+	/* a wired host's rate as this router's connection tracking counts it:
+	   only for one that shares its port (a port to itself counts all of
+	   its traffic, also with the devices beside it) and whose traffic this
+	   device routes: not the gateway, nor a host on a line's port or on a
+	   line's own network (a dumb access point's hosts reach the gateway
+	   past it, bridged, uncounted). null otherwise and without the package */
+	trafficRate: function(c) {
+		var t = this.st && this.st.trafficRates, m = this.m;
+		if (!t || !c.shared || c.ap || c.gateway || this.linePort(c.port, m)) return null;
+		var onLine = ((m && m.uplinks) || []).some(function(x) {
+			var l3 = x && x.l3dev;
+			return !!l3 && !!c.bridge && (c.bridge === l3 || (c.vlan != null && c.bridge + '.' + c.vlan === l3));
+		});
+		return onLine ? null : t[c.mac] || null;
+	},
+
+	/* what may make the rate through this router too low: lines for a
+	   host's details */
+	trafficNotes: function() {
+		var t = this.st.traffic, out = [];
+		if (!t) return out;
+		if (t.partial) out.push(_('From part of the connection table: reading all of it took too long'));
+		if (t.hw) out.push(fmt.N_(t.hw, '%d connection offloaded to hardware may be missing', '%d connections offloaded to hardware may be missing').format(t.hw));
+		if (t.zeroed) out.push(_('Another program resets the connection counters (nlbwmon?): too low'));
+		return out;
+	},
+
+	/* where the rate through this router comes from, and how often the
+	   plugin reads its table */
+	trafficEvery: function() {
+		var t = this.st.traffic;
+		return _('Through this router, from its connection tracking (read every %d s)').format(Math.max(1, Math.round((t ? t.every : 5000) / 1000)));
+	},
+
 	sortValue: function(c, key) {
-		var r = typeof c.port === 'string' ? this.portRate(c) : this.st.staRates[c.mac];
+		var r = typeof c.port === 'string' ? this.listRate(c) : this.st.staRates[c.mac];
 		switch (key) {
 		case 'name': return String(c.name).toLowerCase();
 		case 'signal': return c.signal == null ? -999 : c.signal;
@@ -4152,7 +4759,7 @@ return view.extend({
 		if (ui.chip === 'new') gone = [];
 
 		var maxRate = 0;
-		all.forEach(function(c) { var r = wired ? self.portRate(c) : st.staRates[c.mac]; if (r && r.rx + r.tx > maxRate) maxRate = r.rx + r.tx; });
+		all.forEach(function(c) { var r = wired ? self.listRate(c) : st.staRates[c.mac]; if (r && r.rx + r.tx > maxRate) maxRate = r.rx + r.tx; });
 
 		var keep = new Set(), at = 0;
 		this.rowSig = this.rowSig || new Map();
@@ -4230,9 +4837,12 @@ return view.extend({
 
 	/* a wired host's row. Its link is its port's when it has the port to
 	   itself; on a shared port (a switch or another access point behind
-	   it) neither the speed nor the traffic is its own */
+	   it) neither the speed nor the traffic is its own, unless a paired
+	   access point it is behind has it alone on a port, or this router
+	   counts it (luci-app-vantage-traffic; listRate) */
 	wiredCells: function(c, maxRate) {
-		var r = this.portRate(c), total = r ? r.rx + r.tx : 0;
+		var r = this.listRate(c), total = r ? r.rx + r.tx : 0;
+		var theirs = c.shared && r && c.behind && c.behind.rate ? c.behind : null, ours = c.shared && !!r && !theirs;
 		var bar = E('span', { 'class': 'vt-mini-fill' });
 		setW(bar, maxRate > 0 ? total / maxRate * 100 : 0);
 		var tags = [];
@@ -4257,11 +4867,12 @@ return view.extend({
 			this.whoCell(c, tags),
 			link,
 			E('td', { 'class': 'vt-td-net', 'data-title': _('Network') }, [ E('div', { 'class': 'vt-net' }, [ E('span', { 'class': 'vt-net-ssid' }, [ c.network || c.bridge || fmt.DASH ]) ]) ]),
-			E('td', { 'class': 'vt-td-live', 'data-title': _('Live') }, c.shared ? [
+			E('td', { 'class': 'vt-td-live', 'data-title': _('Live') }, c.shared && !theirs && !ours ? [
 				E('span', { 'class': 'vt-muted', 'title': _('Not counted per device on a shared port') }, [ fmt.DASH ])
 			] : [
 				E('div', { 'class': 'vt-live-cell' }, [
-					E('span', { 'class': 'vt-tn vt-live-total' }, [ r ? fmt.bits(total) : fmt.DASH ]),
+					/* no title (null: no attribute) on any other row */
+					E('span', { 'class': 'vt-tn vt-live-total', 'title': theirs ? _('Counted by %s on its port %s').format(theirs.name, theirs.port) : ours ? this.trafficEvery() : null }, [ r ? fmt.bits(total) : fmt.DASH ]),
 					E('span', { 'class': 'vt-mini' }, [ bar ]),
 					E('span', { 'class': 'vt-live-split vt-tn', 'title': r ? _('To device %s, from device %s').format(fmt.bits(r.tx), fmt.bits(r.rx)) : '' }, [ r ? fmt.rates(r.tx, r.rx) : '' ])
 				])
@@ -4570,6 +5181,117 @@ return view.extend({
 		});
 	},
 
+	/* --------------------------------------------------- provider tiles */
+
+	/* A tile for each provider this login may ask (tileIds; not one whose
+	   first answer said it is not there) that has none yet: its layout
+	   id ('x' and the provider's id) in a list. Its name, icon and dot
+	   come with its answers (paintTile); before one it goes by the
+	   provider's id */
+	buildProvided: function() {
+		var self = this, ts = this.tileState || {}, out = [], els = this.extEls || (this.extEls = Object.create(null));
+		(this.tileIds || []).forEach(function(id) {
+			if (els[id] || (ts[id] && ts[id].off)) return;
+			var e = els[id] = { head: E('h3', { 'class': 'vt-tile-title' }), extra: E('div', { 'class': 'vt-tile-extra' }), body: E('div', { 'class': 'vt-ext' }) };
+			e.tile = self.tiles['x' + id] = E('section', { 'class': 'vt-tile vt-ext-tile' }, [
+				E('header', { 'class': 'vt-tile-head' }, [ e.head, e.extra ]),
+				e.body
+			]);
+			self.nameTile(id);
+			out.push('x' + id);
+		});
+		return out;
+	},
+
+	/* the tiles of providers the page learnt of after it was built (its
+	   first read of the ACL failed: askTiles), made as buildTiles makes
+	   tiles and watched as render watches them */
+	addProvided: function() {
+		var self = this, ro = this.tileRo;
+		this.buildProvided().forEach(function(lid) {
+			var t = self.tiles[lid];
+			t.classList.add('vt-cell');
+			t.appendChild(self.buildOverlay(lid));
+			self.tileList.push(lid);
+			self.el.grid.appendChild(t);
+			if (ro) [ t ].concat(Array.prototype.slice.call(t.children)).forEach(function(c) { if (!c.classList.contains('vt-ov')) ro.observe(c); });
+		});
+	},
+
+	/* Provenance: whose tile it is, so that no provider passes for a tile
+	   of the dashboard's own. The head carries the provider's id in a
+	   source tag after its name (the look of a client's name source),
+	   which its tooltip explains; only provider tiles have one.
+	   Customize, the hidden tiles' list and the screen reader name it
+	   "name (id)". The id is the object's, from the session's ACL, never
+	   from what the provider answered. Its name is that of the last
+	   answer that could be read, the id before one */
+	tileName: function(id) {
+		var t = this.st.ext[id], d = t && t.readable;
+		return d ? _('%s (%s)').format(_(d.title), id) : id;
+	},
+
+	nameTile: function(id) {
+		var e = this.extEls[id], t = this.st.ext[id], d = t && t.readable, lid = 'x' + id, name = this.tileName(id);
+		patch(e.head, [
+			icon(d ? d.icon : model.TILE_ICONS[0]),
+			d ? E('span', { 'class': 'vt-ext-name' }, [ _(d.title) ]) : '',
+			E('span', { 'class': 'vt-src vt-ext-src', 'title': _('From another package: %s').format(id) }, [ id ])
+		]);
+		/* Customize names it too: its controls made again under the name,
+		   but not while it is open, which would take a control from under
+		   the pointer or the keyboard */
+		var ov = this.ov && this.ov[lid];
+		if (this.tileNames[lid] === name || (ov && this.editing)) return;
+		this.tileNames[lid] = name;
+		e.tile.setAttribute('aria-label', name);
+		if (ov && ov.root.parentNode === e.tile) e.tile.replaceChild(this.buildOverlay(lid), ov.root);
+	},
+
+	paintTiles: function() {
+		var self = this;
+		Object.keys(this.extEls || {}).forEach(function(id) { self.paintTile(id); });
+	},
+
+	/* What a provider handed over, drawn by the dashboard as text: its
+	   name and icon (the dashboard's own), its dot (never a health check
+	   and never the page title's mark), the link to its LuCI page where
+	   this login's menu has it, under LuCI's name for that page, a note
+	   and its items. Its words (name, note, labels) are looked up in
+	   LuCI's catalogues, as the dashboard's own are; a text value is a
+	   value (an operator's name) and is shown as it came. A value is
+	   written out by its unit, a counter as its rate between two
+	   answers, with a meter or the page's values of it where it asks
+	   for one. Before an answer, after one that cannot be read and when
+	   it does not answer, it says so in words */
+	paintTile: function(id) {
+		var e = this.extEls[id], t = this.st.ext[id], lid = 'x' + id;
+		if (!e || !t || (this.m.extra || []).indexOf(lid) < 0) return;
+		var last = t.readable, d = t.state === 'ok' ? t.data : null;
+		this.nameTile(id);
+		var page = last && last.page ? menuPage(last.page) : null;
+		patch(e.extra, [
+			d && d.state ? E('span', { 'class': 'vt-status vt-status-' + d.state }, d.state === 'err' || d.state === 'warn' ? [ E('span', { 'class': 'vt-sr' }, [ d.state === 'err' ? _('Error') : _('Warning') ]) ] : []) : '',
+			page ? pageLink(last.page, page) : ''
+		]);
+		if (!d) {
+			patch(e.body, [ E('p', { 'class': 'vt-empty-inline' }, [ t.state === 'wait' ? _('Waiting for its first report') : t.state === 'bad' ? _('Sent a report that could not be read') : _('Did not answer in time') ]) ]);
+			return;
+		}
+		patch(e.body, [
+			d.note ? E('p', { 'class': 'vt-hint vt-ext-note' }, [ _(d.note) ]) : '',
+			d.items.length ? E('div', { 'class': 'vt-ext-items' }, d.items.map(function(x) {
+				var r = x.rate ? t.rates[x.label] : null, level = x.level === 'err' ? ' vt-t-err' : x.level === 'warn' ? ' vt-t-warn' : x.level === 'off' ? ' vt-muted' : '';
+				return E('div', { 'class': 'vt-ext-item' }, [
+					E('span', { 'class': 'vt-label' }, [ _(x.label) ]),
+					E('span', { 'class': 'vt-ext-val vt-tn' + level }, [ tileValue(x, r ? r.rx / 8 : null) ].concat(x.level === 'err' || x.level === 'warn' ? [ E('span', { 'class': 'vt-sr' }, [ ' ' + (x.level === 'err' ? _('Error') : _('Warning')) ]) ] : [])),
+					x.max != null ? tileMeter(x) : '',
+					x.trend ? tileTrend(t.hist[x.label] || []) : ''
+				]);
+			})) : ''
+		]);
+	},
+
 	/* ----------------------------------------------------------- drawer */
 
 	buildDrawer: function() {
@@ -4853,7 +5575,9 @@ return view.extend({
 	},
 
 	drawerWired: function(c) {
-		var self = this, r = this.portRate(c), shared = c.shared ? this.st.devRates[c.port] : null;
+		var self = this, r = this.listRate(c), shared = c.shared ? this.st.devRates[c.port] : null;
+		var theirs = c.shared && r && c.behind && c.behind.rate ? c.behind : null, ours = c.shared && !!r && !theirs;
+		var counting = this.st.traffic;
 		var title = this.drawerWho(c);
 		var rename = this.canWrite ? E('button', { 'type': 'button', 'class': 'vt-btn vt-btn-ghost', 'click': function() { self.startRename(c); } }, [ icon('pencil'), E('span', {}, [ c.alias ? _('Rename', 'vantage') : _('Name this device') ]) ]) : '';
 		var speed = c.speed ? model.speedLabel(c.speed) : fmt.DASH;
@@ -4874,10 +5598,21 @@ return view.extend({
 					E('small', {}, [ c.switch ? _('behind %s, VLAN %d').format(c.switch.name, c.switch.vlan) : _('the port: %s').format(speed) ]) ]
 					: c.switchPort ? [ speed, E('small', {}, [ _('switch port %s').format(c.switchPort) ]) ] : speed),
 				c.switch ? kv(_('Switch ports'), switchLines(c.switch).map(function(l) { return E('div', {}, [ l ]); })) : '',
-				kv(_('Traffic'), c.shared ? [
-					E('span', { 'class': 'vt-muted' }, [ _('Not counted per device on a shared port') ]),
+				kv(_('Traffic'), theirs ? [
+					'↓ ' + fmt.bits(r.tx) + ' · ↑ ' + fmt.bits(r.rx),
+					E('small', {}, [ _('Counted by %s on its port %s').format(theirs.name, theirs.port) ]),
 					shared ? E('small', {}, [ _('the port in total: %s').format('↓ ' + fmt.bits(shared.tx) + ' · ↑ ' + fmt.bits(shared.rx)) ]) : ''
-				] : r ?'↓ ' + fmt.bits(r.tx) + ' · ↑ ' + fmt.bits(r.rx) : _('measuring')),
+				] : ours ? [
+					'↓ ' + fmt.bits(r.tx) + ' · ↑ ' + fmt.bits(r.rx),
+					E('small', {}, [ this.trafficEvery() ]),
+					E('small', {}, [ _('Not counted: traffic with devices on the same network') ])
+				].concat(this.trafficNotes().map(function(n) { return E('small', {}, [ n ]); }), [
+					shared ? E('small', {}, [ _('the port in total: %s').format('↓ ' + fmt.bits(shared.tx) + ' · ↑ ' + fmt.bits(shared.rx)) ]) : ''
+				]) : c.shared ? [
+					E('span', { 'class': 'vt-muted' }, [ _('Not counted per device on a shared port') ])
+				].concat(counting && counting.acct === false ? [ E('small', {}, [ _('Connection accounting is off on this router: per-device traffic counts nothing') ]) ] : [], [
+					shared ? E('small', {}, [ _('the port in total: %s').format('↓ ' + fmt.bits(shared.tx) + ' · ↑ ' + fmt.bits(shared.rx)) ]) : ''
+				]) : r ?'↓ ' + fmt.bits(r.tx) + ' · ↑ ' + fmt.bits(r.rx) : _('measuring')),
 				kv(_('Network'), [ c.network || c.bridge || fmt.DASH, c.vlan != null ? E('small', {}, [ _('VLAN %d').format(c.vlan) ]) : '' ]),
 				kv(_('Last heard'), c.seen == null ? _('static entry') : fmt.ago(c.seen * 1000))
 			].concat(c.behind ? [ kv(_('Access point'), [ c.behind.name, E('small', {}, [ _('its port %s').format(c.behind.port) ]), alsoLine(c.behind) ]) ] : [])) ]),

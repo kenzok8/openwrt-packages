@@ -44,6 +44,14 @@ var AP_BANDS = [ '2g', '5g', '6g', '60g' ];
 /* an interface or port name, as the collector takes one (a netdev's) */
 var AP_IFNAME = /^[A-Za-z0-9_.-]{1,15}$/;
 
+/* per-device traffic (luci.vantage.traffic hosts): the plugin's own cap */
+var MAX_TRAFFIC_HOSTS = 512;
+
+/* a switch chip's own counters (luci.vantage.ports counters): the
+   plugin's own cap, and what its answer says */
+var MAX_SWITCH_PORTS = 32;
+var SWITCH_STATES = [ 'ok', 'none', 'no-ethtool' ];
+
 /* WireGuard (luci.wireguard getWgInstances, LuCI's own), cut to what a
    tile can hold: the page never trusts a reply to be smaller */
 var MAX_WG_IFACES = 8, MAX_WG_PEERS = 128, MAX_WG_ALLOWED = 8;
@@ -57,6 +65,26 @@ var WG_CIDR = /^[0-9A-Fa-f.:]{2,45}[/]\d{1,3}$/;
    than three (Reject-After-Time, 180 s): up to that age a peer is there
    now, past it nothing has passed since */
 var WG_RECENT_S = 180;
+
+/* Provider tiles (#129): what another package's provider may hand the
+   dashboard (model.tile), version 1 of the contract. Caps and forms the
+   page holds every answer to, whatever the provider did */
+var TILE_V = 1, MAX_TILE_ITEMS = 8;
+var TILE_LEVELS = [ 'ok', 'warn', 'err', 'off' ];
+var TILE_UNITS = [ '', '%', 'ms', 's', 'dBm', 'dB', 'MHz', 'B', 'bit/s' ];
+/* the dashboard's own icons a provider may name; any other is the first */
+var TILE_ICONS = [ 'pulse', 'globe', 'signal', 'port', 'lock', 'cpu', 'memory', 'disk', 'router', 'wifi', 'users' ];
+/* a LuCI page as its menu path: admin and one to four more steps */
+var TILE_PAGE = /^admin(\/[A-Za-z0-9_-]{1,32}){1,4}$/;
+var TILE_EVERY_MIN = 5, TILE_EVERY_MAX = 300;
+/* |value| below this: a counter of bytes or events, never a float's noise */
+var TILE_NUM_MAX = 1e15;
+/* a text with something to see, after fmt.safeText (whose U+FFFD
+   counts): a letter, digit, punctuation mark or symbol, but not the
+   Braille blank (U+2800, a symbol that shows nothing). Spaces (Z),
+   control, format and private-use characters (C) and combining marks (M)
+   alone do not count */
+var TILE_VISIBLE = /[^\p{Z}\p{C}\p{M}\u2800]/u;
 
 /* the Ethernet ports the Ports tile lists at most: a 48-port switch with
    its uplinks fits */
@@ -387,21 +415,76 @@ return baseclass.extend({
 		return { at: now, local: local };
 	},
 
-	/* Rates for a set of counters { key: { rx, tx } } captured at `at`.
-	   Returns { next, rates }; next holds only keys present now, so the
-	   state cannot grow with every station that ever associated. */
+	/* Rates for a set of counters { key: { rx, tx, src, at } } captured at
+	   `at`. Returns { next, rates }; next holds only keys present now, so
+	   the state cannot grow with every station that ever associated. src
+	   names where a key's counters come from (a switch port's: its chip,
+	   'switch', or the kernel, none): a rate is only ever of two readings
+	   of one source, so a key whose source changed starts over. A key with
+	   its own at was read then, on its source's clock (a switch port's:
+	   the device's monotonic clock), and is rated by it, never by when
+	   the reply came in; that clock going back (the device started again)
+	   starts the key over */
 	rates: function(prevMap, counters, at) {
 		var next = Object.create(null), rates = Object.create(null), self = this;
 		Object.keys(obj(counters)).forEach(function(k) {
 			var c = counters[k];
 			if (!c) return;
 			var p = own(prevMap, k) ? prevMap[k] : null;
-			var cur = { at: at, rx: num(c.rx), tx: num(c.tx) };
-			var r = self.counterRate(p, cur);
+			var cur = { at: finite(c.at) ? c.at : at, rx: num(c.rx), tx: num(c.tx), src: c.src || null };
+			var r = p && (p.src !== cur.src || (finite(c.at) && cur.at < p.at)) ? { state: 'first' } : self.counterRate(p, cur);
 			if (r.state === 'ok') rates[k] = { rx: r.rx, tx: r.tx };
 			next[k] = r.state === 'skip' ? p : cur;
 		});
 		return { next: next, rates: rates };
+	},
+
+	/* luci.vantage.traffic hosts (luci-app-vantage-traffic, #110), checked
+	   and cut to the plugin's own cap: { at, every, acct, partial, hw,
+	   zeroed, counters: { mac: { rx, tx, at } } }, bytes from and to each
+	   host since the plugin began counting it, or null. at is when the
+	   plugin read its table (ms on the router's monotonic clock): the
+	   rates come from two reads, whoever asked for them. Each counter
+	   carries it, so that rates() starts a host over where that clock
+	   went back (the router started again) */
+	trafficHosts: function(reply) {
+		var r = obj(reply), counters = Object.create(null);
+		if (!finite(r.at) || !Array.isArray(r.hosts)) return null;
+		r.hosts.slice(0, MAX_TRAFFIC_HOSTS).forEach(function(h) {
+			h = obj(h);
+			var mac = typeof h.mac === 'string' ? names.normMac(h.mac) : null;
+			if (mac && !own(counters, mac) && finite(h.rx) && finite(h.tx) && h.rx >= 0 && h.tx >= 0) counters[mac] = { rx: h.rx, tx: h.tx, at: r.at };
+		});
+		var n = function(v) { return finite(v) && v > 0 ? Math.floor(v) : 0; };
+		return {
+			at: r.at, every: finite(r.every) && r.every >= 1000 ? r.every : 5000,
+			acct: r.acct === true ? true : r.acct === false ? false : null,
+			partial: r.partial === 'entries' || r.partial === 'time' ? r.partial : false,
+			hw: n(r.hw), zeroed: n(r.zeroed), counters: counters
+		};
+	},
+
+	/* luci.vantage.ports counters (#156): the byte counters a DSA switch
+	   chip keeps for its ports, which count what it forwards from one
+	   port to another too (the kernel's count what passes the CPU), as
+	   the plugin read them with ethtool. Checked and cut to the plugin's
+	   own cap: { state, counters: { port: { rx, tx, at } }, none } or
+	   null; at: when the port was read, ms on the device's monotonic
+	   clock, which its rate goes by (a port without it is not counted).
+	   none: the answer says there is nothing to ask for (no DSA port, no
+	   ethtool, or every port read with names the plugin does not know:
+	   one driver, which says the same at every call). 'busy' (another
+	   call was reading) is null too: no answer this time, never none */
+	switchCounters: function(reply) {
+		var r = obj(reply), ports = obj(r.ports), counters = Object.create(null), read = 0, unknown = 0;
+		if (r.v !== 1 || SWITCH_STATES.indexOf(r.state) < 0) return null;
+		Object.keys(ports).slice(0, MAX_SWITCH_PORTS).forEach(function(n) {
+			var p = obj(ports[n]);
+			if (!AP_IFNAME.test(n)) return;
+			if (p.error === 'unknown' || p.error === 'failed') { read++; if (p.error === 'unknown') unknown++; return; }
+			if (finite(p.rx_bytes) && finite(p.tx_bytes) && p.rx_bytes >= 0 && p.tx_bytes >= 0 && finite(p.at) && p.at >= 0) { read++; counters[n] = { rx: p.rx_bytes, tx: p.tx_bytes, at: p.at }; }
+		});
+		return { state: r.state, counters: counters, none: r.state !== 'ok' || (read > 0 && unknown === read) };
 	},
 
 	/* ------------------------------------------------------------ uplink */
@@ -755,6 +838,13 @@ return baseclass.extend({
 			if (self.parseIPv4(v)) return v;
 			return v.length <= 39 && v.indexOf(':') >= 0 && /^[0-9a-f:]+$/i.test(v) ? v : null;
 		}
+		/* a station's link as its access point saw it */
+		function phyOf(p) {
+			if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
+			function int(v, lo, hi) { return finite(v) && v % 1 === 0 && v >= lo && v <= hi ? v : null; }
+			return { mhz: int(p.mhz, 1, 640), mcs: int(p.mcs, 0, 31), nss: int(p.nss, 1, 16),
+				ht: p.ht === true, vht: p.vht === true, he: p.he === true, eht: p.eht === true, short_gi: p.sgi === true };
+		}
 		arr(obj(reply).aps).slice(0, MAX_APS).forEach(function(x) {
 			x = obj(x);
 			if (typeof x.id !== 'string' || !AP_ID.test(x.id) || ids[x.id]) return;
@@ -808,7 +898,8 @@ return baseclass.extend({
 						signal: finite(s.signal) && s.signal >= -120 && s.signal <= -1 ? s.signal : null,
 						rxRate: kbit(s.rxRate), txRate: kbit(s.txRate),
 						rx: bps(s.rx), tx: bps(s.tx),
-						connected: finite(s.connected) && s.connected >= 0 ? s.connected : null
+						connected: finite(s.connected) && s.connected >= 0 ? s.connected : null,
+						rxPhy: phyOf(s.rxPhy), txPhy: phyOf(s.txPhy)
 					});
 				});
 				seen = Object.create(null);
@@ -894,6 +985,75 @@ return baseclass.extend({
 			out.push({ name: ifname, port: count(x.listen_port, 65535) || null, peers: peers });
 		});
 		return out;
+	},
+
+	/* --------------------------------------------------- provider tiles */
+
+	/* A provider's answer (vantage.tile.<id> status, another package's)
+	   in the form of contract version 1, or null. The answer:
+	     { v: 1, title, icon?, state?, note?, every?, page?, items: [ item ] }
+	     title  its name, 1-32 characters: an English text, looked up in
+	            LuCI's catalogues as the dashboard's own are
+	     icon   one of TILE_ICONS, the dashboard's own drawings
+	     state  'ok', 'warn', 'err' or 'off': the dot by its name. Never a
+	            health check, never the page title's mark
+	     note   one line under the name, up to 64 characters, looked up
+	            as the title is
+	     every  how often its data changes, 5-300 s: it is asked no more
+	            often than that (default: with every slow poll)
+	     page   a LuCI page by its menu path ('admin/network/dhcp'),
+	            linked where this login's menu has it
+	     items  at most 8 (more are left out), each
+	            { label, value | text, unit?, rate?, max?, level?, trend? }:
+	            label  1-32 characters, looked up as the title is; one
+	                   item a label (a second one is left out)
+	            value  a number the dashboard writes out by its unit:
+	                   '' (a count), '%', 'ms', 's' (a duration), 'dBm',
+	                   'dB', 'MHz', 'B' (bytes) or 'bit/s'
+	            rate   true: value is a counter, shown as its rate between
+	                   two answers ('' a second; 'B' as traffic, in the
+	                   speed unit picked)
+	            max    above 0: a meter, value of max (not with rate)
+	            text   instead of a value: up to 48 characters, as it is
+	            level  'ok', 'warn', 'err' or 'off': the value's colour
+	            trend  true: the page keeps its values and draws them
+	   A key it does not know is left out, so a later version can add
+	   one; an item not of this form is left out, and an answer without
+	   v 1 and a title is none. Text is made safe and cut to its length
+	   (fmt.safeText), and one with nothing to see is none (TILE_VISIBLE).
+	   -> { title, icon, state, note, every, page: [ step ] | null, items:
+	   [ { label, value, text, unit, rate, max, level, trend } ] }; value
+	   is null for a text, text null for a value */
+	TILE_ICONS: TILE_ICONS,
+	tile: function(reply) {
+		function str(v, max) {
+			if (typeof v !== 'string') return null;
+			v = fmt.safeText(v.trim(), max);
+			return v && TILE_VISIBLE.test(v) ? v : null;
+		}
+		function level(v) { return TILE_LEVELS.indexOf(v) >= 0 ? v : null; }
+		function value(v) { return finite(v) && Math.abs(v) < TILE_NUM_MAX ? v : null; }
+		if (!reply || typeof reply !== 'object' || Array.isArray(reply) || reply.v !== TILE_V) return null;
+		var title = str(reply.title, 32);
+		if (!title) return null;
+		var every = finite(reply.every) && reply.every % 1 === 0 && reply.every >= TILE_EVERY_MIN && reply.every <= TILE_EVERY_MAX ? reply.every : null;
+		var page = typeof reply.page === 'string' && TILE_PAGE.test(reply.page) ? reply.page.split('/') : null;
+		var seen = Object.create(null), items = [];
+		arr(reply.items).slice(0, MAX_TILE_ITEMS * 4).forEach(function(x) {
+			if (items.length >= MAX_TILE_ITEMS || !x || typeof x !== 'object' || Array.isArray(x)) return;
+			var label = str(x.label, 32), v = value(x.value), t = v == null ? str(x.text, 48) : null;
+			var unit = x.unit == null ? '' : x.unit, rate = x.rate === true;
+			if (!label || seen[label.toLowerCase()] || (v == null && t == null) || TILE_UNITS.indexOf(unit) < 0) return;
+			/* a counter's rate is of a count or of bytes, and never below zero */
+			if (rate && (v == null || v < 0 || (unit !== '' && unit !== 'B'))) return;
+			seen[label.toLowerCase()] = true;
+			var max = !rate && v != null && finite(x.max) && x.max > 0 && x.max < TILE_NUM_MAX ? x.max : null;
+			items.push({ label: label, value: v, text: t, unit: v == null ? '' : unit, rate: rate, max: max, level: level(x.level), trend: v != null && x.trend === true });
+		});
+		return {
+			title: title, icon: TILE_ICONS.indexOf(reply.icon) >= 0 ? reply.icon : TILE_ICONS[0], state: level(reply.state),
+			note: str(reply.note, 64), every: every, page: page, items: items
+		};
 	},
 
 	/* ------------------------------------------------------------ ports */
@@ -1528,6 +1688,14 @@ return baseclass.extend({
 			c.band = n.band; c.bandLabel = wifi.bandLabel(n.band);
 			c.signal = s.signal; c.signalAvg = null; c.noise = null; c.std = null; c.gen = null;
 			c.rx = link(s.rxRate); c.tx = link(s.txRate);
+			/* the standard and width where the access point says them */
+			if (s.rxPhy || s.txPhy) {
+				var rp = s.rxPhy ? Object.assign({ rate: s.rxRate }, s.rxPhy) : null, tp = s.txPhy ? Object.assign({ rate: s.txRate }, s.txPhy) : null;
+				c.std = wifi.clientStd(rp, tp, null);
+				c.gen = wifi.genName(c.std, n.band);
+				if (rp && s.rxRate) c.rx = wifi.phy(rp);
+				if (tp && s.txRate) c.tx = wifi.phy(tp);
+			}
 			c.rxBytes = null; c.txBytes = null; c.rxPackets = 0; c.txPackets = 0; c.txRetries = 0; c.txFailed = 0;
 			c.connected = s.connected; c.inactive = null; c.authorized = true; c.mfp = false; c.wmm = false; c.caps = {};
 			c.level = wifi.signal(c.signal);
@@ -1563,6 +1731,13 @@ return baseclass.extend({
 				if (h.behind) { h.behind.also = rival(h.mac, a); return; }
 				h.behind = { id: a.id, name: a.name, addr: a.addr, port: w.port, speed: w.speed ? { mbps: w.speed, duplex: null } : null, rate: traffic(w) };
 			});
+		});
+		/* the access points themselves, by MAC, where this device hears
+		   them (portOf): the path names the port's host by its pairing
+		   name; the host's entry is unchanged */
+		var apHosts = Object.create(null);
+		aps.forEach(function(a) {
+			if (portOf[a.id] && a.mac) apHosts[a.mac] = { id: a.id, name: a.name, port: portOf[a.id] };
 		});
 		/* An access point plugged into another paired one is listed under
 		   it (parent, depth). This device must hear both MACs on one port
@@ -1677,7 +1852,8 @@ return baseclass.extend({
 			/* its Ethernet ports (ports): the Ports tile's */
 			ports: this.ports(devs, raw.switches, raw.switchState, wlNames, wired, uplinks),
 			/* the paired access points (collectorAps), [] without any */
-			accessPoints: aps
+			accessPoints: aps,
+			apHosts: apHosts
 		};
 	},
 

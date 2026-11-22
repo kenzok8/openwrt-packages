@@ -32,6 +32,18 @@ var TUNNEL = { wg: true };
    it */
 var PORTS = { ports: true };
 
+/* Provider tiles (#129): tiles another package fills with data (the
+   view's askTiles). Each goes by 'x' and its provider's id, a-z: a layout
+   keeps the theme's form for an id ([a-z]{1,8}), and no tile of this
+   package starts with x. At most EXTRA_MAX of them, the first by id, so
+   that a stored layout with every tile of its own (nine) stays within
+   the twelve the theme keeps. Like a tunnel, they make no layouts of
+   their own: a layout that does not mention one gets it where the
+   default has it, one column wide at the end of the right-hand column */
+var EXTRA = /^x[a-z]{1,7}$/;
+var EXTRA_MAX = 3;
+var EXTRA_AT = { wide: 3, mid: 1, narrow: 0 };
+
 var COLS = { wide: 4, mid: 2, narrow: 1 };
 
 /* narrowest each tile may get, in columns of that screen class */
@@ -63,9 +75,23 @@ var DEFAULTS_WIRED = {
 function own(o, k) { return o != null && Object.prototype.hasOwnProperty.call(o, k); }
 function int(v, d) { v = Math.round(+v); return isFinite(v) ? v : d; }
 
+/* the provider tiles a page has: well-formed ids, each once, the first
+   EXTRA_MAX in id order */
+function extras(list) {
+	var out = [];
+	(Array.isArray(list) ? list : []).forEach(function(id) { if (typeof id === 'string' && EXTRA.test(id) && out.indexOf(id) < 0) out.push(id); });
+	return out.sort().slice(0, EXTRA_MAX);
+}
+
 return baseclass.extend({
 	TILES: TILES,
 	SNAP: SNAP,
+	EXTRA_MAX: EXTRA_MAX,
+
+	/* a provider tile's id ('xdns'): a tile of another package */
+	isExtra: function(id) { return typeof id === 'string' && EXTRA.test(id); },
+
+	extras: extras,
 
 	/* screen class for a layout width; the breakpoints match app.css */
 	tier: function(width) {
@@ -78,8 +104,12 @@ return baseclass.extend({
 	key: function(tier, wired) { return tier + (wired ? '-wired' : ''); },
 
 	/* wg: a WireGuard tunnel exists (the view says: one seen this session);
-	   ports: the device has two Ethernet ports or more (seen likewise) */
-	available: function(id, wired, wg, ports) { return TILES.indexOf(id) >= 0 && !(wired && WIFI[id]) && !(TUNNEL[id] && !wg) && !(PORTS[id] && !ports); },
+	   ports: the device has two Ethernet ports or more (seen likewise);
+	   extra: the provider tiles this page has */
+	available: function(id, wired, wg, ports, extra) {
+		if (EXTRA.test(id)) return extras(extra).indexOf(id) >= 0;
+		return TILES.indexOf(id) >= 0 && !(wired && WIFI[id]) && !(TUNNEL[id] && !wg) && !(PORTS[id] && !ports);
+	},
 
 	minW: function(id, tier) {
 		var m = own(MIN, tier) && own(MIN[tier], id) ? MIN[tier][id] : 1;
@@ -94,22 +124,23 @@ return baseclass.extend({
 		return { id: e.id, c: c, w: w, hide: e.hide === true };
 	},
 
-	defaults: function(tier, wired, wg, ports) {
+	defaults: function(tier, wired, wg, ports, extra) {
 		var src = own(DEFAULTS, tier) ? (wired ? DEFAULTS_WIRED : DEFAULTS)[tier] : DEFAULTS.narrow;
-		var self = this;
+		var self = this, at = own(EXTRA_AT, tier) ? EXTRA_AT[tier] : 0;
 		return src.filter(function(d) { return self.available(d[0], wired, wg, ports); })
+			.concat(extras(extra).map(function(id) { return [ id, at, 1 ]; }))
 			.map(function(d) { return self.fit({ id: d[0], c: d[1], w: d[2] }, tier); });
 	},
 
 	/* a stored layout made safe: known tiles only, each once, sizes in
 	   range, tiles it does not mention added after the tile that
 	   precedes them by default */
-	normalize: function(saved, tier, wired, wg, ports) {
+	normalize: function(saved, tier, wired, wg, ports, extra) {
 		var self = this, seen = Object.create(null), out = [];
-		var def = this.defaults(tier, wired, wg, ports);
+		var def = this.defaults(tier, wired, wg, ports, extra);
 		if (!Array.isArray(saved)) return def;
 		saved.slice(0, 32).forEach(function(e) {
-			if (!e || typeof e !== 'object' || typeof e.id !== 'string' || seen[e.id] || !self.available(e.id, wired, wg, ports)) return;
+			if (!e || typeof e !== 'object' || typeof e.id !== 'string' || seen[e.id] || !self.available(e.id, wired, wg, ports, extra)) return;
 			seen[e.id] = true;
 			out.push(self.fit(e, tier));
 		});

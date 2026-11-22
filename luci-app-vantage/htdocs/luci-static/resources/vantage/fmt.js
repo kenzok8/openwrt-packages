@@ -185,13 +185,16 @@ return baseclass.extend({
 		return /^([0-9A-F]{2}:){5}[0-9A-F]{2}$/.test(m) ? m.slice(12) : '';
 	},
 
-	/* Client- or radio-supplied text for display: invisible/reordering
-	   characters become U+FFFD and long values are cut (by code point) with
-	   an ellipsis. The result is still only ever used as a text node. */
+	/* Client- or radio-supplied text for display: control, reordering and
+	   a list of zero-width characters (UNSAFE_TEXT) become U+FFFD and long
+	   values are cut (by code point) with an ellipsis. The result is still
+	   only ever used as a text node. Only the first 2 * maxLen + 2 code
+	   units are read: each code point takes two at most, and one becomes
+	   one, so the rest cannot change the result */
 	safeText: function(s, maxLen) {
 		if (s == null) return '';
-		var chars = Array.from(String(s).replace(UNSAFE_TEXT, '\ufffd'));
 		maxLen = maxLen > 1 ? maxLen : 64;
+		var chars = Array.from(String(s).slice(0, 2 * maxLen + 2).replace(UNSAFE_TEXT, '\ufffd'));
 		return chars.length > maxLen ? chars.slice(0, maxLen - 1).join('') + '…' : chars.join('');
 	},
 

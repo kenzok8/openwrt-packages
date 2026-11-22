@@ -1,0 +1,7 @@
+#!/bin/sh
+# Once a setting is saved in /etc/config/vantage (a device's name, or a
+# device set not to warn about its signal), the package manager puts the
+# packaged copy of that file beside it at every upgrade. That copy holds
+# no setting: one empty section and comments.
+rm -f /etc/config/vantage-opkg /etc/config/vantage.apk-new
+exit 0

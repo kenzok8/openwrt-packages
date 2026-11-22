@@ -31,7 +31,9 @@ LUCI_DESCRIPTION:=Live network dashboard (landing page under admin/dashboard): d
 # Wi-Fi images already have both, as wifi-scripts needs them.
 # Optional at runtime, degrade when absent: rpcd-mod-rrdns (reverse DNS
 # names), umdns (mDNS names), hostapd ubus objects (WPS names, client
-# capabilities).
+# capabilities), ethtool (a DSA switch's own port counters, #156: the
+# executable rpcd plugin /usr/libexec/rpcd/luci.vantage.ports runs
+# /usr/sbin/ethtool -S on each DSA port, and nothing without it).
 LUCI_DEPENDS:=+luci-base +rpcd +rpcd-mod-iwinfo +rpcd-mod-ucode +ucode-mod-uci +ucode-mod-ubus +ucode-mod-fs +ucode-mod-rtnl +ucode-mod-nl80211
 LUCI_PKGARCH:=all
 LUCI_MAINTAINER:=anothaDev <10740588+anothaDev@users.noreply.github.com>

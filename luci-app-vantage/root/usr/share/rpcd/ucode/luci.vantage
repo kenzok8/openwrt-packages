@@ -68,11 +68,19 @@
 
 'use strict';
 
+// The two netlink modules come first (#134); LuCI's own rpcd script loads
+// the other three as well. rpcd frees the VM of a script that fails to
+// load, and ucode before late 2024 (OpenWrt 23.05, vendor firmware built
+// on it) keeps those three modules' types in variables the last script to
+// load them sets: had this plugin loaded them and then failed on a netlink
+// module that cannot load (one from another distribution's feed), LuCI's
+// script would run on freed memory, which can crash rpcd and every login
+// with it. tests/plugin.test.js keeps the order.
+import * as rtnl from 'rtnl';
+import * as nl80211 from 'nl80211';
 import { cursor } from 'uci';
 import { connect } from 'ubus';
 import { access, lsdir, readfile } from 'fs';
-import * as rtnl from 'rtnl';
-import * as nl80211 from 'nl80211';
 
 const CONFIG = 'vantage';
 const WIRELESS = 'wireless';      // read only, by wireless_from_config()

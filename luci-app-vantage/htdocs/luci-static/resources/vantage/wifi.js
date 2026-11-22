@@ -105,7 +105,9 @@ return baseclass.extend({
 		var detail = [];
 		if (r.mcs != null && isFinite(+r.mcs)) detail.push(_('MCS %d').format(+r.mcs));
 		if (r.nss != null && +r.nss > 0) detail.push((+r.nss) + '×' + (+r.nss));
-		if (r.short_gi || +r.he_gi > 0 || +r.eht_gi > 0) detail.push(_('short GI'));
+		/* HT and VHT's 0.4 µs. he_gi and eht_gi count up from the shortest
+		   (0, 1, 2: 0.8, 1.6, 3.2 µs), so none of them is "short" */
+		if (r.short_gi === true) detail.push(_('short GI'));
 		return { rate: rate, mhz: mhz, std: std, mcs: r.mcs != null ? +r.mcs : null, nss: r.nss != null ? +r.nss : null,
 			label: parts.join(' · '), detail: detail.join(' · ') };
 	},

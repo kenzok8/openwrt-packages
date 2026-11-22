@@ -1,0 +1,191 @@
+#!/usr/bin/ucode -S
+// luci-app-vantage: a switch chip's own byte counters for its ports (#156).
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// On a DSA switch the kernel counts on each port only the frames that pass
+// the CPU (/sys/class/net/<port>/statistics, which netifd's network.device
+// status hands on): what the chip forwards from one of its ports to
+// another never shows there. The chip counts it, and "ethtool -S <port>"
+// prints those counters, under names of the switch driver's own.
+//
+// rpcd runs this file for the ubus object luci.vantage.ports as a process
+// of its own (an executable rpcd plugin): "list" when rpcd starts, "call
+// counters" for each call, while rpcd goes on answering everyone else; it
+// kills a call after its own timeout (30 s as OpenWrt sets it). Read group
+// luci-app-vantage. One method, which takes nothing (standard input is
+// not read):
+//
+//   counters  { v: 1, state, took, more, ports: { <port>: counted } }
+//
+//     state  'ok': ETHTOOL ran for the ports listed. 'none': this device
+//            has no DSA port; 'no-ethtool': it has, and no ETHTOOL;
+//            'busy': another call is reading (below). In these no program
+//            is started and ports is empty.
+//     ports  this device's DSA ports (those the kernel gives DEVTYPE=dsa),
+//            by name, in name order, MAX_PORTS at most (more: there were
+//            others). Each is
+//              { rx_bytes, tx_bytes, at }  the chip's counters since its
+//                    last reset, the way round the kernel's are: rx from
+//                    the device on the port, tx to it; at: when ethtool was
+//                    started for the port, ms on this device's monotonic
+//                    clock. A rate is of two readings by their own at:
+//                    when the answer reaches a browser says nothing of
+//                    when the chip was read, nor does the start of the
+//                    call for the second port and on
+//              { error: 'unknown' }  ETHTOOL printed none of the pairs of
+//                    names in COUNTERS (another driver, or one that already
+//                    gives the kernel the chip's own counters)
+//              { error: 'failed' }  ETHTOOL failed, or printed something
+//                    else, or more than MAX_OUT bytes
+//              { error: 'time' }  not read: BUDGET_MS were over
+//     took   ms the call took
+//     (a port left out or that failed carries at too)
+//
+// The one file of the Vantage dashboard and theme that starts a program:
+// ETHTOOL, with -S and the name of one of this device's own DSA ports.
+// The names come from /sys/class/net and nothing else; nothing a caller
+// sends reaches the command. ucode reads a program's output only through
+// popen, which hands the command line to /bin/sh (OpenWrt 24.10's ucode
+// has no other way: no dup2, and uloop's process takes no setup), so
+// RE_PORT keeps a name to letters, digits, '_' and '-', never first: the
+// shell then reads the line as three plain words, and ethtool reads the
+// third as a device's name, never as an option.
+//
+// One read at a time: rpcd starts a process for every call that comes,
+// and each ethtool -S holds the kernel's rtnl lock while it reads the
+// chip. The lock is on this file itself (SELF), opened for reading, so
+// nothing is written for it; it is taken without waiting before anything
+// is read or started, and a call that finds it held answers busy at once.
+// The descriptor stays open across exec on purpose: the shell and ethtool
+// hold the lock too, so that after rpcd kills a call whose ethtool hangs
+// in a switch driver, no other ethtool of this plugin starts until that
+// one has ended. The kernel drops the lock when the last of them ends.
+
+'use strict';
+
+import { access, lsdir, open, popen, readfile } from 'fs';
+
+const NET = '/sys/class/net';
+const ETHTOOL = '/usr/sbin/ethtool';
+const SELF = '/usr/libexec/rpcd/luci.vantage.ports';
+const MAX_PORTS = 32;             // ports read each time; the add-on's report lists 32 at most
+const BUDGET_MS = 1000;           // no port is read after this
+const MAX_OUT = 32768;            // bytes of one ethtool run read: the drivers below fill 3 KiB or so
+const MAX_UEVENT = 512;           // bytes of a device's uevent read
+
+// Patterns, compiled once (ucode compiles a literal each time it is reached)
+const RE_PORT = /^[A-Za-z0-9_][A-Za-z0-9_-]{0,14}$/;
+// a counter as ethtool prints it, "     <name>: <count>"
+const RE_LINE = /^ +(.+): ([0-9]{1,18})$/;
+
+// [ received, sent ]: the names switch drivers give their ports' byte
+// counters, as Linux 6.6 has them. Not the four the DSA core puts first
+// for every driver (rx_bytes, tx_bytes, ...): those are the kernel's own.
+const COUNTERS = [
+	[ 'RxBytes', 'TxBytes' ],             // mt7530: MT7530, MT7531, MT7988 (until Linux 6.16)
+	[ 'RxGoodByte', 'TxByte' ],           // qca8k: QCA8337, QCA8327
+	[ 'in_good_octets', 'out_octets' ],   // mv88e6xxx: Marvell
+	[ 'RxOctets', 'TxOctets' ],           // b53, bcm_sf2: Broadcom
+	[ 'RxGoodBytes', 'TxGoodBytes' ],     // lantiq_gswip
+	[ 'IfInOctets', 'IfOutOctets' ]       // rtl8366rb
+];
+
+// ms on the monotonic clock
+function now_ms() {
+	let t = clock(true);
+	return t[0] * 1000 + int(t[1] / 1000000);
+}
+
+// the DSA ports: the devices the kernel types dsa (the uevent of a switch
+// port reads DEVTYPE=dsa), by name, MAX_PORTS at most
+function dsa_ports() {
+	let found = [], more = false;
+
+	for (let n in sort(lsdir(NET) ?? [])) {
+		if (!match(n, RE_PORT))
+			continue;
+
+		let dsa = false;
+
+		for (let l in split(readfile(NET + '/' + n + '/uevent', MAX_UEVENT) ?? '', '\n'))
+			if (l == 'DEVTYPE=dsa')
+				dsa = true;
+
+		if (!dsa)
+			continue;
+
+		if (length(found) >= MAX_PORTS) {
+			more = true;
+			break;
+		}
+
+		push(found, n);
+	}
+
+	return { found, more };
+}
+
+// one port's counters from what ethtool printed
+function parse(text) {
+	let lines = split(text, '\n'), seen = {};
+
+	if (lines[0] != 'NIC statistics:')
+		return { error: 'failed' };
+
+	for (let i = 1; i < length(lines); i++) {
+		let m = match(lines[i], RE_LINE);
+
+		// a name printed twice is no counter
+		if (m)
+			seen[m[1]] = (m[1] in seen) ? null : int(m[2]);
+	}
+
+	for (let c in COUNTERS)
+		if (type(seen[c[0]]) == 'int' && type(seen[c[1]]) == 'int')
+			return { rx_bytes: seen[c[0]], tx_bytes: seen[c[1]] };
+
+	return { error: 'unknown' };
+}
+
+// ethtool -S on one port; name is one of dsa_ports()
+function read_port(name) {
+	let p = popen(ETHTOOL + ' -S ' + name, 'r');
+
+	if (!p)
+		return { error: 'failed' };
+
+	let text = p.read(MAX_OUT + 1);
+
+	if (p.close() !== 0 || type(text) != 'string' || length(text) > MAX_OUT)
+		return { error: 'failed' };
+
+	return parse(text);
+}
+
+function counters() {
+	let t0 = now_ms(), self_file = open(SELF, 'r');
+
+	if (!self_file || self_file.lock('xn') !== true)
+		return { v: 1, state: 'busy', took: now_ms() - t0, more: false, ports: {} };
+
+	let ports = {}, d = dsa_ports();
+
+	if (!length(d.found))
+		return { v: 1, state: 'none', took: now_ms() - t0, more: false, ports };
+
+	if (!access(ETHTOOL, 'x'))
+		return { v: 1, state: 'no-ethtool', took: now_ms() - t0, more: d.more, ports };
+
+	for (let name in d.found) {
+		let at = now_ms();
+
+		ports[name] = (at - t0 < BUDGET_MS) ? { ...read_port(name), at } : { error: 'time', at };
+	}
+
+	return { v: 1, state: 'ok', took: now_ms() - t0, more: d.more, ports };
+}
+
+if (ARGV[0] == 'list')
+	print('{ "counters": {} }\n');
+else if (ARGV[0] == 'call' && ARGV[1] == 'counters')
+	print(sprintf('%J', counters()), '\n');

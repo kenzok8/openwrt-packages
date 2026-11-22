@@ -840,7 +840,8 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-path-mesh .vt-leaf-sig.vt-lvl-crit { color: var(--vt-err); }
 .vt-app .vt-path-mesh .vt-leaf-rate { white-space: nowrap; }
 .vt-app .vt-path-mesh .vt-leaf-ip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--vt-text-3); }
-.vt-app .vt-path-mesh .vt-leaf-more { grid-column: 1 / -1; font-size: var(--vt-fs-sm); color: var(--vt-text-3); }
+.vt-app .vt-path-mesh .vt-leaf-more { grid-column: 1 / -1; font-size: var(--vt-fs-sm); color: var(--vt-text-3); cursor: pointer; }
+.vt-app .vt-path-mesh .vt-leaf-more:hover { color: var(--vt-text-2); text-decoration: underline; }
 .vt-app .vt-path-mesh .vt-node-peer { padding: 10px 12px; border-color: color-mix(in oklab, var(--vt-accent-line) 40%, var(--vt-line)); }
 .vt-app .vt-path-mesh .vt-node-peer .vt-node-ico { background: var(--vt-accent-fill); color: var(--vt-accent-fill-ink); }
 .vt-app .vt-path-mesh .vt-node-peer .vt-node-title { font-size: var(--vt-fs-md); }
@@ -998,6 +999,97 @@ html[data-darkmode="true"] .vt-app {
 	.vt-app .vt-lines { gap: 8px; padding: 0 0 0 34px; }
 	.vt-app .vt-lines > .vt-node { align-self: flex-start; min-width: 200px; max-width: 100%; }
 	.vt-app .vt-path-mesh .vt-branch-ssids .vt-node { max-width: none; }
+}
+
+/* The compact path (Customize, #157): every node of the branches one
+   line (overview.js lineNodes): its name, how many, its rate down and
+   up. The tree is stacked at every width, as on a phone: a radio, the
+   Wired node or an access point on its own line, what it leads to set
+   in under it, their wires down its left side (wires.curve). With
+   subgrid every line shares its columns with every other, each as wide
+   as its widest text, so counts and rates line up across the branches
+   in any language; without it each line keeps its own. Cells are set
+   apart by their own padding, so a cell a narrow tree hides takes no
+   room. The tree is as wide as its longest name needs, a name at most
+   36em (about 60 characters), so the rates stay where a reader's eye
+   finds them across; where that is wider than the room, the names give
+   way first. The nodes keep their look (border, idle, dimmed and dashed
+   when off), only shorter */
+.vt-app .vt-path.vt-path-compact .vt-branches { display: flex; flex-direction: column; gap: 10px; justify-self: start; width: fit-content; min-width: 0; max-width: 100%; --vt-nest: 34px; }
+.vt-app .vt-path.vt-path-compact .vt-branch { display: flex; flex-direction: column; gap: 4px; }
+.vt-app .vt-path.vt-path-compact .vt-branch-ssids { display: flex; flex-direction: column; gap: 4px; padding-left: 34px; }
+.vt-app .vt-path.vt-path-compact .vt-branches .vt-node {
+	display: flex; align-items: center; gap: 0; width: auto; min-width: 0; max-width: none; justify-self: stretch; align-self: stretch;
+	padding: 4px 10px; container-type: normal; font-size: var(--vt-fs-sm); color: var(--vt-text-2); line-height: 1.35;
+}
+.vt-app .vt-path.vt-path-compact .vt-cl-name { flex: 1 1 auto; display: flex; align-items: center; gap: 6px; min-width: 0; max-width: 36em; overflow: hidden; white-space: nowrap; color: var(--vt-text); }
+.vt-app .vt-path.vt-path-compact .vt-cl-name > * { flex: 0 1 auto; min-width: 0; }
+.vt-app .vt-path.vt-path-compact .vt-cl-name > .vt-ico, .vt-app .vt-path.vt-path-compact .vt-branches .vt-band { flex: none; }
+.vt-app .vt-path.vt-path-compact .vt-branches .vt-node-title { overflow: hidden; text-overflow: ellipsis; font-size: var(--vt-fs-base); font-weight: var(--vt-fw-semibold); }
+.vt-app .vt-path.vt-path-compact .vt-cl-name .vt-node-kicker { display: block; overflow: hidden; text-overflow: ellipsis; font-size: var(--vt-fs-micro); }
+.vt-app .vt-path.vt-path-compact .vt-cl-name .vt-node-sub { display: block; font-size: var(--vt-fs-sm); color: var(--vt-text-3); }
+/* an access point that is not reporting: why, after its name, given up first */
+.vt-app .vt-path.vt-path-compact .vt-cl-state { flex: 0 1000 auto; overflow: hidden; text-overflow: ellipsis; color: var(--vt-text-2); }
+.vt-app .vt-path.vt-path-compact .vt-cl-state:empty { display: none; }
+.vt-app .vt-path.vt-path-compact .vt-cl-num { flex: none; display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; padding-left: 14px; white-space: nowrap; }
+.vt-app .vt-path.vt-path-compact .vt-cl-num > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-path.vt-path-compact .vt-cl-num .vt-node-title { font-size: inherit; font-weight: inherit; }
+/* no count (a radio, a network, an access point not reporting): the name has its cell too */
+.vt-app .vt-path.vt-path-compact .vt-cl-wide + .vt-cl-num { display: none; }
+/* a rate's digits change every poll: a column wide enough for most, so the others don't move */
+.vt-app .vt-path.vt-path-compact .vt-cl-dn, .vt-app .vt-path.vt-path-compact .vt-cl-up { flex: none; min-width: 7.5em; padding-left: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-path.vt-path-compact .vt-cl-up { color: var(--vt-text-3); }
+.vt-app .vt-path.vt-path-compact .vt-cl-short { display: none; }
+.vt-app .vt-path.vt-path-compact .vt-branches .vt-node-idle .vt-cl-name { color: var(--vt-text-2); }
+@supports (grid-template-columns: subgrid) {
+	.vt-app .vt-path.vt-path-compact .vt-branches { display: grid; grid-template-columns: minmax(6em, 1fr) repeat(3, auto); column-gap: 0; row-gap: 10px; align-content: space-between; }
+	.vt-app .vt-path.vt-path-compact .vt-branches > * { grid-column: 1 / -1; }
+	.vt-app .vt-path.vt-path-compact .vt-branch, .vt-app .vt-path.vt-path-compact .vt-branch-ssids,
+	.vt-app .vt-path.vt-path-compact .vt-branches .vt-node { display: grid; grid-template-columns: subgrid; column-gap: 0; }
+	.vt-app .vt-path.vt-path-compact .vt-branch > *, .vt-app .vt-path.vt-path-compact .vt-branch-ssids > * { grid-column: 1 / -1; }
+	.vt-app .vt-path.vt-path-compact .vt-branch, .vt-app .vt-path.vt-path-compact .vt-branch-ssids { row-gap: 4px; }
+	.vt-app .vt-path.vt-path-compact .vt-cl-wide { grid-column: span 2; }
+}
+/* the wide layout: the device and the line to the internet give the tree
+   the room they give an access point's branches (as .vt-path-mesh) */
+@container vthero (min-width: 1021px) {
+	.vt-app .vt-path.vt-path-compact { grid-template-columns: minmax(150px, .7fr) minmax(90px, .4fr) minmax(184px, .85fr) minmax(0, 3.4fr); }
+}
+/* less room than 500 px for the tree (it takes the tile's width but 34 px
+   below the wide layout): the rate down only (both are in the line's
+   label and tooltip); less than 400 px, in the client rows' short form
+   (62.2k) */
+@container vthero (max-width: 533px) {
+	.vt-app .vt-path.vt-path-compact .vt-cl-up { display: none; }
+}
+@container vthero (max-width: 433px) {
+	/* and less room around a name: what is set in goes 26 px in (the
+	   wire's corner still meets the line's edge), tighter padding */
+	.vt-app .vt-path.vt-path-compact .vt-branches { --vt-nest: 26px; }
+	.vt-app .vt-path.vt-path-compact .vt-branch-ssids { padding-left: 26px; }
+	.vt-app .vt-path.vt-path-compact .vt-branches .vt-node { padding: 4px 8px; }
+	.vt-app .vt-path.vt-path-compact .vt-branches .vt-band { padding: 0 4px; }
+	.vt-app .vt-path.vt-path-compact .vt-cl-num, .vt-app .vt-path.vt-path-compact .vt-cl-dn { padding-left: 8px; }
+	.vt-app .vt-path.vt-path-compact .vt-cl-name, .vt-app .vt-path.vt-path-compact .vt-cl-name .vt-node-title, .vt-app .vt-path.vt-path-compact .vt-cl-num { gap: 4px; }
+	.vt-app .vt-path.vt-path-compact .vt-cl-dn { min-width: 3.6em; }
+	.vt-app .vt-path.vt-path-compact .vt-cl-long { display: none; }
+	.vt-app .vt-path.vt-path-compact .vt-cl-short { display: inline; }
+}
+/* below the wide layout the tree takes the tile's width, under this
+   device as on a phone: beside it a column of 270 px left a few letters
+   of each name */
+@container vthero (max-width: 1020px) {
+	.vt-app .vt-path.vt-path-compact { grid-template-columns: minmax(0, 1fr); gap: 12px; min-height: 0; }
+	.vt-app .vt-path.vt-path-compact > .vt-node-gw, .vt-app .vt-path.vt-path-compact > .vt-node-ap { justify-self: start; min-width: 220px; }
+	.vt-app .vt-path.vt-path-compact > .vt-link-label { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; justify-content: flex-start; padding: 0 0 0 44px; }
+	.vt-app .vt-path.vt-path-compact > .vt-link-label > * { align-self: center; }
+	.vt-app .vt-path.vt-path-compact > .vt-branches { padding-left: 34px; }
+	.vt-app .vt-path.vt-path-compact.vt-path-lines { grid-template-rows: none; }
+	.vt-app .vt-path.vt-path-compact.vt-path-lines > .vt-node-gw, .vt-app .vt-path.vt-path-compact.vt-path-lines > .vt-link-label,
+	.vt-app .vt-path.vt-path-compact.vt-path-lines > .vt-node-ap, .vt-app .vt-path.vt-path-compact.vt-path-lines > .vt-branches,
+	.vt-app .vt-path.vt-path-compact .vt-lines { grid-area: auto; }
+	.vt-app .vt-path.vt-path-compact .vt-lines { gap: 8px; padding: 0 0 0 34px; }
+	.vt-app .vt-path.vt-path-compact .vt-lines > .vt-node { align-self: flex-start; min-width: 200px; max-width: 100%; }
 }
 
 /* ------------------------------------------------------------ 6. system */
@@ -1463,6 +1555,27 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-port-off .vt-port-link { color: var(--vt-text-3); }
 .vt-app .vt-port-rates { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: var(--vt-fs-sm); font-weight: var(--vt-fw-semibold); white-space: nowrap; }
 .vt-app .vt-port-note { font-size: var(--vt-fs-micro); color: var(--vt-text-3); }
+
+/* Provider tiles (#129): another package's data, drawn here: a note,
+   then its items, as many in a row as fit, each a label over its value
+   with a meter or the page's values of it under it */
+/* nothing of the provider's reaches past its tile: a note without a
+   break (non-breaking spaces) wraps anywhere, and the body is clipped
+   sideways (not downwards: a line's stroke at the bottom stays whole) */
+.vt-app .vt-ext { display: flex; flex-direction: column; gap: var(--vt-sp-2); overflow-x: clip; }
+/* its name gives way to its provider's id (the source tag), never the
+   other way round: a long name is cut, the tag stays */
+.vt-app .vt-ext-tile .vt-tile-title { max-width: 100%; }
+.vt-app .vt-ext-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-ext-src { flex: none; }
+.vt-app .vt-ext-note { margin: 0; overflow-wrap: anywhere; }
+.vt-app .vt-ext-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 112px), 1fr)); gap: var(--vt-sp-3) var(--vt-sp-4); }
+.vt-app .vt-ext-item { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.vt-app .vt-ext-item .vt-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-ext-val { font-size: var(--vt-fs-lg); font-weight: var(--vt-fw-semibold); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vt-app .vt-ext-bar { margin-top: 2px; }
+.vt-app .vt-ext-item .vt-spark { height: 22px; }
+.vt-app .vt-spark-ext { --vt-sc: var(--vt-chart-1); }
 
 /* ------------------------------------------------------------ 11. drawer */
 
