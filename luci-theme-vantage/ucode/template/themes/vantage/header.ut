@@ -27,9 +27,11 @@
 	const look_unfocused = look('unfocused', [ 'still', 'moving' ]);
 	const look_units = look('units', [ 'bits', 'bytes' ]);
 	const look_brand = look('brand', [ 'none', 'hostname', 'model' ]);
-	/* The dashboard's chart style and layouts, saved with it. A layout passes
-	   only in the form vantage.layout reads, 'wide=hero:0:4 chart:0:2:h;mid=default' */
+	/* The dashboard's chart style, network path form and layouts, saved with
+	   it. A layout passes only in the form vantage.layout reads,
+	   'wide=hero:0:4 chart:0:2:h;mid=default' */
 	const look_chart = look('chart', [ 'overlay', 'log', 'mirror', 'mirror-split', 'lanes' ]);
+	const look_path = look('path', [ 'full', 'compact' ]);
 	const look_layout = (() => {
 		/* compiled once a page, not once a layout: ucode compiles a
 		   literal each time it is reached, and these counted repeats
@@ -63,7 +65,7 @@
 	})();
 -%}
 <!DOCTYPE html>
-<html lang="{{ lang }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-backdrop="{{ look_backdrop }}" data-vt-look-power="{{ look_power }}" data-vt-look-unfocused="{{ look_unfocused }}" data-vt-look-units="{{ look_units }}" data-vt-look-brand="{{ look_brand }}" data-vt-look-chart="{{ look_chart }}" data-vt-look-layout="{{ look_layout }}" data-vt-look-save="{{ look_save }}">
+<html lang="{{ lang }}" data-darkmode="true" data-vt-look-theme="{{ look_theme }}" data-vt-look-login="{{ look_login }}" data-vt-look-backdrop="{{ look_backdrop }}" data-vt-look-power="{{ look_power }}" data-vt-look-unfocused="{{ look_unfocused }}" data-vt-look-units="{{ look_units }}" data-vt-look-brand="{{ look_brand }}" data-vt-look-chart="{{ look_chart }}" data-vt-look-path="{{ look_path }}" data-vt-look-layout="{{ look_layout }}" data-vt-look-save="{{ look_save }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

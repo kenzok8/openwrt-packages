@@ -10,7 +10,8 @@
 #   option unfocused 'still'  while another window has the focus: still or moving
 #   option units 'bits'       the dashboard's traffic: bits or bytes
 #
-# The dashboard's Customize saves here too: its chart style (option chart) and
+# The dashboard's Customize saves here too: its chart style (option chart), its
+# network path (option path: full, or compact with one line per node) and
 # one layout per screen size (option layout_wide, layout_mid, layout_narrow and
 # the same with _wired), which are best changed there.
 

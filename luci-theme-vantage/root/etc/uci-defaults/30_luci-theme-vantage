@@ -14,4 +14,9 @@ if [ "$PKG_UPGRADE" != 1 ] && [ "$new" = 1 ]; then
 fi
 
 uci -q commit luci
+
+# Once a setting is saved in /etc/config/vantage_theme, the package manager
+# puts the packaged copy of that file beside it at every upgrade. That copy
+# holds no setting: one empty section and comments
+rm -f /etc/config/vantage_theme-opkg /etc/config/vantage_theme.apk-new
 exit 0
