@@ -122,7 +122,7 @@ var TILE_SLOW_MS = 500;
    answer stands that long after a call that failed */
 var TILE_RETRY_MS = 60 * 1000;
 var STORE_KEY = 'vantage.hist.v1';
-var VERSION = '1.1.1';                /* this package's, as its Makefile has it (tests/version.test.js) */
+var VERSION = '1.2.0';                /* this package's, as its Makefile has it (tests/version.test.js) */
 var SVGNS = 'http://www.w3.org/2000/svg';
 var HOSTAPD_OBJ = /^[A-Za-z0-9_.-]{1,64}$/;
 
@@ -818,7 +818,7 @@ function writeStore(v) {
    dotted numbers, this one and the kept one alike: anything else kept
    counts as nothing kept, and with a VERSION of another form there is
    no line. */
-var NEWS_URL = 'https://github.com/anothaDev/luci-theme-vantage/blob/v1.1.1/CHANGELOG.md';
+var NEWS_URL = 'https://github.com/anothaDev/luci-theme-vantage/blob/v1.2.0/CHANGELOG.md';
 var SEEN_KEY = 'vantage.seen.v1';
 var VERSION_FORM = /^\d{1,4}(\.\d{1,4}){1,3}$/;
 
