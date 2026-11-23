@@ -250,7 +250,7 @@ open a pull request that touches only `po/` files.
 With podman and the official OpenWrt SDK image:
 
 ```sh
-dev/build/sdk-build.sh 25.12.4          # builds HEAD into dist/25.12.4/
+dev/build/sdk-build.sh 25.12.6          # builds HEAD into dist/25.12.6/
 ```
 
 The same commit and SDK always produce byte-identical packages, and each

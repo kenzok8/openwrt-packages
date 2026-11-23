@@ -7,7 +7,7 @@ packages are listed at
 <https://github.com/anothaDev/luci-theme-vantage/releases> and in the
 [signed repositories](https://anothadev.github.io/luci-theme-vantage/).
 
-## 1.2.0 - unreleased
+## 1.2.0 - 2026-11-23
 
 - **Dashboard: a module that cannot load no longer costs LuCI its
   login** (#134, [@HachiMiku39](https://github.com/HachiMiku39)). The
