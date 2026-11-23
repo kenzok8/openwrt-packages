@@ -140,6 +140,13 @@
   dropdown-hover-bg: var(--surface-active);
   sidebar-scrollbar: @neutral-100, @neutral-850;
   login-panel-rgb: ~"244, 245, 247", ~"0, 0, 0";
+  wallpaper-surface-rgb: ~"255, 255, 255", ~"37, 37, 38";
+  wallpaper-raised-rgb: ~"255, 255, 255", ~"51, 51, 51";
+  wallpaper-input-rgb: ~"255, 255, 255", ~"30, 30, 30";
+  // Readability floor over the worst-case wallpaper (solid white in dark
+  // mode, solid black in light mode). In light mode the card surface stacks
+  // over the content pane, so the muted description text needs a thicker veil.
+  wallpaper-alpha-floor: .8, .75;
   login-text: #101828, @neutral-400;
   login-input-border: @neutral-0, @neutral-400;
 

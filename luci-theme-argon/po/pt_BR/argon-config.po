@@ -32,6 +32,14 @@ msgstr "Uma cor HEX (padrão: #5e72e4)."
 msgid "Action"
 msgstr "Ação"
 
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Admin page glass effect"
+msgstr "Efeito de vidro das páginas de administração"
+
+#: htdocs/luci-static/resources/view/argon-config.js:166
+msgid "Admin page wallpaper"
+msgstr "Papel de parede das páginas de administração"
+
 #: htdocs/luci-static/resources/argon/branding.js:62
 msgid "Another update is running. Please try again."
 msgstr "Outra atualização está em andamento. Tente novamente mais tarde."
@@ -301,6 +309,10 @@ msgstr "Mostrar ou ocultar a navegação"
 #: htdocs/luci-static/resources/argon-overview.js:33
 msgid "Transmitted bytes"
 msgstr "Bytes transmitidos"
+
+#: htdocs/luci-static/resources/view/argon-config.js:171
+msgid "Turning this off also hides the admin wallpaper and restores the default admin appearance."
+msgstr "Desativar esta opção também oculta o plano de fundo das páginas de administração e restaura a aparência padrão da administração."
 
 #: htdocs/luci-static/resources/argon/branding.js:110
 msgid "Unable to load custom branding. Reload this page or reinstall the theme."

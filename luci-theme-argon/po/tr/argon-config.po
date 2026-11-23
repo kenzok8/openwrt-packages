@@ -30,6 +30,14 @@ msgstr "HEX renk kodu (varsayılan: #5e72e4)."
 msgid "Action"
 msgstr "İşlem"
 
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Admin page glass effect"
+msgstr "Yönetim sayfası cam efekti"
+
+#: htdocs/luci-static/resources/view/argon-config.js:166
+msgid "Admin page wallpaper"
+msgstr "Yönetim sayfası duvar kâğıdı"
+
 #: htdocs/luci-static/resources/argon/branding.js:62
 msgid "Another update is running. Please try again."
 msgstr "Başka bir güncelleme sürüyor. Lütfen daha sonra tekrar deneyin."
@@ -299,6 +307,10 @@ msgstr "Gezinmeyi göster veya gizle"
 #: htdocs/luci-static/resources/argon-overview.js:33
 msgid "Transmitted bytes"
 msgstr "İletilen baytlar"
+
+#: htdocs/luci-static/resources/view/argon-config.js:171
+msgid "Turning this off also hides the admin wallpaper and restores the default admin appearance."
+msgstr "Bunu kapatmak, yönetim sayfası duvar kağıdını da gizler ve varsayılan yönetim görünümüne döner."
 
 #: htdocs/luci-static/resources/argon/branding.js:110
 msgid "Unable to load custom branding. Reload this page or reinstall the theme."

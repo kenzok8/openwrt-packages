@@ -30,6 +30,14 @@ msgstr "16 進数のカラーコード（既定値：#5e72e4）。"
 msgid "Action"
 msgstr "操作"
 
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Admin page glass effect"
+msgstr "管理ページのすりガラス効果"
+
+#: htdocs/luci-static/resources/view/argon-config.js:166
+msgid "Admin page wallpaper"
+msgstr "管理ページの壁紙"
+
 #: htdocs/luci-static/resources/argon/branding.js:62
 msgid "Another update is running. Please try again."
 msgstr "別の更新が進行中です。後でもう一度お試しください。"
@@ -299,6 +307,10 @@ msgstr "ナビゲーションの表示を切り替え"
 #: htdocs/luci-static/resources/argon-overview.js:33
 msgid "Transmitted bytes"
 msgstr "送信バイト数"
+
+#: htdocs/luci-static/resources/view/argon-config.js:171
+msgid "Turning this off also hides the admin wallpaper and restores the default admin appearance."
+msgstr "これを無効にすると、管理ページの壁紙も非表示になり、管理ページの既定の外観に戻ります。"
 
 #: htdocs/luci-static/resources/argon/branding.js:110
 msgid "Unable to load custom branding. Reload this page or reinstall the theme."

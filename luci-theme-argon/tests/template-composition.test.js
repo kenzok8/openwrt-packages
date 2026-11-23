@@ -75,6 +75,28 @@ test('stylesheet URLs track source rebuilds and preserved timestamps on applicat
 	} finally { renderer.close(); }
 });
 
+test('admin pages reuse the login wallpaper layer only when enabled', () => {
+	const renderer = createRenderer(templates);
+	try {
+		const off = renderer.render('application', { backgrounds: ['photo.jpg'] }).html;
+		assert.doesNotMatch(off, /argon-wallpaper|class="main-bg|<video/);
+		const on = renderer.render('application', { settings: { main_background: '1' }, backgrounds: ['photo.jpg'] }).html;
+		assert.match(on, /argon-wallpaper/);
+		assert.match(on, /class="main-bg argon-background-media"/);
+		const solid = renderer.render('application', { settings: { main_background: '1', main_glass: '0' }, backgrounds: ['photo.jpg'] }).html;
+		assert.doesNotMatch(solid, /argon-wallpaper|class="main-bg/);
+		assert.match(on, /photo\.jpg/);
+		assert.ok(on.indexOf('skip-link') < on.indexOf('class="main-bg'));
+		const video = renderer.render('application', { settings: { main_background: '1' }, backgrounds: ['clip.mp4'] }).html;
+		assert.match(video, /<video loop muted playsinline id="video"/);
+		assert.match(video, /class="video argon-background-media"/);
+		assert.match(video, /class="background-controls argon-background-controls"/);
+		assert.match(video, /playback-control/);
+		assert.match(video, /volume-control mute/);
+		assert.ok(video.indexOf('skip-link') < video.indexOf('background-controls'));
+	} finally { renderer.close(); }
+});
+
 test('login partials retain image/video, branding and authentication scope and script order', () => {
 	const renderer = createRenderer(templates);
 	try {
@@ -99,7 +121,7 @@ test('login partials retain image/video, branding and authentication scope and s
 		assert.ok(html.indexOf('src="/auth-plugin.js"') < html.indexOf('input.focus()'));
 		const image = renderer.render('sysauth', { configExists: false, backgrounds: [] }).html;
 		assert.match(image, /data-login-style="classic"/);
-		assert.match(image, /class="main-bg"/);
+		assert.match(image, /class="main-bg argon-background-media"/);
 		assert.match(image, /img\/bg1.webp/);
 		assert.doesNotMatch(image, /<video/);
 		assert.match(image, /--dark-primary: #5a6cc5/);

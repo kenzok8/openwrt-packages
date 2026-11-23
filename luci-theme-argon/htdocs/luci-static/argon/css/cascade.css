@@ -133,6 +133,10 @@
   --dropdown-hover-bg: var(--surface-active);
   --sidebar-scrollbar: #f6f9fc;
   --login-panel-rgb: 244, 245, 247;
+  --wallpaper-surface-rgb: 255, 255, 255;
+  --wallpaper-raised-rgb: 255, 255, 255;
+  --wallpaper-input-rgb: 255, 255, 255;
+  --wallpaper-alpha-floor: 0.8;
   --login-text: #101828;
   --login-input-border: #fff;
   --positive-bg: var(--primary);
@@ -288,6 +292,10 @@
   --dropdown-selected-bg: var(--dark-selected-bg);
   --sidebar-scrollbar: #252526;
   --login-panel-rgb: 0, 0, 0;
+  --wallpaper-surface-rgb: 37, 37, 38;
+  --wallpaper-raised-rgb: 51, 51, 51;
+  --wallpaper-input-rgb: 30, 30, 30;
+  --wallpaper-alpha-floor: 0.75;
   --login-text: #adb5bd;
   --login-input-border: #adb5bd;
   --danger-bg: #c73850;
@@ -426,6 +434,10 @@
     --dropdown-selected-bg: var(--dark-selected-bg);
     --sidebar-scrollbar: #252526;
     --login-panel-rgb: 0, 0, 0;
+    --wallpaper-surface-rgb: 37, 37, 38;
+    --wallpaper-raised-rgb: 51, 51, 51;
+    --wallpaper-input-rgb: 30, 30, 30;
+    --wallpaper-alpha-floor: 0.75;
     --login-text: #adb5bd;
     --login-input-border: #adb5bd;
     --danger-bg: #c73850;
@@ -1110,42 +1122,34 @@ select[multiple] {
 [dir="rtl"] select:not([multiple]) {
   background-position: left 0.5rem center;
 }
-.login-page {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-.login-page .main-bg,
-.login-page .video {
+.argon-background-media {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
 }
-.login-page .main-bg {
+.main-bg.argon-background-media {
   background: url(../img/blank.png) no-repeat center / cover;
 }
-.login-page .main-bg img {
+.main-bg.argon-background-media img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.login-page .video {
+.video.argon-background-media {
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--media-bg);
   overflow: hidden;
 }
-.login-page .video video {
+.video.argon-background-media video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.login-page .background-controls {
+.argon-background-controls {
   position: fixed;
   inset-block-start: var(--field-gap);
   inset-inline-end: var(--field-gap);
@@ -1153,7 +1157,7 @@ select[multiple] {
   gap: var(--control-gap);
   z-index: 5000;
 }
-.login-page .background-controls > button {
+.argon-background-controls > button {
   display: grid;
   place-items: center;
   min-width: 2.5rem;
@@ -1163,7 +1167,7 @@ select[multiple] {
   background: var(--surface-panel);
   color: var(--text-strong);
 }
-.login-page .background-controls > button::before {
+.argon-background-controls > button::before {
   content: '';
   width: 1rem;
   height: 1rem;
@@ -1171,27 +1175,74 @@ select[multiple] {
   mask: var(--background-control-icon) center / contain no-repeat;
   -webkit-mask: var(--background-control-icon) center / contain no-repeat;
 }
-.login-page .background-controls > button:focus-visible {
+.argon-background-controls > button:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 @media (forced-colors: active) {
-  .login-page .background-controls > button::before {
+  .argon-background-controls > button::before {
     forced-color-adjust: none;
     background-color: ButtonText;
   }
 }
-.login-page .playback-control {
+.argon-background-controls .playback-control {
   --background-control-icon: url(../icon/play.svg);
 }
-.login-page .playback-control.playing {
+.argon-background-controls .playback-control.playing {
   --background-control-icon: url(../icon/pause.svg);
 }
-.login-page .volume-control {
+.argon-background-controls .volume-control {
   --background-control-icon: url(../img/volume_high.svg);
 }
-.login-page .volume-control.mute {
+.argon-background-controls .volume-control.mute {
   --background-control-icon: url(../img/volume_off.svg);
+}
+body.argon-wallpaper {
+  --wallpaper-surface-alpha: max(var(--blur-opacity), var(--wallpaper-alpha-floor, 0.8));
+}
+body.argon-wallpaper .argon-background-controls {
+  inset-block-start: auto;
+  inset-block-end: var(--field-gap);
+  z-index: 800;
+}
+body.argon-wallpaper .main-right {
+  background-color: transparent;
+}
+body.argon-wallpaper .main-right > header {
+  background-color: var(--header-bg);
+}
+body.argon-wallpaper .main-left,
+body.argon-wallpaper .main-right > #maincontent > .container,
+body.argon-wallpaper #maincontent > footer,
+body.argon-wallpaper .modal,
+body.argon-wallpaper .alert-message {
+  background-color: rgba(var(--wallpaper-surface-rgb), var(--wallpaper-surface-alpha));
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  backdrop-filter: blur(var(--blur-radius));
+}
+body.argon-wallpaper .main-right > #maincontent > .container {
+  border-radius: var(--radius-card);
+}
+body.argon-wallpaper #maincontent {
+  -webkit-backdrop-filter: blur(var(--blur-radius));
+  backdrop-filter: blur(var(--blur-radius));
+  --surface-color: rgba(var(--wallpaper-surface-rgb), var(--wallpaper-surface-alpha));
+  --surface-raised: rgba(var(--wallpaper-raised-rgb), var(--wallpaper-surface-alpha));
+  --input-bg: rgba(var(--wallpaper-input-rgb), var(--wallpaper-surface-alpha));
+  --tab-item-bg: transparent;
+  --row-alt: transparent;
+  --row-color: transparent;
+  --surface-muted: transparent;
+  --surface-contrast: transparent;
+  --iface-body-bg: transparent;
+  --iface-head-bg: transparent;
+}
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 .login-page .login-container {
   --login-inset: 3.125rem;

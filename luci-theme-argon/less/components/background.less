@@ -1,0 +1,158 @@
+// out: false
+// Background layer shared by the login page and the admin wallpaper mode.
+// login_background.ut marks only the wallpaper markup with argon-background-*,
+// so ordinary view elements reusing main-bg or video keep their own styles.
+
+// Wallpaper stays behind the whole page when a short viewport needs scrolling.
+.argon-background-media {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.main-bg.argon-background-media {
+    background: url(../img/blank.png) no-repeat center/cover;
+
+    img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.video.argon-background-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--media-bg);
+    overflow: hidden;
+
+    video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+}
+
+.argon-background-controls {
+    position: fixed;
+    inset-block-start: var(--field-gap);
+    inset-inline-end: var(--field-gap);
+    display: flex;
+    gap: var(--control-gap);
+    z-index: 5000;
+
+    > button {
+        display: grid;
+        place-items: center;
+        min-width: 2.5rem;
+        min-height: 2.5rem;
+        padding: .5rem;
+        cursor: pointer;
+        background: var(--surface-panel);
+        color: var(--text-strong);
+
+        &::before {
+            content: '';
+            width: 1rem;
+            height: 1rem;
+            background-color: currentColor;
+            mask: var(--background-control-icon) center / contain no-repeat;
+            -webkit-mask: var(--background-control-icon) center / contain no-repeat;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--focus-ring);
+            outline-offset: 2px;
+        }
+
+        @media (forced-colors: active) {
+            &::before {
+                forced-color-adjust: none;
+                background-color: ButtonText;
+            }
+        }
+    }
+
+    .playback-control {
+        --background-control-icon: url(../icon/play.svg);
+
+        &.playing {
+            --background-control-icon: url(../icon/pause.svg);
+        }
+    }
+
+    .volume-control {
+        --background-control-icon: url(../img/volume_high.svg);
+
+        &.mute {
+            --background-control-icon: url(../img/volume_off.svg);
+        }
+    }
+}
+
+body.argon-wallpaper {
+    // The admin glass follows the login panel opacity, which the user may set
+    // to zero. Text over the wallpaper keeps its appearance-specific palette,
+    // so the surfaces need a per-appearance floor (--wallpaper-alpha-floor)
+    // that stays readable over bright and dark wallpapers. (~"" keeps CSS
+    // max() out of lessc.)
+    --wallpaper-surface-alpha: ~"max(var(--blur-opacity), var(--wallpaper-alpha-floor, 0.8))";
+
+    .argon-background-controls {
+        inset-block-start: auto;
+        inset-block-end: var(--field-gap);
+        // Under the modal overlay (900) so open dialogs cover the controls.
+        z-index: 800;
+    }
+
+    .main-right {
+        background-color: transparent;
+    }
+
+    // The header text is always --text-on-accent, which no translucent light
+    // surface can carry, so the header keeps its opaque surface. Dropping the
+    // blur also keeps the header out of the stacking business: with a
+    // backdrop-filter (or a z-index) on the header, the container's glass
+    // context paints over header dropdowns such as the theme switcher.
+    .main-right > header {
+        background-color: var(--header-bg);
+    }
+
+    .main-left,
+    .main-right > #maincontent > .container,
+    #maincontent > footer,
+    .modal,
+    .alert-message {
+        background-color: rgba(var(--wallpaper-surface-rgb), var(--wallpaper-surface-alpha));
+        -webkit-backdrop-filter: blur(var(--blur-radius));
+        backdrop-filter: blur(var(--blur-radius));
+    }
+
+    // The pane floats like the cards inside it: the title strip and the cards
+    // use --radius-card, so a square pane corner reads as a sharp edge over
+    // the frost behind it.
+    .main-right > #maincontent > .container {
+        border-radius: var(--radius-card);
+    }
+
+    // Translucent surfaces keep their palette colors; stripes and muted fills expose the glass.
+    // The pane itself frosts the gutters and the corners of the rounded
+    // surfaces, so no sharp wallpaper shows between the header and the cards.
+    #maincontent {
+        -webkit-backdrop-filter: blur(var(--blur-radius));
+        backdrop-filter: blur(var(--blur-radius));
+        --surface-color: rgba(var(--wallpaper-surface-rgb), var(--wallpaper-surface-alpha));
+        --surface-raised: rgba(var(--wallpaper-raised-rgb), var(--wallpaper-surface-alpha));
+        --input-bg: rgba(var(--wallpaper-input-rgb), var(--wallpaper-surface-alpha));
+        --tab-item-bg: transparent;
+        --row-alt: transparent;
+        --row-color: transparent;
+        --surface-muted: transparent;
+        --surface-contrast: transparent;
+        --iface-body-bg: transparent;
+        --iface-head-bg: transparent;
+    }
+}

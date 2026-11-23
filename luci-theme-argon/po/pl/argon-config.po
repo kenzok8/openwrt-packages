@@ -30,6 +30,14 @@ msgstr "Kolor zapisany za pomocą kodu HEX (domyślnie: #5e72e4)."
 msgid "Action"
 msgstr "Akcja"
 
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Admin page glass effect"
+msgstr "Efekt mlecznego szkła stron administracyjnych"
+
+#: htdocs/luci-static/resources/view/argon-config.js:166
+msgid "Admin page wallpaper"
+msgstr "Tapeta stron administracyjnych"
+
 #: htdocs/luci-static/resources/argon/branding.js:62
 msgid "Another update is running. Please try again."
 msgstr "Trwa inna aktualizacja. Spróbuj ponownie później."
@@ -299,6 +307,10 @@ msgstr "Pokaż lub ukryj nawigację"
 #: htdocs/luci-static/resources/argon-overview.js:33
 msgid "Transmitted bytes"
 msgstr "Wysłane bajty"
+
+#: htdocs/luci-static/resources/view/argon-config.js:171
+msgid "Turning this off also hides the admin wallpaper and restores the default admin appearance."
+msgstr "Wyłączenie tej opcji ukrywa również tło stron administracji i przywraca domyślny wygląd administracji."
 
 #: htdocs/luci-static/resources/argon/branding.js:110
 msgid "Unable to load custom branding. Reload this page or reinstall the theme."

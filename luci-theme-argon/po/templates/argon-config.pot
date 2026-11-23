@@ -23,6 +23,14 @@ msgstr ""
 msgid "Action"
 msgstr ""
 
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Admin page glass effect"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/argon-config.js:166
+msgid "Admin page wallpaper"
+msgstr ""
+
 #: htdocs/luci-static/resources/argon/branding.js:62
 msgid "Another update is running. Please try again."
 msgstr ""
@@ -299,6 +307,10 @@ msgstr ""
 
 #: htdocs/luci-static/resources/argon-overview.js:33
 msgid "Transmitted bytes"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/argon-config.js:171
+msgid "Turning this off also hides the admin wallpaper and restores the default admin appearance."
 msgstr ""
 
 #: htdocs/luci-static/resources/argon/branding.js:110

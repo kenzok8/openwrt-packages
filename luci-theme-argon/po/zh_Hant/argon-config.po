@@ -32,6 +32,14 @@ msgstr "十六進制顏色（預設 #5e72e4）"
 msgid "Action"
 msgstr "動作"
 
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Admin page glass effect"
+msgstr "管理頁面毛玻璃"
+
+#: htdocs/luci-static/resources/view/argon-config.js:166
+msgid "Admin page wallpaper"
+msgstr "管理頁面背景圖"
+
 #: htdocs/luci-static/resources/argon/branding.js:62
 msgid "Another update is running. Please try again."
 msgstr "有其他更新正在進行，請稍後重試。"
@@ -301,6 +309,10 @@ msgstr "展開或收合導覽"
 #: htdocs/luci-static/resources/argon-overview.js:33
 msgid "Transmitted bytes"
 msgstr "已傳輸位元組"
+
+#: htdocs/luci-static/resources/view/argon-config.js:171
+msgid "Turning this off also hides the admin wallpaper and restores the default admin appearance."
+msgstr "關閉此項也會隱藏管理頁壁紙，並還原管理頁的預設外觀。"
 
 #: htdocs/luci-static/resources/argon/branding.js:110
 msgid "Unable to load custom branding. Reload this page or reinstall the theme."

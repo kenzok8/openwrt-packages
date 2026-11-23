@@ -30,6 +30,14 @@ msgstr "Mã màu HEX (mặc định: #5e72e4)."
 msgid "Action"
 msgstr "Thao tác"
 
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Admin page glass effect"
+msgstr "Hiệu ứng kính trang quản trị"
+
+#: htdocs/luci-static/resources/view/argon-config.js:166
+msgid "Admin page wallpaper"
+msgstr "Hình nền trang quản trị"
+
 #: htdocs/luci-static/resources/argon/branding.js:62
 msgid "Another update is running. Please try again."
 msgstr "Một bản cập nhật khác đang chạy. Vui lòng thử lại sau."
@@ -299,6 +307,10 @@ msgstr "Hiện hoặc ẩn menu điều hướng"
 #: htdocs/luci-static/resources/argon-overview.js:33
 msgid "Transmitted bytes"
 msgstr "Số byte đã gửi"
+
+#: htdocs/luci-static/resources/view/argon-config.js:171
+msgid "Turning this off also hides the admin wallpaper and restores the default admin appearance."
+msgstr "Tắt tùy chọn này cũng sẽ ẩn hình nền trang quản trị và khôi phục giao diện quản trị mặc định."
 
 #: htdocs/luci-static/resources/argon/branding.js:110
 msgid "Unable to load custom branding. Reload this page or reinstall the theme."

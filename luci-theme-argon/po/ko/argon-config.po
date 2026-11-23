@@ -30,6 +30,14 @@ msgstr "16진수 색상 코드(기본값: #5e72e4)."
 msgid "Action"
 msgstr "작업"
 
+#: htdocs/luci-static/resources/view/argon-config.js:170
+msgid "Admin page glass effect"
+msgstr "관리 페이지 유리 효과"
+
+#: htdocs/luci-static/resources/view/argon-config.js:166
+msgid "Admin page wallpaper"
+msgstr "관리 페이지 배경 화면"
+
 #: htdocs/luci-static/resources/argon/branding.js:62
 msgid "Another update is running. Please try again."
 msgstr "다른 업데이트가 진행 중입니다. 나중에 다시 시도하세요."
@@ -299,6 +307,10 @@ msgstr "탐색 메뉴 표시 전환"
 #: htdocs/luci-static/resources/argon-overview.js:33
 msgid "Transmitted bytes"
 msgstr "송신 바이트"
+
+#: htdocs/luci-static/resources/view/argon-config.js:171
+msgid "Turning this off also hides the admin wallpaper and restores the default admin appearance."
+msgstr "이 옵션을 끄면 관리 페이지 배경도 숨겨지고 관리 페이지의 기본 모양으로 돌아갑니다."
 
 #: htdocs/luci-static/resources/argon/branding.js:110
 msgid "Unable to load custom branding. Reload this page or reinstall the theme."

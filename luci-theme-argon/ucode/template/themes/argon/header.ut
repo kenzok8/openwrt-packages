@@ -17,19 +17,28 @@
 -#}
 
 {%
+	import { access } from 'fs';
+	import { cursor } from 'uci';
 	import { getuid, getspnam } from 'luci.core';
 
 	const hostname = striptags(ubus.call('system', 'board')?.hostname ?? '?');
 	// First-child routes keep the entry URL while resolving to a deeper page.
 	const page_path = length(ctx.path) > length(ctx.request_path) ? ctx.path : ctx.request_path;
+	const cfg = cursor();
+	const has_config = access('/etc/config/argon');
+	const wallpaper = has_config && cfg.get_first('argon', 'global', 'main_background') == '1'
+		&& cfg.get_first('argon', 'global', 'main_glass') != '0';
 	include('themes/' + theme + '/head', { hostname: hostname, is_login: false });
 %}
 
 <body
-	class="lang_{{ dispatcher.lang }} {{ node?.title ? ` - ${striptags(node.title)}` : '' }} {% if (ctx.authsession): %}logged-in{% endif %}"
+	class="lang_{{ dispatcher.lang }} {{ node?.title ? ` - ${striptags(node.title)}` : '' }} {% if (ctx.authsession): %}logged-in{% endif %}{% if (wallpaper): %} argon-wallpaper{% endif %}"
 	data-page="{{ entityencode(join('-', page_path), true) }}">
 
 	<a class="skip-link" href="#maincontent">{{ _('Skip to content') }}</a>
+	{% if (wallpaper): %}
+	{% include('themes/' + theme + '/login_background', { cfg: cfg }) %}
+	{% endif %}
 	<div class="main">
 		<div class="main-left" id="mainmenu" style="display:none">
 			<div class="sidenav-header d-flex align-items-center">
