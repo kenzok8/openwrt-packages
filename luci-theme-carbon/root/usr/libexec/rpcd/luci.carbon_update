@@ -2,7 +2,8 @@
 # Carbon theme settings backend: verified theme updates and the custom logo.
 # RPC callers can select a checked version, never a URL or command.
 # An optional HTTPS download mirror (uci carbon.update.mirror) only carries the
-# package bytes; release metadata, size and SHA-256 always come from GitHub.
+# package bytes; release metadata, size and SHA-256 come from GitHub Releases API
+# (falling back to official GitHub Pages when GitHub is rate-limited or unreachable).
 # A custom logo is uploaded by LuCI's cgi-upload to $logo_upload (the only file
 # the ACL lets it write), validated here and published under $logo_dir, which
 # sysupgrade keeps (/lib/upgrade/keep.d/luci-theme-carbon).
@@ -11,6 +12,7 @@ umask 077
 state_dir=/tmp/carbon-update
 key_dir=/usr/share/carbon/keys
 repository=mrjoechen/luci-theme-carbon
+pages=https://mrjoechen.github.io/luci-theme-carbon/updates
 package_name=luci-theme-carbon
 logo_dir=/www/luci-static/carbon/custom
 logo_upload=/tmp/carbon-logo.upload
@@ -25,6 +27,14 @@ mirror_prefix() {
 	valid_mirror "$mirror" || mirror=''
 }
 valid_version() { [ "${#1}" -le 40 ] && printf '%s\n' "$1" | grep -Eq '^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}-r[0-9]{1,6}$'; }
+valid_installed_version() {
+	if [ "$manager" = opkg ]; then
+		[ "${#1}" -le 40 ] && printf '%s\n' "$1" | grep -Eq '^[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}-r?[0-9]{1,6}$'
+	else
+		valid_version "$1"
+	fi
+}
+norm_opkg_version() { printf '%s\n' "$1" | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)-\([0-9][0-9]*\)$/\1-r\2/'; }
 prepare() {
 	[ ! -L "$state_dir" ] && mkdir -p "$state_dir" &&
 	[ "$(ls -nd "$state_dir" | awk '{print $3}')" = 0 ] && chmod 700 "$state_dir"
@@ -45,19 +55,19 @@ installed() {
 		manager=opkg
 		current=$(opkg_call status "$package_name" 2>/dev/null | awk '/^Version: / {v=$2} /^Status: .* installed$/ {ok=1} END {if(ok) print v}')
 	fi
-	if valid_version "$current"; then managed=1
+	if valid_installed_version "$current"; then managed=1
 	else current=$(cat /usr/share/carbon/version 2>/dev/null); fi
 }
 newer() {
-	valid_version "$target" && valid_version "$current" || return 1
+	valid_version "$target" && valid_installed_version "$current" || return 1
 	case "$manager" in
 		apk) [ "$(apk version -t "$target" "$current" 2>/dev/null)" = '>' ] ;;
-		opkg) opkg_call compare-versions "$target" '>>' "$current" ;;
+		opkg) opkg_call compare-versions "$target" '>>' "$(norm_opkg_version "$current")" ;;
 		*) return 1 ;;
 	esac
 }
 tools_ready() {
-	for tool in curl flock sha256sum setsid; do command -v "$tool" >/dev/null 2>&1 || return 1; done
+	for tool in curl flock sha256sum; do command -v "$tool" >/dev/null 2>&1 || return 1; done
 	[ "$manager" != apk ] || [ -s "$key_dir/carbon-apk.pem" ]
 }
 load_release() {
@@ -79,13 +89,15 @@ write_status() {
 error_reply() { json_init; json_add_string error "$1"; json_dump; }
 status_reply() {
 	phase=idle; error=''; log=''
-	if [ -s "$state_dir/status.json" ] && json_load_file "$state_dir/status.json"; then json_get_vars state error log; phase=$state; fi
-	busy=0
+	busy=0; locked=0
 	if command -v flock >/dev/null 2>&1; then
 		exec 8>"$state_dir/lock"
-		if flock -n 8; then
-			case "$phase" in checking|downloading|verifying|installing) write_status failed interrupted ;; esac
-		else busy=1; fi
+		if flock -n 8; then locked=1; else busy=1; fi
+	fi
+	# Sample status after taking the lock: a worker may just have finished.
+	if [ -s "$state_dir/status.json" ] && json_load_file "$state_dir/status.json"; then json_get_vars state error log; phase=$state; fi
+	if [ "$locked" = 1 ]; then
+		case "$phase" in checking|downloading|verifying|installing) write_status failed interrupted ;; esac
 	fi
 	installed
 	load_release || :
@@ -108,7 +120,7 @@ status_reply() {
 download() {
 	# Bound disk use even on curl versions that only enforce Content-Length.
 	(ulimit -f 8192; curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' \
-		--connect-timeout 5 --max-time "$3" --max-filesize 4194304 -o "$2" "$1") 9>&-
+		--connect-timeout 5 --speed-limit 1 --speed-time 15 --max-time "$3" --max-filesize 4194304 -o "$2" "$1") 9>&-
 }
 save_preferences() {
 	had_theme=1; saved_theme=$(uci -q get luci.main.mediaurlbase) || had_theme=0
@@ -124,34 +136,55 @@ restore_preferences() {
 	else uci -q delete luci.main.lang || :; fi
 	uci commit luci
 }
-check_release() {
-	rm -f "$state_dir/release.json"
-	download "https://api.github.com/repos/$repository/releases/latest" "$job/release.json" 15 || { failure=network; return 1; }
-	[ "$(wc -c < "$job/release.json")" -le 1048576 ] && json_load_file "$job/release.json" || { failure=metadata; return 1; }
+parse_release() {
+	[ -s "$1" ] && [ "$(wc -c < "$1")" -le 1048576 ] && json_load_file "$1" 2>/dev/null || return 1
+	tag_name=''; draft=''; prerelease=''; body=''
 	json_get_vars tag_name draft prerelease body
-	[ "$draft" = 0 ] && [ "$prerelease" = 0 ] && printf '%s\n' "$tag_name" | grep -Eq '^v[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$' || { failure=metadata; return 1; }
+	[ "$draft" = 0 ] && [ "$prerelease" = 0 ] && printf '%s\n' "$tag_name" | grep -Eq '^v[0-9]{1,4}\.[0-9]{1,4}\.[0-9]{1,4}$' || return 1
 	tag=$tag_name; version=${tag#v}; notes=$(printf '%s' "$body" | head -c 12000)
-	json_select assets || { failure=metadata; return 1; }
-	json_get_keys assets
-	found=0
+	json_select assets 2>/dev/null || return 1
+	assets=''; json_get_keys assets
+	found=0; filename=''; hash=''; bytes=''
 	for asset in $assets; do
-		json_select "$asset"
+		json_select "$asset" || return 1
+		name=''; digest=''; size=''
 		json_get_vars name digest size
 		case "$manager" in
 			apk) pattern="^luci-theme-carbon-${version}-r[0-9]+\\.apk$" ;;
 			opkg) pattern="^luci-theme-carbon_${version}-r[0-9]+_all\\.ipk$" ;;
-			*) failure=manual_install; return 1 ;;
 		esac
 		if printf '%s\n' "$name" | grep -Eq "$pattern"; then
-			[ "$found" = 0 ] || { failure=metadata; return 1; }
-			found=1; filename=$name; hash=${digest#sha256:}; bytes=$size
+			[ "$found" = 0 ] || return 1
+			found=1; filename=$name; bytes=$size
+			case "$digest" in sha256:*) hash=${digest#sha256:} ;; *) hash='' ;; esac
 		fi
 		json_select ..
 	done
 	[ "$found" = 1 ] && printf '%s\n' "$hash" | grep -Eq '^[a-f0-9]{64}$' &&
-	printf '%s\n' "$bytes" | grep -Eq '^[0-9]{1,7}$' && [ "$bytes" -gt 0 ] && [ "$bytes" -le 4194304 ] || { failure=metadata; return 1; }
+	printf '%s\n' "$bytes" | grep -Eq '^[0-9]{1,7}$' && [ "$bytes" -gt 0 ] && [ "$bytes" -le 4194304 ] || return 1
 	target=$(printf '%s' "$filename" | sed -e 's/^luci-theme-carbon[-_]//' -e 's/_all\.ipk$//' -e 's/\.apk$//')
-	valid_version "$target" || { failure=metadata; return 1; }
+	valid_version "$target" || return 1
+}
+check_release() {
+	rm -f "$state_dir/release.json"
+	case "$manager" in apk|opkg) ;; *) failure=manual_install; return 1 ;; esac
+	failure=network
+	for source in github pages; do
+		case "$source" in
+			github) from="https://api.github.com/repos/$repository/releases/latest" ;;
+			pages) from="$pages/latest.json" ;;
+		esac
+		echo "Checking release from $source: $from"
+		rm -f "$job/release.json"
+		download "$from" "$job/release.json" 15 || { echo "Release check from $source failed"; failure=network; continue; }
+		if parse_release "$job/release.json"; then
+			failure=''
+			break
+		fi
+		echo "Invalid release metadata from $source"
+		failure=metadata
+	done
+	[ -z "$failure" ] || return 1
 	json_init
 	json_add_string target "$target"; json_add_string tag "$tag"; json_add_string filename "$filename"
 	json_add_string digest "$hash"; json_add_int size "$bytes"; json_add_int checked "$(date +%s)"; json_add_string notes "$notes"
@@ -165,10 +198,15 @@ install_release() {
 	package="$job/$filename"
 	url="https://github.com/$repository/releases/download/$tag/$filename"
 	mirror_prefix
-	# Mirror first when configured, then GitHub. Each copy must match GitHub's size and SHA-256.
+	# Mirror first when configured, then GitHub Releases, then official Pages fallback.
+	# Each copy must match the checked release size and SHA-256.
 	failure=network
-	for source in ${mirror:+mirror} github; do
-		case "$source" in mirror) from="$mirror$url" ;; *) from=$url ;; esac
+	for source in ${mirror:+mirror} github pages; do
+		case "$source" in
+			mirror) from="$mirror$url" ;;
+			github) from=$url ;;
+			pages) from="$pages/$tag/$filename" ;;
+		esac
 		echo "Downloading from $source: $from"
 		write_status downloading
 		rm -f "$package"
@@ -222,7 +260,12 @@ start_job() {
 	cp "$0" "$job/worker" && chmod 700 "$job/worker" || { error_reply space; return; }
 	case "$1" in check) write_status checking ;; upgrade) write_status downloading ;; esac
 	# Keep the inherited flock until the worker exits, even across rpcd reloads.
-	setsid "$job/worker" worker "$1" "${requested:-}" </dev/null >"$job/log" 2>&1 &
+	# OpenWrt 23.05's default BusyBox omits setsid; fall back to a HUP-immune subshell.
+	if command -v setsid >/dev/null 2>&1; then
+		setsid "$job/worker" worker "$1" "${requested:-}" </dev/null >"$job/log" 2>&1 &
+	else
+		( trap '' HUP; "$job/worker" worker "$1" "${requested:-}" </dev/null >"$job/log" 2>&1 & )
+	fi
 	json_init; json_add_boolean started 1; json_dump
 }
 

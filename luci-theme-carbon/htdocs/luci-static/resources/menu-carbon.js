@@ -151,22 +151,44 @@ const provider = {
  * Sessions from before an upgrade may only be allowed to read zone 0.
  * rpcd (since 2026-07) re-checks the ACL against the symlink target, so the
  * ACL lists both the /sys/class/… links and their /sys/devices/… targets.
+ * Deduplicate thermal→hwmon virtual bridges, trailing "-thermal" variants,
+ * firmware drivers (scpi_sensors / scmi_sensors) that also register a CPU/SoC
+ * thermal zone, and x86_pkg_temp when coretemp is available.
  */
 let sensors = null;
-const listNames = (dir, pattern) => L.resolveDefault(fs.list(dir), []).then((entries) =>
-	(entries || []).map((e) => e.name).filter((n) => pattern.test(n)).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })));
+const listEntries = (dir, pattern) => L.resolveDefault(fs.list(dir), []).then((entries) =>
+	(entries || []).filter((e) => e && pattern.test(e.name)).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })));
+const listNames = (dir, pattern) => listEntries(dir, pattern).then((entries) => entries.map((e) => e.name));
 const readName = (path, fallback) => L.resolveDefault(fs.read(path), '').then((v) => String(v || '').trim() || fallback);
+const sensorKey = (name) => {
+	const raw = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+	return raw.replace(/thermal$/, '') || raw;
+};
+const isThermalBridge = (target) => /(?:^|\/)virtual\/thermal(?:\/|$)/.test(String(target || ''));
+const isCpuThermalZone = (name) => /^(cpu|soc|aml|cluster|big|little|core|pkg|sys|die|tsens|thermalzone)/.test(sensorKey(name));
+const isFirmwareSensor = (name) => /^sc[pm]isensors$/.test(sensorKey(name));
 function findSensors() {
 	const thermal = listNames('/sys/class/thermal', /^thermal_zone\d+$/).then((zones) => Promise.all(zones.slice(0, 8).map((z) =>
 		readName('/sys/class/thermal/' + z + '/type', z).then((name) => ({ name: name, path: '/sys/class/thermal/' + z + '/temp' })))));
-	const hwmon = listNames('/sys/class/hwmon', /^hwmon\d+$/).then((devs) => Promise.all(devs.slice(0, 8).map((d) =>
-		listNames('/sys/class/hwmon/' + d, /^temp\d+_input$/).then((inputs) => inputs.length ? readName('/sys/class/hwmon/' + d + '/name', d)
-			.then((name) => ({ name: name, path: '/sys/class/hwmon/' + d + '/' + inputs[0] })) : null))));
+	const hwmon = listEntries('/sys/class/hwmon', /^hwmon\d+$/).then((devs) => Promise.all(devs.slice(0, 8).map((d) =>
+		listNames('/sys/class/hwmon/' + d.name, /^temp\d+_input$/).then((inputs) => inputs.length ? readName('/sys/class/hwmon/' + d.name + '/name', d.name)
+			.then((name) => ({ name: name, path: '/sys/class/hwmon/' + d.name + '/' + inputs[0], target: d.target || '' })) : null))));
 	return Promise.all([thermal, hwmon]).then((r) => {
+		const zones = r[0].filter(Boolean);
+		const mons = r[1].filter(Boolean);
+		const hasCoretemp = mons.some((s) => sensorKey(s.name) === 'coretemp');
+		const keptZones = hasCoretemp ? zones.filter((s) => sensorKey(s.name) !== 'x86pkgtemp') : zones;
+		const hasCpuZone = keptZones.some((s) => isCpuThermalZone(s.name));
+		const keptMons = mons.filter((s) => {
+			if (zones.length && isThermalBridge(s.target)) return false;
+			if (hasCoretemp && sensorKey(s.name) === 'x86pkgtemp') return false;
+			if (hasCpuZone && isFirmwareSensor(s.name)) return false;
+			return true;
+		});
 		const seen = {}, list = [];
-		r[0].concat(r[1]).forEach((s) => {
-			const key = s && s.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-			if (s && !seen[key]) { seen[key] = true; list.push(s); }
+		keptZones.concat(keptMons).forEach((s) => {
+			const key = sensorKey(s.name);
+			if (!seen[key]) { seen[key] = true; list.push({ name: s.name, path: s.path }); }
 		});
 		return list.length ? list : [{ name: '', path: '/sys/class/thermal/thermal_zone0/temp' }];
 	});

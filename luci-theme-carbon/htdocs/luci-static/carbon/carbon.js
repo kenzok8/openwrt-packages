@@ -192,7 +192,9 @@
 		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
 		(ICONS[name] || ICONS.square) + '</svg>';
 
-	const LOGO = '<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#4F5BEA"/><path d="M32 14.5l15.2 8.75v17.5L32 49.5l-15.2-8.75v-17.5z" fill="none" stroke="#fff" stroke-width="3.6" stroke-linejoin="round"/><circle cx="32" cy="32" r="5" fill="#fff"/></svg>';
+	const LOGO = '<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="cb-logo-bg" x1="10" y1="2" x2="56" y2="64" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#707EFF"/><stop offset="46%" stop-color="#4F5BEA"/><stop offset="100%" stop-color="#292FA8"/></linearGradient><radialGradient id="cb-logo-glow" cx="32" cy="24" r="30" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#B6C1FF" stop-opacity=".46"/><stop offset="55%" stop-color="#6B78FF" stop-opacity=".14"/><stop offset="100%" stop-color="#4F5BEA" stop-opacity="0"/></radialGradient><radialGradient id="cb-logo-bounce" cx="46" cy="62" r="26" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#6CE5FF" stop-opacity=".28"/><stop offset="100%" stop-color="#4F5BEA" stop-opacity="0"/></radialGradient><linearGradient id="cb-logo-rim" x1="16" y1="0" x2="48" y2="64" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFF" stop-opacity=".58"/><stop offset="38%" stop-color="#FFF" stop-opacity=".1"/><stop offset="76%" stop-color="#9BA8FF" stop-opacity=".06"/><stop offset="100%" stop-color="#B8C8FF" stop-opacity=".3"/></linearGradient><linearGradient id="cb-logo-plate" x1="18" y1="14" x2="46" y2="50" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFF" stop-opacity=".32"/><stop offset="52%" stop-color="#DCE3FF" stop-opacity=".11"/><stop offset="100%" stop-color="#8998FF" stop-opacity=".06"/></linearGradient><linearGradient id="cb-logo-sheen" x1="16" y1="13" x2="40" y2="38" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFF" stop-opacity=".3"/><stop offset="100%" stop-color="#FFF" stop-opacity="0"/></linearGradient><linearGradient id="cb-logo-hex" x1="20" y1="13" x2="44" y2="51" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFF"/><stop offset="55%" stop-color="#EEF1FF"/><stop offset="100%" stop-color="#C7D1FF"/></linearGradient><radialGradient id="cb-logo-aura" cx="32" cy="32" r="10" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFF" stop-opacity=".34"/><stop offset="100%" stop-color="#FFF" stop-opacity="0"/></radialGradient><radialGradient id="cb-logo-core" cx="30" cy="29.8" r="7" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFF"/><stop offset="65%" stop-color="#EFF2FF"/><stop offset="100%" stop-color="#BAC6FF"/></radialGradient><clipPath id="cb-logo-sq"><rect width="64" height="64" rx="16"/></clipPath><clipPath id="cb-logo-hc"><path d="M29.75 14.8Q32 13.5 34.25 14.8l11.52 6.65q2.25 1.3 2.25 3.9v13.3q0 2.6-2.25 3.9L34.25 49.2q-2.25 1.3-4.5 0l-11.52-6.65q-2.25-1.3-2.25-3.9v-13.3q0-2.6 2.25-3.9z"/></clipPath></defs><g clip-path="url(#cb-logo-sq)"><rect width="64" height="64" fill="url(#cb-logo-bg)"/><ellipse cx="26" cy="10" rx="34" ry="22" fill="url(#cb-logo-glow)"/><rect width="64" height="64" fill="url(#cb-logo-bounce)"/><ellipse cx="32" cy="-2" rx="34" ry="15" fill="#FFF" fill-opacity=".11"/></g><rect x=".75" y=".75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="url(#cb-logo-rim)" stroke-width="1.5"/><path d="M29.75 16.9Q32 15.6 34.25 16.9l11.52 6.65q2.25 1.3 2.25 3.9v13.3q0 2.6-2.25 3.9L34.25 51.3q-2.25 1.3-4.5 0l-11.52-6.65q-2.25-1.3-2.25-3.9v-13.3q0-2.6 2.25-3.9z" fill="#171C7A" fill-opacity=".26" stroke="#171C7A" stroke-opacity=".34" stroke-width="4.2"/><path d="M29.75 14.8Q32 13.5 34.25 14.8l11.52 6.65q2.25 1.3 2.25 3.9v13.3q0 2.6-2.25 3.9L34.25 49.2q-2.25 1.3-4.5 0l-11.52-6.65q-2.25-1.3-2.25-3.9v-13.3q0-2.6 2.25-3.9z" fill="url(#cb-logo-plate)"/><path d="M12 12h40L12 40z" fill="url(#cb-logo-sheen)" clip-path="url(#cb-logo-hc)"/><path d="M29.75 14.8Q32 13.5 34.25 14.8l11.52 6.65q2.25 1.3 2.25 3.9v13.3q0 2.6-2.25 3.9L34.25 49.2q-2.25 1.3-4.5 0l-11.52-6.65q-2.25-1.3-2.25-3.9v-13.3q0-2.6 2.25-3.9z" fill="none" stroke="url(#cb-logo-hex)" stroke-width="3.6" stroke-linejoin="round"/><circle cx="32" cy="32" r="10" fill="url(#cb-logo-aura)"/><circle cx="32" cy="33.3" r="5.3" fill="#1B2082" fill-opacity=".34"/><circle cx="32" cy="32" r="5.3" fill="url(#cb-logo-core)"/><circle cx="30.3" cy="30.2" r="1.4" fill="#FFF" fill-opacity=".95"/></svg>';
+	let logoSeq = 0;
+	const logo = C.logo = () => LOGO.replace(/\bcb-logo-/g, 'cb-h' + (++logoSeq) + '-');
 
 	const COLORS = {
 		blue: 'var(--cb-blue)', green: 'var(--cb-green)', orange: 'var(--cb-orange)', red: 'var(--cb-red)',
@@ -267,20 +269,20 @@
 		network: 'ports', wireless: 'wifi', dhcp: 'list', dns: 'server', hosts: 'tag', diagnostics: 'search',
 		firewall: 'shield', switch: 'ports', 'switch-vlan': 'layers', vlan: 'layers', pon: 'fiber',
 		gpon: 'fiber', xpon: 'fiber', sqm: 'sliders', qos: 'sliders', eqos: 'sliders', mwan3: 'route',
-		turboacc: 'zap', flowoffload: 'zap',
+		turboacc: 'zap', flowoffload: 'zap', flowcone: 'zap',
 		/* services */
 		ddns: 'refresh', upnp: 'link', wol: 'power', samba4: 'folder', samba: 'folder', ksmbd: 'folder',
 		nfs: 'folder', vsftpd: 'folder', adblock: 'shield', adguardhome: 'shield', smartdns: 'server',
 		mosdns: 'server', 'https-dns-proxy': 'server', acme: 'lock', users: 'users', openvpn: 'lock',
 		zerotier: 'lock', tailscale: 'lock', frpc: 'cloud', frps: 'cloud', nps: 'cloud', cloudflared: 'cloud',
 		openclash: 'send', passwall: 'send', passwall2: 'send', homeproxy: 'send', nikki: 'send',
-		'ssr-plus': 'send', shadowsocksr: 'send', vssr: 'send', bypass: 'send', aria2: 'download',
+		'ssr-plus': 'send', shadowsocksr: 'send', vssr: 'send', bypass: 'send', honk: 'send', aria2: 'download',
 		transmission: 'download', qbittorrent: 'download', minidlna: 'play', jellyfin: 'play',
 		rtp2httpd: 'fiber', rtp2httpx: 'fiber', udpxy: 'fiber', iptv: 'fiber',
 		watchcat: 'eye', diskman: 'disk', 'hd-idle': 'disk', dockerman: 'docker', docker: 'docker',
 		vlmcsd: 'key', ua2f: 'shield', accesscontrol: 'filter', timecontrol: 'clock', p910nd: 'printer',
 		usb_printer: 'printer', alist: 'folder', 'ddns-go': 'refresh', wechatpush: 'bell', serverchan: 'bell',
-		pushbot: 'bell'
+		pushbot: 'bell', irqbalance: 'cpu'
 	};
 	const PAGE_KEYWORDS = [
 		[/plugin|addon|extension/, 'puzzle'], [/theme|argon|design|kucat|skin/, 'palette'],
@@ -2036,7 +2038,7 @@
 			const heroIcon = () => {
 				const custom = document.querySelector('.cb-brand-logo[data-custom]');
 				return custom ? h('div', { class: 'cb-hero-icon custom' }, h('img', { src: custom.getAttribute('src'), alt: '' }))
-					: h('div', { class: 'cb-hero-icon', html: LOGO });
+					: h('div', { class: 'cb-hero-icon', html: logo() });
 			};
 			const setRate = (r, v) => { const b = fmt.bytes(v, true); r.val.innerHTML = esc(b[0]) + '<small>' + esc(b[1]) + '</small>'; };
 			const setSpan = (el, n) => {

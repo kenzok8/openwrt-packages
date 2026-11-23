@@ -62,6 +62,7 @@ const errors = {
 	logo_denied: N_('Permission denied. Log out and log in again once after updating Carbon, then retry.')
 };
 const message = code => errors[code] ? tr(errors[code]) : String(code || '');
+const sameVersion = (a, b) => !!a && !!b && String(a).replace(/-r?(\d+)$/, '-r$1') === String(b).replace(/-r?(\d+)$/, '-r$1');
 const writable = () => L.hasViewPermission();
 
 /* LuCI's E() renders a null array item as the text "null": never pass one */
@@ -283,7 +284,7 @@ function updateSections(data) {
 		};
 		stateText.textContent = labels[value.state] ? tr(labels[value.state]) :
 			value.can_upgrade ? tr('A new version is available.') :
-			value.latest && value.current === value.latest ? tr('You are using the latest version.') : tr('Check the latest stable Carbon release.');
+			sameVersion(value.current, value.latest) ? tr('You are using the latest version.') : tr('Check the latest stable Carbon release.');
 		const issue = value.error || value.reason;
 		errorText.textContent = message(issue); errorText.hidden = !issue;
 		securityText.textContent = value.manager === 'apk' ?

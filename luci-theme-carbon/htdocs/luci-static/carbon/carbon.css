@@ -314,7 +314,7 @@ form.inline { display: inline; margin: 0; }
 	width: 38px;
 	height: 38px;
 	flex: none;
-	border-radius: 12px;
+	border-radius: 25%;
 	box-shadow: 0 6px 16px -6px rgba(79, 91, 234, .6);
 }
 /* uploaded logo: any aspect ratio, no brand-coloured glow */
@@ -870,7 +870,7 @@ body.cb-login {
 .cb-login-logo {
 	width: 72px;
 	height: 72px;
-	border-radius: 17px;
+	border-radius: 25%;
 	box-shadow: 0 12px 30px -8px rgba(79, 91, 234, .55);
 }
 .cb-login-logo[data-custom] { object-fit: contain; box-shadow: none; }

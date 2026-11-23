@@ -16,6 +16,8 @@
 
 **[在线演示](https://mrjoechen.github.io/luci-theme-carbon/) · [English demo](https://mrjoechen.github.io/luci-theme-carbon/?lang=en)**
 
+<p align="center"><img src="docs/screenshots/intro.png" alt="Carbon 桌面端与移动端预览" width="100%"></p>
+
 https://github.com/user-attachments/assets/b78ccf2b-679e-459b-88ea-b4f82da6e03f
 
 </div>
@@ -50,7 +52,7 @@ https://github.com/user-attachments/assets/b78ccf2b-679e-459b-88ea-b4f82da6e03f
 | OpenWrt / ImmortalWrt 23.05、24.10 | opkg | `.ipk` 或安装脚本 |
 | OpenWrt / ImmortalWrt 25.x、snapshot | apk | `.apk` 或安装脚本 |
 
-需要 ucode 版 LuCI（23.05 及以后）。
+需要 ucode 版 LuCI（23.05 及以后）。同一个 `.ipk` 包和在线升级器均适用于 OpenWrt 23.05（含无 `setsid` 的官方默认 BusyBox 与 23.05 SDK 构建包）及 24.10。
 
 所有文件都在 [Releases](https://github.com/mrjoechen/luci-theme-carbon/releases/latest) 页面。
 
@@ -127,11 +129,11 @@ Carbon 会自动设为默认主题。刷新页面，然后**退出并重新登�
 
 首次通过系统包管理器安装 v1.1.0 或更新版本，然后打开 **系统 → Carbon 主题**（v1.1.0 中名为「Carbon 更新」），点击「检查更新」，再点击「一键升级」并确认。页面显示更新说明、后台进度和安装日志；刷新页面后可继续查看进度。主题偏好与路由器配置会保留，不允许同版本重复安装、降级或使用过期的更新信息。
 
-APK 在线更新先使用包内固定的 Carbon 公钥验证，再由 APK 包管理器验签安装；使用已安装依赖，不读取固件软件源索引。此过程不修改 `/etc/apk/keys`，LuCI 标准「上传软件包」仍需前面的一次性公钥导入。IPK 更新通过 HTTPS 下载并核对发布附件的 SHA-256 与大小。检查更新需要路由器能访问 GitHub，且系统时间正确。详见 [在线升级说明](docs/online-update.md)。
+APK 在线更新先使用包内固定的 Carbon 公钥验证，再由 APK 包管理器验签安装；使用已安装依赖，不读取固件软件源索引。此过程不修改 `/etc/apk/keys`，LuCI 标准「上传软件包」仍需前面的一次性公钥导入。IPK 更新通过 HTTPS 下载并核对发布附件的 SHA-256 与大小。检查与下载默认优先访问 GitHub，当 GitHub API 受限、失败或超时时自动回退到项目 GitHub Pages 托管的清单与安装包（需要系统时间正确）。详见 [在线升级说明](docs/online-update.md)。
 
-GitHub 下载缓慢或无法访问时，可在同一页面填写 HTTPS **下载镜像**前缀。镜像只用于下载安装包，版本、大小和 SHA-256 仍以 GitHub 为准；镜像失败时自动改用 GitHub。
+GitHub 下载缓慢或无法访问时，可在同一页面填写 HTTPS **下载镜像**前缀。镜像只用于下载安装包，版本、大小和 SHA-256 仍来自 GitHub（或官方 GitHub Pages 回退清单）；镜像失败时依次尝试 GitHub Releases 和官方 GitHub Pages。
 
-依赖 `curl`、`ca-bundle`、`flock`，使用原生包安装时自动处理。使用 `--files` 或 v1.1.3 之前的安装脚本安装的主题没有登记到 apk/opkg，重新运行一次当前的 `carbon-install.sh` 即可启用在线升级。
+依赖 `curl`、`ca-bundle`、`flock`，使用原生包安装时自动处理（OpenWrt 23.05 不要求 `setsid`）。通过 OpenWrt 23.05 SDK 构建、版本号不含 `-r` 前缀的包（如 `1.1.8-1`）也能被正常识别并在线升级到正式 `-rN` 版本。使用 `--files` 或 v1.1.3 之前的安装脚本安装的主题没有登记到 apk/opkg，重新运行一次当前的 `carbon-install.sh` 即可启用在线升级。
 
 ### 卸载
 
@@ -153,7 +155,7 @@ sh scripts/build-installer.sh
 sh scripts/build-ipk.sh
 ```
 
-**使用 OpenWrt SDK**：把本目录放到 SDK 的 `package/` 下，执行 `make package/luci-theme-carbon/compile`。
+**使用 OpenWrt SDK**：把本目录放到 SDK 的 `package/` 下，执行 `make package/luci-theme-carbon/compile`（支持 23.05 / 24.10 `opkg` 与 25.x `apk` SDK；安装脚本与在线升级器均兼容 23.05 的无 `-r` 修订号）。
 
 **APK 签名**：SDK 原始 APK 未签名；本地签名方法、验证步骤和发布所需的 `APK_SIGNING_KEY` Actions Secret 见 [签名构建说明](docs/apk-signing.md)。
 
