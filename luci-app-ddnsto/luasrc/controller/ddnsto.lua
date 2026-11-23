@@ -218,6 +218,93 @@ local function run_capture(cmd)
   return rc, stdout, stderr
 end
 
+local function update_cli_command(action)
+  local uci = require "luci.model.uci".cursor()
+  local base_url, github_repo, github_branch = "", "", ""
+  uci:foreach("ddnsto", "ddnsto", function(s)
+    base_url = s.update_base_url or base_url
+    github_repo = s.update_github_repo or github_repo
+    github_branch = s.update_github_branch or github_branch
+  end)
+
+  local env = {}
+  if base_url ~= "" then
+    table.insert(env, "DDNSTO_UPDATE_BASE_URL=" .. shell_quote(base_url))
+  end
+  if github_repo ~= "" then
+    table.insert(env, "DDNSTO_UPDATE_GITHUB_REPO=" .. shell_quote(github_repo))
+  end
+  if github_branch ~= "" then
+    table.insert(env, "DDNSTO_UPDATE_GITHUB_BRANCH=" .. shell_quote(github_branch))
+  end
+
+  local prefix = #env > 0 and (table.concat(env, " ") .. " ") or ""
+  return string.format(
+    "%s/usr/sbin/ddnstod update %s --json",
+    prefix,
+    action == "apply" and "--yes" or "check"
+  )
+end
+
+local function update_feature_enabled()
+  local uci = require "luci.model.uci".cursor()
+  local enabled = "0"
+  uci:foreach("ddnsto", "ddnsto", function(s)
+    enabled = s.update_enabled or enabled
+  end)
+  return enabled == "1"
+end
+
+local function run_update_cli(action)
+  local jsonc = require "luci.jsonc"
+  local rc, stdout, stderr = run_capture(update_cli_command(action))
+  local ok, parsed = pcall(jsonc.parse, stdout)
+  if rc ~= 0 then
+    return nil, stderr ~= "" and stderr or stdout, rc
+  end
+  if not ok or type(parsed) ~= "table" then
+    return nil, "invalid update command response", rc
+  end
+  return parsed, "", rc
+end
+
+local function wait_for_ddnsto(expected_version, timeout)
+  local sys = require "luci.sys"
+  local limit = tonumber(timeout) or 15
+  for _ = 1, limit do
+    if service_running() then
+      local version = get_command("/usr/sbin/ddnstod -v")
+      if expected_version == nil or expected_version == "" or version:find(expected_version, 1, true) then
+        return true, version
+      end
+    end
+    sys.exec("sleep 1")
+  end
+  return false, get_command("/usr/sbin/ddnstod -v")
+end
+
+local function rollback_ddnsto_update(enabled)
+  local sys = require "luci.sys"
+  if not file_exists("/usr/sbin/ddnstod.bak") then
+    return false, "backup binary not found"
+  end
+  local restore_rc = sys.call("mv -f /usr/sbin/ddnstod.bak /usr/sbin/ddnstod")
+  if restore_rc ~= 0 then
+    return false, "restore backup binary failed"
+  end
+  if enabled == "1" then
+    local restart_rc = run_init_action("restart")
+    if restart_rc ~= 0 then
+      return false, "restart after rollback failed"
+    end
+    local running = wait_for_ddnsto(nil, 15)
+    if not running then
+      return false, "service did not recover after rollback"
+    end
+  end
+  return true, ""
+end
+
 local function diagnostics_logs_via_cli(lines)
   local jsonc = require "luci.jsonc"
   local cmd = string.format("/usr/sbin/ddnsto diagnostics logs --tail %d", tonumber(lines) or 200)
@@ -416,6 +503,7 @@ local function read_config()
   local sys = require "luci.sys"
   local cfg = {
     enabled      = "1",
+    update_enabled = "0",
     token        = "",
     index        = "0",
     logger       = "0",
@@ -432,6 +520,7 @@ local function read_config()
 
   uci:foreach("ddnsto", "ddnsto", function(s)
     cfg.enabled      = s.enabled or cfg.enabled
+    cfg.update_enabled = s.update_enabled or cfg.update_enabled
     cfg.token        = s.token or cfg.token
     cfg.index        = s.index or cfg.index
     cfg.logger       = s.logger or cfg.logger
@@ -494,6 +583,11 @@ function index()
   entry({"admin", "services", "ddnsto", "page"}, call("action_page"), _("Settings"), 10).leaf = true
   -- entry({"admin", "ddnsto_dev"}, call("action_ddnsto_dev"), _("DDNSTO (Dev)"), 99).leaf = true
   
+  -- Older LuCI dispatchers require explicit intermediate nodes to mark them
+  -- satisfied. Keep these non-leaf so requests reach the API handlers.
+  entry({"admin", "services", "ddnsto", "api"}, firstchild())
+  entry({"admin", "services", "ddnsto", "api", "onboarding"}, firstchild())
+  entry({"admin", "services", "ddnsto", "api", "update"}, firstchild())
   entry({"admin", "services", "ddnsto", "api", "config"},  call("api_config")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "migrate_identity"}, call("api_migrate_identity")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "service"}, call("api_service")).leaf = true
@@ -504,6 +598,8 @@ function index()
   entry({"admin", "services", "ddnsto", "api", "onboarding", "address"}, call("api_onboarding_address")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "connectivity"},  call("api_connectivity")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "status"},  call("api_status")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "update", "check"}, call("api_update_check")).leaf = true
+  entry({"admin", "services", "ddnsto", "api", "update", "apply"}, call("api_update_apply")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "logs"},    call("api_logs")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "offline_diagnosis"}, call("api_offline_diagnosis")).leaf = true
   entry({"admin", "services", "ddnsto", "api", "support_bundle"}, call("api_support_bundle")).leaf = true
@@ -629,13 +725,20 @@ function api_config()
   if feat_password then uci:set("ddnsto", sid, "feat_password", feat_password) end
   if feat_disk_path_selected then uci:set("ddnsto", sid, "feat_disk_path_selected", feat_disk_path_selected) end
 
-  uci:commit("ddnsto")
+  if not uci:commit("ddnsto") then
+    return bad_request("配置保存失败，请重试")
+  end
 
-  -- Restart service to apply changes
+  -- This request may travel through ddnstod itself. Detach the restart and
+  -- allow the HTTP response to leave the tunnel before shutting it down.
   local sys = require "luci.sys"
-  sys.call("/etc/init.d/ddnsto restart >/dev/null 2>&1")
+  local ret = sys.call("(sleep 3; /etc/init.d/ddnsto restart) </dev/null >/dev/null 2>&1 &")
+  if ret ~= 0 then
+    return bad_request("配置已保存，但未能安排服务重启，请手动重启 DDNSTO")
+  end
 
-  write_json({ ok = true })
+  write_json({ ok = true, restart_pending = true })
+  http.close()
 end
 
 function api_migrate_identity()
@@ -927,6 +1030,108 @@ function api_status()
       hostname = hostname,
       version = version,
     }
+  })
+end
+
+-- ==========
+-- API: update
+-- ==========
+
+function api_update_check()
+  local http = require "luci.http"
+  local method = http.getenv("REQUEST_METHOD") or ""
+  if method ~= "GET" then
+    method_not_allowed()
+    return
+  end
+
+  if not update_feature_enabled() then
+    http.status(503, "update temporarily disabled")
+    write_json({
+      ok = false,
+      error = "update temporarily disabled",
+      code = "update_temporarily_disabled",
+      detail = "LuCI 更新入口暂时关闭，请使用 ddnsto CLI 手动更新。",
+    })
+    return
+  end
+
+  local result, detail, rc = run_update_cli("check")
+  if not result then
+    http.status(502, "update check failed")
+    write_json({ ok = false, error = "update check failed", detail = detail, rc = rc })
+    return
+  end
+  write_json({ ok = true, data = result })
+end
+
+function api_update_apply()
+  local http = require "luci.http"
+  local uci = require "luci.model.uci".cursor()
+  local method = http.getenv("REQUEST_METHOD") or ""
+  if method ~= "POST" then
+    method_not_allowed()
+    return
+  end
+
+  if not update_feature_enabled() then
+    http.status(503, "update temporarily disabled")
+    write_json({
+      ok = false,
+      error = "update temporarily disabled",
+      code = "update_temporarily_disabled",
+      detail = "LuCI 更新入口暂时关闭，请使用 ddnsto CLI 手动更新。",
+    })
+    return
+  end
+  if not require_csrf() then return end
+
+  local enabled = "0"
+  uci:foreach("ddnsto", "ddnsto", function(s)
+    enabled = s.enabled or enabled
+  end)
+
+  local result, detail, rc = run_update_cli("apply")
+  if not result then
+    http.status(502, "update failed")
+    write_json({ ok = false, error = "update failed", detail = detail, rc = rc })
+    return
+  end
+
+  if result.decision ~= "updated" then
+    write_json({ ok = true, data = result, service_restarted = false })
+    return
+  end
+
+  if enabled ~= "1" then
+    write_json({ ok = true, data = result, service_restarted = false, service_enabled = false })
+    return
+  end
+
+  local restart_rc = run_init_action("restart")
+  local expected_version = tostring(result.latest_version or "")
+  local healthy, running_version = false, ""
+  if restart_rc == 0 then
+    healthy, running_version = wait_for_ddnsto(expected_version, 15)
+  end
+  if healthy then
+    write_json({
+      ok = true,
+      data = result,
+      service_restarted = true,
+      running_version = running_version,
+    })
+    return
+  end
+
+  local rolled_back, rollback_detail = rollback_ddnsto_update(enabled)
+  http.status(502, "updated service failed to start")
+  write_json({
+    ok = false,
+    error = "updated service failed to start",
+    detail = rollback_detail ~= "" and rollback_detail or "service restart failed",
+    rollback = rolled_back,
+    restart_rc = restart_rc,
   })
 end
 
