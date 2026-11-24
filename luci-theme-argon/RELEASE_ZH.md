@@ -1,5 +1,10 @@
 # Master 分支的更新日志
 
+## v3.2.0 [ 2026.11.24 ]
+
+- GitHub Release: https://github.com/jerrykuku/luci-theme-argon/releases/tag/v3.2.0
+- 详细更新内容请以 Release 页面为准。
+
 ## v3.1.4 [ 2026.11.13 ]
 
 - 修复提示条遮挡下拉菜单、表格下拉选项显示不完整的问题（#740、#741）。

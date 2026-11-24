@@ -104,7 +104,7 @@
     // Navigation font sizes
     .main>.main-left>.nav>li,
     .main>.main-left>.nav>li>a,
-    .main .main-left .nav>li>a:first-child,
+    .main .main-left .nav>li>:is(a, button):first-child,
     .main>.main-left>.nav>.slide>.menu,
     .main>.main-left>.nav>li>[data-title="Log_out"] {
         font-size: 0.9rem;
@@ -392,6 +392,14 @@
 // 5. Tablet Portrait (768px and below)
 // ==========================================================================
 
+// Let the breakpoint handler move focus before these mobile controls disappear.
+@media not all and (max-width: 768px) {
+    header .showSide:focus,
+    .main-left .sidebar-close:focus {
+        display: inline-block;
+    }
+}
+
 @media screen and (max-width: 768px) {
 
     // Mobile sidebar behavior
@@ -404,6 +412,40 @@
 
         &.active {
             width: var(--sidebar-width);
+        }
+
+        .sidenav-header {
+            position: relative;
+            padding-inline-end: 2.75rem;
+        }
+
+        .sidebar-close {
+            position: absolute;
+            inset-inline-end: .25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: grid;
+            place-items: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            padding: 0;
+            color: var(--text-strong);
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+
+            &::before {
+                content: '';
+                width: 1rem;
+                height: 1rem;
+                background-color: currentColor;
+                mask: url('../icon/close.svg') center / contain no-repeat;
+
+                @media (forced-colors: active) {
+                    forced-color-adjust: none;
+                    background-color: ButtonText;
+                }
+            }
         }
 
         // Keep the original reveal animation without reflowing its contents.

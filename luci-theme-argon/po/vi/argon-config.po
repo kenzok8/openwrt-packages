@@ -560,3 +560,11 @@ msgstr "Tạm dừng video nền"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "Chuyển đến nội dung"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "Đóng"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "Điều hướng"

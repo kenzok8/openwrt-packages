@@ -13,11 +13,12 @@ module.exports = function createRenderer(sourceDir) {
 	fs.mkdirSync(target, { recursive: true });
 	for (const name of fs.readdirSync(sourceDir).filter(name => name.endsWith('.ut'))) {
 		const source = fs.readFileSync(path.join(sourceDir, name), 'utf8')
-			.replace("import { access, lsdir, lstat, stat } from 'fs';", `
+			.replace("import { access, lsdir, lstat, readfile, stat } from 'fs';", `
+function readfile(path, limit) { return fixture.scriptVersion ?? '0123456789abcdef'; }
 function access(path) { return fixture.configExists ?? true; }
 function lsdir(path) { return fixture.icons ?? ['default.svg', 'status.svg']; }
 function lstat(path) { return { type: 'file' }; }
-function stat(path) { return path == '/www/luci-static/argon/css/cascade.css' ? fixture.stylesheetStat : null; }`)
+function stat(path) { return fixture.stylesheetStats?.[path]; }`)
 			.replace("import { access } from 'fs';", 'function access(path) { return fixture.configExists ?? true; }')
 			.replace("import * as fs from 'fs';", `
 let fs = { access: path => fixture.configExists ?? true,
@@ -46,7 +47,7 @@ const env = proto({
   http: { prepare_content: value => push(contentTypes, value), getenv: name => '/cgi-bin/luci/',
     urlencode: value => replace(replace(replace(value, ' ', '%20'), '#', '%23'), '?', '%3F') },
   ubus: { call: (object, method) => object == 'luci.argon_wallpaper'
-    ? fixture.wallpaper : { hostname: fixture.hostname ?? 'Router' } },
+    ? (method == 'get_cached_url' ? fixture.wallpaper : null) : { hostname: fixture.hostname ?? 'Router' } },
   ctx: fixture.ctx ?? { path: ['admin', 'status', 'overview'], request_path: ['admin', 'status', 'overview'], authsession: 'session' },
   version: { luciname: 'LuCI', luciversion: 'test-build', distname: 'OpenWrt', distversion: '25.12.5', distrevision: 'test', disturl: 'https://openwrt.org/' },
   _: value => value, entityencode: encode, striptags: value => replace(value, /<[^>]*>/g, ''),

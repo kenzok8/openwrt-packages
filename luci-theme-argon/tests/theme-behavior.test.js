@@ -17,6 +17,11 @@ function element(tag, attrs = {}, children = []) {
 		attrs,
 		children: [],
 		style: {},
+		classList: {
+			add() {}, toggle() {}
+		},
+		setAttribute(name, value) { this.attrs[name] = value; },
+		getAttribute(name) { return this.attrs[name]; },
 		appendChild(child) {
 			if (child && child.parent)
 				child.parent.children.splice(child.parent.children.indexOf(child), 1);
@@ -36,14 +41,14 @@ String.prototype.format = function(...values) {
 };
 
 function loadMenu(dispatchpath, container, icons = '') {
-	return new Function('baseclass', 'ui', 'L', 'E', 'document', '_', menuSource)(
+	return new Function('baseclass', 'ui', 'L', 'E', 'document', '_', 'window', menuSource)(
 		{ extend: value => value },
 		{ menu: { getChildren: node => node.children || [] }, createHandlerFn: (object, name) => object[name].bind(object) },
 		{ env: { dispatchpath }, url: (...parts) => parts.join('/'), media: (...parts) => '/luci-static/argon/' + parts.join('/') },
 		element,
 		{ querySelectorAll: () => [], querySelector: selector => selector == 'meta[name="argon-menu-icons"]'
 			? (icons === null ? null : { getAttribute: () => icons }) : container },
-		value => value
+		value => value, { matchMedia: () => ({ matches: true }) }
 	);
 }
 
@@ -72,18 +77,22 @@ test('translated menu labels keep node-name icons and nested links keep their la
 	const link = rendered.children[0].children[0];
 	assert.equal(link.children[0].attrs['data-icon'], 'status');
 	assert.equal(link.children[1], '状态');
+	assert.equal(link.tag, 'button');
+	assert.equal(link.attrs['aria-expanded'], 'false');
+	assert.equal(link.attrs['aria-controls'], rendered.children[0].children[1].id);
+	assert.equal(rendered.children[0].children[1].inert, true);
 	assert.equal(rendered.children[0].children[1].children[0].children[0].children[0], '概览');
 });
 
-test('clicking a decorative SVG is handled by its navigation link', () => {
+test('an event originating on a decorative icon expands its owning button', () => {
 	const menu = loadMenu([], null);
-	const link = { parentNode: { querySelector: () => null }, nextElementSibling: {}, blur() {} };
-	const icon = { parentNode: link, nextElementSibling: null };
-	let prevented = false, stopped = false;
-	menu.handleMenuExpand({ target: icon, currentTarget: link,
-		preventDefault: () => { prevented = true; }, stopPropagation: () => { stopped = true; } });
-	assert.equal(prevented, true);
-	assert.equal(stopped, true);
+	const submenu = element('ul');
+	const button = element('button', { 'aria-expanded': 'false' });
+	button.nextElementSibling = submenu;
+	menu.handleMenuExpand({ currentTarget: button, target: element('span') });
+	assert.equal(button.attrs['aria-expanded'], 'true');
+	assert.equal(submenu.inert, false);
+	assert.equal(submenu.style.display, 'block');
 });
 
 test('nested LuCI tabs stay in parent-to-child order', () => {
@@ -194,7 +203,7 @@ let http = { urlencode: value => replace(replace(replace(value, ' ', '%20'), '#'
 `;
 	const backgrounds = runUcodeSnippet(
 		'ucode/template/themes/argon/login_background.ut',
-		'const imageTypes', '\n\tfunction selectBackground',
+		'const imageTypes', '\n\tfunction selectLocalBackground',
 		setup, 'fetchMedia("/www/luci-static/argon/background", "/luci-static/argon/background/")'
 	);
 	assert.deepEqual(backgrounds.map(bg => bg.url), [
@@ -223,17 +232,16 @@ function fetchMedia() {
 function randomIndex() { return 0; }
 `;
 	const file = 'ucode/template/themes/argon/login_background.ut';
-	const start = 'function selectBackground';
-	const end = '\n\tconst bgArry';
-	const selected = settings => runUcodeSnippet(file, start, end, setup, 'selectBackground("/luci-static/argon/background/")', settings);
-	assert.equal(selected({ url: 'https://example.com/image.jpg' }).bgUrl, 'https://example.com/image.jpg');
-	for (const invalid of ['http://example.com/image.jpg', 'https://example.com/a b.jpg', 'javascript:alert(1)', 'https://example.com/"bad'])
-		assert.equal(selected({ url: invalid }).bgUrl, '/luci-static/argon/background/local.jpg');
-	assert.equal(selected({ url: 'http://example.com/image.jpg', empty: true }).bgUrl, '/luci-static/argon/img/bg1.webp');
-	assert.deepEqual(selected({ url: '', video: true }), {
-		bgUrl: '/luci-static/argon/background/local.mp4',
-		backgroundType: 'Video',
-		mimeType: 'video/mp4'
+	const start = 'function selectLocalBackground';
+	const end = '\n\tconst localBackground';
+	const select = settings => runUcodeSnippet(file, start, end, setup,
+		'onlineBackground() || selectLocalBackground("/luci-static/argon/background/")', settings);
+	assert.equal(select({ url: 'https://example.com/image.jpg' }).url, 'https://example.com/image.jpg');
+	for (const url of ['http://example.com/image.jpg', 'https://example.com/a b.jpg', 'javascript:alert(1)', 'https://example.com/"bad'])
+		assert.equal(select({ url }).url, '/luci-static/argon/background/local.jpg');
+	assert.equal(select({ url: '', empty: true }).url, '/luci-static/argon/img/bg1.webp');
+	assert.deepEqual(select({ url: '', video: true }), {
+		url: '/luci-static/argon/background/local.mp4', mime: 'video/mp4'
 	});
 });
 
@@ -278,7 +286,7 @@ test('Unsplash falls back on missing key or failed fetch', () => {
 uci() {
   case "$*" in
     *online_wallpaper) printf '%s\\n' "$TEST_WALLPAPER" ;;
-    *use_api_key) [ -n "$TEST_KEY" ] && printf '%s\\n' "$TEST_KEY" ;;
+    *unsplash_api_key) [ -n "$TEST_KEY" ] && printf '%s\\n' "$TEST_KEY" ;;
     *use_exact_resolution) printf '1\\n' ;;
   esac
 }

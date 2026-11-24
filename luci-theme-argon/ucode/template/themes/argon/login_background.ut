@@ -32,49 +32,44 @@
 		return backgroundTable;
 	}
 
-	function selectBackground(themeDir) {
-		let bgUrl = media + "/img/bg1.webp";
-		let backgroundType = "Image";
-		let mimeType = "";
+	function selectLocalBackground(themeDir) {
+		const mediaFiles = fetchMedia("/www" + themeDir, themeDir);
+		if (!length(mediaFiles))
+			return { url: media + '/img/bg1.webp' };
 
-		if (fs.access("/etc/config/argon")) {
-			let online_wallpaper = cfg.get_first('argon', 'global', 'online_wallpaper') ?? (cfg.get_first('argon', 'global', 'bing_background') == '1' ? 'bing' : null);
-			if (online_wallpaper && online_wallpaper != "none") {
-				const picurl = ubus.call("luci.argon_wallpaper", "get_url") ?? {};
-				if (type(picurl?.url) == 'string' && match(picurl.url, /^https:\/\/[^[:space:]"'<>]+$/)) {
-					bgUrl = picurl.url;
-					if (online_wallpaper == 'bing') {
-						const bing = match(bgUrl, /^https:\/\/(www\.bing\.com|cn\.bing\.com)(\/th\?id=.+)$/);
-						if (bing) {
-							const mirror = bing[1] == 'www.bing.com' ? 'cn.bing.com' : 'www.bing.com';
-							return {bgUrl, backgroundType, mimeType, mirrorUrl: 'https://' + mirror + bing[2]};
-						}
-					}
-					return {bgUrl, backgroundType, mimeType};
-				}
-			}
-		}
-
-		let background = fetchMedia("/www" + themeDir, themeDir);
-		if ( length(background) > 0 ) {
-			let currentBg = background[randomIndex(length(background))];
-			bgUrl = currentBg.url;
-			if (index(videoTypes, " " + currentBg.type + " ") != -1) {
-				backgroundType = "Video";
-				mimeType = "video/" + currentBg.type;
-			}
-		}
-
-		return {bgUrl, backgroundType, mimeType};
+		const file = mediaFiles[randomIndex(length(mediaFiles))];
+		const video = index(videoTypes, " " + file.type + " ") != -1;
+		return { url: file.url, mime: video ? 'video/' + file.type : null };
 	}
 
-	const bgArry = selectBackground(media + '/background/');
+	function onlineBackground() {
+		if (!fs.access('/etc/config/argon'))
+			return null;
+		const source = cfg.get_first('argon', 'global', 'online_wallpaper') ??
+			(cfg.get_first('argon', 'global', 'bing_background') == '1' ? 'bing' : null);
+		if (!source || source == 'none')
+			return null;
+
+		const url = ubus.call('luci.argon_wallpaper', 'get_cached_url')?.url;
+		if (type(url) != 'string' || !match(url, /^https:\/\/[^[:space:]"'<>]+$/))
+			return null;
+
+		const bing = source == 'bing' && match(url, /^https:\/\/(www\.bing\.com|cn\.bing\.com)(\/th\?id=.+)$/);
+		return { url, mirror: bing ? 'https://' + (bing[1] == 'www.bing.com' ? 'cn.bing.com' : 'www.bing.com') + bing[2] : null };
+	}
+
+	const localBackground = selectLocalBackground(media + '/background/');
+	const online = onlineBackground();
 %}
-	{% if ( bgArry.backgroundType == "Video" ): %}
+<div class="argon-background-layer">
+	{% if (online): %}
+	<template id="argon-local-background">
+	{% endif %}
+	{% if (localBackground.mime): %}
 	<!-- Video Player Start -->
 	<div class="video argon-background-media">
 		<video loop muted playsinline id="video" poster="{{ media }}/img/bg1.webp">
-			<source src="{{ entityencode(bgArry.bgUrl, true) }}" type="{{ bgArry.mimeType }}">
+			<source src="{{ entityencode(localBackground.url, true) }}" type="{{ localBackground.mime }}">
 		</video>
 	</div>
 	<div class="background-controls argon-background-controls">
@@ -137,8 +132,22 @@
 	<!-- Video Player End -->
 	{% else %}
 	<!-- Image Background Start -->
-	<div class="main-bg argon-background-media" id="main-bg"><img src="{{ entityencode(bgArry.bgUrl, true) }}"
-		{% if (bgArry.mirrorUrl): %}data-mirror="{{ entityencode(bgArry.mirrorUrl, true) }}"{% endif %}
-		data-fallback="{{ media }}/img/bg1.webp" onerror="if(this.dataset.mirror){this.src=this.dataset.mirror;delete this.dataset.mirror;}else{this.onerror=null;this.src=this.dataset.fallback;}" alt=""></div>
+	<div class="main-bg argon-background-media" id="main-bg"><img src="{{ entityencode(localBackground.url, true) }}"
+		data-fallback="{{ media }}/img/bg1.webp" onerror="this.onerror=null;this.src=this.dataset.fallback" alt=""></div>
 	<!-- Image Background End -->
 	{% endif %}
+	{% if (online): %}
+	</template>
+	<div class="main-bg argon-background-media" id="main-bg"><img src="{{ entityencode(online.url, true) }}"
+		{% if (online.mirror): %}data-mirror="{{ entityencode(online.mirror, true) }}"{% endif %}
+		onerror="if (this.dataset.mirror) {
+			const mirror = this.dataset.mirror;
+			delete this.dataset.mirror;
+			this.src = mirror;
+		} else {
+			const fallback = document.getElementById('argon-local-background');
+			this.parentNode.replaceWith(document.importNode(fallback.content, true));
+			fallback.remove();
+		}" alt=""></div>
+	{% endif %}
+</div>

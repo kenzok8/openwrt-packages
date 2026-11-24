@@ -205,8 +205,10 @@ test('integrated defaults keep local wallpapers and expose a masked Unsplash key
  const state = fixture();
  await state.render();
  assert.equal(state.button('online_wallpaper').default, 'none');
- assert.equal(state.button('use_api_key').password, true);
- assert.deepEqual(state.button('use_api_key').dependency, ['online_wallpaper', 'unsplash']);
+ assert.equal(state.button('unsplash_api_key').password, true);
+ assert.equal(state.button('unsplash_api_key').retain, true);
+ assert.equal(state.button('unsplash_api_key').rmempty, true);
+ assert.deepEqual(state.button('unsplash_api_key').dependency, ['online_wallpaper', 'unsplash']);
  for (const name of ['blur', 'blur_dark'])
   assert.equal(state.button(name).datatype, 'and(ufloat,range(0,100))');
 });

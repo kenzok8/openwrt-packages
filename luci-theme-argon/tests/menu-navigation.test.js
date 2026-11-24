@@ -11,29 +11,38 @@ function fixture() {
 	function element() {
 		const classes = new Set();
 		return {
-			attributes: {}, listeners: {}, disabled: false, focused: false,
+			attributes: {}, listeners: {}, style: {}, disabled: false, focused: false,
 			classList: {
 				add: name => classes.add(name),
 				remove: name => classes.delete(name),
-				contains: name => classes.has(name)
+				contains: name => classes.has(name),
+				toggle: (name, on) => on ? classes.add(name) : classes.delete(name)
 			},
+			removeAttribute(name) { delete this.attributes[name]; },
 			setAttribute(name, value) { this.attributes[name] = value; },
 			addEventListener(type, handler) { (this.listeners[type] ||= []).push(handler); },
 			click() { for (const handler of this.listeners.click || []) handler({ currentTarget: this }); },
-			focus() { this.focused = true; }
+			focus() { document.activeElement = this; this.focused = true; }
 		};
 	}
 
 	const button = element(), sidebar = element(), mask = element(), content = element();
-	const nodes = { '.showSide': button, '#mainmenu': sidebar, '.darkMask': mask, '.main-right': content };
+	const close = element(), header = element(), mobile = element();
+	mobile.matches = true;
+	sidebar.contains = node => node === close;
+	const firstLink = element();
+	sidebar.querySelector = () => firstLink;
+	const nodes = { '.sidebar-close': close, '.showSide': button, '#mainmenu': sidebar, '.darkMask': mask, '.main-right': content };
 	const document = {
+		body: element(),
 		listeners: {},
+		querySelectorAll: () => [header],
 		querySelector: selector => nodes[selector] || null,
 		addEventListener(type, handler) { (this.listeners[type] ||= []).push(handler); }
 	};
 	let finishLoad;
 	const loaded = new Promise(resolve => { finishLoad = resolve; });
-	const menu = new Function('baseclass', 'ui', 'L', 'document', source)(
+	const menu = new Function('baseclass', 'ui', 'L', 'document', 'window', source)(
 		{ extend: object => object },
 		{
 			menu: { load: () => loaded },
@@ -43,12 +52,12 @@ function fixture() {
 			bind: (fn, context) => fn.bind(context),
 			env: { dispatchpath: ['admin', 'status', 'overview'] }
 		},
-		document
+		document, { matchMedia: () => mobile }
 	);
 	let mainRenders = 0, tabRenders = 0;
 	menu.renderModeMenu = () => { mainRenders++; };
 	menu.renderTabMenu = () => { tabRenders++; };
-	return { menu, button, sidebar, mask, content, document, loaded, finishLoad,
+	return { menu, button, close, firstLink, header, mobile, sidebar, mask, content, document, loaded, finishLoad,
 		mainRenders: () => mainRenders, tabRenders: () => tabRenders };
 }
 
@@ -57,6 +66,8 @@ function assertOpen(f, open) {
 		assert.equal(node.classList.contains('active'), open);
 	assert.equal(f.button.attributes['aria-expanded'], String(open));
 	assert.equal(f.button.disabled, false);
+	assert.equal(f.sidebar.inert, f.mobile.matches && !open);
+	assert.equal(!!f.header.inert, open);
 }
 
 test('the first sidebar tap is preserved while menu data is still loading', async () => {
@@ -103,7 +114,41 @@ test('rendering tabs again does not duplicate sidebar events, and Escape restore
 	f.button.click();
 	assertOpen(f, true);
 	for (const handler of f.document.listeners.keydown)
-		handler({ key: 'Escape' });
+		handler({ key: 'Escape', preventDefault() {} });
 	assertOpen(f, false);
 	assert.equal(f.button.focused, true);
+});
+
+test('resizing an open drawer releases the page and restores desktop navigation', () => {
+	const f = fixture();
+	f.menu.__init__();
+	assertOpen(f, false);
+	f.button.click();
+	assert.equal(f.document.activeElement, f.close);
+	assert.equal(f.sidebar.attributes['aria-modal'], 'true');
+	f.mobile.matches = false;
+	f.mobile.listeners.change[0]();
+	assertOpen(f, false);
+	assert.equal(f.sidebar.attributes['aria-modal'], undefined);
+});
+
+test('a LuCI modal takes focus and releases the drawer before Escape', () => {
+	const f = fixture();
+	f.menu.__init__();
+	f.button.click();
+	f.document.body.classList.add('modal-overlay-active');
+	f.document.activeElement = { closest: selector => selector === '#modal_overlay' };
+	f.document.listeners.focusin[0]({ target: f.document.activeElement });
+	assertOpen(f, false);
+	f.document.listeners.keydown[0]({ key: 'Escape', preventDefault: () => assert.fail('Escape belongs to LuCI') });
+	assert.notEqual(f.document.activeElement, f.button);
+});
+
+test('widening a closed drawer transfers focus from the mobile trigger to desktop navigation', () => {
+	const f = fixture();
+	f.menu.__init__();
+	f.button.focus();
+	f.mobile.matches = false;
+	f.mobile.listeners.change[0]();
+	assert.equal(f.document.activeElement, f.firstLink);
 });

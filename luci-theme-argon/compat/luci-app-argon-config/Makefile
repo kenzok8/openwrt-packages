@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-argon-config
-PKG_VERSION:=3.1.4
-PKG_RELEASE:=20261113
+PKG_VERSION:=3.2.0
+PKG_RELEASE:=20261124
 PKG_LICENSE:=Apache-2.0
 
 LUCI_TITLE:=Argon configuration compatibility package

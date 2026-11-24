@@ -40,20 +40,10 @@
 	{% include('themes/' + theme + '/login_background', { cfg: cfg }) %}
 	{% endif %}
 	<div class="main">
-		<div class="main-left" id="mainmenu" style="display:none">
-			<div class="sidenav-header d-flex align-items-center">
+		<div class="main-left" role="navigation" id="mainmenu" aria-label="{{ entityencode(_('Navigation'), true) }}" style="display:none">
+			<div class="sidenav-header">
 				<a class="brand" href="#">{{ hostname }}</a>
-				<div class="ml-auto">
-					<!-- Sidenav toggler -->
-					<div class="sidenav-toggler d-none d-xl-block active" data-action="sidenav-unpin"
-						data-target="#sidenav-main">
-						<div class="sidenav-toggler-inner">
-							<i class="sidenav-toggler-line"></i>
-							<i class="sidenav-toggler-line"></i>
-							<i class="sidenav-toggler-line"></i>
-						</div>
-					</div>
-				</div>
+				<button type="button" class="sidebar-close" aria-label="{{ entityencode(_('Close'), true) }}"></button>
 			</div>
 		</div>
 		<div class="main-right">

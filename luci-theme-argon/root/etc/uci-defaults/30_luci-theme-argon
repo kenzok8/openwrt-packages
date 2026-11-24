@@ -40,6 +40,19 @@ if [ -n "$old_bing" ]; then
 	fi
 	uci -q delete 'argon.@global[0].bing_background'
 fi
+# The old field served two providers. Keep an unassigned value offline when
+# its owner cannot be established, even if the wallpaper source later changes.
+if uci -q get 'argon.@global[0].use_api_key' >/dev/null; then
+	key_option=legacy_wallpaper_api_key
+	case "$(uci -q get 'argon.@global[0].online_wallpaper')" in
+		unsplash|unsplash_*)
+			uci -q get 'argon.@global[0].unsplash_api_key' >/dev/null || key_option=unsplash_api_key
+			;;
+	esac
+	if ! uci -q get "argon.@global[0].$key_option" >/dev/null; then
+		uci rename "argon.@global[0].use_api_key=$key_option" || exit 1
+	fi
+fi
 # Missing selectors identify old installations; preserve their separate choices.
 if ! uci -q get 'argon.@global[0].dark_primary_mode' >/dev/null; then
 	if [ -n "$(uci -q get 'argon.@global[0].dark_primary')" ]; then

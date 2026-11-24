@@ -562,3 +562,11 @@ msgstr "Pausar el vídeo de fondo"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "Saltar al contenido"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "Cerrar"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "Navegación"

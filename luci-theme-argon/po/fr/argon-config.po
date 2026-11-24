@@ -560,3 +560,11 @@ msgstr "Mettre la vidéo d’arrière-plan en pause"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "Aller au contenu"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "Fermer"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "Navigation"

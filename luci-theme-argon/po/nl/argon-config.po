@@ -560,3 +560,11 @@ msgstr "Achtergrondvideo pauzeren"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "Naar inhoud springen"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "Sluiten"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "Navigatie"

@@ -560,3 +560,11 @@ msgstr "背景動画を一時停止"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "コンテンツへスキップ"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "閉じる"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "ナビゲーション"

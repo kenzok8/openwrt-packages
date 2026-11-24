@@ -2,6 +2,8 @@
 
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const fs = require('node:fs');
+const { createHash } = require('node:crypto');
 const { test } = require('node:test');
 const createRenderer = require('./helpers/render-templates');
 
@@ -21,12 +23,16 @@ test('application and login compose the same head with their own resource bounda
 			assert.match(html, /data-argon-mode="dark"/);
 			assert.match(html, /name="theme-color" content="#abcdef"/);
 			assert.match(html, /--light-primary: #123456/);
+			assert.match(html, /--light-on-primary: #ffffff/);
 			assert.match(html, /--blur-radius-light:0px/);
 			assert.match(html, /--blur-opacity-light:0.7/);
-			assert.ok(html.indexOf('/css/cascade.css') < html.indexOf('/extra.css'));
+			assert.match(html, /\/css\/base\.css/);
+			assert.ok(html.indexOf('/css/base.css') < html.indexOf('/extra.css'));
 			assert.ok(html.indexOf('/extra.css') < html.indexOf('.fixture { color: red; }'));
 			assert.match(html, /var luciLocation =/);
 			if (entry === 'application') {
+				assert.ok(html.indexOf('/css/admin.css') > html.indexOf('/css/base.css'));
+				assert.ok(html.indexOf('/css/admin.css') < html.indexOf('/extra.css'));
 				assert.match(html, /name="argon-menu-icons" content="default.svg status.svg"/);
 				assert.match(html, /\/luci\.js\?v=test-build/);
 				assert.match(html, /L\.require\('menu-argon'\)/);
@@ -34,7 +40,7 @@ test('application and login compose the same head with their own resource bounda
 				assert.match(html, /id="argon-appearance" hidden/);
 				assert.match(html, /L\.require\('argon-appearance'\)/);
 			} else {
-				assert.doesNotMatch(html, /argon-menu-icons|argon-appearance|\/luci\.js|\/cbi\.js|L\.require/);
+				assert.doesNotMatch(html, /admin\.css|argon-menu-icons|argon-appearance|\/luci\.js|\/cbi\.js|L\.require/);
 			}
 		}
 		assert.equal((renderer.render('headers-twice').html.match(/<!DOCTYPE html>/g) || []).length, 1);
@@ -60,17 +66,41 @@ test('first-child entry routes identify the resolved page and retain wildcard re
 test('stylesheet URLs track source rebuilds and preserved timestamps on application and login pages', () => {
 	const renderer = createRenderer(templates);
 	try {
-		for (const entry of ['application', 'sysauth']) {
-			const stylesheet = stylesheetStat => renderer.render(entry, { stylesheetStat }).html
-				.match(/href="([^"]*\/css\/cascade\.css[^"]*)"/)[1];
-			const original = { mtime: 1792993553, ctime: 1792993553, size: 282004 };
-			const first = stylesheet(original);
-			assert.equal(first, '/luci-static/argon/css/cascade.css?v=1792993553-1792993553-282004');
-			assert.equal(stylesheet(original), first);
-			assert.notEqual(stylesheet({ ...original, mtime: original.mtime + 1 }), first);
-			assert.notEqual(stylesheet({ ...original, ctime: original.ctime + 1 }), first);
-			assert.notEqual(stylesheet({ ...original, size: original.size + 1 }), first);
-			assert.equal(stylesheet(null), '/luci-static/argon/css/cascade.css?v=0');
+		const base = '/www/luci-static/argon/css/base.css';
+		const admin = '/www/luci-static/argon/css/admin.css';
+		const original = { mtime: 10, ctime: 11, size: 12 };
+		const links = (entry, stats, extra = {}) => [...renderer.render(entry, {
+			stylesheetStats: stats, ...extra
+		}).html.matchAll(/href="[^"]*\/css\/([^"]+\.css\?v=[^"]+)"/g)].map(m => m[1]);
+		const stats = { [base]: original, [admin]: { ...original, size: 50 } };
+		assert.deepEqual(links('sysauth', stats), ['base.css?v=10-11-12']);
+		assert.deepEqual(links('application', stats), ['base.css?v=10-11-12', 'admin.css?v=10-11-50']);
+		assert.deepEqual(links('sysauth', stats, { auth_html: '<div>Plugin UI</div>' }), links('application', stats));
+		for (const field of ['mtime', 'ctime', 'size']) {
+			const changed = { ...stats, [base]: { ...original, [field]: 90 } };
+			assert.notEqual(links('sysauth', changed)[0], links('sysauth', stats)[0]);
+			assert.equal(links('application', changed)[1], links('application', stats)[1]);
+		}
+		assert.deepEqual(links('sysauth', {}), ['base.css?v=0']);
+	} finally { renderer.close(); }
+});
+
+test('standalone stylesheet imports follow the contents of each compiled sheet', () => {
+	const css = path.join(__dirname, '../htdocs/luci-static/argon/css');
+	const imports = ['base', 'admin'].map(name => {
+		const content = fs.readFileSync(path.join(css, name + '.css'));
+		const revision = createHash('sha256').update(content).digest('hex').slice(0, 16);
+		return `@import "${name}.css?v=${revision}";`;
+	});
+	assert.deepEqual(fs.readFileSync(path.join(css, 'cascade.css'), 'utf8').trim().split('\n'), imports);
+});
+
+test('LuCI module URLs are versioned for both LuCI and Argon independently', () => {
+	const renderer = createRenderer(templates);
+	try {
+		for (const scriptVersion of ['f1a2b3c4', '99887766']) {
+			const { html } = renderer.render('application', { scriptVersion });
+			assert.ok(html.includes('/luci.js?v=test-build-argon-' + scriptVersion + '"'));
 		}
 	} finally { renderer.close(); }
 });
@@ -150,6 +180,32 @@ test('anonymous login renders the alternate Bing image origin for old and new ca
 		});
 		assert.match(html, /src="https:\/\/images\.unsplash\.com\/example\.jpg"/);
 		assert.doesNotMatch(html, /data-mirror=/);
+	} finally { renderer.close(); }
+});
+
+test('a failed online image activates the selected local image or video after the Bing mirror', () => {
+	const renderer = createRenderer(templates);
+	try {
+		for (const file of ['local image.webp', 'local video.mp4']) {
+			const { html } = renderer.render('sysauth', {
+				settings: { online_wallpaper: 'bing' }, backgrounds: [file],
+				wallpaper: { url: 'https://www.bing.com/th?id=Missing' }
+			});
+			const fallback = html.match(/<template id="argon-local-background">([\s\S]*?)<\/template>/)[1];
+			assert.ok(fallback.includes('/background/' + encodeURIComponent(file)));
+			const online = html.slice(html.indexOf('</template>'));
+			const onerror = new Function('document', online.match(/onerror="([^"]+)"/)[1]);
+			const template = { content: fallback, remove() {} };
+			const mirror = 'https://cn.bing.com/th?id=Missing';
+			let replacement;
+			const img = { dataset: { mirror }, parentNode: { replaceWith(node) { replacement = node; } } };
+			const document = { getElementById: () => template, importNode: content => content };
+			onerror.call(img, document);
+			assert.equal(img.src, mirror);
+			assert.equal(replacement, undefined);
+			onerror.call(img, document);
+			assert.equal(replacement, fallback);
+		}
 	} finally { renderer.close(); }
 });
 

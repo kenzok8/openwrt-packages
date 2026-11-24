@@ -3,6 +3,10 @@
 // login_background.ut marks only the wallpaper markup with argon-background-*,
 // so ordinary view elements reusing main-bg or video keep their own styles.
 
+.argon-background-layer {
+    display: contents;
+}
+
 // Wallpaper stays behind the whole page when a short viewport needs scrolling.
 .argon-background-media {
     position: fixed;
@@ -112,8 +116,7 @@ body.argon-wallpaper {
         background-color: transparent;
     }
 
-    // The header text is always --text-on-accent, which no translucent light
-    // surface can carry, so the header keeps its opaque surface. Dropping the
+    // The header keeps the opaque surface used to choose its text color. Dropping the
     // blur also keeps the header out of the stacking business: with a
     // backdrop-filter (or a z-index) on the header, the container's glass
     // context paints over header dropdowns such as the theme switcher.

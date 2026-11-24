@@ -7,9 +7,11 @@
 # Default to Bing for the legacy bing_background configuration.
 WEB_PIC_SRC="$(uci -q get argon.@global[0].online_wallpaper || echo 'bing')"
 
-# API_KEY is used by Unsplash and Wallhaven when configured.
 # EXACT_RESO is used for exact resolution by default, if not use 'atleast' instead of 'resolutions'
-API_KEY="$(uci -q get argon.@global[0].use_api_key)"
+case "$WEB_PIC_SRC" in
+	unsplash|unsplash_*) API_KEY="$(uci -q get 'argon.@global[0].unsplash_api_key')" ;;
+	wallhaven_*) API_KEY="$(uci -q get 'argon.@global[0].wallhaven_api_key')" ;;
+esac
 EXACT_RESO="$(uci -q get argon.@global[0].use_exact_resolution || echo '1')"
 
 CACHE="/var/run/argon_${WEB_PIC_SRC}.url"
@@ -75,46 +77,53 @@ fetch_pic_url() {
 	esac
 }
 
-try_update() {
-	local lock="$WRLOCK"
-	exec 9>"$lock"
-
-	if flock -n 9 >"/dev/null" 2>&1; then
-		local picurl="$(fetch_pic_url)"
-		if [ -n "$picurl" ]; then
-
-			# below is quirk fix for all browsers
-			# for some weird reason on first load, wallhaven images needs to be
-			# download or browsed first before it can be shown as a background image
-			# if not, browser only displays a blank image
-			# NOTE: only happens to Wallhaven.cc source images
-			case "$WEB_PIC_SRC" in
-			wallhaven*) fetch_url "${picurl}" > /dev/null ;;
-			esac
-
-			echo "$picurl" | tee "$CACHE"
-		else
-			# An expired URL may no longer load. Mark a short failure window
-			# and let the login page select a local background instead.
-			: > "$CACHE"
-		fi
-		flock -u 9 >"/dev/null" 2>&1
-	elif [ -s "$CACHE" ]; then
-		cat "$CACHE"
-	fi
+recent() {
+	[ -f "$1" ] || return 1
+	local modified
+	modified="$(date -r "$1" '+%s' 2>/dev/null)" || return 1
+	[ "$(($(date '+%s') - modified))" -le "$2" ]
 }
+
+cache_current() {
+	local ttl=120
+	[ ! -s "$CACHE" ] || ttl=43200
+	recent "$CACHE" "$ttl"
+}
+
+refresh_cache() (
+	exec 9>"$WRLOCK" || exit 1
+	flock -n 9 || exit 0
+	# Another request may have populated the cache before we acquired the lock.
+	cache_current && exit 0
+
+	local picurl
+	picurl="$(fetch_pic_url)"
+	if [ -n "$picurl" ]; then
+		# Warm Wallhaven images before publishing their URL.
+		case "$WEB_PIC_SRC" in
+			wallhaven*) fetch_url "$picurl" > /dev/null ;;
+		esac
+		printf '%s\n' "$picurl" > "$CACHE.tmp" || exit 1
+	else
+		# Stop serving the stale URL once the refresh has failed.
+		: > "$CACHE.tmp" || exit 1
+	fi
+	mv -f "$CACHE.tmp" "$CACHE"
+)
 
 case "$1" in
 "list")
 	json_init
 	json_add_object "get_url"
 	json_close_object
+	json_add_object "get_cached_url"
+	json_close_object
 	json_dump
 	json_cleanup
 	;;
 "call")
 	case "$2" in
-	"get_url")
+	"get_url"|"get_cached_url")
 		read -r input
 		case "$WEB_PIC_SRC" in
 		unsplash|unsplash_*)
@@ -127,26 +136,17 @@ case "$1" in
 			fi
 			;;
 		esac
-		if [ -f "$CACHE" ]; then
-			idle_t="$(($(date '+%s') - $(date -r "$CACHE" '+%s' 2>/dev/null || echo '0')))"
-			if [ -s "$CACHE" ]; then
-				if [ "$idle_t" -le "43200" ]; then
-					json_init
-					json_add_string "url" "$(cat "$CACHE")"
-					json_dump
-					json_cleanup
-					exit 0
-				fi
+		if ! cache_current; then
+			if [ "$2" = get_cached_url ]; then
+				# rpcd must be able to collect this reply while the worker is downloading.
+				(trap '' HUP; refresh_cache) </dev/null >/dev/null 2>&1 &
 			else
-				if [ "$idle_t" -le 120 ]; then
-					echo '{ "url": "" }'
-					exit 0
-				fi
+				refresh_cache
 			fi
 		fi
 
 		json_init
-		json_add_string "url" "$(try_update)"
+		json_add_string "url" "$(cat "$CACHE" 2>/dev/null)"
 		json_dump
 		json_cleanup
 		exit 0

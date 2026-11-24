@@ -9,7 +9,7 @@ const ucode = process.env.UCODE_BIN || 'ucode';
 const args = ['-L', path.join(path.dirname(ucode), '*.so'), '-L', path.resolve(__dirname, '../root/usr/share/ucode/*.uc')];
 function evaluate(expression, values) {
 	return JSON.parse(execFileSync(ucode, [...args, '-Dvalues=' + JSON.stringify(values), '-e',
-		'import { dark_palette, normalize_hex, appearance_modes } from "luci.argon-palette"; print(sprintf("%J", ' + expression + '));'], { encoding: 'utf8' }));
+		'import { dark_palette, normalize_hex, appearance_modes, on_primary } from "luci.argon-palette"; print(sprintf("%J", ' + expression + '));'], { encoding: 'utf8' }));
 }
 
 // Independently measure the final, quantized sRGB values emitted to the page.
@@ -47,6 +47,13 @@ test('generated dark roles remain readable across saturated, neutral and extreme
 		const rgb = palettes[index][0][role].slice(1).match(/../g);
 		assert.equal(new Set(rgb).size, 1, 'neutral gained a hue');
 	}
+});
+
+test('light foregrounds keep the configured fill readable, including shorthand colors', () => {
+	const colors = ['#5e72e4', '#fc0', '#fff', '#000', '#777', '#345'];
+	const pairs = evaluate('map(values, c => [normalize_hex(c), on_primary(c)])', colors);
+	for (const [fill, text] of pairs)
+		assert.ok(contrast(fill, text) >= 4.5, fill);
 });
 
 test('color input normalization rejects CSS injection and handles short and mixed-case HEX', () => {

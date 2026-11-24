@@ -174,10 +174,11 @@ return view.extend({
 		o.depends('main_background', '1');
 		o.retain = true;
 
-		o = s.option(form.Value, 'use_api_key', _('Unsplash API access key'),
+		o = s.option(form.Value, 'unsplash_api_key', _('Unsplash API access key'),
 			_('Required when using Unsplash wallpapers.'));
 		o.password = true;
 		o.depends('online_wallpaper', 'unsplash');
+		o.retain = true;
 		o.rmempty = true;
 
 		o = s.option(form.ListValue, 'mode', _('Theme mode'));

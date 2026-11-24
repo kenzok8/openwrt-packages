@@ -562,3 +562,11 @@ msgstr "暫停背景影片"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "跳至主要內容"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "關閉"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "導覽"

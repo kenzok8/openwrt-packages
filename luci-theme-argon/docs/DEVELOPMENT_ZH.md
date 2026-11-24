@@ -29,7 +29,7 @@ make package/luci-theme-argon/compile V=s
 
 | 位置 | 用途 |
 | --- | --- |
-| `less/cascade.less` | 样式入口及导入顺序 |
+| `less/base.less`, `less/admin.less`, `less/cascade.less` | 样式入口及导入顺序 |
 | `less/theme.less` | 亮暗配色和语义颜色 token |
 | `less/spacing.less`、`less/shape.less` | 间距及圆角 |
 | `less/components/` | 通用控件、表格、标签页、弹窗、外观菜单 |
@@ -48,10 +48,10 @@ make package/luci-theme-argon/compile V=s
 
 ```sh
 npm install --global less@4.1.3
-lessc less/cascade.less htdocs/luci-static/argon/css/cascade.css
+sh tools/build-theme-assets.sh
 ```
 
-亮暗色共用一份样式。`theme.less` 中 `@theme-palette` 每行以 `角色: 亮色, 暗色;` 定义颜色；单值表示两种模式共用。文字、背景、边框和状态使用各自语义 token；旧变量别名仅用于 LuCI 兼容。
+亮暗色共用 `base.css`。后台和自定义认证界面额外加载 `admin.css`。两个文件分别更新缓存版本，独立入口 `cascade.css` 使用各文件的内容哈希加载完整样式。修改主题 JavaScript 后也需运行上述命令，更新 LuCI 模块缓存使用的 `js-version`。`theme.less` 中 `@theme-palette` 每行以 `角色: 亮色, 暗色;` 定义颜色；单值表示两种模式共用。文字、背景、边框和状态使用各自语义 token；旧变量别名仅用于 LuCI 兼容。
 
 导入顺序为 token、基础控件、登录与后台布局、共享组件、页面适配、响应式规则。通用行为放入对应组件模块，插件选择器放在 `pages/`；`page-fix.less` 只维护导入索引。
 

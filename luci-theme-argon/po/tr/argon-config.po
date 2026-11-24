@@ -560,3 +560,11 @@ msgstr "Arka plan videosunu duraklat"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "İçeriğe atla"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "Kapat"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "Navigasyon"

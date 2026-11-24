@@ -57,12 +57,31 @@
         }
     }
 
+    .sidebar-close {
+        display: none;
+    }
+
+    .nav > li > button.menu {
+        width: calc(100% - 1rem);
+        height: auto;
+        border: 0;
+        background: transparent;
+        color: var(--menu-color);
+        font: inherit;
+        text-align: start;
+    }
+
+    :is(.nav button, .sidebar-close):focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: -2px;
+    }
+
     // Navigation Menu
     .nav {
         margin-top: 0.5rem;
 
         // Top-level navigation links
-        &>li>a:first-child {
+        &>li>:is(a, button):first-child {
             display: block;
             position: relative;
             margin: 0.1rem 0.5rem;
@@ -341,7 +360,7 @@ header {
     position: relative;
     width: 100%;
     padding: 0;
-    color: var(--text-on-accent);
+    color: var(--header-color);
 
     // Primary background modifier
     &.bg-primary {
@@ -385,7 +404,7 @@ header {
                 .showSide {
                     flex: 0 0 auto;
                     font-size: 1.4rem;
-                    color: var(--text-on-accent);
+                    color: var(--header-color);
                     border: 0;
                     background: none;
                     cursor: pointer;
@@ -410,7 +429,7 @@ header {
                     white-space: nowrap;
                     font-size: 1.5rem;
                     font-family: "TypoGraphica";
-                    color: var(--text-on-accent);
+                    color: var(--header-color);
                     text-decoration: none;
                     cursor: default;
                     vertical-align: text-bottom;

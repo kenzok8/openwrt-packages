@@ -40,6 +40,9 @@ elif op == 'add':
 elif op == 'set':
     key, value = args[0].split('=', 1)
     state[key.split('.')[-1]] = value
+elif op == 'rename':
+    key, new = args[0].split('=', 1)
+    state[new] = state.pop(key.split('.')[-1])
 elif op == 'delete':
     state.pop(args[0].split('.')[-1], None)
 elif op != 'commit':
@@ -92,9 +95,27 @@ if op != 'get': p.write_text(json.dumps(state))
         original = dict(login_style='centered', primary='#abcdef', blur='0',
                         transparency='0', online_wallpaper='unsplash', use_api_key='fixture-key')
         state = self.initialize(original)
+        self.assertEqual(state['unsplash_api_key'], original.pop('use_api_key'))
+        self.assertNotIn('use_api_key', state)
         for key, value in original.items():
             self.assertEqual(state[key], value)
         self.assertEqual(self.initialize(), state)
+
+    def test_ambiguous_old_keys_are_preserved_offline_across_provider_changes(self):
+        for source in ('wallhaven_123', 'wallhaven', 'bing', 'none'):
+            with self.subTest(source=source):
+                state = self.initialize(dict(online_wallpaper=source, use_api_key='old-key'))
+                self.assertEqual(state['legacy_wallpaper_api_key'], 'old-key')
+                self.assertNotIn('use_api_key', state)
+                state['online_wallpaper'] = 'unsplash'
+                self.assertEqual(self.initialize(state), state)
+                self.assertNotIn('unsplash_api_key', state)
+                self.assertNotIn('wallhaven_api_key', state)
+        state = self.initialize(dict(online_wallpaper='unsplash_123', use_api_key='old-key',
+                                     unsplash_api_key='new-key', wallhaven_api_key='other-key'))
+        self.assertEqual(state['unsplash_api_key'], 'new-key')
+        self.assertEqual(state['wallhaven_api_key'], 'other-key')
+        self.assertEqual(state['legacy_wallpaper_api_key'], 'old-key')
 
     def test_old_bing_switch_migrates_without_overwriting_current_source(self):
         for old, source in [('0', 'none'), ('1', 'bing')]:

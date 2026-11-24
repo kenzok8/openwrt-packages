@@ -560,3 +560,11 @@ msgstr "Приостановить фоновое видео"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "Перейти к содержимому"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "Закрыть"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "Навигация"

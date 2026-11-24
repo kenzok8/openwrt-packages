@@ -18,9 +18,9 @@
 
 {# Shared document head. Callers supply hostname and is_login explicitly. -#}
 {%
-	import { access, lsdir, lstat, stat } from 'fs';
+	import { access, lsdir, lstat, readfile, stat } from 'fs';
 	import { cursor } from 'uci';
-	import { dark_palette, appearance_modes } from 'luci.argon-palette';
+	import { dark_palette, appearance_modes, on_primary } from 'luci.argon-palette';
 
 	let cfg = cursor();
 	http.prepare_content('text/html; charset=UTF-8');
@@ -83,15 +83,21 @@
 	{%
 		// Source builds can change CSS without changing the package version.
 		// ctime also catches replacements which preserve mtime and file size.
-		const stylesheet_stat = stat('/www' + media + '/css/cascade.css');
+		const stylesheets = is_login && !auth_html && !auth_plugin ? ['base'] : ['base', 'admin'];
+	%}
+	{% for (let sheet in stylesheets): %}
+	{%
+		const stylesheet_stat = stat('/www' + media + '/css/' + sheet + '.css');
 		const stylesheet_version = stylesheet_stat
 			? sprintf('%d-%d-%d', stylesheet_stat.mtime, stylesheet_stat.ctime, stylesheet_stat.size)
 			: '0';
 	%}
-	<link rel="stylesheet" href="{{ media }}/css/cascade.css?v={{ stylesheet_version }}">
+	<link rel="stylesheet" href="{{ media }}/css/{{ sheet }}.css?v={{ stylesheet_version }}">
+	{% endfor %}
 	<style title="text/css">
 		:root {
 			--light-primary: {{ primary }};
+			--light-on-primary: {{ on_primary(primary) }};
 			--dark-primary: {{ dark_primary }};
 			--dark-on-primary: {{ palette.on_primary }};
 			--dark-link-color: {{ palette.link }};
@@ -122,6 +128,7 @@
 	{% if (!is_login): %}
 	<script src="{{ dispatcher.build_url('admin/translations', dispatcher.lang) }}?v={{ version.luciversion }}"></script>
 	<script src="{{ resource }}/cbi.js?v={{ version.luciversion }}"></script>
-	<script src="{{ resource }}/luci.js?v={{ version.luciversion }}"></script>
+	{# LuCI derives the cache version for all dynamically required modules from this URL. -#}
+	<script src="{{ resource }}/luci.js?v={{ version.luciversion }}-argon-{{ readfile('/www' + media + '/js-version', 16) }}"></script>
 	{% endif %}
 </head>

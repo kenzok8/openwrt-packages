@@ -560,3 +560,11 @@ msgstr "Metti in pausa il video di sfondo"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "Vai al contenuto"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "Chiudi"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "Navigazione"

@@ -29,7 +29,7 @@ Translations use `PKG_PO_VERSION` to follow the theme release, including `-r<rev
 
 | Location | Responsibility |
 | --- | --- |
-| `less/cascade.less` | Style entry point and import order |
+| `less/base.less`, `less/admin.less`, `less/cascade.less` | Style entry point and import order |
 | `less/theme.less` | Light/dark palette and semantic color tokens |
 | `less/spacing.less`, `less/shape.less` | Spacing and corner tokens |
 | `less/components/` | Shared controls, tables, tabs, dialogs and appearance menu |
@@ -44,14 +44,14 @@ Translations use `PKG_PO_VERSION` to follow the theme release, including `-r<rev
 
 ## Styles
 
-Edit LESS sources, then regenerate the committed stylesheet with LESS 4.1.3:
+Edit LESS sources, then regenerate the committed stylesheets with LESS 4.1.3:
 
 ```sh
 npm install --global less@4.1.3
-lessc less/cascade.less htdocs/luci-static/argon/css/cascade.css
+sh tools/build-theme-assets.sh
 ```
 
-Light and dark modes share this one stylesheet. Each `@theme-palette` row in `theme.less` defines `role: light, dark;`; one value means both modes share it. Use semantic tokens for text, surfaces, borders and states. Legacy variable aliases exist for LuCI compatibility.
+Both appearances use `base.css`. Admin pages and custom authentication interfaces also load `admin.css`. Each file has its own cache version. The standalone `cascade.css` imports both files with content hashes. Run the same command after editing theme JavaScript to regenerate `js-version` for the LuCI module loader. Each `@theme-palette` row in `theme.less` defines `role: light, dark;`; one value means both modes share it. Use semantic tokens for text, surfaces, borders and states. Legacy variable aliases exist for LuCI compatibility.
 
 Imports run from tokens and base controls through login/application layout, shared components, page adaptations, and responsive rules. Add common behavior to its component module; keep plugin selectors in `pages/`. The `page-fix.less` file is an import index.
 

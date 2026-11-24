@@ -49,6 +49,12 @@ export function contrast(a, b) {
 	return x > y ? (x + 0.05) / (y + 0.05) : (y + 0.05) / (x + 0.05);
 };
 
+// The higher-contrast of black and white meets 4.5:1 on every opaque sRGB fill.
+export function on_primary(color) {
+	let l = luminance(normalize_hex(color) ?? '#5e72e4');
+	return 1.05 / (l + 0.05) >= (l + 0.05) / 0.05 ? '#ffffff' : '#000000';
+};
+
 function oklab(hex) {
 	let v = map(rgb(hex), linear), r = v[0], g = v[1], b = v[2];
 	let l = pow(0.412221469470763 * r + 0.5363325372617348 * g + 0.0514459932675022 * b, 1.0 / 3);
@@ -113,7 +119,7 @@ export function dark_palette(color, custom) {
 	let control_focus = tone(seed, 0.69, 0.95);
 	return {
 		primary: fill,
-		on_primary: contrast('#ffffff', fill) >= contrast('#000000', fill) ? '#ffffff' : '#000000',
+		on_primary: on_primary(fill),
 		link: link,
 		focus: tone(seed, 0.90, 0.4),
 		control_focus: control_focus,

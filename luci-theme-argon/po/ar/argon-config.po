@@ -560,3 +560,11 @@ msgstr "إيقاف فيديو الخلفية مؤقتًا"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "تخطي إلى المحتوى"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "إغلق"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "التنقل"

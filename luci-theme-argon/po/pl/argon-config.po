@@ -560,3 +560,11 @@ msgstr "Wstrzymaj wideo w tle"
 #: ucode/template/themes/argon/header.ut
 msgid "Skip to content"
 msgstr "Przejdź do treści"
+
+#: ucode/template/themes/argon/header.ut:46
+msgid "Close"
+msgstr "Zamknij"
+
+#: ucode/template/themes/argon/header.ut:43
+msgid "Navigation"
+msgstr "Nawigacja"
