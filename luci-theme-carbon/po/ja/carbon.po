@@ -8,6 +8,14 @@ msgid "%d cores"
 msgstr "%d コア"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d device"
+msgstr "%d 台"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d devices"
+msgstr "%d 台"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%d min"
 msgstr "%d 分"
 
@@ -38,6 +46,18 @@ msgstr "%s デバイス"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "%s left"
 msgstr "残り %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "+%d more"
+msgstr "他 %d 件"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s"
+msgstr "1 / 5 / 15 分平均負荷: %s · %s · %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s (%d cores)"
+msgstr "1 / 5 / 15 分平均負荷: %s · %s · %s（%d コア）"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "1 min average"
@@ -94,6 +114,10 @@ msgstr "自動"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
 msgstr "バックアップと更新"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Busy"
+msgstr "やや高い"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Cache"
@@ -300,6 +324,10 @@ msgid "Hide detailed status"
 msgstr "詳細なステータスを隠す"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "High"
+msgstr "高負荷"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "ホーム Wi-Fi"
 
@@ -459,6 +487,10 @@ msgstr "インストールログはまだありません。"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
 msgstr "無線なし"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Normal"
+msgstr "正常"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not checked"

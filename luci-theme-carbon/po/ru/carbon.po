@@ -8,6 +8,14 @@ msgid "%d cores"
 msgstr "Ядер: %d"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d device"
+msgstr "Устройств: %d"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d devices"
+msgstr "Устройств: %d"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%d min"
 msgstr "%d мин"
 
@@ -38,6 +46,18 @@ msgstr "Устройство %s"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "%s left"
 msgstr "осталось %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "+%d more"
+msgstr "Ещё %d"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s"
+msgstr "Нагрузка 1 / 5 / 15 мин: %s · %s · %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s (%d cores)"
+msgstr "Нагрузка 1 / 5 / 15 мин: %s · %s · %s (ядер: %d)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "1 min average"
@@ -94,6 +114,10 @@ msgstr "Авто"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
 msgstr "Резервная копия и прошивка"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Busy"
+msgstr "Повышена"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Cache"
@@ -300,6 +324,10 @@ msgid "Hide detailed status"
 msgstr "Скрыть подробное состояние"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "High"
+msgstr "Высокая"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "Домашний Wi-Fi"
 
@@ -459,6 +487,10 @@ msgstr "Журнала установки пока нет."
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
 msgstr "Нет Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Normal"
+msgstr "Норма"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not checked"

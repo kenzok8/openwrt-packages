@@ -8,6 +8,14 @@ msgid "%d cores"
 msgstr "%d 核"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d device"
+msgstr "%d 台设备"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d devices"
+msgstr "%d 台设备"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%d min"
 msgstr "%d 分钟"
 
@@ -38,6 +46,18 @@ msgstr "%s 设备"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "%s left"
 msgstr "剩余 %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "+%d more"
+msgstr "还有 %d 个"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s"
+msgstr "1 / 5 / 15 分钟平均负载：%s · %s · %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s (%d cores)"
+msgstr "1 / 5 / 15 分钟平均负载：%s · %s · %s（%d 核 CPU）"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "1 min average"
@@ -94,6 +114,10 @@ msgstr "自动"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
 msgstr "备份与升级"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Busy"
+msgstr "繁忙"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Cache"
@@ -300,6 +324,10 @@ msgid "Hide detailed status"
 msgstr "收起详细状态"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "High"
+msgstr "高负载"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "家用无线"
 
@@ -459,6 +487,10 @@ msgstr "暂无安装日志。"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
 msgstr "未检测到无线网卡"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Normal"
+msgstr "正常"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not checked"
@@ -810,7 +842,7 @@ msgstr "外网 IPv6"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Wi-Fi"
-msgstr "无线 Wi‑Fi"
+msgstr "Wi-Fi"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Wireless"

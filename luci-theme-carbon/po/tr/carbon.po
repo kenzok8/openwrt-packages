@@ -8,6 +8,14 @@ msgid "%d cores"
 msgstr "%d çekirdek"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d device"
+msgstr "%d cihaz"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d devices"
+msgstr "%d cihaz"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%d min"
 msgstr "%d dk"
 
@@ -38,6 +46,18 @@ msgstr "%s cihazı"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "%s left"
 msgstr "%s kaldı"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "+%d more"
+msgstr "+%d daha"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s"
+msgstr "1 / 5 / 15 dk yük: %s · %s · %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s (%d cores)"
+msgstr "1 / 5 / 15 dk yük: %s · %s · %s (%d çekirdek)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "1 min average"
@@ -94,6 +114,10 @@ msgstr "Otomatik"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
 msgstr "Yedekleme ve yükseltme"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Busy"
+msgstr "Yoğun"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Cache"
@@ -300,6 +324,10 @@ msgid "Hide detailed status"
 msgstr "Ayrıntılı durumu gizle"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "High"
+msgstr "Yüksek"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "Ev Wi-Fi"
 
@@ -459,6 +487,10 @@ msgstr "Henüz kurulum günlüğü yok."
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
 msgstr "Kablosuz yok"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Normal"
+msgstr "Normal"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not checked"

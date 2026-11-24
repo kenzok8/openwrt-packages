@@ -33,18 +33,17 @@ https://github.com/user-attachments/assets/d6d8d161-65fa-456c-acbc-d3b2c0737bd9
 
 ## Features
 
-- **Dashboard** on *Status → Overview*: live traffic charts for up to four interfaces or devices, CPU / memory / storage rings, memory breakdown, load sparkline, connection count, uptime, Wi‑Fi summary, temperature sensors (thermal zones and hwmon), WAN IPv4/IPv6, connected devices and interface status. Use *Customize* under the dashboard to choose presets, toggle panels, add traffic charts and reorder sections; changes are saved in UCI (`/etc/config/carbon`) across devices and upgrades, and hidden panels stop polling. LuCI's original status widgets are kept behind *Show detailed status* and stop polling while collapsed.
-- **Device upload/download speeds** use `nlbwmon` by default, at its configured interval (normally 30 seconds, minimum display interval 5 seconds). Carbon never probes nftables in this mode, even if `nlbwmon` is unavailable. To sample nftables every 5 seconds, configure named counters and select **nftables** under **System → Carbon Theme Settings**. Anonymous counters require migration. If the selected source fails, the device list stays available. Initial samples, missing records and counter resets show `—`. Reads pause while the page is hidden. DHCP leases update independently. [Counter setup and accounting limits](docs/device-traffic.md)
-- **Discovered devices** — DHCPv4/v6 leases, Wi‑Fi stations (band and signal) and IPv4 ARP neighbours are merged by MAC. Discovery still works with the local DHCP server disabled, including when LAN obtains its own address by DHCP. Gateways, neighbour entries and DHCP leases are labelled separately; a missing local lease does not imply a fixed IP. Devices are recognised by hostname and MAC vendor prefix (35 brands, ~9,200 IEEE OUI prefixes). The count includes devices known to this router, possibly offline ones, and is not a live census of the entire network. Recognisable separate uplinks are excluded; a gateway sharing LAN is retained and labelled. Without an interface named `lan`, custom interface roles may be ambiguous, so discoveries on those interfaces are retained.
-- **Simple / Pro navigation** — *Simple* shows only the pages most people need (overview, internet, Wi‑Fi, software, password, backup, reboot); *Pro* shows the full LuCI menu with an icon for every page.
-- **Frosted-glass sidebar** that collapses into an icon rail (button on the sidebar edge or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>\\</kbd>); hovering a rail icon opens its sub-menu.
-- **Light / dark / auto** theme switch (top-right) and a **language switch** (bottom-left) for every installed LuCI language. Theme strings ship in English, Simplified and Traditional Chinese, German, Spanish, French, Italian, Japanese, Korean, Brazilian Portuguese, Russian, Turkish and Vietnamese; more can be added as gettext files in `po/`.
-- **Keyboard and touch friendly** — arrow keys in segmented controls, a focus-managed phone drawer, and rail sub-menus that open with a tap, <kbd>Enter</kbd> or <kbd>→</kbd>.
-- **Mobile friendly** — drawer navigation and tables that reflow into cards.
-- **Custom logo** — upload a PNG, JPEG, WebP, GIF or SVG in *System → Carbon Theme Settings*. It replaces the sidebar, login, overview and browser-tab logo, and is kept across theme and firmware upgrades. SVGs with scripts or embedded content are rejected.
-- **Online updates** — check and install stable releases from *System → Carbon Theme Settings*, optionally through an HTTPS download mirror. APK signatures remain verified; download size and SHA-256 are checked against GitHub before installation.
-- Existing LuCI pages and plugins keep working;
-- Architecture independent: one theme package for every router.
+- **Dashboard**: live traffic charts, CPU / memory / storage gauges, temperature, Wi‑Fi, and interface status panels; supports presets, toggling, and reordering (saved in UCI) while keeping LuCI's original status view.
+- **Device upload/download speeds**: uses `nlbwmon` by default, with optional 5-second `nftables` named-counter sampling ([setup guide](docs/device-traffic.md)).
+- **Discovered devices**: merges DHCP leases, Wi‑Fi stations (band and signal), and ARP neighbours by MAC, works without local DHCP, and recognises 35 device brands.
+- **Simple / Pro navigation**: *Simple* keeps everyday pages up front; *Pro* shows the full LuCI menu with an icon for every page.
+- **Frosted-glass sidebar**: collapses into an icon rail (<kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>\\</kbd>) with hover or click sub-menus.
+- **Themes & languages**: light / dark / auto mode switch and a built-in language switcher for all installed LuCI languages (13 built-in theme translations).
+- **Keyboard & touch friendly**: arrow-key controls, focus-managed phone drawer, and rail sub-menus accessible via tap or keyboard.
+- **Mobile friendly**: drawer navigation and tables that reflow into cards.
+- **Custom logo**: upload common image formats or safe SVGs in theme settings to replace icons across pages and browser tabs; preserved across upgrades.
+- **Online updates**: check and install stable releases from theme settings with optional HTTPS mirrors, signature verification, and SHA-256 checks.
+- **Broad compatibility**: existing LuCI pages and plugins keep working; one architecture-independent package for every router.
 
 ## Installation & Usage
 

@@ -8,6 +8,14 @@ msgid "%d cores"
 msgstr "%d core"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d device"
+msgstr "%d dispositivo"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d devices"
+msgstr "%d dispositivi"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%d min"
 msgstr "%d min"
 
@@ -38,6 +46,18 @@ msgstr "Dispositivo %s"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "%s left"
 msgstr "%s rimanenti"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "+%d more"
+msgstr "+%d altri"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s"
+msgstr "Carico 1 / 5 / 15 min: %s · %s · %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s (%d cores)"
+msgstr "Carico 1 / 5 / 15 min: %s · %s · %s (%d core)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "1 min average"
@@ -94,6 +114,10 @@ msgstr "Automatico"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
 msgstr "Backup e aggiornamento"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Busy"
+msgstr "Occupato"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Cache"
@@ -300,6 +324,10 @@ msgid "Hide detailed status"
 msgstr "Nascondi stato dettagliato"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "High"
+msgstr "Alto"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "Wi-Fi casa"
 
@@ -459,6 +487,10 @@ msgstr "Ancora nessun registro di installazione."
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
 msgstr "Nessun Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Normal"
+msgstr "Normale"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not checked"

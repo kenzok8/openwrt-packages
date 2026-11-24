@@ -1385,11 +1385,93 @@
 		return { idle: (v[3] || 0) + (v[4] || 0), total: total, cores: lines.filter((l) => /^cpu\d/.test(l)).length };
 	}
 
-	function radioBand(cfg) {
+	C.loadStatus = function (load1, cores) {
+		if (!Number.isFinite(load1) || load1 < 0 || !Number.isFinite(cores) || cores <= 0) return null;
+		const ratio = load1 / cores;
+		if (ratio >= 1) return { level: 'bad', label: N_('High') };
+		if (ratio >= 0.7) return { level: 'warn', label: N_('Busy') };
+		return { level: 'ok', label: N_('Normal') };
+	};
+
+	const BAND_LABEL = Object.assign(Object.create(null), { '2g': '2.4 GHz', '5g': '5 GHz', '6g': '6 GHz', '60g': '60 GHz' });
+	function radioBandInfo(cfg) {
 		cfg = cfg || {};
-		const band = cfg.band ? ({ '2g': '2.4 GHz', '5g': '5 GHz', '6g': '6 GHz', '60g': '60 GHz' })[cfg.band] : null;
-		return band || (cfg.hwmode ? (/a/.test(cfg.hwmode) ? '5 GHz' : '2.4 GHz') : null);
+		const band = String(cfg.band || '').toLowerCase();
+		if (band && BAND_LABEL[band]) return { key: band, label: BAND_LABEL[band] };
+		if (cfg.hwmode) {
+			const key = /a/.test(cfg.hwmode) ? '5g' : '2g';
+			return { key: key, label: BAND_LABEL[key] };
+		}
+		const ch = parseInt(cfg.channel, 10);
+		if (ch >= 1 && ch <= 14) return { key: '2g', label: '2.4 GHz' };
+		if (ch >= 32 && ch <= 177) return { key: '5g', label: '5 GHz' };
+		return { key: '', label: null };
 	}
+	function radioBand(cfg) {
+		return radioBandInfo(cfg).label;
+	}
+	function wirelessWidth(htmode) {
+		const m = String(htmode || '').trim().match(/(?:^|\D)(80\+80|320|160|80|40|20)[+-]?$/);
+		return m ? m[1] + ' MHz' : null;
+	}
+	function wirelessEncryption(enc) {
+		const raw = String(enc || '').trim().toLowerCase();
+		if (!raw || raw === 'none') return null;
+		if (/^sae-mixed\b/.test(raw)) return 'WPA2/WPA3';
+		if (/^sae\b/.test(raw)) return 'WPA3';
+		if (/^psk-mixed\b/.test(raw)) return 'WPA/WPA2';
+		if (/^psk2\b/.test(raw)) return 'WPA2';
+		if (/^psk\b/.test(raw)) return 'WPA';
+		if (/^owe\b/.test(raw)) return 'OWE';
+		return raw.toUpperCase();
+	}
+
+	C.wirelessSummary = function (w, stations) {
+		const hasStations = Array.isArray(stations);
+		const perIf = hasStations ? new Map() : null;
+		const allMacs = hasStations ? new Set() : null;
+		if (hasStations) {
+			stations.forEach((s) => {
+				if (!s || !s.ifname) return;
+				const mac = String(s.mac || '').toLowerCase();
+				if (!MAC_RE.test(mac) || mac === '00:00:00:00:00:00') return;
+				let set = perIf.get(s.ifname);
+				if (!set) perIf.set(s.ifname, set = new Set());
+				set.add(mac);
+			});
+		}
+		const rows = [];
+		if (w && typeof w === 'object') {
+			Object.keys(w).sort().forEach((radio) => {
+				const r = w[radio] || {}, cfg = r.config || {};
+				const b = radioBandInfo(cfg);
+				const channel = cfg.channel && cfg.channel !== 'auto' ? String(cfg.channel) : null;
+				const width = wirelessWidth(cfg.htmode);
+				(r.interfaces || []).forEach((i) => {
+					const ic = i.config || {};
+					if (ic.mode && ic.mode !== 'ap') return;
+					const ssid = ic.ssid ? String(ic.ssid) : '';
+					const encryption = wirelessEncryption(ic.encryption);
+					const meta = [channel ? 'CH ' + channel : null, width, encryption].filter(Boolean).join(' · ');
+					const sub = [b.label, meta].filter(Boolean).join(' · ');
+					const on = !!r.up && !r.disabled && !ic.disabled && !cfg.disabled;
+					const ifname = i.ifname || '';
+					let clients = null;
+					if (on && ifname && hasStations) {
+						const set = perIf.get(ifname);
+						clients = set ? set.size : 0;
+						if (set) set.forEach((mac) => allMacs.add(mac));
+					}
+					rows.push({
+						radio: radio, ifname: ifname, ssid: ssid, hidden: !ssid,
+						band: b.label, bandKey: b.key, channel: channel, width: width, encryption: encryption,
+						meta: meta, sub: sub, on: on, clients: clients
+					});
+				});
+			});
+		}
+		return { rows: rows, totalClients: hasStations ? allMacs.size : null };
+	};
 
 	/* AP interfaces that are up → { ifnames: [...], bands: { ifname: '5 GHz' } } */
 	function apInterfaces(w) {
@@ -2050,7 +2132,7 @@
 				board: null, ifs: null, netdevs: null, netdevsAt: 0,
 				info: null, conntrack: null, temps: null,
 				wireless: undefined, noRadio: !urls.wireless,
-				aps: null, hints: null, hintsAt: 0, devices: null, wifiCount: null,
+				aps: null, stations: undefined, hints: null, hintsAt: 0, devices: null, wifiCount: null,
 				prevCpu: null, cpuPct: null, cpuCores: 0, loadHistory: [],
 				showAll: false,
 				rateData: null, rateSeen: false, rateSource: '', rateNext: 0, rateGeneration: 0,
@@ -2086,7 +2168,7 @@
 					conntrack: hasTile('connections'),
 					temps: hasRes || hasTile('temp'),
 					wireless: needWireless,
-					stations: needDevices || hasTile('wifi'),
+					stations: needWireless,
 					leases: needDevices,
 					neighbors: needDevices,
 					hints: needDevices,
@@ -2324,13 +2406,14 @@
 			}
 
 			function buildWireless() {
+				const count = h('span', { class: 'cb-count' });
 				const list = h('ul', { class: 'cb-list' });
 				const el = h('div', { class: 'cb-card cb-wireless span-6' + (st.noRadio ? ' hidden' : ''), 'data-panel-key': 'detail:wireless' }, [
-					h('div', { class: 'cb-card-head' }, [h('h3', null, t('Wireless')), manage(urls.wireless)]),
+					h('div', { class: 'cb-card-head' }, [h('h3', null, [t('Wireless'), count]), manage(urls.wireless)]),
 					list
 				]);
 				dash.appendChild(el);
-				view.wireless = { el: el, list: list };
+				view.wireless = { el: el, count: count, list: list };
 			}
 
 			function buildInterfaces() {
@@ -2512,38 +2595,41 @@
 				paintDeviceRates();
 			}
 
-			function wirelessRows(w) {
-				const rows = [];
-				if (w) Object.keys(w).sort().forEach((radio) => {
-					const r = w[radio] || {}, cfg = r.config || {};
-					const band = radioBand(cfg);
-					(r.interfaces || []).forEach((i) => {
-						const ic = i.config || {};
-						if (ic.mode && ic.mode !== 'ap') return;
-						rows.push({
-							ssid: ic.ssid || t('Hidden network'),
-							band: band,
-							sub: [band, cfg.channel && cfg.channel !== 'auto' ? 'CH ' + cfg.channel : null, (ic.encryption || '').toUpperCase().replace(/^PSK2.*/, 'WPA2').replace(/^SAE.*/, 'WPA3').replace(/^NONE$/, '') || null].filter(Boolean).join(' · '),
-							on: !!r.up && !r.disabled && !ic.disabled && !cfg.disabled
-						});
-					});
-				});
-				return rows;
+			function clientCountLabel(n) {
+				return n === 1 ? t('%d device', 1) : t('%d devices', n);
 			}
 
 			function paintWireless() {
 				if (!st.fetched.wireless) return;
 				const w = st.wireless;
-				const rows = wirelessRows(w);
+				const summary = C.wirelessSummary(w, st.stations);
+				const rows = summary.rows;
+				const active = rows.filter((x) => x.on);
+				const total = summary.totalClients != null ? summary.totalClients : st.wifiCount;
 				applyDetailSpans();
 				if (view.wireless && !st.noRadio) {
+					view.wireless.count.textContent = (active.length && total != null) ? String(total) : '';
 					view.wireless.list.innerHTML = '';
 					if (!rows.length) view.wireless.list.appendChild(h('li', { class: 'cb-empty', text: w ? t('No wireless') : t('Unavailable') }));
-					else rows.forEach((x) => view.wireless.list.appendChild(h('li', null, [
-						h('span', { class: 'cb-ico', style: '--c:' + (x.on ? COLORS.blue : COLORS.gray), html: icon('wifi') }),
-						h('div', { class: 'cb-list-main' }, [h('span', { class: 'cb-list-title', text: x.ssid }), h('span', { class: 'cb-list-sub', text: x.sub })]),
-						h('span', { class: 'cb-pill sm ' + (x.on ? 'ok' : 'off'), text: x.on ? t('On') : t('Off') })
-					])));
+					else rows.forEach((x) => {
+						const name = x.ssid || t('Hidden network');
+						const head = h('span', { class: 'cb-list-title cb-wifi-head' }, [
+							h('span', { class: 'cb-wifi-ssid', text: name }),
+							x.band ? h('span', { class: 'cb-band' + (x.bandKey ? ' cb-band-' + x.bandKey : ''), text: x.band }) : null
+						]);
+						const aside = h('div', { class: 'cb-list-aside cb-wifi-aside' }, [
+							x.on && x.clients != null ? h('span', { class: 'cb-wifi-clients', text: clientCountLabel(x.clients) }) : null,
+							h('span', { class: 'cb-pill sm ' + (x.on ? 'ok' : 'off'), text: x.on ? t('On') : t('Off') })
+						]);
+						view.wireless.list.appendChild(h('li', null, [
+							h('span', { class: 'cb-ico', style: '--c:' + (x.on ? COLORS.blue : COLORS.gray), html: icon('wifi') }),
+							h('div', { class: 'cb-list-main' }, [
+								head,
+								x.meta ? h('span', { class: 'cb-list-sub', text: x.meta }) : null
+							]),
+							aside
+						]));
+					});
 				}
 				if (view.tiles.wifi) {
 					const tw = view.tiles.wifi;
@@ -2558,18 +2644,33 @@
 						tw.el.title = '';
 					}
 					else {
-						const active = rows.filter((x) => x.on);
-						const bands = [];
-						active.forEach((x) => { if (x.band && bands.indexOf(x.band) < 0) bands.push(x.band); });
 						if (!active.length) {
 							tw.val.textContent = t('Off');
-							tw.sub.textContent = rows.length ? rows.map((x) => x.ssid).slice(0, 2).join(' · ') : t('No wireless');
+							tw.sub.textContent = rows.length ? rows.map((x) => x.ssid || t('Hidden network')).slice(0, 2).join(' · ') : t('No wireless');
 						}
 						else {
-							tw.val.textContent = st.wifiCount != null ? String(st.wifiCount) : t('On');
-							tw.sub.textContent = bands.length ? bands.join(' · ') : active.map((x) => x.ssid).slice(0, 2).join(' · ');
+							tw.val.textContent = total != null ? String(total) : t('On');
+							const shown = active.length > 3 ? active.slice(0, 2) : active;
+							const list = h('div', { class: 'cb-wifi-rows' }, shown.map((x) => h('div', { class: 'cb-wifi-row' }, [
+								h('span', { class: 'cb-wifi-row-head' }, [
+									h('span', { class: 'cb-wifi-row-ssid', text: x.ssid || t('Hidden network') }),
+									x.band ? h('span', { class: 'cb-band' + (x.bandKey ? ' cb-band-' + x.bandKey : '') + ' cb-wifi-row-band', text: x.band }) : null
+								]),
+								x.clients != null ? h('span', { class: 'cb-wifi-row-count', text: String(x.clients) }) : null
+							])));
+							if (active.length > 3)
+								list.appendChild(h('div', { class: 'cb-wifi-row cb-wifi-row-more', text: t('+%d more', active.length - 2) }));
+							tw.sub.innerHTML = '';
+							tw.sub.appendChild(list);
 						}
-						tw.el.title = rows.map((x) => x.ssid + (x.sub ? ' (' + x.sub + ')' : '') + ' · ' + (x.on ? t('On') : t('Off'))).join('\n');
+						tw.el.title = rows.map((x) => {
+							const name = x.ssid || t('Hidden network');
+							return [
+								name + (x.sub ? ' (' + x.sub + ')' : ''),
+								x.on && x.clients != null ? clientCountLabel(x.clients) : null,
+								x.on ? t('On') : t('Off')
+							].filter(Boolean).join(' · ');
+						}).join('\n');
 					}
 				}
 			}
@@ -2580,13 +2681,27 @@
 				else if (!st.prevCpu) view.resources.rCpu.set(null, t('Unavailable'));
 			}
 
+			function loadTooltip(load) {
+				const l = load.map((x) => (x / 65536).toFixed(2));
+				return st.cpuCores > 0
+					? t('1 / 5 / 15 min load: %s · %s · %s (%d cores)', l[0], l[1], l[2], st.cpuCores)
+					: t('1 / 5 / 15 min load: %s · %s · %s', l[0], l[1], l[2]);
+			}
+
 			function paintKv() {
 				if (!view.resources) return;
 				const kv = view.resources.kv;
 				kv.innerHTML = '';
-				if (st.info && st.info.load) {
-					const l = st.info.load.map((x) => (x / 65536).toFixed(2));
-					kv.appendChild(h('li', null, [h('span', { text: t('Load average') }), h('span', { class: 'cb-mono', text: l.join(' · ') })]));
+				if (st.info && Array.isArray(st.info.load) && st.info.load.length >= 3) {
+					const load1 = st.info.load[0] / 65536;
+					const status = C.loadStatus(load1, st.cpuCores);
+					kv.appendChild(h('li', { class: 'cb-kv-help', title: loadTooltip(st.info.load) }, [
+						h('span', { text: t('Load average') }),
+						h('span', { class: 'cb-load-val' }, [
+							h('span', { class: 'cb-mono', text: load1.toFixed(2) }),
+							status ? h('span', { class: 'cb-load-badge ' + status.level, text: t(status.label) }) : null
+						])
+					]));
 				}
 				if (st.temps && st.temps.length) {
 					const sensorName = (n) => String(n || '').replace(/[-_ ]?thermal$/i, '').replace(/[-_]+/g, ' ').trim();
@@ -2632,10 +2747,11 @@
 						view.resources.rDisk.set(null, t('Unavailable'));
 					}
 				}
-				if (info && info.load && view.tiles.load) {
+				if (info && Array.isArray(info.load) && info.load.length >= 3 && view.tiles.load) {
 					const l = info.load.map((x) => (x / 65536).toFixed(2));
 					view.tiles.load.val.textContent = l[0];
 					view.tiles.load.sub.textContent = t('1 min average');
+					view.tiles.load.el.title = loadTooltip(info.load);
 				}
 				if (info && info.uptime != null && view.tiles.uptime) {
 					view.tiles.uptime.val.textContent = fmt.duration(info.uptime);
@@ -2938,18 +3054,10 @@
 					const same = known && known.join() === aps.ifnames.join();
 					st.aps = aps.ifnames;
 					stations = same ? r[5] : (aps.ifnames.length && P.stations ? await safe(() => P.stations(aps.ifnames)) : null);
+					st.stations = stations;
 					st.fetched.stations = true;
-					if (!needs.leases && !needs.neighbors) {
-						if (Array.isArray(stations)) {
-							const macs = new Set();
-							stations.forEach((s) => {
-								const mac = String((s && s.mac) || '').toLowerCase();
-								if (MAC_RE.test(mac) && mac !== '00:00:00:00:00:00') macs.add(mac);
-							});
-							st.wifiCount = macs.size;
-						}
-						else st.wifiCount = null;
-					}
+					if (!needs.leases && !needs.neighbors)
+						st.wifiCount = C.wirelessSummary(st.wireless, stations).totalClients;
 				}
 
 				if (needs.leases || needs.neighbors) {
@@ -3019,15 +3127,23 @@
 				if (needs.cpu) {
 					const cpu = parseCpu(r[0]);
 					st.fetched.cpu = true;
+					let coresChanged = false;
 					if (cpu) {
+						if (cpu.cores && cpu.cores !== st.cpuCores) {
+							st.cpuCores = cpu.cores;
+							coresChanged = true;
+						}
 						if (st.prevCpu && cpu.total > st.prevCpu.total) {
 							const dt = cpu.total - st.prevCpu.total, di = cpu.idle - st.prevCpu.idle;
 							st.cpuPct = (1 - di / dt) * 100;
-							st.cpuCores = cpu.cores;
 						}
 						st.prevCpu = cpu;
 					}
 					paintCpu();
+					if (coresChanged && st.info && Array.isArray(st.info.load) && st.info.load.length >= 3) {
+						paintKv();
+						if (view.tiles.load) view.tiles.load.el.title = loadTooltip(st.info.load);
+					}
 				}
 
 				const now = Date.now();

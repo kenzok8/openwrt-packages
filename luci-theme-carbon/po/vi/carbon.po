@@ -8,6 +8,14 @@ msgid "%d cores"
 msgstr "%d nhân"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d device"
+msgstr "%d thiết bị"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d devices"
+msgstr "%d thiết bị"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%d min"
 msgstr "%d phút"
 
@@ -38,6 +46,18 @@ msgstr "Thiết bị %s"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "%s left"
 msgstr "còn %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "+%d more"
+msgstr "+%d khác"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s"
+msgstr "Tải 1 / 5 / 15 phút: %s · %s · %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s (%d cores)"
+msgstr "Tải 1 / 5 / 15 phút: %s · %s · %s (%d nhân)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "1 min average"
@@ -94,6 +114,10 @@ msgstr "Tự động"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
 msgstr "Sao lưu và nâng cấp"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Busy"
+msgstr "Bận"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Cache"
@@ -300,6 +324,10 @@ msgid "Hide detailed status"
 msgstr "Ẩn trạng thái chi tiết"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "High"
+msgstr "Cao"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "Wi-Fi gia đình"
 
@@ -459,6 +487,10 @@ msgstr "Chưa có nhật ký cài đặt."
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
 msgstr "Không có Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Normal"
+msgstr "Bình thường"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not checked"

@@ -7,6 +7,14 @@ msgid "%d cores"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d device"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d devices"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%d min"
 msgstr ""
 
@@ -36,6 +44,18 @@ msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "%s left"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "+%d more"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s (%d cores)"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
@@ -92,6 +112,10 @@ msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Busy"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
@@ -299,6 +323,10 @@ msgid "Hide detailed status"
 msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "High"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr ""
 
@@ -457,6 +485,10 @@ msgstr ""
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
+msgstr ""
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Normal"
 msgstr ""
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js

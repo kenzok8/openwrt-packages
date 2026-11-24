@@ -8,6 +8,14 @@ msgid "%d cores"
 msgstr "%d코어"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "%d device"
+msgstr "%d대"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "%d devices"
+msgstr "%d대"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "%d min"
 msgstr "%d분"
 
@@ -38,6 +46,18 @@ msgstr "%s 기기"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "%s left"
 msgstr "%s 남음"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "+%d more"
+msgstr "외 %d개"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s"
+msgstr "1 / 5 / 15분 평균 부하: %s · %s · %s"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "1 / 5 / 15 min load: %s · %s · %s (%d cores)"
+msgstr "1 / 5 / 15분 평균 부하: %s · %s · %s (%d코어)"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "1 min average"
@@ -94,6 +114,10 @@ msgstr "자동"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
 msgstr "백업 및 업그레이드"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Busy"
+msgstr "혼잡"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Cache"
@@ -300,6 +324,10 @@ msgid "Hide detailed status"
 msgstr "자세한 상태 숨기기"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "High"
+msgstr "높음"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "가정용 Wi-Fi"
 
@@ -459,6 +487,10 @@ msgstr "아직 설치 로그가 없습니다."
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
 msgstr "무선 없음"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Normal"
+msgstr "정상"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not checked"
