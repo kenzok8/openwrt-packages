@@ -159,3 +159,69 @@ func TestClashStrictDNSSchemeGroup(t *testing.T) {
 		t.Errorf("without a nodes-only group the standard DNS block must apply:\n%s", std)
 	}
 }
+
+func TestClashWritesShadowTLSPlugin(t *testing.T) {
+	node := shadowTLSSSNode()
+	out, err := Generate(Options{Target: model.ClientClashVerge, Nodes: []model.ProxyNode{node}})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for _, want := range []string{
+		"plugin: shadow-tls",
+		"host: \"cover.example.com\"",
+		"password: \"secret\"",
+		"version: 3",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q\n%s", want, out)
+		}
+	}
+	// Stash and Karing are not in upstream's ShadowTLS allow list: the
+	// wrapped node is skipped, never downgraded to plain Shadowsocks.
+	ss := model.ProxyNode{Kind: model.KindShadowsocks, Name: "good-ss", Server: "5.6.7.8", Port: 8388, Cipher: "aes-256-gcm", Password: "pw"}
+	for _, target := range []model.ClientTarget{model.ClientStash, model.ClientKaring} {
+		skipped, err := Generate(Options{Target: target, Nodes: []model.ProxyNode{node, ss}})
+		if err != nil {
+			t.Fatalf("%s: Generate: %v", target, err)
+		}
+		if strings.Contains(skipped, "203.0.113.20") {
+			t.Errorf("%s: ShadowTLS node leaked into output:\n%s", target, skipped)
+		}
+		if !strings.Contains(skipped, "good-ss") {
+			t.Errorf("%s: expressible node missing:\n%s", target, skipped)
+		}
+	}
+}
+
+func TestKaringSkipsMLKEM768(t *testing.T) {
+	support := true
+	node := model.ProxyNode{
+		Kind:                         model.KindVLESS,
+		Name:                         "reality",
+		Server:                       "1.2.3.4",
+		Port:                         443,
+		UUID:                         testUUID,
+		TLS:                          true,
+		SNI:                          "example.com",
+		RealityPublicKey:             "PUBKEY",
+		RealityShortID:               "abcd1234",
+		RealitySupportX25519MLKEM768: &support,
+	}
+	karing, err := Generate(Options{Target: model.ClientKaring, Nodes: []model.ProxyNode{node}})
+	if err != nil {
+		t.Fatalf("Generate karing: %v", err)
+	}
+	if !strings.Contains(karing, "reality-opts:") {
+		t.Errorf("karing output missing reality-opts:\n%s", karing)
+	}
+	if strings.Contains(karing, "support-x25519mlkem768") {
+		t.Errorf("karing must not get support-x25519mlkem768 (own core, no such field):\n%s", karing)
+	}
+	verge, err := Generate(Options{Target: model.ClientClashVerge, Nodes: []model.ProxyNode{node}})
+	if err != nil {
+		t.Fatalf("Generate verge: %v", err)
+	}
+	if !strings.Contains(verge, "support-x25519mlkem768: true") {
+		t.Errorf("clash-verge output missing support-x25519mlkem768:\n%s", verge)
+	}
+}

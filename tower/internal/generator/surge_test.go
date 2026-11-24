@@ -249,3 +249,107 @@ func TestConfNameDoubleSlash(t *testing.T) {
 		t.Errorf("confName = %q, want %q", got, "plain")
 	}
 }
+
+func shadowTLSSnellNode() model.ProxyNode {
+	v := 4
+	return model.ProxyNode{
+		Kind:      model.KindSnell,
+		Name:      "JP STLS",
+		Server:    "203.0.113.20",
+		Port:      443,
+		Password:  "pwd1",
+		Version:   &v,
+		Plugin:    "shadow-tls",
+		ShadowTLS: &model.ShadowTLSOptions{Version: 3, Host: "cover.example.com", Password: "p%w;d2"},
+	}
+}
+
+func shadowTLSSSNode() model.ProxyNode {
+	return model.ProxyNode{
+		Kind:      model.KindShadowsocks,
+		Name:      "JP STLS",
+		Server:    "203.0.113.20",
+		Port:      443,
+		Cipher:    "aes-256-gcm",
+		Password:  "pw",
+		Plugin:    "shadow-tls",
+		ShadowTLS: &model.ShadowTLSOptions{Version: 3, Host: "cover.example.com", Password: "secret"},
+	}
+}
+
+func TestSurgeWritesSnellShadowTLS(t *testing.T) {
+	for _, target := range []model.ClientTarget{model.ClientSurge, model.ClientSurgeMac} {
+		out, err := Generate(Options{Target: target, Nodes: []model.ProxyNode{shadowTLSSnellNode()}})
+		if err != nil {
+			t.Fatalf("%s: Generate: %v", target, err)
+		}
+		for _, want := range []string{
+			"snell, 203.0.113.20, 443", "psk=pwd1", "version=4",
+			"shadow-tls-password=" + "p%w;d2",
+			"shadow-tls-sni=cover.example.com",
+			"shadow-tls-version=3",
+		} {
+			if !strings.Contains(out, want) {
+				t.Errorf("%s: output missing %q\n%s", target, want, out)
+			}
+		}
+		// ShadowTLS only wraps TCP: the wrapped node must not gain
+		// udp-relay unless the source line asked for it.
+		if strings.Contains(out, "udp-relay=true") {
+			t.Errorf("%s: wrapped Snell must not gain udp-relay:\n%s", target, out)
+		}
+	}
+}
+
+func TestSurgeSnellShadowTLSKeepsExplicitUDPRelay(t *testing.T) {
+	node := shadowTLSSnellNode()
+	yes := true
+	node.UDPRelayEnabled = &yes
+	out, err := Generate(Options{Target: model.ClientSurge, Nodes: []model.ProxyNode{node}})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if !strings.Contains(out, "udp-relay=true") {
+		t.Errorf("explicit udp-relay lost:\n%s", out)
+	}
+}
+
+func TestSurgeWritesSSShadowTLS(t *testing.T) {
+	out, err := Generate(Options{Target: model.ClientSurge, Nodes: []model.ProxyNode{shadowTLSSSNode()}})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for _, want := range []string{
+		"ss, 203.0.113.20, 443",
+		"shadow-tls-password=" + "secret",
+		"shadow-tls-sni=cover.example.com",
+		"shadow-tls-version=3",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q\n%s", want, out)
+		}
+	}
+}
+
+func TestOtherClientsSkipSnellShadowTLS(t *testing.T) {
+	node := shadowTLSSnellNode()
+	for _, target := range model.AllClients {
+		if target == model.ClientSurge || target == model.ClientSurgeMac {
+			continue
+		}
+		if got := filterExpressibleNodes(target, []model.ProxyNode{node}); len(got) != 0 {
+			t.Errorf("%s: Snell + ShadowTLS must be skipped, kept %d nodes", target, len(got))
+		}
+	}
+	ss := model.ProxyNode{Kind: model.KindShadowsocks, Name: "good-ss", Server: "5.6.7.8", Port: 8388, Cipher: "aes-256-gcm", Password: "pw"}
+	out, err := Generate(Options{Target: model.ClientClashVerge, Nodes: []model.ProxyNode{node, ss}})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if strings.Contains(out, "203.0.113.20") {
+		t.Errorf("Snell + ShadowTLS node leaked into clash-verge output:\n%s", out)
+	}
+	if !strings.Contains(out, "good-ss") {
+		t.Errorf("expressible node missing:\n%s", out)
+	}
+}

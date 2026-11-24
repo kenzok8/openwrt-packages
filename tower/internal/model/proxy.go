@@ -1,5 +1,10 @@
 package model
 
+import (
+	"strings"
+	"unicode"
+)
+
 // ProxyKind identifies the wire protocol of a proxy node. The raw values match
 // the subscription URI scheme names used across the ecosystem.
 type ProxyKind string
@@ -21,6 +26,33 @@ const (
 	KindUnknown      ProxyKind = "unknown"
 )
 
+// ShadowTLSOptions carries the ShadowTLS wrapper parameters. It mirrors the
+// Swift ShadowTLSOptions: version is 1-3, host is the SNI/cover domain, and
+// the password is the ShadowTLS handshake secret (empty only for v1).
+type ShadowTLSOptions struct {
+	Version                     int    `json:"version"`
+	Host                        string `json:"host"`
+	Password                    string `json:"password"`
+	SkipCertificateVerification bool   `json:"skip_cert_verify,omitempty"`
+}
+
+// IsValid mirrors the Swift isValid: version 1-3, a host with no whitespace
+// or commas, and a password except for v1 (which has no password field).
+func (o ShadowTLSOptions) IsValid() bool {
+	if o.Version < 1 || o.Version > 3 || o.Host == "" {
+		return false
+	}
+	if strings.ContainsAny(o.Host, ",") {
+		return false
+	}
+	for _, r := range o.Host {
+		if unicode.IsSpace(r) {
+			return false
+		}
+	}
+	return o.Version == 1 || o.Password != ""
+}
+
 // ProxyNode is a fully parsed proxy endpoint. It mirrors the Swift ProxyNode so
 // every protocol's connection parameters survive the parser→generator round
 // trip without lossy compression.
@@ -41,6 +73,10 @@ type ProxyNode struct {
 	TransportMode string `json:"transport_mode,omitempty"`
 	Plugin        string `json:"plugin,omitempty"`
 	PluginMux     *bool  `json:"plugin_mux,omitempty"`
+	// ShadowTLS is the ShadowTLS wrapper around an SS or Snell node (Surge
+	// shadow-tls-* keys, Clash plugin-opts, or an ss:// SIP003 plugin).
+	// Non-nil implies Plugin == "shadow-tls".
+	ShadowTLS *ShadowTLSOptions `json:"shadow_tls,omitempty"`
 
 	TLS        bool   `json:"tls,omitempty"`
 	SNI        string `json:"sni,omitempty"`

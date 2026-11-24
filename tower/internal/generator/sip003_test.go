@@ -85,3 +85,45 @@ func TestShareLinkPluginEscapes(t *testing.T) {
 		t.Errorf("link missing escaped semicolon in host:\n%s", link)
 	}
 }
+
+func TestShareLinkKeepsShadowTLSPlugin(t *testing.T) {
+	links := Links([]model.ProxyNode{shadowTLSSSNode()})
+	if len(links) != 1 {
+		t.Fatalf("Links returned %d results, want 1", len(links))
+	}
+	link := links[0].Link
+	// The plugin string is percent-encoded: `;` becomes %3B, `=` becomes
+	// %3D, so the wrapper survives as one plugin= parameter.
+	for _, want := range []string{
+		"plugin=shadow-tls%3Bhost%3Dcover.example.com",
+		"password%3Dsecret",
+		"version%3D3",
+	} {
+		if !strings.Contains(link, want) {
+			t.Errorf("link missing %q:\n%s", want, link)
+		}
+	}
+}
+
+func TestSnellShareLineKeepsShadowTLS(t *testing.T) {
+	node := shadowTLSSnellNode()
+	node.RawURI = ""
+	links := Links([]model.ProxyNode{node})
+	if len(links) != 1 {
+		t.Fatalf("Links returned %d results, want 1", len(links))
+	}
+	link := links[0].Link
+	for _, want := range []string{
+		"snell, 203.0.113.20, 443",
+		"shadow-tls-password=" + "p%w;d2",
+		"shadow-tls-sni=cover.example.com",
+		"shadow-tls-version=3",
+	} {
+		if !strings.Contains(link, want) {
+			t.Errorf("link missing %q:\n%s", want, link)
+		}
+	}
+	if strings.Contains(link, "udp-relay=true") {
+		t.Errorf("wrapped Snell share line must not gain udp-relay:\n%s", link)
+	}
+}

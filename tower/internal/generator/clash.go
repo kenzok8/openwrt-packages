@@ -262,7 +262,19 @@ func clashNode(node model.ProxyNode, target model.ClientTarget) string {
 			"    password: "+yaml(node.Password),
 			"    udp: "+strconv.FormatBool(node.UDPRelayEnabled == nil || *node.UDPRelayEnabled),
 		)
-		if node.Plugin == "v2ray-plugin" {
+		if node.ShadowTLS != nil {
+			values = append(values, "    plugin: shadow-tls")
+			if node.Fingerprint != "" {
+				values = append(values, "    client-fingerprint: "+yaml(node.Fingerprint))
+			}
+			values = append(values, "    plugin-opts:",
+				"      host: "+yaml(node.ShadowTLS.Host),
+				"      password: "+yaml(node.ShadowTLS.Password),
+				"      version: "+strconv.Itoa(node.ShadowTLS.Version))
+			if node.ShadowTLS.SkipCertificateVerification {
+				values = append(values, "      skip-cert-verify: true")
+			}
+		} else if node.Plugin == "v2ray-plugin" {
 			values = append(values, "    plugin: v2ray-plugin", "    plugin-opts:", "      mode: websocket")
 			if node.PluginMux != nil {
 				values = append(values, "      mux: "+strconv.FormatBool(*node.PluginMux))
@@ -549,7 +561,8 @@ func appendClashReality(node model.ProxyNode, target model.ClientTarget, values 
 	if node.RealityShortID != "" {
 		*values = append(*values, "      short-id: "+yaml(node.RealityShortID))
 	}
-	if node.RealitySupportX25519MLKEM768 != nil && mihomoFamily(target) {
+	if node.RealitySupportX25519MLKEM768 != nil && mihomoFamily(target) && target != model.ClientKaring {
+		// Karing runs its own core and documents no such field.
 		*values = append(*values, "      support-x25519mlkem768: "+strconv.FormatBool(*node.RealitySupportX25519MLKEM768))
 	}
 	*values = append(*values, "    client-fingerprint: "+yaml(firstNonEmpty(node.Fingerprint, "chrome")))

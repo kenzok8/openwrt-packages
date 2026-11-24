@@ -77,6 +77,18 @@ func parseSurgeShadowsocksLine(raw, sourceID string) *model.ProxyNode {
 	if cipher == "" || password == "" {
 		return nil
 	}
+	// Option values are already percent-decoded by surgeProxyScalar, so the
+	// ShadowTLS values pass through as-is. An unknown shadow-tls-* key or
+	// an invalid combination rejects the node instead of silently importing
+	// a plain Shadowsocks that can never connect.
+	shadowTLS, ok := surgeShadowTLSOptions(options, nil)
+	if !ok {
+		return nil
+	}
+	plugin := ""
+	if shadowTLS != nil {
+		plugin = "shadow-tls"
+	}
 	var udpRelayEnabled *bool
 	if value, present := options["udp-relay"]; present {
 		var ok bool
@@ -96,6 +108,8 @@ func parseSurgeShadowsocksLine(raw, sourceID string) *model.ProxyNode {
 		Password:        password,
 		Obfs:            options["obfs"],
 		ObfsParam:       options["obfs-host"],
+		Plugin:          plugin,
+		ShadowTLS:       shadowTLS,
 		UDPRelayEnabled: udpRelayEnabled,
 		RawURI:          raw,
 	}

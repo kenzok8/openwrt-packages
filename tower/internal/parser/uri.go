@@ -71,6 +71,7 @@ func parseShadowsocks(raw, sourceID string) *model.ProxyNode {
 	var pluginTLS bool
 	var pluginMux *bool
 	var udpRelayEnabled *bool
+	var shadowTLS *model.ShadowTLSOptions
 
 	if qi := strings.IndexByte(payload, '?'); qi >= 0 {
 		query := payload[qi+1:]
@@ -99,6 +100,9 @@ func parseShadowsocks(raw, sourceID string) *model.ProxyNode {
 				pluginPath = opts.path
 				pluginTLS = opts.tls
 				pluginMux = opts.mux
+			} else if opts := shadowTLSPluginOptions(plugin); opts != nil {
+				sip003Plugin = "shadow-tls"
+				shadowTLS = opts
 			} else {
 				return nil
 			}
@@ -151,6 +155,7 @@ func parseShadowsocks(raw, sourceID string) *model.ProxyNode {
 		Transport:       pluginTransport,
 		Plugin:          sip003Plugin,
 		PluginMux:       pluginMux,
+		ShadowTLS:       shadowTLS,
 		TLS:             pluginTLS,
 		HostHeader:      obfsHost,
 		Path:            pluginPath,
@@ -947,18 +952,39 @@ func parseSnellLine(raw, sourceID string) *model.ProxyNode {
 	if psk == "" || !snellModeIsDefault(options["mode"]) {
 		return nil
 	}
+	// ShadowTLS rides on the same shadow-tls-* keys as the SS line. An
+	// unknown key or an invalid combination rejects the node instead of
+	// silently importing a plain Snell that can never connect.
+	shadowTLS, ok := surgeShadowTLSOptions(options, percentDecode)
+	if !ok {
+		return nil
+	}
+	// ShadowTLS only wraps TCP: keep udp-relay only when the source line
+	// says so explicitly, and only on a wrapped node.
+	var udpRelayEnabled *bool
+	plugin := ""
+	if shadowTLS != nil {
+		plugin = "shadow-tls"
+		if value, present := options["udp-relay"]; present {
+			b := boolString(value)
+			udpRelayEnabled = &b
+		}
+	}
 	return &model.ProxyNode{
-		SourceID:   sourceID,
-		Kind:       model.KindSnell,
-		Name:       name,
-		Server:     server,
-		Port:       port,
-		Password:   psk,
-		HostHeader: options["obfs-host"],
-		Obfs:       options["obfs"],
-		ObfsParam:  options["obfs-host"],
-		Version:    intPtr(options["version"]),
-		RawURI:     raw,
+		SourceID:        sourceID,
+		Kind:            model.KindSnell,
+		Name:            name,
+		Server:          server,
+		Port:            port,
+		Password:        psk,
+		HostHeader:      options["obfs-host"],
+		Obfs:            options["obfs"],
+		ObfsParam:       options["obfs-host"],
+		Version:         intPtr(options["version"]),
+		Plugin:          plugin,
+		ShadowTLS:       shadowTLS,
+		UDPRelayEnabled: udpRelayEnabled,
+		RawURI:          raw,
 	}
 }
 

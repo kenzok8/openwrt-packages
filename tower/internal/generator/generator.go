@@ -205,17 +205,15 @@ func FilterNodes(nodes []model.ProxyNode, protocols []model.ProxyKind) []model.P
 }
 
 // filterExpressibleNodes drops nodes the target client cannot express at
-// all: VLESS combinations Surge 6 cannot write, and Snell versions a Clash
-// client cannot parse. Like FilterNodes it runs before scheme planning, so a
-// rule group left with no nodes fails the export instead of silently
-// pointing at nothing. There is no skipped-node count channel outside the
-// sing-box preflight, so the nodes are dropped the same way FilterNodes
-// drops disabled protocols.
+// all: VLESS combinations Surge 6 cannot write, Snell versions a Clash
+// client cannot parse, and ShadowTLS-wrapped nodes a target does not
+// document (never downgraded to a plain node that can never connect). Like
+// FilterNodes it runs before scheme planning, so a rule group left with no
+// nodes fails the export instead of silently pointing at nothing. There is
+// no skipped-node count channel outside the sing-box preflight, so the
+// nodes are dropped the same way FilterNodes drops disabled protocols.
 func filterExpressibleNodes(target model.ClientTarget, nodes []model.ProxyNode) []model.ProxyNode {
 	family := target.Family()
-	if family != model.FamilySurge && family != model.FamilyClash {
-		return nodes
-	}
 	out := make([]model.ProxyNode, 0, len(nodes))
 	for _, n := range nodes {
 		if family == model.FamilySurge && n.Kind == model.KindVLESS && !surgeAcceptsVLESS(n) {
@@ -224,9 +222,68 @@ func filterExpressibleNodes(target model.ClientTarget, nodes []model.ProxyNode) 
 		if family == model.FamilyClash && n.Kind == model.KindSnell && !clashAcceptsSnell(target, n) {
 			continue
 		}
+		if !shadowTLSAccepted(target, n) {
+			continue
+		}
 		out = append(out, n)
 	}
 	return out
+}
+
+// shadowTLSAccepted mirrors the Swift ShadowTLS gate: a wrapped node is only
+// exported where the target documents the wrapper. Nodes without a wrapper
+// always pass; a half-modelled wrapper (plugin set but options missing, or
+// vice versa) fails closed.
+//
+// Upstream per-target rules, adapted to the fork's target list:
+//   - Snell + ShadowTLS: Surge / Surge Mac only.
+//   - SS + ShadowTLS on mihomo targets (except Karing, which runs its own
+//     core): allowed unless skip-cert-verify is set, which mihomo's
+//     ShadowTLS client does not offer. Stash is not in upstream's allow
+//     list, so it skips.
+//   - Surge / Surge Mac: version 2+, no skip-cert-verify, no fingerprint,
+//     and never the 2022-blake3 cipher Surge does not implement.
+//   - Shadowrocket: version 3 only, no skip-cert-verify, no fingerprint.
+//   - sing-box and DAE: the fork writes no ShadowTLS detour, so wrapped
+//     nodes skip rather than exporting as plain Shadowsocks.
+func shadowTLSAccepted(target model.ClientTarget, node model.ProxyNode) bool {
+	if node.ShadowTLS == nil && node.Plugin != "shadow-tls" {
+		return true
+	}
+	opts := node.ShadowTLS
+	if node.Plugin != "shadow-tls" || opts == nil || !opts.IsValid() {
+		return false
+	}
+	if node.Kind != model.KindShadowsocks && node.Kind != model.KindSnell {
+		return false
+	}
+	if node.Transport != "" || node.TLS || node.CertificateFingerprint != "" {
+		return false
+	}
+	if node.Kind == model.KindShadowsocks {
+		if node.Obfs != "" {
+			return false
+		}
+	} else {
+		if node.Obfs != "" && !strings.EqualFold(node.Obfs, "none") {
+			return false
+		}
+		if target != model.ClientSurge && target != model.ClientSurgeMac {
+			return false
+		}
+	}
+	switch {
+	case target == model.ClientSurge || target == model.ClientSurgeMac:
+		return opts.Version >= 2 && !opts.SkipCertificateVerification &&
+			node.Fingerprint == "" && !strings.EqualFold(node.Cipher, "2022-blake3-chacha20-poly1305")
+	case target == model.ClientShadowrocket:
+		return node.Kind == model.KindShadowsocks && opts.Version == 3 &&
+			!opts.SkipCertificateVerification && node.Fingerprint == ""
+	case mihomoFamily(target) && target != model.ClientKaring:
+		return node.Kind == model.KindShadowsocks && !opts.SkipCertificateVerification
+	default:
+		return false
+	}
 }
 
 // sip003Value escapes a SIP003 plugin option value: a `;` inside a value (a

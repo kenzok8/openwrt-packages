@@ -49,6 +49,7 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 		sip003Plugin, pluginTransport, pluginPath, pluginHost := "", "", "", ""
 		var pluginTLS bool
 		var pluginMux *bool
+		var shadowTLS *model.ShadowTLSOptions
 
 		if kind == model.KindShadowsocks {
 			if hasKey(d, "udp") {
@@ -82,6 +83,20 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 						pluginMux = &b
 					}
 					obfsHost = opts["host"]
+				case plugin == "shadow-tls":
+					// Read plugin-opts directly: the backfilled opts map may
+					// carry a top-level "host" (ws/obfs host), which is not
+					// the ShadowTLS SNI.
+					fields := map[string]string{}
+					for k, v := range asMap(d["plugin-opts"]) {
+						fields[strings.ToLower(k)] = str(v)
+					}
+					shadowTLS = shadowTLSOptions(fields)
+					if shadowTLS == nil {
+						rejected++
+						continue
+					}
+					sip003Plugin = "shadow-tls"
 				default:
 					rejected++
 					continue
@@ -106,6 +121,7 @@ func parseClashYAML(text, sourceID string) ParsedContent {
 			TransportMode:                transportMode(map[string]string{"mode": str(d["mode"])}, network),
 			Plugin:                       sip003Plugin,
 			PluginMux:                    pluginMux,
+			ShadowTLS:                    shadowTLS,
 			TLS:                          kind == model.KindTrojan || pluginTLS || boolString(str(d["tls"])),
 			SNI:                          firstNonEmpty(str(d["servername"]), str(d["sni"])),
 			HostHeader:                   firstNonEmpty(str(d["authority"]), pluginHost, clashHostHeader(d["host"])),

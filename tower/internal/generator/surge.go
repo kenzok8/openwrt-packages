@@ -101,6 +101,12 @@ func surgeNode(node model.ProxyNode, shadowrocket bool) string {
 			"encrypt-method=" + firstNonEmpty(node.Cipher, "aes-256-gcm"),
 			"password=" + confValue(node.Password),
 			"udp-relay=" + strconv.FormatBool(node.UDPRelayEnabled == nil || *node.UDPRelayEnabled)}
+		if node.ShadowTLS != nil {
+			components = append(components,
+				"shadow-tls-password="+confValue(node.ShadowTLS.Password),
+				"shadow-tls-sni="+confValue(node.ShadowTLS.Host),
+				"shadow-tls-version="+strconv.Itoa(node.ShadowTLS.Version))
+		}
 		if shadowrocket && node.Plugin == "v2ray-plugin" {
 			if node.TLS {
 				components = append(components, "obfs=wss")
@@ -206,7 +212,17 @@ func surgeNode(node model.ProxyNode, shadowrocket bool) string {
 			components = append(components, "obfs="+node.Obfs)
 			appendValue(node.ObfsParam, "obfs-host", &components)
 		}
-		if ptrInt(node.Version, 4) >= 3 {
+		if node.ShadowTLS != nil {
+			components = append(components,
+				"shadow-tls-password="+confValue(node.ShadowTLS.Password),
+				"shadow-tls-sni="+confValue(node.ShadowTLS.Host),
+				"shadow-tls-version="+strconv.Itoa(node.ShadowTLS.Version))
+			// ShadowTLS only wraps TCP: the wrapped node gets udp-relay
+			// only when the source line asked for it explicitly.
+			if node.UDPRelayEnabled != nil && *node.UDPRelayEnabled && ptrInt(node.Version, 4) >= 3 {
+				components = append(components, "udp-relay=true")
+			}
+		} else if ptrInt(node.Version, 4) >= 3 {
 			components = append(components, "udp-relay=true")
 		}
 	case model.KindSOCKS5:
