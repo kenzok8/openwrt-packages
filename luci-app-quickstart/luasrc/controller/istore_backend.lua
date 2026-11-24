@@ -50,7 +50,7 @@ local function get_session()
   for _, key in ipairs({"sysauth_https", "sysauth_http", "sysauth"}) do
     sid = http.getcookie(key)
     if sid then
-      sid, sdat = session_retrieve(sid, nil)
+      sid, sdat = session_retrieve(sid, {"root"})
       if sid and sdat then
         return sid, sdat
       end
