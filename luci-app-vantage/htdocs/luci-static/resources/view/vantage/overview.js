@@ -122,7 +122,7 @@ var TILE_SLOW_MS = 500;
    answer stands that long after a call that failed */
 var TILE_RETRY_MS = 60 * 1000;
 var STORE_KEY = 'vantage.hist.v1';
-var VERSION = '1.2.0';                /* this package's, as its Makefile has it (tests/version.test.js) */
+var VERSION = '1.2.1';                /* this package's, as its Makefile has it (tests/version.test.js) */
 var SVGNS = 'http://www.w3.org/2000/svg';
 var HOSTAPD_OBJ = /^[A-Za-z0-9_.-]{1,64}$/;
 
@@ -818,7 +818,7 @@ function writeStore(v) {
    dotted numbers, this one and the kept one alike: anything else kept
    counts as nothing kept, and with a VERSION of another form there is
    no line. */
-var NEWS_URL = 'https://github.com/anothaDev/luci-theme-vantage/blob/v1.2.0/CHANGELOG.md';
+var NEWS_URL = 'https://github.com/anothaDev/luci-theme-vantage/blob/v1.2.1/CHANGELOG.md';
 var SEEN_KEY = 'vantage.seen.v1';
 var VERSION_FORM = /^\d{1,4}(\.\d{1,4}){1,3}$/;
 
@@ -1478,6 +1478,14 @@ return view.extend({
 					swState[n] = { at: asked, ports: v && Array.isArray(v.result) && v.result.length ? v.result : null };
 				});
 			});
+			/* the interfaces hostapd made for a network's VLANs (#164): iwinfo
+			   lists the stations on one under it alone. Its station list
+			   every poll, as the network's own, and nothing else of it
+			   (1.2 ms each on a four-core access point) */
+			var vlans = model.wifiVlans(wifiDevs);
+			Object.keys(vlans).forEach(function(of) {
+				vlans[of].forEach(function(ifn) { per.push(L.resolveDefault(callAssoc(ifn), []).then(function(v) { return [ 'assoc', ifn, v ]; })); });
+			});
 			ifnames.forEach(function(ifn) {
 				per.push(L.resolveDefault(callAssoc(ifn), []).then(function(v) { return [ 'assoc', ifn, v ]; }));
 				if (slow) per.push(hostapd(ifn, 'get_clients').then(function(v) { return [ 'hapd', ifn, v ]; }));
@@ -1671,35 +1679,7 @@ return view.extend({
 		st.devPrev = dr.next;
 		if (Object.keys(dr.rates).length || !Object.keys(devCounters).length) st.devRates = dr.rates;
 
-		function sum(list) {
-			var rx = 0, tx = 0, ok = false;
-			list.forEach(function(n) { var r = st.devRates[n]; if (r) { rx += r.rx; tx += r.tx; ok = true; } });
-			return ok ? { rx: rx, tx: tx } : null;
-		}
-		st.radioRates = Object.create(null);
-		m.radios.forEach(function(r) { var v = sum(r.ifnames); if (v) st.radioRates[r.id] = v; });
-		st.ssidRates = Object.create(null);
-		m.ssids.forEach(function(s) { var v = s.ifname ? sum([ s.ifname ]) : null; if (v) st.ssidRates[s.id] = v; });
-		/* the uplink: the fast lane's own while it samples this uplink's
-		   device; else (no uplink, a new device, the lane stopped) this poll's */
-		var upFast = fast && !!m.uplink && st.fastDev === m.uplink.statsDev;
-		var upRate = upFast ? st.uplinkRate : (m.uplink ? st.devRates[m.uplink.statsDev] : null);
-		st.uplinkRate = upRate || null;
-
-		/* throughput history (only for ticks that produced a rate) */
-		if (upRate && !upFast) this.pushNet(lineKey(m.uplink), at, upRate);
-		/* the other lines to the internet: this poll's (the fast lane
-		   samples the main one only) */
-		this.extraLines(m).forEach(function(x) { var r = st.devRates[x.statsDev]; if (r) self.pushNet(lineKey(x), at, r); });
-		/* a line gone for longer than the chart shows leaves no history */
-		var lineKeys = m.uplinks.map(lineKey);
-		Object.keys(st.hist.net).forEach(function(k) {
-			var h = st.hist.net[k];
-			if (/^up:/.test(k) && lineKeys.indexOf(k) < 0 && !(h.length && h[h.length - 1][0] > at - WINDOW_MS)) delete st.hist.net[k];
-		});
-		m.radios.forEach(function(r) { if (st.radioRates[r.id]) self.pushNet(r.id, at, st.radioRates[r.id]); });
-
-		/* station counters, per-station history */
+		/* station counters */
 		var staCounters = Object.create(null), local = m.clients.filter(function(c) { return !c.ap; });
 		/* a paired access point's stations have no counters here */
 		local.forEach(function(c) { staCounters[c.mac] = { rx: c.rxBytes, tx: c.txBytes }; });
@@ -1708,6 +1688,47 @@ return view.extend({
 		if (Object.keys(sr.rates).length || !local.length) st.staRates = sr.rates;
 		/* theirs: this poll's rates as the access point counts them */
 		m.clients.forEach(function(c) { if (c.ap) { if (c.ap.rate) st.staRates[c.mac] = c.ap.rate; else delete st.staRates[c.mac]; } });
+
+		/* A radio's and a network's traffic: their interfaces' counters,
+		   and for the stations on the interface of a VLAN (#164) each
+		   station's own: netifd lists such an interface, and so its
+		   counters, only where netifd made it */
+		var viaVlan = Object.create(null);
+		local.forEach(function(c) {
+			var r = c.vlanIf ? st.staRates[c.mac] : null, v = r ? viaVlan[c.ssidId] || (viaVlan[c.ssidId] = { rx: 0, tx: 0 }) : null;
+			if (v) { v.rx += r.rx; v.tx += r.tx; }
+		});
+		function sum(list, ssids) {
+			var rx = 0, tx = 0, ok = false;
+			list.map(function(n) { return st.devRates[n]; }).concat(ssids.map(function(id) { return viaVlan[id]; })).forEach(function(r) {
+				if (r) { rx += r.rx; tx += r.tx; ok = true; }
+			});
+			return ok ? { rx: rx, tx: tx } : null;
+		}
+		st.radioRates = Object.create(null);
+		m.radios.forEach(function(r) { var v = sum(r.ifnames, r.ssids); if (v) st.radioRates[r.id] = v; });
+		st.ssidRates = Object.create(null);
+		m.ssids.forEach(function(s) { var v = s.ifname ? sum([ s.ifname ], [ s.id ]) : null; if (v) st.ssidRates[s.id] = v; });
+		/* the uplink: the fast lane's own while it samples this uplink's
+		   device; else (no uplink, a new device, the lane stopped) this poll's */
+		var upFast = fast && !!m.uplink && st.fastDev === m.uplink.statsDev;
+		var upRate = upFast ? st.uplinkRate : model.lineRate(m.uplink, st.devRates);
+		st.uplinkRate = upRate || null;
+
+		/* throughput history (only for ticks that produced a rate) */
+		if (upRate && !upFast) this.pushNet(lineKey(m.uplink), at, upRate);
+		/* the other lines to the internet: this poll's (the fast lane
+		   samples the main one only) */
+		this.extraLines(m).forEach(function(x) { var r = model.lineRate(x, st.devRates); if (r) self.pushNet(lineKey(x), at, r); });
+		/* a line gone for longer than the chart shows leaves no history */
+		var lineKeys = m.uplinks.map(lineKey);
+		Object.keys(st.hist.net).forEach(function(k) {
+			var h = st.hist.net[k];
+			if (/^up:/.test(k) && lineKeys.indexOf(k) < 0 && !(h.length && h[h.length - 1][0] > at - WINDOW_MS)) delete st.hist.net[k];
+		});
+		m.radios.forEach(function(r) { if (st.radioRates[r.id]) self.pushNet(r.id, at, st.radioRates[r.id]); });
+
+		/* per-station history */
 		m.clients.forEach(function(c) {
 			var h = st.clientHist[c.mac] || (st.clientHist[c.mac] = []);
 			var r = st.staRates[c.mac];
@@ -1900,11 +1921,12 @@ return view.extend({
 
 	fastSample: function() {
 		var self = this, st = this.st, up = this.m && this.m.uplink, dev = up && up.statsDev;
+		/* the line's device, then the VLANs that come off it (model.lineVlans) */
+		var devs = dev ? [ dev ].concat(up.minus || []) : [];
 		if (document.hidden || !this.el || this.idle()) return Promise.resolve();
-		return Promise.all([
-			L.resolveDefault(callRead('/proc/stat'), ''),
-			dev ? L.resolveDefault(callDev(dev), null) : Promise.resolve(null)
-		]).then(function(r) {
+		return Promise.all([ L.resolveDefault(callRead('/proc/stat'), '') ].concat(devs.map(function(n) {
+			return L.resolveDefault(callDev(n), null);
+		}))).then(function(r) {
 			/* rates from the browser's clock, samples on the device's timeline */
 			var now = Date.now(), at = now + (st.skew || 0), changed = false;
 			/* back after a pause (a hidden tab) or on another device: start
@@ -1925,10 +1947,10 @@ return view.extend({
 				st.cores = stat.cores.length || st.cores;
 			}
 			var s = r[1] && r[1].statistics, counters = Object.create(null);
-			if (dev && s) counters[dev] = { rx: s.rx_bytes, tx: s.tx_bytes };
-			var dr = model.rates(st.fastPrev, counters, now);
+			devs.forEach(function(n, i) { var c = r[1 + i] && r[1 + i].statistics; if (c) counters[n] = { rx: c.rx_bytes, tx: c.tx_bytes }; });
+			var dr = model.rates(st.fastPrev, counters, now), rate = model.lineRate(up, dr.rates);
 			st.fastPrev = dr.next;
-			if (dev && dr.rates[dev]) { st.uplinkRate = dr.rates[dev]; self.pushNet(lineKey(up), at, st.uplinkRate); changed = true; }
+			if (rate) { st.uplinkRate = rate; self.pushNet(lineKey(up), at, st.uplinkRate); changed = true; }
 			/* both answered: the full poll leaves CPU and the uplink to this lane */
 			if (stat && (!dev || s)) st.fastAt = now;
 			if (changed) self.paintFast();
@@ -3494,7 +3516,7 @@ return view.extend({
 		var lines = Object.create(null);
 		this.extraLines().forEach(function(x) { lines[x.iface] = x; });
 		h.lines.forEach(function(ln) {
-			var x = lines[ln.id], r = x ? st.devRates[x.statsDev] : null;
+			var x = lines[ln.id], r = x ? model.lineRate(x, st.devRates) : null;
 			if (!x) return;
 			var addr = lineAddr(x);
 			setTitle(ln.el, [ x.iface, x.dev, x.speed ? model.speedLabel(x.speed) : null, addr && x.gateway ? _('Gateway %s').format(x.gateway) : null ].filter(Boolean).join(' · '));
@@ -4851,6 +4873,8 @@ return view.extend({
 		else if (this.linePort(c.port)) tags.push(pill(_('Upstream'), 'muted', _('Reached through the uplink port %s, not connected to this device').format(c.port)));
 		/* heard here, and behind a paired access point: a note, nothing more */
 		if (c.behind) tags.push(apPill(_('behind %s').format(c.behind.name), this.behindText(c.behind)));
+		/* a paired access point's own entry: its other addresses, left out of the list (#167) */
+		if (c.own) tags.push(apPill(fmt.N_(c.own.macs.length, '%s more address', '%s more addresses').format(fmt.count(c.own.macs.length)), this.ownText(c.own)));
 		if (c.vlan != null) tags.push(pill(_('VLAN %d').format(c.vlan), 'muted'));
 		var speed = c.speed ? fmt.phyRate(c.speed.mbps * 1000) : fmt.DASH;
 		var link = c.ap ? E('td', { 'class': 'vt-td-link', 'data-title': _('Link', 'vantage'), 'title': _('Port %s of %s').format(c.ap.port, c.ap.name) }, [
@@ -4898,6 +4922,10 @@ return view.extend({
 	/* where a host heard here sits behind a paired access point */
 	behindText: function(b) {
 		return _('Behind %s, its port %s').format(b.name, b.port);
+	},
+
+	ownText: function(o) {
+		return _('%s reports these as addresses of its own too: %s').format(o.name, o.macs.join(', '));
 	},
 
 	clientCells: function(c, maxRate) {
@@ -5151,6 +5179,12 @@ return view.extend({
 			dom.content(this.el.ports, ports.length ? this.portCells : [ E('p', { 'class': 'vt-empty-inline' }, [ _('No Ethernet ports are reported right now.') ]) ]);
 		}
 		var several = (m.uplinks || []).length > 1;
+		/* a note as its label and its counts, so a narrow cell breaks
+		   between the two and not before the last word (#168) */
+		function note(t) {
+			var x = fmt.labelled(t);
+			return E('span', { 'class': 'vt-port-note vt-tn' }, x.length > 1 ? x.map(function(p) { return E('span', {}, [ p ]); }) : x);
+		}
 		ports.forEach(function(p, i) {
 			var r = p.link && !p.sw ? st.devRates[p.id] || null : null, line = p.lines.length > 0, c = p.counters, counted = [];
 			var rate = r && !(r.rx === 0 && r.tx === 0) ? (line ? fmt.rateParts(r.rx, r.tx) : fmt.rateParts(r.tx, r.rx)) : null;
@@ -5177,7 +5211,7 @@ return view.extend({
 				p.link && !p.sw ? E('span', { 'class': 'vt-port-rates vt-tn' }, rate ? [ E('span', {}, [ '↓ ' + rate.dn ]), E('span', {}, [ '↑ ' + rate.up + (rate.unit ? ' ' + rate.unit : '') ]) ]
 					: [ E('span', {}, [ r ? _('idle') : fmt.DASH ]) ]) : '',
 				p.hosts ? E('span', { 'class': 'vt-port-hosts vt-tn' }, [ p.hosts === 1 ? _('1 device') : _('%d devices').format(p.hosts) ]) : ''
-			].concat(counted.map(function(t) { return E('span', { 'class': 'vt-port-note vt-tn' }, [ t ]); })));
+			].concat(counted.map(note)));
 		});
 	},
 
@@ -5553,7 +5587,9 @@ return view.extend({
 				c.ap ? kv(_('Access point'), [ c.ap.name, c.ap.addr ? E('small', {}, [ c.ap.addr ]) : '', alsoLine(c.ap) ]) :
 					kv(_('Radio', 'vantage'), !radio ? c.radio : radio.channel && radio.width ? _('%s · channel %d · %d MHz').format(radio.id, radio.channel, radio.width)
 						: radio.id + ' · ' + (radio.channel ? _('channel %d').format(radio.channel) : fmt.DASH))
-			].concat(c.ap && c.ap.bssid ? [ kv(_('BSSID'), [ fmt.mac(c.ap.bssid), c.ap.channel ? E('small', {}, [ _('channel %d').format(c.ap.channel) ]) : '' ]) ] : [], [
+			].concat(c.ap && c.ap.bssid ? [ kv(_('BSSID'), [ fmt.mac(c.ap.bssid), c.ap.channel ? E('small', {}, [ _('channel %d').format(c.ap.channel) ]) : '' ]) ] : [],
+				/* on the interface of one of the network's VLANs (#164) */
+				c.vlanIf ? [ kv(_('Interface'), c.vlanIf) ] : [], [
 				kv(_('Connected for'), c.gone ? fmt.DASH : fmt.duration(c.connected)),
 				kv(_('Last activity', 'vantage'), c.inactive == null || c.gone ? fmt.DASH : fmt.ago(c.inactive)),
 				kv(_('Seen since'), c.firstSeen ? (c.isNew ? _('%s (new this session)').format(new Date(c.firstSeen).toLocaleTimeString()) : _('before this page opened')) : fmt.DASH)
@@ -5618,6 +5654,7 @@ return view.extend({
 			].concat(c.behind ? [ kv(_('Access point'), [ c.behind.name, E('small', {}, [ _('its port %s').format(c.behind.port) ]), alsoLine(c.behind) ]) ] : [])) ]),
 			this.section(_('Identity'), [ E('dl', { 'class': 'vt-kvs' }, [
 				kv(_('MAC address'), this.copyLine(c.macLabel), true),
+				c.own ? kv(_('Access point'), [ c.own.name, E('small', {}, [ this.ownText(c.own) ]) ]) : '',
 				kv(_('Address type'), c.isPrivate ? _('Private address (randomised by the device)') : (c.vendor ? _('Globally unique · %s').format(c.vendor) : _('Globally unique'))),
 				kv(_('IP addresses'), c.ips && c.ips.length ? c.ips.map(this.addrLine, this) : E('span', { 'class': 'vt-muted' }, [ _('not known to this device') ]), true),
 				madeName(c) ? '' : kv(_('Name from'), this.sourceText(c))
@@ -5856,7 +5893,7 @@ return view.extend({
 	drawerUplink: function(id) {
 		var m = this.m, st = this.st, lines = m.uplinks || [];
 		var up = id ? lines.filter(function(x) { return x.iface === id; })[0] : m.uplink;
-		var r = up && up === m.uplink ? st.uplinkRate : up ? st.devRates[up.statsDev] || null : null;
+		var r = up && up === m.uplink ? st.uplinkRate : model.lineRate(up, st.devRates);
 		var hist = up ? st.hist.net[lineKey(up)] : null, several = lines.length > 1;
 		var tunR = up && up.tunnel ? st.devRates[up.tunnel.dev] || null : null;
 		function errors(n) { return fmt.N_(n, '%s error', '%s errors').format(fmt.count(n)); }

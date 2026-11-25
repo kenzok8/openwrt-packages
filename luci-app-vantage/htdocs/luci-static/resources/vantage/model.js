@@ -31,7 +31,7 @@ var MAX_LINES = 4;
 
 /* the paired access points (vantage.collector report), cut to the
    collector's own caps: the page never trusts a reply to be smaller */
-var MAX_APS = 16, MAX_AP_SSIDS = 16, MAX_AP_STATIONS = 256, MAX_REMOTE_STATIONS = 1024, MAX_AP_WIRED = 128;
+var MAX_APS = 16, MAX_AP_SSIDS = 16, MAX_AP_STATIONS = 256, MAX_REMOTE_STATIONS = 1024, MAX_AP_WIRED = 128, MAX_AP_OWN = 64;
 var AP_ID = /^[0-9a-f]{16}$/;
 /* luci.vantage.pair's rule for the name given at pairing */
 var AP_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,62}$/;
@@ -86,11 +86,15 @@ var TILE_NUM_MAX = 1e15;
    alone do not count */
 var TILE_VISIBLE = /[^\p{Z}\p{C}\p{M}\u2800]/u;
 
+/* the interfaces of the networks' VLANs asked for their stations at most (wifiVlans) */
+var MAX_VLAN_IFS = 32;
 /* the Ethernet ports the Ports tile lists at most: a 48-port switch with
    its uplinks fits */
 var MAX_PORTS = 64;
 /* a VLAN on a device, as netifd names one: eth1.10 */
 var VLAN_DEV = /^(.+)\.\d{1,4}$/;
+/* the device under a VLAN (eth1 under eth1.10), or the name itself */
+function under(n) { for (var m = VLAN_DEV.exec(n); m; m = VLAN_DEV.exec(n)) n = m[1]; return n; }
 
 /* netifd protocols, and kernel device types, of tunnels that ride over
    another line: a full-tunnel VPN is not a second way out. PPTP and L2TP
@@ -657,6 +661,48 @@ return baseclass.extend({
 		};
 	},
 
+	/* The VLAN devices on the device a line is counted on that carry
+	   another network of this device: eth0.3 for a LAN, on the eth0 an
+	   untagged WAN is on (a switch's CPU port, or one port for
+	   everything). The kernel counts their traffic on that device too,
+	   so the line read download plus upload in both directions (#166);
+	   lineRate takes them off. Only a VLAN with an interface of its own
+	   up on it (a protocol, not unmanaged), itself or through its
+	   bridge. Never for a line on a bridge, counted on the bridge or on
+	   its port: what an access point's trunk carries for another of its
+	   networks is bridged on, whatever protocol that network has here,
+	   and counted once. With software flow offloading the kernel counts
+	   on a VLAN's device only what goes out on it: the upload is right
+	   then, the download still has the upload in it. -> [ device ] */
+	lineVlans: function(line, devs, ifaces) {
+		var on = line && line.statsDev, routed = Object.create(null);
+		devs = obj(devs);
+		if (typeof on !== 'string' || line.dev !== line.l3dev || obj(devs[on]).type === 'bridge' || obj(devs[on]).devtype === 'bridge') return [];
+		upIfaces(ifaces).forEach(function(i) {
+			if (!i.proto || i.proto === 'none') return;
+			[ i.device, i.l3_device ].forEach(function(n) {
+				if (typeof n !== 'string' || !devs[n]) return;
+				routed[n] = true;
+				arr(devs[n]['bridge-members']).forEach(function(m) { routed[m] = true; });
+			});
+		});
+		return Object.keys(devs).filter(function(n) {
+			var d = obj(devs[n]), m = VLAN_DEV.exec(n);
+			return routed[n] === true && n !== line.dev && n !== line.l3dev && !!d.statistics && (d.devtype === 'vlan' || d.type === 'VLAN') &&
+				(typeof d.parent === 'string' ? d.parent : m && m[1]) === on;
+		});
+	},
+
+	/* a line's rate from the devices' (rates): its device's, less the
+	   VLANs lineVlans found on it; none while one of them has none */
+	lineRate: function(line, rates) {
+		var r = line && rates ? rates[line.statsDev] : null, minus = line ? arr(line.minus) : [];
+		if (!r || !minus.length) return r || null;
+		var rx = r.rx, tx = r.tx;
+		if (minus.some(function(n) { var v = rates[n]; if (!v) return true; rx -= v.rx; tx -= v.tx; return false; })) return null;
+		return { rx: Math.max(0, rx), tx: Math.max(0, tx) };
+	},
+
 	/* A router's line to the internet whose address is not its own on
 	   the internet: 'private' (RFC 1918: a router in front of this one,
 	   or the provider, translates too: double NAT) or 'shared' (RFC
@@ -815,11 +861,13 @@ return baseclass.extend({
 	/* vantage.collector report -> the paired access points, checked again
 	   here (types, ranges, MACs, caps), whatever the collector did:
 	   [ { id, name, addr, state, error, age, info: { name, model, uptime }
-	   or null, mac, nodes: [ { id, ifname, ssid, bssid, freq, channel,
-	   band, clients } ], sta: [ { mac, node, signal, rxRate, txRate, rx,
-	   tx, connected } ], hosts: [ { mac, port, speed, rx, tx } ], clients,
-	   wired, rate } ]. `name` and `mac` are the pairing's; what the access
-	   point calls itself is in info. Only one in state ok has nodes,
+	   or null, mac, macs: [ mac ], nodes: [ { id, ifname, ssid, bssid,
+	   freq, channel, band, clients } ], sta: [ { mac, node, signal,
+	   rxRate, txRate, rx, tx, connected } ], hosts: [ { mac, port, speed,
+	   rx, tx } ], clients, wired, rate } ]. `name` and `mac` are the
+	   pairing's; what the access point calls itself is in info, and
+	   macs are the addresses it says are its own (#167). Only one in
+	   state ok has macs, nodes,
 	   stations (sta) and hosts: what it reports, which build() gives or
 	   refuses it, counting what it gave in clients, wired and rate (0 and
 	   null here); build() adds parent ({ id, name, port } of the access
@@ -868,10 +916,11 @@ return baseclass.extend({
 					uptime: finite(rep.uptime) && rep.uptime >= 0 ? rep.uptime : null
 				} : null,
 				mac: rep ? unicast(rep.mac) : null,
-				nodes: [], sta: [], hosts: [], clients: 0, wired: 0, rate: null
+				macs: [], nodes: [], sta: [], hosts: [], clients: 0, wired: 0, rate: null
 			};
 			if (state === 'ok') {
 				var nodeOf = Object.create(null), seen = Object.create(null);
+				arr(rep.macs).slice(0, MAX_AP_OWN).forEach(function(v) { var o = unicast(v); if (o && a.macs.indexOf(o) < 0) a.macs.push(o); });
 				arr(rep.ssids).slice(0, MAX_AP_SSIDS).forEach(function(s) {
 					s = obj(s);
 					if (typeof s.ifname !== 'string' || !AP_IFNAME.test(s.ifname) || nodeOf[s.ifname]) return;
@@ -1097,7 +1146,6 @@ return baseclass.extend({
 		var conduit = Object.create(null), cpu = Object.create(null), only = Object.create(null);
 		devs = obj(devs);
 		switches = obj(switches);
-		function under(n) { for (var m = VLAN_DEV.exec(n); m; m = VLAN_DEV.exec(n)) n = m[1]; return n; }
 		function count(v) { return finite(v) && v > 0 ? v : 0; }
 		function parts(n) { return String(n).match(/\d+|\D+/g) || []; }
 		/* lan2 before lan10 */
@@ -1165,6 +1213,32 @@ return baseclass.extend({
 		}).slice(0, MAX_PORTS);
 	},
 
+	/* The interfaces hostapd made for the VLANs of an access point
+	   interface, where a password or RADIUS gives a station its VLAN
+	   (#164): luci.vantage wireless names them (vlans), since iwinfo
+	   lists the stations on one under it alone. Checked: names of
+	   devices, none an interface of a radio's own list, each once,
+	   MAX_VLAN_IFS in all. -> { ifname: [ name ] } */
+	wifiVlans: function(wifi) {
+		var out = Object.create(null), taken = Object.create(null), n = 0;
+		wifi = obj(wifi);
+		function each(f) {
+			Object.keys(wifi).sort().forEach(function(rn) {
+				arr(obj(wifi[rn]).interfaces).forEach(function(i) { if (i && typeof i === 'object' && typeof i.ifname === 'string') f(i); });
+			});
+		}
+		each(function(i) { taken[i.ifname] = true; });
+		each(function(i) {
+			arr(i.vlans).forEach(function(v) {
+				if (typeof v !== 'string' || !AP_IFNAME.test(v) || taken[v] || n >= MAX_VLAN_IFS) return;
+				taken[v] = true;
+				n++;
+				(out[i.ifname] || (out[i.ifname] = [])).push(v);
+			});
+		});
+		return out;
+	},
+
 	/* ------------------------------------------------------------ model */
 
 	/* raw: { board, info, ifaces, devs, wifi, iwinfo: { ifname: info },
@@ -1179,7 +1253,7 @@ return baseclass.extend({
 		var self = this, board = obj(raw.board), info = obj(raw.info), devs = obj(raw.devs), hints = obj(raw.hints);
 		var wifiDevs = obj(raw.wifi), iw = obj(raw.iwinfo), assoc = obj(raw.assoc), hapd = obj(raw.hapd), hstat = obj(raw.hapdStatus);
 
-		var radios = [], ssids = [], clients = [], wlNames = [];
+		var radios = [], ssids = [], clients = [], wlNames = [], vlansOf = this.wifiVlans(wifiDevs);
 
 		Object.keys(wifiDevs).sort().forEach(function(rname) {
 			var r = obj(wifiDevs[rname]), cfg = obj(r.config), rIw = obj(r.iwinfo);
@@ -1258,8 +1332,11 @@ return baseclass.extend({
 					networks: arr(ic.network),
 					bssid: fmt.mac(iiw.bssid || stText(st.bssid) || ic.macaddr || ''),
 					up: radio.up && !!ifname && (!devs[ifname] || devs[ifname].up !== false),
+					/* the interfaces of its VLANs (wifiVlans): Wi-Fi ports too */
+					vlans: (ifname && vlansOf[ifname]) || [],
 					clients: 0
 				};
+				ss.vlans.forEach(function(v) { wlNames.push(v); });
 				radio.ssids.push(ss.id);
 				ssids.push(ss);
 			});
@@ -1282,16 +1359,32 @@ return baseclass.extend({
 			arr(ss.networks).forEach(function(n) { arr(netSubnets[n]).forEach(function(s) { if (out.indexOf(s) < 0) out.push(s); }); });
 			return out.length ? out : subnets;
 		}
+		/* a station on the interface of a VLAN is on another network
+		   than its SSID's: any of this device's but a routed line's own
+		   (the provider's subnet), since the bridge that interface is in
+		   is not netifd's to know everywhere */
+		var anySubnets = [], routed = uplink && uplink.dev === uplink.l3dev ? uplink.iface : null;
+		Object.keys(netSubnets).forEach(function(n) {
+			if (n !== 'loopback' && n !== routed) netSubnets[n].forEach(function(s) { if (anySubnets.indexOf(s) < 0) anySubnets.push(s); });
+		});
+		function staSubnets(ss, via) { return via && anySubnets.length ? anySubnets : ssidSubnets(ss); }
 
 		function hintOf(mac) { return obj(hints[mac.toUpperCase()] || hints[mac]); }
+		/* a network's stations: its interface's, then those on the
+		   interfaces of its VLANs, each with that interface (via) */
+		function stationsOf(ss) {
+			var out = arr(assoc[ss.ifname]).map(function(s) { return { s: s, via: null }; });
+			ss.vlans.forEach(function(v) { arr(assoc[v]).forEach(function(s) { out.push({ s: s, via: v }); }); });
+			return out;
+		}
 
 		/* mDNS names only where they are unambiguous across all stations */
 		var everyone = [], apSta = Object.create(null);
 		ssids.forEach(function(ss) {
-			if (ss.ifname) arr(assoc[ss.ifname]).forEach(function(s) {
-				var mac = s && names.normMac(s.mac);
+			if (ss.ifname) stationsOf(ss).forEach(function(e) {
+				var s = e.s, mac = s && names.normMac(s.mac);
 				if (!mac) return;
-				everyone.push({ mac: mac, ips: self.hintAddrs(hintOf(mac), ssidSubnets(ss)) });
+				everyone.push({ mac: mac, ips: self.hintAddrs(hintOf(mac), staSubnets(ss, e.via)) });
 				/* a station of an access point interface: one host using
 				   this device. The far end of a client or mesh interface
 				   is no such station */
@@ -1428,6 +1521,7 @@ return baseclass.extend({
 			var mac = macOf(hop, l3);
 			return mac ? linePort(mac, l3) : null;
 		}, kernel).slice(0, MAX_LINES))) : [];
+		uplinks.forEach(function(u) { u.minus = self.lineVlans(u, devs, raw.ifaces); });
 		/* the network on each bridge (or bridge VLAN: br-lan.10), and its
 		   IPv4 subnets for the hosts' addresses */
 		var lans = Object.create(null);
@@ -1478,12 +1572,12 @@ return baseclass.extend({
 			var hc = obj(obj(hapd[ss.ifname]).clients);
 			var hmap = Object.create(null);
 			Object.keys(hc).forEach(function(k) { var m = names.normMac(k); if (m) hmap[m] = obj(hc[k]); });
-			arr(assoc[ss.ifname]).forEach(function(s) {
-				var mac = s && names.normMac(s.mac);
+			stationsOf(ss).forEach(function(e) {
+				var s = e.s, mac = s && names.normMac(s.mac);
 				if (!mac) return;
 				var h = hmap[mac] || {}, rx = obj(s.rx), tx = obj(s.tx);
 				var hint = hintOf(mac);
-				var ips = self.hintAddrs(hint, ssidSubnets(ss));
+				var ips = self.hintAddrs(hint, staSubnets(ss, e.via));
 				var std = wifi.clientStd(rx, tx, h);
 				var alias = raw.aliases && raw.aliases[mac];
 				var nm = names.resolve({
@@ -1508,6 +1602,8 @@ return baseclass.extend({
 					wps: names.wpsName(h.signature),
 					ips: ips,
 					ifname: ss.ifname,
+					/* the interface of a VLAN it is on, or null (#164) */
+					vlanIf: e.via,
 					ssid: ss.ssid,
 					ssidId: ss.id,
 					radio: ss.radio,
@@ -1586,13 +1682,19 @@ return baseclass.extend({
 		/* The paired access points. What they report adds entries, marked
 		   `ap`; a MAC this device lists itself (a station, a wired host,
 		   one of its own, the gateway's) keeps this device's entry, and a
-		   remote entry is never the gateway. Two exceptions, both only for
-		   a wired host this device hears on the very port it hears an
-		   access point's own MAC on, and never the gateway or this device:
+		   remote entry is never the gateway. Three exceptions, all only for
+		   a wired host this device hears on the wire it hears an access
+		   point's own MAC on (that port, or another VLAN of the port's
+		   device: eth0.3 beside eth0.1, where each VLAN is a device of its
+		   own here; sameWire), and never the gateway or this device:
 		   - one the access point reports as its station becomes that
 		     station, out of the wired hosts (a router's view of the Wi-Fi
 		     clients of its wired access points);
-		   - one it reports as its wired host gets a note (`behind`).
+		   - one it reports as its wired host gets a note (`behind`);
+		   - one it reports as an address of its own (the bridge of
+		     another of its networks, #167) is that access point once
+		     more, not one more host: out of the wired hosts, and named
+		     on the access point's own entry there.
 		   A station of this device is never moved. portOf, the port of an
 		   access point: its MAC (the pairing's) unique among them, not the
 		   gateway's, not one of this device's, learned on a wired port,
@@ -1635,7 +1737,15 @@ return baseclass.extend({
 			localHost[h.mac] = h;
 			if (!h.gateway && !ownMacs[h.mac] && !maybeGw[h.mac]) heardAt[h.mac] = h.port;
 		});
-		function behind(a, mac) { return !!portOf[a.id] && heardAt[mac] === portOf[a.id] && mac !== a.mac; }
+		/* the wire an access point is heard on: its port, or another VLAN
+		   of the port's device; not across to a port a line to the
+		   internet leaves by, or from one: what is heard there is
+		   upstream of this device (a bridged WAN on eth0.2 beside the
+		   LAN's eth0.1) */
+		var linePorts = Object.create(null);
+		uplinks.forEach(function(u) { [ u.port, u.dev, u.l3dev, u.statsDev ].forEach(function(n) { if (typeof n === 'string') linePorts[n] = true; }); });
+		function sameWire(p, q) { return p === q || (!linePorts[p] && !linePorts[q] && under(p) === under(q)); }
+		function behind(a, mac) { return !!portOf[a.id] && heardAt[mac] != null && sameWire(heardAt[mac], portOf[a.id]) && mac !== a.mac; }
 		/* ips: the addresses a host moved from the wired list had there */
 		function who(mac, ips) {
 			var alias = raw.aliases && raw.aliases[mac], hint = hintOf(mac);
@@ -1669,8 +1779,29 @@ return baseclass.extend({
 				remote[s.mac] = { a: a, s: s };
 			});
 		});
+		/* The addresses an access point reports as its own (#167): out of
+		   the wired hosts, and named on its own entry there (own), so that
+		   none is taken unseen. Not the MAC of a paired access point, nor
+		   one that another of them reports too, as its own, its station
+		   or its wired host: a contested claim takes nothing. And only
+		   while its own entry is a wired host here to carry them */
+		var claims = Object.create(null), apOwn = Object.create(null);
+		aps.forEach(function(a) {
+			var once = Object.create(null);
+			a.macs.concat(a.sta.map(function(x) { return x.mac; }), a.hosts.map(function(x) { return x.mac; })).forEach(function(m) {
+				if (!once[m]) { once[m] = true; claims[m] = (claims[m] || 0) + 1; }
+			});
+		});
+		aps.forEach(function(a) {
+			var me = a.mac && !remote[a.mac] ? localHost[a.mac] : null;
+			if (me) a.macs.forEach(function(m) {
+				if (!behind(a, m) || macCount[m] || claims[m] !== 1 || remote[m] || apOwn[m]) return;
+				apOwn[m] = true;
+				(me.own || (me.own = { id: a.id, name: a.name, macs: [] })).macs.push(fmt.mac(m));
+			});
+		});
 		var heard = wired.length;
-		wired = wired.filter(function(h) { return !remote[h.mac]; });
+		wired = wired.filter(function(h) { return !remote[h.mac] && !apOwn[h.mac]; });
 		/* a port a host moved away from: who is left on it */
 		if (wired.length !== heard) {
 			var left = Object.create(null);
@@ -1806,6 +1937,8 @@ return baseclass.extend({
 		   details */
 		var here = Object.create(null);
 		[ clients, wired ].forEach(function(l) { l.forEach(function(c) { here[c.mac] = true; }); });
+		/* nor an address left out as an access point's own: it is there, on that entry */
+		Object.keys(apOwn).forEach(function(m) { here[m] = true; });
 		var offline = Object.keys(obj(raw.aliases)).filter(function(mac) {
 			return names.normMac(mac) === mac && !here[mac] && !ownMacs[mac];
 		}).slice(0, names.ALIAS_MAX).map(function(mac) {

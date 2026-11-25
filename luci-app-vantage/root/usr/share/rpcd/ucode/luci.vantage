@@ -7,8 +7,12 @@
 //              reads: no key, sae_password, RADIUS or 802.11r secrets, no
 //              EAP credentials. Where netifd has no network.wireless object
 //              (vendor drivers that bypass it, such as MediaTek's mtkwifi),
-//              the same fields from /etc/config/wireless instead. Read group
-//              luci-app-vantage.
+//              the same fields from /etc/config/wireless instead. An
+//              interface in AP mode also names the interfaces hostapd
+//              made for its VLANs, where a password or RADIUS gives a
+//              station its VLAN (vlans: their names, from one dump of
+//              the kernel's wireless interfaces; nothing else of them).
+//              Read group luci-app-vantage.
 //   thermal    the temperature of each thermal zone in /sys/class/thermal
 //              (millidegrees Celsius) with its type; nothing else is read.
 //              Read group luci-app-vantage.
@@ -106,6 +110,9 @@ const BOARD_MAX = 65536;          // bytes read of it
 const MAX_SWITCH_VLANS = 64;
 const MAX_SURVEY = 256;          // channels in a survey reply (a tri-band wiphy has about 100)
 const MAX_MHZ = 100000;          // a channel's frequency, MHz (60 GHz is 70200)
+const IFTYPE_AP = 3;             // enum nl80211_iftype, the kernel's ABI
+const IFTYPE_AP_VLAN = 4;
+const MAX_VLAN_IFS = 32;         // VLAN interfaces named in a wireless reply
 
 // Patterns, compiled once: ucode compiles a regular expression literal each
 // time the code reaches it, and a counted repeat ({1,64}) costs musl
@@ -411,6 +418,68 @@ function wireless_from_config() {
 		out[name] = { ...reduce_radio(r), source: 'config' };
 
 	return out;
+}
+
+// The interfaces hostapd made for a network's VLANs, where a password or
+// RADIUS gives a station its VLAN (#164): { <the network's interface>:
+// [ name ] }, MAX_VLAN_IFS in all. An AP_VLAN interface is its network's
+// by its address, which hostapd makes the network's own, on the same
+// wiphy; no one's where two networks there share that address. A WDS
+// station's interface (<ifname>.staN) is an AP_VLAN one too and is left
+// out: iwinfo lists its station under the network's interface, the
+// others' only under their own. netifd knows only the ones it made
+// itself, so the kernel is asked: one read-only dump (a driver may be
+// asked for an interface's transmit power while it answers, as for `iw dev`).
+function ap_vlans() {
+	let res = nl80211.request(nl80211.const.NL80211_CMD_GET_INTERFACE, nl80211.const.NLM_F_DUMP);
+	let aps = {}, out = {}, n = 0;
+
+	res = (type(res) == 'array') ? res : ((type(res) == 'object') ? [ res ] : []);
+
+	// wiphy and address: what a network's interface and its VLANs' share
+	let key = (i) => (type(i) == 'object' && type(i.wiphy) == 'int' && type(i.ifname) == 'string' && match(i.ifname, RE_NETDEV) && norm_mac(i.mac))
+		? i.wiphy + ' ' + norm_mac(i.mac) : null;
+
+	for (let i in res) {
+		let k = key(i);
+
+		if (k && i.iftype === IFTYPE_AP)
+			aps[k] = (k in aps) ? false : i.ifname;
+	}
+
+	for (let i in res) {
+		if (n >= MAX_VLAN_IFS)
+			break;
+
+		let k = key(i), ap = (k && i.iftype === IFTYPE_AP_VLAN) ? aps[k] : null;
+
+		if (!ap || index(i.ifname, ap + '.sta') == 0)
+			continue;
+
+		if (!out[ap])
+			out[ap] = [];
+
+		push(out[ap], i.ifname);
+		n++;
+	}
+
+	for (let ap, l in out)
+		sort(l);
+
+	return out;
+}
+
+// a wireless reply, each network's interface with its VLANs' interfaces
+// (vlans), where it has any
+function with_vlans(radios) {
+	let vl = ap_vlans();
+
+	for (let name, r in radios)
+		for (let i in r.interfaces)
+			if (type(i.ifname) == 'string' && vl[i.ifname])
+				i.vlans = vl[i.ifname];
+
+	return radios;
 }
 
 /* ---------------------------------------------------------- set_alias */
@@ -900,13 +969,13 @@ const methods = {
 			// no object, or one that skipped every radio (netifd has no
 			// handler for the vendor's driver type): the config instead
 			if (type(reply) != 'object' || !length(reply))
-				return wireless_from_config();
+				return with_vlans(wireless_from_config());
 
 			for (let name, r in reply)
 				if (type(r) == 'object' && match(name, RE_NAME))
 					out[name] = reduce_radio(r);
 
-			return out;
+			return with_vlans(out);
 		}
 	},
 

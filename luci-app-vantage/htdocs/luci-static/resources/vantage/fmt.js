@@ -37,6 +37,14 @@ return baseclass.extend({
 		return t;
 	},
 
+	/* "Dropped: 0 in · 3 out" as its label and the rest, at the first
+	   colon (Chinese's too), so that a narrow cell can break between the
+	   two (#168): [ 'Dropped: ', '0 in · 3 out' ]; a text without one: [ text ] */
+	labelled: function(text) {
+		var m = /^(.*?[:\uff1a]\s*)(.+)$/.exec(String(text == null ? '' : text));
+		return m ? [ m[1], m[2] ] : [ String(text == null ? '' : text) ];
+	},
+
 	/* the traffic's unit, 'bits' or 'bytes' */
 	speedUnits: function() { return SPEED_UNITS; },
 

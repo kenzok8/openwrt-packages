@@ -1554,7 +1554,7 @@ html[data-darkmode="true"] .vt-app {
 .vt-app .vt-port-link, .vt-app .vt-port-hosts { font-size: var(--vt-fs-sm); color: var(--vt-text-2); }
 .vt-app .vt-port-off .vt-port-link { color: var(--vt-text-3); }
 .vt-app .vt-port-rates { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: var(--vt-fs-sm); font-weight: var(--vt-fw-semibold); white-space: nowrap; }
-.vt-app .vt-port-note { font-size: var(--vt-fs-micro); color: var(--vt-text-3); }
+.vt-app .vt-port-note { display: flex; flex-wrap: wrap; gap: 0 .3em; font-size: var(--vt-fs-micro); color: var(--vt-text-3); }
 
 /* Provider tiles (#129): another package's data, drawn here: a note,
    then its items, as many in a row as fit, each a label over its value
