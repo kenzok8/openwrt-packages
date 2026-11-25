@@ -85,4 +85,80 @@ local source=chunksource({recv=function() return "" end}, "incomplete")
 assert(source()==nil, "EOF not handled")
 source=chunksource({recv=function() error("must not read zero bytes") end}, string.rep("z",1024))
 assert(source()==nil, "oversize chunk header accepted")
-print("PASS: package validation, full proxy writes, all chunk boundaries, EOF and header limit")
+
+-- Failed requests must close their socket, and every request must connect again
+-- so the next one recovers after a backend restart.
+local sockets, connects, closed, status = 0, 0, 0, nil
+local request, output = "", ""
+local available = false
+nixio.connect = function() error("TCP proxy must not be used") end
+nixio.socket = function(domain, kind)
+    assert(domain == "unix" and kind == "stream", "wrong socket type")
+    sockets = sockets + 1
+    return {
+        connect = function(_, path)
+            assert(path == "/var/run/quickstart/http.sock", "wrong HTTP socket path")
+            connects = connects + 1
+            return available
+        end,
+        close = function() closed = closed + 1 end,
+        sendall = function(_, chunk) request = request .. chunk; return #chunk end,
+        linesource = function()
+            local lines, index = {"HTTP/1.1 200 OK", "Content-Type: application/json", ""}, 0
+            return function(buffer)
+                if buffer then return '{"success":0}' end
+                index = index + 1
+                return lines[index]
+            end
+        end,
+        blocksource = function() return function() end end,
+    }
+end
+http.status = function(code) status = code end
+proxy()
+assert(status == 500 and connects == 1 and closed == 1, "failed connection leaked socket")
+
+available = true
+local env = {REQUEST_METHOD="GET", REQUEST_URI="/cgi-bin/luci/istore/system/version/"}
+http.getenv = function(key) return env[key] end
+http.context = {request={message={env={HTTP_HOST="router.test", HTTP_X_FORWARDED_SID="spoofed"}}}}
+http.getcookie = function(name) if name == "sysauth_http" then return "session" end end
+util.ubus = function() return {values={username="root", token="secret"}} end
+http.header = function() end
+http.write = function(chunk) output = output .. chunk; return 1 end
+http.source = function() return function() end end
+local ltn12 = package.loaded["luci.ltn12"]
+ltn12.source = {
+    string = function(value)
+        return function() local result = value; value = nil; return result end
+    end,
+    cat = function(...)
+        local sources, index = {...}, 1
+        return function()
+            while sources[index] do
+                local chunk = sources[index]()
+                if chunk then return chunk end
+                index = index + 1
+            end
+        end
+    end,
+}
+ltn12.pump = {all=function(source, send)
+    while true do
+        local chunk = source()
+        if not chunk then return 1 end
+        if not send(chunk) then return nil end
+    end
+end}
+proxy()
+assert(status == 200 and sockets == 2 and connects == 2 and closed == 2,
+    "request did not recover after backend restart or leaked socket")
+assert(output == '{"success":0}', "proxy corrupted HTTP response")
+assert(request:find("HOST: router.test", 1, true), "original Host lost")
+assert(request:find("X-Forwarded-Sid: session", 1, true) and
+    request:find("X-Forwarded-Token: secret", 1, true), "validated credentials lost")
+assert(not request:find("spoofed", 1, true), "client forwarded header trusted")
+nixio.socket = function() return nil end
+proxy()
+assert(status == 500 and closed == 2, "socket creation failure not handled")
+print("PASS: package validation, full proxy writes, chunk boundaries, EOF, header limit and Unix proxy recovery")
