@@ -84,6 +84,22 @@ msgid "Add live traffic"
 msgstr "Canlı trafik ekle"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Add page"
+msgstr "Sayfa ekle"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Add to Common"
+msgstr "Sık kullanılanlara ekle"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Add to System"
+msgstr "Sisteme ekle"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Added"
+msgstr "Eklendi"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "All settings"
 msgstr "Tüm ayarlar"
 
@@ -110,6 +126,10 @@ msgstr "Görünüm"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Auto"
 msgstr "Otomatik"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Back"
+msgstr "Geri"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
@@ -155,8 +175,16 @@ msgid "Choose a valid traffic source."
 msgstr "Geçerli bir trafik verisi kaynağı seçin."
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose which pages appear in the Simple sidebar and arrange their order. Saved on this router across devices and firmware upgrades."
+msgstr "Basit kenar çubuğunda hangi sayfaların görüneceğini seçin ve sırasını düzenleyin. Cihazlar arasında ve yazılım güncellemelerinde yönlendiricide saklanır."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Choose which panels appear on Overview and arrange them in sections. Saved on this router across devices and firmware upgrades."
 msgstr "Genel bakış sayfasında hangi panellerin görüneceğini seçin ve bölümler halinde düzenleyin. Cihazlar arasında ve yazılım güncellemelerinde yönlendiricide saklanır."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Clear"
+msgstr "Temizle"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
@@ -222,9 +250,18 @@ msgstr "Özelleştir"
 msgid "Customize dashboard"
 msgstr "Panoyu özelleştir"
 
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Customize menu"
+msgstr "Menüyü özelleştir"
+
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Customize on Overview"
 msgstr "Genel bakış sayfasında özelleştir"
+
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Customize simple menu"
+msgstr "Basit menüyü özelleştir"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
@@ -241,6 +278,10 @@ msgstr "Varsayılan"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Default dashboard layout restored."
 msgstr "Varsayılan pano düzeni geri yüklendi."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Default simple menu restored."
+msgstr "Varsayılan basit menü geri yüklendi."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Details"
@@ -300,6 +341,10 @@ msgid "Failed to save layout."
 msgstr "Düzen kaydedilemedi."
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Failed to save menu."
+msgstr "Menü kaydedilemedi."
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
 msgstr "Boş"
 
@@ -330,6 +375,14 @@ msgstr "Yüksek"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "Ev Wi-Fi"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "In Common"
+msgstr "Sık kullanılanlarda"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "In System"
+msgstr "Sistemde"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
@@ -368,6 +421,11 @@ msgstr "İnternet ve ağ"
 msgid "Invalid dashboard layout."
 msgstr "Geçersiz pano düzeni."
 
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid simple menu configuration."
+msgstr "Geçersiz basit menü yapılandırması."
+
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Invalid update request."
 msgstr "Geçersiz güncelleme isteği."
@@ -375,6 +433,10 @@ msgstr "Geçersiz güncelleme isteği."
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
 msgstr "IPK güncellemeleri HTTPS ile indirilir ve sürümün SHA-256 değeri ile dosya boyutuna göre denetlenir."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Keep at least one menu item."
+msgstr "En az bir menü öğesi kalmalıdır."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Keep at least one panel visible."
@@ -429,6 +491,10 @@ msgid "Manage"
 msgstr "Yönet"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Maximum %d menu items."
+msgstr "En fazla %d menü öğesi."
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "May include offline devices."
 msgstr "Çevrimdışı cihazlar içerebilir."
 
@@ -477,12 +543,24 @@ msgid "nlbwmon (default)"
 msgstr "nlbwmon (varsayılan)"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "No configured pages are currently installed."
+msgstr "Yapılandırılan sayfaların hiçbiri şu anda yüklü değil."
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
 msgstr "Henüz cihaz yok"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "No installation log yet."
 msgstr "Henüz kurulum günlüğü yok."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No items in this group."
+msgstr "Bu grupta öğe yok."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No matching pages."
+msgstr "Eşleşen sayfa yok."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
@@ -503,6 +581,10 @@ msgstr "Bağlı değil"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not enough temporary storage or unable to create update files."
 msgstr "Geçici depolama yetersiz veya güncelleme dosyaları oluşturulamıyor."
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Not installed"
+msgstr "Yüklü değil"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Now"
@@ -637,6 +719,10 @@ msgid "Saving…"
 msgstr "Kaydediliyor…"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Search pages or plugins…"
+msgstr "Sayfa veya eklenti ara…"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Show all %d devices"
 msgstr "%d cihazın tümünü göster"
 
@@ -655,6 +741,10 @@ msgstr "Kenar çubuğunda, giriş sayfasında, genel bakışta ve tarayıcı sim
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Simple"
 msgstr "Basit"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Simple menu"
+msgstr "Basit menü"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Since %s"
@@ -687,6 +777,10 @@ msgstr "Statik adres"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Storage"
 msgstr "Depolama"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Switch to Carbon theme to customize the simple menu."
+msgstr "Basit menüyü özelleştirmek için Carbon temasına geçin."
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "System"
@@ -817,8 +911,16 @@ msgid "Using a custom dashboard layout."
 msgstr "Özel pano düzeni kullanılıyor."
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using a custom simple menu."
+msgstr "Özel basit menü kullanılıyor."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Using the default dashboard layout."
 msgstr "Varsayılan pano düzeni kullanılıyor."
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using the default simple menu."
+msgstr "Varsayılan basit menü kullanılıyor."
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Verifying update…"

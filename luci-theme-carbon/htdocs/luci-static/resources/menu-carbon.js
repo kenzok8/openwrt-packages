@@ -31,6 +31,21 @@ const callSetDashboard = rpc.declare({
 	params: [ 'action', 'hero', 'sections', 'monitor', 'tiles', 'details' ],
 	expect: { '': {} }, raise: true
 });
+const callSetSimpleMenu = rpc.declare({
+	object: 'luci.carbon_update', method: 'set_simple_menu',
+	params: [ 'action', 'common', 'system' ],
+	expect: { '': {} }, raise: true
+});
+
+const mapRpcError = (err) => {
+	const msg = String(err && (err.message || err.code || err) || '');
+	if (/denied|forbidden|403|-32002|ubus code 6/i.test(msg)) {
+		const denied = new Error('denied');
+		denied.code = 'denied';
+		throw denied;
+	}
+	throw err;
+};
 
 /*
  * Interface language: lists the installed LuCI catalogues (luci.languages)
@@ -239,6 +254,8 @@ return baseclass.extend({
 			c.children.forEach((ch) => { known[ch.path] = ch; });
 		});
 
+		const app = document.querySelector('.cb-app');
+
 		C.initShell({
 			logoutUrl: known[root.name + '/logout'] ? L.url(root.name, 'logout') : null,
 			language: this.language
@@ -248,7 +265,31 @@ return baseclass.extend({
 			root: root.name,
 			categories: categories,
 			activePath: L.env.dispatchpath,
-			url: (p) => L.url(p)
+			url: (p) => L.url(p),
+			simpleMenuAttr: (app && app.dataset && app.dataset.simpleMenu) || '',
+			saveSimpleMenu: (cfg) => {
+				const s = C.simpleMenu.serialize(cfg);
+				return callSetSimpleMenu('set', s.common, s.system).then((res) => {
+					if (res && res.error) {
+						const err = new Error(res.error);
+						err.code = res.error;
+						throw err;
+					}
+					if (app && app.dataset)
+						app.dataset.simpleMenu = C.simpleMenu.encodeAttr(cfg);
+					return res;
+				}, mapRpcError);
+			},
+			resetSimpleMenu: () => callSetSimpleMenu('reset', '', '').then((res) => {
+				if (res && res.error) {
+					const err = new Error(res.error);
+					err.code = res.error;
+					throw err;
+				}
+				if (app && app.dataset)
+					delete app.dataset.simpleMenu;
+				return res;
+			}, mapRpcError)
 		});
 
 		/* toolbar title: Category › Page */
@@ -315,16 +356,6 @@ return baseclass.extend({
 		const host = E('div', { 'id': 'cb-dashboard' });
 
 		main.insertBefore(host, (view && view.parentNode === main) ? view : null);
-
-		const mapRpcError = (err) => {
-			const msg = String(err && (err.message || err.code || err) || '');
-			if (/denied|forbidden|403|-32002|ubus code 6/i.test(msg)) {
-				const denied = new Error('denied');
-				denied.code = 'denied';
-				throw denied;
-			}
-			throw err;
-		};
 
 		C.Dashboard.mount(host, provider, {
 			urls: {

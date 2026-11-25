@@ -31,6 +31,17 @@
 		}
 		dashboard_attr = join(';', dash_parts);
 	}
+	const menu_uci = !is_login ? ubus.call('uci', 'get', { config: 'carbon', section: 'simple_menu' })?.values : null;
+	let simple_menu_attr = '';
+	if (type(menu_uci) == 'object') {
+		const menu_parts = [];
+		for (let k in [ 'common', 'system' ]) {
+			const v = menu_uci[k];
+			if (type(v) == 'string' && length(v) > 0 && length(v) <= 1024 && match(v, /^[A-Za-z0-9._\/ -]+$/))
+				push(menu_parts, `${k}=${v}`);
+		}
+		simple_menu_attr = join(';', menu_parts);
+	}
 
 	/* One version source: the packaged version file busts browser caches. */
 	let carbon_version = trim(readfile('/usr/share/carbon/version') ?? '');
@@ -97,7 +108,7 @@
 			</div>
 			<div id="maincontent" class="cb-login-card">
 	{% elif (!blank_page): %}
-		<div class="cb-app" data-traffic-source="{{ traffic_source }}"{% if (dashboard_attr): %} data-dashboard="{{ entityencode(dashboard_attr, true) }}"{% endif %}>
+		<div class="cb-app" data-traffic-source="{{ traffic_source }}"{% if (dashboard_attr): %} data-dashboard="{{ entityencode(dashboard_attr, true) }}"{% endif %}{% if (simple_menu_attr): %} data-simple-menu="{{ entityencode(simple_menu_attr, true) }}"{% endif %}>
 			<aside class="cb-sidebar" id="cb-sidebar">
 				<button type="button" class="cb-collapse" id="cb-collapse" aria-label="Collapse sidebar"></button>
 				<a class="cb-brand" href="{{ dispatcher.build_url() }}">

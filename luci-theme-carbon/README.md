@@ -36,7 +36,7 @@ https://github.com/user-attachments/assets/d6d8d161-65fa-456c-acbc-d3b2c0737bd9
 - **Dashboard**: live traffic charts, CPU / memory / storage gauges, temperature, Wi‑Fi, and interface status panels; supports presets, toggling, and reordering (saved in UCI) while keeping LuCI's original status view.
 - **Device upload/download speeds**: uses `nlbwmon` by default, with optional 5-second `nftables` named-counter sampling ([setup guide](docs/device-traffic.md)).
 - **Discovered devices**: merges DHCP leases, Wi‑Fi stations (band and signal), and ARP neighbours by MAC, works without local DHCP, and recognises 35 device brands.
-- **Simple / Pro navigation**: *Simple* keeps everyday pages up front; *Pro* shows the full LuCI menu with an icon for every page.
+- **Simple / Pro navigation**: *Simple* keeps everyday pages up front and lets you pin, remove, and reorder any installed LuCI page or plugin (saved in UCI); *Pro* shows the full LuCI menu with an icon for every page.
 - **Frosted-glass sidebar**: collapses into an icon rail (<kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>\\</kbd>) with hover or click sub-menus.
 - **Themes & languages**: light / dark / auto mode switch and a built-in language switcher for all installed LuCI languages (13 built-in theme translations).
 - **Keyboard & touch friendly**: arrow-key controls, focus-managed phone drawer, and rail sub-menus accessible via tap or keyboard.
@@ -117,7 +117,7 @@ Carbon becomes the default theme. Refresh the page, then **log out and log in on
 
 | What | Where |
 |---|---|
-| Simple / Pro menu | segmented control at the top of the sidebar |
+| Simple / Pro menu | segmented control at the top of the sidebar (*Customize menu* in Simple mode or System → Carbon Theme Settings → Simple menu to pin and reorder pages, saved in UCI) |
 | Collapse sidebar | round button on the sidebar edge, or <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>\\</kbd> |
 | Light / dark / auto | top-right of the toolbar |
 | Language | bottom-left of the sidebar (changes LuCI's language, same as *System → Language*; a list when more than two are installed) |

@@ -28,6 +28,8 @@
 	--cb-green-t: rgba(22, 163, 74, .12);
 	--cb-orange-t: rgba(232, 135, 11, .13);
 	--cb-red-t: rgba(229, 72, 77, .11);
+	--cb-danger: #e5484d;
+	--cb-danger-strong: #cf363c;
 
 	/* Carbon indigo — the one accent used for actions, focus and selection */
 	--cb-accent: #4f5bea;
@@ -43,6 +45,7 @@
 	--cb-card-2: rgba(15, 23, 42, .025);
 	--cb-card-edge: rgba(15, 23, 42, .06);
 	--cb-field: #ffffff;
+	--cb-btn-bg: #ffffff;
 	--cb-fill: rgba(15, 23, 42, .06);
 	--cb-fill-2: rgba(15, 23, 42, .035);
 	--cb-hover: rgba(79, 91, 234, .05);
@@ -91,6 +94,8 @@
 	--cb-green-t: rgba(52, 211, 153, .14);
 	--cb-orange-t: rgba(251, 176, 59, .15);
 	--cb-red-t: rgba(248, 113, 113, .15);
+	--cb-danger: #dc2626;
+	--cb-danger-strong: #ef4444;
 
 	--cb-accent: #8b95ff;
 	--cb-accent-strong: #aab3ff;
@@ -104,6 +109,7 @@
 	--cb-card-2: rgba(255, 255, 255, .03);
 	--cb-card-edge: rgba(255, 255, 255, .06);
 	--cb-field: rgba(255, 255, 255, .045);
+	--cb-btn-bg: rgba(255, 255, 255, .06);
 	--cb-fill: rgba(255, 255, 255, .08);
 	--cb-fill-2: rgba(255, 255, 255, .05);
 	--cb-hover: rgba(255, 255, 255, .04);
@@ -497,6 +503,43 @@ form.inline { display: inline; margin: 0; }
 .cb-sub-ico svg { width: 16px; height: 16px; stroke-width: 1.8; }
 .cb-nav-item.active .cb-sub-ico { opacity: 1; }
 
+/* customize menu button & empty notice in simple mode */
+.cb-nav-empty {
+	margin: 12px 6px 0;
+	padding: 10px 12px;
+	border-radius: 12px;
+	color: var(--cb-nav-fg-2);
+	font-size: 12.5px;
+	line-height: 1.5;
+	text-align: center;
+}
+.cb-nav-customize {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	width: calc(100% - 4px);
+	height: 36px;
+	margin: 16px 2px 0;
+	padding: 0 12px;
+	border: 1px solid var(--cb-chip-edge);
+	border-radius: 12px;
+	background: var(--cb-chip);
+	color: var(--cb-nav-fg);
+	font: inherit;
+	font-size: 12.5px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color .18s var(--cb-ease), border-color .18s var(--cb-ease), color .18s var(--cb-ease), transform .12s var(--cb-ease);
+}
+.cb-nav-customize .cb-nav-label { flex: 0 1 auto; }
+.cb-nav-customize:hover { background: var(--cb-nav-hover); border-color: var(--cb-accent-t); color: var(--cb-nav-active-fg); }
+.cb-nav-customize:active { transform: scale(.98); }
+.cb-nav-customize:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--cb-focus); }
+.cb-nav-customize-ico { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 16px; height: 16px; color: var(--cb-accent); }
+.cb-nav-customize-ico svg { width: 15px; height: 15px; }
+.cb-nav-customize + .cb-nav-hint { margin-top: 10px; }
+
 /* hint card in simple mode */
 .cb-nav-hint {
 	display: flex;
@@ -618,6 +661,8 @@ form.inline { display: inline; margin: 0; }
 	html.cb-collapsed .cb-sidebar .cb-nav-label,
 	html.cb-collapsed .cb-chev,
 	html.cb-collapsed .cb-nav-items,
+	html.cb-collapsed .cb-nav-empty,
+	html.cb-collapsed .cb-nav-customize,
 	html.cb-collapsed .cb-nav-hint,
 	html.cb-collapsed .cb-mode .cb-seg,
 	html.cb-collapsed .cb-sidebar-foot .cb-seg,
@@ -1207,7 +1252,7 @@ select option { background: var(--cb-card-solid); color: var(--cb-text); }
 	background-color: transparent;
 }
 
-input:focus,
+input:where(:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"])):focus,
 textarea:focus,
 select:focus,
 .cbi-select.focus,
@@ -1340,14 +1385,15 @@ input[type="radio"].cbi-input-invalid { border-color: var(--cb-red); }
    7. Buttons — solid colours only (no gradients)
    ========================================================================== */
 
-/* secondary: glass chip */
+/* secondary: glass chip
+   Keep attribute-matched <input> buttons at (0, 0, 1) with :where() so
+   single-class LuCI variants (.cbi-button-remove, .cbi-button-add, …) win
+   on classic CBI <input> elements just like on modern <button> elements. */
 .btn,
 .cbi-button,
 button:where(:not([class*="cb-"])),
-input[type="submit"],
-input[type="button"],
-input[type="reset"] {
-	--btn-bg: var(--cb-card-solid);
+input:where([type="submit"], [type="button"], [type="reset"]) {
+	--btn-bg: var(--cb-btn-bg);
 	--btn-fg: var(--cb-text);
 	--btn-ring: var(--cb-border-strong);
 	display: inline-flex;
@@ -1361,7 +1407,7 @@ input[type="reset"] {
 	border-radius: var(--cb-radius-sm);
 	background: var(--btn-bg);
 	color: var(--btn-fg);
-	box-shadow: inset 0 0 0 1px var(--btn-ring), 0 1px 2px rgba(15, 23, 42, .05);
+	box-shadow: var(--btn-shadow, inset 0 0 0 1px var(--btn-ring), 0 1px 2px rgba(15, 23, 42, .05));
 	font: inherit;
 	font-size: 13.5px;
 	font-weight: 600;
@@ -1375,28 +1421,82 @@ input[type="reset"] {
 	-webkit-user-select: none;
 	user-select: none;
 }
-:root[data-darkmode="true"] .btn,
-:root[data-darkmode="true"] .cbi-button,
-:root[data-darkmode="true"] input[type="submit"],
-:root[data-darkmode="true"] input[type="button"],
-:root[data-darkmode="true"] input[type="reset"],
-:root[data-darkmode="true"] button:where(:not([class*="cb-"])) { --btn-bg: rgba(255, 255, 255, .06); }
 
 .btn:hover,
 .cbi-button:hover,
-input[type="submit"]:hover,
-input[type="button"]:hover,
-input[type="reset"]:hover,
-button:where(:not([class*="cb-"])):hover { --btn-ring: var(--cb-accent); color: var(--cb-accent-strong); }
+button:where(:not([class*="cb-"])):hover,
+input:where([type="submit"], [type="button"], [type="reset"]):hover {
+	--btn-ring: var(--cb-accent);
+	--btn-fg: var(--cb-accent-strong);
+}
 .btn:active,
 .cbi-button:active,
-button:where(:not([class*="cb-"])):active { transform: translateY(1px); }
+button:where(:not([class*="cb-"])):active,
+input:where([type="submit"], [type="button"], [type="reset"]):active { transform: translateY(1px); }
 .btn:focus-visible,
 .cbi-button:focus-visible,
-input[type="submit"]:focus-visible,
-input[type="button"]:focus-visible,
-input[type="reset"]:focus-visible,
-button:where(:not([class*="cb-"])):focus-visible { outline: 0; box-shadow: inset 0 0 0 1px var(--cb-accent), 0 0 0 4px var(--cb-focus); }
+button:where(:not([class*="cb-"])):focus-visible,
+input:where([type="submit"], [type="button"], [type="reset"]):focus-visible { outline: 0; box-shadow: inset 0 0 0 1px var(--cb-accent), 0 0 0 4px var(--cb-focus); }
+
+/* neutral fill */
+.cbi-button-neutral,
+.cbi-button-up,
+.cbi-button-down,
+.cbi-button-reload {
+	--btn-bg: var(--cb-fill);
+	--btn-ring: transparent;
+}
+
+/* tinted variants */
+.cbi-button-positive,
+.cbi-button-add,
+.cbi-button-fieldadd,
+.btn.success {
+	--btn-bg: var(--cb-green-t);
+	--btn-fg: var(--cb-green);
+	--btn-ring: transparent;
+}
+.cbi-button-positive:hover,
+.cbi-button-add:hover,
+.cbi-button-fieldadd:hover,
+.btn.success:hover {
+	--btn-ring: var(--cb-green);
+	--btn-fg: var(--cb-green);
+}
+
+.cbi-button-negative,
+.cbi-button-remove,
+.cbi-button-reset,
+.cbi-button-neutral.down,
+.cbi-section-remove .cbi-button,
+.cbi-section-remove .btn,
+.btn.danger,
+.btn.error {
+	--btn-bg: var(--cb-red-t);
+	--btn-fg: var(--cb-red);
+	--btn-ring: transparent;
+}
+.cbi-button-negative:hover,
+.cbi-button-remove:hover,
+.cbi-button-reset:hover,
+.cbi-button-neutral.down:hover,
+.cbi-section-remove .cbi-button:hover,
+.cbi-section-remove .btn:hover,
+.btn.danger:hover,
+.btn.error:hover {
+	--btn-ring: var(--cb-red);
+	--btn-fg: var(--cb-red);
+}
+
+.cbi-button-action,
+.cbi-button-edit,
+.cbi-button-find,
+.cbi-button-link,
+.cbi-button-download {
+	--btn-bg: var(--cb-accent-t);
+	--btn-fg: var(--cb-accent-strong);
+	--btn-ring: transparent;
+}
 
 /* primary: solid Carbon indigo */
 .btn.primary,
@@ -1407,89 +1507,63 @@ button:where(:not([class*="cb-"])):focus-visible { outline: 0; box-shadow: inset
 .cbi-button-action.important,
 .cbi-button.important,
 .cbi-page-actions .cbi-button-apply,
-.cbi-section-actions .cbi-button-edit,
-input[type="submit"].cbi-button-apply {
-	--btn-bg: var(--cb-accent) !important;
-	--btn-fg: var(--cb-on-accent) !important;
-	--btn-ring: transparent !important;
-	color: var(--cb-on-accent) !important;
-	box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 6px 14px -6px rgba(79, 91, 234, .55);
+.cbi-section-actions .cbi-button-edit {
+	--btn-bg: var(--cb-accent);
+	--btn-fg: var(--cb-on-accent);
+	--btn-ring: transparent;
+	--btn-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 6px 14px -6px rgba(79, 91, 234, .55);
 }
 .btn.primary:hover,
 .btn.important:hover,
 .cbi-button-apply:hover,
 .cbi-button-save:hover,
+.cbi-button-positive.important:hover,
+.cbi-button-action.important:hover,
 .cbi-button.important:hover,
-.cbi-section-actions .cbi-button-edit:hover { --btn-bg: var(--cb-accent-strong) !important; }
-
-/* tinted variants */
-.cbi-button-positive,
-.cbi-button-add,
-.btn.success {
-	--btn-bg: var(--cb-green-t);
-	--btn-fg: var(--cb-green);
+.cbi-page-actions .cbi-button-apply:hover,
+.cbi-section-actions .cbi-button-edit:hover {
+	--btn-bg: var(--cb-accent-strong);
+	--btn-fg: var(--cb-on-accent);
 	--btn-ring: transparent;
 }
-.cbi-button-negative,
-.cbi-button-remove,
-.btn.danger,
-.btn.error {
-	--btn-bg: var(--cb-red-t);
-	--btn-fg: var(--cb-red);
+
+/* destructive primary: solid red (after primary so .btn.important / .cbi-button.important never wins) */
+.cbi-button-negative.important,
+.cbi-button-remove.important,
+.cbi-button-reset.important,
+.btn.danger.important,
+.btn.error.important,
+[data-page="admin-system-reboot"] #view > .cbi-button-action.important {
+	--btn-bg: var(--cb-danger);
+	--btn-fg: #fff;
+	--btn-ring: transparent;
+	--btn-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 6px 14px -6px rgba(229, 72, 77, .55);
+}
+.cbi-button-negative.important:hover,
+.cbi-button-remove.important:hover,
+.cbi-button-reset.important:hover,
+.btn.danger.important:hover,
+.btn.error.important:hover,
+[data-page="admin-system-reboot"] #view > .cbi-button-action.important:hover {
+	--btn-bg: var(--cb-danger-strong);
+	--btn-fg: #fff;
 	--btn-ring: transparent;
 }
-.cbi-button-action,
-.cbi-button-edit,
-.cbi-button-find,
-.cbi-button-link,
-.cbi-button-download {
-	--btn-bg: var(--cb-accent-t);
-	--btn-fg: var(--cb-accent-strong);
-	--btn-ring: transparent;
-}
-:root[data-darkmode="true"] .cbi-button-positive,
-:root[data-darkmode="true"] .cbi-button-add { --btn-bg: var(--cb-green-t); }
-:root[data-darkmode="true"] .cbi-button-negative,
-:root[data-darkmode="true"] .cbi-button-remove { --btn-bg: var(--cb-red-t); }
-:root[data-darkmode="true"] .cbi-button-action,
-:root[data-darkmode="true"] .cbi-button-edit,
-:root[data-darkmode="true"] .cbi-button-find,
-:root[data-darkmode="true"] .cbi-button-link,
-:root[data-darkmode="true"] .cbi-button-download { --btn-bg: var(--cb-accent-t); }
-.cbi-button-positive:hover,
-.cbi-button-add:hover { --btn-ring: var(--cb-green); color: var(--cb-green); }
-.cbi-button-negative:hover,
-.cbi-button-remove:hover { --btn-ring: var(--cb-red); color: var(--cb-red); }
 
-.cbi-button-negative.important {
-	--btn-bg: var(--cb-red) !important;
-	--btn-fg: #fff !important;
-	color: #fff !important;
-	box-shadow: 0 6px 14px -6px rgba(229, 72, 77, .55);
-}
-
-.cbi-button-reset,
-.cbi-button-neutral,
-.cbi-button-up,
-.cbi-button-down,
-.cbi-button-fieldadd,
-.cbi-button-reload { --btn-bg: var(--cb-fill); --btn-ring: transparent; }
-:root[data-darkmode="true"] .cbi-button-reset,
-:root[data-darkmode="true"] .cbi-button-neutral,
-:root[data-darkmode="true"] .cbi-button-up,
-:root[data-darkmode="true"] .cbi-button-down,
-:root[data-darkmode="true"] .cbi-button-fieldadd,
-:root[data-darkmode="true"] .cbi-button-reload { --btn-bg: var(--cb-fill); }
-
+/* Save beside Save & Apply (or Apply unchecked) drops back to a secondary chip */
 .cbi-page-actions .cbi-button-apply + .cbi-button-save,
 .cbi-page-actions .cbi-button-negative + .cbi-button-save {
-	--btn-bg: var(--cb-card-solid) !important;
-	--btn-fg: var(--cb-text) !important;
-	--btn-ring: var(--cb-border-strong) !important;
-	color: var(--cb-text) !important;
-	box-shadow: inset 0 0 0 1px var(--btn-ring);
+	--btn-bg: var(--cb-btn-bg);
+	--btn-fg: var(--cb-text);
+	--btn-ring: var(--cb-border-strong);
+	--btn-shadow: initial;
 }
-:root[data-darkmode="true"] .cbi-page-actions .cbi-button-apply + .cbi-button-save { --btn-bg: rgba(255, 255, 255, .06) !important; }
+.cbi-page-actions .cbi-button-apply + .cbi-button-save:hover,
+.cbi-page-actions .cbi-button-negative + .cbi-button-save:hover {
+	--btn-bg: var(--cb-btn-bg);
+	--btn-fg: var(--cb-accent-strong);
+	--btn-ring: var(--cb-accent);
+}
 
 .cbi-button-up,
 .cbi-button-down { min-width: 34px; padding: 0 8px; }
@@ -3089,6 +3163,174 @@ body.cb-has-dash #maincontent > h2 { display: none; }
 	transition: opacity .2s var(--cb-ease), transform .24s var(--cb-ease), visibility 0s;
 }
 .cb-sheet-expand svg { width: 15px; height: 15px; }
+
+/* simple menu customizer sheet additions */
+@media (min-width: 1024px) {
+	.cb-sheet-scrim.cb-sheet-scrim-menu { left: calc(var(--cb-side-w) + var(--cb-gutter) * 2); }
+	html.cb-collapsed .cb-sheet-scrim.cb-sheet-scrim-menu { left: calc(var(--cb-side-w-mini) + var(--cb-gutter) * 2); }
+}
+.cb-sheet-head-main { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+.cb-sheet-head-main h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cb-sheet-back {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: var(--cb-fill);
+	color: var(--cb-text-2);
+	cursor: pointer;
+	transition: background-color .15s var(--cb-ease), color .15s var(--cb-ease), transform .12s var(--cb-ease);
+}
+.cb-sheet-back:hover:not(:disabled) { background: var(--cb-accent-t); color: var(--cb-accent); }
+.cb-sheet-back:active:not(:disabled) { transform: scale(.94); }
+.cb-sheet-back:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--cb-focus); }
+.cb-sheet-back svg { width: 15px; height: 15px; }
+.cb-sheet-back[hidden],
+.cb-sheet-search[hidden],
+.cb-sheet-search-clear[hidden] { display: none; }
+
+.cb-sheet-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.cb-sheet-text .cb-sheet-name { flex: none; max-width: 100%; }
+.cb-sheet-sub {
+	max-width: 100%;
+	color: var(--cb-text-2);
+	font-size: 11.5px;
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.cb-sheet-tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 6px;
+	border-radius: 5px;
+	background: var(--cb-fill);
+	color: var(--cb-text-2);
+	font-size: 10.5px;
+	font-weight: 600;
+	line-height: 17px;
+}
+.cb-sheet-empty {
+	padding: 12px 6px;
+	color: var(--cb-text-2);
+	font-size: 12.5px;
+	text-align: center;
+}
+.cb-sheet-empty-card {
+	padding: 28px 14px;
+	border-radius: 14px;
+	background: var(--cb-card-2);
+	border: 1px solid var(--cb-border);
+}
+
+.cb-sheet-search {
+	flex: none;
+	padding: 10px 18px;
+	border-bottom: .5px solid var(--cb-sep);
+}
+.cb-sheet-search-box { position: relative; display: flex; align-items: center; }
+.cb-sheet-search-ico {
+	position: absolute;
+	inset-inline-start: 11px;
+	display: inline-flex;
+	width: 15px;
+	height: 15px;
+	color: var(--cb-text-3);
+	pointer-events: none;
+}
+.cb-sheet-search-ico svg { width: 15px; height: 15px; }
+.cb-sheet-search-input {
+	width: 100%;
+	min-width: 0;
+	height: 36px;
+	margin: 0;
+	padding: 0 34px;
+	border-radius: 10px;
+	border: 1px solid var(--cb-border);
+	background: var(--cb-card-2);
+	color: var(--cb-text);
+	font-size: 13.5px;
+}
+.cb-sheet-search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.cb-sheet-search-clear {
+	position: absolute;
+	inset-inline-end: 6px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--cb-text-2);
+	cursor: pointer;
+}
+.cb-sheet-search-clear:hover { background: var(--cb-fill); color: var(--cb-text); }
+.cb-sheet-search-clear svg { width: 13px; height: 13px; }
+
+.cb-picker-item {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	min-height: 44px;
+	margin: 0;
+	padding: 6px 6px;
+	border: 0;
+	border-radius: 10px;
+	background: transparent;
+	color: var(--cb-text);
+	font: inherit;
+	text-align: start;
+	cursor: pointer;
+	transition: background-color .15s var(--cb-ease), opacity .15s var(--cb-ease);
+}
+.cb-picker-item + .cb-picker-item { box-shadow: 0 -.5px 0 var(--cb-sep); }
+.cb-picker-item:hover:not(:disabled) { background: var(--cb-hover); box-shadow: none; }
+.cb-picker-item:hover:not(:disabled) + .cb-picker-item { box-shadow: none; }
+.cb-picker-item:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--cb-focus); }
+.cb-picker-item:disabled { opacity: .78; cursor: default; }
+.cb-picker-item.is-other .cb-sheet-name { color: var(--cb-text-2); }
+.cb-picker-item .cb-ico { width: 28px; height: 28px; border-radius: 8px; }
+.cb-picker-item .cb-ico svg { width: 15px; height: 15px; }
+.cb-picker-plus {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 26px;
+	height: 26px;
+	border-radius: 8px;
+	background: var(--cb-fill);
+	color: var(--cb-text-2);
+	transition: background-color .15s var(--cb-ease), color .15s var(--cb-ease);
+}
+.cb-picker-plus svg { width: 14px; height: 14px; }
+.cb-picker-item:hover:not(:disabled) .cb-picker-plus { background: var(--cb-accent-t); color: var(--cb-accent); }
+.cb-picker-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	flex: none;
+	padding: 0 8px;
+	border-radius: 999px;
+	font-size: 11.5px;
+	font-weight: 600;
+	line-height: 22px;
+	white-space: nowrap;
+}
+.cb-picker-badge.ok { background: var(--cb-green-t); color: var(--cb-green); }
+.cb-picker-badge.muted { background: var(--cb-fill); color: var(--cb-text-2); }
+.cb-picker-badge-ico { display: inline-flex; width: 13px; height: 13px; }
+.cb-picker-badge-ico svg { width: 13px; height: 13px; }
 /* ==========================================================================
    16. Responsive
    ========================================================================== */
@@ -3163,6 +3405,7 @@ body:has(#maincontent .table) { --cb-content-max: var(--cb-content-wide); }
 		transform: translateY(100%);
 	}
 	.cb-sheet-foot { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+	.cb-sheet-search { padding: 10px 14px; }
 	.cb-sheet-body { padding: 12px 14px 16px; }
 	.cb-sheet-collapse {
 		top: -13px;

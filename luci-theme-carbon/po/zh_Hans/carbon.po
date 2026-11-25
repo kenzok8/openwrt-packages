@@ -84,6 +84,22 @@ msgid "Add live traffic"
 msgstr "添加实时流量"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Add page"
+msgstr "添加页面"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Add to Common"
+msgstr "添加到「常用」"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Add to System"
+msgstr "添加到「系统」"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Added"
+msgstr "已添加"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "All settings"
 msgstr "全部设置"
 
@@ -110,6 +126,10 @@ msgstr "外观"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Auto"
 msgstr "自动"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Back"
+msgstr "返回"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Backup & Upgrade"
@@ -155,8 +175,16 @@ msgid "Choose a valid traffic source."
 msgstr "请选择有效的流量数据源。"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Choose which pages appear in the Simple sidebar and arrange their order. Saved on this router across devices and firmware upgrades."
+msgstr "选择简洁侧栏显示的页面并调整顺序。配置保存在路由器上，跨设备同步并在固件升级后保留。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Choose which panels appear on Overview and arrange them in sections. Saved on this router across devices and firmware upgrades."
 msgstr "选择概览页显示的面板并调整各区块顺序。配置保存在路由器上，跨设备同步并在固件升级后保留。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Clear"
+msgstr "清除"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "click to switch"
@@ -222,9 +250,18 @@ msgstr "自定义"
 msgid "Customize dashboard"
 msgstr "自定义仪表盘"
 
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Customize menu"
+msgstr "自定义菜单"
+
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Customize on Overview"
 msgstr "前往概览自定义"
+
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Customize simple menu"
+msgstr "自定义简洁菜单"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Dark"
@@ -241,6 +278,10 @@ msgstr "默认"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Default dashboard layout restored."
 msgstr "已恢复默认仪表盘布局。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Default simple menu restored."
+msgstr "已恢复默认简洁菜单。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Details"
@@ -300,6 +341,10 @@ msgid "Failed to save layout."
 msgstr "保存布局失败。"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Failed to save menu."
+msgstr "保存菜单失败。"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Free"
 msgstr "可用"
 
@@ -330,6 +375,14 @@ msgstr "高负载"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Home Wi-Fi"
 msgstr "家用无线"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "In Common"
+msgstr "已在「常用」中"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "In System"
+msgstr "已在「系统」中"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Install curl, ca-bundle and flock, and restore the Carbon public key if missing."
@@ -368,6 +421,11 @@ msgstr "上网与网络"
 msgid "Invalid dashboard layout."
 msgstr "仪表盘布局配置无效。"
 
+#: htdocs/luci-static/carbon/carbon.js
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Invalid simple menu configuration."
+msgstr "简洁菜单配置无效。"
+
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Invalid update request."
 msgstr "更新请求无效。"
@@ -375,6 +433,10 @@ msgstr "更新请求无效。"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "IPK updates are downloaded over HTTPS and checked against the release SHA-256 and file size."
 msgstr "IPK 更新通过 HTTPS 下载，并核对发布文件的 SHA-256 和大小。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Keep at least one menu item."
+msgstr "至少保留一个菜单项。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Keep at least one panel visible."
@@ -429,6 +491,10 @@ msgid "Manage"
 msgstr "管理"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Maximum %d menu items."
+msgstr "最多可添加 %d 个菜单项。"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "May include offline devices."
 msgstr "可能包含离线设备。"
 
@@ -477,12 +543,24 @@ msgid "nlbwmon (default)"
 msgstr "nlbwmon（默认）"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "No configured pages are currently installed."
+msgstr "当前没有已安装的配置页面。"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "No devices yet"
 msgstr "暂时没有设备"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "No installation log yet."
 msgstr "暂无安装日志。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No items in this group."
+msgstr "此分组暂无菜单项。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "No matching pages."
+msgstr "没有匹配的页面。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "No wireless"
@@ -503,6 +581,10 @@ msgstr "未连接"
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Not enough temporary storage or unable to create update files."
 msgstr "临时存储空间不足或无法创建更新文件。"
+
+#: htdocs/luci-static/carbon/carbon.js
+msgid "Not installed"
+msgstr "未安装"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Now"
@@ -637,6 +719,10 @@ msgid "Saving…"
 msgstr "正在保存…"
 
 #: htdocs/luci-static/carbon/carbon.js
+msgid "Search pages or plugins…"
+msgstr "搜索页面或插件…"
+
+#: htdocs/luci-static/carbon/carbon.js
 msgid "Show all %d devices"
 msgstr "显示全部 %d 台设备"
 
@@ -655,6 +741,10 @@ msgstr "显示在侧边栏、登录页、概览页和浏览器标签上。支持
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Simple"
 msgstr "简洁"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Simple menu"
+msgstr "简洁菜单"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Since %s"
@@ -687,6 +777,10 @@ msgstr "静态地址"
 #: htdocs/luci-static/carbon/carbon.js
 msgid "Storage"
 msgstr "存储"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Switch to Carbon theme to customize the simple menu."
+msgstr "请切换到 Carbon 主题以自定义简洁菜单。"
 
 #: htdocs/luci-static/carbon/carbon.js
 msgid "System"
@@ -817,8 +911,16 @@ msgid "Using a custom dashboard layout."
 msgstr "当前使用自定义仪表盘布局。"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using a custom simple menu."
+msgstr "当前使用自定义简洁菜单。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Using the default dashboard layout."
 msgstr "当前使用默认仪表盘布局。"
+
+#: htdocs/luci-static/resources/view/system/carbon-update.js
+msgid "Using the default simple menu."
+msgstr "当前使用默认简洁菜单。"
 
 #: htdocs/luci-static/resources/view/system/carbon-update.js
 msgid "Verifying update…"

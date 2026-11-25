@@ -69,6 +69,15 @@
 		({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 	const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+	const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
+	const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+	const canWaapi = () => typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
+	const splitTokens = (val) => {
+		if (Array.isArray(val)) return val.map((x) => String(x || '').trim()).filter(Boolean);
+		const s = String(val == null ? '' : val).trim();
+		if (!s || s === 'none') return [];
+		return s.split(/\s+/).filter(Boolean);
+	};
 
 	function h(tag, attrs, children) {
 		const el = document.createElement(tag);
@@ -331,6 +340,131 @@
 			{ title: N_('Reboot'), icon: 'power', paths: ['system/reboot'] }
 		] }
 	];
+
+	/* ------------------------------------------------------------------
+	 * Customizable Simple menu model (pure helpers; UCI-backed on router,
+	 * localStorage fallback in static preview)
+	 * ------------------------------------------------------------------ */
+	const MENU_GROUPS = ['common', 'system'];
+	const MENU_MAX_ITEMS = 32;
+	const MENU_MAX_BYTES = 1024;
+	const MENU_PATH_RE = /^[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}(?:\/[A-Za-z0-9_-][A-Za-z0-9._-]{0,63})?$/;
+	const SIMPLE_BUILTIN_BY_PATH = Object.create(null);
+	C.SIMPLE_MENU.forEach((grp, idx) => {
+		const groupKey = MENU_GROUPS[idx] || 'system';
+		grp.items.forEach((it) => {
+			const meta = { group: groupKey, title: it.title, icon: it.icon, paths: it.paths };
+			it.paths.forEach((p) => { SIMPLE_BUILTIN_BY_PATH[p] = meta; });
+		});
+	});
+
+	function isValidMenuPath(p) {
+		return typeof p === 'string' &&
+			p !== 'none' && p !== 'logout' && p.indexOf('logout/') !== 0 &&
+			p.indexOf('..') < 0 && MENU_PATH_RE.test(p);
+	}
+	function defaultSimpleMenu(known, root) {
+		const prefix = root ? root + '/' : '';
+		const out = { common: [], system: [] };
+		C.SIMPLE_MENU.forEach((grp, idx) => {
+			const key = MENU_GROUPS[idx] || 'system';
+			grp.items.forEach((it) => {
+				if (known) {
+					for (const p of it.paths) {
+						if (known[prefix + p]) { out[key].push(p); break; }
+					}
+				}
+				else {
+					out[key].push(it.paths[0]);
+				}
+			});
+		});
+		return out;
+	}
+	function resolveSimplePath(rel, known, root) {
+		if (!known || !isValidMenuPath(rel)) return null;
+		const prefix = root ? root + '/' : '';
+		const builtin = SIMPLE_BUILTIN_BY_PATH[rel] || null;
+		if (known[prefix + rel])
+			return { rel: rel, path: prefix + rel, node: known[prefix + rel], builtin: builtin };
+		if (builtin) {
+			for (const alt of builtin.paths) {
+				if (known[prefix + alt])
+					return { rel: alt, path: prefix + alt, node: known[prefix + alt], builtin: builtin };
+			}
+		}
+		return null;
+	}
+	const cloneSimpleMenu = (c) => ({
+		common: (c && Array.isArray(c.common)) ? c.common.slice() : [],
+		system: (c && Array.isArray(c.system)) ? c.system.slice() : []
+	});
+	function parseSimpleMenuObject(raw) {
+		const seen = Object.create(null);
+		const out = { common: [], system: [] };
+		let total = 0;
+		MENU_GROUPS.forEach((g) => {
+			let bytes = 0;
+			splitTokens(raw[g]).forEach((tok) => {
+				if (total >= MENU_MAX_ITEMS) return;
+				if (!isValidMenuPath(tok) || seen[tok]) return;
+				const nextBytes = (bytes ? bytes + 1 : 0) + tok.length;
+				if (nextBytes > MENU_MAX_BYTES) return;
+				seen[tok] = true;
+				out[g].push(tok);
+				bytes = nextBytes;
+				total++;
+			});
+		});
+		return total > 0 ? out : null;
+	}
+	function normalizeSimpleMenu(raw, fallback) {
+		const parsed = raw && typeof raw === 'object' ? parseSimpleMenuObject(raw) : null;
+		return parsed || cloneSimpleMenu(fallback || defaultSimpleMenu());
+	}
+	function serializeSimpleMenu(cfg) {
+		const c = normalizeSimpleMenu(cfg);
+		return {
+			common: c.common.length ? c.common.join(' ') : 'none',
+			system: c.system.length ? c.system.join(' ') : 'none'
+		};
+	}
+	function encodeSimpleMenuAttr(cfg) {
+		const s = serializeSimpleMenu(cfg);
+		return 'common=' + s.common + ';system=' + s.system;
+	}
+	function parseSimpleMenuAttr(str) {
+		const s = String(str || '').trim();
+		if (!s) return null;
+		const obj = {};
+		let any = false;
+		s.split(';').forEach((part) => {
+			const i = part.indexOf('=');
+			if (i <= 0) return;
+			const k = part.slice(0, i).trim(), v = part.slice(i + 1).trim();
+			if (k === 'common' || k === 'system') { obj[k] = v; any = true; }
+		});
+		return any ? parseSimpleMenuObject(obj) : null;
+	}
+	const countSimpleMenu = (cfg) => ((cfg && cfg.common && cfg.common.length) || 0) + ((cfg && cfg.system && cfg.system.length) || 0);
+	const isDefaultSimpleMenu = (cfg, known, root) => encodeSimpleMenuAttr(cfg) === encodeSimpleMenuAttr(defaultSimpleMenu(known, root));
+
+	C.simpleMenu = {
+		GROUPS: MENU_GROUPS,
+		MAX_ITEMS: MENU_MAX_ITEMS,
+		MAX_BYTES: MENU_MAX_BYTES,
+		isValidPath: isValidMenuPath,
+		builtinFor: (rel) => SIMPLE_BUILTIN_BY_PATH[rel] || null,
+		defaultConfig: defaultSimpleMenu,
+		resolvePath: resolveSimplePath,
+		clone: cloneSimpleMenu,
+		normalize: normalizeSimpleMenu,
+		serialize: serializeSimpleMenu,
+		encodeAttr: encodeSimpleMenuAttr,
+		parseAttr: parseSimpleMenuAttr,
+		count: countSimpleMenu,
+		isDefault: isDefaultSimpleMenu
+	};
 
 	/* ------------------------------------------------------------------
 	 * Appearance (auto / light / dark) — applied immediately on load
@@ -878,6 +1012,7 @@
 			if (!on && was && restoreFocus && burger) burger.focus();
 		};
 		const close = () => setDrawer(false, sidebar && sidebar.contains(document.activeElement));
+		C._closeNavDrawer = () => setDrawer(false, false);
 
 		if (burger) {
 			burger.setAttribute('aria-label', t('Menu'));
@@ -1008,8 +1143,43 @@
 	 *   url(path) → href
 	 * }
 	 * ------------------------------------------------------------------ */
+	let simpleMenuDrawer = null;
+
+	function buildKnownMap(model) {
+		const known = Object.create(null);
+		(model.categories || []).forEach((c) => {
+			const cIcon = CATEGORY_ICON[c.name] || pageIcon(c.name);
+			known[c.path] = Object.assign({ icon: cIcon, catTitle: '' }, c);
+			(c.children || []).forEach((ch) => {
+				known[ch.path] = Object.assign({ icon: pageIcon(ch.name, c.name), catTitle: c.title }, ch);
+			});
+		});
+		return known;
+	}
+
+	function savedSimpleMenu(model, known) {
+		const hasUci = typeof model.saveSimpleMenu === 'function';
+		const rawAttr = hasUci ? C._simpleMenuAttr : store.get('carbon.simpleMenu', '');
+		return C.simpleMenu.parseAttr(rawAttr) || C.simpleMenu.defaultConfig(known, model.root);
+	}
+
+	C.setSimpleMenuAttr = function (attr) {
+		C._simpleMenuAttr = String(attr || '');
+		if (C._navModel && C._navModel.simpleMenuAttr !== undefined)
+			C._navModel.simpleMenuAttr = C._simpleMenuAttr;
+		const app = document.querySelector('.cb-app');
+		if (app && app.dataset) {
+			if (C._simpleMenuAttr) app.dataset.simpleMenu = C._simpleMenuAttr;
+			else delete app.dataset.simpleMenu;
+		}
+		if (C._navModel) C.renderNav(C._navModel);
+	};
+
 	C.renderNav = function (model) {
+		const isNewModel = model !== C._navModel;
 		C._navModel = model;
+		if (isNewModel && model.simpleMenuAttr !== undefined)
+			C._simpleMenuAttr = model.simpleMenuAttr;
 		const nav = document.getElementById('topmenu');
 		if (!nav) return;
 		nav.innerHTML = '';
@@ -1017,11 +1187,7 @@
 
 		const active = model.activePath.join('/');
 		const isActive = (p) => active === p || active.indexOf(p + '/') === 0;
-		const known = {};
-		model.categories.forEach((c) => {
-			known[c.path] = c;
-			c.children.forEach((ch) => { known[ch.path] = ch; });
-		});
+		const known = buildKnownMap(model);
 
 		const link = (title, iconName, href, on) => {
 			const a = h('a', { class: 'cb-nav-link' + (on ? ' active' : ''), href: href, 'aria-current': on ? 'page' : null }, [
@@ -1032,19 +1198,41 @@
 			return a;
 		};
 
-		if (C.mode.get() === 'simple') {
-			C.SIMPLE_MENU.forEach((group) => {
+		if (C.mode.get() === 'simple' || (simpleMenuDrawer && !simpleMenuDrawer.closed)) {
+			const cfg = (simpleMenuDrawer && !simpleMenuDrawer.closed) ? simpleMenuDrawer.draft : savedSimpleMenu(model, known);
+			const groups = [
+				{ key: 'common', label: C.SIMPLE_MENU[0].group },
+				{ key: 'system', label: C.SIMPLE_MENU[1].group }
+			];
+			const seenFull = Object.create(null);
+			let renderedCount = 0;
+			groups.forEach((g) => {
 				const items = [];
-				group.items.forEach((it) => {
-					for (const p of it.paths) {
-						const full = model.root + '/' + p;
-						if (known[full]) { items.push({ it: it, path: full }); break; }
-					}
+				(cfg[g.key] || []).forEach((rel) => {
+					const resolved = C.simpleMenu.resolvePath(rel, known, model.root);
+					if (!resolved || seenFull[resolved.path]) return;
+					seenFull[resolved.path] = true;
+					items.push({
+						title: resolved.builtin ? t(resolved.builtin.title) : resolved.node.title,
+						icon: resolved.builtin ? resolved.builtin.icon : resolved.node.icon,
+						path: resolved.path
+					});
 				});
 				if (!items.length) return;
-				nav.appendChild(h('div', { class: 'cb-nav-sect', text: t(group.group) }));
-				items.forEach((x) => nav.appendChild(link(t(x.it.title), x.it.icon, model.url(x.path), isActive(x.path))));
+				renderedCount += items.length;
+				nav.appendChild(h('div', { class: 'cb-nav-sect', text: t(g.label) }));
+				items.forEach((x) => nav.appendChild(link(x.title, x.icon, model.url(x.path), isActive(x.path))));
 			});
+
+			if (!renderedCount)
+				nav.appendChild(h('div', { class: 'cb-nav-empty', text: t('No configured pages are currently installed.') }));
+
+			const editBtn = h('button', { type: 'button', class: 'cb-nav-customize' }, [
+				h('span', { class: 'cb-nav-customize-ico', html: icon('sliders') }),
+				h('span', { class: 'cb-nav-label', text: t('Customize menu') })
+			]);
+			editBtn.addEventListener('click', () => C.openSimpleMenuCustomizer(editBtn));
+			nav.appendChild(editBtn);
 
 			const hint = h('div', { class: 'cb-nav-hint' }, [
 				h('span', { class: 'cb-nav-hint-ico', html: icon('sliders') }),
@@ -1116,6 +1304,533 @@
 		const cur = nav.querySelector('.cb-nav-item.active, .cb-nav-link.active');
 		if (cur && cur.scrollIntoView && nav.scrollHeight > nav.clientHeight)
 			cur.scrollIntoView({ block: 'nearest' });
+	};
+
+	/* ------------------------------------------------------------------
+	 * Simple menu customizer drawer (reuses .cb-sheet glass drawer)
+	 * ------------------------------------------------------------------ */
+	const CAT_COLOR = {
+		status: 'indigo', network: 'blue', system: 'purple', services: 'teal',
+		vpn: 'green', docker: 'blue', nas: 'orange', statistics: 'pink', control: 'orange'
+	};
+	const menuColor = (rel) => COLORS[CAT_COLOR[String(rel || '').split('/')[0]] || 'blue'];
+
+	C.openSimpleMenuCustomizer = function (opener) {
+		const model = C._navModel;
+		if (!model || simpleMenuDrawer || document.querySelector('.cb-sheet')) return;
+
+		const openerInNav = !!(opener && opener.closest && opener.closest('#topmenu'));
+
+		/* close mobile sidebar drawer before opening the bottom sheet */
+		if (document.body.classList.contains('cb-nav-open') && typeof C._closeNavDrawer === 'function')
+			C._closeNavDrawer();
+
+		const M = C.simpleMenu;
+		const appEl = document.querySelector('.cb-app');
+		const known = buildKnownMap(model);
+		const defCfg = M.defaultConfig(known, model.root);
+		const initialCfg = savedSimpleMenu(model, known);
+		const initialKey = M.encodeAttr(initialCfg);
+		const draft = M.clone(initialCfg);
+		const hasUciSave = typeof model.saveSimpleMenu === 'function';
+
+		let viewMode = 'edit'; /* 'edit' | 'pick' */
+		let pickGroup = 'common';
+		let query = '';
+		let saving = false;
+
+		/* Build searchable catalog of all installed pages (excluding logout) */
+		const catalog = [];
+		(model.categories || []).forEach((cat) => {
+			if (cat.name === 'logout') return;
+			const entries = cat.children && cat.children.length
+				? cat.children.map((ch) => ({ rel: cat.name + '/' + ch.name, title: ch.title, icon: pageIcon(ch.name, cat.name) }))
+				: [{ rel: cat.name, title: cat.title, icon: CATEGORY_ICON[cat.name] || pageIcon(cat.name) }];
+			const items = entries.filter((e) => M.isValidPath(e.rel)).map((e) => {
+				const builtin = M.builtinFor(e.rel);
+				const displayTitle = builtin ? t(builtin.title) : e.title;
+				const subTitle = (builtin && e.title && e.title !== displayTitle) ? e.title : '';
+				return {
+					rel: e.rel,
+					title: displayTitle,
+					rawTitle: e.title,
+					subTitle: subTitle,
+					icon: builtin ? builtin.icon : e.icon,
+					color: menuColor(e.rel),
+					searchText: [displayTitle, e.title, cat.title, e.rel].join(' ').toLowerCase()
+				};
+			});
+			if (items.length) catalog.push({ name: cat.name, title: cat.title, items: items });
+		});
+
+		const samePath = (a, b) => {
+			if (a === b) return true;
+			const ba = M.builtinFor(a), bb = M.builtinFor(b);
+			return !!(ba && bb && ba.paths === bb.paths);
+		};
+		const findInList = (list, rel) => list.findIndex((x) => samePath(x, rel));
+		const isDirty = () => M.encodeAttr(draft) !== initialKey;
+
+		const titleId = uid();
+		const scrim = h('div', { class: 'cb-sheet-scrim cb-sheet-scrim-menu' });
+		const backBtn = h('button', {
+			type: 'button', class: 'cb-sheet-back',
+			'aria-label': t('Back'), title: t('Back'), html: icon('chevleft'), hidden: true
+		});
+		const titleEl = h('h3', { id: titleId, text: t('Customize simple menu') });
+		const closeBtn = h('button', { type: 'button', class: 'cb-sheet-close', 'aria-label': t('Close'), title: t('Close'), html: icon('close') });
+
+		const searchInput = h('input', {
+			type: 'search', class: 'cb-sheet-search-input',
+			placeholder: t('Search pages or plugins…'),
+			'aria-label': t('Search pages or plugins…'),
+			autocomplete: 'off', spellcheck: 'false'
+		});
+		const searchClear = h('button', {
+			type: 'button', class: 'cb-sheet-search-clear',
+			'aria-label': t('Clear'), title: t('Clear'), html: icon('close'), hidden: true
+		});
+		const searchBar = h('div', { class: 'cb-sheet-search', hidden: true }, [
+			h('div', { class: 'cb-sheet-search-box' }, [
+				h('span', { class: 'cb-sheet-search-ico', html: icon('search') }),
+				searchInput,
+				searchClear
+			])
+		]);
+
+		const body = h('div', { class: 'cb-sheet-body' });
+		const statusEl = h('div', { class: 'cb-sheet-status', role: 'status', 'aria-live': 'polite' });
+		const resetBtn = h('button', { type: 'button', class: 'cbi-button cbi-button-reset', text: t('Restore default') });
+		const cancelBtn = h('button', { type: 'button', class: 'cbi-button', text: t('Cancel') });
+		const saveBtn = h('button', { type: 'button', class: 'cbi-button cbi-button-save', text: t('Save') });
+
+		const sheet = h('aside', { class: 'cb-sheet cb-sheet-menu', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': titleId }, [
+			h('div', { class: 'cb-sheet-head' }, [
+				h('div', { class: 'cb-sheet-head-main' }, [backBtn, titleEl]),
+				closeBtn
+			]),
+			searchBar,
+			body,
+			h('div', { class: 'cb-sheet-foot' }, [
+				statusEl,
+				h('div', { class: 'cb-sheet-actions' }, [resetBtn, h('div', { class: 'cb-sheet-actions-end' }, [cancelBtn, saveBtn])])
+			])
+		]);
+
+		const makeMoveBtn = (dir, disabled, label, onClick) => {
+			const b = h('button', {
+				type: 'button',
+				class: 'cbi-button ' + (dir < 0 ? 'cbi-button-up' : 'cbi-button-down') + ' cb-sheet-ico-btn',
+				title: label, 'aria-label': label, html: icon(dir < 0 ? 'chevup' : 'chevdown')
+			});
+			b.disabled = !!disabled;
+			b.addEventListener('click', onClick);
+			return b;
+		};
+		const swap = (arr, i, j) => { const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp; };
+
+		function describeSaved(rel) {
+			const resolved = M.resolvePath(rel, known, model.root);
+			if (resolved) {
+				return {
+					installed: true,
+					title: resolved.builtin ? t(resolved.builtin.title) : resolved.node.title,
+					sub: resolved.builtin ? '' : (resolved.node.catTitle || ''),
+					icon: resolved.builtin ? resolved.builtin.icon : resolved.node.icon,
+					color: menuColor(resolved.rel)
+				};
+			}
+			const builtin = M.builtinFor(rel);
+			const parts = rel.split('/');
+			const fallbackIcon = builtin ? builtin.icon : (parts.length > 1 ? pageIcon(parts[1], parts[0]) : (CATEGORY_ICON[parts[0]] || pageIcon(parts[0])));
+			return {
+				installed: false,
+				title: builtin ? t(builtin.title) : rel,
+				sub: '',
+				icon: fallbackIcon,
+				color: COLORS.gray
+			};
+		}
+
+		function syncControls() {
+			const isPick = viewMode === 'pick';
+			backBtn.hidden = !isPick;
+			searchBar.hidden = !isPick;
+			titleEl.textContent = isPick
+				? (pickGroup === 'common' ? t('Add to Common') : t('Add to System'))
+				: t('Customize simple menu');
+			searchClear.hidden = !query;
+			resetBtn.disabled = saving || M.isDefault(draft, known, model.root);
+			saveBtn.disabled = saving;
+			cancelBtn.disabled = saving;
+			closeBtn.disabled = saving;
+			backBtn.disabled = saving;
+			searchInput.disabled = saving;
+			searchClear.disabled = saving;
+			if (saving) body.setAttribute('inert', '');
+			else body.removeAttribute('inert');
+		}
+
+		const canAppendToGroup = (list, rel) => {
+			const curBytes = list.length ? list.join(' ').length : 0;
+			return M.count(draft) < M.MAX_ITEMS && ((curBytes ? curBytes + 1 : 0) + rel.length) <= M.MAX_BYTES;
+		};
+
+		function captureEditFocus() {
+			const ae = document.activeElement;
+			if (!ae || !body.contains(ae)) return null;
+			const row = ae.closest('[data-row-key]');
+			const grp = ae.closest('[data-group]');
+			const btnKind = ['cbi-button-up', 'cbi-button-down', 'cbi-button-remove', 'cb-sheet-add'].find((c) => ae.classList.contains(c)) || '';
+			return { rowKey: row ? row.dataset.rowKey : '', group: grp ? grp.dataset.group : '', btnKind: btnKind };
+		}
+
+		function restoreEditFocus(info) {
+			if (!info) return;
+			let target = null;
+			if (info.rowKey) {
+				const row = Array.from(body.querySelectorAll('[data-row-key]')).find((el) => el.dataset.rowKey === info.rowKey);
+				if (row) {
+					const order = info.btnKind === 'cbi-button-up' ? ['.cbi-button-up', '.cbi-button-down', '.cbi-button-remove'] :
+						(info.btnKind === 'cbi-button-down' ? ['.cbi-button-down', '.cbi-button-up', '.cbi-button-remove'] :
+							['.' + info.btnKind, '.cbi-button-remove', '.cbi-button-up', '.cbi-button-down']);
+					for (const sel of order) {
+						const cand = sel !== '.' ? row.querySelector(sel) : null;
+						if (cand && !cand.disabled) { target = cand; break; }
+					}
+				}
+			}
+			if (!target && info.group) {
+				const grp = body.querySelector('.cb-sheet-group[data-group="' + info.group + '"]');
+				if (grp) {
+					const add = grp.querySelector('.cb-sheet-add:not(:disabled)');
+					const anyBtn = grp.querySelector('button:not(:disabled)');
+					target = add || anyBtn;
+				}
+			}
+			(target || closeBtn).focus({ preventScroll: true });
+		}
+
+		function paintEdit(animate) {
+			const scrollTop = body.scrollTop;
+			const focusInfo = captureEditFocus();
+			const doAnim = !!(animate && canWaapi() && !reducedMotion());
+			const prevRows = new Map();
+			if (doAnim) {
+				const br = body.getBoundingClientRect();
+				body.querySelectorAll('[data-row-key]').forEach((el) => {
+					prevRows.set(el.dataset.rowKey, el.getBoundingClientRect().top - br.top + scrollTop);
+				});
+			}
+
+			body.innerHTML = '';
+			const total = M.count(draft);
+			const onlyOne = total <= 1;
+			const atMax = total >= M.MAX_ITEMS;
+
+			[
+				{ key: 'common', label: C.SIMPLE_MENU[0].group },
+				{ key: 'system', label: C.SIMPLE_MENU[1].group }
+			].forEach((g) => {
+				const list = draft[g.key];
+				const rows = [];
+				if (!list.length) {
+					rows.push(h('div', { class: 'cb-sheet-empty', text: t('No items in this group.') }));
+				}
+				else {
+					list.forEach((rel, idx) => {
+						const info = describeSaved(rel);
+						const rm = h('button', {
+							type: 'button', class: 'cbi-button cbi-button-remove cb-sheet-ico-btn',
+							title: t('Remove'), 'aria-label': t('Remove'), html: icon('close')
+						});
+						rm.disabled = onlyOne;
+						rm.addEventListener('click', () => {
+							if (M.count(draft) <= 1) { statusEl.textContent = t('Keep at least one menu item.'); return; }
+							list.splice(idx, 1);
+							statusEl.textContent = M.count(draft) <= 1 ? t('Keep at least one menu item.') : '';
+							applyDraft(true);
+						});
+						const textKids = [h('span', { class: 'cb-sheet-name', text: info.title })];
+						if (!info.installed)
+							textKids.push(h('span', { class: 'cb-sheet-tag', text: t('Not installed') }));
+						else if (info.sub)
+							textKids.push(h('span', { class: 'cb-sheet-sub', text: info.sub }));
+
+						rows.push(h('div', { class: 'cb-sheet-row' + (info.installed ? '' : ' is-off'), 'data-row-key': g.key + ':' + rel }, [
+							h('span', { class: 'cb-ico', style: '--c:' + info.color, html: icon(info.icon) }),
+							h('div', { class: 'cb-sheet-text' }, textKids),
+							h('div', { class: 'cb-sheet-ctrl' }, [
+								makeMoveBtn(-1, idx === 0, t('Move up'), () => { swap(list, idx, idx - 1); statusEl.textContent = ''; applyDraft(true); }),
+								makeMoveBtn(1, idx === list.length - 1, t('Move down'), () => { swap(list, idx, idx + 1); statusEl.textContent = ''; applyDraft(true); }),
+								rm
+							])
+						]));
+					});
+				}
+
+				const addBtn = h('button', {
+					type: 'button', class: 'cbi-button cbi-button-add cb-sheet-add',
+					html: icon('plus') + '<span>' + esc(t('Add page')) + '</span>'
+				});
+				addBtn.disabled = atMax;
+				addBtn.addEventListener('click', () => {
+					if (M.count(draft) >= M.MAX_ITEMS) { statusEl.textContent = t('Maximum %d menu items.', M.MAX_ITEMS); return; }
+					pickGroup = g.key;
+					viewMode = 'pick';
+					query = '';
+					searchInput.value = '';
+					statusEl.textContent = '';
+					paintSheet(false);
+					body.scrollTop = 0;
+					searchInput.focus({ preventScroll: true });
+				});
+				rows.push(h('div', { class: 'cb-sheet-add-row', 'data-row-key': g.key + ':add' }, [
+					addBtn,
+					h('span', { class: 'cb-sheet-count', text: total + ' / ' + M.MAX_ITEMS })
+				]));
+
+				body.appendChild(h('div', { class: 'cb-sheet-group', 'data-group': g.key }, [
+					h('div', { class: 'cb-sheet-group-head' }, [
+						h('span', { class: 'cb-sheet-group-title', text: t(g.label) }),
+						h('span', { class: 'cb-sheet-count', text: String(list.length) })
+					]),
+					h('div', { class: 'cb-sheet-list' }, rows)
+				]));
+			});
+
+			syncControls();
+			body.scrollTop = scrollTop;
+			restoreEditFocus(focusInfo);
+
+			if (doAnim && prevRows.size) {
+				const br = body.getBoundingClientRect();
+				body.querySelectorAll('[data-row-key]').forEach((el) => {
+					const prevTop = prevRows.get(el.dataset.rowKey);
+					if (prevTop == null) return;
+					const dy = prevTop - (el.getBoundingClientRect().top - br.top + body.scrollTop);
+					if (Math.abs(dy) > 2 && Math.abs(dy) < 360) {
+						el.animate([
+							{ transform: 'translate3d(0,' + dy + 'px,0)' },
+							{ transform: 'translate3d(0,0,0)' }
+						], { duration: 220, easing: EASE_OUT });
+					}
+				});
+			}
+		}
+
+		function paintPicker() {
+			const scrollTop = body.scrollTop;
+			const focusedPath = (document.activeElement && body.contains(document.activeElement) && document.activeElement.dataset)
+				? document.activeElement.dataset.path : '';
+			body.innerHTML = '';
+			const q = query.trim().toLowerCase();
+			const otherGroup = pickGroup === 'common' ? 'system' : 'common';
+			const targetList = draft[pickGroup];
+			const otherList = draft[otherGroup];
+			const total = M.count(draft);
+			const onlyOne = total <= 1;
+			let shown = 0;
+
+			catalog.forEach((cat) => {
+				const matches = q ? cat.items.filter((it) => it.searchText.indexOf(q) >= 0) : cat.items;
+				if (!matches.length) return;
+				shown += matches.length;
+				const rows = matches.map((it) => {
+					const inTarget = findInList(targetList, it.rel);
+					const inOther = inTarget < 0 ? findInList(otherList, it.rel) : -1;
+					const cls = 'cb-picker-item' + (inTarget >= 0 ? ' is-added' : (inOther >= 0 ? ' is-other' : ''));
+					const badge = inTarget >= 0
+						? h('span', { class: 'cb-picker-badge ok' }, [h('span', { class: 'cb-picker-badge-ico', html: icon('check') }), t('Added')])
+						: (inOther >= 0
+							? h('span', { class: 'cb-picker-badge muted', text: otherGroup === 'common' ? t('In Common') : t('In System') })
+							: h('span', { class: 'cb-picker-plus', html: icon('plus') }));
+					const textKids = [h('span', { class: 'cb-sheet-name', text: it.title })];
+					if (it.subTitle) textKids.push(h('span', { class: 'cb-sheet-sub', text: it.subTitle }));
+					const btn = h('button', {
+						type: 'button', class: cls, 'data-path': it.rel,
+						'aria-pressed': inTarget >= 0 ? 'true' : (inOther >= 0 ? null : 'false')
+					}, [
+						h('span', { class: 'cb-ico', style: '--c:' + (inOther >= 0 ? COLORS.gray : it.color), html: icon(it.icon) }),
+						h('div', { class: 'cb-sheet-text' }, textKids),
+						badge
+					]);
+					if (inOther >= 0) {
+						btn.disabled = true;
+					}
+					else if (inTarget >= 0) {
+						btn.disabled = onlyOne;
+						btn.addEventListener('click', () => {
+							if (M.count(draft) <= 1) { statusEl.textContent = t('Keep at least one menu item.'); return; }
+							const idx = findInList(targetList, it.rel);
+							if (idx >= 0) targetList.splice(idx, 1);
+							statusEl.textContent = M.count(draft) <= 1 ? t('Keep at least one menu item.') : '';
+							applyDraft(false);
+						});
+					}
+					else {
+						const canAdd = canAppendToGroup(targetList, it.rel);
+						btn.disabled = !canAdd;
+						btn.addEventListener('click', () => {
+							if (!canAppendToGroup(targetList, it.rel)) {
+								statusEl.textContent = t('Maximum %d menu items.', M.MAX_ITEMS);
+								return;
+							}
+							targetList.push(it.rel);
+							statusEl.textContent = M.count(draft) >= M.MAX_ITEMS ? t('Maximum %d menu items.', M.MAX_ITEMS) : '';
+							applyDraft(false);
+						});
+					}
+					return btn;
+				});
+
+				body.appendChild(h('div', { class: 'cb-sheet-group' }, [
+					h('div', { class: 'cb-sheet-group-head' }, [
+						h('span', { class: 'cb-sheet-group-title', text: cat.title }),
+						h('span', { class: 'cb-sheet-count', text: String(matches.length) })
+					]),
+					h('div', { class: 'cb-sheet-list' }, rows)
+				]));
+			});
+
+			if (!shown)
+				body.appendChild(h('div', { class: 'cb-sheet-empty cb-sheet-empty-card', text: t('No matching pages.') }));
+
+			syncControls();
+			body.scrollTop = scrollTop;
+			if (focusedPath) {
+				const nextBtn = Array.from(body.querySelectorAll('.cb-picker-item')).find((el) => el.dataset.path === focusedPath && !el.disabled);
+				(nextBtn || searchInput).focus({ preventScroll: true });
+			}
+		}
+
+		function paintSheet(animate) {
+			if (viewMode === 'pick') paintPicker();
+			else paintEdit(animate);
+		}
+
+		function applyDraft(animate) {
+			C.renderNav(model);
+			paintSheet(animate);
+		}
+
+		function exitPicker() {
+			viewMode = 'edit';
+			statusEl.textContent = '';
+			paintSheet(false);
+			const addBtn = body.querySelector('.cb-sheet-group[data-group="' + pickGroup + '"] .cb-sheet-add:not(:disabled)');
+			(addBtn || closeBtn).focus({ preventScroll: true });
+		}
+
+		function close(commit) {
+			if (!simpleMenuDrawer) return;
+			simpleMenuDrawer.closed = true;
+			document.removeEventListener('keydown', onKey);
+			scrim.remove();
+			sheet.remove();
+			document.body.classList.remove('cb-sheet-open');
+			if (appEl) appEl.removeAttribute('inert');
+			simpleMenuDrawer = null;
+			C.renderNav(model);
+			const target = openerInNav ? document.querySelector('#topmenu .cb-nav-customize') : opener;
+			const burger = document.getElementById('cb-burger');
+			if (target && target.offsetParent !== null && !target.closest('[inert]'))
+				target.focus({ preventScroll: true });
+			else if (burger && burger.offsetParent !== null)
+				burger.focus({ preventScroll: true });
+			void commit;
+		}
+
+		async function doSave() {
+			if (saving) return;
+			saving = true;
+			statusEl.textContent = t('Saving…');
+			syncControls();
+			try {
+				const clean = M.normalize(draft, defCfg);
+				const isDef = M.isDefault(clean, known, model.root);
+				if (hasUciSave) {
+					if (isDef && typeof model.resetSimpleMenu === 'function') {
+						await model.resetSimpleMenu();
+						C._simpleMenuAttr = '';
+						if (model.simpleMenuAttr !== undefined) model.simpleMenuAttr = '';
+					}
+					else {
+						await model.saveSimpleMenu(clean);
+						C._simpleMenuAttr = M.encodeAttr(clean);
+						if (model.simpleMenuAttr !== undefined) model.simpleMenuAttr = C._simpleMenuAttr;
+					}
+				}
+				else {
+					if (isDef) {
+						try { window.localStorage.removeItem('carbon.simpleMenu'); } catch (e) { /* ignore */ }
+					}
+					else {
+						store.set('carbon.simpleMenu', M.encodeAttr(clean));
+					}
+				}
+				try { document.dispatchEvent(new CustomEvent('carbon:simple-menu-change', { detail: { custom: !isDef } })); } catch (e) { /* ignore */ }
+				saving = false;
+				close(true);
+			}
+			catch (err) {
+				saving = false;
+				statusEl.textContent = (err && err.code === 'denied')
+					? t('Permission denied. Log out and log in again once after updating Carbon, then retry.')
+					: (err && err.code === 'invalid_simple_menu' ? t('Invalid simple menu configuration.') : t('Failed to save menu.'));
+				syncControls();
+			}
+		}
+
+		const onKey = (e) => {
+			if (e.key !== 'Escape' || e.isComposing || e.keyCode === 229 || saving) return;
+			e.preventDefault();
+			if (viewMode === 'pick') exitPicker();
+			else close(false);
+		};
+
+		backBtn.addEventListener('click', () => { if (!saving) exitPicker(); });
+		searchInput.addEventListener('input', () => {
+			query = searchInput.value;
+			searchClear.hidden = !query;
+			paintPicker();
+		});
+		searchClear.addEventListener('click', () => {
+			if (saving) return;
+			query = '';
+			searchInput.value = '';
+			searchClear.hidden = true;
+			paintPicker();
+			searchInput.focus({ preventScroll: true });
+		});
+		resetBtn.addEventListener('click', () => {
+			if (saving) return;
+			const next = M.defaultConfig(known, model.root);
+			draft.common = next.common;
+			draft.system = next.system;
+			viewMode = 'edit';
+			statusEl.textContent = '';
+			applyDraft(true);
+		});
+		cancelBtn.addEventListener('click', () => { if (!saving) close(false); });
+		closeBtn.addEventListener('click', () => { if (!saving) close(false); });
+		scrim.addEventListener('click', () => { if (!saving && !isDirty()) close(false); });
+		saveBtn.addEventListener('click', doSave);
+
+		simpleMenuDrawer = { draft: draft, closed: false };
+		C.renderNav(model);
+		paintSheet(false);
+		document.body.appendChild(scrim);
+		document.body.appendChild(sheet);
+		document.body.classList.add('cb-sheet-open');
+		if (appEl) appEl.setAttribute('inert', '');
+		document.addEventListener('keydown', onKey);
+		requestAnimationFrame(() => {
+			if (!simpleMenuDrawer || simpleMenuDrawer.closed) return;
+			scrim.classList.add('show');
+			sheet.classList.add('show');
+			closeBtn.focus({ preventScroll: true });
+		});
 	};
 
 	/* Toolbar title: "Network › Wireless" */
@@ -1885,12 +2600,6 @@
 	const DASH_MAX_TRAFFIC = 4;
 	const DASH_DEV_RE = /^[A-Za-z0-9._:@-]{1,32}$/;
 
-	const splitTokens = (val) => {
-		if (Array.isArray(val)) return val.map((x) => String(x || '').trim()).filter(Boolean);
-		const s = String(val == null ? '' : val).trim();
-		if (!s || s === 'none') return [];
-		return s.split(/\s+/).filter(Boolean);
-	};
 	const cleanDev = (v) => {
 		const s = String(v == null ? '' : v).trim();
 		return DASH_DEV_RE.test(s) ? s : 'auto';
@@ -2794,9 +3503,6 @@
 			}
 
 			/* ---------------- grid mount & live layout apply ---------------- */
-			const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
-			const reducedMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-			const canWaapi = () => typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
 			let hasRendered = false;
 			let ghostLayer = null;
 
