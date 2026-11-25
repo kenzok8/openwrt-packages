@@ -7,6 +7,49 @@ packages are listed at
 <https://github.com/anothaDev/luci-theme-vantage/releases> and in the
 [signed repositories](https://anothadev.github.io/luci-theme-vantage/).
 
+## 1.2.1 - 2026-11-25
+
+- **Dashboard: the uplink's download and upload on a port that also
+  carries the LAN** (#166,
+  [@milindpatel63](https://github.com/milindpatel63)). With the WAN
+  untagged on the device the LAN's VLANs are on (`eth0` beside `eth0.3`:
+  a switch's CPU port, or one port for everything), the uplink showed
+  the same rate in both directions: the kernel counts the VLANs' traffic
+  on that device too, so each direction read download plus upload. The
+  dashboard now takes the rates of those VLANs off the line's own, in
+  the uplink card, the chart and the network path. The counters since
+  boot in the uplink's details are still the device's. With software
+  flow offloading on, the upload is right and the download still
+  includes the upload: the kernel does not count what an offloaded
+  connection brings in on a VLAN's device.
+- **Wi-Fi: clients on a VLAN of their own are listed** (#164,
+  [@milindpatel63](https://github.com/milindpatel63)). Where a network's
+  passwords (or RADIUS) give each client its VLAN, hostapd puts the
+  client on an interface of that VLAN, and neither the dashboard nor
+  LuCI's Wireless page listed it there. The dashboard now asks those
+  interfaces too and shows their clients under the network, with the
+  interface in a client's details, and counts their traffic to the
+  network and its radio. It reads no password for this, as before. A
+  paired access point reports such clients too
+  (`luci-app-vantage-aps`).
+- **Other access points: an access point's own bridges are no wired
+  clients** (#167,
+  [@milindpatel63](https://github.com/milindpatel63)). A paired access
+  point with several networks has a bridge with an address of its own
+  for each, and the router listed each as one more wired device. The
+  access point now reports its own addresses and the router leaves them
+  out; the access point's own row says how many, and its details name
+  them. A router whose VLANs are devices of their own (`eth0.1`,
+  `eth0.3`) also shows an access point's clients on another VLAN than
+  its own as that access point's, where they stayed wired hosts of the
+  router. The first needs 1.2.1 on the access points as well.
+- **Ports tile and LuCI's Port status: no line broken before its last
+  word** (#168, [@VIKINGYFY](https://github.com/VIKINGYFY)). A port's
+  errors and drops broke before the last word in a narrow cell, in
+  Chinese at any width near the smallest: the line now breaks between
+  its label and its counts. In LuCI's Port status a counter stays on
+  one line with its unit.
+
 ## 1.2.0 - 2026-11-23
 
 - **Dashboard: a module that cannot load no longer costs LuCI its

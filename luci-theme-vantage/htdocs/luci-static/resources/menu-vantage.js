@@ -65,7 +65,7 @@ const MOTION_EVENT = 'vantage:tick';
    key, also what the dashboard reads under another theme) counts until
    the router has one. */
 /* this package's version, as its Makefile has it (tests/version.test.js) */
-const VERSION = '1.2.0';
+const VERSION = '1.2.1';
 /* Check for updates (Appearance): when asked, and never on its own unless
    the daily check below is on, the browser reads the project's 24.10
    package list on GitHub Pages (the same release as 25.12's), without

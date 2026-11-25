@@ -2042,6 +2042,9 @@ div:has(> .ifacebox > .ifacebox-head.cbi-tooltip-container) {
 	align-items: stretch !important; justify-items: stretch !important;
 }
 div:has(> .ifacebox > .ifacebox-head.cbi-tooltip-container) > .ifacebox { width: 100% !important; max-width: none !important; margin: 0 !important; }
+/* a counter stays on one line with its unit: ImmortalWrt prints two
+   decimals ("184.31 MiB"), and the unit dropped to a line of its own (#168) */
+.ifacebox-head.cbi-tooltip-container + .ifacebox-body > .cbi-tooltip-container { white-space: nowrap; }
 .ifacebox:has(.cbi-tooltip-container) > :first-child { border-radius: calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px) 0 0; }
 .ifacebox:has(.cbi-tooltip-container) > :last-child { border-radius: 0 0 calc(var(--r-lg) - 1px) calc(var(--r-lg) - 1px); }
 .ifacebox-head.active { background: var(--accent-soft); color: var(--accent-text); }
