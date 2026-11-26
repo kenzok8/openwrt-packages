@@ -251,7 +251,8 @@
 			'<rect x="11.2" y="9" width="2.7" height="2.4" rx=".4"/><rect x="7.9" y="5.9" width="2.7" height="2.4" rx=".4"/>' +
 			'<rect x="11.2" y="5.9" width="2.7" height="2.4" rx=".4"/><rect x="11.2" y="2.8" width="2.7" height="2.4" rx=".4"/><circle cx="7.4" cy="15.4" r=".9"/></g>',
 		nodes: '<circle cx="12" cy="5.5" r="2.3"/><circle cx="5.5" cy="18" r="2.3"/><circle cx="18.5" cy="18" r="2.3"/><path d="M10.9 7.6l-4.3 8.3M13.1 7.6l4.3 8.3M7.8 18h8.4"/>',
-		sparkle: '<path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M18.5 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>'
+		sparkle: '<path d="M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z"/><path d="M18.5 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>',
+		grip: '<g fill="currentColor" stroke="none"><circle cx="9" cy="6.5" r="1.4"/><circle cx="15" cy="6.5" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="17.5" r="1.4"/><circle cx="15" cy="17.5" r="1.4"/></g>'
 	});
 
 	/* Top-level LuCI menu categories → line icon */
@@ -1144,6 +1145,8 @@
 	 * }
 	 * ------------------------------------------------------------------ */
 	let simpleMenuDrawer = null;
+	let simpleMenuNavSaving = false;
+	let navToastTimer = null;
 
 	function buildKnownMap(model) {
 		const known = Object.create(null);
@@ -1161,6 +1164,402 @@
 		const hasUci = typeof model.saveSimpleMenu === 'function';
 		const rawAttr = hasUci ? C._simpleMenuAttr : store.get('carbon.simpleMenu', '');
 		return C.simpleMenu.parseAttr(rawAttr) || C.simpleMenu.defaultConfig(known, model.root);
+	}
+
+	async function persistSimpleMenu(model, known, nextCfg) {
+		const M = C.simpleMenu;
+		const defCfg = M.defaultConfig(known, model.root);
+		const clean = M.normalize(nextCfg, defCfg);
+		const isDef = M.isDefault(clean, known, model.root);
+		const hasUciSave = typeof model.saveSimpleMenu === 'function';
+		if (hasUciSave) {
+			if (isDef && typeof model.resetSimpleMenu === 'function') {
+				await model.resetSimpleMenu();
+				C._simpleMenuAttr = '';
+				if (model.simpleMenuAttr !== undefined) model.simpleMenuAttr = '';
+			}
+			else {
+				await model.saveSimpleMenu(clean);
+				C._simpleMenuAttr = M.encodeAttr(clean);
+				if (model.simpleMenuAttr !== undefined) model.simpleMenuAttr = C._simpleMenuAttr;
+			}
+		}
+		else {
+			if (isDef) {
+				try { window.localStorage.removeItem('carbon.simpleMenu'); } catch (e) { /* ignore */ }
+			}
+			else {
+				store.set('carbon.simpleMenu', M.encodeAttr(clean));
+			}
+		}
+		try { document.dispatchEvent(new CustomEvent('carbon:simple-menu-change', { detail: { custom: !isDef } })); } catch (e) { /* ignore */ }
+		return { clean: clean, isDefault: isDef };
+	}
+
+	function simpleMenuErrorText(err) {
+		return (err && err.code === 'denied')
+			? t('Permission denied. Log out and log in again once after updating Carbon, then retry.')
+			: (err && err.code === 'invalid_simple_menu' ? t('Invalid simple menu configuration.') : t('Failed to save menu.'));
+	}
+
+	function showNavStatus(msg) {
+		const nav = document.getElementById('topmenu');
+		if (!nav) return;
+		let note = nav.querySelector('.cb-nav-status');
+		if (!note) {
+			note = h('div', { class: 'cb-nav-status', role: 'status', 'aria-live': 'polite' });
+			const edit = nav.querySelector('.cb-nav-customize');
+			if (edit && edit.parentNode === nav) nav.insertBefore(note, edit);
+			else nav.appendChild(note);
+		}
+		note.textContent = msg;
+		clearTimeout(navToastTimer);
+		navToastTimer = setTimeout(() => { if (note.parentNode) note.remove(); }, 4500);
+	}
+
+	/* ------------------------------------------------------------------
+	 * Physical pointer drag-to-reorder engine (shared by the customizer
+	 * drawer and Simple sidebar long-press reorder)
+	 * ------------------------------------------------------------------ */
+	function startSortableDrag(opts) {
+		const item = opts.item;
+		const itemRect = item.getBoundingClientRect();
+		const grabOffsetY = (opts.grabY != null ? opts.grabY : opts.startY) - itemRect.top;
+		const grabOffsetX = (opts.grabX != null ? opts.grabX : opts.startX) - itemRect.left;
+		const scrollEl = opts.scrollEl;
+		const containers = opts.getContainers();
+		const initContainer = containers.find((c) => c.el.contains(item));
+		if (!initContainer) return null;
+
+		const initSiblings = Array.from(initContainer.el.children).filter((el) => el.matches(initContainer.itemSel));
+		const startGroup = initContainer.group;
+		const startIndex = initSiblings.indexOf(item);
+		if (startIndex < 0) return null;
+
+		let curGroup = startGroup;
+		let curIndex = startIndex;
+		let curX = opts.startX;
+		let curY = opts.startY;
+		let changed = false;
+		let ended = false;
+		let rafId = 0;
+
+		const ghost = item.cloneNode(true);
+		ghost.removeAttribute('id');
+		ghost.setAttribute('aria-hidden', 'true');
+		ghost.classList.remove('cb-nav-pressing');
+		ghost.classList.add('cb-drag-ghost');
+		if (opts.ghostClass) ghost.classList.add(opts.ghostClass);
+		ghost.style.left = itemRect.left + 'px';
+		ghost.style.top = itemRect.top + 'px';
+		ghost.style.width = itemRect.width + 'px';
+		ghost.style.height = itemRect.height + 'px';
+
+		item.classList.add('cb-drag-slot');
+		document.body.classList.add('cb-dragging');
+		document.body.appendChild(ghost);
+		if (typeof opts.onStart === 'function') opts.onStart();
+
+		const paintGhost = () => {
+			const dx = (curX - grabOffsetX - itemRect.left) * 0.14;
+			const dy = curY - grabOffsetY - itemRect.top;
+			ghost.style.transform = 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) scale(1.02)';
+		};
+		paintGhost();
+
+		const getAllSiblings = () => {
+			const list = [];
+			containers.forEach((c) => {
+				Array.from(c.el.children).forEach((el) => {
+					if (el !== item && el.matches(c.itemSel)) list.push(el);
+				});
+			});
+			return list;
+		};
+
+		const pickContainer = (centerY) => {
+			let best = null, bestDist = Infinity;
+			containers.forEach((c) => {
+				const r = c.el.getBoundingClientRect();
+				if (centerY >= r.top && centerY <= r.bottom) { best = c; bestDist = 0; return; }
+				const d = centerY < r.top ? (r.top - centerY) : (centerY - r.bottom);
+				if (d < bestDist) { bestDist = d; best = c; }
+			});
+			return best;
+		};
+
+		function updateSlot() {
+			const centerY = curY - grabOffsetY + itemRect.height / 2;
+			const target = pickContainer(centerY);
+			if (!target) return;
+			if (target.group !== curGroup && typeof opts.canDropInGroup === 'function' && !opts.canDropInGroup(target.group))
+				return;
+
+			const siblings = Array.from(target.el.children).filter((el) => el !== item && el.matches(target.itemSel));
+			let beforeEl = null;
+			for (const sib of siblings) {
+				const r = sib.getBoundingClientRect();
+				if (centerY < r.top + r.height / 2) { beforeEl = sib; break; }
+			}
+			const nextIndex = beforeEl ? siblings.indexOf(beforeEl) : siblings.length;
+			if (target.group === curGroup && nextIndex === curIndex) return;
+
+			const animate = canWaapi() && !reducedMotion();
+			const prevTops = animate ? new Map(getAllSiblings().map((el) => [el, el.getBoundingClientRect().top])) : null;
+
+			if (beforeEl) target.el.insertBefore(item, beforeEl);
+			else target.el.appendChild(item);
+
+			const prevGroup = curGroup, prevIndex = curIndex;
+			curGroup = target.group;
+			curIndex = nextIndex;
+			changed = true;
+
+			if (typeof opts.onMove === 'function')
+				opts.onMove(prevGroup, prevIndex, curGroup, curIndex);
+
+			if (animate && prevTops) {
+				prevTops.forEach((oldTop, el) => {
+					const dy = oldTop - el.getBoundingClientRect().top;
+					if (Math.abs(dy) > 1 && Math.abs(dy) < 360) {
+						el.animate([
+							{ transform: 'translate3d(0,' + dy + 'px,0)' },
+							{ transform: 'translate3d(0,0,0)' }
+						], { duration: 200, easing: EASE_OUT });
+					}
+				});
+			}
+		}
+
+		function autoScrollTick() {
+			if (ended) return;
+			if (scrollEl && scrollEl.scrollHeight > scrollEl.clientHeight) {
+				const r = scrollEl.getBoundingClientRect();
+				const edge = 44;
+				let step = 0;
+				if (curY < r.top + edge) step = -Math.ceil(((r.top + edge - curY) / edge) * 10);
+				else if (curY > r.bottom - edge) step = Math.ceil(((curY - (r.bottom - edge)) / edge) * 10);
+				if (step) {
+					const before = scrollEl.scrollTop;
+					scrollEl.scrollTop += step;
+					if (scrollEl.scrollTop !== before) updateSlot();
+				}
+			}
+			rafId = requestAnimationFrame(autoScrollTick);
+		}
+		rafId = requestAnimationFrame(autoScrollTick);
+
+		function finish(cancelled) {
+			if (ended) return;
+			ended = true;
+			cancelAnimationFrame(rafId);
+			window.removeEventListener('pointermove', onPointerMove, true);
+			window.removeEventListener('pointerup', onPointerUp, true);
+			window.removeEventListener('pointercancel', onPointerCancel, true);
+			window.removeEventListener('keydown', onKeyDown, true);
+			window.removeEventListener('contextmenu', preventDefault, true);
+
+			const ghostRect = ghost.getBoundingClientRect();
+			ghost.remove();
+			item.classList.remove('cb-drag-slot');
+			document.body.classList.remove('cb-dragging');
+
+			const finalRect = item.getBoundingClientRect();
+			if (!cancelled && canWaapi() && !reducedMotion()) {
+				const dx = ghostRect.left - finalRect.left;
+				const dy = ghostRect.top - finalRect.top;
+				if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+					item.animate([
+						{ transform: 'translate3d(' + dx + 'px,' + dy + 'px,0) scale(1.02)' },
+						{ transform: 'translate3d(0,0,0) scale(1)' }
+					], { duration: 170, easing: EASE_OUT });
+				}
+			}
+			if (typeof opts.onEnd === 'function')
+				opts.onEnd(changed && !cancelled, cancelled);
+		}
+
+		const preventDefault = (e) => e.preventDefault();
+		const onPointerMove = (e) => {
+			if (e.pointerId !== opts.pointerId) return;
+			e.preventDefault();
+			curX = e.clientX;
+			curY = e.clientY;
+			paintGhost();
+			updateSlot();
+		};
+		const onPointerUp = (e) => {
+			if (e.pointerId !== opts.pointerId) return;
+			e.preventDefault();
+			finish(false);
+		};
+		const onPointerCancel = (e) => {
+			if (e.pointerId !== opts.pointerId) return;
+			finish(true);
+		};
+		const onKeyDown = (e) => {
+			if (e.key === 'Escape') {
+				e.preventDefault();
+				e.stopPropagation();
+				finish(true);
+			}
+		};
+
+		window.addEventListener('pointermove', onPointerMove, true);
+		window.addEventListener('pointerup', onPointerUp, true);
+		window.addEventListener('pointercancel', onPointerCancel, true);
+		window.addEventListener('keydown', onKeyDown, true);
+		window.addEventListener('contextmenu', preventDefault, true);
+		return { cancel: () => finish(true) };
+	}
+
+	function suppressNextClick() {
+		let cleared = false;
+		const kill = (e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			cleanup();
+		};
+		const cleanup = () => {
+			if (cleared) return;
+			cleared = true;
+			document.removeEventListener('click', kill, true);
+		};
+		document.addEventListener('click', kill, true);
+		setTimeout(cleanup, 400);
+	}
+
+	function bindSidebarLongPressDrag(nav, model, known) {
+		const LONG_PRESS_MS = 280;
+		const MOVE_CANCEL_PX = 6;
+
+		nav.querySelectorAll('.cb-nav-link[data-menu-rel]').forEach((a) => {
+			a.setAttribute('draggable', 'false');
+			a.addEventListener('dragstart', (e) => e.preventDefault());
+			a.addEventListener('pointerdown', (e) => {
+				if (e.button !== 0 && e.pointerType === 'mouse') return;
+				if (railActive() || simpleMenuDrawer || simpleMenuNavSaving || document.body.classList.contains('cb-dragging')) return;
+
+				const pointerId = e.pointerId;
+				const startX = e.clientX, startY = e.clientY;
+				let curX = startX, curY = startY;
+				let timer = null;
+
+				a.classList.add('cb-nav-pressing');
+
+				const blockContext = (ev) => ev.preventDefault();
+				const cancelPending = () => {
+					if (timer) { clearTimeout(timer); timer = null; }
+					a.classList.remove('cb-nav-pressing');
+					window.removeEventListener('pointermove', onWaitMove, true);
+					window.removeEventListener('pointerup', onWaitEnd, true);
+					window.removeEventListener('pointercancel', onWaitEnd, true);
+					window.removeEventListener('contextmenu', blockContext, true);
+					nav.removeEventListener('scroll', cancelPending, true);
+				};
+				const onWaitMove = (ev) => {
+					if (ev.pointerId !== pointerId) return;
+					curX = ev.clientX;
+					curY = ev.clientY;
+					if (Math.hypot(curX - startX, curY - startY) > MOVE_CANCEL_PX) cancelPending();
+				};
+				const onWaitEnd = (ev) => {
+					if (ev.pointerId !== pointerId) return;
+					cancelPending();
+				};
+
+				window.addEventListener('pointermove', onWaitMove, true);
+				window.addEventListener('pointerup', onWaitEnd, true);
+				window.addEventListener('pointercancel', onWaitEnd, true);
+				window.addEventListener('contextmenu', blockContext, true);
+				nav.addEventListener('scroll', cancelPending, true);
+
+				timer = setTimeout(() => {
+					cancelPending();
+					if (railActive() || simpleMenuDrawer || !nav.contains(a)) return;
+					hideFlyout(true);
+
+					const baseCfg = savedSimpleMenu(model, known);
+					const nextCfg = C.simpleMenu.clone(baseCfg);
+					const movedRel = a.dataset.menuRel;
+					const containers = Array.from(nav.querySelectorAll('.cb-nav-simple-list[data-menu-group]')).map((el) => ({
+						group: el.dataset.menuGroup,
+						el: el,
+						itemSel: '.cb-nav-link[data-menu-rel]'
+					}));
+
+					const groupBytes = (arr) => arr.length ? arr.join(' ').length : 0;
+					const canDropInGroup = (group) => {
+						const list = nextCfg[group] || [];
+						if (list.indexOf(movedRel) >= 0) return true;
+						const bytes = groupBytes(list);
+						return ((bytes ? bytes + 1 : 0) + movedRel.length) <= C.simpleMenu.MAX_BYTES;
+					};
+
+					/* Re-splice movedRel inside nextCfg while preserving any uninstalled hidden entries */
+					const syncNextCfgFromDom = () => {
+						['common', 'system'].forEach((g) => {
+							const idx = nextCfg[g].indexOf(movedRel);
+							if (idx >= 0) nextCfg[g].splice(idx, 1);
+						});
+						const hostList = a.closest('.cb-nav-simple-list[data-menu-group]');
+						const targetGroup = hostList ? hostList.dataset.menuGroup : a.dataset.menuGroup;
+						const domRels = hostList
+							? Array.from(hostList.querySelectorAll('.cb-nav-link[data-menu-rel]')).map((el) => el.dataset.menuRel)
+							: [];
+						const pos = domRels.indexOf(movedRel);
+						const afterRel = pos >= 0 ? domRels[pos + 1] : null;
+						const arr = nextCfg[targetGroup];
+						const insertAt = afterRel ? arr.indexOf(afterRel) : -1;
+						if (insertAt >= 0) arr.splice(insertAt, 0, movedRel);
+						else arr.push(movedRel);
+						a.dataset.menuGroup = targetGroup;
+					};
+
+					const beforeKey = C.simpleMenu.encodeAttr(baseCfg);
+					startSortableDrag({
+						item: a,
+						pointerId: pointerId,
+						startX: curX,
+						startY: curY,
+						scrollEl: nav,
+						getContainers: () => containers,
+						canDropInGroup: canDropInGroup,
+						ghostClass: 'cb-drag-ghost-nav',
+						onStart: () => nav.classList.add('cb-nav-reordering'),
+						onMove: () => syncNextCfgFromDom(),
+						onEnd: async (didMove, cancelled) => {
+							suppressNextClick();
+							nav.classList.remove('cb-nav-reordering');
+							if (cancelled || !didMove) {
+								if (cancelled) C.renderNav(model);
+								return;
+							}
+							syncNextCfgFromDom();
+							if (C.simpleMenu.encodeAttr(nextCfg) === beforeKey) return;
+							simpleMenuNavSaving = true;
+							try {
+								await persistSimpleMenu(model, known, nextCfg);
+								simpleMenuNavSaving = false;
+								/* Prune any emptied group heading/list in-place so the drop settle animation finishes cleanly */
+								nav.querySelectorAll('.cb-nav-simple-list[data-menu-group]').forEach((listEl) => {
+									if (!listEl.querySelector('.cb-nav-link[data-menu-rel]')) {
+										const prev = listEl.previousElementSibling;
+										if (prev && prev.classList.contains('cb-nav-sect')) prev.remove();
+										listEl.remove();
+									}
+								});
+							}
+							catch (err) {
+								simpleMenuNavSaving = false;
+								C.renderNav(model);
+								showNavStatus(simpleMenuErrorText(err));
+							}
+						}
+					});
+				}, LONG_PRESS_MS);
+			});
+		});
 	}
 
 	C.setSimpleMenuAttr = function (attr) {
@@ -1189,8 +1588,9 @@
 		const isActive = (p) => active === p || active.indexOf(p + '/') === 0;
 		const known = buildKnownMap(model);
 
-		const link = (title, iconName, href, on) => {
-			const a = h('a', { class: 'cb-nav-link' + (on ? ' active' : ''), href: href, 'aria-current': on ? 'page' : null }, [
+		const link = (title, iconName, href, on, extra) => {
+			const attrs = Object.assign({ class: 'cb-nav-link' + (on ? ' active' : ''), href: href, 'aria-current': on ? 'page' : null }, extra || null);
+			const a = h('a', attrs, [
 				h('span', { class: 'cb-nav-ico', html: icon(iconName) }),
 				h('span', { class: 'cb-nav-label', text: title })
 			]);
@@ -1213,6 +1613,7 @@
 					if (!resolved || seenFull[resolved.path]) return;
 					seenFull[resolved.path] = true;
 					items.push({
+						rel: rel,
 						title: resolved.builtin ? t(resolved.builtin.title) : resolved.node.title,
 						icon: resolved.builtin ? resolved.builtin.icon : resolved.node.icon,
 						path: resolved.path
@@ -1221,11 +1622,16 @@
 				if (!items.length) return;
 				renderedCount += items.length;
 				nav.appendChild(h('div', { class: 'cb-nav-sect', text: t(g.label) }));
-				items.forEach((x) => nav.appendChild(link(x.title, x.icon, model.url(x.path), isActive(x.path))));
+				const listEl = h('div', { class: 'cb-nav-simple-list', 'data-menu-group': g.key });
+				items.forEach((x) => listEl.appendChild(link(x.title, x.icon, model.url(x.path), isActive(x.path), { 'data-menu-group': g.key, 'data-menu-rel': x.rel })));
+				nav.appendChild(listEl);
 			});
 
 			if (!renderedCount)
 				nav.appendChild(h('div', { class: 'cb-nav-empty', text: t('No configured pages are currently installed.') }));
+
+			if (!(simpleMenuDrawer && !simpleMenuDrawer.closed) && renderedCount > 1)
+				bindSidebarLongPressDrag(nav, model, known);
 
 			const editBtn = h('button', { type: 'button', class: 'cb-nav-customize' }, [
 				h('span', { class: 'cb-nav-customize-ico', html: icon('sliders') }),
@@ -1328,16 +1734,15 @@
 		const M = C.simpleMenu;
 		const appEl = document.querySelector('.cb-app');
 		const known = buildKnownMap(model);
-		const defCfg = M.defaultConfig(known, model.root);
 		const initialCfg = savedSimpleMenu(model, known);
 		const initialKey = M.encodeAttr(initialCfg);
 		const draft = M.clone(initialCfg);
-		const hasUciSave = typeof model.saveSimpleMenu === 'function';
 
 		let viewMode = 'edit'; /* 'edit' | 'pick' */
 		let pickGroup = 'common';
 		let query = '';
 		let saving = false;
+		let activeDrag = null;
 
 		/* Build searchable catalog of all installed pages (excluding logout) */
 		const catalog = [];
@@ -1417,18 +1822,6 @@
 			])
 		]);
 
-		const makeMoveBtn = (dir, disabled, label, onClick) => {
-			const b = h('button', {
-				type: 'button',
-				class: 'cbi-button ' + (dir < 0 ? 'cbi-button-up' : 'cbi-button-down') + ' cb-sheet-ico-btn',
-				title: label, 'aria-label': label, html: icon(dir < 0 ? 'chevup' : 'chevdown')
-			});
-			b.disabled = !!disabled;
-			b.addEventListener('click', onClick);
-			return b;
-		};
-		const swap = (arr, i, j) => { const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp; };
-
 		function describeSaved(rel) {
 			const resolved = M.resolvePath(rel, known, model.root);
 			if (resolved) {
@@ -1475,13 +1868,19 @@
 			const curBytes = list.length ? list.join(' ').length : 0;
 			return M.count(draft) < M.MAX_ITEMS && ((curBytes ? curBytes + 1 : 0) + rel.length) <= M.MAX_BYTES;
 		};
+		const canMoveIntoGroup = (group, rel) => {
+			const list = draft[group] || [];
+			if (list.indexOf(rel) >= 0) return true;
+			const curBytes = list.length ? list.join(' ').length : 0;
+			return ((curBytes ? curBytes + 1 : 0) + rel.length) <= M.MAX_BYTES;
+		};
 
 		function captureEditFocus() {
 			const ae = document.activeElement;
 			if (!ae || !body.contains(ae)) return null;
 			const row = ae.closest('[data-row-key]');
 			const grp = ae.closest('[data-group]');
-			const btnKind = ['cbi-button-up', 'cbi-button-down', 'cbi-button-remove', 'cb-sheet-add'].find((c) => ae.classList.contains(c)) || '';
+			const btnKind = ['cbi-button-remove', 'cb-sheet-add'].find((c) => ae.classList.contains(c)) || '';
 			return { rowKey: row ? row.dataset.rowKey : '', group: grp ? grp.dataset.group : '', btnKind: btnKind };
 		}
 
@@ -1491,13 +1890,8 @@
 			if (info.rowKey) {
 				const row = Array.from(body.querySelectorAll('[data-row-key]')).find((el) => el.dataset.rowKey === info.rowKey);
 				if (row) {
-					const order = info.btnKind === 'cbi-button-up' ? ['.cbi-button-up', '.cbi-button-down', '.cbi-button-remove'] :
-						(info.btnKind === 'cbi-button-down' ? ['.cbi-button-down', '.cbi-button-up', '.cbi-button-remove'] :
-							['.' + info.btnKind, '.cbi-button-remove', '.cbi-button-up', '.cbi-button-down']);
-					for (const sel of order) {
-						const cand = sel !== '.' ? row.querySelector(sel) : null;
-						if (cand && !cand.disabled) { target = cand; break; }
-					}
+					const cand = info.btnKind ? row.querySelector('.' + info.btnKind) : null;
+					if (cand && !cand.disabled) target = cand;
 				}
 			}
 			if (!target && info.group) {
@@ -1509,6 +1903,96 @@
 				}
 			}
 			(target || closeBtn).focus({ preventScroll: true });
+		}
+
+		function syncDrawerCounts() {
+			['common', 'system'].forEach((g) => {
+				const grp = body.querySelector('.cb-sheet-group[data-group="' + g + '"]');
+				if (!grp) return;
+				const cnt = grp.querySelector('.cb-sheet-group-head .cb-sheet-count');
+				if (cnt) cnt.textContent = String(draft[g].length);
+				const empty = grp.querySelector('.cb-sheet-empty');
+				if (empty) empty.hidden = draft[g].length > 0;
+			});
+			resetBtn.disabled = saving || M.isDefault(draft, known, model.root);
+		}
+
+		function bindRowDrag(row, rel) {
+			row.addEventListener('pointerdown', (e) => {
+				if (saving || activeDrag) return;
+				if (e.button !== 0 && e.pointerType === 'mouse') return;
+				if (e.target.closest('button, a, input')) return;
+				if (e.pointerType !== 'mouse' && !e.target.closest('.cb-drag-handle')) return;
+				if (e.pointerType === 'mouse') e.preventDefault();
+
+				const pointerId = e.pointerId;
+				const startX = e.clientX, startY = e.clientY;
+				const THRESHOLD = 4;
+
+				const stopWait = () => {
+					window.removeEventListener('pointermove', onWaitMove, true);
+					window.removeEventListener('pointerup', onWaitUp, true);
+					window.removeEventListener('pointercancel', onWaitUp, true);
+				};
+				const onWaitMove = (ev) => {
+					if (ev.pointerId !== pointerId) return;
+					if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < THRESHOLD) return;
+					stopWait();
+
+					const snapshot = M.clone(draft);
+					const containers = Array.from(body.querySelectorAll('.cb-sheet-items[data-group]')).map((el) => ({
+						group: el.dataset.group,
+						el: el,
+						itemSel: '.cb-sheet-row[data-rel]'
+					}));
+
+					const syncDraftFromDom = () => {
+						containers.forEach((c) => {
+							draft[c.group] = Array.from(c.el.querySelectorAll('.cb-sheet-row[data-rel]')).map((el) => {
+								el.dataset.rowKey = c.group + ':' + el.dataset.rel;
+								return el.dataset.rel;
+							});
+						});
+						statusEl.textContent = '';
+						syncDrawerCounts();
+						C.renderNav(model);
+					};
+
+					activeDrag = startSortableDrag({
+						item: row,
+						pointerId: pointerId,
+						grabX: startX,
+						grabY: startY,
+						startX: ev.clientX,
+						startY: ev.clientY,
+						scrollEl: body,
+						getContainers: () => containers,
+						canDropInGroup: (group) => canMoveIntoGroup(group, rel),
+						ghostClass: 'cb-drag-ghost-row',
+						onStart: () => body.classList.add('cb-sheet-dragging'),
+						onMove: () => syncDraftFromDom(),
+						onEnd: (didMove, cancelled) => {
+							activeDrag = null;
+							body.classList.remove('cb-sheet-dragging');
+							if (cancelled) {
+								draft.common = snapshot.common;
+								draft.system = snapshot.system;
+								applyDraft(false);
+								return;
+							}
+							if (didMove) syncDraftFromDom();
+						}
+					});
+				};
+				const onWaitUp = (ev) => {
+					if (ev.pointerId !== pointerId) return;
+					stopWait();
+				};
+
+				window.addEventListener('pointermove', onWaitMove, true);
+				window.addEventListener('pointerup', onWaitUp, true);
+				window.addEventListener('pointercancel', onWaitUp, true);
+			});
 		}
 
 		function paintEdit(animate) {
@@ -1533,41 +2017,45 @@
 				{ key: 'system', label: C.SIMPLE_MENU[1].group }
 			].forEach((g) => {
 				const list = draft[g.key];
-				const rows = [];
-				if (!list.length) {
-					rows.push(h('div', { class: 'cb-sheet-empty', text: t('No items in this group.') }));
-				}
-				else {
-					list.forEach((rel, idx) => {
-						const info = describeSaved(rel);
-						const rm = h('button', {
-							type: 'button', class: 'cbi-button cbi-button-remove cb-sheet-ico-btn',
-							title: t('Remove'), 'aria-label': t('Remove'), html: icon('close')
-						});
-						rm.disabled = onlyOne;
-						rm.addEventListener('click', () => {
-							if (M.count(draft) <= 1) { statusEl.textContent = t('Keep at least one menu item.'); return; }
-							list.splice(idx, 1);
-							statusEl.textContent = M.count(draft) <= 1 ? t('Keep at least one menu item.') : '';
-							applyDraft(true);
-						});
-						const textKids = [h('span', { class: 'cb-sheet-name', text: info.title })];
-						if (!info.installed)
-							textKids.push(h('span', { class: 'cb-sheet-tag', text: t('Not installed') }));
-						else if (info.sub)
-							textKids.push(h('span', { class: 'cb-sheet-sub', text: info.sub }));
-
-						rows.push(h('div', { class: 'cb-sheet-row' + (info.installed ? '' : ' is-off'), 'data-row-key': g.key + ':' + rel }, [
-							h('span', { class: 'cb-ico', style: '--c:' + info.color, html: icon(info.icon) }),
-							h('div', { class: 'cb-sheet-text' }, textKids),
-							h('div', { class: 'cb-sheet-ctrl' }, [
-								makeMoveBtn(-1, idx === 0, t('Move up'), () => { swap(list, idx, idx - 1); statusEl.textContent = ''; applyDraft(true); }),
-								makeMoveBtn(1, idx === list.length - 1, t('Move down'), () => { swap(list, idx, idx + 1); statusEl.textContent = ''; applyDraft(true); }),
-								rm
-							])
-						]));
+				const itemNodes = [];
+				list.forEach((rel, idx) => {
+					const info = describeSaved(rel);
+					const rm = h('button', {
+						type: 'button', class: 'cbi-button cbi-button-remove cb-sheet-ico-btn',
+						title: t('Remove'), 'aria-label': t('Remove'), html: icon('close')
 					});
-				}
+					rm.disabled = onlyOne;
+					rm.addEventListener('click', () => {
+						if (M.count(draft) <= 1) { statusEl.textContent = t('Keep at least one menu item.'); return; }
+						['common', 'system'].forEach((gk) => {
+							const i = draft[gk].indexOf(rel);
+							if (i >= 0) draft[gk].splice(i, 1);
+						});
+						statusEl.textContent = M.count(draft) <= 1 ? t('Keep at least one menu item.') : '';
+						applyDraft(true);
+					});
+					const textKids = [h('span', { class: 'cb-sheet-name', text: info.title })];
+					if (!info.installed)
+						textKids.push(h('span', { class: 'cb-sheet-tag', text: t('Not installed') }));
+					else if (info.sub)
+						textKids.push(h('span', { class: 'cb-sheet-sub', text: info.sub }));
+
+					const row = h('div', {
+						class: 'cb-sheet-row cb-sheet-row-drag' + (info.installed ? '' : ' is-off'),
+						'data-row-key': g.key + ':' + rel,
+						'data-rel': rel
+					}, [
+						h('span', { class: 'cb-drag-handle', 'aria-hidden': 'true', html: icon('grip') }),
+						h('span', { class: 'cb-ico', style: '--c:' + info.color, html: icon(info.icon) }),
+						h('div', { class: 'cb-sheet-text' }, textKids),
+						h('div', { class: 'cb-sheet-ctrl' }, [rm])
+					]);
+					bindRowDrag(row, rel);
+					itemNodes.push(row);
+				});
+
+				const itemsWrap = h('div', { class: 'cb-sheet-items', 'data-group': g.key }, itemNodes);
+				const emptyEl = h('div', { class: 'cb-sheet-empty', text: t('No items in this group.'), hidden: list.length > 0 });
 
 				const addBtn = h('button', {
 					type: 'button', class: 'cbi-button cbi-button-add cb-sheet-add',
@@ -1585,17 +2073,17 @@
 					body.scrollTop = 0;
 					searchInput.focus({ preventScroll: true });
 				});
-				rows.push(h('div', { class: 'cb-sheet-add-row', 'data-row-key': g.key + ':add' }, [
+				const addRow = h('div', { class: 'cb-sheet-add-row', 'data-row-key': g.key + ':add' }, [
 					addBtn,
 					h('span', { class: 'cb-sheet-count', text: total + ' / ' + M.MAX_ITEMS })
-				]));
+				]);
 
 				body.appendChild(h('div', { class: 'cb-sheet-group', 'data-group': g.key }, [
 					h('div', { class: 'cb-sheet-group-head' }, [
 						h('span', { class: 'cb-sheet-group-title', text: t(g.label) }),
 						h('span', { class: 'cb-sheet-count', text: String(list.length) })
 					]),
-					h('div', { class: 'cb-sheet-list' }, rows)
+					h('div', { class: 'cb-sheet-list' }, [emptyEl, itemsWrap, addRow])
 				]));
 			});
 
@@ -1724,6 +2212,7 @@
 
 		function close(commit) {
 			if (!simpleMenuDrawer) return;
+			if (activeDrag) { activeDrag.cancel(); activeDrag = null; }
 			simpleMenuDrawer.closed = true;
 			document.removeEventListener('keydown', onKey);
 			scrim.remove();
@@ -1747,43 +2236,19 @@
 			statusEl.textContent = t('Saving…');
 			syncControls();
 			try {
-				const clean = M.normalize(draft, defCfg);
-				const isDef = M.isDefault(clean, known, model.root);
-				if (hasUciSave) {
-					if (isDef && typeof model.resetSimpleMenu === 'function') {
-						await model.resetSimpleMenu();
-						C._simpleMenuAttr = '';
-						if (model.simpleMenuAttr !== undefined) model.simpleMenuAttr = '';
-					}
-					else {
-						await model.saveSimpleMenu(clean);
-						C._simpleMenuAttr = M.encodeAttr(clean);
-						if (model.simpleMenuAttr !== undefined) model.simpleMenuAttr = C._simpleMenuAttr;
-					}
-				}
-				else {
-					if (isDef) {
-						try { window.localStorage.removeItem('carbon.simpleMenu'); } catch (e) { /* ignore */ }
-					}
-					else {
-						store.set('carbon.simpleMenu', M.encodeAttr(clean));
-					}
-				}
-				try { document.dispatchEvent(new CustomEvent('carbon:simple-menu-change', { detail: { custom: !isDef } })); } catch (e) { /* ignore */ }
+				await persistSimpleMenu(model, known, draft);
 				saving = false;
 				close(true);
 			}
 			catch (err) {
 				saving = false;
-				statusEl.textContent = (err && err.code === 'denied')
-					? t('Permission denied. Log out and log in again once after updating Carbon, then retry.')
-					: (err && err.code === 'invalid_simple_menu' ? t('Invalid simple menu configuration.') : t('Failed to save menu.'));
+				statusEl.textContent = simpleMenuErrorText(err);
 				syncControls();
 			}
 		}
 
 		const onKey = (e) => {
-			if (e.key !== 'Escape' || e.isComposing || e.keyCode === 229 || saving) return;
+			if (e.key !== 'Escape' || e.isComposing || e.keyCode === 229 || saving || activeDrag) return;
 			e.preventDefault();
 			if (viewMode === 'pick') exitPicker();
 			else close(false);
@@ -2076,7 +2541,7 @@
 	 *   netDevices()       → luci-rpc getNetworkDevices, keyed by name (optional;
 	 *                        lists physical ports such as pon0 in the traffic picker)
 	 *   leases()           → luci-rpc getDHCPLeases
-	 *   wireless()         → ubus network.wireless status
+	 *   wireless()         → luci-rpc getWirelessDevices or ubus network.wireless status
 	 *   stations(ifnames)  → [{ ifname, mac, signal }] from iwinfo assoclist (optional)
 	 *   neighbors()        → contents of /proc/net/arp (optional)
 	 *   deviceTraffic()    → { interval: seconds, columns, data } from an existing
@@ -2109,36 +2574,77 @@
 	};
 
 	const BAND_LABEL = Object.assign(Object.create(null), { '2g': '2.4 GHz', '5g': '5 GHz', '6g': '6 GHz', '60g': '60 GHz' });
-	function radioBandInfo(cfg) {
+	function isDisabled(v) {
+		return v === true || v === 1 || v === '1' || v === 'true';
+	}
+	function isApMode(ic, iw, on) {
+		const mode = String((ic && ic.mode) || '').trim().toLowerCase();
+		if (mode) return /^(?:ap(?:[-_]wds)?|master)$/.test(mode);
+		if (on && iw && iw.mode) return /^(?:master\b|unknown$)/i.test(String(iw.mode).trim());
+		return true;
+	}
+	function bandFromFreq(freq) {
+		const f = Number(freq);
+		if (!Number.isFinite(f) || f <= 0) return null;
+		if (f >= 57000) return '60g';
+		if (f >= 5925 && f <= 7125) return '6g';
+		if (f >= 4900 && f < 5925) return '5g';
+		if (f >= 2400 && f <= 2500) return '2g';
+		return null;
+	}
+	function bandFromHwmode(hwmode) {
+		const hw = String(hwmode || '').trim();
+		if (!hw) return null;
+		if (/ad/i.test(hw)) return '60g';
+		if (/[bg]/i.test(hw)) return '2g';
+		if (/^(?:11)?(?:a|na|ac|axa)$/i.test(hw)) return '5g';
+		return null;
+	}
+	function radioBandInfo(cfg, iw) {
 		cfg = cfg || {};
 		const band = String(cfg.band || '').toLowerCase();
 		if (band && BAND_LABEL[band]) return { key: band, label: BAND_LABEL[band] };
-		if (cfg.hwmode) {
-			const key = /a/.test(cfg.hwmode) ? '5g' : '2g';
-			return { key: key, label: BAND_LABEL[key] };
-		}
-		const ch = parseInt(cfg.channel, 10);
+		const fk = iw ? bandFromFreq(iw.frequency) : null;
+		if (fk) return { key: fk, label: BAND_LABEL[fk] };
+		const hk = bandFromHwmode(cfg.hwmode);
+		if (hk) return { key: hk, label: BAND_LABEL[hk] };
+		const rawCh = cfg.channel && cfg.channel !== 'auto' && String(cfg.channel) !== '0' ? cfg.channel : (iw && iw.channel);
+		const ch = parseInt(rawCh, 10);
 		if (ch >= 1 && ch <= 14) return { key: '2g', label: '2.4 GHz' };
 		if (ch >= 32 && ch <= 177) return { key: '5g', label: '5 GHz' };
 		return { key: '', label: null };
 	}
-	function radioBand(cfg) {
-		return radioBandInfo(cfg).label;
+	function radioBand(cfg, iw) {
+		return radioBandInfo(cfg, iw).label;
 	}
 	function wirelessWidth(htmode) {
 		const m = String(htmode || '').trim().match(/(?:^|\D)(80\+80|320|160|80|40|20)[+-]?$/);
 		return m ? m[1] + ' MHz' : null;
 	}
-	function wirelessEncryption(enc) {
+	function wirelessEncryption(enc, iwEnc) {
 		const raw = String(enc || '').trim().toLowerCase();
-		if (!raw || raw === 'none') return null;
-		if (/^sae-mixed\b/.test(raw)) return 'WPA2/WPA3';
-		if (/^sae\b/.test(raw)) return 'WPA3';
-		if (/^psk-mixed\b/.test(raw)) return 'WPA/WPA2';
-		if (/^psk2\b/.test(raw)) return 'WPA2';
-		if (/^psk\b/.test(raw)) return 'WPA';
-		if (/^owe\b/.test(raw)) return 'OWE';
-		return raw.toUpperCase();
+		if (raw === 'none') return null;
+		if (raw) {
+			if (/^sae-mixed\b/.test(raw)) return 'WPA2/WPA3';
+			if (/^sae\b/.test(raw)) return 'WPA3';
+			if (/^psk-mixed\b/.test(raw)) return 'WPA/WPA2';
+			if (/^psk2\b/.test(raw)) return 'WPA2';
+			if (/^psk\b/.test(raw)) return 'WPA';
+			if (/^owe\b/.test(raw)) return 'OWE';
+			return raw.toUpperCase();
+		}
+		if (iwEnc && typeof iwEnc === 'object' && iwEnc.enabled) {
+			const auth = Array.isArray(iwEnc.authentication) ? iwEnc.authentication.map((s) => String(s).toLowerCase()) : [];
+			const wpa = Array.isArray(iwEnc.wpa) ? iwEnc.wpa : [];
+			if (auth.indexOf('owe') >= 0) return 'OWE';
+			if ((wpa.indexOf(2) >= 0 && wpa.indexOf(3) >= 0) || (auth.indexOf('psk') >= 0 && auth.indexOf('sae') >= 0)) return 'WPA2/WPA3';
+			if (wpa.indexOf(3) >= 0 || auth.indexOf('sae') >= 0) return 'WPA3';
+			if (wpa.indexOf(1) >= 0 && wpa.indexOf(2) >= 0) return 'WPA/WPA2';
+			if (wpa.indexOf(2) >= 0) return 'WPA2';
+			if (wpa.indexOf(1) >= 0) return 'WPA';
+			if (Array.isArray(iwEnc.wep) && iwEnc.wep.length) return 'WEP';
+		}
+		return null;
 	}
 
 	C.wirelessSummary = function (w, stations) {
@@ -2158,19 +2664,22 @@
 		const rows = [];
 		if (w && typeof w === 'object') {
 			Object.keys(w).sort().forEach((radio) => {
-				const r = w[radio] || {}, cfg = r.config || {};
-				const b = radioBandInfo(cfg);
-				const channel = cfg.channel && cfg.channel !== 'auto' ? String(cfg.channel) : null;
+				const r = w[radio] || {}, cfg = r.config || {}, riw = r.iwinfo || null;
+				const cfgCh = cfg.channel && cfg.channel !== 'auto' && String(cfg.channel) !== '0' ? String(cfg.channel) : null;
 				const width = wirelessWidth(cfg.htmode);
 				(r.interfaces || []).forEach((i) => {
-					const ic = i.config || {};
-					if (ic.mode && ic.mode !== 'ap') return;
-					const ssid = ic.ssid ? String(ic.ssid) : '';
-					const encryption = wirelessEncryption(ic.encryption);
+					const ic = i.config || {}, iw = i.iwinfo || null;
+					const on = !!r.up && !isDisabled(r.disabled) && !isDisabled(ic.disabled) && !isDisabled(cfg.disabled);
+					if (!isApMode(ic, iw, on)) return;
+					const b = radioBandInfo(cfg, iw || riw);
+					const liveCh = on && (iw || riw) && Number((iw || riw).channel) > 0 ? String((iw || riw).channel) : null;
+					const channel = cfgCh || liveCh;
+					const rawSsid = ic.ssid != null && ic.ssid !== '' ? ic.ssid : (iw && iw.ssid ? iw.ssid : '');
+					const ssid = rawSsid ? String(rawSsid) : '';
+					const encryption = wirelessEncryption(ic.encryption, iw && iw.encryption);
 					const meta = [channel ? 'CH ' + channel : null, width, encryption].filter(Boolean).join(' · ');
 					const sub = [b.label, meta].filter(Boolean).join(' · ');
-					const on = !!r.up && !r.disabled && !ic.disabled && !cfg.disabled;
-					const ifname = i.ifname || '';
+					const ifname = i.ifname || (iw && iw.ifname) || '';
 					let clients = null;
 					if (on && ifname && hasStations) {
 						const set = perIf.get(ifname);
@@ -2192,13 +2701,14 @@
 	function apInterfaces(w) {
 		const out = { ifnames: [], bands: {} };
 		Object.keys(w || {}).forEach((radio) => {
-			const r = w[radio] || {}, cfg = r.config || {};
-			if (!r.up || r.disabled || cfg.disabled) return;
+			const r = w[radio] || {}, cfg = r.config || {}, riw = r.iwinfo || null;
+			if (!r.up || isDisabled(r.disabled) || isDisabled(cfg.disabled)) return;
 			(r.interfaces || []).forEach((i) => {
-				const ic = i.config || {};
-				if (!i.ifname || ic.disabled || (ic.mode && ic.mode !== 'ap')) return;
-				out.ifnames.push(i.ifname);
-				out.bands[i.ifname] = radioBand(cfg);
+				const ic = i.config || {}, iw = i.iwinfo || null;
+				const ifname = i.ifname || (iw && iw.ifname) || '';
+				if (!ifname || isDisabled(ic.disabled) || !isApMode(ic, iw, true)) return;
+				out.ifnames.push(ifname);
+				out.bands[ifname] = radioBand(cfg, iw || riw);
 			});
 		});
 		return out;
@@ -3319,7 +3829,7 @@
 				if (view.wireless && !st.noRadio) {
 					view.wireless.count.textContent = (active.length && total != null) ? String(total) : '';
 					view.wireless.list.innerHTML = '';
-					if (!rows.length) view.wireless.list.appendChild(h('li', { class: 'cb-empty', text: w ? t('No wireless') : t('Unavailable') }));
+					if (!rows.length) view.wireless.list.appendChild(h('li', { class: 'cb-empty', text: w ? t('Off') : t('Unavailable') }));
 					else rows.forEach((x) => {
 						const name = x.ssid || t('Hidden network');
 						const head = h('span', { class: 'cb-list-title cb-wifi-head' }, [
@@ -3342,20 +3852,25 @@
 				}
 				if (view.tiles.wifi) {
 					const tw = view.tiles.wifi;
-					if (st.noRadio) {
-						tw.val.textContent = '—';
-						tw.sub.textContent = t('No wireless');
-						tw.el.title = '';
-					}
-					else if (!w) {
+					if (!w) {
 						tw.val.textContent = '—';
 						tw.sub.textContent = t('Unavailable');
 						tw.el.title = '';
 					}
+					else if (st.noRadio) {
+						tw.val.textContent = '—';
+						tw.sub.textContent = t('No wireless');
+						tw.el.title = '';
+					}
 					else {
 						if (!active.length) {
+							const radioBands = [];
+							Object.keys(w).sort().forEach((k) => {
+								const r = w[k] || {}, b = radioBand(r.config, r.iwinfo);
+								if (b && radioBands.indexOf(b) < 0) radioBands.push(b);
+							});
 							tw.val.textContent = t('Off');
-							tw.sub.textContent = rows.length ? rows.map((x) => x.ssid || t('Hidden network')).slice(0, 2).join(' · ') : t('No wireless');
+							tw.sub.textContent = rows.length ? rows.map((x) => x.ssid || t('Hidden network')).slice(0, 2).join(' · ') : radioBands.slice(0, 2).join(' · ');
 						}
 						else {
 							tw.val.textContent = total != null ? String(total) : t('On');

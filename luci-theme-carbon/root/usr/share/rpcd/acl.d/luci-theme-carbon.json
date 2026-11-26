@@ -9,7 +9,7 @@
 				"network.device": [ "status" ],
 				"network.wireless": [ "status" ],
 				"iwinfo": [ "assoclist" ],
-				"luci-rpc": [ "getDHCPLeases", "getNetworkDevices", "getHostHints" ],
+				"luci-rpc": [ "getDHCPLeases", "getNetworkDevices", "getHostHints", "getWirelessDevices" ],
 				"file": [ "list", "read" ],
 				"uci": [ "get" ]
 			},

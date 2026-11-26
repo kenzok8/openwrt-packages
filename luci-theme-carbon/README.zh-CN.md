@@ -18,7 +18,7 @@
 
 <p align="center"><img src="docs/screenshots/intro.png" alt="Carbon 桌面端与移动端预览" width="100%"></p>
 
-https://github.com/user-attachments/assets/b78ccf2b-679e-459b-88ea-b4f82da6e03f
+https://github.com/user-attachments/assets/bd007741-a615-4472-8b81-d9da7b18b3e8
 
 </div>
 

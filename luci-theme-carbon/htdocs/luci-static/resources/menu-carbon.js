@@ -20,21 +20,22 @@ const callIfaces = rpc.declare({ object: 'network.interface', method: 'dump', ex
 const callDevice = rpc.declare({ object: 'network.device', method: 'status', params: [ 'name' ], expect: { '': {} } });
 const callNetDevs = rpc.declare({ object: 'luci-rpc', method: 'getNetworkDevices', expect: { '': {} } });
 const callLeases = rpc.declare({ object: 'luci-rpc', method: 'getDHCPLeases', expect: { '': {} } });
-const callWireless = rpc.declare({ object: 'network.wireless', method: 'status', expect: { '': {} } });
+const callLuciWireless = rpc.declare({ object: 'luci-rpc', method: 'getWirelessDevices', reject: true });
+const callWireless = rpc.declare({ object: 'network.wireless', method: 'status', reject: true });
 const callHostHints = rpc.declare({ object: 'luci-rpc', method: 'getHostHints', expect: { '': {} } });
-const callAssoc = rpc.declare({ object: 'iwinfo', method: 'assoclist', params: [ 'device' ], expect: { results: [] } });
+const callAssoc = rpc.declare({ object: 'iwinfo', method: 'assoclist', params: [ 'device' ], expect: { results: [] }, reject: true });
 const callUciGet = rpc.declare({ object: 'uci', method: 'get', params: [ 'config', 'section' ], expect: { values: {} } });
 const callUciSet = rpc.declare({ object: 'uci', method: 'set', params: [ 'config', 'section', 'values' ] });
 const callUciCommit = rpc.declare({ object: 'uci', method: 'commit', params: [ 'config' ] });
 const callSetDashboard = rpc.declare({
 	object: 'luci.carbon_update', method: 'set_dashboard',
 	params: [ 'action', 'hero', 'sections', 'monitor', 'tiles', 'details' ],
-	expect: { '': {} }, raise: true
+	expect: { '': {} }, reject: true
 });
 const callSetSimpleMenu = rpc.declare({
 	object: 'luci.carbon_update', method: 'set_simple_menu',
 	params: [ 'action', 'common', 'system' ],
-	expect: { '': {} }, raise: true
+	expect: { '': {} }, reject: true
 });
 
 const mapRpcError = (err) => {
@@ -116,6 +117,12 @@ function readMemoryInfo(text) {
 	return result;
 }
 
+function parseWireless(r) {
+	if (r === 0) return {};
+	if (r && typeof r === 'object' && !Array.isArray(r)) return r;
+	return Promise.reject(new Error('Invalid wireless response'));
+}
+
 const provider = {
 	board: () => callBoard().then((r) => (r && r.hostname) ? r : null),
 	info: () => Promise.all([
@@ -139,7 +146,7 @@ const provider = {
 	}),
 	netDevices: () => callNetDevs().then((r) => (r && typeof r === 'object' && Object.keys(r).length) ? r : null),
 	leases: () => callLeases().then((r) => (r && Array.isArray(r.dhcp_leases)) ? r : null),
-	wireless: () => callWireless(),
+	wireless: () => callLuciWireless().then(parseWireless).catch(() => callWireless().then(parseWireless)),
 	hostHints: () => callHostHints(),
 	/* associated Wi‑Fi stations of the given AP interfaces */
 	stations: (ifnames) => Promise.all((ifnames || []).map((dev) => callAssoc(dev)

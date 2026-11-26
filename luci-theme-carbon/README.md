@@ -20,7 +20,7 @@ A clean, glass-style LuCI theme for OpenWrt — built for everyday users.
 
 <p align="center"><img src="docs/screenshots/intro.png" alt="Carbon desktop and mobile preview" width="100%"></p>
 
-https://github.com/user-attachments/assets/d6d8d161-65fa-456c-acbc-d3b2c0737bd9
+https://github.com/user-attachments/assets/bd007741-a615-4472-8b81-d9da7b18b3e8
 
 </div>
 

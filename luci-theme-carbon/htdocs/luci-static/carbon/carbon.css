@@ -503,7 +503,31 @@ form.inline { display: inline; margin: 0; }
 .cb-sub-ico svg { width: 16px; height: 16px; stroke-width: 1.8; }
 .cb-nav-item.active .cb-sub-ico { opacity: 1; }
 
-/* customize menu button & empty notice in simple mode */
+/* customize menu button, drag reorder & empty notice in simple mode */
+.cb-nav-simple-list { display: flex; flex-direction: column; }
+.cb-nav-link[data-menu-rel] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cb-nav-link.cb-nav-pressing {
+	transform: scale(.985);
+	background: var(--cb-nav-hover);
+	transition: transform .18s var(--cb-ease), background-color .15s var(--cb-ease);
+}
+.cb-nav-reordering .cb-nav-link:hover { background: transparent; }
+.cb-nav-reordering .cb-nav-simple-list:empty {
+	min-height: 42px;
+	margin: 2px 0;
+	border-radius: 13px;
+	border: 1.5px dashed var(--cb-glass-line);
+	background: var(--cb-nav-hover);
+}
+.cb-nav-status {
+	margin: 12px 2px 0;
+	padding: 8px 10px;
+	border-radius: 10px;
+	background: var(--cb-red-t);
+	color: var(--cb-red);
+	font-size: 12px;
+	line-height: 1.45;
+}
 .cb-nav-empty {
 	margin: 12px 6px 0;
 	padding: 10px 12px;
@@ -3331,6 +3355,84 @@ body.cb-has-dash #maincontent > h2 { display: none; }
 .cb-picker-badge.muted { background: var(--cb-fill); color: var(--cb-text-2); }
 .cb-picker-badge-ico { display: inline-flex; width: 13px; height: 13px; }
 .cb-picker-badge-ico svg { width: 13px; height: 13px; }
+
+/* drag-to-reorder (customizer drawer & Simple sidebar long-press) */
+body.cb-dragging,
+body.cb-dragging * {
+	cursor: grabbing !important;
+	-webkit-user-select: none !important;
+	user-select: none !important;
+	touch-action: none !important;
+}
+.cb-sheet-items { display: flex; flex-direction: column; gap: 2px; }
+.cb-sheet-dragging .cb-sheet-empty { display: none; }
+.cb-sheet-dragging .cb-sheet-items:empty {
+	min-height: 44px;
+	border-radius: 10px;
+	border: 1.5px dashed var(--cb-border-strong);
+	background: var(--cb-fill-2);
+}
+.cb-sheet-empty[hidden] { display: none; }
+.cb-sheet-row-drag {
+	cursor: grab;
+	-webkit-user-select: none;
+	user-select: none;
+	border-radius: 10px;
+	padding: 6px 6px;
+	transition: background-color .15s var(--cb-ease);
+}
+.cb-sheet-row-drag + .cb-sheet-row-drag { border-top: 0; padding-top: 6px; box-shadow: 0 -.5px 0 var(--cb-sep); }
+.cb-sheet-row-drag:hover { background: var(--cb-hover); box-shadow: none; }
+.cb-sheet-row-drag:hover + .cb-sheet-row-drag { box-shadow: none; }
+.cb-sheet-dragging .cb-sheet-row-drag:hover { background: transparent; }
+.cb-drag-handle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 20px;
+	height: 28px;
+	margin-inline-start: -2px;
+	color: var(--cb-text-3);
+	touch-action: none;
+	cursor: grab;
+	transition: color .15s var(--cb-ease);
+}
+.cb-drag-handle svg { width: 15px; height: 15px; }
+.cb-sheet-row-drag:hover .cb-drag-handle { color: var(--cb-text-2); }
+
+.cb-drag-slot {
+	opacity: .22 !important;
+	border-radius: 11px;
+	background: var(--cb-accent-t) !important;
+	box-shadow: 0 0 0 1.5px var(--cb-accent) inset !important;
+	pointer-events: none;
+}
+.cb-drag-slot > * { visibility: hidden; }
+
+.cb-drag-ghost {
+	position: fixed;
+	z-index: 1100;
+	margin: 0 !important;
+	pointer-events: none;
+	border-radius: 13px;
+	border: 1px solid var(--cb-glass-edge);
+	background: var(--cb-card-solid);
+	box-shadow: 0 14px 34px -8px rgba(15, 23, 42, .26), 0 0 0 1.5px var(--cb-accent-t) !important;
+	will-change: transform;
+}
+:root[data-darkmode="true"] .cb-drag-ghost {
+	box-shadow: 0 16px 38px -8px rgba(0, 0, 0, .65), 0 0 0 1.5px var(--cb-accent-t) !important;
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+	.cb-drag-ghost {
+		background: var(--cb-popover);
+		-webkit-backdrop-filter: blur(20px) saturate(160%);
+		backdrop-filter: blur(20px) saturate(160%);
+	}
+}
+.cb-drag-ghost-row { border-top: 0 !important; }
+.cb-drag-ghost-nav { color: var(--cb-nav-fg); }
 /* ==========================================================================
    16. Responsive
    ========================================================================== */
