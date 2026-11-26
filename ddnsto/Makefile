@@ -12,7 +12,7 @@ PKG_ARCH_DDNSTO:=$(ARCH)
 PKG_NAME:=ddnsto
 # use PKG_SOURCE_DATE instead of PKG_VERSION for compatible
 PKG_SOURCE_DATE:=4.2.9
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 # 构建类型：standard 或 lite（保留包命名，lite 下载 Micro 二进制）
 DDNSTO_TYPE?=standard
@@ -87,6 +87,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 	[ -f /etc/uci-defaults/ddnsto ] && /etc/uci-defaults/ddnsto && rm -f /etc/uci-defaults/ddnsto
 	exit 0
 fi
+exit 0
 endef
 
 define Build/Configure
