@@ -11,7 +11,7 @@ PKG_ARCH_quickstart:=$(ARCH)
 
 PKG_NAME:=quickstart
 PKG_VERSION:=0.17.1-rc20261028
-PKG_RELEASE:=2
+PKG_RELEASE:=3
 PKG_SOURCE:=$(PKG_NAME)-binary-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://github.com/istoreos/quickstart/releases/download/v$(PKG_VERSION)/
 PKG_HASH:=c2fa6bfe8bc9f7a17f989f43f3103a2cd02314800dcf155989e2ff8f944c8469
@@ -74,6 +74,7 @@ if [ -z "$${IPKG_INSTROOT}" ]; then
 	fi
 	exit 0
 fi
+exit 0
 endef
 
 define Build/Configure
