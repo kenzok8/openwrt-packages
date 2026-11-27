@@ -49,19 +49,35 @@
 	/* May this login save it for every browser? 'yes'; 'relogin' when rpcd
 	   would grant the theme's group at a new login and no reload of rpcd
 	   has given it to this one yet (the install's reload reaches open
-	   logins); 'no' otherwise, and without the config's section. Only the
+	   logins); 'no' otherwise, and without the config's section. A login's
+	   write list as rpcd reads it (session.c, rpc_login_test_permission):
+	   a list only, and an entry that starts with "!" and matches the group
+	   refuses it, whatever else the list grants. Of several sections for
+	   one name rpcd takes the one whose password matched, which this page
+	   cannot know: 'relogin' only when each of them would grant. Only the
 	   word reaches the page. */
 	const look_save = (() => {
 		if (!authed || type(uci.get_all('vantage_theme', 'appearance')) != 'object') return 'no';
-		const held = ctx.authacl?.['access-group']?.['luci-theme-vantage'];
+		const group = 'luci-theme-vantage', held = ctx.authacl?.['access-group']?.[group];
 		if (type(held) == 'array' && index(held, 'write') >= 0) return 'yes';
-		let would = false;
+		let sections = 0, granting = 0;
 		uci.foreach('rpcd', 'login', s => {
 			if (s.username !== ctx.authuser) return;
-			for (let p in (type(s.write) == 'array' ? s.write : [ s.write ]))
-				if (type(p) == 'string' && wildcard('luci-theme-vantage', p)) would = true;
+			sections++;
+			if (type(s.write) != 'array') return;
+			let grants = false;
+			for (let p in s.write) {
+				if (type(p) != 'string' || p == '') continue;
+				if (substr(p, 0, 1) != '!') {
+					if (wildcard(group, p)) grants = true;
+					continue;
+				}
+				p = ltrim(substr(p, 1), " \t\n\v\f\r");
+				if (p != '' && wildcard(group, p)) return;
+			}
+			if (grants) granting++;
 		});
-		return would ? 'relogin' : 'no';
+		return sections && granting == sections ? 'relogin' : 'no';
 	})();
 -%}
 <!DOCTYPE html>

@@ -18,8 +18,12 @@
  *    in place, so a packet's whole way reads top to bottom.
  * The ruleset comes from the command LuCI's page runs (same ACL). The
  * conditions are LuCI's own rendering of each rule, copied as text and a
- * few formatting tags; LuCI read the ruleset separately, so a chain whose
- * rows don't match its rules (a reload in between) shows no conditions.
+ * few formatting tags: its view draws the rule again from the ruleset
+ * read here, so a rule's conditions and what it does come from one
+ * snapshot. LuCI's table on the page is from its own, earlier read and
+ * is not read: a reload between the two would pair a rule with another
+ * ruleset's conditions. Where LuCI's view cannot draw a rule, the step
+ * shows no conditions.
  * Rules as in menu-vantage.js: E() with array content only, LuCI's nodes
  * stay where they are (hidden by a class in Flow mode).
  * ------------------------------------------------------------------------ */
@@ -68,37 +72,6 @@ function tableTitle(t) {
 	case 'netdev': return _('Network device table "%h"').format(t.name);
 	default: return _('"%h" table "%h"', 'Yet unknown nftables table family ("family" table "name")').format(t.family, t.name);
 	}
-}
-
-/* LuCI's rows per chain key, in the ruleset's order: tables, chains and
-   rules are rendered in JSON order, one row per rule. A chain's rows are
-   used only when they agree with its rules: same count, same comments,
-   same jump targets (LuCI read the ruleset on its own; a reload between
-   the two reads must not pair a rule with another rule's conditions). */
-function luciRows(root, m) {
-	const out = Object.create(null);
-	const tables = root.querySelectorAll(':scope > .nft-table');
-	m.tables.forEach((t, i) => {
-		const box = tables[i];
-		if (!box) return;
-		const cards = box.querySelectorAll('.nft-chain');
-		t.chains.forEach((k, j) => {
-			const c = m.chains[k], card = cards[j], h = card && card.querySelector(':scope > h4');
-			if (!h || h.id !== t.name + '.' + c.name) return;
-			const rows = Array.prototype.filter.call(card.querySelectorAll('.nft-rules .tr'), (tr) => !tr.classList.contains('table-titles'));
-			if (rows.length === c.rules.length && c.rules.every((r, n) => agrees(r, rows[n])))
-				out[k] = rows;
-		});
-	});
-	return out;
-}
-
-function agrees(r, tr) {
-	const tip = tr.querySelector('.nft-comment .cbi-tooltip');
-	if (!!tip !== !!r.comment || (tip && tip.textContent.indexOf(r.comment) < 0)) return false;
-	const v = r.verdict, want = v.target ? [ v.target ] : (v.map || []).filter((e) => e.target).map((e) => e.target);
-	const have = Array.prototype.map.call(tr.querySelectorAll('a[href^="#"]'), (a) => a.getAttribute('href').replace(/^#[^.]*\./, ''));
-	return want.every((t) => have.indexOf(t) >= 0);
 }
 
 /* a copy of LuCI's rendering as text and its formatting tags only: no
@@ -177,7 +150,8 @@ return baseclass.extend({
 				if (!json || root.querySelector(':scope > .v-nft')) return;
 				const m = nftmodel.build(json);
 				if (!m.bases.length && !m.others.length) return;
-				this.draw(root, m);
+				/* LuCI's view: the page has loaded it, its tables are there */
+				return L.resolveDefault(L.require('view.status.nftables'), null).then((luci) => this.draw(root, m, json.nftables, luci));
 			}).catch((e) => { if (window.console) console.warn('vantage: firewall flow', e); });
 		};
 		const root = ready();
@@ -194,9 +168,11 @@ return baseclass.extend({
 		mo.observe(view, { childList: true, subtree: true });
 	},
 
-	draw(root, m) {
+	/* data: the ruleset m was built from; luci: LuCI's view */
+	draw(root, m, data, luci) {
 		this.m = m;
-		this.rows = luciRows(root, m);
+		this.data = data;
+		this.luci = luci && typeof luci.renderRule === 'function' ? luci : null;
 		this.ids = Object.create(null);
 		Object.keys(m.chains).forEach((k, i) => { this.ids[k] = 'v-nft-c' + i; });
 		this.cards = Object.create(null);
@@ -383,18 +359,30 @@ return baseclass.extend({
 		return chip('none', _('Unchanged', 'vantage-theme'));
 	},
 
+	/* the rule's row as LuCI's view draws it (conditions, actions), from
+	   the ruleset read here; null where it can't: this LuCI's view has no
+	   such function, or fails on the rule */
+	luciRow(r) {
+		if (!this.luci) return null;
+		try {
+			const tr = this.luci.renderRule(this.data, r.spec);
+			return tr && tr.nodeType === 1 && tr.children.length === 2 ? tr : null;
+		}
+		catch (e) { return null; }
+	},
+
 	/* a chain's rules as steps. path: the chains opened above it (to stop
 	   at a loop); stack: the chains to come back to (a jump adds its
 	   chain, a goto doesn't) */
 	flow(k, path, stack) {
-		const c = this.m.chains[k], rows = this.rows[k];
+		const c = this.m.chains[k];
 		const list = E('ol', { 'class': 'v-nft-flow' });
 		const step = (r) => {
-			const row = rows && rows[r.index];
+			const row = this.luciRow(r);
 			const cond = r.parts.conds && row ? conditions(row, r.verdict.kind === 'vmap') : null;
 			const nat = r.verdict.kind === 'nat';
 			const also = row && r.verdict.kind !== 'vmap' && (nat || r.parts.acts > (r.parts.last >= 0 ? 1 : 0)) ? sideActions(row, r.parts, nat) : null;
-			/* a rule with conditions LuCI's rows can't supply never reads
+			/* a rule with conditions LuCI's view can't draw never reads
 			   as "Any packet" */
 			const label = r.comment || (cond ? '' : r.parts.conds ? _('Conditions in the rules table', 'vantage-theme') : _('Any packet', 'nft match any traffic'));
 			const what = [ E('div', { 'class': 'v-nft-what-name', 'data-muted': String(!r.comment && !cond && !!r.parts.conds) }, [ label ]) ];

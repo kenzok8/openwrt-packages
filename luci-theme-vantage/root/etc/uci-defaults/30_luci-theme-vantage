@@ -2,18 +2,36 @@
 # Register the Vantage theme with LuCI (System -> Language and Style).
 # Select it only on a fresh install and only when the entry is new, so an
 # upgrade or a reinstall never overrides the theme the administrator chose.
+#
+# A step that fails (a full or read-only overlay) ends this script with an
+# error: the system then keeps it and runs it again at the next boot. It
+# first takes back what it has set itself, those options and no other: the
+# postinst that runs this script commits whatever is left set right after
+# it, and an entry kept without the selection would read as known at that
+# next boot, so the theme would never be selected. With nothing left, the
+# entry is new again then, and a fresh install still selects the theme.
+
+staged=
+undo() {
+	for o in $staged; do
+		uci -q revert "$o"
+	done
+	exit 1
+}
 
 new=0
 if [ -z "$(uci -q get luci.themes.Vantage)" ]; then
 	new=1
 fi
-uci -q set luci.themes.Vantage=/luci-static/vantage || exit 1
+uci -q set luci.themes.Vantage=/luci-static/vantage || undo
+staged=luci.themes.Vantage
 
 if [ "$PKG_UPGRADE" != 1 ] && [ "$new" = 1 ]; then
-	uci -q set luci.main.mediaurlbase=/luci-static/vantage
+	uci -q set luci.main.mediaurlbase=/luci-static/vantage || undo
+	staged="$staged luci.main.mediaurlbase"
 fi
 
-uci -q commit luci
+uci -q commit luci || undo
 
 # Once a setting is saved in /etc/config/vantage_theme, the package manager
 # puts the packaged copy of that file beside it at every upgrade. That copy

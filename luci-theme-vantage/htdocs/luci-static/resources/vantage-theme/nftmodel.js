@@ -179,6 +179,8 @@ return baseclass.extend({
 				offload = true;
 			c.rules.push({
 				index: c.rules.length,
+				/* the rule as nft gave it: LuCI's view draws its conditions from it */
+				spec: r,
 				comment: this.comment(r.comment),
 				verdict: this.ruleVerdict(expr),
 				counter: this.counter(expr),

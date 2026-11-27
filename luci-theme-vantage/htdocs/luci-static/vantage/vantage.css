@@ -1209,26 +1209,31 @@ input[readonly] { cursor: default; }
 :is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option:disabled { color: var(--text-3); }
 
 /* a select's list drawn in the page (customizable select, Chromium 135+)
-   gets the .cbi-dropdown list's look. Not listboxes, nor a select LuCI
-   sizes itself (width:auto, Wireless "Operating frequency"): base-select
-   sizes a field to its chosen label, not its longest. The dashboard
+   gets the .cbi-dropdown list's look. Not listboxes. The dashboard
    styles its own. */
 @supports (appearance: base-select) {
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *),
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *)::picker(select) { appearance: base-select; }
+	/* a select LuCI sizes itself (width:auto: Wireless "Operating
+	   frequency", its mode, band, channel and width). A drawn list sizes
+	   the field to its chosen label, not its longest, so each keeps room
+	   for its usual longest one: the row does not jump with a choice, and
+	   a field with nothing chosen is still a field */
+	:is(.vt-main, .modal) select[style*="width:auto"]:not([multiple], [size], .vt-app *) { min-inline-size: 6em; }
+	:is(.vt-main, .modal) select.channel[style*="width:auto"]:not([multiple], [size], .vt-app *) { min-inline-size: 10em; }
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *),
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *)::picker(select) { appearance: base-select; }
 	/* the field as before: base-select makes it a flex box with the value
 	   at the top (2px high, 6px on touch) and free to wrap; centre it on
 	   one line, cut at the content edge as the native field cuts it */
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) {
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) {
 		align-items: center;
 		white-space: nowrap;
 		overflow: clip; overflow-clip-margin: content-box;
 	}
 	/* the theme draws the arrow */
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *)::picker-icon { display: none; }
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *)::picker-icon { display: none; }
 	/* focus moves to an option while the list is open: the field keeps its
 	   ring and its arrow turns to the signal, as on an open .cbi-dropdown */
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *):open {
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *):open {
 		border-color: var(--focus);
 		box-shadow: 0 0 0 1px var(--focus), 0 0 0 4px var(--accent-soft);
 		background-image: linear-gradient(45deg, transparent 50%, var(--accent-text) 50%), linear-gradient(135deg, var(--accent-text) 50%, transparent 50%);
@@ -1237,7 +1242,7 @@ input[readonly] { cursor: default; }
 	   is more room there; 50vh at most, as .cbi-dropdown, and never past
 	   the screen (100% is the room beside the field: less the 8px of
 	   margins below, an 8px gutter across) */
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *)::picker(select) {
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *)::picker(select) {
 		margin: 4px 0;
 		padding: 4px;
 		min-inline-size: anchor-size(self-inline);
@@ -1252,7 +1257,7 @@ input[readonly] { cursor: default; }
 		scrollbar-width: thin;
 	}
 	/* choices as .cbi-dropdown's: long ones wrap */
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option {
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option {
 		min-block-size: calc(var(--ctl-h) - 4px);
 		padding: 4px 8px;
 		border-radius: var(--r-sm);
@@ -1263,18 +1268,18 @@ input[readonly] { cursor: default; }
 	/* the chosen one in the signal (fill and weight, no check mark); the
 	   one under the pointer or the keyboard on --s4, the keyboard's with
 	   the accent bar */
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option::checkmark { display: none; }
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option::checkmark { display: none; }
 	/* the tint over an opaque fill: apps that copy a select's option colour
 	   onto their own list (PassWall's node picker) would get a see-through one */
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option:checked { color: var(--accent-text); font-weight: 600; background: linear-gradient(var(--accent-soft) 0 0) var(--s2); }
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option:is(:hover, :focus-visible) { background: var(--s4); color: var(--text); outline: none; }
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option:focus-visible { box-shadow: inset 2px 0 0 var(--accent-text); }
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option:disabled { color: var(--text-3); background: none; cursor: not-allowed; }
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option:checked { color: var(--accent-text); font-weight: 600; background: linear-gradient(var(--accent-soft) 0 0) var(--s2); }
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option:is(:hover, :focus-visible) { background: var(--s4); color: var(--text); outline: none; }
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option:focus-visible { box-shadow: inset 2px 0 0 var(--accent-text); }
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option:disabled { color: var(--text-3); background: none; cursor: not-allowed; }
 	/* a group's label: quiet, its choices as any other */
-	:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) optgroup { color: var(--text-3); font-weight: 600; }
+	:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) optgroup { color: var(--text-3); font-weight: 600; }
 	/* touch: each choice is a touch target, as the dropdown's */
 	@media (pointer: coarse) {
-		:is(.vt-main, .modal) select:not([multiple], [size], [style*="width:auto"], .vt-app *) option { min-block-size: var(--ctl-h); }
+		:is(.vt-main, .modal) select:not([multiple], [size], .vt-app *) option { min-block-size: var(--ctl-h); }
 	}
 }
 

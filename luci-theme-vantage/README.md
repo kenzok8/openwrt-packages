@@ -218,7 +218,8 @@ the [spec](docs/SPEC.md#6-security-requirements).
   switch ports, where `ethtool` is installed, with nothing from the
   browser on its command line. Its only writes are device names and a
   device's "Don't warn about its signal" mark, both stored in
-  `/etc/config/vantage`.
+  `/etc/config/vantage`, and an empty lock file in RAM while it reads
+  those counters.
 - **Wi-Fi keys stay out.** Wireless settings come through Vantage's own
   plugin, which leaves out Wi-Fi keys, SAE passwords and RADIUS secrets.
 - **The theme writes one file.** Appearance, and the dashboard's layout
@@ -227,8 +228,9 @@ the [spec](docs/SPEC.md#6-security-requirements).
 - **Other access points are opt-in.** The optional `luci-app-vantage-aps`
   is the one part that does more than read: pairing creates the router's
   own SSH key and, on an access point, adds that key to Dropbear limited
-  to one read-only report command. It has its own permission
-  (`luci-app-vantage-aps`), meant for administrators. Seeing the paired
+  to one read-only report command (and lets no router in while an SSH
+  listener there runs a command of its own in its place). It has its own
+  permission (`luci-app-vantage-aps`), meant for administrators. Seeing the paired
   access points on the dashboard is a second one
   (`luci-app-vantage-aps-view`), since asking for their reports makes the
   router log in to them with that key; the dashboard's own read

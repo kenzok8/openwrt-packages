@@ -65,7 +65,7 @@ const MOTION_EVENT = 'vantage:tick';
    key, also what the dashboard reads under another theme) counts until
    the router has one. */
 /* this package's version, as its Makefile has it (tests/version.test.js) */
-const VERSION = '1.2.1';
+const VERSION = '1.2.2';
 /* Check for updates (Appearance): when asked, and never on its own unless
    the daily check below is on, the browser reads the project's 24.10
    package list on GitHub Pages (the same release as 25.12's), without
@@ -102,6 +102,9 @@ const LOOK = {
 	units: { own: 'vantage.units.own', before: 'vantage.units', ok: [ 'bits', 'bytes' ] }
 };
 const LOOK_SYNC = 'vantage.look';         /* another tab saved one: { name, value } */
+const LOOK_LOCK = 'vantage.look.save';    /* one tab saves at a time (lookWrite) */
+const LOOK_LOCK_TICK = 50;                /* ms from writing the lock to reading it back, and between tries */
+const LOOK_LOCK_MS = 5000;                /* a lock this old was left behind; and the longest a save waits for one */
 const LOOK_SET_EVENT = 'vantage:backdrop-set';   /* the dashboard's own picker hands its pick over */
 /* The dashboard's Customize saves its chart style, network path form and
    layouts with the Appearance, in one write when it is done: { values,
@@ -248,6 +251,24 @@ function listedVersion(text) {
 	const m = block && /^Version: (\S+)$/m.exec(block);
 	return m && versionParts(m[1]) ? m[1].replace(/-r\d+$/, '') : null;
 }
+/* The list's text, no more than UPDATE_MAX bytes of it: read as it
+   arrives and called off there, so a list that gives no length, or one
+   sent compressed, is never taken whole. A browser that hands out no
+   stream takes it whole, as before. */
+function listText(r) {
+	const reader = r.body && typeof r.body.getReader === 'function' && typeof TextDecoder === 'function' ? r.body.getReader() : null;
+	if (!reader) return r.text();
+	const dec = new TextDecoder();
+	let text = '', left = UPDATE_MAX;
+	const more = () => reader.read().then(c => {
+		if (c.done) return text + dec.decode();
+		const part = c.value.subarray(0, left);
+		text += dec.decode(part, { stream: true });
+		left -= part.length;
+		return left > 0 ? more() : Promise.resolve(reader.cancel()).then(() => text, () => text);
+	});
+	return more();
+}
 /* the daily check's last try as kept, { at, latest }: a time, and a
    version or null (none read); null for anything else */
 function updateMemory(text) {
@@ -274,10 +295,47 @@ function lookValue(ok, list) {
 	for (const v of list) if (ok.indexOf(v) >= 0) return v;
 	return ok[0];
 }
+/* A save's turn without Web Locks: the lock is a key in this browser's
+   storage, { token, at }. A tab writes its own, waits a tick and reads it
+   back, and has the turn only if the key still carries its token: of two
+   tabs writing at once the later write stands, and the other waits for
+   the key to go. A lock older than LOOK_LOCK_MS was left behind (a tab
+   closed mid-save) and is taken. The lock never stops a save: storage
+   that keeps nothing (no lock to read right after writing one), or a
+   turn not had within LOOK_LOCK_MS, and it saves as before, without
+   the lock. Not as strict as a real lock: a save that takes
+   longer than LOOK_LOCK_MS, or one that gave up waiting, can still run
+   beside another. */
+function lookTurn(write) {
+	const token = Math.random().toString(36).slice(2) + '.' + Date.now().toString(36), started = Date.now();
+	const lock = () => { let l = null; try { l = JSON.parse(storageGet(LOOK_LOCK)); } catch (e) {} return l && typeof l.at === 'number' ? l : null; };
+	const mine = () => { const l = lock(); return !!l && l.token === token; };
+	const free = () => { if (mine()) storageSet(LOOK_LOCK, null); };
+	const later = f => new Promise(r => setTimeout(r, LOOK_LOCK_TICK)).then(f);
+	const turn = () => {
+		const now = Date.now(), waited = now - started, l = lock();
+		if (waited < 0 || waited >= LOOK_LOCK_MS) return write();
+		if (l && l.token !== token && now >= l.at && now - l.at < LOOK_LOCK_MS) return later(turn);
+		storageSet(LOOK_LOCK, JSON.stringify({ token: token, at: now }));
+		/* no lock there at all: this storage keeps nothing. Another tab's,
+		   landed in between, is no such case: the tick below finds it */
+		if (!lock()) return write();
+		return later(() => mine() ? write().then(v => { free(); return v; }, e => { free(); throw e; }) : turn());
+	};
+	return turn();
+}
+/* One save: revert, set, commit, on staging that every tab of this login
+   shares. So one tab at a time, or another tab's revert would drop what
+   this one has set before its commit, and both would say saved: under a
+   Web Lock, which reaches as far as the login does (this browser's tabs),
+   and where the browser has none (a page not served over HTTPS), under
+   the lock kept in its storage (lookTurn). */
 function lookWrite(values) {
-	return callLookRevert('vantage_theme')
+	const write = () => callLookRevert('vantage_theme')
 		.then(() => callLookSet('vantage_theme', 'appearance', values))
 		.then(() => callLookCommit('vantage_theme').catch(e => callLookRevert('vantage_theme').then(() => { throw e; }, () => { throw e; })));
+	const locks = typeof navigator === 'object' && navigator ? navigator.locks : null;
+	return locks && typeof locks.request === 'function' ? locks.request(LOOK_LOCK, write) : lookTurn(write);
 }
 function viewValue(name, value) {
 	if (name === 'chart') return VIEW_CHARTS.indexOf(value) >= 0;
@@ -2124,7 +2182,7 @@ return baseclass.extend({
 		return fetch(UPDATE_INDEX, { cache: 'no-store', credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl ? ctl.signal : undefined })
 			.then(r => {
 				const size = r.headers && r.headers.get ? +r.headers.get('content-length') : 0;
-				return r.ok && !(size > UPDATE_MAX) ? r.text() : Promise.reject(new Error(r.ok ? 'too large' : 'HTTP ' + r.status));
+				return r.ok && !(size > UPDATE_MAX) ? listText(r) : Promise.reject(new Error(r.ok ? 'too large' : 'HTTP ' + r.status));
 			})
 			.then(text => {
 				clearTimeout(timer);

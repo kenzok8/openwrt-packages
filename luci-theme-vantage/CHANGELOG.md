@@ -7,7 +7,7 @@ packages are listed at
 <https://github.com/anothaDev/luci-theme-vantage/releases> and in the
 [signed repositories](https://anothadev.github.io/luci-theme-vantage/).
 
-## 1.2.2 - unreleased
+## 1.2.2 - 2026-11-27
 
 - **Paired access points: their own addresses leave the wired list on a
   wire that carries several VLANs** (#167,
@@ -23,13 +23,95 @@ packages are listed at
   point lists it as a wired host. Needs 1.2.2 on the access points as
   well. On an access point with an older built-in switch (swconfig),
   whose ports all arrive through one device, a host plugged into it
-  cannot be told from the rest of its VLAN: it stays in the router's
-  wired list, without the "behind" note.
+  cannot be told from the rest of its VLAN. 1.2.1 noted all of that
+  VLAN's hosts "behind" the access point; now none is, and the host
+  stays in the router's wired list without the note.
 - **Clients: a mesh's other nodes are peers, not clients** (#167). The
   far end of a mesh interface was listed and counted as a Wi-Fi client.
-  Its row now has a "Mesh peer" tag, it no longer counts among the
-  device's or the radio's clients, and the mesh's node in the network
-  path counts peers.
+  Its row now has a "Mesh peer" tag, and the mesh's node in the network
+  path and search count peers. A peer no longer counts among the
+  device's or the radio's clients, is not ranked in Top talkers, and is
+  left out of the Signal check's client counts; a weak one still warns.
+- **Dashboard: no hole above a card that spans several columns** (#173,
+  [@VIKINGYFY](https://github.com/VIKINGYFY)). A short card beside a
+  taller one, with a wide card under both, left an empty space below it.
+  The short card now reaches down to the wide one. Cards keep their size
+  by content otherwise, and a short column at the end of the page still
+  just ends.
+- **Paired access points: no router is let in beside an SSH listener
+  that runs its own command.** Dropbear can run several listeners, each
+  may be given a command that it runs for every login (`ForceCommand`),
+  and it runs that command in place of the one a key is limited to. The
+  add-on checked only the first listener, so on an access point with a
+  second one set up that way, a paired router's key ran that listener's
+  command as root there instead of the read-only report. Every Dropbear
+  that OpenWrt's service manager runs and that takes root logins is
+  checked now, as configured and as running, and no router is let in
+  while one has such a command. Where routers were let in before, their
+  keys stay until you revoke them: the access point's pairing page says
+  so (remove the command or revoke the routers), and the access point
+  gives no report meanwhile, so the router shows it as not reporting. An
+  access point with a single listener, as OpenWrt ships it, was not
+  affected. Needs 1.2.2 on the access points.
+- **Firewall overview: IPv6 uplinks are checked too.** The overview
+  found the internet side by masquerading, the wan names and the IPv4
+  default route. With a separate IPv6 uplink (a tunnel, say) in a zone
+  under another name it could say "Nothing is open" while that zone
+  accepted every connection. An interface with the IPv6 default route
+  and a global address or delegated prefix now counts as an uplink, and
+  its zone faces the internet for IPv6. Where the overview cannot place
+  an IPv6 default route it gives no verdict instead of an all-clear;
+  that includes an access point that still has a wan zone in its
+  firewall config and gets IPv6 over its bridge, which read "Nothing is
+  open" before. The page says there that the router in front decides
+  what gets through.
+- **Dashboard: a device that stops answering is no longer shown as
+  Live.** Every call fell back to an empty answer, so a router that was
+  rebooting or unreachable kept its "Live" pill over emptied tiles. The
+  last readings now stay on screen and the pill says "Reconnecting" with
+  their age.
+- **Wireless networks: a network that also allows TKIP is marked
+  weak.** The cipher list was dropped before rating, so `psk2+tkip+ccmp`
+  (or the older `wpa2/tkip+aes`) read as plain WPA2. It now has the
+  weak-security mark with "(TKIP allowed)", and is listed apart from a
+  network of the same name without TKIP.
+- **Clients: a device that gets another device's old address no longer
+  shows that device's name.** A reverse-DNS answer was kept per address
+  for the whole session and ranked above the DHCP name. It now belongs
+  to the device that held the address when it was asked, and is asked
+  again after 10 minutes.
+- **Radios: the noise floor is the channel survey's reading again.** It
+  was fetched on every poll but never reached the page since 1.0.19,
+  which showed iwinfo's value or none.
+- **Per-device traffic: totals no longer grow without traffic where
+  conntrack zones are in use.** The same connection in two zones was
+  taken for one, and each read counted the difference between the two.
+  Each zone's entry now counts on its own. An address that two
+  interfaces give different MACs is counted for nobody instead of for
+  whichever was listed last. A full `/tmp` can no longer replace the
+  counters' state with a cut-off file. The counters start over once
+  after the upgrade.
+- **Status → Firewall flow: a rule's conditions and what it does come
+  from one read of the ruleset.** A rule edited between LuCI's read and
+  the flow's could show the old conditions beside the new verdict.
+- **Access points page: a service that does not start is said.** When
+  the service that reads access points cannot be set up or shut down, or
+  does not run afterwards, the page says so and a second try sets it
+  right; adding the same access point again no longer answers "already
+  on this dashboard". An access point whose network was renumbered a
+  second time is found again, and its old address is no longer asked
+  once it belongs to another network. An access point with 16 Wi-Fi
+  networks no longer loses the clients on their VLAN interfaces.
+- **Network → Wireless: Mode, Band, Channel and Width open the theme's
+  own list.** These four selects of "Operating frequency" were the last
+  that still opened the browser's plain list.
+- **Smaller fixes.** Tab and Shift+Tab stay inside the open details
+  drawer. A rename that finishes late no longer closes an editor opened
+  in the meantime, and Enter cannot save twice. Two tabs saving
+  Appearance at the same moment no longer undo each other's setting. A
+  login that is explicitly denied the theme's group is no longer told to
+  log in again. When LuCI's config cannot be written at install (a full
+  overlay), the theme's registration is tried again at the next boot.
 
 ## 1.2.1 - 2026-11-25
 
