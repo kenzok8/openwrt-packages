@@ -1640,18 +1640,34 @@
 			editBtn.addEventListener('click', () => C.openSimpleMenuCustomizer(editBtn));
 			nav.appendChild(editBtn);
 
-			const hint = h('div', { class: 'cb-nav-hint' }, [
-				h('span', { class: 'cb-nav-hint-ico', html: icon('sliders') }),
-				h('span', null, [t('Need more settings? Switch to') + ' '])
-			]);
-			const a = h('a', { href: '#', text: t('Pro mode') });
-			a.addEventListener('click', (e) => {
-				e.preventDefault();
-				const btn = document.querySelector('#cb-mode .cb-seg-btn:last-child');
-				if (btn) btn.click();
-			});
-			hint.lastChild.appendChild(a);
-			nav.appendChild(hint);
+			if (store.get('carbon.hintDismissed', '0') !== '1') {
+				const hintText = h('span', { class: 'cb-nav-hint-text' }, [t('Need more settings? Switch to') + ' ']);
+				const a = h('a', { href: '#', text: t('Pro mode') });
+				a.addEventListener('click', (e) => {
+					e.preventDefault();
+					const btn = document.querySelector('#cb-mode .cb-seg-btn:last-child');
+					if (btn) btn.click();
+				});
+				hintText.appendChild(a);
+				const closeBtn = h('button', {
+					type: 'button',
+					class: 'cb-nav-hint-close',
+					'aria-label': t('Close'),
+					title: t('Close'),
+					html: icon('close')
+				});
+				const hint = h('div', { class: 'cb-nav-hint' }, [
+					h('span', { class: 'cb-nav-hint-ico', html: icon('sliders') }),
+					hintText,
+					closeBtn
+				]);
+				closeBtn.addEventListener('click', (e) => {
+					store.set('carbon.hintDismissed', '1');
+					hint.remove();
+					if (e.detail === 0 && editBtn && editBtn.isConnected) editBtn.focus();
+				});
+				nav.appendChild(hint);
+			}
 		}
 		else {
 			let openSet = {};
