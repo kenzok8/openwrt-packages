@@ -7,6 +7,30 @@ packages are listed at
 <https://github.com/anothaDev/luci-theme-vantage/releases> and in the
 [signed repositories](https://anothadev.github.io/luci-theme-vantage/).
 
+## 1.2.2 - unreleased
+
+- **Paired access points: their own addresses leave the wired list on a
+  wire that carries several VLANs** (#167,
+  [@milindpatel63](https://github.com/milindpatel63)). Where each VLAN is
+  a device of its own (`eth0.3` beside `eth0.1`), an access point knew
+  its uplink in its own network only and reported what it heard on the
+  other VLANs as its wired hosts: the other access points' bridges, and
+  every host of those networks. The router then saw two claims on such
+  an address and took neither, so the bridges stayed listed, each
+  "behind" another access point, and a host plugged in elsewhere could
+  carry that note too. An access point now leaves out the other VLANs of
+  its uplink's device, and its own address stands when another access
+  point lists it as a wired host. Needs 1.2.2 on the access points as
+  well. On an access point with an older built-in switch (swconfig),
+  whose ports all arrive through one device, a host plugged into it
+  cannot be told from the rest of its VLAN: it stays in the router's
+  wired list, without the "behind" note.
+- **Clients: a mesh's other nodes are peers, not clients** (#167). The
+  far end of a mesh interface was listed and counted as a Wi-Fi client.
+  Its row now has a "Mesh peer" tag, it no longer counts among the
+  device's or the radio's clients, and the mesh's node in the network
+  path counts peers.
+
 ## 1.2.1 - 2026-11-25
 
 - **Dashboard: the uplink's download and upload on a port that also
