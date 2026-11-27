@@ -253,8 +253,9 @@ return baseclass.extend({
 	},
 
 	/* Resolve the display name of one station.
-	   s: { mac, alias: { name, icon }, ips: [..], rdns: { ip: name },
-	        mdns: { ip: name }, hint: { name }, wps, vendor }
+	   s: { mac, alias: { name, icon }, ips: [..],
+	        rdns: { ip: { name, mac } }, mdns: { ip: name }, hint: { name },
+	        wps, vendor }
 	   -> { name, plain, source, sourceLabel, icon, secondary, isPrivate }
 	   Without a name (vendor, private, mac) name is the one-line label,
 	   which carries the MAC's last two octets ("Private device 53:0F"),
@@ -275,9 +276,22 @@ return baseclass.extend({
 			return null;
 		}
 
+		/* a reverse DNS answer is its holder's, the client that had the
+		   address when it was asked: another client has it now and
+		   would read as the last one */
+		function fromRdns(map) {
+			if (!map) return null;
+			for (var i = 0; i < ips.length; i++) {
+				var e = Object.prototype.hasOwnProperty.call(map, ips[i]) ? map[ips[i]] : null;
+				var n = (e && e.mac === mac) ? self.cleanHostname(e.name) : null;
+				if (n) return n;
+			}
+			return null;
+		}
+
 		var alias = s.alias && this.validateAlias(s.alias.name);
 		if (alias && alias.ok && alias.value) { name = alias.value; source = 'alias'; }
-		if (!name && (name = fromIps(s.rdns))) source = 'dns';
+		if (!name && (name = fromRdns(s.rdns))) source = 'dns';
 		if (!name && s.hint && (name = this.cleanHostname(s.hint.name))) source = 'dhcp';
 		if (!name && (name = fromIps(s.mdns))) source = 'mdns';
 		if (!name && s.wps && (name = fmt.safeText(str(s.wps).trim(), NAME_MAX) || null)) source = 'wps';

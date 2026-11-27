@@ -121,12 +121,15 @@ return baseclass.extend({
 
 		/* signal; a station set quiet (#110: far away on purpose) is left
 		   out, of the warning and of the weakest; so are a paired access
-		   point's stations (this device cannot help them) */
-		var clients = (model.clients || []).filter(function(c) { return !c.ap; }), quiet = quietMacs || {};
+		   point's stations (this device cannot help them). A mesh peer
+		   (#167) is no client: a weak one warns as any weak link does,
+		   and the lines that count clients leave it out */
+		var links = (model.clients || []).filter(function(c) { return !c.ap; }), quiet = quietMacs || {};
+		var clients = links.filter(function(c) { return !c.peer; });
 		var counted = clients.filter(function(c) { return !quiet[c.mac]; });
-		var weak = counted.filter(function(c) { return c.signal != null && c.signal < WEAK_DBM; }).sort(function(a, b) { return a.signal - b.signal; });
+		var weak = links.filter(function(c) { return !quiet[c.mac] && c.signal != null && c.signal < WEAK_DBM; }).sort(function(a, b) { return a.signal - b.signal; });
 		var heard = counted.filter(function(c) { return c.signal != null; }).sort(function(a, b) { return a.signal - b.signal; });
-		if (!clients.length) out.push({ id: 'signal', level: 'info', title: _('Signal'), value: _('No clients'), reason: '', detail: _('No stations are associated right now'), page: PAGES.wireless });
+		if (!clients.length && !weak.length) out.push({ id: 'signal', level: 'info', title: _('Signal'), value: _('No clients'), reason: '', detail: _('No stations are associated right now'), page: PAGES.wireless });
 		else if (weak.length) out.push({ id: 'signal', level: 'warn', title: _('Signal'), value: _('%d weak').format(weak.length),
 			/* the level stays in one piece when the line wraps */
 			reason: _('%s · %s').format(weak[0].name, fmt.dbm(weak[0].signal).replace(/ /g, '\u00a0')),
@@ -203,7 +206,8 @@ return baseclass.extend({
 	/* clients + rates { mac: { rx, tx } } (AP view: tx = to the client)
 	   -> top n [ { mac, name, down, up, total, share } ] with total > 0.
 	   This device's clients: a paired access point's (c.ap) push none of
-	   them out.
+	   them out, and a mesh peer (c.peer) carries its node's traffic, not
+	   its own.
 	   hosts + hostRates: the wired hosts that have a rate of their own
 	   (the view's pick: a port to themselves), ranked with the stations
 	   and marked wired. A port counts as a radio does, from this side of
@@ -219,7 +223,7 @@ return baseclass.extend({
 			if (wired) t.wired = true;
 			list.push(t);
 		}
-		(clients || []).forEach(function(c) { add(c, !c.ap && own(rates, c.mac) ? rates[c.mac] : null, false); });
+		(clients || []).forEach(function(c) { add(c, !c.ap && !c.peer && own(rates, c.mac) ? rates[c.mac] : null, false); });
 		(hosts || []).forEach(function(h) { add(h, own(hostRates, h.mac) ? hostRates[h.mac] : null, true); });
 		list.sort(function(a, b) { return b.total - a.total || (a.mac < b.mac ? -1 : 1); });
 		list.forEach(function(t) { t.share = sum > 0 ? t.total / sum : 0; });

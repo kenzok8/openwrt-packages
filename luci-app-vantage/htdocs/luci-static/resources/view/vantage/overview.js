@@ -47,6 +47,11 @@ var IWINFO_MS = 30 * 1000;
    association by a moment; in between, its last reply */
 var HINTS_MS = 30 * 1000;
 var HINTS_HOT = 3;
+/* a reverse DNS answer, a name or none, is asked again after this long
+   (resolveMore): an address gets another name, or its first */
+var RDNS_MS = 10 * 60 * 1000;
+/* what Tab stops at (holdTab) */
+var TAB_STOPS = 'a[href], button, input, select, textarea, summary, [tabindex]';
 /* One clock for everything that moves (the status circle's ring, the Live
    beat, the flow dots, the backdrop): a compositor animation makes the
    browser draw a frame on every display refresh, sixty a second, however
@@ -122,7 +127,7 @@ var TILE_SLOW_MS = 500;
    answer stands that long after a call that failed */
 var TILE_RETRY_MS = 60 * 1000;
 var STORE_KEY = 'vantage.hist.v1';
-var VERSION = '1.2.1';                /* this package's, as its Makefile has it (tests/version.test.js) */
+var VERSION = '1.2.2';                /* this package's, as its Makefile has it (tests/version.test.js) */
 var SVGNS = 'http://www.w3.org/2000/svg';
 var HOSTAPD_OBJ = /^[A-Za-z0-9_.-]{1,64}$/;
 
@@ -187,7 +192,9 @@ var callAssoc = rpc.declare({ object: 'iwinfo', method: 'assoclist', params: [ '
    iwinfo backend but nl80211's (MediaTek's mtwifi in the mt798x builds,
    #124) */
 var callSurvey = rpc.declare({ object: 'luci.vantage', method: 'survey', params: [ 'device' ], expect: { results: [] } });
-var callRrdns = rpc.declare({ object: 'network.rrdns', method: 'lookup', params: [ 'addrs', 'timeout', 'limit' ], expect: { '': {} } });
+/* reject: a ubus status in the reply (not found, permission denied) is
+   an error to read (resolveMore), not an answer without names */
+var callRrdns = rpc.declare({ object: 'network.rrdns', method: 'lookup', params: [ 'addrs', 'timeout', 'limit' ], expect: { '': {} }, reject: true });
 var callMdns = rpc.declare({ object: 'umdns', method: 'hosts' });
 var callUciGet = rpc.declare({ object: 'uci', method: 'get', params: [ 'config' ], expect: { values: {} } });
 var callSetAlias = rpc.declare({ object: 'luci.vantage', method: 'set_alias', params: [ 'mac', 'name', 'icon' ] });
@@ -818,7 +825,7 @@ function writeStore(v) {
    dotted numbers, this one and the kept one alike: anything else kept
    counts as nothing kept, and with a VERSION of another form there is
    no line. */
-var NEWS_URL = 'https://github.com/anothaDev/luci-theme-vantage/blob/v1.2.1/CHANGELOG.md';
+var NEWS_URL = 'https://github.com/anothaDev/luci-theme-vantage/blob/v1.2.2/CHANGELOG.md';
 var SEEN_KEY = 'vantage.seen.v1';
 var VERSION_FORM = /^\d{1,4}(\.\d{1,4}){1,3}$/;
 
@@ -1372,7 +1379,9 @@ return view.extend({
 		return null;
 	},
 
-	/* one poll's worth of raw replies; missing pieces degrade to {} */
+	/* one poll's worth of raw replies; missing pieces degrade to {}.
+	   lost: the device's own status call was not answered, and the rest
+	   is nothing to show (refresh) */
 	fetch: function() {
 		var started = Date.now(), self = this;
 		/* Low-power router: the slow parts once every LOW_SLOW_MS */
@@ -1395,7 +1404,9 @@ return view.extend({
 		/* and a switch chip's own counters, every poll (askSwitch) */
 		var counted = this.askSwitch();
 		return Promise.all([
-			L.resolveDefault(callInfo(), {}),
+			/* the device's own status: the poll counts as answered only
+			   when this call was (lost, below) */
+			L.resolveDefault(callInfo(), null),
 			L.resolveDefault(callRead('/proc/stat'), ''),
 			L.resolveDefault(callIfDump(), []),
 			L.resolveDefault(callDevs(), {}),
@@ -1408,6 +1419,10 @@ return view.extend({
 			/* null when the call fails (an older plugin): netifd's metrics decide */
 			L.resolveDefault(callRoutes(), null)
 		]).then(function(r) {
+			/* no answer, ubus' error code in its place (a number), or a
+			   reply without the uptime every answer carries */
+			var info = (r[0] && typeof r[0] === 'object' && !Array.isArray(r[0])) ? r[0] : {};
+			var lost = !(typeof info.uptime === 'number' && isFinite(info.uptime));
 			var wifiDevs = (r[4] && typeof r[4] === 'object') ? r[4] : null;
 			var wiredReply = (r[7] && typeof r[7] === 'object') ? r[7] : {};
 			var ifnames = [], radioFirst = Object.create(null), surveyFor = Object.create(null);
@@ -1545,7 +1560,7 @@ return view.extend({
 				});
 				var switchState = Object.create(null);
 				Object.keys(swState).forEach(function(n) { switchState[n] = swState[n].ports; });
-				var raw = { info: r[0] || {}, stat: r[1] || '', ifaces: r[2] || [], devs: r[3] || {}, wifi: wifiDevs, hints: r[5] || self.hintsCache || {}, thermal: r[6] || [],
+				var raw = { info: info, lost: lost, stat: r[1] || '', ifaces: r[2] || [], devs: r[3] || {}, wifi: wifiDevs, hints: r[5] || self.hintsCache || {}, thermal: r[6] || [],
 					fdb: Array.isArray(wiredReply.hosts) ? wiredReply.hosts : [], fdbCrowded: wiredReply.crowded === true, switches: switches, switchState: switchState,
 					/* no answer (an older plugin, a lookup not sent, a failed call)
 					   keeps the last one: no tunnel blinking off */
@@ -1622,6 +1637,20 @@ return view.extend({
 		this.st.mdnsAt = Date.now();
 	},
 
+	/* what model.build takes of a poll's replies, with the names kept
+	   beside them: one list for the poll (ingest) and for a rebuild
+	   (rerender), so neither leaves a reply behind */
+	modelInput: function(raw) {
+		var st = this.st;
+		return {
+			board: this.board, info: raw.info, ifaces: raw.ifaces, devs: raw.devs, wifi: raw.wifi, iwinfo: raw.iwinfo,
+			assoc: raw.assoc, hapd: raw.hapd, hapdStatus: raw.hapdStatus, survey: raw.survey, hints: raw.hints, fdb: raw.fdb,
+			switches: raw.switches, switchState: raw.switchState, routes: raw.routes, collector: raw.collector,
+			aliases: this.aliases, rdns: st.rdns, mdns: st.mdns,
+			vendor: st.oui ? function(k) { return k ? st.oui.lookup(k) : null; } : null
+		};
+	},
+
 	/* raw replies -> model + rates + histories */
 	ingest: function(raw) {
 		var st = this.st, self = this;
@@ -1646,13 +1675,7 @@ return view.extend({
 		}
 		st.temps = model.temps(raw.thermal);
 
-		var m = model.build({
-			board: this.board, info: raw.info, ifaces: raw.ifaces, devs: raw.devs, wifi: raw.wifi, iwinfo: raw.iwinfo,
-			assoc: raw.assoc, hapd: raw.hapd, hapdStatus: raw.hapdStatus, hints: raw.hints, fdb: raw.fdb,
-			switches: raw.switches, switchState: raw.switchState, routes: raw.routes, collector: raw.collector,
-			aliases: this.aliases, rdns: st.rdns, mdns: st.mdns,
-			vendor: st.oui ? function(k) { return k ? st.oui.lookup(k) : null; } : null
-		});
+		var m = model.build(this.modelInput(raw));
 		this.markWired(m, raw);
 		this.noteTunnels(m, raw.wg, now);
 		this.notePorts(m);
@@ -1720,12 +1743,6 @@ return view.extend({
 		/* the other lines to the internet: this poll's (the fast lane
 		   samples the main one only) */
 		this.extraLines(m).forEach(function(x) { var r = model.lineRate(x, st.devRates); if (r) self.pushNet(lineKey(x), at, r); });
-		/* a line gone for longer than the chart shows leaves no history */
-		var lineKeys = m.uplinks.map(lineKey);
-		Object.keys(st.hist.net).forEach(function(k) {
-			var h = st.hist.net[k];
-			if (/^up:/.test(k) && lineKeys.indexOf(k) < 0 && !(h.length && h[h.length - 1][0] > at - WINDOW_MS)) delete st.hist.net[k];
-		});
 		m.radios.forEach(function(r) { if (st.radioRates[r.id]) self.pushNet(r.id, at, st.radioRates[r.id]); });
 
 		/* per-station history */
@@ -1740,24 +1757,16 @@ return view.extend({
 		/* presence: new since the page opened, recently gone */
 		var p = insight.presence(st.presence, m.clients, now, GONE_KEEP_MS,
 			m.accessPoints.filter(function(a) { return a.state === 'ok'; }).map(function(a) { return a.id; }));
-		st.presence = p.state;
 		st.isNew = p.isNew;
 		st.gone = p.gone;
 		this.markOffline(m, raw, now);
-		Object.keys(st.clientHist).forEach(function(mac) {
-			if (!p.state.firstSeen[mac]) delete st.clientHist[mac];
-		});
-		Object.keys(st.bestStd).forEach(function(mac) {
-			if (!p.state.firstSeen[mac]) delete st.bestStd[mac];
-		});
-
-		/* per-station history is kept for the session (60 points each,
-		   stations seen in the last minutes only) */
-		var keepClients = {};
-		Object.keys(st.clientHist).slice(0, 32).forEach(function(mac) {
-			keepClients[mac] = st.clientHist[mac].slice(-60).filter(function(p) { return p.every(function(v) { return isFinite(v); }); });
-		});
-		writeStore({ sid: storeOwner(), net: st.hist.net, cpu: st.hist.cpu, mem: st.hist.mem, clients: keepClients });
+		/* What is kept beyond this poll: who was there, so that later
+		   ones are new, and the history, less what is gone, saved for
+		   the next page load. Nothing of it from a first poll the device
+		   did not answer (render; refresh takes in no such poll): that
+		   one lists nobody, which would drop every saved history, write
+		   that back, and make every client new at the first answer */
+		if (!raw.lost) this.keepSeen(m, p.state, at);
 
 		this.stickyGen(m);
 		m.clients.forEach(function(c) { c.exp = insight.experience(c); c.firstSeen = p.state.firstSeen[c.mac]; c.isNew = !!p.isNew[c.mac]; });
@@ -1769,6 +1778,30 @@ return view.extend({
 		this.lastRaw = raw;
 		this.resolveMore(m);
 		return m;
+	},
+
+	/* the part of a poll that lasts (ingest): who is there, and the
+	   history as the next page load reads it, without a line gone for
+	   longer than the chart shows or a station neither here nor lately
+	   gone; per station 60 points, for 32 of them */
+	keepSeen: function(m, seen, at) {
+		var st = this.st, lineKeys = m.uplinks.map(lineKey);
+		st.presence = seen;
+		Object.keys(st.hist.net).forEach(function(k) {
+			var h = st.hist.net[k];
+			if (/^up:/.test(k) && lineKeys.indexOf(k) < 0 && !(h.length && h[h.length - 1][0] > at - WINDOW_MS)) delete st.hist.net[k];
+		});
+		Object.keys(st.clientHist).forEach(function(mac) {
+			if (!seen.firstSeen[mac]) delete st.clientHist[mac];
+		});
+		Object.keys(st.bestStd).forEach(function(mac) {
+			if (!seen.firstSeen[mac]) delete st.bestStd[mac];
+		});
+		var keepClients = {};
+		Object.keys(st.clientHist).slice(0, 32).forEach(function(mac) {
+			keepClients[mac] = st.clientHist[mac].slice(-60).filter(function(p) { return p.every(function(v) { return isFinite(v); }); });
+		});
+		writeStore({ sid: storeOwner(), net: st.hist.net, cpu: st.hist.cpu, mem: st.hist.mem, clients: keepClients });
 	},
 
 	/* Wired-only: the wireless status answered and lists no radios. A
@@ -1995,31 +2028,65 @@ return view.extend({
 	   address, mDNS every minute when present, the vendor table once;
 	   for Wi-Fi clients and wired hosts alike */
 	resolveMore: function(m) {
-		var st = this.st, self = this;
+		var st = this.st, self = this, now = Date.now();
 		var ips = [], all = m.clients.concat(m.wiredHosts || []);
-		/* answers are kept for the session, but only for addresses still
-		   in use once there are many */
+		/* who holds each address now (the first to list it) */
+		var held = st.rdnsHeld = Object.create(null);
+		all.forEach(function(c) { c.ips.forEach(function(ip) { if (!(ip in held)) held[ip] = c.mac; }); });
+		/* answers are kept, but only for addresses still in use once
+		   there are many */
 		if (Object.keys(st.rdns).length > 1024) {
 			var keep = Object.create(null);
-			all.forEach(function(c) { c.ips.forEach(function(ip) { if (ip in st.rdns) keep[ip] = st.rdns[ip]; }); });
+			Object.keys(held).forEach(function(ip) { if (ip in st.rdns) keep[ip] = st.rdns[ip]; });
 			st.rdns = keep;
 		}
-		all.forEach(function(c) {
-			c.ips.forEach(function(ip) { if (!(ip in st.rdns) && ips.indexOf(ip) < 0 && ips.length < 64) ips.push(ip); });
+		/* an answer { name, mac, at } (a name or '') is the client's that
+		   held the address when it was asked (names.resolve gives it to
+		   no other), for RDNS_MS: an address is asked again after that,
+		   and at once when another client has it */
+		Object.keys(held).forEach(function(ip) {
+			var e = st.rdns[ip], age = e ? now - e.at : -1;
+			if (!(e && e.mac === held[ip] && age >= 0 && age < RDNS_MS) && ips.length < 64) ips.push(ip);
 		});
 		if (ips.length && !st.rdnsBusy && !st.rdnsOff) {
 			st.rdnsBusy = true;
-			ips.forEach(function(ip) { st.rdns[ip] = ''; });
+			/* its holder's last name stays while an address is asked
+			   again, and no longer: the answer, or none, replaces it */
+			ips.forEach(function(ip) {
+				var e = st.rdns[ip];
+				st.rdns[ip] = { name: e && e.mac === held[ip] ? e.name : '', mac: held[ip], at: now };
+			});
 			/* rpcd-mod-rrdns is optional: when the object or the grant is
-			   missing the first call says so and reverse DNS stays off;
-			   a timeout or a network error only skips this batch */
+			   missing the first call says so and reverse DNS stays off:
+			   ubus' "not found" (4) or "permission denied" (6) in the
+			   reply, or uhttpd's own -32000 (no object) or -32002 (access
+			   denied). Anything else, a timeout (-32003) or a network
+			   error among them, only skips this batch */
 			callRrdns(ips, 1500, 1000).catch(function(e) {
-				if (/ubus code [2-6]\b|error -320\d\d\b/.test(String(e && e.message))) st.rdnsOff = true;
-				return {};
+				if (/ubus code [46]\b|error -3200[02]\b/.test(String(e && e.message))) st.rdnsOff = true;
+				return null;
 			}).then(function(res) {
 				var hit = false;
-				if (res && typeof res === 'object')
-					Object.keys(res).forEach(function(ip) { if (typeof res[ip] === 'string' && ips.indexOf(ip) >= 0) { st.rdns[ip] = res[ip]; hit = true; } });
+				/* lookups are off from here on (no object, no grant):
+				   nothing is asked again, so no answer is kept, of this
+				   batch or of the ones before it */
+				if (st.rdnsOff) {
+					hit = Object.keys(st.rdns).some(function(ip) { return !!st.rdns[ip].name; });
+					st.rdns = Object.create(null);
+				}
+				ips.forEach(function(ip) {
+					var e = st.rdns[ip];
+					if (!e || e.mac !== held[ip]) return;
+					/* the address changed hands while this was asked: the
+					   answer is the last holder's, and the next poll asks */
+					if (st.rdnsHeld[ip] !== e.mac) { delete st.rdns[ip]; return; }
+					/* a call that failed is no name either: the last one
+					   was shown while this was asked, not beyond it */
+					var name = (res && typeof res === 'object' && Object.prototype.hasOwnProperty.call(res, ip) && typeof res[ip] === 'string') ? res[ip] : '';
+					if (name !== e.name) hit = true;
+					e.name = name;
+					e.at = Date.now();
+				});
 				if (hit) self.rerender();
 			}).finally(function() { st.rdnsBusy = false; });
 		}
@@ -2043,13 +2110,7 @@ return view.extend({
 	rerender: function() {
 		if (!this.lastRaw) return;
 		var st = this.st, raw = this.lastRaw;
-		var m = model.build({
-			board: this.board, info: raw.info, ifaces: raw.ifaces, devs: raw.devs, wifi: raw.wifi, iwinfo: raw.iwinfo,
-			assoc: raw.assoc, hapd: raw.hapd, hapdStatus: raw.hapdStatus, hints: raw.hints, fdb: raw.fdb,
-			switches: raw.switches, switchState: raw.switchState, routes: raw.routes, collector: raw.collector,
-			aliases: this.aliases, rdns: st.rdns, mdns: st.mdns,
-			vendor: st.oui ? function(k) { return k ? st.oui.lookup(k) : null; } : null
-		});
+		var m = model.build(this.modelInput(raw));
 		this.markWired(m, null);
 		m.wg = st.wgSeen === true;
 		this.markOffline(m, raw, null);
@@ -2080,6 +2141,10 @@ return view.extend({
 		this.fullAt = Date.now();
 		this.fetching = true;
 		return this.fetch().then(function(raw) {
+			/* the device did not answer: what is shown stays, as old as
+			   it is (paintLive), instead of the defaults of a poll that
+			   read nothing */
+			if (raw.lost) throw new Error('no answer');
 			self.ingest(raw);
 			self.st.lastOk = Date.now();
 			self.st.lastErr = null;
@@ -2132,7 +2197,9 @@ return view.extend({
 		   read in the picked unit */
 		this.applyUnits();
 		this.ingest(data.raw);
-		this.st.lastOk = Date.now();
+		/* a first poll the device did not answer is no live page */
+		if (data.raw && data.raw.lost) this.st.lastErr = new Error('no answer');
+		else this.st.lastOk = Date.now();
 
 		this.el = {};
 		/* .vt-body is the size container for the layout; the drawer stays
@@ -2868,7 +2935,8 @@ return view.extend({
 		/* LuCI's own refresh can be paused (its indicator in the header) */
 		var stopped = typeof poll.active === 'function' && !poll.active();
 		if (st.paused || document.hidden || stopped) { state = 'paused'; label = stopped && !document.hidden ? _('Paused') : _('Paused while hidden'); }
-		else if (st.lastErr) { state = 'err'; label = _('Reconnecting…', 'vantage'); }
+		/* with the age of what is shown: the last poll the device answered */
+		else if (st.lastErr) { state = 'err'; label = _('Reconnecting…', 'vantage') + (st.lastOk ? ' · ' + fmt.ago(Date.now() - st.lastOk) : ''); }
 		else { state = 'ok'; label = _('Live') + ' · ' + fmt.ago(Date.now() - st.lastOk); }
 		this.el.live.className = 'vt-livepill vt-live-' + state;
 		/* the Vantage theme's refresh dot pulses fast and amber while this
@@ -3083,8 +3151,9 @@ return view.extend({
 	/* without airtime: the Wi-Fi clients by band along the card's bottom
 	   edge, in the bands' colours (as the other cards' lines) */
 	bandPicture: function() {
-		/* this device's clients: a paired access point's are on its branch */
-		var clients = ((this.m && this.m.clients) || []).filter(function(c) { return !c.ap; }), by = {};
+		/* this device's clients: a paired access point's are on its branch,
+		   and a mesh peer is no client */
+		var clients = ((this.m && this.m.clients) || []).filter(function(c) { return !c.ap && !c.peer; }), by = {};
 		clients.forEach(function(c) { if (c.band) by[c.band] = (by[c.band] || 0) + 1; });
 		var bands = Object.keys(by).sort();
 		if (!bands.length) return [];
@@ -3582,7 +3651,7 @@ return view.extend({
 					sn.tone = tone;
 				}
 				setClass(sn.el, 'vt-node vt-node-ssid' + (s.clients ? '' : ' vt-node-idle'));
-				setTitle(sn.el, _('Show the clients of %s').format(s.ssid) + (tone ? '\n' + s.security.long : ''));
+				setTitle(sn.el, (s.mode === 'mesh' ? _('Show the peers of %s') : _('Show the clients of %s')).format(s.ssid) + (tone ? '\n' + s.security.long : ''));
 				txt(sn.name, s.ssid || _('(hidden)'));
 				txt(sn.count, self.ssidCount(s));
 				var dots = m.clients.filter(function(c) { return c.ssidId === s.id; }).slice(0, 8);
@@ -4376,7 +4445,7 @@ return view.extend({
 				spec.appendChild(E('span', { 'class': 'vt-spectrum-hi vt-tn' }, [ _('%s MHz').format(sp.bandHi) ]));
 			}
 			var hist = st.hist.net[r.id] || [];
-			var clients = m.clients.filter(function(c) { return c.radio === r.id; });
+			var clients = m.clients.filter(function(c) { return c.radio === r.id && !c.peer; });
 			return E('article', { 'class': 'vt-tile vt-radio vt-radio-' + (r.band || 'x') + (r.up ? '' : ' vt-radio-off'), 'data-radio': r.id }, [
 				E('header', { 'class': 'vt-radio-head' }, [
 					bandBadge(r.band),
@@ -5018,7 +5087,8 @@ return view.extend({
 			var c = (x.wired ? hostBy : byMac)[x.mac] || { mac: x.mac, name: x.name, icon: 'device' };
 			var fill = E('span', { 'class': 'vt-talk-fill' });
 			setW(fill, x.share * 100);
-			return E('button', { 'type': 'button', 'class': 'vt-talk-row', 'click': function() { self.openDrawer('client', x.mac); } }, [
+			/* built anew by every poll: data-mac says whose row it is (closeDrawer) */
+			return E('button', { 'type': 'button', 'class': 'vt-talk-row', 'data-mac': x.mac, 'click': function() { self.openDrawer('client', x.mac); } }, [
 				E('span', { 'class': 'vt-talk-rank vt-tn' }, [ String(i + 1) ]),
 				avatar(c, true),
 				E('span', { 'class': 'vt-talk-main' }, [
@@ -5361,7 +5431,12 @@ return view.extend({
 		   moves on (from a radio to one of its clients) */
 		try { history.replaceState(null, '', '#' + kind + (kind === 'uplink' && !id ? '' : '=' + encodeURIComponent(id))); } catch (e) {}
 		if (!el.drawer.hidden) { this.paintDrawer(); this.paintClients(); return; }
-		this.lastFocus = document.activeElement;
+		/* what gets the focus back (closeDrawer): the control that
+		   opened this, or, once a poll has built another in its place,
+		   its tile's control for the same client */
+		var from = this.lastFocus = document.activeElement, tiles = this.tiles || {};
+		this.lastFocusIn = Object.keys(tiles).map(function(t) { return tiles[t]; }).filter(function(t) { return !!from && t.contains(from); })[0] || null;
+		this.lastFocusMac = kind === 'client' ? names.normMac(id) : null;
 		el.drawer.hidden = false;
 		el.drawerBack.hidden = false;
 		this.paintDrawer();
@@ -5378,7 +5453,10 @@ return view.extend({
 		window.setTimeout(function() { if (!self.ui.drawer) { el.drawer.hidden = true; el.drawerBack.hidden = true; } }, reducedMotion() ? 0 : 260);
 		try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
 		this.paintClients();
-		if (this.lastFocus && this.lastFocus.isConnected) this.lastFocus.focus();
+		var back = this.lastFocus, mac = this.lastFocusMac;
+		if (!(back && back.isConnected))
+			back = (this.lastFocusIn && mac) ? Array.prototype.filter.call(this.lastFocusIn.querySelectorAll('[data-mac]'), function(n) { return n.getAttribute('data-mac') === mac; })[0] : null;
+		if (back) back.focus();
 	},
 
 	/* A deep link names an existing thing or nothing: a client by a
@@ -5721,7 +5799,9 @@ return view.extend({
 	/* inline alias editor; Enter saves, Escape cancels, empty clears */
 	startRename: function(c) {
 		var self = this, slot = this.el.renameSlot, chosen = { icon: (this.aliases[c.mac] && this.aliases[c.mac].icon) || null };
-		this.ui.editing = c.mac;
+		/* this editor, and no other one opened later (for another client,
+		   or for this one again) */
+		var me = this.ui.editing = { mac: c.mac };
 		var err = E('p', { 'class': 'vt-form-err', 'role': 'alert', 'hidden': 'hidden' });
 		var input = E('input', { 'type': 'text', 'class': 'vt-rename-input', 'maxlength': String(names.NAME_MAX * 2), 'autocomplete': 'off',
 			'placeholder': _('e.g. Living room TV', 'vantage'), 'aria-label': _('Device name') });
@@ -5734,6 +5814,8 @@ return view.extend({
 				} }, [ icon(ic) ]);
 		});
 		function save() {
+			/* one save at a time: Enter does not pass the disabled button */
+			if (saveBtn.disabled) return;
 			var v = names.validateAlias(input.value);
 			if (!v.ok) { txt(err, v.error); err.hidden = false; input.focus(); return; }
 			saveBtn.disabled = true;
@@ -5741,7 +5823,10 @@ return view.extend({
 				saveBtn.disabled = false;
 				if (typeof ok === 'string') { txt(err, ok); err.hidden = false; return; }
 				if (!ok) { txt(err, _('Could not save the name (no permission or the device refused it).')); err.hidden = false; return; }
-				self.ui.editing = null;
+				/* a save that finishes late: its name shows for its client
+				   (the page is rebuilt), and an editor opened since keeps
+				   its form (paintDrawer leaves an open one alone) */
+				if (self.ui.editing === me) self.ui.editing = null;
 				self.rerender();
 			});
 		}
@@ -5861,7 +5946,7 @@ return view.extend({
 		var self = this, r = this.m.radios.filter(function(x) { return x.id === id; })[0];
 		if (!r) return { title: [ E('span', { 'class': 'vt-drawer-name' }, [ _('Unknown radio') ]) ], body: [ E('p', { 'class': 'vt-empty-inline' }, [ _('This radio is not reported any more.') ]) ] };
 		var rr = this.st.radioRates[r.id], ins = this.st.radioInsights[r.id] || { notes: [] };
-		var clients = this.m.clients.filter(function(c) { return c.radio === r.id; });
+		var clients = this.m.clients.filter(function(c) { return c.radio === r.id && !c.peer; });
 		return {
 			title: [ E('span', { 'class': 'vt-drawer-ico' }, [ icon('radio') ]), E('div', { 'class': 'vt-drawer-titles' }, [
 				E('div', { 'class': 'vt-drawer-name' }, [ r.bandLabel + ' · ' + (r.gen || r.id) ]),
@@ -6040,21 +6125,22 @@ return view.extend({
 		   points', as the Clients list filters by the name. Not where the
 		   layout hides that list, and not one without a name */
 		var nets = [], named = Object.create(null);
-		function net(ssid, band, clients) {
+		function net(ssid, band, clients, mode) {
 			if (!ssid) return;
 			var n = named[ssid];
-			if (!n) nets.push(n = named[ssid] = { ssid: ssid, bands: [], clients: 0 });
+			if (!n) nets.push(n = named[ssid] = { ssid: ssid, bands: [], clients: 0, mode: mode });
+			else if (n.mode !== mode) n.mode = null;
 			if (band && n.bands.indexOf(band) < 0) n.bands.push(band);
 			n.clients += clients;
 		}
 		if (this.el.clients.getClientRects().length) {
-			m.ssids.forEach(function(s) { net(s.ssid, s.band, s.clients); });
+			m.ssids.forEach(function(s) { net(s.ssid, s.band, s.clients, s.mode); });
 			this.aps().forEach(function(a) { a.nodes.forEach(function(n) { net(n.ssid, n.band, n.clients); }); });
 		}
 		give('ssid', nets.map(function(n) {
 			return {
 				title: cut([ n.ssid ], '', 64),
-				detail: cut(n.bands.sort().map(wifi.bandLabel).concat(n.clients === 1 ? _('1 client') : _('%d clients').format(n.clients)), ' · ', 64),
+				detail: cut(n.bands.sort().map(wifi.bandLabel).concat(self.ssidCount(n)), ' · ', 64),
 				words: '',
 				/* open details would cover the list */
 				run: function() { self.closeDrawer(); self.filterSsid(n.ssid); }
@@ -6095,6 +6181,22 @@ return view.extend({
 
 	/* ---------------------------------------------------------- keyboard */
 
+	/* The details drawer is modal (aria-modal): Tab and Shift+Tab go
+	   round its controls, as they are now (a poll repaints its body), and
+	   from the page behind they come back to it (the control that had
+	   the focus is gone). Another dialog over it keeps its own keys. */
+	holdTab: function(ev) {
+		var box = this.el.drawer, at = document.activeElement, inside = !!at && box.contains(at);
+		if (!inside && at && typeof at.closest === 'function' && at.closest('[role="dialog"]')) return;
+		var stops = Array.prototype.filter.call(box.querySelectorAll(TAB_STOPS), function(n) {
+			return !n.disabled && n.getAttribute('tabindex') !== '-1' && (typeof n.getClientRects !== 'function' || n.getClientRects().length > 0);
+		});
+		var first = stops[0], last = stops[stops.length - 1];
+		if (inside && at !== (ev.shiftKey ? first : last)) return;
+		ev.preventDefault();
+		if (first) (ev.shiftKey ? last : first).focus();
+	},
+
 	handleKey: function(ev) {
 		var t = ev.target, typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
 		/* Escape in an open chart style list (a select whose list the page
@@ -6106,6 +6208,10 @@ return view.extend({
 		}
 		if (ev.key === 'Escape' && this.editing && !this.drag) {
 			this.setEditing(false, this.viewFailed);
+			return;
+		}
+		if (ev.key === 'Tab' && this.ui.drawer && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !document.body.classList.contains('modal-overlay-active')) {
+			this.holdTab(ev);
 			return;
 		}
 		/* 'f' focuses the client filter; '/' and Ctrl+K belong to the theme */

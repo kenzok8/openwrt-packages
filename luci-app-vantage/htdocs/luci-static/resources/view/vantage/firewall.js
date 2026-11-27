@@ -19,7 +19,7 @@
    access point, an empty interface list as a router whose uplinks are all
    zoned. load() checks the shape of what they return. */
 var callUciGet = rpc.declare({ object: 'uci', method: 'get', params: [ 'config' ], reject: true });
-/* which interface holds the default route, to find an uplink zone that
+/* which interfaces hold the default routes, to find an uplink zone that
    does not masquerade: LuCI's luci-base-network-status group grants it
    (also the app's read group); without it the page falls back to
    masquerading and naming */
@@ -131,6 +131,7 @@ function adminServices(ports) {
 function complexWhy(c) {
 	if (c.why === 'subnet') return _('the covered subnets of zone %s').format(c.name);
 	if (c.why === 'shared') return _('zones %s and %s if they share a device').format(c.name, c.other);
+	if (c.why === 'route6') return _('IPv6 traffic on %s').format(c.name);
 	return _('the set in %s').format(c.name || _('an unnamed rule'));
 }
 
@@ -218,7 +219,13 @@ return view.extend({
 		var facing = fw.internet.concat(fw.outside.map(function(o) { return o.family ? _('%s (IPv%d)').format(o.name, o.family) : o.name; })).join(', ');
 		if (fw.complex.length) {
 			head = _('This setup is beyond what this overview checks');
-			sub = _('What is open depends on how firewall4 handles %s, which this page does not follow. Check the firewall pages.').format(fw.complex.map(complexWhy).filter(function(t, i, a) { return a.indexOf(t) === i; }).join('; '));
+			/* an IPv6 default route this cannot place is no matter of how
+			   fw4 reads the config: where another router sits in front
+			   (an access point), that router decides */
+			var uniq = function(t, i, a) { return a.indexOf(t) === i; };
+			sub = fw.complex.every(function(c) { return c.why === 'route6'; })
+				? _('This page cannot tell where IPv6 on %s comes in from. If another router sits in front of this device, as with an access point, that router\'s firewall decides what gets through. Check it and the firewall pages here.').format(fw.complex.map(function(c) { return c.name; }).filter(uniq).join(', '))
+				: _('What is open depends on how firewall4 handles %s, which this page does not follow. Check the firewall pages.').format(fw.complex.map(complexWhy).filter(uniq).join('; '));
 			if (fw.unconfirmed.length)
 				sub += ' ' + _('The settings below apply if traffic reaches them as configured.');
 		}

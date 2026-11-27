@@ -18,8 +18,9 @@ var BANDS = {
 /* rank for comparisons; 'legacy' is 802.11a/b/g */
 var GEN_RANK = { 'legacy': 0, 'Wi-Fi 4': 4, 'Wi-Fi 5': 5, 'Wi-Fi 6': 6, 'Wi-Fi 6E': 6.5, 'Wi-Fi 7': 7 };
 
-/* UCI encryption -> friendly label. Suffixes like +ccmp are cipher
-   choices, not a different protocol. */
+/* UCI encryption -> friendly label, by its protocol. Suffixes like
+   +ccmp or /tkip+aes are cipher choices, not a different protocol
+   (security() reads them for TKIP). */
 var SECURITY = [
 	[ /^none$/, _('Open', 'vantage'), _('Open network'), 'open' ],
 	[ /^owe$/, _('OWE', 'vantage'), _('Enhanced Open (OWE)'), 'owe' ],
@@ -130,12 +131,22 @@ return baseclass.extend({
 		return (dbm < 0 && dbm > -105) ? dbm : null;
 	},
 
-	/* UCI encryption string -> { short, long, tone: ok|weak|open|owe } */
+	/* UCI encryption string -> { short, long, tone: ok|weak|open|owe }.
+	   The protocol, then its ciphers after a '+' or a '/'
+	   ('psk2+tkip+ccmp', 'wpa2/tkip+aes'). netifd reads the ciphers off
+	   the string's end: 'tkip', 'tkip+aes' and 'tkip+ccmp' let TKIP in,
+	   which makes a protocol weak that is not on its own */
 	security: function(enc) {
-		var e = String(enc == null ? 'none' : enc).trim().toLowerCase().replace(/\+.*$/, '') || 'none';
-		for (var i = 0; i < SECURITY.length; i++)
-			if (SECURITY[i][0].test(e)) return { short: SECURITY[i][1], long: SECURITY[i][2], tone: SECURITY[i][3] };
-		return { short: e.toUpperCase(), long: e, tone: 'ok' };
+		var s = String(enc == null ? 'none' : enc).trim().toLowerCase();
+		var e = s.split(/[+\/]/)[0] || 'none', hit = null;
+		for (var i = 0; i < SECURITY.length && !hit; i++)
+			if (SECURITY[i][0].test(e)) hit = SECURITY[i];
+		var out = hit ? { short: hit[1], long: hit[2], tone: hit[3] } : { short: e.toUpperCase(), long: e, tone: 'ok' };
+		if (out.tone === 'ok' && /[+\/](.*\+)?tkip(\+(aes|ccmp))?$/.test(s)) {
+			out.long = _('%s (TKIP allowed)').format(out.long);
+			out.tone = 'weak';
+		}
+		return out;
 	},
 
 	/* channel -> centre frequency (MHz) for the band */

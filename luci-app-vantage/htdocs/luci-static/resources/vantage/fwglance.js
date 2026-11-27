@@ -33,9 +33,14 @@
    - a script include needs fw4_compatible (default on, except for
      /etc/firewall.user).
    A zone faces the internet when it masquerades (masq or masq6), holds an
-   uplink (an interface with the default route and a public IPv4 address:
-   a router with public addresses routes without NAT), or by OpenWrt's
-   naming is called wan or wan6 or holds the wan or wan6 network.
+   uplink (an interface with the IPv4 default route and a public address,
+   or the IPv6 default route and a global address or delegated prefix: a
+   router with public addresses routes without NAT), or by OpenWrt's
+   naming is called wan or wan6 or holds the wan or wan6 network. It
+   then does so for both families, whichever the uplink's: IPv6 can
+   come in over an IPv4 uplink's device without this seeing an IPv6
+   uplink there (a prefix routed to the lan), so a rule of the other
+   family from such a zone is listed and warned about all the same.
    Some setups depend on what fw4 does at run time in ways this does not
    follow: a zone with covered subnets (it takes some source addresses,
    on any device when it names none), several zones that can take
@@ -43,8 +48,12 @@
    names compare as patterns, and a device need not be in the dump), and
    internet rules or port forwards that use a set this config does not
    define and enable (its definition may come from a service this cannot
-   see). For those it gives no verdict (complex lists why), and the
-   warnings it would give are only settings to check (unconfirmed). */
+   see). Nor can it place an IPv6 default route that is no uplink (no
+   global address or prefix on its interface, or on a device behind
+   another router) and that no internet zone takes: where IPv6 comes in
+   is then not known. For those it gives no verdict (complex lists why),
+   and the warnings it would give are only settings to check
+   (unconfirmed). */
 
 /* ports whose exposure from the internet deserves a warning: the router's
    own SSH, telnet and web admin */
@@ -315,27 +324,59 @@ function subnet(s) {
 
 /* ---- the interface dump */
 
-function isUplink(i) {
-	return !!(i.up &&
-		(i.route || []).some(function(r) { return r && r.target === '0.0.0.0' && +r.mask === 0; }) &&
-		(i['ipv4-address'] || []).some(function(a) { return a && public4(a.address); }));
+/* an up interface with the default route of a family ('0.0.0.0' or '::') */
+function routes(i, target) {
+	return !!i.up && Array.isArray(i.route) && i.route.some(function(r) { return r && r.target === target && +r.mask === 0; });
 }
 
-/* network.interface dump -> { name: { up, uplink, device, zone, addrs, ips } },
-   null when there is none. As fw4 reads it: the device is l3_device, else
-   device; addrs are the interface's subnets (what its name stands for in
-   a rule), ips the router's own addresses on it as bytes */
+function isUplink(i) {
+	return routes(i, '0.0.0.0') && (i['ipv4-address'] || []).some(function(a) { return a && public4(a.address); });
+}
+
+/* private-use and link-local IPv4: what a router hands the devices behind
+   it (a carrier's shared range is the carrier's, and is not) */
+function private4(addr) {
+	var o = String(addr || '').split('.').map(Number);
+	return o.length === 4 && (o[0] === 10 || (o[0] === 172 && (o[1] & 0xf0) === 16) || (o[0] === 192 && o[1] === 168) || (o[0] === 169 && o[1] === 254));
+}
+
+/* global unicast, the addresses whose first three bits are 001: IPv6
+   has no private range inside them */
+function global6(a) {
+	var b = a && a.address != null ? ipBytes(a.address) : null;
+	return !!b && b.length === 16 && (b[0] & 0xe0) === 0x20;
+}
+
+function l3(i) { return i.l3_device != null ? i.l3_device : i.device; }
+
+/* network.interface dump -> { name: { up, uplink, uplink4, route6,
+   device, zone, addrs, ips } }, null when there is none. As fw4 reads
+   it: the device is l3_device, else device; addrs are the interface's
+   subnets (what its name stands for in a rule), ips the router's own
+   addresses on it as bytes. uplink: it holds the IPv4 default route and
+   a public address (uplink4), or the IPv6 default route and a global
+   address or delegated prefix; IPv6 makes none on a device behind
+   another router: one whose IPv4 default route runs over a private or
+   link-local address (an access point's bridge), where IPv6 has passed
+   that router too. route6: it holds the IPv6 default route and is no
+   uplink by it, so where that route leads is not known. */
 function interfaces(dump) {
 	if (!Array.isArray(dump)) return null;
-	var out = Object.create(null);
+	var out = Object.create(null), inner = Object.create(null);
 	var list = function(v) { return (Array.isArray(v) ? v : []).filter(function(a) { return a && a.address && ipBytes(a.address); }); };
 	dump.forEach(function(i) {
+		if (i && i.interface && l3(i) && routes(i, '0.0.0.0') && !isUplink(i) && (i['ipv4-address'] || []).some(function(a) { return a && private4(a.address); }))
+			inner[String(l3(i))] = true;
+	});
+	dump.forEach(function(i) {
 		if (!i || !i.interface) return;
-		var dev = i.l3_device != null ? i.l3_device : i.device;
+		var dev = l3(i);
 		var own = list(i['ipv4-address']).concat(list(i['ipv6-address']),
 			list((Array.isArray(i['ipv6-prefix-assignment']) ? i['ipv6-prefix-assignment'] : []).map(function(p) { return p && p['local-address']; })));
+		var u4 = isUplink(i), r6 = routes(i, '::');
+		var u6 = r6 && !(dev && inner[String(dev)]) && list(i['ipv6-address']).concat(list(i['ipv6-prefix'])).some(global6);
 		out[String(i.interface)] = {
-			up: !!i.up, uplink: isUplink(i),
+			up: !!i.up, uplink: u4 || u6, uplink4: u4, route6: r6 && !u6,
 			device: dev ? String(dev) : null,
 			zone: (i.data && i.data.zone) ? String(i.data.zone) : null,
 			addrs: own.map(function(a) {
@@ -407,10 +448,11 @@ return baseclass.extend({
 
 	public4: public4,
 
-	/* uplinks of a network.interface dump: interfaces that are up, hold the
-	   IPv4 default route and a public IPv4 address. An access point's
-	   default route runs to the main router over a private address and
-	   does not count. -> [ interface name ] */
+	/* uplinks of a network.interface dump: interfaces that are up and hold
+	   the IPv4 default route and a public IPv4 address, or the IPv6
+	   default route and a global address or delegated prefix. An access
+	   point's default route runs to the main router over a private
+	   address and does not count, in either family. -> [ interface name ] */
 	uplinks: function(ifaces) {
 		var ifs = interfaces(ifaces) || {};
 		return Object.keys(ifs).filter(function(n) { return ifs[n].uplink; });
@@ -565,10 +607,15 @@ return baseclass.extend({
 		var covers = function(z, n) { return takes(z, via(n)); };
 		var zoned = function(n) { return zones.some(function(z) { return covers(z, n); }); };
 
+		/* outer: the internet's side by masquerading, by name or by the
+		   IPv4 uplink. An IPv6 uplink makes its zone face the internet as
+		   well, but what is sent on into such a zone warns as it did before
+		   IPv6 uplinks were followed: the zone may hold more than the uplink */
 		zones.forEach(function(z) {
-			z.internet = z.masq || WAN.test(z.name) ||
+			z.outer = z.masq || WAN.test(z.name) ||
 				z.networks.some(function(n) { return WAN.test(n); }) ||
-				ups.some(function(u) { return covers(z, u); });
+				ups.some(function(u) { return ifs[u].uplink4 && covers(z, u); });
+			z.internet = z.outer || ups.some(function(u) { return covers(z, u); });
 		});
 		var internet = zones.filter(function(z) { return z.internet; });
 
@@ -603,7 +650,7 @@ return baseclass.extend({
 
 		var routed = internet.length > 0 || outside.length > 0;
 		var fromInternet = function(src) { return routed && (src === '*' || !!(byName[src] && byName[src].internet)); };
-		var intoInternet = function(dest) { return dest !== '*' && !!(byName[dest] && byName[dest].internet); };
+		var intoInternet = function(dest) { return dest !== '*' && !!(byName[dest] && byName[dest].outer); };
 		var zoneRef = function(v) { return (v === '*' || byName[v]) ? v : null; };
 		var zoneFam = function(ref) { return (ref && ref !== '*') ? byName[ref].family : null; };
 
@@ -617,6 +664,15 @@ return baseclass.extend({
 		/* covered subnets on an internet zone, or on a zone that names no
 		   device and so takes those addresses on every one */
 		zones.forEach(function(z) { if (z.subnet && (z.internet || !z.pos.length)) addComplex('subnet', z.name); });
+		/* an IPv6 default route that is no uplink, on an interface whose
+		   IPv6 no internet zone takes or leaves to the default policies
+		   (outside): the page would speak for IPv4 alone */
+		var placed6 = function(n) {
+			return internet.some(function(z) {
+				return covers(z, n) && (z.family !== 4 || outside.some(function(o) { return o.zone && o.name === z.name && o.family === 6; }));
+			});
+		};
+		if (routed && ifs) Object.keys(ifs).forEach(function(n) { if (ifs[n].route6 && !placed6(n)) addComplex('route6', n); });
 		/* another zone that does or may take traffic on an internet zone's
 		   devices (in a family both have); without the dump a network and a
 		   device do not compare, so that may. Device names compare as

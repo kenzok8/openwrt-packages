@@ -19,8 +19,9 @@
 //
 //     state  'ok': ETHTOOL ran for the ports listed. 'none': this device
 //            has no DSA port; 'no-ethtool': it has, and no ETHTOOL;
-//            'busy': another call is reading (below). In these no program
-//            is started and ports is empty.
+//            'busy': another call is reading, or the lock could not be
+//            had at all (below). In these no program is started and ports
+//            is empty.
 //     ports  this device's DSA ports (those the kernel gives DEVTYPE=dsa),
 //            by name, in name order, MAX_PORTS at most (more: there were
 //            others). Each is
@@ -53,9 +54,13 @@
 //
 // One read at a time: rpcd starts a process for every call that comes,
 // and each ethtool -S holds the kernel's rtnl lock while it reads the
-// chip. The lock is on this file itself (SELF), opened for reading, so
-// nothing is written for it; it is taken without waiting before anything
-// is read or started, and a call that finds it held answers busy at once.
+// chip. The lock is an empty file of its own in DIR, a directory only
+// root can enter (made 0700 on first use, in RAM), and all this plugin
+// ever writes. Not this file itself: any account that may read that can
+// hold a lock on it, and an upgrade puts another in its place. It is
+// taken without waiting before anything is read or started, and a call
+// that finds it held, or cannot have it at all (DIR not as this plugin
+// makes it, the file not opened), answers busy at once.
 // The descriptor stays open across exec on purpose: the shell and ethtool
 // hold the lock too, so that after rpcd kills a call whose ethtool hangs
 // in a switch driver, no other ethtool of this plugin starts until that
@@ -63,11 +68,11 @@
 
 'use strict';
 
-import { access, lsdir, open, popen, readfile } from 'fs';
+import { access, lsdir, lstat, mkdir, open, popen, readfile } from 'fs';
 
 const NET = '/sys/class/net';
 const ETHTOOL = '/usr/sbin/ethtool';
-const SELF = '/usr/libexec/rpcd/luci.vantage.ports';
+const DIR = '/var/run/vantage-ports';
 const MAX_PORTS = 32;             // ports read each time; the add-on's report lists 32 at most
 const BUDGET_MS = 1000;           // no port is read after this
 const MAX_OUT = 32768;            // bytes of one ethtool run read: the drivers below fill 3 KiB or so
@@ -162,10 +167,23 @@ function read_port(name) {
 	return parse(text);
 }
 
-function counters() {
-	let t0 = now_ms(), self_file = open(SELF, 'r');
+// DIR as this plugin makes it: a directory, not a link, root's, no
+// access for group or others
+function dir_ok() {
+	let st = lstat(DIR);
 
-	if (!self_file || self_file.lock('xn') !== true)
+	if (!st) {
+		mkdir(DIR, 0700);
+		st = lstat(DIR);
+	}
+
+	return st?.type == 'directory' && st.uid === 0 && !(st.mode & 0077);
+}
+
+function counters() {
+	let t0 = now_ms(), lock = dir_ok() ? open(DIR + '/lock', 'a', 0600) : null;
+
+	if (!lock || lock.lock('xn') !== true)
 		return { v: 1, state: 'busy', took: now_ms() - t0, more: false, ports: {} };
 
 	let ports = {}, d = dsa_ports();

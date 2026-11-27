@@ -90,6 +90,7 @@ const CONFIG = 'vantage';
 const WIRELESS = 'wireless';      // read only, by wireless_from_config()
 const NAME_MAX = 48;              // code points, after collapsing spaces
 const NAME_MAX_UNITS = NAME_MAX * 8; // raw input cap, in UTF-16 code units (as names.js)
+const NAME_MAX_BYTES = NAME_MAX_UNITS * 3; // the most bytes that many units take in UTF-8
 const MAX_ALIASES = 512;          // client sections; bounds /etc/config/vantage
 const MAX_QUIET = 512;            // quiet sections, likewise
 const ICONS = [ 'phone', 'laptop', 'tablet', 'desktop', 'tv', 'speaker', 'printer', 'camera', 'console', 'watch', 'iot', 'router', 'device' ];
@@ -127,7 +128,7 @@ const RE_DASHES = /-/g;
 const RE_DOTS = /\./g;
 const RE_PAIRS = /../g;
 const RE_SPACES = /\s+/;
-const RE_ENCRYPTION = /^[A-Za-z0-9+_-]{1,40}/;
+const RE_ENCRYPTION = /^[A-Za-z0-9+\/_-]{1,40}/;
 const RE_NAME = /^[A-Za-z0-9_.-]{1,64}$/;          // radio sections, interfaces
 const RE_HT = /^HT(20|40|80|160)$/;                 // qcawificfg80211's htmode, whatever the standard
 const RE_ZONE = /^thermal_zone[0-9]{1,3}$/;
@@ -228,6 +229,11 @@ function validate_name(name) {
 	if (type(name) != 'string')
 		return { ok: false, error: 'invalid-name' };
 
+	// before decode() takes an array for each of its characters: rpcd's
+	// memory, and the transport alone bounds what arrives
+	if (length(name) > NAME_MAX_BYTES)
+		return { ok: false, error: 'name-too-long' };
+
 	let cps = decode(name);
 
 	if (cps == null)
@@ -286,8 +292,11 @@ function uci_true(v) {
 
 /* ----------------------------------------------------------- wireless */
 
-// the encryption mode ('sae-mixed+ccmp', 'psk2', 'none', ...): its leading
-// run of mode characters and nothing after it
+// the encryption mode ('sae-mixed+ccmp', 'psk2', 'wpa2/tkip+aes', 'none',
+// ...): its leading run of mode characters and nothing after it. The
+// slash is the older separator before the ciphers, which netifd still
+// reads: without it a network that lets TKIP in would read as one that
+// does not
 function encryption(v) {
 	let m = (type(v) == 'string') ? match(v, RE_ENCRYPTION) : null;
 	return m ? m[0] : null;
