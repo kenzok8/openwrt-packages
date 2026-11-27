@@ -2837,7 +2837,7 @@ return view.extend({
 	/* the device and its clients; the firmware is in the System tile */
 	paintHead: function() {
 		/* this device's own: a paired access point's stations are on its branch */
-		var s = this.st.summary, clients = this.m.clients.filter(function(c) { return !c.ap; }).length;
+		var s = this.st.summary, clients = this.m.clients.filter(function(c) { return !c.ap && !c.peer; }).length;
 		this.el.orb.className = 'vt-orb vt-orb-' + s.level;
 		/* the Vantage theme's refresh dot pulses fast in the same colour
 		   while something needs attention (vantage.css), and its tab
@@ -3584,7 +3584,7 @@ return view.extend({
 				setClass(sn.el, 'vt-node vt-node-ssid' + (s.clients ? '' : ' vt-node-idle'));
 				setTitle(sn.el, _('Show the clients of %s').format(s.ssid) + (tone ? '\n' + s.security.long : ''));
 				txt(sn.name, s.ssid || _('(hidden)'));
-				txt(sn.count, s.clients === 1 ? _('1 client') : _('%d clients').format(s.clients));
+				txt(sn.count, self.ssidCount(s));
 				var dots = m.clients.filter(function(c) { return c.ssidId === s.id; }).slice(0, 8);
 				var sig = dots.map(function(c) { return c.level.level + ' ' + c.name + ' · ' + fmt.dbm(c.signal); }).join('\n');
 				if (sn.sig !== sig) {
@@ -4924,6 +4924,13 @@ return view.extend({
 		return _('Behind %s, its port %s').format(b.name, b.port);
 	},
 
+	/* how many are on a network's interface: a mesh interface's are the
+	   mesh's other nodes, no clients */
+	ssidCount: function(s) {
+		return s.mode === 'mesh' ? fmt.N_(s.clients, '%s peer', '%s peers').format(fmt.count(s.clients))
+			: s.clients === 1 ? _('1 client') : _('%d clients').format(s.clients);
+	},
+
 	ownText: function(o) {
 		return _('%s reports these as addresses of its own too: %s').format(o.name, o.macs.join(', '));
 	},
@@ -4937,6 +4944,7 @@ return view.extend({
 		if (c.gone) tags.push(pill(_('Left %s').format(fmt.ago(Date.now() - c.goneAt)), 'muted'));
 		else if (c.isNew) tags.push(pill(_('New', 'vantage'), 'accent', _('Connected after you opened this page')));
 		if (c.legacyOnRadio && !c.gone) tags.push(pill(c.gen === 'legacy' ? _('Legacy', 'vantage') : c.gen, 'warn', _('Older Wi-Fi generation than the radio; uses more airtime')));
+		if (c.peer) tags.push(pill(_('Mesh peer'), 'muted', _('Another node of this mesh, not a client')));
 		var exp = c.exp || { score: 0, level: 'muted', grade: fmt.DASH, reason: '' };
 
 		return [
