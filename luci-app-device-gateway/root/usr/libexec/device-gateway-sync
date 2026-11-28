@@ -1,0 +1,309 @@
+#!/bin/sh
+
+TAG_PREFIX='dg_'
+OWNER='device-gateway'
+STATUS='/tmp/device-gateway.status'
+set -f
+
+log() {
+	logger -t device-gateway "$*"
+	printf '%s\n' "$*"
+	printf '%s · %s\n' "$(date '+%F %T')" "$*" > "$STATUS.$$.tmp"
+	mv -f "$STATUS.$$.tmp" "$STATUS"
+}
+
+fail() {
+	log "错误：$*"
+	exit 1
+}
+
+if [ "${DG_LOCKED:-0}" != '1' ]; then
+	export DG_LOCKED=1
+	exec flock -x /tmp/device-gateway.lock "$0" "$@"
+fi
+
+valid_ipv4() {
+	awk -v ip="$1" 'BEGIN {
+		n = split(ip, a, ".");
+		if (n != 4) exit 1;
+		for (i = 1; i <= 4; i++)
+			if (a[i] !~ /^[0-9]+$/ || a[i] < 0 || a[i] > 255) exit 1;
+		exit 0;
+	}'
+}
+
+valid_mac() {
+	printf '%s\n' "$1" | grep -Eiq '^([0-9a-f]{2}:){5}[0-9a-f]{2}$'
+}
+
+sections_of_type() {
+	if [ "$1" = 'dhcp' ]; then
+		staged_uci show dhcp
+	else
+		uci -q show "$1"
+	fi | sed -n "s/^$1\.\([^=]*\)=$2$/\1/p"
+}
+
+staged_uci() {
+	uci -q -c "$WORK" -C "$WORK" -P "$WORK/delta" "$@"
+}
+
+change_dhcp() {
+	staged_uci "$@" || fail "无法生成 DHCP 规则（$1），原配置保留"
+}
+
+migrate_gateways() {
+	local section address preset changed=0
+	for section in $(sections_of_type device-gateway rule); do
+		[ -z "$(uci -q get device-gateway."$section".gateway_mode)" ] || continue
+		address="$(uci -q get device-gateway."$section".gateway)"
+		[ -n "$address" ] && valid_ipv4 "$address" || continue
+		preset="gw_$(printf '%s' "$address" | tr '.' '_')"
+		if [ -z "$(uci -q get device-gateway."$preset")" ]; then
+			uci set device-gateway."$preset"=gateway_preset &&
+			uci set device-gateway."$preset".label="已有网关 $address" &&
+			uci set device-gateway."$preset".address="$address" || return 1
+		fi
+		[ "$(uci -q get device-gateway."$preset")" = gateway_preset ] &&
+		[ "$(uci -q get device-gateway."$preset".address)" = "$address" ] || continue
+		uci set device-gateway."$section".gateway_mode="$preset" &&
+		uci delete device-gateway."$section".gateway || return 1
+		changed=1
+	done
+	[ "$changed" = '0' ] || uci commit device-gateway
+}
+
+resolve_gateway() {
+	local mode
+	mode="$(uci -q get device-gateway."$1".gateway_mode)"
+	case "$mode" in
+		'') uci -q get device-gateway."$1".gateway || true ;;
+		inherit) ;;
+		gw_*[!a-zA-Z0-9_]*) return 1 ;;
+		gw_*)
+			[ "$(uci -q get device-gateway."$mode")" = gateway_preset ] &&
+				uci -q get device-gateway."$mode".address ;;
+		*) return 1 ;;
+	esac
+}
+
+resolve_dns() {
+	local mode
+	mode="$(uci -q get device-gateway."$1".dns_mode)"
+	case "$mode" in
+		inherit) ;;
+		ali) printf '%s\n' '223.5.5.5 223.6.6.6' ;;
+		tencent) printf '%s\n' '119.29.29.29' ;;
+		114) printf '%s\n' '114.114.114.114' ;;
+		custom) uci -q get device-gateway."$1".dns | tr ',' ' ' ;;
+		'') uci -q get device-gateway."$1".dns | tr ',' ' ' ;;
+		*) return 1 ;;
+	esac
+}
+
+remove_managed_data() {
+	local section tags tag mac
+	for section in $(sections_of_type dhcp tag); do
+		[ "$(staged_uci get dhcp."$section".dg_owner)" = "$OWNER" ] && \
+			change_dhcp delete dhcp."$section"
+	done
+
+	for section in $(sections_of_type dhcp host); do
+		if [ "$(staged_uci get dhcp."$section".dg_owner)" = "$OWNER" ]; then
+			change_dhcp delete dhcp."$section"
+			continue
+		fi
+
+		tags="$(staged_uci get dhcp."$section".tag)"
+		for tag in $tags; do
+			case "$tag" in
+				${TAG_PREFIX}*)
+					# Old versions also used this exact MAC-owned tag.
+					for mac in $(staged_uci get dhcp."$section".mac); do
+						[ "$tag" = "${TAG_PREFIX}$(printf '%s' "$mac" | tr -d ':' | tr 'A-F' 'a-f')" ] || continue
+						change_dhcp del_list dhcp."$section".tag="$tag"
+						break
+					done ;;
+			esac
+		done
+	done
+}
+
+find_host_by_mac() {
+	local wanted section candidate
+	wanted="$(printf '%s' "$1" | tr 'A-F' 'a-f')"
+	for section in $(sections_of_type dhcp host); do
+		for candidate in $(staged_uci get dhcp."$section".mac); do
+			candidate="$(printf '%s' "$candidate" | tr 'A-F' 'a-f')"
+			[ "$candidate" = "$wanted" ] && {
+				printf '%s\n' "$section"
+				return 0
+			}
+		done
+	done
+	return 1
+}
+
+validate_rules() {
+	local section mac ip gateway dns dns_list mac_lc seen_macs seen_ips
+	seen_macs=' '
+	seen_ips=' '
+	for section in $(sections_of_type device-gateway rule); do
+		[ "$(uci -q get device-gateway."$section".enabled)" = '0' ] && continue
+		mac="$(uci -q get device-gateway."$section".mac)"
+		ip="$(uci -q get device-gateway."$section".ip)"
+		gateway="$(resolve_gateway "$section")" || fail "规则 $section 的网关预设不存在或无效"
+
+		valid_mac "$mac" || fail "规则 $section 的 MAC 地址无效：$mac"
+		valid_ipv4 "$ip" || fail "规则 $section 的固定 IP 无效：$ip"
+		[ -z "$gateway" ] || valid_ipv4 "$gateway" || \
+			fail "规则 $section 的网关无效：$gateway"
+
+		mac_lc="$(printf '%s' "$mac" | tr 'A-F' 'a-f')"
+		case "$seen_macs" in *" $mac_lc "*) fail "MAC 地址重复：$mac" ;; esac
+		case "$seen_ips" in *" $ip "*) fail "固定 IP 重复：$ip" ;; esac
+		seen_macs="$seen_macs$mac_lc "
+		seen_ips="$seen_ips$ip "
+
+		dns_list="$(resolve_dns "$section")" || fail "规则 $section 的 DNS 预设无效"
+		if [ "$(uci -q get device-gateway."$section".dns_mode)" = custom ]; then
+			[ -n "$(printf '%s' "$dns_list" | tr -d '[:space:]')" ] || fail "规则 $section 的自定义 DNS 为空"
+		fi
+		for dns in $dns_list; do
+			valid_ipv4 "$dns" || fail "规则 $section 的 DNS 无效：$dns"
+		done
+	done
+}
+
+apply_rule() {
+	local section="$1"
+	local mac ip gateway dns_list id tag host existing native_ip native_tag option
+	mac="$(uci -q get device-gateway."$section".mac | tr 'A-F' 'a-f')"
+	ip="$(uci -q get device-gateway."$section".ip)"
+	gateway="$(resolve_gateway "$section")" || fail "读取网关预设失败"
+	dns_list="$(resolve_dns "$section")" || fail "读取 DNS 预设失败"
+	set -- $dns_list
+	id="$(printf '%s' "$mac" | tr -d ':')"
+	tag="${TAG_PREFIX}${id}"
+
+	host="$(find_host_by_mac "$mac")"
+	for existing in $(sections_of_type dhcp host); do
+		[ "$existing" != "$host" ] || continue
+		[ "$(staged_uci get dhcp."$existing".ip)" != "$ip" ] ||
+			fail "$ip 已由系统另一条静态租约使用"
+	done
+	if [ -z "$host" ]; then
+		host="dg_host_${id}"
+		[ -z "$(staged_uci get dhcp."$host")" ] || fail "$host 与原有 DHCP 配置重名"
+		change_dhcp set dhcp."$host"=host
+		change_dhcp set dhcp."$host".dg_owner="$OWNER"
+		change_dhcp add_list dhcp."$host".mac="$mac"
+		change_dhcp set dhcp."$host".ip="$ip"
+		printf 'dhcp-host=%s,set:%s,%s\n' "$mac" "$tag" "$ip" >> "$WORK/syntax.conf"
+	else
+		native_ip="$(staged_uci get dhcp."$host".ip)"
+		[ "$native_ip" = "$ip" ] || fail "$mac 已有系统静态租约（${native_ip:-未设置 IP}），请在原租约中调整"
+		if [ -n "$gateway" ] || [ "$#" -gt 0 ]; then
+			case "$(staged_uci get dhcp."$host".mac)" in
+				*' '*) fail "$mac 属于多 MAC 静态租约，不能单独追加网关或 DNS" ;;
+			esac
+			for native_tag in $(staged_uci get dhcp."$host".tag); do
+				for option in $(staged_uci get dhcp."$native_tag".dhcp_option) $(staged_uci get dhcp."$native_tag".dhcp_option_force); do
+					case "$option" in
+						3,*|option:router,*) [ -z "$gateway" ] || fail "$mac 原有 DHCP 标签 $native_tag 已指定网关" ;;
+						6,*|option:dns-server,*) [ "$#" -eq 0 ] || fail "$mac 原有 DHCP 标签 $native_tag 已指定 DNS" ;;
+					esac
+				done
+			done
+		fi
+	fi
+
+	if [ -n "$gateway" ] || [ "$#" -gt 0 ]; then
+		[ -z "$(staged_uci get dhcp."$tag")" ] || fail "$tag 与原有 DHCP 标签重名"
+		change_dhcp set dhcp."$tag"=tag
+		change_dhcp set dhcp."$tag".dg_owner="$OWNER"
+		if [ -n "$gateway" ]; then
+			change_dhcp add_list dhcp."$tag".dhcp_option="3,$gateway"
+			printf 'dhcp-option=tag:%s,3,%s\n' "$tag" "$gateway" >> "$WORK/syntax.conf"
+		fi
+		if [ "$#" -gt 0 ]; then
+			local dns_csv
+			dns_csv="$(IFS=,; printf '%s' "$*")"
+			change_dhcp add_list dhcp."$tag".dhcp_option="6,$dns_csv"
+			printf 'dhcp-option=tag:%s,6,%s\n' "$tag" "$dns_csv" >> "$WORK/syntax.conf"
+		fi
+		change_dhcp add_list dhcp."$host".tag="$tag"
+	fi
+}
+
+if [ "${1:-}" = '--migrate' ]; then
+	migrate_gateways || fail '旧网关迁移失败'
+	exit 0
+fi
+
+WORK="$(mktemp -d /tmp/device-gateway.XXXXXX)" || fail '无法创建临时目录'
+PUBLISH=''
+cleanup() {
+	[ -z "$PUBLISH" ] || rm -f "$PUBLISH"
+	rm -f "$WORK/dhcp" "$WORK/previous" "$WORK/syntax.conf" "$WORK/expected" "$WORK/committed" "$WORK/delta/dhcp" "$WORK/next/dhcp"
+	rmdir "$WORK/delta" "$WORK/next" "$WORK/empty" "$WORK" 2>/dev/null || true
+}
+trap cleanup EXIT
+mkdir "$WORK/delta" "$WORK/next" "$WORK/empty" &&
+	cp -p /etc/config/dhcp "$WORK/dhcp" &&
+	cp -p "$WORK/dhcp" "$WORK/previous" &&
+	touch "$WORK/syntax.conf" || fail '无法暂存 DHCP 配置'
+remove_managed_data
+
+enabled="$(uci -q get device-gateway.main.enabled)"
+if [ "$DG_DISABLE" != '1' ] && [ "$enabled" != '0' ]; then
+	validate_rules
+	for section in $(sections_of_type device-gateway rule); do
+		[ "$(uci -q get device-gateway."$section".enabled)" = '0' ] && continue
+		apply_rule "$section"
+	done
+fi
+
+change_dhcp export dhcp > "$WORK/expected"
+sed '/^package dhcp$/d' "$WORK/expected" > "$WORK/next/dhcp" &&
+	chmod 600 "$WORK/next/dhcp" &&
+	uci -q -c "$WORK/next" -C "$WORK/next" -P "$WORK/empty" export dhcp > "$WORK/committed" &&
+	cmp -s "$WORK/expected" "$WORK/committed" ||
+	fail '暂存规则没有完整写入，原配置保留'
+dnsmasq --test --conf-file="$WORK/syntax.conf" >/dev/null 2>&1 ||
+	fail '生成的 DHCP 规则未通过 dnsmasq 校验，原配置保留'
+[ "${1:-}" != '--check' ] || exit 0
+cmp -s "$WORK/previous" /etc/config/dhcp || fail '检测到系统 DHCP 配置同时被修改，请重新应用'
+if cmp -s "$WORK/next/dhcp" "$WORK/previous"; then
+	log '同步完成，生成规则无需变更'
+	exit 0
+fi
+
+publish() {
+	PUBLISH="$(mktemp /etc/config/.device-gateway.XXXXXX)" &&
+		cp -p "$1" "$PUBLISH" &&
+		mv -f "$PUBLISH" /etc/config/dhcp
+}
+
+restart_dnsmasq() {
+	/etc/init.d/dnsmasq restart >/dev/null 2>&1 || return 1
+	local attempt
+	for attempt in 1 2 3 4 5; do
+		netstat -lnup 2>/dev/null | awk '$4 ~ /:67$/ && $NF ~ /\/dnsmasq$/ { found=1 } END { exit !found }' &&
+			return 0
+		sleep 1
+	done
+	return 1
+}
+
+publish "$WORK/next/dhcp" || fail '无法写入 DHCP 配置，原配置保留'
+if ! restart_dnsmasq; then
+	if publish "$WORK/previous" && restart_dnsmasq; then
+		fail '新配置启动失败，已恢复上一份 DHCP 配置'
+	fi
+	fail 'DHCP 启动失败，自动恢复未通过检查，请查看系统日志'
+fi
+
+log 'DHCP 已加载规则，等待客户端更新租约'
+exit 0
+

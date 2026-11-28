@@ -1,0 +1,25 @@
+#!/bin/sh /etc/rc.common
+
+START=19
+STOP=89
+USE_PROCD=1
+
+start_service() {
+	/usr/libexec/device-gateway-sync
+}
+
+reload_service() {
+	/usr/libexec/device-gateway-sync
+}
+
+service_triggers() {
+	# LuCI applies UCI changes asynchronously. Registering the config here makes
+	# procd run reload_service() only after /etc/config/device-gateway has really
+	# been committed, avoiding a race where dnsmasq was rebuilt from stale data.
+	procd_add_reload_trigger 'device-gateway'
+}
+
+stop_service() {
+	DG_DISABLE=1 /usr/libexec/device-gateway-sync
+}
+

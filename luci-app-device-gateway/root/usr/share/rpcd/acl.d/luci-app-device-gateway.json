@@ -1,0 +1,18 @@
+{
+	"luci-app-device-gateway": {
+		"description": "Grant access to device-specific DHCP gateway settings",
+		"read": {
+			"file": { "/tmp/device-gateway.status": [ "read" ] },
+			"uci": [ "device-gateway", "dhcp", "network" ],
+			"ubus": {
+				"network.interface": [ "dump" ],
+				"luci-rpc": [ "getHostHints" ],
+				"file": [ "read" ]
+			}
+		},
+		"write": {
+			"uci": [ "device-gateway" ]
+		}
+	}
+}
+

@@ -1,0 +1,14 @@
+{
+	"admin/network/device-gateway": {
+		"title": "指定网关",
+		"order": 65,
+		"action": {
+			"type": "view",
+			"path": "device-gateway/rules"
+		},
+		"depends": {
+			"acl": [ "luci-app-device-gateway" ]
+		}
+	}
+}
+
