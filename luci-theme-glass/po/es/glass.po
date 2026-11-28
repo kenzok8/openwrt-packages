@@ -240,3 +240,59 @@ msgid ""
 "You must enable JavaScript in your browser or LuCI will not work properly."
 msgstr ""
 "Debe activar JavaScript en su navegador o LuCI no funcionará correctamente."
+
+msgid "Wallpaper source"
+msgstr "Fuente de fondo de pantalla"
+
+msgid ""
+"Select online wallpaper source. Each source provides different styles of "
+"wallpapers."
+msgstr ""
+"Seleccione la fuente de fondo de pantalla en línea. Cada fuente proporciona "
+"diferentes estilos."
+
+msgid "Picsum (Random photos)"
+msgstr "Picsum (Fotos aleatorias)"
+
+msgid "Iciba Daily (China)"
+msgstr "Iciba Daily (China)"
+
+msgid "Wallpaper count"
+msgstr "Cantidad de fondos de pantalla"
+
+msgid ""
+"Number of wallpapers to display (4-16, default: 8). Changes take effect "
+"after refreshing the page."
+msgstr ""
+"Número de fondos de pantalla para mostrar (4-16, predeterminado: 8). Los "
+"cambios surten efecto después de actualizar la página."
+
+msgid "Next Batch"
+msgstr "Siguiente lote"
+
+msgid "Enable wallpaper"
+msgstr "Enable wallpaper"
+
+msgid "Background blur (px)"
+msgstr "Background blur (px)"
+
+msgid "Blur effect on background wallpaper (0 = no blur, 50 = maximum blur)"
+msgstr "Blur effect on background wallpaper (0 = no blur, 50 = maximum blur)"
+
+msgid "Source:"
+msgstr "Source:"
+
+msgid "No wallpapers available in this category"
+msgstr "No wallpapers available in this category"
+
+msgid "Please enable wallpaper feature first"
+msgstr "Please enable wallpaper feature first"
+
+msgid "Wallpaper Disabled"
+msgstr "Wallpaper Disabled"
+
+msgid "Please enable wallpaper feature first."
+msgstr "Please enable wallpaper feature first."
+
+msgid "OK"
+msgstr "OK"

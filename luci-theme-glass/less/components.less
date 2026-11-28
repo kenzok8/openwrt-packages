@@ -118,18 +118,12 @@
 }
 
 /* Title shown in header bar; description becomes tooltip */
-.cbi-map-descr,
 .cbi-map > h2,
 #view > h2,
 #maincontent > h2 {
   display: none;
 }
 
-/* Hide descriptions only when moved to header tooltip (data-moved set by footer.ut JS) */
-.cbi-map-descr[data-moved],
-#view > h2 + [data-moved] {
-  display: none;
-}
 
 /* ---- CBI Value rows ---- */
 .cbi-value {
@@ -838,7 +832,14 @@ table.cbi-section-table {
    IMPORTANT: Do NOT use !important here — LuCI's dependency system needs
    to evaluate fields in all tabs during page load to set proper visibility. */
 [data-tab][data-tab-title]:not([data-tab-active="true"]) {
-  display: none;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  border-width: 0;
 }
 
 /* ---- Alerts / Messages ----
@@ -948,6 +949,14 @@ table.cbi-section-table {
     font-weight: var(--font-weight-semibold);
     color: var(--color-text);
     text-shadow: 0 0 4px rgba(255, 255, 255, 0.60);
+    white-space: nowrap;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .cbi-progressbar::after {
+    font-size: 0.65rem;
   }
 }
 
@@ -1026,11 +1035,6 @@ input[type="radio"] {
       border: none;
       box-shadow: none;
       border-radius: 0;
-    }
-
-    /* Let open dropdowns render beyond the modal's scroll clip. */
-    &:has(.cbi-dropdown[open]) {
-      overflow: visible;
     }
   }
 
@@ -1164,4 +1168,15 @@ body.modal-overlay-active #modal_overlay {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+/* Selected-item checkboxes are only meaningful in the open list;
+   hide them in the collapsed display row, and let row clicks pass
+   through the checkbox in the open list (#13) */
+.cbi-dropdown ul:not(.dropdown) li input[type="checkbox"] {
+  display: none;
+}
+
+.cbi-dropdown[open] li input[type="checkbox"] {
+  pointer-events: none;
 }

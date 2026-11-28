@@ -4,15 +4,23 @@
         "read": {
             "uci": [ "glass" ],
             "file": {
-                "/www/luci-static/glass/background/*": [ "list" ]
+                "/www/luci-static/glass/background/*": [ "list", "read" ]
             },
             "ubus": {
+                "session": [ "access", "login" ],
                 "network.interface": [ "dump" ],
-                "network.device": [ "status" ]
+                "network.device": [ "status" ],
+                "glass": [ "wallpapers", "current", "getSource", "nextBatch" ]
             }
         },
         "write": {
-            "uci": [ "glass" ]
+            "uci": [ "glass" ],
+            "file": {
+                "/www/luci-static/glass/background/*": [ "write" ]
+            },
+            "ubus": {
+                "glass": [ "download", "remove", "setSource" ]
+            }
         }
     }
 }

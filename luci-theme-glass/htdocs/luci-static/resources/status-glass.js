@@ -97,6 +97,16 @@ return baseclass.extend({
 
 		if (!this.netChecked) {
 			this.netChecked = true;
+
+			/* Device picked on the Config page (e.g. the "wan" port instead
+			   of "pppoe-wan", whose counters miss hardware-offloaded flows):
+			   monitor exactly that device, no auto-detection */
+			var forced = this.container.getAttribute('data-device');
+			if (forced) {
+				this.resolvePhysicalDevice(forced, true);
+				return;
+			}
+
 			L.resolveDefault(callInterfaceDump(), []).then(function(ifaces) {
 				/* Find WAN device — prefer 'wan' over 'wan6' */
 				var wanDev = null;
@@ -123,12 +133,14 @@ return baseclass.extend({
 		}
 	},
 
-	resolvePhysicalDevice: function(devName) {
+	resolvePhysicalDevice: function(devName, exact) {
 		var self = this;
 		L.resolveDefault(callDeviceStatus(devName), {}).then(function(dev) {
 			if (!dev) return;
 			var members = dev['bridge-members'];
-			if (dev.type === 'bridge' && members && members.length > 0) {
+			if (exact) {
+				if (dev.statistics) self.netDevice = devName;
+			} else if (dev.type === 'bridge' && members && members.length > 0) {
 				/* Bridge stats only count management traffic;
 				   use first physical port for real forwarded stats */
 				self.netDevice = members[0];
@@ -145,7 +157,7 @@ return baseclass.extend({
 				}
 				/* DSA port with hardware offload: per-port counters miss
 				   offloaded flows; use the conduit (switch master) instead */
-				if (phys && phys.devtype === 'dsa' && phys['hw-tc-offload'] && phys.conduit) {
+				if (!exact && phys && phys.devtype === 'dsa' && phys['hw-tc-offload'] && phys.conduit) {
 					self.netLabel = self.netDevice;
 					self.netDevice = phys.conduit;
 				}

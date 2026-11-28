@@ -6,180 +6,200 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/system/glass.js:52
 msgid "Accent Colors"
-msgstr ""
+msgstr "Couleurs d'accentuation"
 
 #: htdocs/luci-static/resources/view/system/glass.js:72
 msgid "Accent color used for active elements, links, and buttons in dark mode."
 msgstr ""
+"Couleur d'accentuation pour les éléments actifs, liens et boutons en mode "
+"sombre."
 
 #: htdocs/luci-static/resources/view/system/glass.js:56
 msgid ""
 "Accent color used for active elements, links, and buttons in light mode."
 msgstr ""
+"Couleur d'accentuation pour les éléments actifs, liens et boutons en mode "
+"clair."
 
 #: htdocs/luci-static/resources/view/system/glass.js:128
 msgid "Active"
-msgstr ""
+msgstr "Actif"
 
 #: htdocs/luci-static/resources/view/system/glass.js:33
 msgid "Auto (follow system)"
-msgstr ""
+msgstr "Auto (suivre le système)"
 
 #: htdocs/luci-static/resources/view/system/glass.js:108
 msgid "Backdrop blur radius for glass panels in dark mode."
-msgstr ""
+msgstr "Rayon de flou d'arrière-plan pour les panneaux en mode sombre."
 
 #: htdocs/luci-static/resources/view/system/glass.js:92
 msgid ""
 "Backdrop blur radius for glass panels. Higher values create a more frosted "
 "appearance."
 msgstr ""
+"Rayon de flou d'arrière-plan pour les panneaux en verre. Des valeurs plus "
+"élevées créent un effet dépoli plus prononcé."
 
 #: htdocs/luci-static/resources/view/system/glass.js:120
 msgid "Background"
-msgstr ""
+msgstr "Arrière-plan"
 
 #: htdocs/luci-static/resources/view/system/glass.js:98
 msgid ""
 "Background opacity of glass panels (0 = fully transparent, 1 = fully opaque)."
 msgstr ""
+"Opacité d'arrière-plan des panneaux (0 = totalement transparent, 1 = "
+"totalement opaque)."
 
 #: htdocs/luci-static/resources/view/system/glass.js:114
 msgid ""
 "Background opacity of glass panels in dark mode (0 = fully transparent, 1 = "
 "fully opaque)."
 msgstr ""
+"Opacité d'arrière-plan des panneaux en mode sombre (0 = totalement "
+"transparent, 1 = totalement opaque)."
 
 #: htdocs/luci-static/resources/view/system/glass.js:43
 msgid "Base font size"
-msgstr ""
+msgstr "Taille de police de base"
 
 #: htdocs/luci-static/resources/view/system/glass.js:91
 #: htdocs/luci-static/resources/view/system/glass.js:107
 msgid "Blur intensity (px)"
-msgstr ""
+msgstr "Intensité du flou (px)"
 
 #: htdocs/luci-static/resources/view/system/glass.js:25
 msgid ""
 "Configure the appearance of the Glass theme. Changes take effect after "
 "saving and refreshing the page."
 msgstr ""
+"Configurer l'apparence du thème Glass. Les modifications prennent effet "
+"après sauvegarde et actualisation."
 
 #: htdocs/luci-static/resources/view/system/glass.js:32
 msgid ""
 "Controls the overall appearance. \"Normal\" follows the system preference."
 msgstr ""
+"Contrôle l'apparence générale. « Auto » suit les préférences du système."
 
 #: htdocs/luci-static/resources/view/system/glass.js:123
 msgid "Current background"
-msgstr ""
+msgstr "Arrière-plan actuel"
 
 #: htdocs/luci-static/resources/view/system/glass.js:35
 msgid "Dark"
-msgstr ""
+msgstr "Sombre"
 
 #: htdocs/luci-static/resources/view/system/glass.js:48
 msgid "Extra Large (18px)"
-msgstr ""
+msgstr "Très grand (18px)"
 
 #: htdocs/luci-static/resources/view/system/glass.js:28
 msgid "General"
-msgstr ""
+msgstr "Général"
 
 #: htdocs/luci-static/resources/view/system/glass.js:104
 msgid "Glass Effects — Dark Mode"
-msgstr ""
+msgstr "Effets verre — Mode sombre"
 
 #: htdocs/luci-static/resources/view/system/glass.js:88
 msgid "Glass Effects — Light Mode"
-msgstr ""
+msgstr "Effets verre — Mode clair"
 
 #: htdocs/luci-static/resources/view/system/glass.js:24
 msgid "Glass Theme"
-msgstr ""
+msgstr "Thème Glass"
 
 #: root/usr/share/luci/menu.d/luci-theme-glass.json:3
 msgid "Glass Theme Config"
-msgstr ""
+msgstr "Configuration du thème Glass"
 
 #: ucode/template/themes/glass/header.ut:204
 msgid "Go to password configuration..."
-msgstr ""
+msgstr "Aller à la configuration du mot de passe..."
 
 #: root/usr/share/rpcd/acl.d/luci-theme-glass.json:3
 msgid "Grant access for luci-theme-glass"
-msgstr ""
+msgstr "Accorder l'accès à luci-theme-glass"
 
 #: htdocs/luci-static/resources/view/system/glass.js:38
 msgid "Header status bar"
-msgstr ""
+msgstr "Barre d'état de l'en-tête"
 
 #: ucode/template/themes/glass/sysauth.ut:111
 msgid "Invalid username and/or password! Please try again."
 msgstr ""
+"Nom d'utilisateur et/ou mot de passe incorrect(s) ! Veuillez réessayer."
 
 #: ucode/template/themes/glass/header.ut:211
 msgid "JavaScript required!"
-msgstr ""
+msgstr "JavaScript requis !"
 
 #: htdocs/luci-static/resources/view/system/glass.js:47
 msgid "Large (16px)"
-msgstr ""
+msgstr "Grand (16px)"
 
 #: htdocs/luci-static/resources/view/system/glass.js:34
 msgid "Light"
-msgstr ""
+msgstr "Clair"
 
 #: ucode/template/themes/glass/sysauth.ut:129
 msgid "Log in"
-msgstr ""
+msgstr "Se connecter"
 
 #: ucode/template/themes/glass/sysauth.ut:51
 msgid "Login"
-msgstr ""
+msgstr "Connexion"
 
 #: htdocs/luci-static/resources/view/system/glass.js:131
 msgid ""
 "No background set. Upload an image or video named \"bg\" (e.g. bg.jpg, "
 "bg.png, bg.mp4) to /www/luci-static/glass/background/ via SCP."
 msgstr ""
+"Aucun arrière-plan défini. Téléversez une image ou vidéo nommée \"bg\" (ex. "
+"bg.jpg, bg.png, bg.mp4) dans /www/luci-static/glass/background/ via SCP."
 
 #: ucode/template/themes/glass/header.ut:201
 msgid "No password set!"
-msgstr ""
+msgstr "Aucun mot de passe défini !"
 
 #: htdocs/luci-static/resources/view/system/glass.js:46
 msgid "Normal (14px)"
-msgstr ""
+msgstr "Normal (14px)"
 
 #: htdocs/luci-static/resources/view/system/glass.js:97
 #: htdocs/luci-static/resources/view/system/glass.js:113
 msgid "Panel transparency"
-msgstr ""
+msgstr "Transparence des panneaux"
 
 #: ucode/template/themes/glass/sysauth.ut:124
 msgid "Password"
-msgstr ""
+msgstr "Mot de passe"
 
 #: htdocs/luci-static/resources/view/system/glass.js:71
 msgid "Primary color (dark mode)"
-msgstr ""
+msgstr "Couleur principale (mode sombre)"
 
 #: htdocs/luci-static/resources/view/system/glass.js:55
 msgid "Primary color (light mode)"
-msgstr ""
+msgstr "Couleur principale (mode clair)"
 
 #: htdocs/luci-static/resources/view/system/glass.js:44
 msgid ""
 "Scales all text in the theme. Larger values improve readability on high-DPI "
 "displays."
 msgstr ""
+"Redimensionne tout le texte du thème. Des valeurs plus élevées améliorent la "
+"lisibilité sur les écrans haute résolution."
 
 #: htdocs/luci-static/resources/view/system/glass.js:39
 msgid ""
 "Show live system stats (CPU, RAM, network, uptime) in the header. Disable to "
 "reduce resource usage on low-end devices."
 msgstr ""
+"Affiche les statistiques système en temps réel (CPU, RAM, réseau, uptime) "
+"dans l'en-tête. Désactiver sur les appareils bas de gamme."
 
 #: ucode/template/themes/glass/sysauth.ut:106
 msgid "Sign in to continue"
@@ -187,23 +207,83 @@ msgstr "Connectez-vous pour continuer"
 
 #: htdocs/luci-static/resources/view/system/glass.js:45
 msgid "Small (13px)"
-msgstr ""
+msgstr "Petit (13px)"
 
 #: htdocs/luci-static/resources/view/system/glass.js:31
 msgid "Theme mode"
-msgstr ""
+msgstr "Mode du thème"
 
 #: ucode/template/themes/glass/header.ut:202
 msgid ""
 "There is no password set on this router. Please configure a root password to "
 "protect the web interface."
 msgstr ""
+"Aucun mot de passe n'est défini sur ce routeur. Veuillez configurer un mot "
+"de passe root pour protéger l'interface web."
 
 #: ucode/template/themes/glass/sysauth.ut:117
 msgid "Username"
-msgstr ""
+msgstr "Nom d'utilisateur"
 
 #: ucode/template/themes/glass/header.ut:212
 msgid ""
 "You must enable JavaScript in your browser or LuCI will not work properly."
 msgstr ""
+"Vous devez activer JavaScript dans votre navigateur, sinon LuCI ne "
+"fonctionnera pas correctement."
+
+msgid "Wallpaper source"
+msgstr "Source du fond d'écran"
+
+msgid ""
+"Select online wallpaper source. Each source provides different styles of "
+"wallpapers."
+msgstr ""
+"Sélectionnez la source du fond d'écran en ligne. Chaque source propose "
+"différents styles."
+
+msgid "Picsum (Random photos)"
+msgstr "Picsum (Photos aléatoires)"
+
+msgid "Iciba Daily (China)"
+msgstr "Iciba Daily (Chine)"
+
+msgid "Wallpaper count"
+msgstr "Nombre de fonds d'écran"
+
+msgid ""
+"Number of wallpapers to display (4-16, default: 8). Changes take effect "
+"after refreshing the page."
+msgstr ""
+"Nombre de fonds d'écran à afficher (4-16, par défaut : 8). Les modifications "
+"prennent effet après l'actualisation de la page."
+
+msgid "Next Batch"
+msgstr "Lot suivant"
+
+msgid "Enable wallpaper"
+msgstr "Enable wallpaper"
+
+msgid "Background blur (px)"
+msgstr "Background blur (px)"
+
+msgid "Blur effect on background wallpaper (0 = no blur, 50 = maximum blur)"
+msgstr "Blur effect on background wallpaper (0 = no blur, 50 = maximum blur)"
+
+msgid "Source:"
+msgstr "Source:"
+
+msgid "No wallpapers available in this category"
+msgstr "No wallpapers available in this category"
+
+msgid "Please enable wallpaper feature first"
+msgstr "Please enable wallpaper feature first"
+
+msgid "Wallpaper Disabled"
+msgstr "Wallpaper Disabled"
+
+msgid "Please enable wallpaper feature first."
+msgstr "Please enable wallpaper feature first."
+
+msgid "OK"
+msgstr "OK"

@@ -1,0 +1,377 @@
+#!/bin/sh
+# Glass Theme Wallpaper Service - Multi-source with batch random wallpapers
+. /lib/functions.sh
+. /usr/share/libubox/jshn.sh
+
+glass='glass'
+BG_DIR="/www/luci-static/glass/background"
+CACHE_DIR="/var/glass"
+
+mkdir -p "$BG_DIR" "$CACHE_DIR"
+chmod 755 "$BG_DIR" "$CACHE_DIR"
+
+# Get wallpaper enable status (0=disabled, 1=enabled)
+get_bg_enable() {
+    val=$(uci -q get ${glass}.@global[0].bg_enable 2>/dev/null)
+    if [ "$val" = "1" ] || [ "$val" = "true" ] || [ "$val" = "yes" ]; then
+        echo "1"
+    else
+        echo "0"
+    fi
+}
+
+# Only the sources the Config page offers are accepted; the value is echoed
+# into JSON and into thumbnail URLs, so anything else falls back to picsum
+valid_source() {
+    case "$1" in
+        picsum|bing|iciba) return 0 ;;
+    esac
+    return 1
+}
+
+# Get wallpaper source
+get_bg_source() {
+    local source
+    source=$(uci -q get ${glass}.@global[0].bg_source 2>/dev/null)
+    valid_source "$source" || source="picsum"
+    echo "$source"
+}
+
+# Get wallpaper count from UCI (default: 8, min: 4, max: 16)
+get_bg_count() {
+    local count
+    count=$(uci -q get glass.@global[0].bg_count)
+    case "$count" in
+        ''|*[!0-9]*) count=8 ;;
+    esac
+    [ "$count" -lt 4 ] && count=4
+    [ "$count" -gt 16 ] && count=16
+    echo "$count"
+}
+
+
+# Get current batch seed
+get_batch_seed() {
+    seed_file="${CACHE_DIR}/batch_seed"
+    if [ -f "$seed_file" ]; then
+        cat "$seed_file"
+    else
+        # Generate random seed
+        seed=$(date +%s%N | sha256sum | head -c 8)
+        echo "$seed" > "$seed_file"
+        echo "$seed"
+    fi
+}
+
+# Regenerate batch seed
+regenerate_batch_seed() {
+    seed=$(date +%s%N | sha256sum | head -c 8)
+    echo "$seed" > "${CACHE_DIR}/batch_seed"
+    echo "$seed"
+}
+
+# Simple download function. Runs as root, so only plain http(s) URLs are
+# fetched (no file://, no option-looking strings), redirects included.
+download_file() {
+    local url="$1"
+    local output="$2"
+    case "$url" in
+        http://*|https://*) ;;
+        *) return 1 ;;
+    esac
+    if command -v curl >/dev/null 2>&1; then
+        curl -Lfs --proto '=http,https' --proto-redir '=http,https' \
+            --connect-timeout 10 --max-time 60 -o "$output" -- "$url" 2>/dev/null && return 0
+    elif command -v wget >/dev/null 2>&1; then
+        # Stock OpenWrt wget is uclient-fetch, which rejects -t (tries)
+        wget -q -T 60 -O "$output" "$url" 2>/dev/null && return 0
+    fi
+    return 1
+}
+
+# Generate wallpapers for a source and category
+# Each wallpaper is randomly assigned to a category (nature, abstract, technology, minimal, gradient)
+generate_wallpapers() {
+    local source="$1"
+    local category="$2"
+    local batch_seed="$3"
+    local count="${4:-8}"
+    
+    # Available categories
+    local categories="nature abstract technology minimal gradient"
+    
+    # Generate wallpapers with batch seed
+    idx=1
+    while [ $idx -le $count ]; do
+        # Randomly assign a category based on wallpaper index
+        # Use deterministic assignment based on idx to maintain consistency within a batch
+        local cat_idx=$(( (idx - 1) % 5 ))
+        local assigned_category=""
+        case "$cat_idx" in
+            0) assigned_category="nature" ;;
+            1) assigned_category="abstract" ;;
+            2) assigned_category="technology" ;;
+            3) assigned_category="minimal" ;;
+            4) assigned_category="gradient" ;;
+        esac
+        
+        # Get prefix for the assigned category
+        local prefix=""
+        case "$assigned_category" in
+            nature) prefix="n" ;;
+            abstract) prefix="a" ;;
+            technology) prefix="t" ;;
+            minimal) prefix="m" ;;
+            gradient) prefix="g" ;;
+        esac
+        
+        img_seed="${source}${batch_seed}${prefix}${idx}"
+        if [ "$source" = "picsum" ]; then
+            url="https://picsum.photos/seed/${img_seed}/1920/1080"
+            thumb="https://picsum.photos/seed/${img_seed}/400/225"
+        elif [ "$source" = "bing" ]; then
+            # Bing Daily - use same URL for preview and download
+            # Use 1366 for preview (faster loading), 1920 for full download
+            url="https://bing.biturl.top/?resolution=1920&format=image&index=${idx}"
+            thumb="https://bing.biturl.top/?resolution=1366&format=image&index=${idx}"
+        elif [ "$source" = "iciba" ]; then
+            # Iciba daily - use picsum as fallback with different seed (China-friendly)
+            url="https://picsum.photos/seed/iciba${img_seed}/1920/1080"
+            thumb="https://picsum.photos/seed/iciba${img_seed}/400/225"
+        else
+            url="https://picsum.photos/seed/${img_seed}/1920/1080"
+            thumb="https://picsum.photos/seed/${img_seed}/400/225"
+        fi
+
+        # Output JSON object with assigned category
+        printf '{"id": "%s-%s-%s-%d", "name": "%s %d", "url": "%s", "thumb": "%s", "category": "%s"}' \
+            "$source" "$batch_seed" "$prefix" "$idx" "$assigned_category" "$idx" "$url" "$thumb" "$assigned_category"
+
+        [ $idx -lt $count ] && printf ","
+        idx=$((idx + 1))
+    done
+}
+
+case "$1" in
+"list")
+    json_init
+    json_add_object "wallpapers"
+    json_add_string "category" "category"
+    json_add_string "batch" "batch"
+    json_close_object
+    json_add_object "download"
+    json_add_string "id" "id"
+    json_add_string "url" "url"
+    json_close_object
+    json_add_object "remove"
+    json_close_object
+    json_add_object "current"
+    json_close_object
+    json_add_object "nextBatch"
+    json_close_object
+    json_add_object "getSource"
+    json_close_object
+    json_add_object "setSource"
+    json_add_string "source" "source"
+    json_close_object
+    json_dump
+    json_cleanup
+    ;;
+"call")
+    case "$2" in
+    "getSource")
+        source=$(get_bg_source)
+        json_init
+        json_add_string "source" "$source"
+        json_add_string "enable" "$(get_bg_enable)"
+        json_dump
+        json_cleanup
+        ;;
+    "setSource")
+        read input
+        json_load "$input" 2>/dev/null || json_init
+        json_get_var source source
+        json_cleanup
+        if valid_source "$source"; then
+            uci set $glass.@global[0].bg_source="$source"
+            uci commit $glass
+            # Regenerate batch on source change
+            regenerate_batch_seed >/dev/null
+            json_init
+            json_add_boolean "success" 1
+            json_add_string "message" "Source updated"
+            json_dump
+            json_cleanup
+        else
+            json_init
+            json_add_boolean "success" 0
+            json_add_string "error" "Invalid source"
+            json_dump
+            json_cleanup
+        fi
+        ;;
+    "nextBatch")
+        new_seed=$(regenerate_batch_seed)
+        json_init
+        json_add_boolean "success" 1
+        json_add_string "seed" "$new_seed"
+        json_add_string "message" "New batch generated"
+        json_dump
+        json_cleanup
+        ;;
+    "wallpapers")
+        read input
+        json_load "$input" 2>/dev/null || json_init
+        json_get_var category category
+        json_get_var batch batch
+        json_cleanup
+
+        source=$(get_bg_source)
+        batch_seed=$(get_batch_seed)
+        wallpaper_count=$(get_bg_count)
+
+        # Output JSON - generate wallpapers for all category
+        printf '{"source": "%s", "batch": "%s", "wallpapers": [' "$source" "$batch_seed"
+        generate_wallpapers "$source" "all" "$batch_seed" "$wallpaper_count"
+        printf '], "categories": ['
+        printf '{"id": "all", "name": "All"},'
+        printf '{"id": "nature", "name": "Nature"},'
+        printf '{"id": "abstract", "name": "Abstract"},'
+        printf '{"id": "technology", "name": "Technology"},'
+        printf '{"id": "minimal", "name": "Minimal"},'
+        printf '{"id": "gradient", "name": "Gradient"}'
+        printf ']}\n'
+        ;;
+    "current")
+        enable=$(get_bg_enable)
+        if [ "$enable" = "1" ]; then
+            if [ -f "${BG_DIR}/bg.jpg" ]; then
+                json_init
+                json_add_boolean "hasBackground" 1
+                json_add_string "filename" "bg.jpg"
+                json_add_string "url" "/luci-static/glass/background/bg.jpg"
+                json_add_string "source" "$(get_bg_source)"
+                json_dump
+                json_cleanup
+            elif [ -f "${BG_DIR}/bg.png" ]; then
+                json_init
+                json_add_boolean "hasBackground" 1
+                json_add_string "filename" "bg.png"
+                json_add_string "url" "/luci-static/glass/background/bg.png"
+                json_add_string "source" "$(get_bg_source)"
+                json_dump
+                json_cleanup
+            elif [ -f "${BG_DIR}/bg.webp" ]; then
+                json_init
+                json_add_boolean "hasBackground" 1
+                json_add_string "filename" "bg.webp"
+                json_add_string "url" "/luci-static/glass/background/bg.webp"
+                json_add_string "source" "$(get_bg_source)"
+                json_dump
+                json_cleanup
+            else
+                json_init
+                json_add_boolean "hasBackground" 0
+                json_add_string "source" "$(get_bg_source)"
+                json_dump
+                json_cleanup
+            fi
+        else
+            json_init
+            json_add_boolean "hasBackground" 0
+            json_add_boolean "disabled" 1
+            json_add_string "source" "$(get_bg_source)"
+            json_dump
+            json_cleanup
+        fi
+        ;;
+    "download")
+        enable=$(get_bg_enable)
+        if [ "$enable" != "1" ]; then
+            json_init
+            json_add_boolean "success" 0
+            json_add_string "error" "Wallpaper feature is disabled"
+            json_dump
+            json_cleanup
+            exit 0
+        fi
+        read input
+        json_load "$input" 2>/dev/null || json_init
+        json_get_var id id
+        json_get_var url url
+        json_get_var direct direct
+        json_cleanup
+
+        customUrl="$url"
+        download_url=""
+        ext=".jpg"
+
+        if [ -n "$id" ]; then
+            # Parse id: source-batchseed-category-index
+            download_url="$direct"
+        elif [ -n "$customUrl" ]; then
+            download_url="$customUrl"
+            # OpenWrt busybox tr has no [:upper:] classes; plain ranges work
+            lowerUrl=$(echo "$download_url" | tr 'A-Z' 'a-z')
+            case "$lowerUrl" in
+                *.png) ext=".png" ;;
+                *.webp) ext=".webp" ;;
+            esac
+        fi
+
+        if [ -n "$download_url" ]; then
+            output="${BG_DIR}/bg${ext}"
+            # Download to a temp file first: a failed or empty download must
+            # not wipe the wallpaper the user already has
+            tmp="${CACHE_DIR}/download.tmp"
+            rm -f "$tmp"
+            if download_file "$download_url" "$tmp" && [ -s "$tmp" ]; then
+                rm -f "${BG_DIR}/bg.jpg" "${BG_DIR}/bg.png" "${BG_DIR}/bg.webp"
+                mv -f "$tmp" "$output"
+                chmod 644 "$output"
+                uci set $glass.@global[0].bg_url="/luci-static/glass/background/bg${ext}"
+                uci set $glass.@global[0].bg_type="image"
+                uci commit $glass
+                json_init
+                json_add_boolean "success" 1
+                json_add_string "filename" "bg${ext}"
+                json_add_string "message" "Wallpaper downloaded"
+                json_dump
+                json_cleanup
+            else
+                rm -f "$tmp"
+                json_init
+                json_add_boolean "success" 0
+                json_add_string "error" "Download failed"
+                json_dump
+                json_cleanup
+            fi
+        else
+            json_init
+            json_add_boolean "success" 0
+            json_add_string "error" "Invalid ID or URL"
+            json_dump
+            json_cleanup
+            exit 0
+        fi
+        ;;
+    "remove")
+        rm -f "${BG_DIR}/bg.jpg" "${BG_DIR}/bg.png" "${BG_DIR}/bg.webp"
+        uci delete $glass.@global[0].bg_url 2>/dev/null
+        uci delete $glass.@global[0].bg_type 2>/dev/null
+        uci commit $glass
+        json_init
+        json_add_boolean "success" 1
+        json_add_string "message" "Background removed"
+        json_dump
+        json_cleanup
+        ;;
+    *)
+        echo '{"error": "Unknown method"}'
+        ;;
+    esac
+    ;;
+*)
+    echo '{"error": "Invalid command"}'
+    ;;
+esac

@@ -277,6 +277,14 @@ return baseclass.extend({
 							subEl.classList.remove('open');
 							navItem.classList.remove('open');
 						} else {
+							if (document.documentElement.dataset.menuAccordion === '1') {
+								subEl.parentElement.querySelectorAll('.nav-sub.open').forEach(function(el) {
+									el.classList.remove('open');
+								});
+								subEl.parentElement.querySelectorAll('.nav-item.open').forEach(function(el) {
+									if (el !== navItem) el.classList.remove('open');
+								});
+							}
 							subEl.classList.add('open');
 							navItem.classList.add('open');
 						}
@@ -297,6 +305,14 @@ return baseclass.extend({
 
 		if (children.length == 0)
 			return E([]);
+
+		/* footer.ut may have moved a CBI tabmenu into header-sub and hidden
+		   the original before the menu data loaded; restore in-content tabmenus
+		   or they stay invisible forever (server-rendered pages like OpenClash) */
+		document.querySelectorAll('.cbi-tabmenu').forEach(function(tm) {
+			if (tm.style.display === 'none')
+				tm.style.display = '';
+		});
 
 		/* Clear any CBI tabs that footer.ut added before menu loaded */
 		container.innerHTML = '';

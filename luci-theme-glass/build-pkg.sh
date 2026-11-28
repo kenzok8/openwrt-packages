@@ -25,6 +25,7 @@ mkdir -p "$DATA_DIR/www/luci-static/resources"
 mkdir -p "$DATA_DIR/www/luci-static/resources/view/system"
 mkdir -p "$DATA_DIR/usr/share/ucode/luci/template/themes/glass"
 mkdir -p "$DATA_DIR/usr/share/rpcd/acl.d"
+mkdir -p "$DATA_DIR/usr/libexec/rpcd"
 mkdir -p "$DATA_DIR/usr/share/luci/menu.d"
 mkdir -p "$DATA_DIR/etc/uci-defaults"
 mkdir -p "$DATA_DIR/etc/config"
@@ -40,6 +41,8 @@ cp htdocs/luci-static/resources/view/system/glass.js "$DATA_DIR/www/luci-static/
 cp ucode/template/themes/glass/*.ut "$DATA_DIR/usr/share/ucode/luci/template/themes/glass/"
 cp ucode/template/themes/glass/version "$DATA_DIR/usr/share/ucode/luci/template/themes/glass/"
 cp root/usr/share/rpcd/acl.d/luci-theme-glass.json "$DATA_DIR/usr/share/rpcd/acl.d/"
+# rpcd exec plugin (ubus object "glass") must be executable or rpcd ignores it
+install -m 755 root/usr/libexec/rpcd/glass "$DATA_DIR/usr/libexec/rpcd/glass"
 cp root/usr/share/luci/menu.d/luci-theme-glass.json "$DATA_DIR/usr/share/luci/menu.d/"
 cp root/etc/uci-defaults/30_luci-theme-glass "$DATA_DIR/etc/uci-defaults/"
 cp root/etc/config/glass "$DATA_DIR/etc/config/"
@@ -73,6 +76,10 @@ Homepage: $HOMEPAGE
 License: $LICENSE
 EOF
 
+# Keep the user's theme settings on opkg upgrade (without this, opkg
+# overwrites /etc/config/glass with the defaults every time)
+echo "/etc/config/glass" > "$IPK_DIR/control/conffiles"
+
 cat > "$IPK_DIR/control/postinst" <<'SCRIPT'
 #!/bin/sh
 if [ "$PKG_UPGRADE" != 1 ]; then
@@ -83,6 +90,12 @@ if [ "$PKG_UPGRADE" != 1 ]; then
 		commit luci
 	EOF
 fi
+# On a live system (not an image build), drop LuCI caches and HUP rpcd so it
+# re-execs and picks up the new ACL and the "glass" ubus plugin
+[ -n "$IPKG_INSTROOT" ] || {
+	rm -rf /tmp/luci-indexcache* /tmp/luci-modulecache
+	killall -HUP rpcd 2>/dev/null
+}
 exit 0
 SCRIPT
 chmod 755 "$IPK_DIR/control/postinst"
@@ -118,14 +131,31 @@ uci batch <<-EOF
 	set luci.main.mediaurlbase=/luci-static/glass
 	commit luci
 EOF
+[ -n "$IPKG_INSTROOT" ] || {
+	rm -rf /tmp/luci-indexcache* /tmp/luci-modulecache
+	killall -HUP rpcd 2>/dev/null
+}
 exit 0
 SCRIPT
   chmod 755 "$APK_SCRIPT"
+
+  # apk runs post-upgrade (not post-install) on upgrades: reload rpcd there too
+  APK_UPGRADE_SCRIPT="$WORK_DIR/post-upgrade.sh"
+  cat > "$APK_UPGRADE_SCRIPT" <<'SCRIPT'
+#!/bin/sh
+[ -n "$IPKG_INSTROOT" ] || {
+	rm -rf /tmp/luci-indexcache* /tmp/luci-modulecache
+	killall -HUP rpcd 2>/dev/null
+}
+exit 0
+SCRIPT
+  chmod 755 "$APK_UPGRADE_SCRIPT"
 
   # Build using Alpine container with apk mkpkg
   docker run --rm \
     -v "$DATA_DIR:/pkg/files:ro" \
     -v "$APK_SCRIPT:/pkg/post-install.sh:ro" \
+    -v "$APK_UPGRADE_SCRIPT:/pkg/post-upgrade.sh:ro" \
     -v "$SCRIPT_DIR/$DIST_DIR:/pkg/out" \
     alpine:latest sh -c "
       apk add --no-cache apk-tools-mkpkg >/dev/null 2>&1 || true
@@ -139,6 +169,7 @@ SCRIPT
         --info 'url:$HOMEPAGE' \
         --info 'maintainer:$MAINTAINER' \
         --script 'post-install:/pkg/post-install.sh' \
+        --script 'post-upgrade:/pkg/post-upgrade.sh' \
         --files /pkg/files \
         --output /pkg/out/$APK_FILENAME
     " 2>&1

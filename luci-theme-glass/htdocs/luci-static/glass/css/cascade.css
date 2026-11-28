@@ -1019,15 +1019,9 @@ body.has-sub-nav #content-wrap {
   margin-bottom: var(--space-xl);
 }
 /* Title shown in header bar; description becomes tooltip */
-.cbi-map-descr,
 .cbi-map > h2,
 #view > h2,
 #maincontent > h2 {
-  display: none;
-}
-/* Hide descriptions only when moved to header tooltip (data-moved set by footer.ut JS) */
-.cbi-map-descr[data-moved],
-#view > h2 + [data-moved] {
   display: none;
 }
 /* ---- CBI Value rows ---- */
@@ -1643,7 +1637,14 @@ table.cbi-section-table .tr:hover .td {
    IMPORTANT: Do NOT use !important here — LuCI's dependency system needs
    to evaluate fields in all tabs during page load to set proper visibility. */
 [data-tab][data-tab-title]:not([data-tab-active="true"]) {
-  display: none;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  border-width: 0;
 }
 /* ---- Alerts / Messages ----
    Only the container is tinted — body text stays at `--color-text` so
@@ -1746,6 +1747,13 @@ table.cbi-section-table .tr:hover .td {
   font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   text-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  line-height: 1;
+}
+@media (max-width: 640px) {
+  .cbi-progressbar::after {
+    font-size: 0.65rem;
+  }
 }
 /* ---- Checkbox & Radio ---- */
 input[type="checkbox"],
@@ -1805,7 +1813,6 @@ input[type="radio"] {
        itself already has glass background + padding, so the inner section
        creates a visible box-in-box with extra padding
        ([#6](https://github.com/rchen14b/luci-theme-glass/issues/6)). */
-  /* Let open dropdowns render beyond the modal's scroll clip. */
 }
 #modal_overlay > .modal > * {
   max-width: 100%;
@@ -1827,9 +1834,6 @@ input[type="radio"] {
   border: none;
   box-shadow: none;
   border-radius: 0;
-}
-#modal_overlay > .modal:has(.cbi-dropdown[open]) {
-  overflow: visible;
 }
 #modal_overlay > .modal.cbi-modal,
 #modal_overlay > .modal.uci-dialog {
@@ -1948,6 +1952,15 @@ body.modal-overlay-active #modal_overlay {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+/* Selected-item checkboxes are only meaningful in the open list;
+   hide them in the collapsed display row, and let row clicks pass
+   through the checkbox in the open list (#13) */
+.cbi-dropdown ul:not(.dropdown) li input[type="checkbox"] {
+  display: none;
+}
+.cbi-dropdown[open] li input[type="checkbox"] {
+  pointer-events: none;
 }
 /* ==========================================================================
    Login Page (sysauth) — luci-theme-glass
@@ -2072,6 +2085,8 @@ body.modal-overlay-active #modal_overlay {
 @media (max-width: 1024px) {
   #sidebar {
     transform: translateX(calc(-100% - var(--sidebar-gap)));
+    /* overlay sidebar must sit above the fixed header/sub-nav bars */
+    z-index: calc(var(--z-header) + 1);
   }
   #sidebar.open {
     transform: translateX(0);
@@ -2137,6 +2152,9 @@ body.modal-overlay-active #modal_overlay {
     display: block;
     overflow-x: auto;
   }
+  .table:has(.cbi-progressbar) {
+    display: table;
+  }
 }
 /* ==========================================================================
    Page Fixes — LuCI-specific overrides and quirks
@@ -2177,6 +2195,9 @@ body.modal-overlay-active #modal_overlay {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 .ifacebox-head.active {
+  /* match the parent card rounding — .ifacebox is overflow:visible, so
+       a square active header sticks out past the rounded corners */
+  border-radius: calc(var(--radius-md) - 0.5px) calc(var(--radius-md) - 0.5px) 0 0;
   background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.75) 0%, rgba(var(--color-primary-rgb), 0.6) 50%, rgba(var(--color-primary-rgb), 0.7) 100%);
   color: var(--color-text-inverse);
   padding: var(--space-sm) var(--space-lg);
@@ -2207,6 +2228,16 @@ body.modal-overlay-active #modal_overlay {
 }
 .ifacebox-body > div {
   margin-top: var(--space-sm);
+}
+/* ---- Network → Interfaces: center device icons, vertically center the
+   parenthesised bridge-port icon groups ---- */
+.cbi-section-table .ifacebox-body {
+  text-align: center;
+}
+.cbi-section-table .ifacebox-body > span {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
 }
 /* ---- Port status grid (29_ports.js) ---- */
 div[style*="display:grid;grid-template-columns:repeat"] {

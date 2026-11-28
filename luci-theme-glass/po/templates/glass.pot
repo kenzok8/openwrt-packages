@@ -141,6 +141,132 @@ msgid ""
 "bg.png, bg.mp4) to /www/luci-static/glass/background/ via SCP."
 msgstr ""
 
+#: htdocs/luci-static/resources/view/system/glass.js:180
+msgid ""
+"No background set. Select a wallpaper from the online gallery below, or "
+"upload a custom image via SCP to /www/luci-static/glass/background/"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:187
+msgid "Online Wallpaper Gallery"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:238
+msgid "All"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:253
+msgid "No wallpapers available in this category"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Nature Landscape"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Mountain View"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Abstract Light"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Abstract Dark"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Technology"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Minimal"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Blue Gradient"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Purple Gradient"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:239
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Nature"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:239
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Abstract"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:239
+#: htdocs/luci-static/resources/view/system/glass.js:270
+msgid "Gradient"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:283
+msgid "Apply"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:283
+msgid "Re-apply"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:294
+msgid "Custom URL"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:297
+msgid "Download & Apply"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:300
+msgid "Enter a direct image URL to download and apply as background"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:176
+msgid "Remove Background"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:358
+msgid "Downloading..."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:363
+msgid "Wallpaper applied successfully. Refresh the page to see the changes."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:365
+#: htdocs/luci-static/resources/view/system/glass.js:373
+msgid "Failed to download wallpaper"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:367
+msgid "Download failed"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:380
+msgid "Download failed: "
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:390
+msgid "Remove current background?"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:396
+msgid "Background removed. Refresh the page to see the changes."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:398
+msgid "Failed to remove background"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js:406
+msgid "Remove failed: "
+msgstr ""
+
 #: ucode/template/themes/glass/header.ut:201
 msgid "No password set!"
 msgstr ""
@@ -203,4 +329,23 @@ msgstr ""
 #: ucode/template/themes/glass/header.ut:212
 msgid ""
 "You must enable JavaScript in your browser or LuCI will not work properly."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js
+msgid "Throughput device"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js
+msgid ""
+"Network device the header throughput indicator monitors. Leave empty to "
+"detect the WAN device automatically. With PPPoE and hardware offloading, "
+"pick the physical WAN port (e.g. wan) instead of pppoe-wan."
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js
+msgid "Auto-detect"
+msgstr ""
+
+#: htdocs/luci-static/resources/view/system/glass.js
+msgid "Expecting a network device name"
 msgstr ""

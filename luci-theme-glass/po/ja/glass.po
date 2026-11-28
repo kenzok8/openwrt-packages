@@ -6,180 +6,190 @@ msgstr ""
 
 #: htdocs/luci-static/resources/view/system/glass.js:52
 msgid "Accent Colors"
-msgstr ""
+msgstr "アクセントカラー"
 
 #: htdocs/luci-static/resources/view/system/glass.js:72
 msgid "Accent color used for active elements, links, and buttons in dark mode."
-msgstr ""
+msgstr "ダークモードでのアクティブ要素・リンク・ボタンのアクセントカラー。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:56
 msgid ""
 "Accent color used for active elements, links, and buttons in light mode."
-msgstr ""
+msgstr "ライトモードでのアクティブ要素・リンク・ボタンのアクセントカラー。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:128
 msgid "Active"
-msgstr ""
+msgstr "設定済み"
 
 #: htdocs/luci-static/resources/view/system/glass.js:33
 msgid "Auto (follow system)"
-msgstr ""
+msgstr "自動（システムに従う）"
 
 #: htdocs/luci-static/resources/view/system/glass.js:108
 msgid "Backdrop blur radius for glass panels in dark mode."
-msgstr ""
+msgstr "ダークモードのグラスパネルの背景ブラー半径。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:92
 msgid ""
 "Backdrop blur radius for glass panels. Higher values create a more frosted "
 "appearance."
 msgstr ""
+"グラスパネルの背景ブラー半径。大きい値ほどすりガラス風の効果が強くなります。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:120
 msgid "Background"
-msgstr ""
+msgstr "背景"
 
 #: htdocs/luci-static/resources/view/system/glass.js:98
 msgid ""
 "Background opacity of glass panels (0 = fully transparent, 1 = fully opaque)."
-msgstr ""
+msgstr "グラスパネルの背景不透明度（0 = 完全透明、 1 = 完全不透明）。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:114
 msgid ""
 "Background opacity of glass panels in dark mode (0 = fully transparent, 1 = "
 "fully opaque)."
 msgstr ""
+"ダークモードのグラスパネルの背景不透明度（0 = 完全透明、 1 = 完全不透明）。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:43
 msgid "Base font size"
-msgstr ""
+msgstr "基本フォントサイズ"
 
 #: htdocs/luci-static/resources/view/system/glass.js:91
 #: htdocs/luci-static/resources/view/system/glass.js:107
 msgid "Blur intensity (px)"
-msgstr ""
+msgstr "ブラー強度（px）"
 
 #: htdocs/luci-static/resources/view/system/glass.js:25
 msgid ""
 "Configure the appearance of the Glass theme. Changes take effect after "
 "saving and refreshing the page."
 msgstr ""
+"Glassテーマの外観を設定します。変更は保存してページを更新すると反映されます。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:32
 msgid ""
 "Controls the overall appearance. \"Normal\" follows the system preference."
-msgstr ""
+msgstr "全体的な外観を制御します。「自動」はシステムの設定に従います。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:123
 msgid "Current background"
-msgstr ""
+msgstr "現在の背景"
 
 #: htdocs/luci-static/resources/view/system/glass.js:35
 msgid "Dark"
-msgstr ""
+msgstr "ダーク"
 
 #: htdocs/luci-static/resources/view/system/glass.js:48
 msgid "Extra Large (18px)"
-msgstr ""
+msgstr "特大（18px）"
 
 #: htdocs/luci-static/resources/view/system/glass.js:28
 msgid "General"
-msgstr ""
+msgstr "一般"
 
 #: htdocs/luci-static/resources/view/system/glass.js:104
 msgid "Glass Effects — Dark Mode"
-msgstr ""
+msgstr "ガラスエフェクト — ダークモード"
 
 #: htdocs/luci-static/resources/view/system/glass.js:88
 msgid "Glass Effects — Light Mode"
-msgstr ""
+msgstr "ガラスエフェクト — ライトモード"
 
 #: htdocs/luci-static/resources/view/system/glass.js:24
 msgid "Glass Theme"
-msgstr ""
+msgstr "Glassテーマ"
 
 #: root/usr/share/luci/menu.d/luci-theme-glass.json:3
 msgid "Glass Theme Config"
-msgstr ""
+msgstr "Glassテーマ設定"
 
 #: ucode/template/themes/glass/header.ut:204
 msgid "Go to password configuration..."
-msgstr ""
+msgstr "パスワード設定へ..."
 
 #: root/usr/share/rpcd/acl.d/luci-theme-glass.json:3
 msgid "Grant access for luci-theme-glass"
-msgstr ""
+msgstr "luci-theme-glassへのアクセスを許可"
 
 #: htdocs/luci-static/resources/view/system/glass.js:38
 msgid "Header status bar"
-msgstr ""
+msgstr "ヘッダーステータスバー"
 
 #: ucode/template/themes/glass/sysauth.ut:111
 msgid "Invalid username and/or password! Please try again."
-msgstr ""
+msgstr "ユーザー名またはパスワードが間違います。再度お試しください。"
 
 #: ucode/template/themes/glass/header.ut:211
 msgid "JavaScript required!"
-msgstr ""
+msgstr "JavaScriptが必要です！"
 
 #: htdocs/luci-static/resources/view/system/glass.js:47
 msgid "Large (16px)"
-msgstr ""
+msgstr "大（16px）"
 
 #: htdocs/luci-static/resources/view/system/glass.js:34
 msgid "Light"
-msgstr ""
+msgstr "ライト"
 
 #: ucode/template/themes/glass/sysauth.ut:129
 msgid "Log in"
-msgstr ""
+msgstr "ログイン"
 
 #: ucode/template/themes/glass/sysauth.ut:51
 msgid "Login"
-msgstr ""
+msgstr "ログイン"
 
 #: htdocs/luci-static/resources/view/system/glass.js:131
 msgid ""
 "No background set. Upload an image or video named \"bg\" (e.g. bg.jpg, "
 "bg.png, bg.mp4) to /www/luci-static/glass/background/ via SCP."
 msgstr ""
+"背景が未設定です。SCPで\"bg\"という名前の画像または動画（bg.jpg、bg.png、"
+"bg.mp4など）を /www/luci-static/glass/background/ にアップロードしてくださ"
+"い。"
 
 #: ucode/template/themes/glass/header.ut:201
 msgid "No password set!"
-msgstr ""
+msgstr "パスワードが未設定です！"
 
 #: htdocs/luci-static/resources/view/system/glass.js:46
 msgid "Normal (14px)"
-msgstr ""
+msgstr "標準（14px）"
 
 #: htdocs/luci-static/resources/view/system/glass.js:97
 #: htdocs/luci-static/resources/view/system/glass.js:113
 msgid "Panel transparency"
-msgstr ""
+msgstr "パネル透明度"
 
 #: ucode/template/themes/glass/sysauth.ut:124
 msgid "Password"
-msgstr ""
+msgstr "パスワード"
 
 #: htdocs/luci-static/resources/view/system/glass.js:71
 msgid "Primary color (dark mode)"
-msgstr ""
+msgstr "メインカラー（ダークモード）"
 
 #: htdocs/luci-static/resources/view/system/glass.js:55
 msgid "Primary color (light mode)"
-msgstr ""
+msgstr "メインカラー（ライトモード）"
 
 #: htdocs/luci-static/resources/view/system/glass.js:44
 msgid ""
 "Scales all text in the theme. Larger values improve readability on high-DPI "
 "displays."
 msgstr ""
+"テーマ内のすべてのテキストをスケーリングします。大きい値は高解像度ディスプレ"
+"イでの読みやすさを向上させます。"
 
 #: htdocs/luci-static/resources/view/system/glass.js:39
 msgid ""
 "Show live system stats (CPU, RAM, network, uptime) in the header. Disable to "
 "reduce resource usage on low-end devices."
 msgstr ""
+"ヘッダーにリアルタイムのシステム情報（CPU、RAM、ネットワーク、稼働時間）を表"
+"示。低スペック端末では無効にできます。"
 
 #: ucode/template/themes/glass/sysauth.ut:106
 msgid "Sign in to continue"
@@ -187,23 +197,81 @@ msgstr "続行するにはサインインしてください"
 
 #: htdocs/luci-static/resources/view/system/glass.js:45
 msgid "Small (13px)"
-msgstr ""
+msgstr "小（13px）"
 
 #: htdocs/luci-static/resources/view/system/glass.js:31
 msgid "Theme mode"
-msgstr ""
+msgstr "テーマモード"
 
 #: ucode/template/themes/glass/header.ut:202
 msgid ""
 "There is no password set on this router. Please configure a root password to "
 "protect the web interface."
 msgstr ""
+"このルーターにパスワードが設定されていません。Webインターフェースを保護するた"
+"めに root パスワードを設定してください。"
 
 #: ucode/template/themes/glass/sysauth.ut:117
 msgid "Username"
-msgstr ""
+msgstr "ユーザー名"
 
 #: ucode/template/themes/glass/header.ut:212
 msgid ""
 "You must enable JavaScript in your browser or LuCI will not work properly."
+msgstr "ブラウザーでJavaScriptを有効にしないと、LuCIが正常に動作しません。"
+
+msgid "Wallpaper source"
+msgstr "壁紙ソース"
+
+msgid ""
+"Select online wallpaper source. Each source provides different styles of "
+"wallpapers."
 msgstr ""
+"オンライン壁紙ソースを選択してください。各ソースは異なるスタイルの壁紙を提供"
+"します。"
+
+msgid "Picsum (Random photos)"
+msgstr "Picsum（ランダム写真）"
+
+msgid "Iciba Daily (China)"
+msgstr "Iciba Daily（中国）"
+
+msgid "Wallpaper count"
+msgstr "壁紙数"
+
+msgid ""
+"Number of wallpapers to display (4-16, default: 8). Changes take effect "
+"after refreshing the page."
+msgstr ""
+"表示する壁紙の数（4-16、デフォルト：8）。変更はページを更新した後に有効になり"
+"ます。"
+
+msgid "Next Batch"
+msgstr "次のバッチ"
+
+msgid "Enable wallpaper"
+msgstr "Enable wallpaper"
+
+msgid "Background blur (px)"
+msgstr "Background blur (px)"
+
+msgid "Blur effect on background wallpaper (0 = no blur, 50 = maximum blur)"
+msgstr "Blur effect on background wallpaper (0 = no blur, 50 = maximum blur)"
+
+msgid "Source:"
+msgstr "Source:"
+
+msgid "No wallpapers available in this category"
+msgstr "No wallpapers available in this category"
+
+msgid "Please enable wallpaper feature first"
+msgstr "Please enable wallpaper feature first"
+
+msgid "Wallpaper Disabled"
+msgstr "Wallpaper Disabled"
+
+msgid "Please enable wallpaper feature first."
+msgstr "Please enable wallpaper feature first."
+
+msgid "OK"
+msgstr "OK"

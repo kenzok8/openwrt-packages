@@ -37,6 +37,9 @@
   }
 
   &.active {
+    /* match the parent card rounding — .ifacebox is overflow:visible, so
+       a square active header sticks out past the rounded corners */
+    border-radius: calc(var(--radius-md) - 0.5px) calc(var(--radius-md) - 0.5px) 0 0;
     background: linear-gradient(
       135deg,
       rgba(var(--color-primary-rgb), 0.75) 0%,
@@ -79,6 +82,19 @@
   /* Device badge row */
   > div {
     margin-top: var(--space-sm);
+  }
+}
+
+
+/* ---- Network → Interfaces: center device icons, vertically center the
+   parenthesised bridge-port icon groups ---- */
+.cbi-section-table .ifacebox-body {
+  text-align: center;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
   }
 }
 
